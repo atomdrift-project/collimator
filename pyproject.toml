@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "collimator"
+version = "0.1.0"
+description = "PyTorch training pipeline for malware detection using cleave analysis reports"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+    "torch>=2.2",
+    "onnx>=1.15",
+    "numpy>=1.24",
+    "scikit-learn>=1.3",
+    "shap>=0.44",
+]
+
+[project.scripts]
+collimator = "collimator.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM"]
+# N803/N806: uppercase X, Y are standard ML convention for feature matrices.
+per-file-ignores = {"src/collimator/*" = ["N803", "N806"], "tests/*" = ["N803", "N806"]}
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

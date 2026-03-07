@@ -1,0 +1,8 @@
+
+# added by lint-install
+out/
+__pycache__/
+src/collimator/__pycache__/
+tests/__pycache__/
+*/__pycache__/
+
