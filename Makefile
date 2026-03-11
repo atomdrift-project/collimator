@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan traits test lint clean venv help
+.PHONY: train evaluate explain inspect errors scan verify traits test lint clean deploy venv help
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -25,7 +25,7 @@ $(VENV_DIR)/bin/activate: requirements.txt
 	touch $(VENV_DIR)/bin/activate
 
 train: venv check-db
-	$(PYTHON) -m collimator train --db $(DB) --output $(OUT_DIR)
+	$(PYTHON) -m collimator train --db $(DB) --output $(OUT_DIR) --cleave $(CLEAVE)
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
@@ -45,6 +45,9 @@ errors: venv check-db
 traits: venv check-db
 	$(PYTHON) -m collimator traits --db $(DB)
 
+verify: venv
+	$(PYTHON) -m collimator verify --model $(OUT_DIR)/model.pt --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE)
+
 scan: venv
 ifndef FILE
 	$(error FILE is required. Usage: make scan FILE=/path/to/binary)
@@ -59,6 +62,15 @@ lint: venv
 	$(VENV_DIR)/bin/pip install ruff mypy
 	$(VENV_DIR)/bin/ruff check src/ tests/
 	$(VENV_DIR)/bin/mypy src/collimator/
+
+MODELS_DIR ?= ../litmus-models/v1/default
+
+deploy:
+	@test -d $(MODELS_DIR) || { echo "error: $(MODELS_DIR) does not exist"; exit 1; }
+	cp $(OUT_DIR)/model.json $(MODELS_DIR)/model.json
+	cp $(OUT_DIR)/model.onnx $(MODELS_DIR)/model.onnx
+	cp $(OUT_DIR)/feature_spec.json $(MODELS_DIR)/feature_spec.json
+	@echo "Deployed to $(MODELS_DIR)"
 
 clean:
 	rm -rf $(OUT_DIR) $(VENV_DIR) src/*.egg-info __pycache__ .mypy_cache .pytest_cache
@@ -76,6 +88,10 @@ help:
 	@echo "  make errors DB=...                 Show misclassified samples"
 	@echo "  make traits DB=...                 Show trait-level prevalence / false-positive stats"
 	@echo "  make scan FILE=/path/to/binary     Score a live file via cleave + model"
+	@echo "  make verify                        Verify model against testdata/ samples"
+	@echo ""
+	@echo "Deployment:"
+	@echo "  make deploy                        Copy model artifacts to ../litmus-models"
 	@echo ""
 	@echo "Development:"
 	@echo "  make test                          Run tests"
@@ -89,6 +105,7 @@ help:
 	@echo "  SAMPLE=sha256   SHA256 (or prefix) for inspect"
 	@echo "  FILE=path       File path for scan"
 	@echo "  CLEAVE=path     Path to cleave binary (default: cleave)"
+	@echo "  MODELS_DIR=path Deployment target (default: ../litmus-models/v1/default)"
 
 # BEGIN: lint-install .
 # http://github.com/codeGROOVE-dev/lint-install

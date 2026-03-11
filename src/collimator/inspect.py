@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import torch
 
 from .features import (
     FeatureSpec,
@@ -17,22 +16,13 @@ from .features import (
     primary_file,
     standardize,
 )
-from .model import MalwareClassifier
+from .model import load_model, predict_proba
 
 log = logging.getLogger(__name__)
 
 
-def _load_model(model_path: Path, n_features: int) -> MalwareClassifier:
-    model = MalwareClassifier(n_features)
-    model.load_state_dict(torch.load(model_path, weights_only=True))
-    model.eval()
-    return model
-
-
-def _predict(model: MalwareClassifier, vec: np.ndarray) -> float:
-    with torch.no_grad():
-        t = torch.tensor(vec, dtype=torch.float32).unsqueeze(0)
-        return float(torch.sigmoid(model(t)).squeeze().item())
+def _predict(model: object, vec: np.ndarray) -> float:
+    return float(predict_proba(model, vec.reshape(1, -1))[0])
 
 
 def _print_feature_vector(vec: np.ndarray, spec: FeatureSpec, top_n: int = 30) -> None:
@@ -51,30 +41,22 @@ def _print_feature_vector(vec: np.ndarray, spec: FeatureSpec, top_n: int = 30) -
 
 
 def _print_shap_breakdown(
-    model: MalwareClassifier,
+    model: object,
     vec: np.ndarray,
     spec: FeatureSpec,
     vec_raw: np.ndarray | None = None,
 ) -> None:
-    """Per-sample SHAP breakdown."""
+    """Per-sample SHAP breakdown using TreeExplainer."""
     try:
         import shap
     except ImportError:
         print("\nSHAP not installed, skipping per-sample breakdown")
         return
 
-    device = next(model.parameters()).device
     display = vec_raw if vec_raw is not None else vec
 
-    background = np.zeros((1, spec.total_features), dtype=np.float32)
-
-    def predict_fn(x: np.ndarray) -> np.ndarray:
-        with torch.no_grad():
-            t = torch.tensor(x, dtype=torch.float32, device=device)
-            return torch.sigmoid(model(t)).cpu().numpy()
-
-    explainer = shap.KernelExplainer(predict_fn, background)
-    shap_values = explainer.shap_values(vec.reshape(1, -1), nsamples=200)
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(vec.reshape(1, -1))
 
     if isinstance(shap_values, list):
         shap_values = shap_values[0]
@@ -105,7 +87,7 @@ def inspect_sample(
     import sqlite3
 
     spec = FeatureSpec.load(spec_path)
-    model = _load_model(model_path, spec.total_features)
+    model = load_model(model_path)
 
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
@@ -146,7 +128,7 @@ def inspect_errors(
     from . import data
 
     spec = FeatureSpec.load(spec_path)
-    model = _load_model(model_path, spec.total_features)
+    model = load_model(model_path)
     samples = data.load_samples(db_path)
 
     if not samples:
@@ -157,9 +139,7 @@ def inspect_errors(
         [extract(s.report, spec) for s in samples], dtype=np.float32,
     )
     vecs = standardize(vecs_raw, spec)
-    with torch.no_grad():
-        t = torch.tensor(vecs, dtype=torch.float32)
-        probs = torch.sigmoid(model(t)).squeeze(1).cpu().numpy()
+    probs = predict_proba(model, vecs)
 
     false_positives = []
     false_negatives = []
@@ -207,7 +187,7 @@ def scan_file(
 ) -> None:
     """Run cleave on a file and score it with the trained model."""
     spec = FeatureSpec.load(spec_path)
-    model = _load_model(model_path, spec.total_features)
+    model = load_model(model_path)
 
     try:
         result = subprocess.run(

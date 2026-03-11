@@ -8,35 +8,27 @@ from pathlib import Path
 
 import numpy as np
 import shap
-import torch
+import xgboost as xgb
 
 from .features import FeatureSpec
-from .model import MalwareClassifier
 
 log = logging.getLogger(__name__)
 
-# Maximum samples for SHAP.
-MAX_BACKGROUND = 50
-MAX_EXPLAIN = 50
+# Maximum samples for SHAP analysis.
+MAX_EXPLAIN = 200
 
 
 def compute_shap_importance(
-    model: MalwareClassifier,
+    model: xgb.XGBClassifier,
     X: np.ndarray,
     spec: FeatureSpec,
     output_path: Path | None = None,
 ) -> dict[str, float]:
-    """Compute global SHAP feature importance.
+    """Compute global SHAP feature importance using TreeExplainer.
 
-    Returns a dict mapping feature name → mean |SHAP value|, sorted descending.
+    TreeExplainer is exact for tree models (no sampling approximation needed)
+    and dramatically faster than KernelExplainer.
     """
-    model.eval().cpu()
-
-    # Use kmeans to summarize background — much more efficient than raw
-    # samples for KernelExplainer, and avoids numerical issues.
-    n_bg = min(MAX_BACKGROUND, len(X))
-    background = shap.kmeans(X, min(n_bg, 50))
-
     if len(X) > MAX_EXPLAIN:
         rng = np.random.default_rng(42)
         ex_idx = rng.choice(len(X), MAX_EXPLAIN, replace=False)
@@ -44,29 +36,10 @@ def compute_shap_importance(
     else:
         X_explain = X
 
-    def predict_fn(x: np.ndarray) -> np.ndarray:
-        with torch.no_grad():
-            t = torch.tensor(x, dtype=torch.float32)
-            return torch.sigmoid(model(t)).numpy()
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer.shap_values(X_explain)
 
-    explainer = shap.KernelExplainer(predict_fn, background)
-    # nsamples="auto" lets SHAP pick based on feature count.
-    # Suppress verbose SHAP logging.
-    shap_logger = logging.getLogger("shap")
-    prev_level = shap_logger.level
-    shap_logger.setLevel(logging.WARNING)
-    try:
-        shap_values = explainer.shap_values(X_explain, nsamples="auto")
-    finally:
-        shap_logger.setLevel(prev_level)
-
-    # shap_values may be a list (one per output) or array.
-    if isinstance(shap_values, list):
-        shap_values = shap_values[0]
-    shap_arr = np.array(shap_values)
-
-    # Squeeze extra dimensions and replace NaN.
-    shap_arr = np.nan_to_num(shap_arr.squeeze(), nan=0.0)
+    shap_arr = np.nan_to_num(np.array(shap_values).squeeze(), nan=0.0)
     if shap_arr.ndim == 1:
         shap_arr = shap_arr.reshape(1, -1)
 

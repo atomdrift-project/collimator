@@ -1,40 +1,49 @@
-"""Tests for the MLP model architecture."""
+"""Tests for XGBoost model creation and prediction."""
 
-import torch
+import numpy as np
 
-from collimator.model import MalwareClassifier
-
-
-def test_forward_shape() -> None:
-    model = MalwareClassifier(n_features=100)
-    x = torch.randn(8, 100)
-    out = model(x)
-    assert out.shape == (8, 1)
+from collimator.model import create_classifier, predict_proba
 
 
-def test_output_range() -> None:
-    """Sigmoid of logits should be in [0, 1]."""
-    model = MalwareClassifier(n_features=50)
-    x = torch.randn(32, 50)
-    probs = torch.sigmoid(model(x))
-    assert probs.min() >= 0.0
-    assert probs.max() <= 1.0
+def test_create_classifier_defaults() -> None:
+    model = create_classifier(n_benign=100, n_malware=50)
+    assert model.get_params()["objective"] == "binary:logistic"
+    assert model.get_params()["max_depth"] == 6
 
 
-def test_single_sample() -> None:
-    """Model should handle batch size 1."""
-    model = MalwareClassifier(n_features=20)
-    model.eval()
-    x = torch.randn(1, 20)
-    out = model(x)
-    assert out.shape == (1, 1)
+def test_create_classifier_custom_params() -> None:
+    model = create_classifier(
+        n_benign=100, n_malware=50,
+        max_depth=4, n_estimators=50, learning_rate=0.1,
+    )
+    assert model.get_params()["max_depth"] == 4
+    assert model.get_params()["n_estimators"] == 50
+    assert model.get_params()["learning_rate"] == 0.1
 
 
-def test_deterministic_eval() -> None:
-    """Same input should produce same output in eval mode."""
-    model = MalwareClassifier(n_features=30)
-    model.eval()
-    x = torch.randn(4, 30)
-    out1 = model(x)
-    out2 = model(x)
-    assert torch.allclose(out1, out2)
+def test_predict_proba_shape() -> None:
+    model = create_classifier(n_benign=50, n_malware=50, n_estimators=10)
+    rng = np.random.default_rng(42)
+    X_train = rng.standard_normal((100, 10)).astype(np.float32)
+    y_train = np.array([0] * 50 + [1] * 50, dtype=np.float32)
+    model.set_params(early_stopping_rounds=None)
+    model.fit(X_train, y_train, verbose=False)
+
+    X_test = rng.standard_normal((5, 10)).astype(np.float32)
+    probs = predict_proba(model, X_test)
+    assert probs.shape == (5,)
+    assert all(0.0 <= p <= 1.0 for p in probs)
+
+
+def test_predict_proba_deterministic() -> None:
+    model = create_classifier(n_benign=50, n_malware=50, n_estimators=10)
+    rng = np.random.default_rng(42)
+    X_train = rng.standard_normal((100, 10)).astype(np.float32)
+    y_train = np.array([0] * 50 + [1] * 50, dtype=np.float32)
+    model.set_params(early_stopping_rounds=None)
+    model.fit(X_train, y_train, verbose=False)
+
+    X_test = rng.standard_normal((3, 10)).astype(np.float32)
+    probs1 = predict_proba(model, X_test)
+    probs2 = predict_proba(model, X_test)
+    np.testing.assert_array_equal(probs1, probs2)
