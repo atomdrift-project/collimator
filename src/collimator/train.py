@@ -37,6 +37,12 @@ class TrainConfig:
     max_depth: int = 6
     learning_rate: float = 0.05
     early_stopping_rounds: int = 30
+    min_child_weight: int = 5
+    colsample_bytree: float = 0.8
+    subsample: float = 0.8
+    gamma: float = 0.0
+    reg_alpha: float = 0.0
+    reg_lambda: float = 1.0
 
 
 @dataclass
@@ -76,13 +82,14 @@ def _compute_metrics(
 def _optimal_threshold(
     y_true: np.ndarray,
     y_prob: np.ndarray,
-    beta: float = 2.0,
+    beta: float = 0.5,
 ) -> float:
     """Find threshold that maximizes F-beta on a precision-recall curve.
 
-    Default beta=2.0 weights recall 2x more than precision, appropriate for
-    malware detection where missing malware (false negative) is worse than
-    a false alarm (false positive).
+    Default beta=0.5 weights precision 2x more than recall, appropriate for
+    a pipeline where false positives (legitimate tools flagged as malware)
+    are more disruptive than false negatives (missed malware that cleave
+    can catch with criticality heuristics).
     """
     if len(np.unique(y_true)) < 2:
         return 0.5
@@ -194,6 +201,12 @@ def train(
                 max_depth=config.max_depth,
                 learning_rate=config.learning_rate,
                 early_stopping_rounds=config.early_stopping_rounds,
+                min_child_weight=config.min_child_weight,
+                colsample_bytree=config.colsample_bytree,
+                subsample=config.subsample,
+                gamma=config.gamma,
+                reg_alpha=config.reg_alpha,
+                reg_lambda=config.reg_lambda,
             )
             fold_model.fit(
                 X_tv_std[train_idx], y_tv[train_idx],
@@ -225,6 +238,12 @@ def train(
         max_depth=config.max_depth,
         learning_rate=config.learning_rate,
         early_stopping_rounds=config.early_stopping_rounds,
+        min_child_weight=config.min_child_weight,
+        colsample_bytree=config.colsample_bytree,
+        subsample=config.subsample,
+        gamma=config.gamma,
+        reg_alpha=config.reg_alpha,
+        reg_lambda=config.reg_lambda,
     )
 
     if X_holdout_std is not None:

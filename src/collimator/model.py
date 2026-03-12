@@ -23,6 +23,12 @@ def create_classifier(
     max_depth: int = 6,
     learning_rate: float = 0.05,
     early_stopping_rounds: int = 30,
+    min_child_weight: int = 5,
+    colsample_bytree: float = 0.8,
+    subsample: float = 0.8,
+    gamma: float = 0.0,
+    reg_alpha: float = 0.0,
+    reg_lambda: float = 1.0,
 ) -> xgb.XGBClassifier:
     """Create an XGBoost classifier with defaults tuned for malware detection."""
     return xgb.XGBClassifier(
@@ -31,9 +37,12 @@ def create_classifier(
         max_depth=max_depth,
         learning_rate=learning_rate,
         n_estimators=n_estimators,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        min_child_weight=5,
+        subsample=subsample,
+        colsample_bytree=colsample_bytree,
+        min_child_weight=min_child_weight,
+        gamma=gamma,
+        reg_alpha=reg_alpha,
+        reg_lambda=reg_lambda,
         scale_pos_weight=n_benign / max(n_malware, 1),
         tree_method="hist",
         random_state=42,

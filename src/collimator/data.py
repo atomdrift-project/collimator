@@ -17,6 +17,10 @@ MALWARE_STATUSES = frozenset({"bad", "good-malicious"})
 BENIGN_STATUSES = frozenset({"good", "bad-benign"})
 ALL_TERMINAL = MALWARE_STATUSES | BENIGN_STATUSES
 
+# Samples whose SHA256 last byte falls in [0, TEST_BUCKET_MAX) are reserved
+# for threshold evaluation and excluded from training.  13/256 ≈ 5%.
+TEST_BUCKET_MAX = 13
+
 
 @dataclass(frozen=True, slots=True)
 class Sample:
@@ -81,3 +85,23 @@ def load_samples(db_path: Path) -> list[Sample]:
         len(samples), n_malware, n_benign, skipped,
     )
     return samples
+
+
+def is_test_sample(sha256: str) -> bool:
+    """Deterministic test-set assignment based on SHA256 last byte."""
+    return int(sha256[-2:], 16) < TEST_BUCKET_MAX
+
+
+def split_train_test(samples: list[Sample]) -> tuple[list[Sample], list[Sample]]:
+    """Split samples into train and test sets using SHA256 bucket assignment."""
+    train_samples = [s for s in samples if not is_test_sample(s.sha256)]
+    test_samples = [s for s in samples if is_test_sample(s.sha256)]
+    n_test_malware = sum(1 for s in test_samples if s.label == 1)
+    n_test_benign = len(test_samples) - n_test_malware
+    log.info(
+        "split: %d train, %d test (%d malware, %d benign, %.1f%%)",
+        len(train_samples), len(test_samples),
+        n_test_malware, n_test_benign,
+        100 * len(test_samples) / max(len(samples), 1),
+    )
+    return train_samples, test_samples

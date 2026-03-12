@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan verify traits test lint clean deploy venv help
+.PHONY: train evaluate explain inspect errors scan verify traits thresholds test lint clean deploy venv help
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -45,6 +45,9 @@ errors: venv check-db
 traits: venv check-db
 	$(PYTHON) -m collimator traits --db $(DB)
 
+thresholds: venv check-db
+	$(PYTHON) -m collimator thresholds --db $(DB)
+
 verify: venv
 	$(PYTHON) -m collimator verify --model $(OUT_DIR)/model.pt --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE)
 
@@ -87,6 +90,7 @@ help:
 	@echo "  make inspect DB=... SAMPLE=<sha>   Inspect a single sample (features + SHAP)"
 	@echo "  make errors DB=...                 Show misclassified samples"
 	@echo "  make traits DB=...                 Show trait-level prevalence / false-positive stats"
+	@echo "  make thresholds DB=...             Show confidence thresholds for accuracy targets"
 	@echo "  make scan FILE=/path/to/binary     Score a live file via cleave + model"
 	@echo "  make verify                        Verify model against testdata/ samples"
 	@echo ""

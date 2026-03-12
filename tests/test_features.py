@@ -1,4 +1,4 @@
-"""Tests for v12 path×tier feature extraction from cleave v3 AnalysisReport JSON."""
+"""Tests for v13 capability-first feature extraction from cleave v3 AnalysisReport JSON."""
 
 import math
 
@@ -99,27 +99,30 @@ def test_build_vocab_empty() -> None:
     spec = build_vocab([_make_report()])
     assert spec.total_features > 0
     assert len(spec.feature_names) == spec.total_features
-    assert spec.version == 12
+    assert spec.version == 13
 
 
-def test_build_vocab_path_tier_combos() -> None:
-    # Create enough reports to exceed MIN_PATH_FREQ.
+def test_build_vocab_presence() -> None:
     reports = _reports_with_finding("objectives/evasion/process", "hostile", n=35)
     spec = build_vocab(reports)
 
-    # Hostile finding should create all tiers (hostile >= notable, suspicious, hostile).
-    assert "objectives:hostile" in spec.path_vocab
-    assert "objectives:suspicious" in spec.path_vocab
-    assert "objectives:notable" in spec.path_vocab
-    assert "objectives/evasion:hostile" in spec.path_vocab
-    assert "objectives/evasion/process:hostile" in spec.path_vocab
+    # Presence vocab should contain tier-agnostic paths.
+    assert "objectives" in spec.presence_vocab
+    assert "objectives/evasion" in spec.presence_vocab
+    assert "objectives/evasion/process" in spec.presence_vocab
+
+    # Both presence and maxcrit features should exist.
+    assert "present:objectives" in spec.feature_names
+    assert "maxcrit:objectives" in spec.feature_names
+    assert "present:objectives/evasion/process" in spec.feature_names
+    assert "maxcrit:objectives/evasion/process" in spec.feature_names
 
 
 def test_build_vocab_freq_filter() -> None:
-    # Below MIN_PATH_FREQ → excluded from vocab.
+    # Below MIN_PATH_FREQ -> excluded.
     reports = _reports_with_finding("objectives/rare", "hostile", n=5)
     spec = build_vocab(reports)
-    assert "objectives/rare:hostile" not in spec.path_vocab
+    assert "objectives/rare" not in spec.presence_vocab
 
 
 def test_build_vocab_filetype() -> None:
@@ -133,11 +136,11 @@ def test_build_vocab_feature_groups_present() -> None:
     reports = _reports_with_finding("objectives/evasion", "hostile", n=35)
     spec = build_vocab(reports)
 
-    # Check that all feature groups have representatives.
     groups = set()
     for name in spec.feature_names:
         groups.add(name.split(":")[0])
-    assert "path" in groups
+    assert "present" in groups
+    assert "maxcrit" in groups
     assert "agg" in groups
     assert "ext" in groups
     assert "metrics" in groups
@@ -149,34 +152,47 @@ def test_build_vocab_feature_groups_present() -> None:
 # Feature extraction
 # ---------------------------------------------------------------------------
 
-def test_extract_path_tier_binary() -> None:
+def test_extract_presence_features() -> None:
     reports = _reports_with_finding("objectives/evasion/process", "hostile", n=35)
     spec = build_vocab(reports)
-    report = reports[0]
-    vec = extract(report, spec)
+    vec = extract(reports[0], spec)
 
-    # The hostile finding should set all tier features for this path.
-    hostile_idx = spec.feature_names.index("path:objectives/evasion/process:hostile")
-    suspicious_idx = spec.feature_names.index("path:objectives/evasion/process:suspicious")
-    notable_idx = spec.feature_names.index("path:objectives/evasion/process:notable")
-    assert vec[hostile_idx] == 1.0
-    assert vec[suspicious_idx] == 1.0
-    assert vec[notable_idx] == 1.0
+    assert vec[spec.feature_names.index("present:objectives")] == 1.0
+    assert vec[spec.feature_names.index("present:objectives/evasion")] == 1.0
+    assert vec[spec.feature_names.index("present:objectives/evasion/process")] == 1.0
 
 
-def test_extract_notable_only() -> None:
+def test_extract_maxcrit_features() -> None:
+    reports = _reports_with_finding("objectives/evasion/process", "hostile", n=35)
+    spec = build_vocab(reports)
+    vec = extract(reports[0], spec)
+
+    # Hostile = ordinal 5.
+    assert vec[spec.feature_names.index("maxcrit:objectives")] == 5.0
+    assert vec[spec.feature_names.index("maxcrit:objectives/evasion")] == 5.0
+    assert vec[spec.feature_names.index("maxcrit:objectives/evasion/process")] == 5.0
+
+
+def test_extract_maxcrit_notable() -> None:
+    """Notable finding should produce maxcrit=3."""
     reports = _reports_with_finding("objectives/evasion", "notable", n=35)
     spec = build_vocab(reports)
     vec = extract(reports[0], spec)
 
-    # Notable should only set notable tier, not suspicious or hostile.
-    notable_idx = spec.feature_names.index("path:objectives/evasion:notable")
-    assert vec[notable_idx] == 1.0
+    assert vec[spec.feature_names.index("maxcrit:objectives")] == 3.0
+    assert vec[spec.feature_names.index("maxcrit:objectives/evasion")] == 3.0
 
-    # Suspicious and hostile should NOT be set.
-    if "path:objectives/evasion:suspicious" in spec.feature_names:
-        suspicious_idx = spec.feature_names.index("path:objectives/evasion:suspicious")
-        assert vec[suspicious_idx] == 0.0
+
+def test_extract_presence_baseline_only() -> None:
+    """A baseline finding should set presence and maxcrit but at baseline level."""
+    reports = _reports_with_finding("objectives/evasion", "baseline", n=35)
+    spec = build_vocab(reports)
+    vec = extract(reports[0], spec)
+
+    assert vec[spec.feature_names.index("present:objectives")] == 1.0
+    assert vec[spec.feature_names.index("present:objectives/evasion")] == 1.0
+    assert vec[spec.feature_names.index("maxcrit:objectives")] == 2.0  # baseline
+    assert vec[spec.feature_names.index("maxcrit:objectives/evasion")] == 2.0
 
 
 def test_extract_aggregates() -> None:
@@ -184,13 +200,15 @@ def test_extract_aggregates() -> None:
     spec = build_vocab(reports)
     vec = extract(reports[0], spec)
 
-    # attack_max_crit should be 5 (hostile).
-    idx = spec.feature_names.index("agg:attack_max_crit")
+    # max_crit should be 5 (hostile).
+    idx = spec.feature_names.index("agg:max_crit")
     assert vec[idx] == 5.0
 
-    # attack_breadth_notable should be >= 1.
-    idx = spec.feature_names.index("agg:attack_breadth_notable")
-    assert vec[idx] >= 1.0
+    # Concentration: single hostile finding in 1 path = 100%.
+    susp_conc = vec[spec.feature_names.index("agg:suspicious_concentration")]
+    hostile_conc = vec[spec.feature_names.index("agg:hostile_concentration")]
+    assert susp_conc > 0.0
+    assert hostile_conc > 0.0
 
 
 def test_extract_third_party_signals() -> None:
@@ -202,7 +220,7 @@ def test_extract_third_party_signals() -> None:
     vec = extract(report, spec)
 
     idx = spec.feature_names.index("ext:third_party_max_crit")
-    assert vec[idx] == 5.0  # hostile = 5
+    assert vec[idx] == 5.0
 
     idx = spec.feature_names.index("ext:third_party_count")
     assert math.isclose(vec[idx], math.log1p(2), rel_tol=1e-6)
@@ -240,7 +258,6 @@ def test_extract_key_metrics() -> None:
     idx = spec.feature_names.index("metrics:binary_overall_entropy")
     assert vec[idx] == 7.8
 
-    # function_count uses log1p.
     idx = spec.feature_names.index("metrics:binary_function_count")
     assert math.isclose(vec[idx], math.log1p(42), rel_tol=1e-6)
 
@@ -258,7 +275,6 @@ def test_extract_filetype_onehot() -> None:
 
 
 def test_extract_structural() -> None:
-    # Tiny executable: binary < 20KB.
     report = _make_report(file_type="pe", size=5000)
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -266,7 +282,6 @@ def test_extract_structural() -> None:
     idx = spec.feature_names.index("struct:tiny_executable")
     assert vec[idx] == 1.0
 
-    # Non-tiny.
     report_big = _make_report(file_type="pe", size=50000)
     vec_big = extract(report_big, spec)
     assert vec_big[idx] == 0.0
@@ -292,9 +307,9 @@ def test_extract_zero_findings() -> None:
 
 def test_extract_finding_count_log() -> None:
     report = _make_report(findings=[
-        {"id": "a", "crit": "baseline", "conf": 0.5},
-        {"id": "b", "crit": "baseline", "conf": 0.5},
-        {"id": "c", "crit": "baseline", "conf": 0.5},
+        {"id": "a", "crit": "baseline", "conf": 0.9},
+        {"id": "b", "crit": "baseline", "conf": 0.9},
+        {"id": "c", "crit": "baseline", "conf": 0.9},
     ])
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -338,7 +353,6 @@ def test_unknown_path_ignored() -> None:
         {"id": "known/path", "crit": "baseline", "conf": 0.5},
         {"id": "unknown_new/deep/thing", "crit": "hostile", "conf": 1.0},
     ])
-    # Should not crash — unknown paths are just not in path_vocab.
     vec = extract(report_new, spec)
     assert len(vec) == spec.total_features
 
@@ -374,7 +388,7 @@ def test_no_findings_zero_aggregates() -> None:
     report = _make_report()
     spec = build_vocab([report])
     vec = extract(report, spec)
-    assert vec[spec.feature_names.index("agg:attack_max_crit")] == 0.0
+    assert vec[spec.feature_names.index("agg:max_crit")] == 0.0
     assert vec[spec.feature_names.index("struct:zero_findings")] == 1.0
 
 
@@ -390,10 +404,10 @@ def test_feature_spec_save_load(tmp_path) -> None:
     loaded = FeatureSpec.load(path)
 
     assert loaded.total_features == spec.total_features
-    assert loaded.path_vocab == spec.path_vocab
+    assert loaded.presence_vocab == spec.presence_vocab
     assert loaded.filetype_vocab == spec.filetype_vocab
     assert loaded.feature_names == spec.feature_names
-    assert loaded.version == 12
+    assert loaded.version == 13
 
 
 def test_feature_spec_save_load_with_standardization(tmp_path) -> None:
@@ -420,7 +434,6 @@ def test_standardize_with_params() -> None:
     spec.feature_stds = [1.0] * spec.total_features
     X = np.ones((2, spec.total_features), dtype=np.float32)
     result = standardize(X, spec)
-    # All features are dead (mean=0, std=1), so result should be all zeros.
     assert np.allclose(result, 0.0)
 
 
@@ -440,5 +453,4 @@ def test_standardize_basic_arithmetic() -> None:
     spec.feature_stds = [4.0] * n
     X = np.full((1, n), 10.0, dtype=np.float32)
     result = standardize(X, spec)
-    # (10 - 2) / 4 = 2.0
     assert np.allclose(result, 2.0)

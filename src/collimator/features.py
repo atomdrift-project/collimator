@@ -1,33 +1,30 @@
 """Extract fixed-size numeric feature vectors from cleave v3 AnalysisReport JSON.
 
-v12: Path-centric feature extraction using hierarchical binary features.
+v13: Capability-first feature extraction with criticality as gradient signal.
 
-Each finding's subdirectory path is extracted at 1, 2, and 3 levels of depth,
-then paired with criticality tiers (notable, suspicious, hostile) to create
-binary features. For example, a finding at "objectives/evasion/process" with
-crit=hostile produces these binary signals:
+The ML pipeline exists because cleave's criticality judgments are imperfect.
+The model must learn malicious *capability combinations* independently from
+cleave's tier assignments. Cleave is good at identifying what capabilities
+exist; it's less reliable at judging how severe they are. So we give the
+model two complementary views per finding path:
 
-    path:objectives:hostile                    = 1
-    path:objectives:suspicious                 = 1
-    path:objectives:notable                    = 1
-    path:objectives/evasion:hostile             = 1
-    path:objectives/evasion:suspicious          = 1
-    path:objectives/evasion:notable             = 1
-    path:objectives/evasion/process:hostile      = 1
-    path:objectives/evasion/process:suspicious   = 1
-    path:objectives/evasion/process:notable      = 1
+  Presence (binary): "does this capability exist?" — the primary signal for
+  learning malicious combinations. When 91k benign samples also have a path,
+  the model automatically learns to discount it. This works even when cleave
+  gets criticality wrong.
 
-This lets the model learn patterns like "objectives/anti-static:hostile AND
-micro-behaviors/process/injection:suspicious → malware" while ignoring
-sub-notable noise that dominates benign software.
+  Max criticality (ordinal 0-5): "how severe does cleave rate it?" — a
+  gradient signal the model can use when helpful, but can't over-rely on
+  since it's a single value per path rather than 3 binary thresholds.
 
 Feature groups:
-  1. Path × Tier: binary features for hierarchical paths × crit tiers (~500)
-  2. Path Aggregates: attack breadth, context breadth, ratios (8)
-  3. Third-Party / Well-Known Summary: aggregated match signals (6)
-  4. Key Metrics: curated binary/text/PE metrics (16)
-  5. File Type: one-hot (corpus-dependent, ~30-40)
-  6. Structural: anomalies + finding count (4)
+  1. Path Presence: binary features for path existing at any crit ≥ baseline
+  2. Path Max Criticality: ordinal (0-5) per path in presence vocab
+  3. Path Aggregates: breadth, concentration, and ratio signals (12)
+  4. Third-Party / Well-Known Summary: aggregated match signals (6)
+  5. Key Metrics: curated binary/text/PE metrics (16)
+  6. File Type: one-hot (corpus-dependent, ~30-40)
+  7. Structural: anomalies + finding count (4)
 """
 
 from __future__ import annotations
@@ -67,16 +64,12 @@ RISK_ORDINAL: dict[str, int] = {
     "hostile": 5,
 }
 
-# Criticality tiers used for binary path features (ignore below notable).
-TIERS: list[tuple[str, int]] = [
-    ("notable", 3),
-    ("suspicious", 4),
-    ("hostile", 5),
-]
-TIER_ORDINALS: dict[str, int] = {name: ordinal for name, ordinal in TIERS}
-
-# Minimum number of samples a path×tier combo must appear in to get a feature.
+# Minimum number of samples a path must appear in to get a feature.
 MIN_PATH_FREQ = 30
+
+# Minimum confidence for a finding to be included in feature extraction.
+# Low-confidence findings add noise without meaningful signal.
+MIN_CONFIDENCE = 0.65
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
@@ -102,11 +95,6 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
     ("pe", "rsrc_entropy", False),
     ("pe", "rsrc_size", True),
 ]
-
-# Top-level categories that count as "attack" paths for aggregate features.
-_ATTACK_TOPS = frozenset({"objectives"})
-# Top-level categories that count as "context" (benign indicator) paths.
-_CONTEXT_TOPS = frozenset({"metadata"})
 
 
 # ---------------------------------------------------------------------------
@@ -150,12 +138,13 @@ def _finding_paths(finding_id: str) -> list[str]:
 class FeatureSpec:
     """Describes the feature vector layout. Exported for Rust inference parity.
 
-    Version 12: path×tier binary features. path_vocab contains strings like
-    "objectives/evasion/process:hostile" — each is a binary feature.
+    Version 13: capability-first features. Each path in presence_vocab gets
+    two features: a binary presence flag and an ordinal max-criticality value.
+    No path×tier binary features — criticality is a gradient, not a threshold.
     """
 
-    version: int = 12
-    path_vocab: list[str] = field(default_factory=list)
+    version: int = 13
+    presence_vocab: list[str] = field(default_factory=list)
     filetype_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
     total_features: int = 0
@@ -166,7 +155,7 @@ class FeatureSpec:
         path.parent.mkdir(parents=True, exist_ok=True)
         d: dict[str, Any] = {
             "version": self.version,
-            "path_vocab": self.path_vocab,
+            "presence_vocab": self.presence_vocab,
             "filetype_vocab": self.filetype_vocab,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
@@ -184,15 +173,15 @@ class FeatureSpec:
         with open(path) as f:
             data = json.load(f)
         version = data.get("version", 11)
-        if version < 12:
+        if version < 13:
             log.warning(
-                "loading feature spec version %d (expected 12); "
+                "loading feature spec version %d (expected 13); "
                 "models trained with older versions are not compatible",
                 version,
             )
         return cls(
             version=version,
-            path_vocab=data.get("path_vocab", []),
+            presence_vocab=data.get("presence_vocab", []),
             filetype_vocab=data.get("filetype_vocab", []),
             feature_names=data["feature_names"],
             total_features=data["total_features"],
@@ -208,10 +197,15 @@ class FeatureSpec:
 def build_vocab(reports: list[dict[str, Any]]) -> FeatureSpec:
     """Scan all reports to build the feature vocabulary.
 
-    Collects hierarchical path × tier combos with frequency >= MIN_PATH_FREQ,
-    plus all file types.
+    Each path that appears in >= MIN_PATH_FREQ samples gets two features:
+      - present:X  (binary) — capability exists at any crit ≥ baseline
+      - maxcrit:X  (ordinal 0-5) — cleave's max criticality for this path
+
+    This lets the model learn from capability combinations (presence) while
+    optionally using criticality as a gradient signal (maxcrit). No binary
+    tier thresholds — the model decides what criticality levels matter.
     """
-    combo_counts: dict[str, int] = {}
+    presence_counts: dict[str, int] = {}  # path -> sample count
     filetypes: set[str] = set()
 
     for report in reports:
@@ -221,48 +215,52 @@ def build_vocab(reports: list[dict[str, Any]]) -> FeatureSpec:
         if ftype:
             filetypes.add(ftype)
 
-        # Compute per-path max crit for this sample (at all hierarchy levels).
-        sample_paths: dict[str, int] = {}  # path -> max_crit_ord
+        sample_paths: dict[str, int] = {}
         for finding in pf.get("findings") or []:
             fid = finding.get("id", "")
             if not fid:
+                continue
+            if _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
                 continue
             crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
             for path in _finding_paths(fid):
                 if crit_ord > sample_paths.get(path, -1):
                     sample_paths[path] = crit_ord
 
-        # Count which path×tier combos this sample activates.
         for path, max_ord in sample_paths.items():
-            for tier_name, tier_ord in TIERS:
-                if max_ord >= tier_ord:
-                    key = f"{path}:{tier_name}"
-                    combo_counts[key] = combo_counts.get(key, 0) + 1
+            if max_ord >= 2:
+                presence_counts[path] = presence_counts.get(path, 0) + 1
 
-    # Filter by minimum frequency, sort for deterministic ordering.
-    path_vocab = sorted(k for k, c in combo_counts.items() if c >= MIN_PATH_FREQ)
+    presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
     filetype_vocab = sorted(filetypes)
 
-    # Build feature name list.
     feature_names: list[str] = []
 
-    # Group 1: Path × Tier binary features.
-    for combo in path_vocab:
-        feature_names.append(f"path:{combo}")
+    # Group 1: Path Presence — binary (capability exists?).
+    for path in presence_vocab:
+        feature_names.append(f"present:{path}")
 
-    # Group 2: Path Aggregates (8).
+    # Group 2: Path Max Criticality — ordinal 0-5 (cleave's severity gradient).
+    for path in presence_vocab:
+        feature_names.append(f"maxcrit:{path}")
+
+    # Group 3: Path Aggregates (8).
+    # Ratio-based: forces the model to learn from relative concentration of
+    # suspicious behavior rather than absolute counts. A tool with 23 suspicious
+    # findings out of 154 total (15%) looks very different from malware with
+    # 10 suspicious out of 15 total (67%).
     feature_names.extend([
-        "agg:attack_breadth_notable",
-        "agg:attack_breadth_suspicious",
-        "agg:attack_max_crit",
-        "agg:micro_breadth_notable",
-        "agg:context_breadth",
-        "agg:attack_to_context_ratio",
-        "agg:total_active_paths",
-        "agg:supply_chain_signal",
+        "agg:max_crit",                  # highest crit seen (0-5)
+        "agg:category_breadth",          # distinct top-level categories
+        "agg:path_breadth_any",          # log1p of all 3-level paths (any crit)
+        "agg:total_active_paths",        # log1p of notable+ 3-level paths
+        "agg:suspicious_concentration",  # suspicious / all paths
+        "agg:hostile_concentration",     # hostile / all paths
+        "agg:escalation_rate",           # suspicious+ / notable+ (cleave escalation)
+        "agg:notable_only_fraction",     # notable_only / notable+ (how much stays at notable)
     ])
 
-    # Group 3: Third-Party / Well-Known Summary (6).
+    # Group 4: Third-Party / Well-Known Summary (6).
     feature_names.extend([
         "ext:third_party_max_crit",
         "ext:third_party_count",
@@ -272,15 +270,15 @@ def build_vocab(reports: list[dict[str, Any]]) -> FeatureSpec:
         "ext:has_yara_match",
     ])
 
-    # Group 4: Key Metrics (16).
+    # Group 5: Key Metrics (16).
     for group, fname, _ in KEY_METRICS:
         feature_names.append(f"metrics:{group}_{fname}")
 
-    # Group 5: File Type one-hot.
+    # Group 6: File Type one-hot.
     for ft in filetype_vocab:
         feature_names.append(f"filetype:{ft}")
 
-    # Group 6: Structural (4).
+    # Group 7: Structural (4).
     feature_names.extend([
         "struct:tiny_executable",
         "struct:no_imports",
@@ -289,14 +287,16 @@ def build_vocab(reports: list[dict[str, Any]]) -> FeatureSpec:
     ])
 
     spec = FeatureSpec(
-        path_vocab=path_vocab,
+        presence_vocab=presence_vocab,
         filetype_vocab=filetype_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
     )
     log.info(
-        "vocab: %d path×tier combos (>=%d freq), %d filetypes -> %d features (v12 path×tier)",
-        len(path_vocab), MIN_PATH_FREQ, len(filetype_vocab), spec.total_features,
+        "vocab: %d paths (>=%d freq), %d filetypes -> %d features "
+        "(v13 presence+maxcrit)",
+        len(presence_vocab), MIN_PATH_FREQ,
+        len(filetype_vocab), spec.total_features,
     )
     return spec
 
@@ -308,17 +308,13 @@ def build_vocab(reports: list[dict[str, Any]]) -> FeatureSpec:
 class _ExtractContext:
     """Pre-built lookup tables for fast repeated extraction against a spec."""
 
-    __slots__ = ("path_tiers", "n_combos", "ft_lookup", "n_ft", "total_features")
+    __slots__ = ("presence_lookup", "n_paths", "ft_lookup", "n_ft", "total_features")
 
     def __init__(self, spec: FeatureSpec) -> None:
-        # Map path -> [(feature_index, tier_ord)] for fast lookup during extraction.
-        self.path_tiers: dict[str, list[tuple[int, int]]] = defaultdict(list)
-        for i, combo in enumerate(spec.path_vocab):
-            # combo is "objectives/evasion/process:hostile"
-            path, tier_name = combo.rsplit(":", 1)
-            tier_ord = TIER_ORDINALS[tier_name]
-            self.path_tiers[path].append((i, tier_ord))
-        self.n_combos = len(spec.path_vocab)
+        self.presence_lookup: dict[str, int] = {
+            path: i for i, path in enumerate(spec.presence_vocab)
+        }
+        self.n_paths = len(spec.presence_vocab)
         self.ft_lookup = {ft: i for i, ft in enumerate(spec.filetype_vocab)}
         self.n_ft = len(spec.filetype_vocab)
         self.total_features = spec.total_features
@@ -330,14 +326,9 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
     findings = pf.get("findings") or []
     offset = 0
 
-    # -----------------------------------------------------------------------
-    # Group 1: Path × Tier binary features (n_combos features)
-    # -----------------------------------------------------------------------
-    path_offset = offset
-    offset += ctx.n_combos
-
     # Compute per-path max crit at all hierarchy levels.
     sample_paths: dict[str, int] = {}  # path -> max_crit_ord
+    filtered_finding_count = 0
     third_party_max_crit = 0
     third_party_count = 0
     well_known_max_crit = 0
@@ -349,9 +340,11 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
         fid = finding.get("id", "")
         if not fid:
             continue
+        if _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
+            continue
+        filtered_finding_count += 1
         crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
 
-        # Track third_party / well-known for aggregate features.
         top = fid.split("/")[0]
         if top == "third_party":
             third_party_count += 1
@@ -366,66 +359,82 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
             elif crit_ord >= 4:
                 well_known_suspicious += 1
 
-        # Update max crit for each hierarchical path level.
         for path in _finding_paths(fid):
             if crit_ord > sample_paths.get(path, -1):
                 sample_paths[path] = crit_ord
 
-    # Set binary features: 1.0 if sample's max crit for path >= tier threshold.
+    # -----------------------------------------------------------------------
+    # Group 1: Path Presence — binary (does this capability exist?)
+    # -----------------------------------------------------------------------
+    presence_offset = offset
+    offset += ctx.n_paths
+
     for path, max_ord in sample_paths.items():
-        for feat_idx, tier_ord in ctx.path_tiers.get(path, []):
-            if max_ord >= tier_ord:
-                vec[path_offset + feat_idx] = 1.0
+        if max_ord >= 2:  # baseline or above
+            feat_idx = ctx.presence_lookup.get(path)
+            if feat_idx is not None:
+                vec[presence_offset + feat_idx] = 1.0
 
     # -----------------------------------------------------------------------
-    # Group 2: Path Aggregates (8 features)
+    # Group 2: Path Max Criticality — ordinal 0-5 (cleave's severity gradient)
+    # -----------------------------------------------------------------------
+    maxcrit_offset = offset
+    offset += ctx.n_paths
+
+    for path, max_ord in sample_paths.items():
+        feat_idx = ctx.presence_lookup.get(path)
+        if feat_idx is not None:
+            vec[maxcrit_offset + feat_idx] = float(max_ord)
+
+    # -----------------------------------------------------------------------
+    # Group 3: Path Aggregates (8 features) — ratio-based, not counts
     # -----------------------------------------------------------------------
     agg_offset = offset
     offset += 8
 
-    # Compute from raw per-path max crits (3-level paths only for specificity).
-    attack_breadth_notable = 0
-    attack_breadth_suspicious = 0
-    attack_max_crit = 0
-    micro_breadth_notable = 0
-    context_breadth = 0
+    breadth_notable = 0
+    breadth_suspicious = 0
+    breadth_hostile = 0
+    breadth_notable_only = 0
+    max_crit = 0
     total_active = 0
+    categories: set[str] = set()
+    path_breadth_any = 0
 
     for path, max_ord in sample_paths.items():
-        # Only count 3-level paths for aggregates to avoid double-counting.
+        if max_ord >= 2:
+            top = path.split("/")[0]
+            categories.add(top)
+            if path.count("/") >= 2:
+                path_breadth_any += 1
+
         if path.count("/") < 2:
             continue
-        if max_ord < 3:  # below notable — skip
+        if max_ord < 3:
             continue
         total_active += 1
-        top = path.split("/")[0]
-        if top in _ATTACK_TOPS:
-            attack_breadth_notable += 1
-            if max_ord >= 4:
-                attack_breadth_suspicious += 1
-            if max_ord > attack_max_crit:
-                attack_max_crit = max_ord
-        elif top in _CONTEXT_TOPS:
-            context_breadth += 1
-        elif top == "micro-behaviors":
-            micro_breadth_notable += 1
+        breadth_notable += 1
+        if max_ord >= 4:
+            breadth_suspicious += 1
+        if max_ord > max_crit:
+            max_crit = max_ord
+        if max_ord >= 5:
+            breadth_hostile += 1
+        elif max_ord == 3:
+            breadth_notable_only += 1
 
-    vec[agg_offset] = attack_breadth_notable
-    vec[agg_offset + 1] = attack_breadth_suspicious
-    vec[agg_offset + 2] = attack_max_crit
-    vec[agg_offset + 3] = micro_breadth_notable
-    vec[agg_offset + 4] = context_breadth
-    vec[agg_offset + 5] = (
-        attack_breadth_notable / (context_breadth + 1)
-    )
-    vec[agg_offset + 6] = math.log1p(total_active)
-    # Supply chain signal: attack behaviors coexisting with legitimate context.
-    vec[agg_offset + 7] = (
-        attack_breadth_notable * (context_breadth / max(total_active, 1))
-    )
+    vec[agg_offset] = max_crit
+    vec[agg_offset + 1] = len(categories)
+    vec[agg_offset + 2] = math.log1p(path_breadth_any)
+    vec[agg_offset + 3] = math.log1p(total_active)
+    # Concentration ratios — what fraction of behavior is suspicious?
+    vec[agg_offset + 4] = breadth_suspicious / max(path_breadth_any, 1)
+    vec[agg_offset + 5] = breadth_hostile / max(path_breadth_any, 1)
+    vec[agg_offset + 6] = breadth_suspicious / max(breadth_notable, 1)
+    vec[agg_offset + 7] = breadth_notable_only / max(breadth_notable, 1)
 
     # -----------------------------------------------------------------------
-    # Group 3: Third-Party / Well-Known Summary (6 features)
+    # Group 4: Third-Party / Well-Known Summary (6 features)
     # -----------------------------------------------------------------------
     ext_offset = offset
     offset += 6
@@ -438,7 +447,7 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
     vec[ext_offset + 5] = 1.0 if has_yara else 0.0
 
     # -----------------------------------------------------------------------
-    # Group 4: Key Metrics (16 features)
+    # Group 5: Key Metrics (16 features)
     # -----------------------------------------------------------------------
     metrics = pf.get("metrics") or {}
     for group, fname, use_log in KEY_METRICS:
@@ -449,7 +458,7 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
         offset += 1
 
     # -----------------------------------------------------------------------
-    # Group 5: File Type one-hot
+    # Group 6: File Type one-hot
     # -----------------------------------------------------------------------
     idx = ctx.ft_lookup.get(pf.get("file_type", ""))
     if idx is not None:
@@ -457,17 +466,17 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
     offset += ctx.n_ft
 
     # -----------------------------------------------------------------------
-    # Group 6: Structural (4 features)
+    # Group 7: Structural (4 features)
     # -----------------------------------------------------------------------
     file_size = pf.get("size", 0)
     file_type = pf.get("file_type", "")
     is_binary = file_type in ("pe", "elf", "macho")
     imports = pf.get("imports") or []
 
-    vec[offset] = 1.0 if (is_binary and file_size < 20000) else 0.0  # tiny_executable
-    vec[offset + 1] = 1.0 if len(imports) == 0 else 0.0  # no_imports
-    vec[offset + 2] = 1.0 if len(findings) == 0 else 0.0  # zero_findings
-    vec[offset + 3] = math.log1p(len(findings))  # finding_count_log
+    vec[offset] = 1.0 if (is_binary and file_size < 20000) else 0.0
+    vec[offset + 1] = 1.0 if len(imports) == 0 else 0.0
+    vec[offset + 2] = 1.0 if filtered_finding_count == 0 else 0.0
+    vec[offset + 3] = math.log1p(filtered_finding_count)
     offset += 4
 
 

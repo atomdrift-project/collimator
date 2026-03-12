@@ -8,7 +8,7 @@ import logging
 import sys
 from pathlib import Path
 
-from . import data, explain, export, features, inspect, train, traits, verify
+from . import data, explain, export, features, inspect, thresholds, train, traits, verify
 
 
 def setup_logging() -> None:
@@ -25,10 +25,11 @@ def cmd_train(args: argparse.Namespace) -> None:
     out_dir = Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load samples.
-    samples = data.load_samples(db_path)
+    # Load samples, excluding the deterministic test set.
+    all_samples = data.load_samples(db_path)
+    samples, test_samples = data.split_train_test(all_samples)
     if len(samples) < 10:
-        print(f"ERROR: only {len(samples)} samples, need at least 10")
+        print(f"ERROR: only {len(samples)} training samples, need at least 10")
         sys.exit(1)
 
     # Build vocabulary and extract features.
@@ -379,6 +380,12 @@ def main() -> None:
     )
     p_traits.add_argument("--output", default=None, help="Optional JSON output path")
 
+    # thresholds
+    p_thresh = subparsers.add_parser(
+        "thresholds", help="Show accuracy at various confidence thresholds",
+    )
+    p_thresh.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+
     args = parser.parse_args()
 
     if args.command == "train":
@@ -430,6 +437,8 @@ def main() -> None:
             top_n=args.top,
             output_path=Path(args.output) if args.output else None,
         )
+    elif args.command == "thresholds":
+        thresholds.show_thresholds(db_path=Path(args.db))
 
 
 if __name__ == "__main__":
