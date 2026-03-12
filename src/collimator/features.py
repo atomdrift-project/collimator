@@ -143,6 +143,7 @@ class FeatureSpec:
     No path×tier binary features — criticality is a gradient, not a threshold.
     """
 
+    # NOTE: bumping this version requires a matching update in ../collimator (Rust).
     version: int = 13
     presence_vocab: list[str] = field(default_factory=list)
     filetype_vocab: list[str] = field(default_factory=list)

@@ -31,16 +31,16 @@ evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
 
 explain: venv check-db
-	$(PYTHON) -m collimator explain --db $(DB) --model $(OUT_DIR)/model.pt --spec $(OUT_DIR)/feature_spec.json --output $(OUT_DIR)
+	$(PYTHON) -m collimator explain --db $(DB) --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json --output $(OUT_DIR)
 
 inspect: venv check-db
 ifndef SAMPLE
 	$(error SAMPLE is required. Usage: make inspect DB=... SAMPLE=<sha256>)
 endif
-	$(PYTHON) -m collimator inspect --db $(DB) --sample $(SAMPLE) --model $(OUT_DIR)/model.pt --spec $(OUT_DIR)/feature_spec.json
+	$(PYTHON) -m collimator inspect --db $(DB) --sample $(SAMPLE) --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json
 
 errors: venv check-db
-	$(PYTHON) -m collimator errors --db $(DB) --model $(OUT_DIR)/model.pt --spec $(OUT_DIR)/feature_spec.json
+	$(PYTHON) -m collimator errors --db $(DB) --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json
 
 traits: venv check-db
 	$(PYTHON) -m collimator traits --db $(DB)
@@ -49,13 +49,13 @@ thresholds: venv check-db
 	$(PYTHON) -m collimator thresholds --db $(DB)
 
 verify: venv
-	$(PYTHON) -m collimator verify --model $(OUT_DIR)/model.pt --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE)
+	$(PYTHON) -m collimator verify --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE)
 
 scan: venv
 ifndef FILE
 	$(error FILE is required. Usage: make scan FILE=/path/to/binary)
 endif
-	$(PYTHON) -m collimator scan $(FILE) --model $(OUT_DIR)/model.pt --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE) $(if $(DB),--db $(DB),)
+	$(PYTHON) -m collimator scan $(FILE) --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE) $(if $(DB),--db $(DB),)
 
 test: venv
 	$(VENV_DIR)/bin/pip install pytest
