@@ -309,11 +309,11 @@ def train(
     print(f"  {'':>20}  {'Count':>6}  {'Rate':>8}")
     print(f"  {'-' * 40}")
     if n_eval_malware:
-        print(f"  {'True Positives':>20}  {tp:>6}  {tp / n_eval_malware:>8.1%}")
-        print(f"  {'False Negatives':>20}  {fn:>6}  {fn / n_eval_malware:>8.1%}")
+        print(f"  {'True Positives':>20}  {tp:>6}  {tp / n_eval_malware:>8.2%}")
+        print(f"  {'False Negatives':>20}  {fn:>6}  {fn / n_eval_malware:>8.2%}")
     if n_eval_benign:
-        print(f"  {'True Negatives':>20}  {tn:>6}  {tn / n_eval_benign:>8.1%}")
-        print(f"  {'False Positives':>20}  {fp:>6}  {fp / n_eval_benign:>8.1%}")
+        print(f"  {'True Negatives':>20}  {tn:>6}  {tn / n_eval_benign:>8.2%}")
+        print(f"  {'False Positives':>20}  {fp:>6}  {fp / n_eval_benign:>8.2%}")
     print(f"{'=' * 50}")
 
     return TrainResult(
