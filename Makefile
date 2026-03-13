@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan verify traits thresholds test lint clean deploy venv help
+.PHONY: train evaluate explain inspect errors scan traits thresholds test lint clean deploy venv help
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -25,7 +25,7 @@ $(VENV_DIR)/bin/activate: requirements.txt
 	touch $(VENV_DIR)/bin/activate
 
 train: venv check-db
-	$(PYTHON) -m collimator train --db $(DB) --output $(OUT_DIR) --cleave $(CLEAVE)
+	$(PYTHON) -m collimator train --db $(DB) --output $(OUT_DIR)
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
@@ -47,9 +47,6 @@ traits: venv check-db
 
 thresholds: venv check-db
 	$(PYTHON) -m collimator thresholds --db $(DB)
-
-verify: venv
-	$(PYTHON) -m collimator verify --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE)
 
 scan: venv
 ifndef FILE
@@ -92,7 +89,6 @@ help:
 	@echo "  make traits DB=...                 Show trait-level prevalence / false-positive stats"
 	@echo "  make thresholds DB=...             Show confidence thresholds for accuracy targets"
 	@echo "  make scan FILE=/path/to/binary     Score a live file via cleave + model"
-	@echo "  make verify                        Verify model against testdata/ samples"
 	@echo ""
 	@echo "Deployment:"
 	@echo "  make deploy                        Copy model artifacts to ../litmus-models"

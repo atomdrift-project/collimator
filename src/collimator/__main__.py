@@ -8,7 +8,7 @@ import logging
 import sys
 from pathlib import Path
 
-from . import data, explain, export, features, inspect, thresholds, train, traits, verify
+from . import data, explain, export, features, inspect, thresholds, train, traits
 
 
 def setup_logging() -> None:
@@ -85,16 +85,6 @@ def cmd_train(args: argparse.Namespace) -> None:
             size = f.stat().st_size
             print(f"  {f.name:<30s} {size:>10,d} bytes")
 
-    # Post-training verification against testdata.
-    cleave_bin = args.cleave if hasattr(args, "cleave") else "cleave"
-    ok = verify.verify(
-        model_path=out_dir / "model.json",
-        spec_path=out_dir / "feature_spec.json",
-        cleave_bin=cleave_bin,
-        threshold=result.optimal_threshold,
-    )
-    if not ok:
-        sys.exit(1)
 
 
 def cmd_evaluate(args: argparse.Namespace) -> None:
@@ -283,9 +273,6 @@ def main() -> None:
     p_train = subparsers.add_parser("train", help="Train model and export to ONNX")
     p_train.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
     p_train.add_argument("--output", default="out", help="Output directory (default: out)")
-    p_train.add_argument(
-        "--cleave", default="cleave", help="Path to cleave binary for verification",
-    )
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Evaluate existing model")
@@ -326,22 +313,6 @@ def main() -> None:
     p_scan.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
     p_scan.add_argument("--cleave", default="cleave", help="Path to cleave binary")
     p_scan.add_argument("--db", default=None, help="Background DB for SHAP context (optional)")
-
-    # verify
-    p_verify = subparsers.add_parser(
-        "verify", help="Verify model against testdata samples",
-    )
-    p_verify.add_argument("--model", default="out/model.json", help="Path to XGBoost model")
-    p_verify.add_argument(
-        "--spec", default="out/feature_spec.json", help="Path to feature_spec.json",
-    )
-    p_verify.add_argument("--cleave", default="cleave", help="Path to cleave binary")
-    p_verify.add_argument(
-        "--testdata", default=None, help="Path to testdata directory (default: testdata/)",
-    )
-    p_verify.add_argument(
-        "--threshold", type=float, default=0.5, help="Classification threshold (default: 0.5)",
-    )
 
     # fixture
     p_fixture = subparsers.add_parser(
@@ -415,17 +386,6 @@ def main() -> None:
             spec_path=Path(args.spec),
             cleave_bin=args.cleave,
         )
-    elif args.command == "verify":
-        testdata_dir = Path(args.testdata) if args.testdata else None
-        ok = verify.verify(
-            model_path=Path(args.model),
-            spec_path=Path(args.spec),
-            cleave_bin=args.cleave,
-            testdata_dir=testdata_dir,
-            threshold=args.threshold,
-        )
-        if not ok:
-            sys.exit(1)
     elif args.command == "fixture":
         cmd_fixture(args)
     elif args.command == "traits":

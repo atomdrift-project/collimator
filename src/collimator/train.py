@@ -287,6 +287,11 @@ def train(
     y_binary = (eval_preds > optimal_threshold).astype(int)
     cm = confusion_matrix(eval_y, y_binary).tolist()
 
+    # cm layout: [[TN, FP], [FN, TP]]
+    tn, fp, fn, tp = cm[0][0], cm[0][1], cm[1][0], cm[1][1]
+    n_eval_benign = tn + fp
+    n_eval_malware = tp + fn
+
     print(f"\n{'=' * 50}")
     print("TRAINING RESULTS")
     print(f"{'=' * 50}")
@@ -300,6 +305,15 @@ def train(
     print(f"Precision:   {metrics['precision']:.4f}")
     print(f"Recall:      {metrics['recall']:.4f}")
     print(f"Threshold:   {optimal_threshold:.3f}")
+    print(f"{'-' * 50}")
+    print(f"  {'':>20}  {'Count':>6}  {'Rate':>8}")
+    print(f"  {'-' * 40}")
+    if n_eval_malware:
+        print(f"  {'True Positives':>20}  {tp:>6}  {tp / n_eval_malware:>8.1%}")
+        print(f"  {'False Negatives':>20}  {fn:>6}  {fn / n_eval_malware:>8.1%}")
+    if n_eval_benign:
+        print(f"  {'True Negatives':>20}  {tn:>6}  {tn / n_eval_benign:>8.1%}")
+        print(f"  {'False Positives':>20}  {fp:>6}  {fp / n_eval_benign:>8.1%}")
     print(f"{'=' * 50}")
 
     return TrainResult(
