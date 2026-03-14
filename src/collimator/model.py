@@ -83,5 +83,8 @@ def load_model(model_path: Path) -> xgb.XGBClassifier:
 
 def predict_proba(model: xgb.XGBClassifier, X: np.ndarray) -> np.ndarray:
     """Return malware probability for each sample."""
-    proba = model.predict_proba(X)
-    return proba[:, 1] if proba.ndim > 1 else proba
+    # Use DMatrix to avoid device-mismatch warning when model is on GPU.
+    dmat = xgb.DMatrix(X)
+    raw = model.get_booster().predict(dmat, output_margin=True)
+    # Sigmoid to convert log-odds to probability.
+    return 1.0 / (1.0 + np.exp(-raw))
