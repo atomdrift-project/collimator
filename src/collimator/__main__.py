@@ -8,6 +8,8 @@ import logging
 import sys
 from pathlib import Path
 
+import numpy as np
+
 from . import data, explain, export, features, inspect, thresholds, train, traits
 
 
@@ -60,31 +62,40 @@ def cmd_train(args: argparse.Namespace) -> None:
         output_path=out_dir / "evaluation.json",
     )
 
-    # Standardize feature data for ONNX validation and SHAP.
-    X_std = features.standardize(X, spec)
+    # Post-training steps only need small dense subsets — avoid densifying
+    # the full sparse matrix to keep memory low.
+    rng = np.random.default_rng(42)
 
-    # Validate ONNX.
+    # Validate ONNX (100 samples).
+    onnx_idx = rng.choice(X.shape[0], min(100, X.shape[0]), replace=False)
     if not export.validate_onnx(
-        result.model, out_dir / "model.onnx", spec.total_features, X=X_std,
+        result.model, out_dir / "model.onnx", spec.total_features,
+        X=features.standardize(X[onnx_idx], spec),
     ):
         print("WARNING: ONNX validation failed")
         sys.exit(1)
 
-    # SHAP analysis on standardized data.
+    # SHAP analysis (200 samples).
+    shap_idx = rng.choice(X.shape[0], min(200, X.shape[0]), replace=False)
     explain.compute_shap_importance(
-        result.model, X_std, spec,
+        result.model, features.standardize(X[shap_idx], spec), spec,
         output_path=out_dir / "shap_importance.json",
     )
 
-    # Cross-language test fixtures for xgboost-native.
-    generate_fixtures(result.model, spec, X, X_std, out_dir)
+    # Cross-language test fixtures (10 samples).
+    fix_idx = rng.choice(X.shape[0], min(10, X.shape[0]), replace=False)
+    fix_idx.sort()
+    generate_fixtures(
+        result.model, spec,
+        X[fix_idx].toarray(), features.standardize(X[fix_idx], spec),
+        out_dir,
+    )
 
     print(f"\nOutput files in {out_dir}/:")
     for f in sorted(out_dir.iterdir()):
         if f.is_file():
             size = f.stat().st_size
             print(f"  {f.name:<30s} {size:>10,d} bytes")
-
 
 
 def cmd_evaluate(args: argparse.Namespace) -> None:
@@ -250,11 +261,16 @@ def cmd_fixture(args: argparse.Namespace) -> None:
 
     reports = [s.report for s in samples]
     labels = [s.label for s in samples]
-    X_raw, _ = features.extract_all(reports, labels, spec)
-    X_std = features.standardize(X_raw, spec)
+    X, _ = features.extract_all(reports, labels, spec)
+
+    # Only densify the small subset needed for fixtures.
+    rng = np.random.default_rng(42)
+    idx = rng.choice(X.shape[0], min(args.n_samples, X.shape[0]), replace=False)
+    idx.sort()
 
     generate_fixtures(
-        model, spec, X_raw, X_std,
+        model, spec,
+        X[idx].toarray(), features.standardize(X[idx], spec),
         out_dir=Path(args.output),
         n_samples=args.n_samples,
     )

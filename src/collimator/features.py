@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import scipy.sparse as sp
 
 log = logging.getLogger(__name__)
 
@@ -496,32 +497,52 @@ def extract_all(
     reports: list[dict[str, Any]],
     labels: list[int],
     spec: FeatureSpec,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Extract feature vectors for all samples."""
+) -> tuple[sp.csr_matrix, np.ndarray]:
+    """Extract feature vectors for all samples as a sparse CSR matrix."""
     n = len(reports)
-    X = np.zeros((n, spec.total_features), dtype=np.float32)
     y = np.array(labels, dtype=np.float32)
 
     ctx = _ExtractContext(spec)
-    for i, report in enumerate(reports):
-        _extract_into(report, ctx, X[i])
+    rows: list[int] = []
+    cols: list[int] = []
+    vals: list[float] = []
+    vec = np.zeros(spec.total_features, dtype=np.float32)
 
-    log.info("extracted %d samples x %d features", n, spec.total_features)
+    for i, report in enumerate(reports):
+        vec[:] = 0.0
+        _extract_into(report, ctx, vec)
+        nz = np.nonzero(vec)[0]
+        rows.extend([i] * len(nz))
+        cols.extend(nz.tolist())
+        vals.extend(vec[nz].tolist())
+
+    X = sp.csr_matrix(
+        (np.array(vals, dtype=np.float32),
+         (np.array(rows, dtype=np.int32), np.array(cols, dtype=np.int32))),
+        shape=(n, spec.total_features),
+    )
+    log.info(
+        "extracted %d samples x %d features (nnz=%d, density=%.1f%%)",
+        n, spec.total_features, X.nnz,
+        100.0 * X.nnz / max(n * spec.total_features, 1),
+    )
     return X, y
 
 
-def standardize(X: np.ndarray, spec: FeatureSpec) -> np.ndarray:
+def standardize(X: np.ndarray | sp.spmatrix, spec: FeatureSpec) -> np.ndarray:
     """Apply z-score standardization using training statistics.
 
     Works on single vectors (1D) and batches (2D) via numpy broadcasting.
+    Accepts sparse input (densifies it — call on small subsets only).
     Features that were constant during training (mean=0, std=1) are zeroed
     out to prevent catastrophic misclassification from unseen raw values.
     """
     if spec.feature_means is None or spec.feature_stds is None:
-        return X
+        return X.toarray() if sp.issparse(X) else X  # type: ignore[union-attr]
     means = np.array(spec.feature_means, dtype=np.float32)
     stds = np.array(spec.feature_stds, dtype=np.float32)
-    result = (X - means) / stds
+    dense = X.toarray() if sp.issparse(X) else X  # type: ignore[union-attr]
+    result = (dense - means) / stds
     dead = (means == 0.0) & (stds == 1.0)
     result[..., dead] = 0.0
     return result

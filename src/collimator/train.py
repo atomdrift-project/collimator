@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass, field
 
 import numpy as np
+import scipy.sparse as sp
 import xgboost as xgb
 from sklearn.metrics import (
     accuracy_score,
@@ -103,7 +104,7 @@ def _optimal_threshold(
 
 
 def train(
-    X: np.ndarray,
+    X: np.ndarray | sp.spmatrix,
     y: np.ndarray,
     config: TrainConfig | None = None,
     feature_names: list[str] | None = None,
@@ -159,14 +160,32 @@ def train(
     # --- Standardization ---
     # Kept for pipeline compatibility (Rust inference applies it).
     # Trees don't benefit from standardization, but it doesn't hurt.
-    feature_means = X_tv.mean(axis=0).astype(np.float32)
-    feature_stds = X_tv.std(axis=0).astype(np.float32)
+    if sp.issparse(X_tv):
+        feature_means = np.asarray(X_tv.mean(axis=0), dtype=np.float32).ravel()
+        # Var = E[X^2] - E[X]^2, computed without densifying the full matrix.
+        X_tv_sq = X_tv.copy()
+        X_tv_sq.data **= 2
+        variance = (
+            np.asarray(X_tv_sq.mean(axis=0), dtype=np.float32).ravel()
+            - feature_means ** 2
+        )
+        del X_tv_sq
+        feature_stds = np.sqrt(np.maximum(variance, 0)).astype(np.float32)
+        del variance
+    else:
+        feature_means = X_tv.mean(axis=0).astype(np.float32)
+        feature_stds = X_tv.std(axis=0).astype(np.float32)
     feature_stds[feature_stds < 1e-7] = 1.0
 
-    X_tv_std = ((X_tv - feature_means) / feature_stds).astype(np.float32)
+    # Standardize to dense for training — XGBoost handles the memory internally.
+    X_tv_dense = X_tv.toarray() if sp.issparse(X_tv) else X_tv
+    X_tv_std = ((X_tv_dense - feature_means) / feature_stds).astype(np.float32)
+    del X_tv_dense
     X_holdout_std = None
     if X_holdout is not None:
-        X_holdout_std = ((X_holdout - feature_means) / feature_stds).astype(np.float32)
+        X_ho_dense = X_holdout.toarray() if sp.issparse(X_holdout) else X_holdout
+        X_holdout_std = ((X_ho_dense - feature_means) / feature_stds).astype(np.float32)
+        del X_ho_dense
 
     dead_mask = (feature_means == 0.0) & (feature_stds == 1.0)
     n_dead = int(np.sum(dead_mask))

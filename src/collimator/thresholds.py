@@ -37,9 +37,9 @@ def show_thresholds(db_path: Path) -> None:
     test_labels = [s.label for s in test_samples]
     X_test, y_test = features.extract_all(test_reports, test_labels, spec)
 
-    means = np.array(result.feature_means, dtype=np.float32)
-    stds = np.array(result.feature_stds, dtype=np.float32)
-    X_test_std = ((X_test - means) / stds).astype(np.float32)
+    spec.feature_means = result.feature_means
+    spec.feature_stds = result.feature_stds
+    X_test_std = features.standardize(X_test, spec)
 
     probs = predict_proba(result.model, X_test_std)
 

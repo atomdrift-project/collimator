@@ -9,16 +9,37 @@ Gradient-boosted trees are the right model for this data:
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import numpy as np
 import xgboost as xgb
+
+log = logging.getLogger(__name__)
+
+_device_cache: str | None = None
+
+
+def detect_device() -> str:
+    """Return 'cuda' if XGBoost GPU support is available, else 'cpu'."""
+    global _device_cache
+    if _device_cache is not None:
+        return _device_cache
+    try:
+        dmat = xgb.DMatrix(np.zeros((1, 1), dtype=np.float32))
+        xgb.Booster({"device": "cuda"}, [dmat])
+        _device_cache = "cuda"
+    except xgb.core.XGBoostError:
+        _device_cache = "cpu"
+    log.info("xgboost device: %s", _device_cache)
+    return _device_cache
 
 
 def create_classifier(
     n_benign: int,
     n_malware: int,
     *,
+    device: str | None = None,
     n_estimators: int = 1000,
     max_depth: int = 6,
     learning_rate: float = 0.05,
@@ -31,6 +52,8 @@ def create_classifier(
     reg_lambda: float = 1.0,
 ) -> xgb.XGBClassifier:
     """Create an XGBoost classifier with defaults tuned for malware detection."""
+    if device is None:
+        device = detect_device()
     return xgb.XGBClassifier(
         objective="binary:logistic",
         eval_metric="aucpr",
@@ -45,6 +68,7 @@ def create_classifier(
         reg_lambda=reg_lambda,
         scale_pos_weight=n_benign / max(n_malware, 1),
         tree_method="hist",
+        device=device,
         random_state=42,
         early_stopping_rounds=early_stopping_rounds,
     )
