@@ -50,33 +50,33 @@ def load_samples(db_path: Path) -> list[Sample]:
     )
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
-    try:
-        rows = conn.execute(query, tuple(sorted(ALL_TERMINAL))).fetchall()
-    finally:
-        conn.close()
+    log.info("loading samples from %s", db_path)
 
     samples: list[Sample] = []
     skipped = 0
-    for row in rows:
-        cleave_json = row["cleave_json"]
-        if not cleave_json:
-            skipped += 1
-            continue
+    try:
+        for row in conn.execute(query, tuple(sorted(ALL_TERMINAL))):
+            cleave_json = row["cleave_json"]
+            if not cleave_json:
+                skipped += 1
+                continue
 
-        try:
-            report = json.loads(cleave_json)
-        except json.JSONDecodeError:
-            log.warning("invalid JSON for %s, skipping", row["sha256"])
-            skipped += 1
-            continue
+            try:
+                report = json.loads(cleave_json)
+            except json.JSONDecodeError:
+                log.warning("invalid JSON for %s, skipping", row["sha256"])
+                skipped += 1
+                continue
 
-        label = 1 if row["status"] in MALWARE_STATUSES else 0
-        samples.append(Sample(
-            sha256=row["sha256"],
-            path=row["path"],
-            label=label,
-            report=report,
-        ))
+            label = 1 if row["status"] in MALWARE_STATUSES else 0
+            samples.append(Sample(
+                sha256=row["sha256"],
+                path=row["path"],
+                label=label,
+                report=report,
+            ))
+    finally:
+        conn.close()
 
     n_malware = sum(1 for s in samples if s.label == 1)
     n_benign = len(samples) - n_malware
