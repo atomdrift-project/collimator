@@ -127,10 +127,20 @@ def train(
     n_malware = int(np.sum(y == 1))
     n_benign = int(np.sum(y == 0))
 
-    log.info(
-        "training: %d samples (%d malware, %d benign), %d features",
-        len(y), n_malware, n_benign, n_features,
-    )
+    if sp.issparse(X):
+        mem_mb = (X.data.nbytes + X.indices.nbytes + X.indptr.nbytes) / 1024 / 1024
+        log.info(
+            "training: %d samples (%d malware, %d benign), %d features, "
+            "sparse nnz=%d density=%.1f%% mem=%.0fMB",
+            len(y), n_malware, n_benign, n_features,
+            X.nnz, 100.0 * X.nnz / max(len(y) * n_features, 1), mem_mb,
+        )
+    else:
+        mem_mb = X.nbytes / 1024 / 1024
+        log.info(
+            "training: %d samples (%d malware, %d benign), %d features, dense mem=%.0fMB",
+            len(y), n_malware, n_benign, n_features, mem_mb,
+        )
 
     # --- Holdout split ---
     n_min_class = min(n_malware, n_benign)
