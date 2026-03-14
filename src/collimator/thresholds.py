@@ -12,7 +12,7 @@ from .model import predict_proba
 
 log = logging.getLogger(__name__)
 
-ACCURACY_TARGETS = [0.80, 0.90, 0.98, 0.99, 0.999, 0.9999, 0.99999]
+ACCURACY_TARGETS = [0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 0.99999]
 
 
 def show_thresholds(db_path: Path) -> None:
@@ -41,15 +41,19 @@ def show_thresholds(db_path: Path) -> None:
         return
 
     probs = predict_proba(result.model, X_test)
+    print_threshold_table(probs, y_test)
 
-    n_benign = int(np.sum(y_test == 0))
-    n_malware = int(np.sum(y_test == 1))
 
-    print(f"\nTest set: {len(y_test)} samples ({n_malware} malware, {n_benign} benign)")
+def print_threshold_table(probs: np.ndarray, y: np.ndarray) -> None:
+    """Print the hostile/benign threshold table for a set of predictions."""
+    n_benign = int(np.sum(y == 0))
+    n_malware = int(np.sum(y == 1))
+
+    print(f"\nTest set: {len(y)} samples ({n_malware} malware, {n_benign} benign)")
 
     # --- Hostile thresholds (calling something malware) ---
     print(f"\n{'HOSTILE':=^60}")
-    print(f"  Threshold to call a sample malware (score >= threshold)")
+    print("  Threshold to call a sample malware (score >= threshold)")
     print(f"  {'Accuracy':<12} {'Threshold':>10} {'Correct':>10} {'Wrong':>8} {'Total':>8}")
     print(f"  {'-'*50}")
 
@@ -61,7 +65,7 @@ def show_thresholds(db_path: Path) -> None:
             n = int(mask.sum())
             if n == 0:
                 continue
-            correct = int(((probs >= t) & (y_test == 1)).sum())
+            correct = int(((probs >= t) & (y == 1)).sum())
             acc = correct / n
             if acc >= target:
                 best_t = t
@@ -78,7 +82,7 @@ def show_thresholds(db_path: Path) -> None:
 
     # --- Benign thresholds (calling something safe) ---
     print(f"\n{'BENIGN':=^60}")
-    print(f"  Threshold to call a sample benign (score < threshold)")
+    print("  Threshold to call a sample benign (score < threshold)")
     print(f"  {'Accuracy':<12} {'Threshold':>10} {'Correct':>10} {'Wrong':>8} {'Total':>8}")
     print(f"  {'-'*50}")
 
@@ -90,7 +94,7 @@ def show_thresholds(db_path: Path) -> None:
             n = int(mask.sum())
             if n == 0:
                 continue
-            correct = int(((probs < t) & (y_test == 0)).sum())
+            correct = int(((probs < t) & (y == 0)).sum())
             acc = correct / n
             if acc >= target:
                 best_t = t

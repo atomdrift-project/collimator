@@ -94,6 +94,18 @@ def cmd_train(args: argparse.Namespace) -> None:
     X_fix = X[fix_idx].toarray()
     generate_fixtures(result.model, spec, X_fix, X_fix, out_dir)
 
+    # Threshold table on the deterministic test set.
+    log.info("pass 3: scoring test set for threshold table")
+    X_test, y_test = features.extract_stream(
+        data.stream_reports(db_path, only_test=True), spec,
+    )
+    if X_test.shape[0] > 0:
+        from .model import predict_proba
+        test_probs = predict_proba(result.model, X_test)
+        thresholds.print_threshold_table(test_probs, y_test)
+    else:
+        print("\nNo test samples — skipping threshold table.")
+
     print(f"\nOutput files in {out_dir}/:")
     for f in sorted(out_dir.iterdir()):
         if f.is_file():
