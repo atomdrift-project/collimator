@@ -37,11 +37,7 @@ def show_thresholds(db_path: Path) -> None:
     test_labels = [s.label for s in test_samples]
     X_test, y_test = features.extract_all(test_reports, test_labels, spec)
 
-    spec.feature_means = result.feature_means
-    spec.feature_stds = result.feature_stds
-    X_test_std = features.standardize(X_test, spec)
-
-    probs = predict_proba(result.model, X_test_std)
+    probs = predict_proba(result.model, X_test)
 
     n_benign = int(np.sum(y_test == 0))
     n_malware = int(np.sum(y_test == 1))

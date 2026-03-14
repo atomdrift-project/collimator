@@ -152,6 +152,9 @@ class FeatureSpec:
     total_features: int = 0
     feature_means: list[float] | None = None
     feature_stds: list[float] | None = None
+    # Whether the model was trained on standardized features. When False,
+    # inference should use raw features directly (no z-score transform).
+    standardized: bool = False
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -162,6 +165,7 @@ class FeatureSpec:
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
+        d["standardized"] = self.standardized
         if self.feature_means is not None:
             d["feature_means"] = self.feature_means
         if self.feature_stds is not None:
@@ -189,6 +193,7 @@ class FeatureSpec:
             total_features=data["total_features"],
             feature_means=data.get("feature_means"),
             feature_stds=data.get("feature_stds"),
+            standardized=data.get("standardized", True),
         )
 
 

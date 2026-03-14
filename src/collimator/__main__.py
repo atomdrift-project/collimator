@@ -66,30 +66,29 @@ def cmd_train(args: argparse.Namespace) -> None:
     # the full sparse matrix to keep memory low.
     rng = np.random.default_rng(42)
 
+    def _dense_subset(n: int) -> np.ndarray:
+        idx = rng.choice(X.shape[0], min(n, X.shape[0]), replace=False)
+        return X[idx].toarray()
+
     # Validate ONNX (100 samples).
-    onnx_idx = rng.choice(X.shape[0], min(100, X.shape[0]), replace=False)
     if not export.validate_onnx(
         result.model, out_dir / "model.onnx", spec.total_features,
-        X=features.standardize(X[onnx_idx], spec),
+        X=_dense_subset(100),
     ):
         print("WARNING: ONNX validation failed")
         sys.exit(1)
 
     # SHAP analysis (200 samples).
-    shap_idx = rng.choice(X.shape[0], min(200, X.shape[0]), replace=False)
     explain.compute_shap_importance(
-        result.model, features.standardize(X[shap_idx], spec), spec,
+        result.model, _dense_subset(200), spec,
         output_path=out_dir / "shap_importance.json",
     )
 
     # Cross-language test fixtures (10 samples).
     fix_idx = rng.choice(X.shape[0], min(10, X.shape[0]), replace=False)
     fix_idx.sort()
-    generate_fixtures(
-        result.model, spec,
-        X[fix_idx].toarray(), features.standardize(X[fix_idx], spec),
-        out_dir,
-    )
+    X_fix = X[fix_idx].toarray()
+    generate_fixtures(result.model, spec, X_fix, X_fix, out_dir)
 
     print(f"\nOutput files in {out_dir}/:")
     for f in sorted(out_dir.iterdir()):
@@ -109,7 +108,10 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     reports = [s.report for s in samples]
     labels = [s.label for s in samples]
     X, y = features.extract_all(reports, labels, spec)
-    X = features.standardize(X, spec)
+    if spec.standardized:
+        X = features.standardize(X, spec)
+    else:
+        X = X.toarray() if hasattr(X, 'toarray') else X
 
     try:
         import onnxruntime as ort
@@ -167,7 +169,10 @@ def cmd_explain(args: argparse.Namespace) -> None:
     reports = [s.report for s in samples]
     labels = [s.label for s in samples]
     X, y = features.extract_all(reports, labels, spec)
-    X = features.standardize(X, spec)
+    if spec.standardized:
+        X = features.standardize(X, spec)
+    else:
+        X = X.toarray() if hasattr(X, 'toarray') else X
 
     model = load_model(model_path)
 
@@ -268,9 +273,11 @@ def cmd_fixture(args: argparse.Namespace) -> None:
     idx = rng.choice(X.shape[0], min(args.n_samples, X.shape[0]), replace=False)
     idx.sort()
 
+    X_fix = X[idx].toarray()
+    X_fix_std = features.standardize(X[idx], spec) if spec.standardized else X_fix
+
     generate_fixtures(
-        model, spec,
-        X[idx].toarray(), features.standardize(X[idx], spec),
+        model, spec, X_fix, X_fix_std,
         out_dir=Path(args.output),
         n_samples=args.n_samples,
     )

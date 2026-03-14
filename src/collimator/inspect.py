@@ -104,7 +104,7 @@ def inspect_sample(
     report = json.loads(row["cleave_json"])
     pf = primary_file(report)
     vec_raw = extract(report, spec)
-    vec = standardize(vec_raw, spec)
+    vec = standardize(vec_raw, spec) if spec.standardized else vec_raw
     prob = _predict(model, vec)
 
     print(f"Sample:      {row['sha256']}")
@@ -115,7 +115,7 @@ def inspect_sample(
     print(f"Findings:    {len(pf.get('findings') or [])}")
 
     _print_feature_vector(vec_raw, spec)
-    _print_shap_breakdown(model, vec, spec, vec_raw=vec_raw)
+    _print_shap_breakdown(model, vec, spec, vec_raw=vec_raw if spec.standardized else None)
 
 
 def inspect_errors(
@@ -138,7 +138,7 @@ def inspect_errors(
     vecs_raw = np.array(
         [extract(s.report, spec) for s in samples], dtype=np.float32,
     )
-    vecs = standardize(vecs_raw, spec)
+    vecs = standardize(vecs_raw, spec) if spec.standardized else vecs_raw
     probs = predict_proba(model, vecs)
 
     false_positives = []
@@ -210,7 +210,7 @@ def scan_file(
     report = json.loads(result.stdout)
     pf = primary_file(report)
     vec_raw = extract(report, spec)
-    vec = standardize(vec_raw, spec)
+    vec = standardize(vec_raw, spec) if spec.standardized else vec_raw
     prob = _predict(model, vec)
 
     findings = pf.get("findings") or []
@@ -223,4 +223,4 @@ def scan_file(
     print(f"Findings:    {len(findings)} ({hostile} hostile, {suspicious} suspicious)")
 
     _print_feature_vector(vec_raw, spec)
-    _print_shap_breakdown(model, vec, spec, vec_raw=vec_raw)
+    _print_shap_breakdown(model, vec, spec, vec_raw=vec_raw if spec.standardized else None)

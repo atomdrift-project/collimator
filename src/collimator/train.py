@@ -157,12 +157,14 @@ def train(
             n_min_class,
         )
 
-    # --- Standardization ---
-    # Kept for pipeline compatibility (Rust inference applies it).
-    # Trees don't benefit from standardization, but it doesn't hurt.
+    # --- Standardization params ---
+    # Trees are invariant to monotonic feature transforms, so we train on raw
+    # features directly (no dense copy needed). We still compute mean/std and
+    # export them so the Rust inference pipeline can apply standardization if
+    # the model was trained that way — but for v13+ we skip it.
     if sp.issparse(X_tv):
         feature_means = np.asarray(X_tv.mean(axis=0), dtype=np.float32).ravel()
-        # Var = E[X^2] - E[X]^2, computed without densifying the full matrix.
+        # Var = E[X^2] - E[X]^2, computed without densifying.
         X_tv_sq = X_tv.copy()
         X_tv_sq.data **= 2
         variance = (
@@ -176,24 +178,6 @@ def train(
         feature_means = X_tv.mean(axis=0).astype(np.float32)
         feature_stds = X_tv.std(axis=0).astype(np.float32)
     feature_stds[feature_stds < 1e-7] = 1.0
-
-    # Standardize to dense for training — XGBoost handles the memory internally.
-    X_tv_dense = X_tv.toarray() if sp.issparse(X_tv) else X_tv
-    X_tv_std = ((X_tv_dense - feature_means) / feature_stds).astype(np.float32)
-    del X_tv_dense
-    X_holdout_std = None
-    if X_holdout is not None:
-        X_ho_dense = X_holdout.toarray() if sp.issparse(X_holdout) else X_holdout
-        X_holdout_std = ((X_ho_dense - feature_means) / feature_stds).astype(np.float32)
-        del X_ho_dense
-
-    dead_mask = (feature_means == 0.0) & (feature_stds == 1.0)
-    n_dead = int(np.sum(dead_mask))
-    n_constant = int(np.sum(feature_stds == 1.0))
-    log.info(
-        "standardized: %d features (%d constant, %d dead/never-populated)",
-        n_features, n_constant, n_dead,
-    )
 
     # --- Cross-validation ---
     n_tv_malware = int(np.sum(y_tv == 1))
@@ -212,7 +196,7 @@ def train(
         print(f"\n{'Fold':<6} {'AUC':>8} {'F1':>8} {'Prec':>8} {'Recall':>8}")
         print(f"{'-' * 42}")
 
-        for fold, (train_idx, val_idx) in enumerate(skf.split(X_tv_std, y_tv)):
+        for fold, (train_idx, val_idx) in enumerate(skf.split(X_tv, y_tv)):
             fold_model = create_classifier(
                 n_benign=int(np.sum(y_tv[train_idx] == 0)),
                 n_malware=int(np.sum(y_tv[train_idx] == 1)),
@@ -228,12 +212,12 @@ def train(
                 reg_lambda=config.reg_lambda,
             )
             fold_model.fit(
-                X_tv_std[train_idx], y_tv[train_idx],
-                eval_set=[(X_tv_std[val_idx], y_tv[val_idx])],
+                X_tv[train_idx], y_tv[train_idx],
+                eval_set=[(X_tv[val_idx], y_tv[val_idx])],
                 verbose=False,
             )
 
-            fold_preds = predict_proba(fold_model, X_tv_std[val_idx])
+            fold_preds = predict_proba(fold_model, X_tv[val_idx])
             cv_predictions[val_idx] = fold_preds
 
             fm = _compute_metrics(y_tv[val_idx], fold_preds)
@@ -265,11 +249,11 @@ def train(
         reg_lambda=config.reg_lambda,
     )
 
-    if X_holdout_std is not None:
+    if X_holdout is not None:
         # Use holdout as eval set for early stopping.
         final_model.fit(
-            X_tv_std, y_tv,
-            eval_set=[(X_holdout_std, y_holdout)],
+            X_tv, y_tv,
+            eval_set=[(X_holdout, y_holdout)],
             verbose=False,
         )
         best_iter = getattr(final_model, "best_iteration", None)
@@ -280,11 +264,11 @@ def train(
     else:
         # No holdout — train without early stopping.
         final_model.set_params(early_stopping_rounds=None)
-        final_model.fit(X_tv_std, y_tv, verbose=False)
+        final_model.fit(X_tv, y_tv, verbose=False)
 
     # --- Evaluation ---
-    if X_holdout_std is not None:
-        holdout_preds = predict_proba(final_model, X_holdout_std)
+    if X_holdout is not None:
+        holdout_preds = predict_proba(final_model, X_holdout)
         optimal_threshold = _optimal_threshold(y_holdout, holdout_preds)
         metrics = _compute_metrics(y_holdout, holdout_preds, optimal_threshold)
         eval_y = y_holdout
@@ -297,7 +281,7 @@ def train(
         eval_y = y_tv
         eval_preds = cv_predictions
     else:
-        all_preds = predict_proba(final_model, X_tv_std)
+        all_preds = predict_proba(final_model, X_tv)
         optimal_threshold = _optimal_threshold(y_tv, all_preds)
         metrics = _compute_metrics(y_tv, all_preds, optimal_threshold)
         eval_y = y_tv
