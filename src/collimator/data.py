@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -105,3 +106,45 @@ def split_train_test(samples: list[Sample]) -> tuple[list[Sample], list[Sample]]
         100 * len(test_samples) / max(len(samples), 1),
     )
     return train_samples, test_samples
+
+
+def stream_reports(
+    db_path: Path,
+    *,
+    exclude_test: bool = False,
+    only_test: bool = False,
+) -> Iterator[tuple[dict[str, Any], int]]:
+    """Yield (report, label) pairs from the database without holding all in memory.
+
+    Each report dict is parsed from JSON, yielded once, and discarded.
+    When exclude_test=True, test-bucket samples (5%) are skipped.
+    When only_test=True, only test-bucket samples are yielded.
+    """
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found: {db_path}")
+
+    placeholders = ",".join("?" for _ in ALL_TERMINAL)
+    query = (
+        "SELECT sha256, status, cleave_json"
+        f" FROM samples WHERE status IN ({placeholders})"
+    )
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        for sha256, status, cleave_json in conn.execute(
+            query, tuple(sorted(ALL_TERMINAL)),
+        ):
+            if not cleave_json:
+                continue
+            is_test = is_test_sample(sha256)
+            if exclude_test and is_test:
+                continue
+            if only_test and not is_test:
+                continue
+            try:
+                report = json.loads(cleave_json)
+            except json.JSONDecodeError:
+                continue
+            label = 1 if status in MALWARE_STATUSES else 0
+            yield report, label
+    finally:
+        conn.close()

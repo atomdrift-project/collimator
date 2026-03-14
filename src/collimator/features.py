@@ -35,6 +35,7 @@ import math
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
+from collections.abc import Iterable
 from typing import Any
 
 import numpy as np
@@ -201,7 +202,7 @@ class FeatureSpec:
 # Vocabulary building
 # ---------------------------------------------------------------------------
 
-def build_vocab(reports: list[dict[str, Any]]) -> FeatureSpec:
+def build_vocab(reports: Iterable[dict[str, Any]]) -> FeatureSpec:
     """Scan all reports to build the feature vocabulary.
 
     Each path that appears in >= MIN_PATH_FREQ samples gets two features:
@@ -211,6 +212,8 @@ def build_vocab(reports: list[dict[str, Any]]) -> FeatureSpec:
     This lets the model learn from capability combinations (presence) while
     optionally using criticality as a gradient signal (maxcrit). No binary
     tier thresholds — the model decides what criticality levels matter.
+
+    Accepts any iterable of report dicts (including generators).
     """
     presence_counts: dict[str, int] = {}  # path -> sample count
     filetypes: set[str] = set()
@@ -504,23 +507,37 @@ def extract_all(
     spec: FeatureSpec,
 ) -> tuple[sp.csr_matrix, np.ndarray]:
     """Extract feature vectors for all samples as a sparse CSR matrix."""
-    n = len(reports)
-    y = np.array(labels, dtype=np.float32)
+    return extract_stream(zip(reports, labels), spec)
 
+
+def extract_stream(
+    report_labels: Iterable[tuple[dict[str, Any], int]],
+    spec: FeatureSpec,
+) -> tuple[sp.csr_matrix, np.ndarray]:
+    """Extract features by streaming (report, label) pairs.
+
+    Each report is parsed, its features extracted into sparse COO entries,
+    and then discarded — only the sparse indices/values and labels are kept.
+    """
     ctx = _ExtractContext(spec)
     rows: list[int] = []
     cols: list[int] = []
     vals: list[float] = []
+    labels: list[int] = []
     vec = np.zeros(spec.total_features, dtype=np.float32)
 
-    for i, report in enumerate(reports):
+    n = 0
+    for report, label in report_labels:
         vec[:] = 0.0
         _extract_into(report, ctx, vec)
         nz = np.nonzero(vec)[0]
-        rows.extend([i] * len(nz))
+        rows.extend([n] * len(nz))
         cols.extend(nz.tolist())
         vals.extend(vec[nz].tolist())
+        labels.append(label)
+        n += 1
 
+    y = np.array(labels, dtype=np.float32)
     X = sp.csr_matrix(
         (np.array(vals, dtype=np.float32),
          (np.array(rows, dtype=np.int32), np.array(cols, dtype=np.int32))),

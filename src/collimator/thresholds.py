@@ -18,24 +18,27 @@ ACCURACY_TARGETS = [0.80, 0.90, 0.98, 0.99, 0.999, 0.9999, 0.99999]
 def show_thresholds(db_path: Path) -> None:
     """Train a model on non-test samples, then show the confidence
     thresholds needed for each accuracy target on the test set."""
-    samples = data.load_samples(db_path)
-    train_samples, test_samples = data.split_train_test(samples)
+    # Pass 1: build vocab from training samples (streaming).
+    spec = features.build_vocab(
+        report for report, _label in data.stream_reports(db_path, exclude_test=True)
+    )
 
-    if not test_samples:
-        print("No test samples — cannot compute thresholds.")
+    # Pass 2: extract training features (streaming).
+    X_train, y_train = features.extract_stream(
+        data.stream_reports(db_path, exclude_test=True), spec,
+    )
+    if X_train.shape[0] == 0:
+        print("No training samples found.")
         return
-
-    # Train on the non-test portion.
-    train_reports = [s.report for s in train_samples]
-    train_labels = [s.label for s in train_samples]
-    spec = features.build_vocab(train_reports)
-    X_train, y_train = features.extract_all(train_reports, train_labels, spec)
     result = train.train(X_train, y_train, feature_names=spec.feature_names)
 
-    # Score the held-out test portion.
-    test_reports = [s.report for s in test_samples]
-    test_labels = [s.label for s in test_samples]
-    X_test, y_test = features.extract_all(test_reports, test_labels, spec)
+    # Pass 3: extract test features (streaming).
+    X_test, y_test = features.extract_stream(
+        data.stream_reports(db_path, exclude_test=False, only_test=True), spec,
+    )
+    if X_test.shape[0] == 0:
+        print("No test samples — cannot compute thresholds.")
+        return
 
     probs = predict_proba(result.model, X_test)
 

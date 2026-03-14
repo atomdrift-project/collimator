@@ -12,6 +12,8 @@ import numpy as np
 
 from . import data, explain, export, features, inspect, thresholds, train, traits
 
+log = logging.getLogger(__name__)
+
 
 def setup_logging() -> None:
     logging.basicConfig(
@@ -27,18 +29,20 @@ def cmd_train(args: argparse.Namespace) -> None:
     out_dir = Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load samples, excluding the deterministic test set.
-    all_samples = data.load_samples(db_path)
-    samples, test_samples = data.split_train_test(all_samples)
-    if len(samples) < 10:
-        print(f"ERROR: only {len(samples)} training samples, need at least 10")
-        sys.exit(1)
+    # Pass 1: stream reports to build vocabulary (no reports kept in memory).
+    log.info("pass 1: building vocabulary from %s", db_path)
+    spec = features.build_vocab(
+        report for report, _label in data.stream_reports(db_path, exclude_test=True)
+    )
 
-    # Build vocabulary and extract features.
-    reports = [s.report for s in samples]
-    labels = [s.label for s in samples]
-    spec = features.build_vocab(reports)
-    X, y = features.extract_all(reports, labels, spec)
+    # Pass 2: stream reports again to extract sparse features.
+    log.info("pass 2: extracting features")
+    X, y = features.extract_stream(
+        data.stream_reports(db_path, exclude_test=True), spec,
+    )
+    if X.shape[0] < 10:
+        print(f"ERROR: only {X.shape[0]} training samples, need at least 10")
+        sys.exit(1)
 
     # Train.
     config = train.TrainConfig()
