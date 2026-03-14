@@ -25,7 +25,7 @@ $(VENV_DIR)/bin/activate: requirements.txt
 	touch $(VENV_DIR)/bin/activate
 
 train: venv check-db
-	$(PYTHON) -m collimator train --db $(DB) --output $(OUT_DIR)
+	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR)
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
