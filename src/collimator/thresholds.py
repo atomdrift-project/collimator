@@ -72,7 +72,6 @@ def print_threshold_table(probs: np.ndarray, y: np.ndarray) -> None:
                 best_n = n
                 best_correct = correct
                 best_wrong = n - correct
-                break
         if best_t is not None:
             pct = f"{target * 100:.3f}%"
             print(f"  {pct:<12} {best_t:>10.6f} {best_correct:>10} {best_wrong:>8} {best_n:>8}")
