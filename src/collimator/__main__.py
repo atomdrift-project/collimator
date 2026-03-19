@@ -491,17 +491,6 @@ def main() -> None:
         "thresholds", help="Show accuracy at various confidence thresholds",
     )
     p_thresh.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
-<<<<<<< HEAD
-    p_thresh.add_argument(
-        "--model", default=None,
-        help="Path to trained XGBoost model (.json) to reuse instead of retraining",
-    )
-    p_thresh.add_argument(
-        "--spec", default=None,
-        help="Path to feature_spec.json to reuse instead of rebuilding vocab",
-    )
-||||||| parent of 34abe0b (productionization work)
-=======
     p_thresh.add_argument(
         "--model", default=None,
         help="Path to trained XGBoost model (.json) to reuse instead of retraining",
@@ -562,7 +551,6 @@ def main() -> None:
     p_demo.add_argument("--n-benign", type=int, default=64, help="Number of benign samples")
     p_demo.add_argument("--n-malware", type=int, default=64, help="Number of malware samples")
     _add_seed_arg(p_demo)
->>>>>>> 34abe0b (productionization work)
 
     args = parser.parse_args()
 
@@ -605,15 +593,6 @@ def main() -> None:
             output_path=Path(args.output) if args.output else None,
         )
     elif args.command == "thresholds":
-<<<<<<< HEAD
-        thresholds.show_thresholds(
-            db_path=Path(args.db),
-            model_path=Path(args.model) if args.model else None,
-            spec_path=Path(args.spec) if args.spec else None,
-        )
-||||||| parent of 34abe0b (productionization work)
-        thresholds.show_thresholds(db_path=Path(args.db))
-=======
         thresholds.show_thresholds(
             db_path=Path(args.db),
             model_path=Path(args.model) if args.model else None,
@@ -657,7 +636,6 @@ def main() -> None:
             n_malware=args.n_malware,
             seed=args.seed,
         )
->>>>>>> 34abe0b (productionization work)
 
 
 if __name__ == "__main__":

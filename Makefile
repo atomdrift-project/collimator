@@ -56,13 +56,6 @@ traits: venv check-db
 	$(PYTHON) -m collimator traits --db $(DB)
 
 thresholds: venv check-db
-<<<<<<< HEAD
-	$(PYTHON) -m collimator thresholds --db $(DB) \
-		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
-		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
-||||||| parent of 34abe0b (productionization work)
-	$(PYTHON) -m collimator thresholds --db $(DB)
-=======
 	$(PYTHON) -m collimator thresholds --db $(DB) \
 		--workers $(WORKERS) \
 		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
@@ -84,7 +77,6 @@ ablate: venv check-db
 
 demo-db: venv
 	$(PYTHON) -m collimator demo-db --output $(DEMO_DB) --seed $(SEED)
->>>>>>> 34abe0b (productionization work)
 
 scan: venv
 ifndef FILE
