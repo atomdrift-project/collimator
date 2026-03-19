@@ -5,7 +5,6 @@ Summary: XGBoost training pipeline for malware detection using cleave analysis r
 License-Expression: Apache-2.0
 Requires-Python: >=3.11
 License-File: LICENSE
-License-File: LICENSE.txt
 Requires-Dist: xgboost>=2.0
 Requires-Dist: onnx>=1.15
 Requires-Dist: onnxmltools>=1.12

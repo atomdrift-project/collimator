@@ -395,6 +395,14 @@ def main() -> None:
         "thresholds", help="Show accuracy at various confidence thresholds",
     )
     p_thresh.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_thresh.add_argument(
+        "--model", default=None,
+        help="Path to trained XGBoost model (.json) to reuse instead of retraining",
+    )
+    p_thresh.add_argument(
+        "--spec", default=None,
+        help="Path to feature_spec.json to reuse instead of rebuilding vocab",
+    )
 
     args = parser.parse_args()
 
@@ -437,7 +445,11 @@ def main() -> None:
             output_path=Path(args.output) if args.output else None,
         )
     elif args.command == "thresholds":
-        thresholds.show_thresholds(db_path=Path(args.db))
+        thresholds.show_thresholds(
+            db_path=Path(args.db),
+            model_path=Path(args.model) if args.model else None,
+            spec_path=Path(args.spec) if args.spec else None,
+        )
 
 
 if __name__ == "__main__":

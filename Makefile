@@ -46,7 +46,9 @@ traits: venv check-db
 	$(PYTHON) -m collimator traits --db $(DB)
 
 thresholds: venv check-db
-	$(PYTHON) -m collimator thresholds --db $(DB)
+	$(PYTHON) -m collimator thresholds --db $(DB) \
+		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
+		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
 
 scan: venv
 ifndef FILE
