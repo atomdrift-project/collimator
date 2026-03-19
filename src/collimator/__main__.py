@@ -519,13 +519,13 @@ def main() -> None:
         help="Approximate sampled training rows (default: 10000)",
     )
     p_exp.add_argument("--n-folds", type=int, default=2, help="CV folds for the experiment")
-    p_exp.add_argument("--n-estimators", type=int, default=120, help="Max trees for the experiment")
-    p_exp.add_argument("--max-depth", type=int, default=5, help="Tree depth for the experiment")
+    p_exp.add_argument("--n-estimators", type=int, default=220, help="Max trees for the experiment")
+    p_exp.add_argument("--max-depth", type=int, default=6, help="Tree depth for the experiment")
     p_exp.add_argument(
-        "--learning-rate", type=float, default=0.05, help="Learning rate for the experiment",
+        "--learning-rate", type=float, default=0.03, help="Learning rate for the experiment",
     )
     p_exp.add_argument(
-        "--early-stopping-rounds", type=int, default=12,
+        "--early-stopping-rounds", type=int, default=25,
         help="Early stopping rounds for the experiment",
     )
     _add_workers_arg(p_exp)

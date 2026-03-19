@@ -14,10 +14,10 @@ EXP_WORKERS ?= 1
 SEED ?= 42
 EXP_TRAIN_SAMPLES ?= 10000
 EXP_FOLDS ?= 2
-EXP_ESTIMATORS ?= 120
-EXP_MAX_DEPTH ?= 5
-EXP_LEARNING_RATE ?= 0.05
-EXP_EARLY_STOPPING ?= 12
+EXP_ESTIMATORS ?= 220
+EXP_MAX_DEPTH ?= 6
+EXP_LEARNING_RATE ?= 0.03
+EXP_EARLY_STOPPING ?= 25
 
 # Validate DB is set for targets that need it
 check-db:
@@ -141,7 +141,7 @@ help:
 	@echo "  SEED=n          Random seed for training/demo generation (default: 42)"
 	@echo "  EXP_TRAIN_SAMPLES=n   Experiment train rows (default: 10000)"
 	@echo "  EXP_FOLDS=n           Experiment CV folds (default: 2)"
-	@echo "  EXP_ESTIMATORS=n      Experiment max trees (default: 120)"
+	@echo "  EXP_ESTIMATORS=n      Experiment max trees (default: 220)"
 	@echo "  SAMPLE=sha256   SHA256 (or prefix) for inspect"
 	@echo "  FILE=path       File path for scan"
 	@echo "  CLEAVE=path     Path to cleave binary (default: cleave)"

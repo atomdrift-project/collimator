@@ -136,10 +136,10 @@ def run_experiment(
     seed: int = 42,
     train_samples: int = 10_000,
     n_folds: int = 2,
-    n_estimators: int = 120,
-    max_depth: int = 5,
-    learning_rate: float = 0.05,
-    early_stopping_rounds: int = 12,
+    n_estimators: int = 220,
+    max_depth: int = 6,
+    learning_rate: float = 0.03,
+    early_stopping_rounds: int = 25,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     corpus = sample_partitioned_reports(
