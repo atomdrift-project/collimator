@@ -6,14 +6,14 @@ from collimator.model import create_classifier, predict_proba
 
 
 def test_create_classifier_defaults() -> None:
-    model = create_classifier(n_benign=100, n_malware=50)
+    model = create_classifier(n_benign=100, n_malware=50, device="cpu")
     assert model.get_params()["objective"] == "binary:logistic"
     assert model.get_params()["max_depth"] == 6
 
 
 def test_create_classifier_custom_params() -> None:
     model = create_classifier(
-        n_benign=100, n_malware=50,
+        n_benign=100, n_malware=50, device="cpu",
         max_depth=4, n_estimators=50, learning_rate=0.1,
     )
     assert model.get_params()["max_depth"] == 4
@@ -22,7 +22,7 @@ def test_create_classifier_custom_params() -> None:
 
 
 def test_predict_proba_shape() -> None:
-    model = create_classifier(n_benign=50, n_malware=50, n_estimators=10)
+    model = create_classifier(n_benign=50, n_malware=50, n_estimators=10, device="cpu")
     rng = np.random.default_rng(42)
     X_train = rng.standard_normal((100, 10)).astype(np.float32)
     y_train = np.array([0] * 50 + [1] * 50, dtype=np.float32)
@@ -36,7 +36,7 @@ def test_predict_proba_shape() -> None:
 
 
 def test_predict_proba_deterministic() -> None:
-    model = create_classifier(n_benign=50, n_malware=50, n_estimators=10)
+    model = create_classifier(n_benign=50, n_malware=50, n_estimators=10, device="cpu")
     rng = np.random.default_rng(42)
     X_train = rng.standard_normal((100, 10)).astype(np.float32)
     y_train = np.array([0] * 50 + [1] * 50, dtype=np.float32)

@@ -31,6 +31,48 @@ class Sample:
     report: dict[str, Any]
 
 
+def stream_samples(
+    db_path: Path,
+    *,
+    exclude_test: bool = False,
+    only_test: bool = False,
+) -> Iterator[Sample]:
+    """Yield labeled samples from the database without loading all rows."""
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found: {db_path}")
+
+    placeholders = ",".join("?" for _ in ALL_TERMINAL)
+    query = (
+        "SELECT sha256, path, status, cleave_json"
+        f" FROM samples WHERE status IN ({placeholders})"
+    )
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        for sha256, path, status, cleave_json in conn.execute(
+            query, tuple(sorted(ALL_TERMINAL)),
+        ):
+            if not cleave_json:
+                continue
+            is_test = is_test_sample(sha256)
+            if exclude_test and is_test:
+                continue
+            if only_test and not is_test:
+                continue
+            try:
+                report = json.loads(cleave_json)
+            except json.JSONDecodeError:
+                log.warning("invalid JSON for %s, skipping", sha256)
+                continue
+            yield Sample(
+                sha256=sha256,
+                path=path,
+                label=1 if status in MALWARE_STATUSES else 0,
+                report=report,
+            )
+    finally:
+        conn.close()
+
+
 def load_samples(db_path: Path) -> list[Sample]:
     """Load labeled samples from a cyclotron database.
 
@@ -41,49 +83,14 @@ def load_samples(db_path: Path) -> list[Sample]:
     Intermediate statuses (bad-review, bad-reversed, good-review, etc.)
     are skipped to ensure clean training labels.
     """
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    query = (
-        "SELECT sha256, path, status, cleave_json"
-        f" FROM samples WHERE status IN ({placeholders})"
-    )
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    conn.row_factory = sqlite3.Row
     log.info("loading samples from %s", db_path)
-
-    samples: list[Sample] = []
-    skipped = 0
-    try:
-        for row in conn.execute(query, tuple(sorted(ALL_TERMINAL))):
-            cleave_json = row["cleave_json"]
-            if not cleave_json:
-                skipped += 1
-                continue
-
-            try:
-                report = json.loads(cleave_json)
-            except json.JSONDecodeError:
-                log.warning("invalid JSON for %s, skipping", row["sha256"])
-                skipped += 1
-                continue
-
-            label = 1 if row["status"] in MALWARE_STATUSES else 0
-            samples.append(Sample(
-                sha256=row["sha256"],
-                path=row["path"],
-                label=label,
-                report=report,
-            ))
-    finally:
-        conn.close()
+    samples = list(stream_samples(db_path))
 
     n_malware = sum(1 for s in samples if s.label == 1)
     n_benign = len(samples) - n_malware
     log.info(
-        "loaded %d samples (%d malware, %d benign, %d skipped)",
-        len(samples), n_malware, n_benign, skipped,
+        "loaded %d samples (%d malware, %d benign)",
+        len(samples), n_malware, n_benign,
     )
     return samples
 
@@ -120,6 +127,21 @@ def stream_reports(
     When exclude_test=True, test-bucket samples (5%) are skipped.
     When only_test=True, only test-bucket samples are yielded.
     """
+    for sample in stream_samples(
+        db_path,
+        exclude_test=exclude_test,
+        only_test=only_test,
+    ):
+        yield sample.report, sample.label
+
+
+def stream_raw_reports(
+    db_path: Path,
+    *,
+    exclude_test: bool = False,
+    only_test: bool = False,
+) -> Iterator[tuple[str, int]]:
+    """Yield raw cleave JSON strings and labels without parent-process decoding."""
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
 
@@ -140,11 +162,34 @@ def stream_reports(
                 continue
             if only_test and not is_test:
                 continue
-            try:
-                report = json.loads(cleave_json)
-            except json.JSONDecodeError:
+            yield cleave_json, (1 if status in MALWARE_STATUSES else 0)
+    finally:
+        conn.close()
+
+
+def stream_partitioned_raw_reports(
+    db_path: Path,
+) -> Iterator[tuple[str, int, bool]]:
+    """Yield raw cleave JSON, label, and test-split membership in one pass."""
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found: {db_path}")
+
+    placeholders = ",".join("?" for _ in ALL_TERMINAL)
+    query = (
+        "SELECT sha256, status, cleave_json"
+        f" FROM samples WHERE status IN ({placeholders})"
+    )
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        for sha256, status, cleave_json in conn.execute(
+            query, tuple(sorted(ALL_TERMINAL)),
+        ):
+            if not cleave_json:
                 continue
-            label = 1 if status in MALWARE_STATUSES else 0
-            yield report, label
+            yield (
+                cleave_json,
+                1 if status in MALWARE_STATUSES else 0,
+                is_test_sample(sha256),
+            )
     finally:
         conn.close()

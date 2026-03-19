@@ -17,6 +17,17 @@ dependencies = [
     "shap>=0.44",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+export = [
+    "onnxruntime>=1.18",
+]
+explain = [
+    "shap>=0.44",
+]
+
 [project.scripts]
 collimator = "collimator.__main__:main"
 

@@ -32,16 +32,21 @@ from __future__ import annotations
 import json
 import logging
 import math
+import multiprocessing as mp
+import os
 from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from collections.abc import Iterable
-from typing import Any
+from itertools import islice
+from typing import Any, TypeVar
 
 import numpy as np
 import scipy.sparse as sp
 
 log = logging.getLogger(__name__)
+T = TypeVar("T")
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -97,6 +102,8 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
     ("pe", "rsrc_entropy", False),
     ("pe", "rsrc_size", True),
 ]
+
+FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "struct")
 
 
 # ---------------------------------------------------------------------------
@@ -202,7 +209,7 @@ class FeatureSpec:
 # Vocabulary building
 # ---------------------------------------------------------------------------
 
-def build_vocab(reports: Iterable[dict[str, Any]]) -> FeatureSpec:
+def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> FeatureSpec:
     """Scan all reports to build the feature vocabulary.
 
     Each path that appears in >= MIN_PATH_FREQ samples gets two features:
@@ -213,33 +220,32 @@ def build_vocab(reports: Iterable[dict[str, Any]]) -> FeatureSpec:
     optionally using criticality as a gradient signal (maxcrit). No binary
     tier thresholds — the model decides what criticality levels matter.
 
-    Accepts any iterable of report dicts (including generators).
+    Accepts any iterable of report dicts or raw JSON strings.
     """
-    presence_counts: dict[str, int] = {}  # path -> sample count
+    nw = resolve_worker_count(n_workers)
+    presence_counts: dict[str, int] = {}
     filetypes: set[str] = set()
+    batch_size = max(64, 512 // max(nw, 1))
 
-    for report in reports:
-        pf = primary_file(report)
+    def _merge_batch(counts: dict[str, int], fts: list[str]) -> None:
+        for k, v in counts.items():
+            presence_counts[k] = presence_counts.get(k, 0) + v
+        filetypes.update(fts)
 
-        ftype = pf.get("file_type", "")
-        if ftype:
-            filetypes.add(ftype)
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            for counts, fts in pool.map(
+                _vocab_batch_worker,
+                _batched(reports, batch_size),
+            ):
+                _merge_batch(counts, fts)
 
-        sample_paths: dict[str, int] = {}
-        for finding in pf.get("findings") or []:
-            fid = finding.get("id", "")
-            if not fid:
-                continue
-            if _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
-                continue
-            crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
-            for path in _finding_paths(fid):
-                if crit_ord > sample_paths.get(path, -1):
-                    sample_paths[path] = crit_ord
-
-        for path, max_ord in sample_paths.items():
-            if max_ord >= 2:
-                presence_counts[path] = presence_counts.get(path, 0) + 1
+    if nw <= 1:
+        for counts, fts in map(_vocab_batch_worker, _batched(reports, batch_size)):
+            _merge_batch(counts, fts)
 
     presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
     filetype_vocab = sorted(filetypes)
@@ -330,14 +336,21 @@ class _ExtractContext:
         self.total_features = spec.total_features
 
 
-def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray) -> None:
-    """Extract features from a report into a pre-allocated vector."""
-    pf = primary_file(report)
-    findings = pf.get("findings") or []
-    offset = 0
+@dataclass(slots=True)
+class _FindingSummary:
+    sample_paths: dict[str, int]
+    filtered_finding_count: int
+    third_party_max_crit: int
+    third_party_count: int
+    well_known_max_crit: int
+    well_known_hostile: int
+    well_known_suspicious: int
+    has_yara: bool
 
-    # Compute per-path max crit at all hierarchy levels.
-    sample_paths: dict[str, int] = {}  # path -> max_crit_ord
+
+def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
+    """Collect reusable per-report finding statistics."""
+    sample_paths: dict[str, int] = {}
     filtered_finding_count = 0
     third_party_max_crit = 0
     third_party_count = 0
@@ -360,7 +373,7 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
             third_party_count += 1
             if crit_ord > third_party_max_crit:
                 third_party_max_crit = crit_ord
-            has_yara = True
+            has_yara = has_yara or fid.startswith("third_party/yara")
         elif top == "well-known":
             if crit_ord > well_known_max_crit:
                 well_known_max_crit = crit_ord
@@ -373,35 +386,53 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
             if crit_ord > sample_paths.get(path, -1):
                 sample_paths[path] = crit_ord
 
-    # -----------------------------------------------------------------------
-    # Group 1: Path Presence — binary (does this capability exist?)
-    # -----------------------------------------------------------------------
-    presence_offset = offset
-    offset += ctx.n_paths
+    return _FindingSummary(
+        sample_paths=sample_paths,
+        filtered_finding_count=filtered_finding_count,
+        third_party_max_crit=third_party_max_crit,
+        third_party_count=third_party_count,
+        well_known_max_crit=well_known_max_crit,
+        well_known_hostile=well_known_hostile,
+        well_known_suspicious=well_known_suspicious,
+        has_yara=has_yara,
+    )
 
+
+def _apply_presence_features(
+    sample_paths: dict[str, int],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 1: path presence features."""
     for path, max_ord in sample_paths.items():
         if max_ord >= 2:  # baseline or above
             feat_idx = ctx.presence_lookup.get(path)
             if feat_idx is not None:
-                vec[presence_offset + feat_idx] = 1.0
+                vec[offset + feat_idx] = 1.0
+    return offset + ctx.n_paths
 
-    # -----------------------------------------------------------------------
-    # Group 2: Path Max Criticality — ordinal 0-5 (cleave's severity gradient)
-    # -----------------------------------------------------------------------
-    maxcrit_offset = offset
-    offset += ctx.n_paths
 
+def _apply_maxcrit_features(
+    sample_paths: dict[str, int],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 2: path maximum criticality features."""
     for path, max_ord in sample_paths.items():
         feat_idx = ctx.presence_lookup.get(path)
         if feat_idx is not None:
-            vec[maxcrit_offset + feat_idx] = float(max_ord)
+            vec[offset + feat_idx] = float(max_ord)
+    return offset + ctx.n_paths
 
-    # -----------------------------------------------------------------------
-    # Group 3: Path Aggregates (8 features) — ratio-based, not counts
-    # -----------------------------------------------------------------------
-    agg_offset = offset
-    offset += 8
 
+def _apply_aggregate_features(
+    sample_paths: dict[str, int],
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 3: aggregate path breadth and concentration features."""
     breadth_notable = 0
     breadth_suspicious = 0
     breadth_hostile = 0
@@ -433,51 +464,68 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
         elif max_ord == 3:
             breadth_notable_only += 1
 
-    vec[agg_offset] = max_crit
-    vec[agg_offset + 1] = len(categories)
-    vec[agg_offset + 2] = math.log1p(path_breadth_any)
-    vec[agg_offset + 3] = math.log1p(total_active)
+    vec[offset] = max_crit
+    vec[offset + 1] = len(categories)
+    vec[offset + 2] = math.log1p(path_breadth_any)
+    vec[offset + 3] = math.log1p(total_active)
     # Concentration ratios — what fraction of behavior is suspicious?
-    vec[agg_offset + 4] = breadth_suspicious / max(path_breadth_any, 1)
-    vec[agg_offset + 5] = breadth_hostile / max(path_breadth_any, 1)
-    vec[agg_offset + 6] = breadth_suspicious / max(breadth_notable, 1)
-    vec[agg_offset + 7] = breadth_notable_only / max(breadth_notable, 1)
+    vec[offset + 4] = breadth_suspicious / max(path_breadth_any, 1)
+    vec[offset + 5] = breadth_hostile / max(path_breadth_any, 1)
+    vec[offset + 6] = breadth_suspicious / max(breadth_notable, 1)
+    vec[offset + 7] = breadth_notable_only / max(breadth_notable, 1)
+    return offset + 8
 
-    # -----------------------------------------------------------------------
-    # Group 4: Third-Party / Well-Known Summary (6 features)
-    # -----------------------------------------------------------------------
-    ext_offset = offset
-    offset += 6
 
-    vec[ext_offset] = third_party_max_crit
-    vec[ext_offset + 1] = math.log1p(third_party_count)
-    vec[ext_offset + 2] = well_known_max_crit
-    vec[ext_offset + 3] = well_known_hostile
-    vec[ext_offset + 4] = well_known_suspicious
-    vec[ext_offset + 5] = 1.0 if has_yara else 0.0
+def _apply_external_signal_features(
+    summary: _FindingSummary,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 4: aggregated third-party and well-known signals."""
+    vec[offset] = summary.third_party_max_crit
+    vec[offset + 1] = math.log1p(summary.third_party_count)
+    vec[offset + 2] = summary.well_known_max_crit
+    vec[offset + 3] = summary.well_known_hostile
+    vec[offset + 4] = summary.well_known_suspicious
+    vec[offset + 5] = 1.0 if summary.has_yara else 0.0
+    return offset + 6
 
-    # -----------------------------------------------------------------------
-    # Group 5: Key Metrics (16 features)
-    # -----------------------------------------------------------------------
-    metrics = pf.get("metrics") or {}
+
+def _apply_metric_features(
+    metrics: dict[str, Any],
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 5: curated numeric metrics."""
     for group, fname, use_log in KEY_METRICS:
         val = _float((metrics.get(group) or {}).get(fname))
         if use_log:
             val = math.log1p(abs(val))
         vec[offset] = val
         offset += 1
+    return offset
 
-    # -----------------------------------------------------------------------
-    # Group 6: File Type one-hot
-    # -----------------------------------------------------------------------
+
+def _apply_filetype_features(
+    pf: dict[str, Any],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 6: file type one-hot features."""
     idx = ctx.ft_lookup.get(pf.get("file_type", ""))
     if idx is not None:
         vec[offset + idx] = 1.0
-    offset += ctx.n_ft
+    return offset + ctx.n_ft
 
-    # -----------------------------------------------------------------------
-    # Group 7: Structural (4 features)
-    # -----------------------------------------------------------------------
+
+def _apply_structural_features(
+    pf: dict[str, Any],
+    filtered_finding_count: int,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 7: structural anomaly features."""
     file_size = pf.get("size", 0)
     file_type = pf.get("file_type", "")
     is_binary = file_type in ("pe", "elf", "macho")
@@ -487,7 +535,116 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
     vec[offset + 1] = 1.0 if len(imports) == 0 else 0.0
     vec[offset + 2] = 1.0 if filtered_finding_count == 0 else 0.0
     vec[offset + 3] = math.log1p(filtered_finding_count)
-    offset += 4
+    return offset + 4
+
+
+def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray) -> None:
+    """Extract features from a report into a pre-allocated vector."""
+    pf = primary_file(report)
+    summary = _summarize_findings(pf.get("findings") or [])
+
+    offset = 0
+    offset = _apply_presence_features(summary.sample_paths, ctx, vec, offset)
+    offset = _apply_maxcrit_features(summary.sample_paths, ctx, vec, offset)
+    offset = _apply_aggregate_features(summary.sample_paths, vec, offset)
+    offset = _apply_external_signal_features(summary, vec, offset)
+    offset = _apply_metric_features(pf.get("metrics") or {}, vec, offset)
+    offset = _apply_filetype_features(pf, ctx, vec, offset)
+    _apply_structural_features(pf, summary.filtered_finding_count, vec, offset)
+
+
+# ---------------------------------------------------------------------------
+# Parallel worker functions (module-level for multiprocessing pickling)
+# ---------------------------------------------------------------------------
+
+def _coerce_report(report: dict[str, Any] | str) -> dict[str, Any] | None:
+    """Return a parsed report dict from either a dict or raw JSON string."""
+    if isinstance(report, str):
+        try:
+            parsed = json.loads(report)
+        except json.JSONDecodeError:
+            return None
+        return parsed if isinstance(parsed, dict) else None
+    return report
+
+
+def _vocab_batch_worker(
+    reports: list[dict[str, Any] | str],
+) -> tuple[dict[str, int], list[str]]:
+    """Count path occurrences for a batch of reports. CPU-only."""
+    presence_counts: dict[str, int] = {}
+    filetypes: list[str] = []
+    for raw_report in reports:
+        report = _coerce_report(raw_report)
+        if report is None:
+            continue
+        pf = primary_file(report)
+        ftype = pf.get("file_type", "")
+        if ftype:
+            filetypes.append(ftype)
+        sample_paths: dict[str, int] = {}
+        for finding in pf.get("findings") or []:
+            fid = finding.get("id", "")
+            if not fid:
+                continue
+            if _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
+                continue
+            crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
+            for path in _finding_paths(fid):
+                if crit_ord > sample_paths.get(path, -1):
+                    sample_paths[path] = crit_ord
+        for path, max_ord in sample_paths.items():
+            if max_ord >= 2:
+                presence_counts[path] = presence_counts.get(path, 0) + 1
+    return presence_counts, filetypes
+
+
+def _extract_batch_worker(
+    args: tuple[int, list[tuple[dict[str, Any] | str, int]], FeatureSpec],
+) -> tuple[list[int], list[int], list[float], list[int]]:
+    """Extract features from a batch of (report, label) pairs. CPU-only."""
+    offset, batch, spec = args
+    ctx = _ExtractContext(spec)
+    vec = np.zeros(spec.total_features, dtype=np.float32)
+    rows: list[int] = []
+    cols: list[int] = []
+    vals: list[float] = []
+    labels: list[int] = []
+    for i, (raw_report, label) in enumerate(batch):
+        report = _coerce_report(raw_report)
+        if report is None:
+            continue
+        vec[:] = 0.0
+        _extract_into(report, ctx, vec)
+        nz = np.nonzero(vec)[0]
+        rows.extend([offset + i] * len(nz))
+        cols.extend(nz.tolist())
+        vals.extend(vec[nz].tolist())
+        labels.append(label)
+    return rows, cols, vals, labels
+
+
+def _n_workers_default() -> int:
+    """Choose a conservative parallelism level for JSON-heavy feature work."""
+    cpu_count = os.cpu_count() or 1
+    if cpu_count <= 2:
+        return 1
+    return min(max(cpu_count // 2, 2), 16)
+
+
+def resolve_worker_count(n_workers: int) -> int:
+    """Resolve a requested worker count to the effective process count."""
+    return n_workers if n_workers > 0 else _n_workers_default()
+
+
+def _batched(items: Iterable[T], batch_size: int) -> Iterable[list[T]]:
+    """Yield lists of up to batch_size items from an iterable."""
+    it = iter(items)
+    while True:
+        batch = list(islice(it, batch_size))
+        if not batch:
+            return
+        yield batch
 
 
 # ---------------------------------------------------------------------------
@@ -511,31 +668,58 @@ def extract_all(
 
 
 def extract_stream(
-    report_labels: Iterable[tuple[dict[str, Any], int]],
+    report_labels: Iterable[tuple[dict[str, Any] | str, int]],
     spec: FeatureSpec,
+    n_workers: int = 0,
 ) -> tuple[sp.csr_matrix, np.ndarray]:
     """Extract features by streaming (report, label) pairs.
 
-    Each report is parsed, its features extracted into sparse COO entries,
-    and then discarded — only the sparse indices/values and labels are kept.
+    Each report's features are extracted into sparse COO entries.
+    When n_workers > 1 (or auto-detected > 1) and the dataset is large
+    enough, extraction is parallelised across CPU workers.  Falls back
+    to sequential on any failure.
     """
-    ctx = _ExtractContext(spec)
+    nw = resolve_worker_count(n_workers)
     rows: list[int] = []
     cols: list[int] = []
     vals: list[float] = []
     labels: list[int] = []
-    vec = np.zeros(spec.total_features, dtype=np.float32)
+    batch_size = max(64, 512 // max(nw, 1))
 
-    n = 0
-    for report, label in report_labels:
-        vec[:] = 0.0
-        _extract_into(report, ctx, vec)
-        nz = np.nonzero(vec)[0]
-        rows.extend([n] * len(nz))
-        cols.extend(nz.tolist())
-        vals.extend(vec[nz].tolist())
-        labels.append(label)
-        n += 1
+    def _consume(batch_iter: Iterable[tuple[list[int], list[int], list[float], list[int]]]) -> None:
+        for b_rows, b_cols, b_vals, b_labels in batch_iter:
+            rows.extend(b_rows)
+            cols.extend(b_cols)
+            vals.extend(b_vals)
+            labels.extend(b_labels)
+
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            _consume(
+                pool.map(
+                    _extract_batch_worker,
+                    (
+                        (offset, batch, spec)
+                        for offset, batch in _enumerate_batches(report_labels, batch_size)
+                    ),
+                )
+            )
+
+    if nw <= 1:
+        _consume(
+            map(
+                _extract_batch_worker,
+                (
+                    (offset, batch, spec)
+                    for offset, batch in _enumerate_batches(report_labels, batch_size)
+                ),
+            )
+        )
+
+    n = len(labels)
 
     y = np.array(labels, dtype=np.float32)
     X = sp.csr_matrix(
@@ -549,6 +733,167 @@ def extract_stream(
         100.0 * X.nnz / max(n * spec.total_features, 1),
     )
     return X, y
+
+
+def _enumerate_batches(
+    items: Iterable[T],
+    batch_size: int,
+) -> Iterable[tuple[int, list[T]]]:
+    """Yield (row_offset, batch) pairs for a stream."""
+    offset = 0
+    for batch in _batched(items, batch_size):
+        yield offset, batch
+        offset += len(batch)
+
+
+def _extract_partitioned_batch_worker(
+    args: tuple[int, int, list[tuple[dict[str, Any] | str, int, bool]], FeatureSpec],
+) -> tuple[
+    list[int], list[int], list[float], list[int],
+    list[int], list[int], list[float], list[int],
+]:
+    """Extract train/test features from a mixed batch into separate sparse rows."""
+    train_offset, test_offset, batch, spec = args
+    ctx = _ExtractContext(spec)
+    vec = np.zeros(spec.total_features, dtype=np.float32)
+
+    train_rows: list[int] = []
+    train_cols: list[int] = []
+    train_vals: list[float] = []
+    train_labels: list[int] = []
+
+    test_rows: list[int] = []
+    test_cols: list[int] = []
+    test_vals: list[float] = []
+    test_labels: list[int] = []
+
+    local_train = 0
+    local_test = 0
+
+    for raw_report, label, is_test in batch:
+        report = _coerce_report(raw_report)
+        if report is None:
+            continue
+        vec[:] = 0.0
+        _extract_into(report, ctx, vec)
+        nz = np.nonzero(vec)[0]
+        if is_test:
+            row = test_offset + local_test
+            local_test += 1
+            test_rows.extend([row] * len(nz))
+            test_cols.extend(nz.tolist())
+            test_vals.extend(vec[nz].tolist())
+            test_labels.append(label)
+        else:
+            row = train_offset + local_train
+            local_train += 1
+            train_rows.extend([row] * len(nz))
+            train_cols.extend(nz.tolist())
+            train_vals.extend(vec[nz].tolist())
+            train_labels.append(label)
+
+    return (
+        train_rows, train_cols, train_vals, train_labels,
+        test_rows, test_cols, test_vals, test_labels,
+    )
+
+
+def _enumerate_partitioned_batches(
+    items: Iterable[tuple[T, int, bool]],
+    batch_size: int,
+) -> Iterable[tuple[int, int, list[tuple[T, int, bool]]]]:
+    """Yield (train_offset, test_offset, batch) for a mixed train/test stream."""
+    train_offset = 0
+    test_offset = 0
+    for batch in _batched(items, batch_size):
+        yield train_offset, test_offset, batch
+        batch_train = sum(1 for _item, _label, is_test in batch if not is_test)
+        train_offset += batch_train
+        test_offset += len(batch) - batch_train
+
+
+def extract_partitioned_stream(
+    report_labels_split: Iterable[tuple[dict[str, Any] | str, int, bool]],
+    spec: FeatureSpec,
+    n_workers: int = 0,
+) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
+    """Extract train and test matrices from a mixed stream in one pass."""
+    nw = resolve_worker_count(n_workers)
+    batch_size = max(64, 512 // max(nw, 1))
+
+    train_rows: list[int] = []
+    train_cols: list[int] = []
+    train_vals: list[float] = []
+    train_labels: list[int] = []
+
+    test_rows: list[int] = []
+    test_cols: list[int] = []
+    test_vals: list[float] = []
+    test_labels: list[int] = []
+
+    def _consume(
+        batch_iter: Iterable[
+            tuple[
+                list[int], list[int], list[float], list[int],
+                list[int], list[int], list[float], list[int],
+            ]
+        ],
+    ) -> None:
+        for (
+            b_train_rows, b_train_cols, b_train_vals, b_train_labels,
+            b_test_rows, b_test_cols, b_test_vals, b_test_labels,
+        ) in batch_iter:
+            train_rows.extend(b_train_rows)
+            train_cols.extend(b_train_cols)
+            train_vals.extend(b_train_vals)
+            train_labels.extend(b_train_labels)
+            test_rows.extend(b_test_rows)
+            test_cols.extend(b_test_cols)
+            test_vals.extend(b_test_vals)
+            test_labels.extend(b_test_labels)
+
+    batch_args = (
+        (train_offset, test_offset, batch, spec)
+        for train_offset, test_offset, batch in _enumerate_partitioned_batches(
+            report_labels_split,
+            batch_size,
+        )
+    )
+
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            _consume(pool.map(_extract_partitioned_batch_worker, batch_args))
+    else:
+        _consume(map(_extract_partitioned_batch_worker, batch_args))
+
+    n_train = len(train_labels)
+    n_test = len(test_labels)
+    X_train = sp.csr_matrix(
+        (
+            np.array(train_vals, dtype=np.float32),
+            (np.array(train_rows, dtype=np.int32), np.array(train_cols, dtype=np.int32)),
+        ),
+        shape=(n_train, spec.total_features),
+    )
+    y_train = np.array(train_labels, dtype=np.float32)
+
+    X_test = sp.csr_matrix(
+        (
+            np.array(test_vals, dtype=np.float32),
+            (np.array(test_rows, dtype=np.int32), np.array(test_cols, dtype=np.int32)),
+        ),
+        shape=(n_test, spec.total_features),
+    )
+    y_test = np.array(test_labels, dtype=np.float32)
+
+    log.info(
+        "extracted %d train + %d test samples x %d features",
+        n_train, n_test, spec.total_features,
+    )
+    return X_train, y_train, X_test, y_test
 
 
 def standardize(X: np.ndarray | sp.spmatrix, spec: FeatureSpec) -> np.ndarray:
@@ -568,3 +913,12 @@ def standardize(X: np.ndarray | sp.spmatrix, spec: FeatureSpec) -> np.ndarray:
     dead = (means == 0.0) & (stds == 1.0)
     result[..., dead] = 0.0
     return result
+
+
+def feature_group_indices(spec: FeatureSpec) -> dict[str, list[int]]:
+    """Return feature indices grouped by their prefix before ':'."""
+    groups: dict[str, list[int]] = {group: [] for group in FEATURE_GROUPS}
+    for i, name in enumerate(spec.feature_names):
+        group = name.split(":", 1)[0]
+        groups.setdefault(group, []).append(i)
+    return groups

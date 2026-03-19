@@ -36,8 +36,22 @@ def compute_shap_importance(
     else:
         X_explain = X
 
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_explain)
+    # Prefer XGBoost's native pred_contribs, which runs on the GPU when the
+    # model is on CUDA and avoids the shap library overhead entirely.
+    # Falls back to shap.TreeExplainer (CPU) if anything goes wrong.
+    try:
+        from .model import detect_device
+        device = detect_device()
+        try:
+            dmat = xgb.DMatrix(X_explain, device=device)
+        except Exception:
+            dmat = xgb.DMatrix(X_explain)
+        contribs = model.get_booster().predict(dmat, pred_contribs=True)
+        shap_values = contribs[:, :-1]  # last column is the bias term
+    except Exception as exc:
+        log.warning("native pred_contribs failed (%s); falling back to shap library", exc)
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_explain)
 
     shap_arr = np.nan_to_num(np.array(shap_values).squeeze(), nan=0.0)
     if shap_arr.ndim == 1:

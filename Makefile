@@ -1,13 +1,23 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan traits thresholds test lint clean deploy venv help
+.PHONY: train evaluate explain inspect errors scan traits thresholds benchmark experiment ablate demo-db test lint clean deploy venv help
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
-DB ?=
+DB ?= $(HOME)/.local/share/cyclotron/cyclotron.db
 OUT_DIR ?= out
 SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
+DEMO_DB ?= out/demo.db
+WORKERS ?= 0
+EXP_WORKERS ?= 1
+SEED ?= 42
+EXP_TRAIN_SAMPLES ?= 10000
+EXP_FOLDS ?= 2
+EXP_ESTIMATORS ?= 120
+EXP_MAX_DEPTH ?= 5
+EXP_LEARNING_RATE ?= 0.05
+EXP_EARLY_STOPPING ?= 12
 
 # Validate DB is set for targets that need it
 check-db:
@@ -25,7 +35,7 @@ $(VENV_DIR)/bin/activate: requirements.txt
 	touch $(VENV_DIR)/bin/activate
 
 train: venv check-db
-	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR)
+	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED)
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
@@ -46,9 +56,35 @@ traits: venv check-db
 	$(PYTHON) -m collimator traits --db $(DB)
 
 thresholds: venv check-db
+<<<<<<< HEAD
 	$(PYTHON) -m collimator thresholds --db $(DB) \
 		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
 		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
+||||||| parent of 34abe0b (productionization work)
+	$(PYTHON) -m collimator thresholds --db $(DB)
+=======
+	$(PYTHON) -m collimator thresholds --db $(DB) \
+		--workers $(WORKERS) \
+		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
+		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
+
+benchmark: venv check-db
+	$(PYTHON) -m collimator benchmark --db $(DB) --workers $(WORKERS) \
+		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
+		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
+
+experiment: venv check-db
+	$(PYTHON) -u -m collimator experiment --db $(DB) --workers $(EXP_WORKERS) --seed $(SEED) \
+		--train-samples $(EXP_TRAIN_SAMPLES) \
+		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
+		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING)
+
+ablate: venv check-db
+	$(PYTHON) -m collimator ablate --db $(DB) --workers $(WORKERS) --seed $(SEED)
+
+demo-db: venv
+	$(PYTHON) -m collimator demo-db --output $(DEMO_DB) --seed $(SEED)
+>>>>>>> 34abe0b (productionization work)
 
 scan: venv
 ifndef FILE
@@ -90,6 +126,10 @@ help:
 	@echo "  make errors DB=...                 Show misclassified samples"
 	@echo "  make traits DB=...                 Show trait-level prevalence / false-positive stats"
 	@echo "  make thresholds DB=...             Show confidence thresholds for accuracy targets"
+	@echo "  make benchmark DB=...              Benchmark extraction, training, and inference"
+	@echo "  make experiment DB=...             Fast experiment with full external test evaluation"
+	@echo "  make ablate DB=...                 Run leave-one-group-out feature ablations"
+	@echo "  make demo-db                       Create a small synthetic demo database"
 	@echo "  make scan FILE=/path/to/binary     Score a live file via cleave + model"
 	@echo ""
 	@echo "Deployment:"
@@ -102,11 +142,18 @@ help:
 	@echo "  make clean                         Remove build artifacts"
 	@echo ""
 	@echo "Configuration:"
-	@echo "  DB=path         Path to cyclotron SQLite database"
+	@echo "  DB=path         Path to cyclotron SQLite database (default: $$HOME/.local/share/cyclotron/cyclotron.db)"
 	@echo "  OUT_DIR=path    Output directory (default: out)"
+	@echo "  WORKERS=n       Feature extraction workers (default: 0=auto)"
+	@echo "  EXP_WORKERS=n   Experiment workers (default: 1)"
+	@echo "  SEED=n          Random seed for training/demo generation (default: 42)"
+	@echo "  EXP_TRAIN_SAMPLES=n   Experiment train rows (default: 10000)"
+	@echo "  EXP_FOLDS=n           Experiment CV folds (default: 2)"
+	@echo "  EXP_ESTIMATORS=n      Experiment max trees (default: 120)"
 	@echo "  SAMPLE=sha256   SHA256 (or prefix) for inspect"
 	@echo "  FILE=path       File path for scan"
 	@echo "  CLEAVE=path     Path to cleave binary (default: cleave)"
+	@echo "  DEMO_DB=path    Output path for make demo-db (default: out/demo.db)"
 	@echo "  MODELS_DIR=path Deployment target (default: ../litmus-models/v1/default)"
 
 # BEGIN: lint-install .

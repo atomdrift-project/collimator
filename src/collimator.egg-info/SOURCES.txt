@@ -9,9 +9,9 @@ src/collimator/export.py
 src/collimator/features.py
 src/collimator/inspect.py
 src/collimator/model.py
+src/collimator/thresholds.py
 src/collimator/train.py
 src/collimator/traits.py
-src/collimator/verify.py
 src/collimator.egg-info/PKG-INFO
 src/collimator.egg-info/SOURCES.txt
 src/collimator.egg-info/dependency_links.txt
@@ -21,4 +21,5 @@ src/collimator.egg-info/top_level.txt
 tests/test_data.py
 tests/test_features.py
 tests/test_model.py
+tests/test_thresholds.py
 tests/test_traits.py

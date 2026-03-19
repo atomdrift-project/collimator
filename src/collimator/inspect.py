@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import heapq
 import logging
 import subprocess
 import sys
@@ -13,9 +14,11 @@ import numpy as np
 from .features import (
     FeatureSpec,
     extract,
+    extract_all,
     primary_file,
     standardize,
 )
+from .export import load_threshold
 from .model import load_model, predict_proba
 
 log = logging.getLogger(__name__)
@@ -23,7 +26,6 @@ log = logging.getLogger(__name__)
 
 def _predict(model: object, vec: np.ndarray) -> float:
     return float(predict_proba(model, vec.reshape(1, -1))[0])
-
 
 def _print_feature_vector(vec: np.ndarray, spec: FeatureSpec, top_n: int = 30) -> None:
     """Print the non-zero features, sorted by absolute value."""
@@ -88,6 +90,10 @@ def inspect_sample(
 
     spec = FeatureSpec.load(spec_path)
     model = load_model(model_path)
+    eval_path = model_path.parent / "evaluation.json"
+    threshold = load_threshold(eval_path)
+    if eval_path.exists():
+        log.info("using threshold %.3f from %s", threshold, eval_path)
 
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
@@ -110,7 +116,7 @@ def inspect_sample(
     print(f"Sample:      {row['sha256']}")
     print(f"Path:        {row['path']}")
     print(f"Status:      {row['status']}")
-    print(f"Prediction:  {prob:.4f} ({'MALWARE' if prob > 0.5 else 'BENIGN'})")
+    print(f"Prediction:  {prob:.4f} ({'MALWARE' if prob > threshold else 'BENIGN'})")
     print(f"File type:   {pf.get('file_type', 'unknown')}")
     print(f"Findings:    {len(pf.get('findings') or [])}")
 
@@ -129,43 +135,75 @@ def inspect_errors(
 
     spec = FeatureSpec.load(spec_path)
     model = load_model(model_path)
-    samples = data.load_samples(db_path)
+    eval_path = model_path.parent / "evaluation.json"
+    threshold = load_threshold(eval_path)
+    if eval_path.exists():
+        log.info("using threshold %.3f from %s", threshold, eval_path)
+    batch_size = 1024
+    sample_batch: list[data.Sample] = []
+    report_batch: list[dict[str, object]] = []
+    label_batch: list[int] = []
+    false_positives: list[tuple[float, data.Sample]] = []
+    false_negatives: list[tuple[float, data.Sample]] = []
+    total = 0
+    n_correct = 0
+    total_fp = 0
+    total_fn = 0
 
-    if not samples:
+    def _score_batch() -> None:
+        nonlocal total, n_correct, total_fp, total_fn
+        if not sample_batch:
+            return
+        X, _ = extract_all(report_batch, label_batch, spec)
+        vecs = standardize(X, spec) if spec.standardized else X
+        probs = predict_proba(model, vecs)
+        for prob, sample in zip(probs, sample_batch, strict=False):
+            total += 1
+            predicted = int(prob > threshold)
+            if sample.label == predicted:
+                n_correct += 1
+                continue
+            if sample.label == 0:
+                total_fp += 1
+                heapq.heappush(false_positives, (float(prob), sample))
+                if len(false_positives) > top_n:
+                    heapq.heappop(false_positives)
+            else:
+                total_fn += 1
+                heapq.heappush(false_negatives, (-float(prob), sample))
+                if len(false_negatives) > top_n:
+                    heapq.heappop(false_negatives)
+        sample_batch.clear()
+        report_batch.clear()
+        label_batch.clear()
+
+    for sample in data.stream_samples(db_path):
+        sample_batch.append(sample)
+        report_batch.append(sample.report)
+        label_batch.append(sample.label)
+        if len(sample_batch) >= batch_size:
+            _score_batch()
+    _score_batch()
+
+    if total == 0:
         print("No samples found")
         return
 
-    vecs_raw = np.array(
-        [extract(s.report, spec) for s in samples], dtype=np.float32,
-    )
-    vecs = standardize(vecs_raw, spec) if spec.standardized else vecs_raw
-    probs = predict_proba(model, vecs)
+    false_positives.sort(key=lambda x: x[0], reverse=True)
+    false_negatives = [(-score, sample) for score, sample in false_negatives]
+    false_negatives.sort(key=lambda x: x[0])
 
-    false_positives = []
-    false_negatives = []
-    for i, sample in enumerate(samples):
-        predicted = int(probs[i] > 0.5)
-        if sample.label == 0 and predicted == 1:
-            false_positives.append((i, probs[i], sample))
-        elif sample.label == 1 and predicted == 0:
-            false_negatives.append((i, probs[i], sample))
-
-    false_positives.sort(key=lambda x: x[1], reverse=True)
-    false_negatives.sort(key=lambda x: x[1])
-
-    total = len(samples)
-    n_correct = total - len(false_positives) - len(false_negatives)
     print(f"Total samples:    {total}")
     print(f"Correct:          {n_correct} ({100 * n_correct / total:.1f}%)")
-    print(f"False positives:  {len(false_positives)} (benign flagged as malware)")
-    print(f"False negatives:  {len(false_negatives)} (malware missed)")
+    print(f"False positives:  {total_fp} (benign flagged as malware)")
+    print(f"False negatives:  {total_fn} (malware missed)")
 
     if false_positives:
         print(f"\nTop {min(top_n, len(false_positives))} False Positives "
               "(benign samples scored as malware):")
         print(f"  {'Score':>7} {'SHA256':<20} {'Path'}")
         print(f"  {'-' * 60}")
-        for _, prob, sample in false_positives[:top_n]:
+        for prob, sample in false_positives[:top_n]:
             sha_short = sample.sha256[:16]
             print(f"  {prob:>7.4f} {sha_short:<20} {sample.path}")
 
@@ -174,7 +212,7 @@ def inspect_errors(
               "(malware samples scored as benign):")
         print(f"  {'Score':>7} {'SHA256':<20} {'Path'}")
         print(f"  {'-' * 60}")
-        for _, prob, sample in false_negatives[:top_n]:
+        for prob, sample in false_negatives[:top_n]:
             sha_short = sample.sha256[:16]
             print(f"  {prob:>7.4f} {sha_short:<20} {sample.path}")
 
@@ -188,6 +226,10 @@ def scan_file(
     """Run cleave on a file and score it with the trained model."""
     spec = FeatureSpec.load(spec_path)
     model = load_model(model_path)
+    eval_path = model_path.parent / "evaluation.json"
+    threshold = load_threshold(eval_path)
+    if eval_path.exists():
+        log.info("using threshold %.3f from %s", threshold, eval_path)
 
     try:
         result = subprocess.run(
@@ -219,7 +261,7 @@ def scan_file(
 
     print(f"File:        {file_path}")
     print(f"File type:   {pf.get('file_type', 'unknown')}")
-    print(f"Prediction:  {prob:.4f} ({'MALWARE' if prob > 0.5 else 'BENIGN'})")
+    print(f"Prediction:  {prob:.4f} ({'MALWARE' if prob > threshold else 'BENIGN'})")
     print(f"Findings:    {len(findings)} ({hostile} hostile, {suspicious} suspicious)")
 
     _print_feature_vector(vec_raw, spec)

@@ -5,12 +5,13 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import subprocess
 import sys
 from pathlib import Path
 
 import numpy as np
 
-from . import data, explain, export, features, inspect, thresholds, train, traits
+from . import ablation, benchmark, data, demo, experiment, explain, export, features, inspect, thresholds, train, traits
 
 log = logging.getLogger(__name__)
 
@@ -23,29 +24,48 @@ def setup_logging() -> None:
     )
 
 
+def _git_sha() -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return result.stdout.strip() or None
+
+
 def cmd_train(args: argparse.Namespace) -> None:
     """Train a model and export to ONNX."""
     db_path = Path(args.db)
     out_dir = Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
+    effective_workers = features.resolve_worker_count(args.workers)
+    if args.workers <= 0:
+        log.info("auto workers: using %d worker processes", effective_workers)
+    else:
+        log.info("using %d worker processes", effective_workers)
 
     # Pass 1: stream reports to build vocabulary (no reports kept in memory).
     log.info("pass 1: building vocabulary from %s", db_path)
     spec = features.build_vocab(
-        report for report, _label in data.stream_reports(db_path, exclude_test=True)
+        (report for report, _label in data.stream_raw_reports(db_path, exclude_test=True)),
+        n_workers=args.workers,
     )
 
-    # Pass 2: stream reports again to extract sparse features.
-    log.info("pass 2: extracting features")
-    X, y = features.extract_stream(
-        data.stream_reports(db_path, exclude_test=True), spec,
+    # Pass 2: stream the corpus once to extract both training and held-out test features.
+    log.info("pass 2: extracting training and test features")
+    X, y, X_test, y_test = features.extract_partitioned_stream(
+        data.stream_partitioned_raw_reports(db_path), spec, n_workers=args.workers,
     )
     if X.shape[0] < 10:
         print(f"ERROR: only {X.shape[0]} training samples, need at least 10")
         sys.exit(1)
 
     # Train.
-    config = train.TrainConfig()
+    config = train.TrainConfig(seed=args.seed)
     result = train.train(X, y, config, feature_names=spec.feature_names)
 
     # Attach standardization params to spec before saving.
@@ -58,11 +78,34 @@ def cmd_train(args: argparse.Namespace) -> None:
     export.save_model(result.model, out_dir / "model.json")
     export.save_evaluation(
         metrics=result.metrics,
+        calibration=result.calibration,
         optimal_threshold=result.optimal_threshold,
         confusion=result.confusion,
         class_distribution=result.class_distribution,
+        split_summary=result.split_summary,
         fold_metrics=result.fold_metrics,
         n_features=spec.total_features,
+        experiment={
+            "seed": config.seed,
+            "feature_spec_version": spec.version,
+            "workers_requested": args.workers,
+            "workers_effective": effective_workers,
+            "git_sha": _git_sha(),
+            "train_config": {
+                "n_folds": config.n_folds,
+                "n_estimators": config.n_estimators,
+                "max_depth": config.max_depth,
+                "learning_rate": config.learning_rate,
+                "holdout_fraction": config.holdout_fraction,
+                "early_stopping_rounds": config.early_stopping_rounds,
+                "min_child_weight": config.min_child_weight,
+                "colsample_bytree": config.colsample_bytree,
+                "subsample": config.subsample,
+                "gamma": config.gamma,
+                "reg_alpha": config.reg_alpha,
+                "reg_lambda": config.reg_lambda,
+            },
+        },
         output_path=out_dir / "evaluation.json",
     )
 
@@ -95,10 +138,6 @@ def cmd_train(args: argparse.Namespace) -> None:
     generate_fixtures(result.model, spec, X_fix, X_fix, out_dir)
 
     # Threshold table on the deterministic test set.
-    log.info("pass 3: scoring test set for threshold table")
-    X_test, y_test = features.extract_stream(
-        data.stream_reports(db_path, only_test=True), spec,
-    )
     if X_test.shape[0] > 0:
         from .model import predict_proba
         test_probs = predict_proba(result.model, X_test)
@@ -119,15 +158,7 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     spec_path = Path(args.spec)
     model_path = Path(args.model)
 
-    samples = data.load_samples(db_path)
     spec = features.FeatureSpec.load(spec_path)
-    reports = [s.report for s in samples]
-    labels = [s.label for s in samples]
-    X, y = features.extract_all(reports, labels, spec)
-    if spec.standardized:
-        X = features.standardize(X, spec)
-    else:
-        X = X.toarray() if hasattr(X, 'toarray') else X
 
     try:
         import onnxruntime as ort
@@ -136,7 +167,37 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     session = ort.InferenceSession(str(model_path))
-    predictions = session.run(None, {"features": X})[0].squeeze()
+    batch_size = 1024
+    reports_batch: list[dict[str, object]] = []
+    labels_batch: list[int] = []
+    pred_batches: list[np.ndarray] = []
+    y_batches: list[np.ndarray] = []
+
+    def _score_batch() -> None:
+        if not reports_batch:
+            return
+        X_batch, y_batch = features.extract_all(reports_batch, labels_batch, spec)
+        if spec.standardized:
+            X_input = features.standardize(X_batch, spec)
+        else:
+            X_input = X_batch.toarray() if hasattr(X_batch, "toarray") else X_batch
+        pred_batches.append(export.predict_onnx_proba(session, X_input))
+        y_batches.append(y_batch)
+        reports_batch.clear()
+        labels_batch.clear()
+
+    for sample in data.stream_samples(db_path):
+        reports_batch.append(sample.report)
+        labels_batch.append(sample.label)
+        if len(reports_batch) >= batch_size:
+            _score_batch()
+    _score_batch()
+
+    predictions = np.concatenate(pred_batches) if pred_batches else np.array([], dtype=np.float32)
+    y = np.concatenate(y_batches) if y_batches else np.array([], dtype=np.float32)
+    if len(y) == 0:
+        print("No samples found")
+        return
 
     # Use optimal threshold from training if available.
     threshold = 0.5
@@ -145,10 +206,7 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     else:
         eval_json_path = model_path.parent / "evaluation.json"
     if eval_json_path.exists():
-        import json as _json
-        with open(eval_json_path) as f:
-            eval_data = _json.load(f)
-        threshold = eval_data.get("optimal_threshold", 0.5)
+        threshold = export.load_threshold(eval_json_path)
         logging.getLogger(__name__).info(
             "using threshold %.3f from %s", threshold, eval_json_path,
         )
@@ -169,6 +227,9 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     print(f"  F1:        {f1_score(y, y_binary, zero_division=0):.4f}")
     if len(set(y)) > 1:
         print(f"  ROC AUC:   {roc_auc_score(y, predictions):.4f}")
+        from sklearn.metrics import average_precision_score, brier_score_loss
+        print(f"  Avg Prec:  {average_precision_score(y, predictions):.4f}")
+        print(f"  Brier:     {brier_score_loss(y, predictions):.4f}")
 
 
 def cmd_explain(args: argparse.Namespace) -> None:
@@ -180,21 +241,54 @@ def cmd_explain(args: argparse.Namespace) -> None:
     model_path = Path(args.model)
     out_dir = Path(args.output)
 
-    samples = data.load_samples(db_path)
     spec = features.FeatureSpec.load(spec_path)
-    reports = [s.report for s in samples]
-    labels = [s.label for s in samples]
-    X, y = features.extract_all(reports, labels, spec)
+    rng = np.random.default_rng(42)
+    sampled: list[tuple[dict[str, object], int]] = []
+    seen = 0
+    for report, label in data.stream_reports(db_path):
+        seen += 1
+        if len(sampled) < explain.MAX_EXPLAIN:
+            sampled.append((report, label))
+            continue
+        j = int(rng.integers(seen))
+        if j < explain.MAX_EXPLAIN:
+            sampled[j] = (report, label)
+
+    if not sampled:
+        print("No samples found")
+        return
+
+    reports = [report for report, _label in sampled]
+    labels = [label for _report, label in sampled]
+    X, _ = features.extract_all(reports, labels, spec)
     if spec.standardized:
         X = features.standardize(X, spec)
-    else:
-        X = X.toarray() if hasattr(X, 'toarray') else X
+    elif hasattr(X, "toarray"):
+        X = X.toarray()
 
     model = load_model(model_path)
 
     explain.compute_shap_importance(
         model, X, spec,
         output_path=out_dir / "shap_importance.json",
+    )
+
+
+def _add_workers_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=0,
+        help="Feature extraction worker processes (default: auto; use 1 to force single-process)",
+    )
+
+
+def _add_seed_arg(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for splitting, CV, and model training (default: 42)",
     )
 
 
@@ -312,6 +406,8 @@ def main() -> None:
     p_train = subparsers.add_parser("train", help="Train model and export to ONNX")
     p_train.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
     p_train.add_argument("--output", default="out", help="Output directory (default: out)")
+    _add_workers_arg(p_train)
+    _add_seed_arg(p_train)
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Evaluate existing model")
@@ -395,6 +491,7 @@ def main() -> None:
         "thresholds", help="Show accuracy at various confidence thresholds",
     )
     p_thresh.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+<<<<<<< HEAD
     p_thresh.add_argument(
         "--model", default=None,
         help="Path to trained XGBoost model (.json) to reuse instead of retraining",
@@ -403,6 +500,69 @@ def main() -> None:
         "--spec", default=None,
         help="Path to feature_spec.json to reuse instead of rebuilding vocab",
     )
+||||||| parent of 34abe0b (productionization work)
+=======
+    p_thresh.add_argument(
+        "--model", default=None,
+        help="Path to trained XGBoost model (.json) to reuse instead of retraining",
+    )
+    p_thresh.add_argument(
+        "--spec", default=None,
+        help="Path to feature_spec.json to reuse instead of rebuilding vocab",
+    )
+    _add_workers_arg(p_thresh)
+
+    # benchmark
+    p_bench = subparsers.add_parser("benchmark", help="Benchmark extraction, training, and inference")
+    p_bench.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_bench.add_argument("--model", default=None, help="Optional trained XGBoost model (.json)")
+    p_bench.add_argument("--spec", default=None, help="Optional feature_spec.json")
+    p_bench.add_argument("--output", default=None, help="Optional JSON output path")
+    _add_workers_arg(p_bench)
+
+    # experiment
+    p_exp = subparsers.add_parser(
+        "experiment", help="Run a fast subsampled experiment on the full external test bucket",
+    )
+    p_exp.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_exp.add_argument(
+        "--train-samples", type=int, default=10_000,
+        help="Approximate sampled training rows (default: 10000)",
+    )
+    p_exp.add_argument("--n-folds", type=int, default=2, help="CV folds for the experiment")
+    p_exp.add_argument("--n-estimators", type=int, default=120, help="Max trees for the experiment")
+    p_exp.add_argument("--max-depth", type=int, default=5, help="Tree depth for the experiment")
+    p_exp.add_argument(
+        "--learning-rate", type=float, default=0.05, help="Learning rate for the experiment",
+    )
+    p_exp.add_argument(
+        "--early-stopping-rounds", type=int, default=12,
+        help="Early stopping rounds for the experiment",
+    )
+    _add_workers_arg(p_exp)
+    _add_seed_arg(p_exp)
+
+    # ablation
+    p_ablate = subparsers.add_parser("ablate", help="Run leave-one-group-out feature ablations")
+    p_ablate.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_ablate.add_argument(
+        "--groups",
+        nargs="*",
+        choices=list(features.FEATURE_GROUPS),
+        default=None,
+        help="Optional subset of feature groups to ablate",
+    )
+    p_ablate.add_argument("--output", default=None, help="Optional JSON output path")
+    _add_workers_arg(p_ablate)
+    _add_seed_arg(p_ablate)
+
+    # demo-db
+    p_demo = subparsers.add_parser("demo-db", help="Create a small synthetic cyclotron database")
+    p_demo.add_argument("--output", required=True, help="Path to output SQLite database")
+    p_demo.add_argument("--n-benign", type=int, default=64, help="Number of benign samples")
+    p_demo.add_argument("--n-malware", type=int, default=64, help="Number of malware samples")
+    _add_seed_arg(p_demo)
+>>>>>>> 34abe0b (productionization work)
 
     args = parser.parse_args()
 
@@ -445,11 +605,59 @@ def main() -> None:
             output_path=Path(args.output) if args.output else None,
         )
     elif args.command == "thresholds":
+<<<<<<< HEAD
         thresholds.show_thresholds(
             db_path=Path(args.db),
             model_path=Path(args.model) if args.model else None,
             spec_path=Path(args.spec) if args.spec else None,
         )
+||||||| parent of 34abe0b (productionization work)
+        thresholds.show_thresholds(db_path=Path(args.db))
+=======
+        thresholds.show_thresholds(
+            db_path=Path(args.db),
+            model_path=Path(args.model) if args.model else None,
+            spec_path=Path(args.spec) if args.spec else None,
+            n_workers=args.workers,
+        )
+    elif args.command == "benchmark":
+        benchmark.run_benchmark(
+            db_path=Path(args.db),
+            n_workers=args.workers,
+            model_path=Path(args.model) if args.model else None,
+            spec_path=Path(args.spec) if args.spec else None,
+            output_path=Path(args.output) if args.output else None,
+        )
+    elif args.command == "experiment":
+        experiment.run_experiment(
+            db_path=Path(args.db),
+            n_workers=args.workers,
+            seed=args.seed,
+            train_samples=args.train_samples,
+            n_folds=args.n_folds,
+            n_estimators=args.n_estimators,
+            max_depth=args.max_depth,
+            learning_rate=args.learning_rate,
+            early_stopping_rounds=args.early_stopping_rounds,
+        )
+    elif args.command == "ablate":
+        rows = ablation.run_ablation(
+            db_path=Path(args.db),
+            n_workers=args.workers,
+            seed=args.seed,
+            groups=args.groups,
+        )
+        ablation.print_ablation(rows)
+        if args.output:
+            ablation.save_ablation(rows, Path(args.output))
+    elif args.command == "demo-db":
+        demo.create_demo_db(
+            Path(args.output),
+            n_benign=args.n_benign,
+            n_malware=args.n_malware,
+            seed=args.seed,
+        )
+>>>>>>> 34abe0b (productionization work)
 
 
 if __name__ == "__main__":

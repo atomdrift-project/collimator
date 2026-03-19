@@ -11,6 +11,7 @@ import xgboost as xgb
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
+    brier_score_loss,
     confusion_matrix,
     f1_score,
     precision_recall_curve,
@@ -26,13 +27,17 @@ log = logging.getLogger(__name__)
 
 # Minimum samples per class to enable a holdout split.
 MIN_HOLDOUT_CLASS_SIZE = 20
+MIN_CALIBRATION_CLASS_SIZE = 8
 
-# Fraction of data reserved for honest evaluation.
-HOLDOUT_FRACTION = 0.15
+# Fraction of non-test training data reserved for calibration/evaluation.
+HOLDOUT_FRACTION = 0.10
 
 
 @dataclass
 class TrainConfig:
+    seed: int = 42
+    device: str | None = None
+    holdout_fraction: float = HOLDOUT_FRACTION
     n_folds: int = 5
     n_estimators: int = 1000
     max_depth: int = 6
@@ -50,9 +55,11 @@ class TrainConfig:
 class TrainResult:
     model: xgb.XGBClassifier
     metrics: dict[str, float]
+    calibration: dict[str, object]
     optimal_threshold: float
     confusion: list[list[int]]
     class_distribution: dict[str, int]
+    split_summary: dict[str, int | str]
     fold_metrics: list[dict[str, float]]
     feature_means: list[float] = field(default_factory=list)
     feature_stds: list[float] = field(default_factory=list)
@@ -69,6 +76,7 @@ def _compute_metrics(
         "precision": float(precision_score(y_true, y_pred, zero_division=0)),
         "recall": float(recall_score(y_true, y_pred, zero_division=0)),
         "f1": float(f1_score(y_true, y_pred, zero_division=0)),
+        "brier": float(brier_score_loss(y_true, y_prob)),
         "roc_auc": (
             float(roc_auc_score(y_true, y_prob))
             if len(np.unique(y_true)) > 1 else 0.0
@@ -78,6 +86,47 @@ def _compute_metrics(
             if len(np.unique(y_true)) > 1 else 0.0
         ),
     }
+
+
+def _calibration_summary(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    *,
+    n_bins: int = 10,
+) -> dict[str, object]:
+    """Summarize calibration with equal-width bins and ECE."""
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    bin_ids = np.clip(np.digitize(y_prob, edges[1:-1], right=False), 0, n_bins - 1)
+    rows: list[dict[str, float | int]] = []
+    ece = 0.0
+    for i in range(n_bins):
+        mask = bin_ids == i
+        count = int(np.sum(mask))
+        if count == 0:
+            rows.append(
+                {
+                    "bin": i,
+                    "count": 0,
+                    "avg_confidence": 0.0,
+                    "empirical_rate": 0.0,
+                    "abs_gap": 0.0,
+                }
+            )
+            continue
+        avg_conf = float(np.mean(y_prob[mask]))
+        emp_rate = float(np.mean(y_true[mask]))
+        gap = abs(avg_conf - emp_rate)
+        ece += (count / max(len(y_prob), 1)) * gap
+        rows.append(
+            {
+                "bin": i,
+                "count": count,
+                "avg_confidence": avg_conf,
+                "empirical_rate": emp_rate,
+                "abs_gap": gap,
+            }
+        )
+    return {"ece": float(ece), "bins": rows}
 
 
 def _optimal_threshold(
@@ -103,6 +152,33 @@ def _optimal_threshold(
     return 0.5
 
 
+def _split_calibration_eval(
+    X_holdout: np.ndarray | sp.spmatrix,
+    y_holdout: np.ndarray,
+    *,
+    seed: int = 42,
+) -> tuple[
+    tuple[np.ndarray | sp.spmatrix, np.ndarray] | None,
+    tuple[np.ndarray | sp.spmatrix, np.ndarray],
+]:
+    """Split holdout into calibration and final evaluation subsets when feasible."""
+    n_holdout_malware = int(np.sum(y_holdout == 1))
+    n_holdout_benign = int(np.sum(y_holdout == 0))
+    if min(n_holdout_malware, n_holdout_benign) < MIN_CALIBRATION_CLASS_SIZE:
+        return None, (X_holdout, y_holdout)
+
+    calib_idx, eval_idx = train_test_split(
+        np.arange(len(y_holdout)),
+        test_size=0.5,
+        stratify=y_holdout,
+        random_state=seed,
+    )
+    return (
+        (X_holdout[calib_idx], y_holdout[calib_idx]),
+        (X_holdout[eval_idx], y_holdout[eval_idx]),
+    )
+
+
 def train(
     X: np.ndarray | sp.spmatrix,
     y: np.ndarray,
@@ -112,7 +188,7 @@ def train(
     """Train an XGBoost classifier with holdout + stratified K-fold CV.
 
     Pipeline:
-      1. Stratified holdout split (15%) for honest evaluation
+      1. Stratified holdout split (default 10%) for honest evaluation
       2. Compute feature standardization (mean/std) for pipeline compatibility
       3. K-fold CV on train+val for model selection metrics
       4. Retrain final model on all train+val data
@@ -121,7 +197,7 @@ def train(
     if config is None:
         config = TrainConfig()
 
-    np.random.seed(42)
+    np.random.seed(config.seed)
 
     n_features = X.shape[1]
     n_malware = int(np.sum(y == 1))
@@ -147,9 +223,9 @@ def train(
     if n_min_class >= MIN_HOLDOUT_CLASS_SIZE:
         tv_idx, holdout_idx = train_test_split(
             np.arange(len(y)),
-            test_size=HOLDOUT_FRACTION,
+            test_size=config.holdout_fraction,
             stratify=y,
-            random_state=42,
+            random_state=config.seed,
         )
         X_tv, y_tv = X[tv_idx], y[tv_idx]
         X_holdout, y_holdout = X[holdout_idx], y[holdout_idx]
@@ -201,7 +277,7 @@ def train(
     cv_predictions = np.zeros(len(y_tv))
 
     if n_folds >= 2:
-        skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
+        skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=config.seed)
         log.info("running %d-fold cross-validation", n_folds)
         print(f"\n{'Fold':<6} {'AUC':>8} {'F1':>8} {'Prec':>8} {'Recall':>8}")
         print(f"{'-' * 42}")
@@ -210,6 +286,8 @@ def train(
             fold_model = create_classifier(
                 n_benign=int(np.sum(y_tv[train_idx] == 0)),
                 n_malware=int(np.sum(y_tv[train_idx] == 1)),
+                device=config.device,
+                random_state=config.seed,
                 n_estimators=config.n_estimators,
                 max_depth=config.max_depth,
                 learning_rate=config.learning_rate,
@@ -247,6 +325,8 @@ def train(
     final_model = create_classifier(
         n_benign=n_tv_benign,
         n_malware=n_tv_malware,
+        device=config.device,
+        random_state=config.seed,
         n_estimators=config.n_estimators,
         max_depth=config.max_depth,
         learning_rate=config.learning_rate,
@@ -260,10 +340,24 @@ def train(
     )
 
     if X_holdout is not None:
-        # Use holdout as eval set for early stopping.
+        calibration_split, evaluation_split = _split_calibration_eval(
+            X_holdout, y_holdout, seed=config.seed,
+        )
+        if calibration_split is None:
+            log.warning(
+                "holdout too small to separate calibration from evaluation; "
+                "using same split for both"
+            )
+            X_calib, y_calib = X_holdout, y_holdout
+            X_eval, y_eval = X_holdout, y_holdout
+        else:
+            X_calib, y_calib = calibration_split
+            X_eval, y_eval = evaluation_split
+
+        # Use calibration split for early stopping and threshold selection.
         final_model.fit(
             X_tv, y_tv,
-            eval_set=[(X_holdout, y_holdout)],
+            eval_set=[(X_calib, y_calib)],
             verbose=False,
         )
         best_iter = getattr(final_model, "best_iteration", None)
@@ -271,29 +365,44 @@ def train(
             log.info("final model: %d trees (early stopped at %d)", final_model.n_estimators, best_iter)
         else:
             log.info("final model: %d trees", final_model.n_estimators)
+        split_summary = {
+            "policy": "train/calibration/evaluation" if calibration_split is not None else "train/holdout",
+            "train_samples": int(len(y_tv)),
+            "calibration_samples": int(len(y_calib)),
+            "evaluation_samples": int(len(y_eval)),
+        }
     else:
         # No holdout — train without early stopping.
         final_model.set_params(early_stopping_rounds=None)
         final_model.fit(X_tv, y_tv, verbose=False)
+        split_summary = {
+            "policy": "train_only",
+            "train_samples": int(len(y_tv)),
+            "calibration_samples": 0,
+            "evaluation_samples": int(len(y_tv)),
+        }
 
     # --- Evaluation ---
     if X_holdout is not None:
-        holdout_preds = predict_proba(final_model, X_holdout)
-        optimal_threshold = _optimal_threshold(y_holdout, holdout_preds)
-        metrics = _compute_metrics(y_holdout, holdout_preds, optimal_threshold)
-        eval_y = y_holdout
-        eval_preds = holdout_preds
-        log.info("holdout evaluation: AUC=%.4f F1=%.4f threshold=%.3f",
+        calib_preds = predict_proba(final_model, X_calib)
+        optimal_threshold = _optimal_threshold(y_calib, calib_preds)
+        eval_preds = predict_proba(final_model, X_eval)
+        metrics = _compute_metrics(y_eval, eval_preds, optimal_threshold)
+        calibration = _calibration_summary(y_eval, eval_preds)
+        eval_y = y_eval
+        log.info("evaluation: AUC=%.4f F1=%.4f threshold=%.3f",
                  metrics["roc_auc"], metrics["f1"], optimal_threshold)
     elif n_folds >= 2:
         optimal_threshold = _optimal_threshold(y_tv, cv_predictions)
         metrics = _compute_metrics(y_tv, cv_predictions, optimal_threshold)
+        calibration = _calibration_summary(y_tv, cv_predictions)
         eval_y = y_tv
         eval_preds = cv_predictions
     else:
         all_preds = predict_proba(final_model, X_tv)
         optimal_threshold = _optimal_threshold(y_tv, all_preds)
         metrics = _compute_metrics(y_tv, all_preds, optimal_threshold)
+        calibration = _calibration_summary(y_tv, all_preds)
         eval_y = y_tv
         eval_preds = all_preds
 
@@ -310,10 +419,13 @@ def train(
     print(f"{'=' * 50}")
     print(f"Samples:     {len(y)} ({n_malware} malware, {n_benign} benign)")
     if X_holdout is not None:
-        print(f"Holdout:     {len(y_holdout)} samples")
+        print(f"Calibrate:   {len(y_calib)} samples")
+        print(f"Evaluate:    {len(y_eval)} samples")
     print(f"Features:    {n_features}")
     print(f"ROC AUC:     {metrics['roc_auc']:.4f}")
     print(f"Avg Prec:    {metrics['avg_precision']:.4f}")
+    print(f"Brier:       {metrics['brier']:.4f}")
+    print(f"ECE:         {float(calibration['ece']):.4f}")
     print(f"F1 Score:    {metrics['f1']:.4f}")
     print(f"Precision:   {metrics['precision']:.4f}")
     print(f"Recall:      {metrics['recall']:.4f}")
@@ -332,9 +444,11 @@ def train(
     return TrainResult(
         model=final_model,
         metrics=metrics,
+        calibration=calibration,
         optimal_threshold=optimal_threshold,
         confusion=cm,
         class_distribution={"benign": n_benign, "malware": n_malware},
+        split_summary=split_summary,
         fold_metrics=fold_metrics_list,
         feature_means=feature_means.tolist(),
         feature_stds=feature_stds.tolist(),

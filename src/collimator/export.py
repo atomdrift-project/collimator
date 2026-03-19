@@ -4,12 +4,65 @@ from __future__ import annotations
 
 import json
 import logging
+import platform
 from pathlib import Path
 
 import numpy as np
 import xgboost as xgb
 
 log = logging.getLogger(__name__)
+
+
+def load_evaluation(path: Path) -> dict[str, object]:
+    """Load evaluation metadata from JSON."""
+    with open(path) as f:
+        return json.load(f)
+
+
+def load_threshold(path: Path, default: float = 0.5) -> float:
+    """Load the calibrated threshold from an evaluation artifact."""
+    try:
+        data = load_evaluation(path)
+    except (OSError, json.JSONDecodeError):
+        return default
+    return float(data.get("optimal_threshold", default))
+
+
+def predict_onnx_proba(session: object, X: np.ndarray) -> np.ndarray:
+    """Run ONNX inference and return class-1 probabilities as a 1D array."""
+    results = session.run(None, {"features": X})
+    n_rows = len(X)
+
+    def _as_probability_vector(value: object) -> np.ndarray | None:
+        if isinstance(value, list) and len(value) == n_rows and value:
+            first = value[0]
+            if isinstance(first, dict):
+                return np.array(
+                    [row.get(1, row.get("1", 0.0)) for row in value],
+                    dtype=np.float32,
+                )
+
+        arr = np.asarray(value)
+        if arr.ndim == 2 and arr.shape[0] == n_rows and arr.shape[1] >= 2:
+            return arr[:, 1].astype(np.float32, copy=False)
+        if arr.ndim == 1 and arr.shape[0] == n_rows:
+            if np.issubdtype(arr.dtype, np.floating):
+                return arr.astype(np.float32, copy=False)
+        return None
+
+    output_names = [out.name.lower() for out in session.get_outputs()]
+    for name, value in zip(output_names, results):
+        if "prob" in name:
+            probs = _as_probability_vector(value)
+            if probs is not None:
+                return probs
+
+    for value in results:
+        probs = _as_probability_vector(value)
+        if probs is not None and not np.array_equal(probs, probs.astype(np.int32)):
+            return probs
+
+    raise ValueError("could not locate probability output in ONNX results")
 
 
 def export_onnx(
@@ -81,11 +134,7 @@ def validate_onnx(
 
     # ONNX predictions.
     session = ort.InferenceSession(str(onnx_path))
-    onnx_results = session.run(None, {"features": test_input})
-
-    # XGBoost ONNX outputs: [labels, probabilities_map].
-    # probabilities_map is a list of dicts [{0: p0, 1: p1}, ...].
-    onnx_probs = np.array([r[1] for r in onnx_results[1]], dtype=np.float32)
+    onnx_probs = predict_onnx_proba(session, test_input)
 
     max_diff = float(np.max(np.abs(xgb_output - onnx_probs)))
     if max_diff > tolerance:
@@ -105,22 +154,33 @@ def save_model(model: xgb.XGBClassifier, output_path: Path) -> None:
 
 def save_evaluation(
     metrics: dict[str, float],
+    calibration: dict[str, object],
     optimal_threshold: float,
     confusion: list[list[int]],
     class_distribution: dict[str, int],
+    split_summary: dict[str, int | str],
     fold_metrics: list[dict[str, float]],
     n_features: int,
+    experiment: dict[str, object],
     output_path: Path,
 ) -> None:
     """Save evaluation results as JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     results = {
         "metrics": metrics,
+        "calibration": calibration,
         "optimal_threshold": optimal_threshold,
         "confusion_matrix": confusion,
         "class_distribution": class_distribution,
+        "split_summary": split_summary,
         "fold_metrics": fold_metrics,
         "n_features": n_features,
+        "experiment": experiment,
+        "environment": {
+            "python": platform.python_version(),
+            "xgboost": xgb.__version__,
+            "numpy": np.__version__,
+        },
     }
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)

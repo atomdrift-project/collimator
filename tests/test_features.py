@@ -10,6 +10,7 @@ from collimator.features import (
     build_vocab,
     extract,
     extract_all,
+    feature_group_indices,
     primary_file,
     standardize,
 )
@@ -148,6 +149,15 @@ def test_build_vocab_feature_groups_present() -> None:
     assert "struct" in groups
 
 
+def test_feature_group_indices_covers_all_features() -> None:
+    reports = _reports_with_finding("objectives/evasion", "hostile", n=35)
+    spec = build_vocab(reports)
+    grouped = feature_group_indices(spec)
+
+    seen = sorted(i for idxs in grouped.values() for i in idxs)
+    assert seen == list(range(spec.total_features))
+
+
 # ---------------------------------------------------------------------------
 # Feature extraction
 # ---------------------------------------------------------------------------
@@ -227,6 +237,17 @@ def test_extract_third_party_signals() -> None:
 
     idx = spec.feature_names.index("ext:has_yara_match")
     assert vec[idx] == 1.0
+
+
+def test_extract_non_yara_third_party_does_not_set_yara_flag() -> None:
+    report = _make_report(findings=[
+        {"id": "third_party/packer_match", "crit": "hostile", "conf": 1.0},
+    ])
+    spec = build_vocab([report])
+    vec = extract(report, spec)
+
+    idx = spec.feature_names.index("ext:has_yara_match")
+    assert vec[idx] == 0.0
 
 
 def test_extract_well_known_signals() -> None:
