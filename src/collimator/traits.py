@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from .data import Sample, load_samples
-from .features import primary_file
+from .features import report_files
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,35 +41,35 @@ def compute_trait_stats(
     malware_occurrence_counts: dict[str, int] = {}
 
     for sample in samples:
-        pf = primary_file(sample.report)
         seen: set[str] = set()
-        for finding in pf.get("findings") or []:
-            if crit is not None and finding.get("crit") != crit:
-                continue
-            trait_id = finding.get("id", "")
-            if not trait_id:
-                continue
+        for file_entry in report_files(sample.report):
+            for finding in file_entry.get("findings") or []:
+                if crit is not None and finding.get("crit") != crit:
+                    continue
+                trait_id = finding.get("id", "")
+                if not trait_id:
+                    continue
 
-            if sample.label == 1:
-                malware_occurrence_counts[trait_id] = (
-                    malware_occurrence_counts.get(trait_id, 0) + 1
-                )
-            else:
-                benign_occurrence_counts[trait_id] = (
-                    benign_occurrence_counts.get(trait_id, 0) + 1
-                )
+                if sample.label == 1:
+                    malware_occurrence_counts[trait_id] = (
+                        malware_occurrence_counts.get(trait_id, 0) + 1
+                    )
+                else:
+                    benign_occurrence_counts[trait_id] = (
+                        benign_occurrence_counts.get(trait_id, 0) + 1
+                    )
 
-            if trait_id in seen:
-                continue
-            seen.add(trait_id)
-            if sample.label == 1:
-                malware_sample_counts[trait_id] = (
-                    malware_sample_counts.get(trait_id, 0) + 1
-                )
-            else:
-                benign_sample_counts[trait_id] = (
-                    benign_sample_counts.get(trait_id, 0) + 1
-                )
+                if trait_id in seen:
+                    continue
+                seen.add(trait_id)
+                if sample.label == 1:
+                    malware_sample_counts[trait_id] = (
+                        malware_sample_counts.get(trait_id, 0) + 1
+                    )
+                else:
+                    benign_sample_counts[trait_id] = (
+                        benign_sample_counts.get(trait_id, 0) + 1
+                    )
 
     trait_ids = set(benign_sample_counts) | set(malware_sample_counts)
     stats: list[TraitStat] = []

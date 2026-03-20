@@ -20,11 +20,11 @@ model two complementary views per finding path:
 Feature groups:
   1. Path Presence: binary features for path existing at any crit ≥ baseline
   2. Path Max Criticality: ordinal (0-5) per path in presence vocab
-  3. Path Aggregates: breadth, concentration, and finding-density signals (16)
+  3. Path Aggregates: breadth, concentration, and finding-density signals (22)
   4. Third-Party / Well-Known Summary: aggregated match signals (6)
   5. Key Metrics: curated binary/text/PE metrics (16)
-  6. File Type: one-hot (corpus-dependent, ~30-40)
-  7. Structural: anomalies + finding count (4)
+  6. File Type: multi-hot across all files in the report
+  7. Structural: report/container context (6)
 """
 
 from __future__ import annotations
@@ -78,6 +78,9 @@ MIN_PATH_FREQ = 30
 # Low-confidence findings add noise without meaningful signal.
 MIN_CONFIDENCE = 0.65
 
+# Number of riskiest files to summarize for package-level top-k signals.
+TOP_K_RISK_FILES = 1
+
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
 KEY_METRICS: list[tuple[str, str, bool]] = [
@@ -110,12 +113,16 @@ FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "st
 # Helpers
 # ---------------------------------------------------------------------------
 
+def report_files(report: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return all valid file entries from a v3 report."""
+    files = report.get("files") or []
+    return [f for f in files if isinstance(f, dict)]
+
+
 def primary_file(report: dict[str, Any]) -> dict[str, Any]:
     """Return the primary (first) file entry from a v3 report."""
-    files = report.get("files") or []
-    if files and isinstance(files[0], dict):
-        return files[0]
-    return {}
+    files = report_files(report)
+    return files[0] if files else {}
 
 
 def _float(value: Any, default: float = 0.0) -> float:
@@ -260,7 +267,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     for path in presence_vocab:
         feature_names.append(f"maxcrit:{path}")
 
-    # Group 3: Path Aggregates (16).
+    # Group 3: Path Aggregates (22).
     # Ratio-based: forces the model to learn from relative concentration of
     # suspicious behavior rather than absolute counts. A tool with 23 suspicious
     # findings out of 154 total (15%) looks very different from malware with
@@ -282,6 +289,12 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         "agg:hostile_finding_ratio",     # hostile / all filtered findings
         "agg:unique_suspicious_ids_log", # log1p of unique suspicious+ trait IDs
         "agg:unique_hostile_ids_log",    # log1p of unique hostile trait IDs
+        f"agg:top{TOP_K_RISK_FILES}_file_suspicious_ratio_sum",
+        f"agg:top{TOP_K_RISK_FILES}_file_hostile_ratio_sum",
+        f"agg:top{TOP_K_RISK_FILES}_file_suspicious_findings_log",
+        f"agg:top{TOP_K_RISK_FILES}_file_hostile_findings_log",
+        f"agg:top{TOP_K_RISK_FILES}_file_suspicious_ratio_x_inner_files",
+        f"agg:top{TOP_K_RISK_FILES}_file_hostile_ratio_x_inner_files",
     ])
 
     # Group 4: Third-Party / Well-Known Summary (6).
@@ -298,16 +311,18 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     for group, fname, _ in KEY_METRICS:
         feature_names.append(f"metrics:{group}_{fname}")
 
-    # Group 6: File Type one-hot.
+    # Group 6: File Type multi-hot across all files in the report.
     for ft in filetype_vocab:
         feature_names.append(f"filetype:{ft}")
 
-    # Group 7: Structural (4).
+    # Group 7: Structural / container context (6).
     feature_names.extend([
         "struct:tiny_executable",
         "struct:no_imports",
         "struct:zero_findings",
         "struct:finding_count_log",
+        "struct:file_count_log",
+        "struct:inner_file_count_log",
     ])
 
     spec = FeatureSpec(
@@ -359,6 +374,34 @@ class _FindingSummary:
     well_known_hostile: int
     well_known_suspicious: int
     has_yara: bool
+
+
+@dataclass(slots=True)
+class _FileRiskStats:
+    suspicious_ratio: float
+    hostile_ratio: float
+    suspicious_findings: int
+    hostile_findings: int
+
+
+def _merge_metric_values(files: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
+    """Collapse per-file metrics into report-level maxima.
+
+    Max aggregation preserves single-file detections for embedded files while
+    still allowing multi-file reports to contribute their strongest signal.
+    """
+    merged: dict[str, dict[str, float]] = {}
+    for file_entry in files:
+        metrics = file_entry.get("metrics") or {}
+        for group, fields in metrics.items():
+            if not isinstance(fields, dict):
+                continue
+            group_metrics = merged.setdefault(group, {})
+            for fname, raw_value in fields.items():
+                val = _float(raw_value)
+                if fname not in group_metrics or val > group_metrics[fname]:
+                    group_metrics[fname] = val
+    return merged
 
 
 def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
@@ -429,6 +472,110 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     )
 
 
+def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
+    """Aggregate findings across every file in the report.
+
+    This makes an embedded file contribute the same capability signal it would
+    have as a standalone sample, while still letting the report express
+    multi-file/package behavior as a whole.
+    """
+    sample_paths: dict[str, int] = {}
+    filtered_finding_count = 0
+    notable_finding_count = 0
+    suspicious_finding_count = 0
+    hostile_finding_count = 0
+    unique_suspicious_ids: set[str] = set()
+    unique_hostile_ids: set[str] = set()
+    third_party_max_crit = 0
+    third_party_count = 0
+    well_known_max_crit = 0
+    well_known_hostile = 0
+    well_known_suspicious = 0
+    has_yara = False
+
+    for file_entry in files:
+        summary = _summarize_findings(file_entry.get("findings") or [])
+        filtered_finding_count += summary.filtered_finding_count
+        notable_finding_count += summary.notable_finding_count
+        suspicious_finding_count += summary.suspicious_finding_count
+        hostile_finding_count += summary.hostile_finding_count
+        third_party_count += summary.third_party_count
+        well_known_hostile += summary.well_known_hostile
+        well_known_suspicious += summary.well_known_suspicious
+        third_party_max_crit = max(third_party_max_crit, summary.third_party_max_crit)
+        well_known_max_crit = max(well_known_max_crit, summary.well_known_max_crit)
+        has_yara = has_yara or summary.has_yara
+
+        for path, max_ord in summary.sample_paths.items():
+            if max_ord > sample_paths.get(path, -1):
+                sample_paths[path] = max_ord
+
+        for finding in file_entry.get("findings") or []:
+            fid = finding.get("id", "")
+            if not fid or _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
+                continue
+            crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
+            if crit_ord >= 4:
+                unique_suspicious_ids.add(fid)
+            if crit_ord >= 5:
+                unique_hostile_ids.add(fid)
+
+    return _FindingSummary(
+        sample_paths=sample_paths,
+        filtered_finding_count=filtered_finding_count,
+        notable_finding_count=notable_finding_count,
+        suspicious_finding_count=suspicious_finding_count,
+        hostile_finding_count=hostile_finding_count,
+        unique_suspicious_ids=len(unique_suspicious_ids),
+        unique_hostile_ids=len(unique_hostile_ids),
+        third_party_max_crit=third_party_max_crit,
+        third_party_count=third_party_count,
+        well_known_max_crit=well_known_max_crit,
+        well_known_hostile=well_known_hostile,
+        well_known_suspicious=well_known_suspicious,
+        has_yara=has_yara,
+    )
+
+
+def _file_risk_stats(file_entry: dict[str, Any]) -> _FileRiskStats:
+    """Compute per-file suspiciousness for top-k package aggregation."""
+    summary = _summarize_findings(file_entry.get("findings") or [])
+    denom = max(summary.filtered_finding_count, 1)
+    return _FileRiskStats(
+        suspicious_ratio=summary.suspicious_finding_count / denom,
+        hostile_ratio=summary.hostile_finding_count / denom,
+        suspicious_findings=summary.suspicious_finding_count,
+        hostile_findings=summary.hostile_finding_count,
+    )
+
+
+
+
+def _topk_file_risk_features(files: list[dict[str, Any]], k: int) -> tuple[float, float, float, float]:
+    """Summarize the riskiest files so a few bad files survive package dilution."""
+    if k <= 0 or not files:
+        return 0.0, 0.0, 0.0, 0.0
+
+    stats = [_file_risk_stats(file_entry) for file_entry in files]
+    top_suspicious = sorted(
+        stats,
+        key=lambda s: (s.suspicious_ratio, s.suspicious_findings, s.hostile_ratio, s.hostile_findings),
+        reverse=True,
+    )[:k]
+    top_hostile = sorted(
+        stats,
+        key=lambda s: (s.hostile_ratio, s.hostile_findings, s.suspicious_ratio, s.suspicious_findings),
+        reverse=True,
+    )[:k]
+
+    return (
+        sum(s.suspicious_ratio for s in top_suspicious),
+        sum(s.hostile_ratio for s in top_hostile),
+        math.log1p(sum(s.suspicious_findings for s in top_suspicious)),
+        math.log1p(sum(s.hostile_findings for s in top_hostile)),
+    )
+
+
 def _apply_presence_features(
     sample_paths: dict[str, int],
     ctx: _ExtractContext,
@@ -460,6 +607,7 @@ def _apply_maxcrit_features(
 
 def _apply_aggregate_features(
     summary: _FindingSummary,
+    files: list[dict[str, Any]],
     vec: np.ndarray,
     offset: int,
 ) -> int:
@@ -513,7 +661,18 @@ def _apply_aggregate_features(
     vec[offset + 13] = summary.hostile_finding_count / max(summary.filtered_finding_count, 1)
     vec[offset + 14] = math.log1p(summary.unique_suspicious_ids)
     vec[offset + 15] = math.log1p(summary.unique_hostile_ids)
-    return offset + 16
+    topk_susp_ratio, topk_host_ratio, topk_susp_log, topk_host_log = _topk_file_risk_features(
+        files,
+        TOP_K_RISK_FILES,
+    )
+    vec[offset + 16] = topk_susp_ratio
+    vec[offset + 17] = topk_host_ratio
+    vec[offset + 18] = topk_susp_log
+    vec[offset + 19] = topk_host_log
+    inner_files_log = math.log1p(max(len(files) - 1, 0))
+    vec[offset + 20] = topk_susp_ratio * inner_files_log
+    vec[offset + 21] = topk_host_ratio * inner_files_log
+    return offset + 22
 
 
 def _apply_external_signal_features(
@@ -547,50 +706,63 @@ def _apply_metric_features(
 
 
 def _apply_filetype_features(
-    pf: dict[str, Any],
+    files: list[dict[str, Any]],
     ctx: _ExtractContext,
     vec: np.ndarray,
     offset: int,
 ) -> int:
-    """Group 6: file type one-hot features."""
-    idx = ctx.ft_lookup.get(pf.get("file_type", ""))
-    if idx is not None:
-        vec[offset + idx] = 1.0
+    """Group 6: file type multi-hot features across all files."""
+    for file_entry in files:
+        idx = ctx.ft_lookup.get(file_entry.get("file_type", ""))
+        if idx is not None:
+            vec[offset + idx] = 1.0
     return offset + ctx.n_ft
 
 
 def _apply_structural_features(
-    pf: dict[str, Any],
+    files: list[dict[str, Any]],
     filtered_finding_count: int,
     vec: np.ndarray,
     offset: int,
 ) -> int:
-    """Group 7: structural anomaly features."""
-    file_size = pf.get("size", 0)
-    file_type = pf.get("file_type", "")
-    is_binary = file_type in ("pe", "elf", "macho")
-    imports = pf.get("imports") or []
+    """Group 7: report/container context features."""
+    binary_like = {"pe", "elf", "macho"}
+    any_tiny_binary = False
+    import_candidates = 0
+    importless_candidates = 0
+    for file_entry in files:
+        if file_entry.get("file_type", "") in binary_like and _float(file_entry.get("size", 0)) < 20000:
+            any_tiny_binary = True
+        if "imports" in file_entry:
+            import_candidates += 1
+            if len(file_entry.get("imports") or []) == 0:
+                importless_candidates += 1
 
-    vec[offset] = 1.0 if (is_binary and file_size < 20000) else 0.0
-    vec[offset + 1] = 1.0 if len(imports) == 0 else 0.0
+    vec[offset] = 1.0 if any_tiny_binary else 0.0
+    vec[offset + 1] = 1.0 if (import_candidates > 0 and importless_candidates == import_candidates) else 0.0
     vec[offset + 2] = 1.0 if filtered_finding_count == 0 else 0.0
     vec[offset + 3] = math.log1p(filtered_finding_count)
-    return offset + 4
+    vec[offset + 4] = math.log1p(len(files))
+    vec[offset + 5] = math.log1p(max(len(files) - 1, 0))
+    return offset + 6
 
 
 def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray) -> None:
     """Extract features from a report into a pre-allocated vector."""
-    pf = primary_file(report)
-    summary = _summarize_findings(pf.get("findings") or [])
+    files = report_files(report)
+    if not files:
+        files = [{}]
+    summary = _summarize_report_files(files)
+    metrics = _merge_metric_values(files)
 
     offset = 0
     offset = _apply_presence_features(summary.sample_paths, ctx, vec, offset)
     offset = _apply_maxcrit_features(summary.sample_paths, ctx, vec, offset)
-    offset = _apply_aggregate_features(summary, vec, offset)
+    offset = _apply_aggregate_features(summary, files, vec, offset)
     offset = _apply_external_signal_features(summary, vec, offset)
-    offset = _apply_metric_features(pf.get("metrics") or {}, vec, offset)
-    offset = _apply_filetype_features(pf, ctx, vec, offset)
-    _apply_structural_features(pf, summary.filtered_finding_count, vec, offset)
+    offset = _apply_metric_features(metrics, vec, offset)
+    offset = _apply_filetype_features(files, ctx, vec, offset)
+    _apply_structural_features(files, summary.filtered_finding_count, vec, offset)
 
 
 # ---------------------------------------------------------------------------
@@ -618,21 +790,21 @@ def _vocab_batch_worker(
         report = _coerce_report(raw_report)
         if report is None:
             continue
-        pf = primary_file(report)
-        ftype = pf.get("file_type", "")
-        if ftype:
-            filetypes.append(ftype)
         sample_paths: dict[str, int] = {}
-        for finding in pf.get("findings") or []:
-            fid = finding.get("id", "")
-            if not fid:
-                continue
-            if _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
-                continue
-            crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
-            for path in _finding_paths(fid):
-                if crit_ord > sample_paths.get(path, -1):
-                    sample_paths[path] = crit_ord
+        for file_entry in report_files(report):
+            ftype = file_entry.get("file_type", "")
+            if ftype:
+                filetypes.append(ftype)
+            for finding in file_entry.get("findings") or []:
+                fid = finding.get("id", "")
+                if not fid:
+                    continue
+                if _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
+                    continue
+                crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
+                for path in _finding_paths(fid):
+                    if crit_ord > sample_paths.get(path, -1):
+                        sample_paths[path] = crit_ord
         for path, max_ord in sample_paths.items():
             if max_ord >= 2:
                 presence_counts[path] = presence_counts.get(path, 0) + 1

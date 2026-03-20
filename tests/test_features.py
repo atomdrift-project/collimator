@@ -12,6 +12,7 @@ from collimator.features import (
     extract_all,
     feature_group_indices,
     primary_file,
+    report_files,
     standardize,
 )
 
@@ -90,6 +91,13 @@ def test_primary_file_empty() -> None:
     assert primary_file({}) == {}
     assert primary_file({"files": []}) == {}
     assert primary_file({"files": [None]}) == {}
+
+
+def test_report_files_filters_invalid_entries() -> None:
+    report = {"files": [None, {"file_type": "zip"}, "bad", {"file_type": "python"}]}
+    files = report_files(report)
+
+    assert [f["file_type"] for f in files] == ["zip", "python"]
 
 
 # ---------------------------------------------------------------------------
@@ -304,6 +312,121 @@ def test_extract_key_metrics() -> None:
 
     idx = spec.feature_names.index("metrics:text_char_entropy")
     assert vec[idx] == 5.5
+
+
+def test_extract_uses_inner_files_from_archive() -> None:
+    report = {
+        "version": "3",
+        "files": [
+            {
+                "id": 0,
+                "path": "/tmp/archive.zip",
+                "depth": 0,
+                "file_type": "zip",
+                "sha256": "outer",
+                "size": 4096,
+                "findings": [],
+                "imports": [],
+                "strings": [],
+                "sections": [],
+                "metrics": {},
+            },
+            {
+                "id": 1,
+                "path": "archive.zip!!hello.py",
+                "depth": 1,
+                "file_type": "python",
+                "sha256": "inner",
+                "size": 512,
+                "findings": [
+                    {"id": "objectives/evasion/process", "crit": "hostile", "conf": 0.95},
+                ],
+                "imports": [{"module": "os"}],
+                "strings": [],
+                "sections": [],
+                "metrics": {
+                    "text": {"char_entropy": 5.5},
+                },
+            },
+        ],
+        "summary": {
+            "files_analyzed": 2,
+            "duration_ms": 10,
+            "tools": ["test"],
+        },
+    }
+    spec = build_vocab([report] * 35)
+    vec = extract(report, spec)
+
+    assert vec[spec.feature_names.index("present:objectives")] == 1.0
+    assert vec[spec.feature_names.index("maxcrit:objectives")] == 5.0
+    assert vec[spec.feature_names.index("filetype:zip")] == 1.0
+    assert vec[spec.feature_names.index("filetype:python")] == 1.0
+    assert vec[spec.feature_names.index("metrics:text_char_entropy")] == 5.5
+    assert vec[spec.feature_names.index("struct:finding_count_log")] == math.log1p(1)
+    assert vec[spec.feature_names.index("struct:inner_file_count_log")] == math.log1p(1)
+
+
+def test_extract_topk_file_risk_features() -> None:
+    report = {
+        "version": "3",
+        "files": [
+            {
+                "id": 0,
+                "path": "/tmp/pkg.zip",
+                "depth": 0,
+                "file_type": "zip",
+                "sha256": "outer",
+                "size": 1024,
+                "findings": [],
+                "imports": [],
+                "strings": [],
+                "sections": [],
+                "metrics": {},
+            },
+            {
+                "id": 1,
+                "path": "pkg.zip!!benign.py",
+                "depth": 1,
+                "file_type": "python",
+                "sha256": "b",
+                "size": 100,
+                "findings": [
+                    {"id": "metadata/format::x", "crit": "baseline", "conf": 0.95},
+                ],
+                "imports": [],
+                "strings": [],
+                "sections": [],
+                "metrics": {},
+            },
+            {
+                "id": 2,
+                "path": "pkg.zip!!evil.py",
+                "depth": 1,
+                "file_type": "python",
+                "sha256": "e",
+                "size": 100,
+                "findings": [
+                    {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
+                    {"id": "objectives/evasion/process::b", "crit": "suspicious", "conf": 0.95},
+                ],
+                "imports": [],
+                "strings": [],
+                "sections": [],
+                "metrics": {},
+            },
+        ],
+        "summary": {"files_analyzed": 3, "duration_ms": 10, "tools": ["test"]},
+    }
+    spec = build_vocab([report] * 35)
+    vec = extract(report, spec)
+
+    assert vec[spec.feature_names.index("agg:top1_file_suspicious_ratio_sum")] == 1.0
+    assert vec[spec.feature_names.index("agg:top1_file_hostile_ratio_sum")] == 0.5
+    assert vec[spec.feature_names.index("agg:top1_file_suspicious_findings_log")] == math.log1p(2)
+    assert vec[spec.feature_names.index("agg:top1_file_hostile_findings_log")] == math.log1p(1)
+    assert vec[spec.feature_names.index("agg:top1_file_suspicious_ratio_x_inner_files")] == math.log1p(2)
+    assert vec[spec.feature_names.index("agg:top1_file_hostile_ratio_x_inner_files")] == 0.5 * math.log1p(2)
 
 
 def test_extract_filetype_onehot() -> None:
