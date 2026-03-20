@@ -100,7 +100,7 @@ def test_build_vocab_empty() -> None:
     spec = build_vocab([_make_report()])
     assert spec.total_features > 0
     assert len(spec.feature_names) == spec.total_features
-    assert spec.version == 13
+    assert spec.version == 14
 
 
 def test_build_vocab_presence() -> None:
@@ -219,6 +219,26 @@ def test_extract_aggregates() -> None:
     hostile_conc = vec[spec.feature_names.index("agg:hostile_concentration")]
     assert susp_conc > 0.0
     assert hostile_conc > 0.0
+
+
+def test_extract_finding_density_features() -> None:
+    report = _make_report(findings=[
+        {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
+        {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
+        {"id": "objectives/evasion/process::b", "crit": "suspicious", "conf": 0.95},
+        {"id": "metadata/format::x", "crit": "baseline", "conf": 0.95},
+    ])
+    spec = build_vocab([report] * 35)
+    vec = extract(report, spec)
+
+    assert vec[spec.feature_names.index("agg:notable_findings_log")] == math.log1p(3)
+    assert vec[spec.feature_names.index("agg:suspicious_findings_log")] == math.log1p(3)
+    assert vec[spec.feature_names.index("agg:hostile_findings_log")] == math.log1p(2)
+    assert vec[spec.feature_names.index("agg:notable_finding_ratio")] == 3 / 4
+    assert vec[spec.feature_names.index("agg:suspicious_finding_ratio")] == 3 / 4
+    assert vec[spec.feature_names.index("agg:hostile_finding_ratio")] == 2 / 4
+    assert vec[spec.feature_names.index("agg:unique_suspicious_ids_log")] == math.log1p(2)
+    assert vec[spec.feature_names.index("agg:unique_hostile_ids_log")] == math.log1p(1)
 
 
 def test_extract_third_party_signals() -> None:
@@ -428,7 +448,7 @@ def test_feature_spec_save_load(tmp_path) -> None:
     assert loaded.presence_vocab == spec.presence_vocab
     assert loaded.filetype_vocab == spec.filetype_vocab
     assert loaded.feature_names == spec.feature_names
-    assert loaded.version == 13
+    assert loaded.version == 14
 
 
 def test_feature_spec_save_load_with_standardization(tmp_path) -> None:

@@ -1,6 +1,6 @@
 """Extract fixed-size numeric feature vectors from cleave v3 AnalysisReport JSON.
 
-v13: Capability-first feature extraction with criticality as gradient signal.
+v14: Capability-first features plus high-criticality finding-density signals.
 
 The ML pipeline exists because cleave's criticality judgments are imperfect.
 The model must learn malicious *capability combinations* independently from
@@ -20,7 +20,7 @@ model two complementary views per finding path:
 Feature groups:
   1. Path Presence: binary features for path existing at any crit ≥ baseline
   2. Path Max Criticality: ordinal (0-5) per path in presence vocab
-  3. Path Aggregates: breadth, concentration, and ratio signals (12)
+  3. Path Aggregates: breadth, concentration, and finding-density signals (16)
   4. Third-Party / Well-Known Summary: aggregated match signals (6)
   5. Key Metrics: curated binary/text/PE metrics (16)
   6. File Type: one-hot (corpus-dependent, ~30-40)
@@ -147,13 +147,13 @@ def _finding_paths(finding_id: str) -> list[str]:
 class FeatureSpec:
     """Describes the feature vector layout. Exported for Rust inference parity.
 
-    Version 13: capability-first features. Each path in presence_vocab gets
+    Version 14: capability-first features. Each path in presence_vocab gets
     two features: a binary presence flag and an ordinal max-criticality value.
     No path×tier binary features — criticality is a gradient, not a threshold.
     """
 
     # NOTE: bumping this version requires a matching update in ../collimator (Rust).
-    version: int = 13
+    version: int = 14
     presence_vocab: list[str] = field(default_factory=list)
     filetype_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
@@ -189,7 +189,7 @@ class FeatureSpec:
         version = data.get("version", 11)
         if version < 13:
             log.warning(
-                "loading feature spec version %d (expected 13); "
+                "loading feature spec version %d (expected 14); "
                 "models trained with older versions are not compatible",
                 version,
             )
@@ -260,7 +260,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     for path in presence_vocab:
         feature_names.append(f"maxcrit:{path}")
 
-    # Group 3: Path Aggregates (8).
+    # Group 3: Path Aggregates (16).
     # Ratio-based: forces the model to learn from relative concentration of
     # suspicious behavior rather than absolute counts. A tool with 23 suspicious
     # findings out of 154 total (15%) looks very different from malware with
@@ -274,6 +274,14 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         "agg:hostile_concentration",     # hostile / all paths
         "agg:escalation_rate",           # suspicious+ / notable+ (cleave escalation)
         "agg:notable_only_fraction",     # notable_only / notable+ (how much stays at notable)
+        "agg:notable_findings_log",      # log1p of notable+ exact findings
+        "agg:suspicious_findings_log",   # log1p of suspicious+ exact findings
+        "agg:hostile_findings_log",      # log1p of hostile exact findings
+        "agg:notable_finding_ratio",     # notable+ / all filtered findings
+        "agg:suspicious_finding_ratio",  # suspicious+ / all filtered findings
+        "agg:hostile_finding_ratio",     # hostile / all filtered findings
+        "agg:unique_suspicious_ids_log", # log1p of unique suspicious+ trait IDs
+        "agg:unique_hostile_ids_log",    # log1p of unique hostile trait IDs
     ])
 
     # Group 4: Third-Party / Well-Known Summary (6).
@@ -310,7 +318,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     )
     log.info(
         "vocab: %d paths (>=%d freq), %d filetypes -> %d features "
-        "(v13 presence+maxcrit)",
+        "(v14 presence+maxcrit+density)",
         len(presence_vocab), MIN_PATH_FREQ,
         len(filetype_vocab), spec.total_features,
     )
@@ -340,6 +348,11 @@ class _ExtractContext:
 class _FindingSummary:
     sample_paths: dict[str, int]
     filtered_finding_count: int
+    notable_finding_count: int
+    suspicious_finding_count: int
+    hostile_finding_count: int
+    unique_suspicious_ids: int
+    unique_hostile_ids: int
     third_party_max_crit: int
     third_party_count: int
     well_known_max_crit: int
@@ -352,6 +365,11 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     """Collect reusable per-report finding statistics."""
     sample_paths: dict[str, int] = {}
     filtered_finding_count = 0
+    notable_finding_count = 0
+    suspicious_finding_count = 0
+    hostile_finding_count = 0
+    suspicious_ids: set[str] = set()
+    hostile_ids: set[str] = set()
     third_party_max_crit = 0
     third_party_count = 0
     well_known_max_crit = 0
@@ -367,6 +385,14 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
             continue
         filtered_finding_count += 1
         crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
+        if crit_ord >= 3:
+            notable_finding_count += 1
+        if crit_ord >= 4:
+            suspicious_finding_count += 1
+            suspicious_ids.add(fid)
+        if crit_ord >= 5:
+            hostile_finding_count += 1
+            hostile_ids.add(fid)
 
         top = fid.split("/")[0]
         if top == "third_party":
@@ -389,6 +415,11 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     return _FindingSummary(
         sample_paths=sample_paths,
         filtered_finding_count=filtered_finding_count,
+        notable_finding_count=notable_finding_count,
+        suspicious_finding_count=suspicious_finding_count,
+        hostile_finding_count=hostile_finding_count,
+        unique_suspicious_ids=len(suspicious_ids),
+        unique_hostile_ids=len(hostile_ids),
         third_party_max_crit=third_party_max_crit,
         third_party_count=third_party_count,
         well_known_max_crit=well_known_max_crit,
@@ -428,11 +459,12 @@ def _apply_maxcrit_features(
 
 
 def _apply_aggregate_features(
-    sample_paths: dict[str, int],
+    summary: _FindingSummary,
     vec: np.ndarray,
     offset: int,
 ) -> int:
     """Group 3: aggregate path breadth and concentration features."""
+    sample_paths = summary.sample_paths
     breadth_notable = 0
     breadth_suspicious = 0
     breadth_hostile = 0
@@ -473,7 +505,15 @@ def _apply_aggregate_features(
     vec[offset + 5] = breadth_hostile / max(path_breadth_any, 1)
     vec[offset + 6] = breadth_suspicious / max(breadth_notable, 1)
     vec[offset + 7] = breadth_notable_only / max(breadth_notable, 1)
-    return offset + 8
+    vec[offset + 8] = math.log1p(summary.notable_finding_count)
+    vec[offset + 9] = math.log1p(summary.suspicious_finding_count)
+    vec[offset + 10] = math.log1p(summary.hostile_finding_count)
+    vec[offset + 11] = summary.notable_finding_count / max(summary.filtered_finding_count, 1)
+    vec[offset + 12] = summary.suspicious_finding_count / max(summary.filtered_finding_count, 1)
+    vec[offset + 13] = summary.hostile_finding_count / max(summary.filtered_finding_count, 1)
+    vec[offset + 14] = math.log1p(summary.unique_suspicious_ids)
+    vec[offset + 15] = math.log1p(summary.unique_hostile_ids)
+    return offset + 16
 
 
 def _apply_external_signal_features(
@@ -546,7 +586,7 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
     offset = 0
     offset = _apply_presence_features(summary.sample_paths, ctx, vec, offset)
     offset = _apply_maxcrit_features(summary.sample_paths, ctx, vec, offset)
-    offset = _apply_aggregate_features(summary.sample_paths, vec, offset)
+    offset = _apply_aggregate_features(summary, vec, offset)
     offset = _apply_external_signal_features(summary, vec, offset)
     offset = _apply_metric_features(pf.get("metrics") or {}, vec, offset)
     offset = _apply_filetype_features(pf, ctx, vec, offset)
