@@ -60,13 +60,14 @@ def cmd_train(args: argparse.Namespace) -> None:
     X, y, X_test, y_test = features.extract_partitioned_stream(
         data.stream_partitioned_raw_reports(db_path), spec, n_workers=args.workers,
     )
+    train_groups = data.load_train_group_ids(db_path)
     if X.shape[0] < 10:
         print(f"ERROR: only {X.shape[0]} training samples, need at least 10")
         sys.exit(1)
 
     # Train.
     config = train.TrainConfig(seed=args.seed)
-    result = train.train(X, y, config, feature_names=spec.feature_names)
+    result = train.train(X, y, config, feature_names=spec.feature_names, groups=train_groups)
 
     # Attach standardization params to spec before saving.
     spec.feature_means = result.feature_means
@@ -107,6 +108,27 @@ def cmd_train(args: argparse.Namespace) -> None:
             },
         },
         output_path=out_dir / "evaluation.json",
+    )
+    export.save_run_summary(
+        kind="train",
+        payload={
+            "db_path": str(db_path),
+            "output_dir": str(out_dir),
+            "metrics": result.metrics,
+            "calibration": result.calibration,
+            "optimal_threshold": result.optimal_threshold,
+            "confusion_matrix": result.confusion,
+            "class_distribution": result.class_distribution,
+            "split_summary": result.split_summary,
+            "fold_metrics": result.fold_metrics,
+            "n_features": spec.total_features,
+            "seed": config.seed,
+            "feature_spec_version": spec.version,
+            "workers_requested": args.workers,
+            "workers_effective": effective_workers,
+            "git_sha": _git_sha(),
+        },
+        output_dir=out_dir,
     )
 
     # Post-training steps only need small dense subsets — avoid densifying
@@ -150,6 +172,12 @@ def cmd_train(args: argparse.Namespace) -> None:
         if f.is_file():
             size = f.stat().st_size
             print(f"  {f.name:<30s} {size:>10,d} bytes")
+
+
+def cmd_build_splits(args: argparse.Namespace) -> None:
+    """Build or refresh cached split assignments for a database."""
+    cache_path = data.build_split_cache(Path(args.db))
+    print(cache_path)
 
 
 def cmd_evaluate(args: argparse.Namespace) -> None:
@@ -509,11 +537,18 @@ def main() -> None:
     p_bench.add_argument("--output", default=None, help="Optional JSON output path")
     _add_workers_arg(p_bench)
 
+    # build-splits
+    p_splits = subparsers.add_parser(
+        "build-splits", help="Build cached split assignments for grouped external-test partitioning",
+    )
+    p_splits.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+
     # experiment
     p_exp = subparsers.add_parser(
         "experiment", help="Run a fast subsampled experiment on the full external test bucket",
     )
     p_exp.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_exp.add_argument("--output", default="out", help="Directory for experiment summaries (default: out)")
     p_exp.add_argument(
         "--train-samples", type=int, default=10_000,
         help="Approximate sampled training rows (default: 10000)",
@@ -607,9 +642,12 @@ def main() -> None:
             spec_path=Path(args.spec) if args.spec else None,
             output_path=Path(args.output) if args.output else None,
         )
+    elif args.command == "build-splits":
+        cmd_build_splits(args)
     elif args.command == "experiment":
         experiment.run_experiment(
             db_path=Path(args.db),
+            output_dir=Path(args.output),
             n_workers=args.workers,
             seed=args.seed,
             train_samples=args.train_samples,

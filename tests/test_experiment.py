@@ -13,11 +13,11 @@ def test_sample_partitioned_reports_is_deterministic(tmp_path) -> None:
     a = sample_partitioned_reports(db_path, train_samples=20, seed=11)
     b = sample_partitioned_reports(db_path, train_samples=20, seed=11)
 
-    assert [(s.raw_report, s.label, s.is_test) for s in a.train_samples] == [
-        (s.raw_report, s.label, s.is_test) for s in b.train_samples
+    assert [(s.raw_report, s.label, s.is_test, s.group_id) for s in a.train_samples] == [
+        (s.raw_report, s.label, s.is_test, s.group_id) for s in b.train_samples
     ]
-    assert [(s.raw_report, s.label, s.is_test) for s in a.test_samples] == [
-        (s.raw_report, s.label, s.is_test) for s in b.test_samples
+    assert [(s.raw_report, s.label, s.is_test, s.group_id) for s in a.test_samples] == [
+        (s.raw_report, s.label, s.is_test, s.group_id) for s in b.test_samples
     ]
     assert all(not s.is_test for s in a.train_samples)
     assert all(s.is_test for s in a.test_samples)

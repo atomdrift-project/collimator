@@ -425,8 +425,6 @@ def test_extract_topk_file_risk_features() -> None:
     assert vec[spec.feature_names.index("agg:top1_file_hostile_ratio_sum")] == 0.5
     assert vec[spec.feature_names.index("agg:top1_file_suspicious_findings_log")] == math.log1p(2)
     assert vec[spec.feature_names.index("agg:top1_file_hostile_findings_log")] == math.log1p(1)
-    assert vec[spec.feature_names.index("agg:top1_file_suspicious_ratio_x_inner_files")] == math.log1p(2)
-    assert vec[spec.feature_names.index("agg:top1_file_hostile_ratio_x_inner_files")] == 0.5 * math.log1p(2)
 
 
 def test_extract_filetype_onehot() -> None:

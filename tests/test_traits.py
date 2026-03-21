@@ -6,6 +6,7 @@ from collimator.traits import compute_trait_stats, sort_trait_stats
 
 def _sample(sha: str, label: int, findings: list[dict]) -> Sample:
     return Sample(
+        row_id=0,
         sha256=sha,
         path=f"/tmp/{sha}",
         label=label,

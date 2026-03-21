@@ -5,7 +5,13 @@ from __future__ import annotations
 import numpy as np
 import scipy.sparse as sp
 
-from collimator.train import TrainConfig, _split_calibration_eval, train
+from collimator.train import (
+    TrainConfig,
+    _compute_metrics,
+    _grouped_split_indices,
+    _split_calibration_eval,
+    train,
+)
 
 
 def test_split_calibration_eval_returns_disjoint_stratified_splits() -> None:
@@ -56,3 +62,42 @@ def test_train_reports_split_summary_and_brier() -> None:
     assert result.split_summary["policy"] in {"train/calibration/evaluation", "train/holdout"}
     assert int(result.split_summary["train_samples"]) > 0
     assert int(result.split_summary["evaluation_samples"]) > 0
+
+
+def test_grouped_split_indices_keep_groups_together() -> None:
+    y = np.array([0, 0, 1, 1, 0, 1], dtype=np.float32)
+    groups = np.array(["a", "a", "b", "b", "c", "c"], dtype=object)
+
+    train_idx, test_idx = _grouped_split_indices(y, groups, test_size=0.5, seed=42)
+
+    train_groups = set(groups[train_idx].tolist())
+    test_groups = set(groups[test_idx].tolist())
+    assert train_groups.isdisjoint(test_groups)
+
+
+def test_train_uses_grouped_holdout_and_cv_when_groups_provided() -> None:
+    rng = np.random.default_rng(7)
+    X = sp.csr_matrix(rng.normal(size=(48, 8)).astype(np.float32))
+    y = np.array(([0] * 2 + [1] * 2) * 12, dtype=np.float32)
+    groups = np.array([f"g{i}" for i in range(24) for _ in range(2)], dtype=object)
+
+    result = train(
+        X,
+        y,
+        TrainConfig(n_estimators=5, early_stopping_rounds=2, n_folds=2, device="cpu"),
+        groups=groups,
+    )
+
+    assert result.split_summary["holdout_split"] == "grouped"
+    assert result.split_summary["cv_split"] == "grouped"
+
+
+def test_compute_metrics_treats_equal_threshold_as_positive() -> None:
+    y_true = np.array([1, 0], dtype=np.float32)
+    y_prob = np.array([0.5, 0.4], dtype=np.float32)
+
+    metrics = _compute_metrics(y_true, y_prob, threshold=0.5)
+
+    assert metrics["precision"] == 1.0
+    assert metrics["recall"] == 1.0
+    assert metrics["f1"] == 1.0

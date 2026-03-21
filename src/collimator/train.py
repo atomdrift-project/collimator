@@ -1,4 +1,4 @@
-"""Training loop with stratified holdout + K-fold cross-validation."""
+"""Training loop with holdout + K-fold cross-validation."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import GroupShuffleSplit, StratifiedGroupKFold, StratifiedKFold, train_test_split
 
 from .model import create_classifier, predict_proba
 
@@ -70,7 +70,7 @@ def _compute_metrics(
     y_prob: np.ndarray,
     threshold: float = 0.5,
 ) -> dict[str, float]:
-    y_pred = (y_prob > threshold).astype(int)
+    y_pred = (y_prob >= threshold).astype(int)
     return {
         "accuracy": float(accuracy_score(y_true, y_pred)),
         "precision": float(precision_score(y_true, y_pred, zero_division=0)),
@@ -156,6 +156,7 @@ def _split_calibration_eval(
     X_holdout: np.ndarray | sp.spmatrix,
     y_holdout: np.ndarray,
     *,
+    groups_holdout: np.ndarray | None = None,
     seed: int = 42,
 ) -> tuple[
     tuple[np.ndarray | sp.spmatrix, np.ndarray] | None,
@@ -167,16 +168,54 @@ def _split_calibration_eval(
     if min(n_holdout_malware, n_holdout_benign) < MIN_CALIBRATION_CLASS_SIZE:
         return None, (X_holdout, y_holdout)
 
-    calib_idx, eval_idx = train_test_split(
-        np.arange(len(y_holdout)),
-        test_size=0.5,
-        stratify=y_holdout,
-        random_state=seed,
-    )
+    if groups_holdout is not None and len(np.unique(groups_holdout)) >= 2:
+        calib_idx, eval_idx = _grouped_split_indices(
+            y_holdout,
+            groups_holdout,
+            test_size=0.5,
+            seed=seed,
+        )
+    else:
+        calib_idx, eval_idx = train_test_split(
+            np.arange(len(y_holdout)),
+            test_size=0.5,
+            stratify=y_holdout,
+            random_state=seed,
+        )
     return (
         (X_holdout[calib_idx], y_holdout[calib_idx]),
         (X_holdout[eval_idx], y_holdout[eval_idx]),
     )
+
+
+def _grouped_split_indices(
+    y: np.ndarray,
+    groups: np.ndarray,
+    *,
+    test_size: float,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return train/test indices using groups when feasible, else stratified rows."""
+    n_splits = max(int(round(1.0 / max(test_size, 1e-6))), 2)
+    unique_groups = np.unique(groups)
+    if len(unique_groups) >= n_splits:
+        try:
+            splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+            train_idx, test_idx = next(splitter.split(np.zeros(len(y)), y, groups))
+            return np.asarray(train_idx), np.asarray(test_idx)
+        except ValueError:
+            pass
+    if len(unique_groups) >= 2:
+        splitter = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=seed)
+        train_idx, test_idx = next(splitter.split(np.zeros(len(y)), y, groups))
+        return np.asarray(train_idx), np.asarray(test_idx)
+    train_idx, test_idx = train_test_split(
+        np.arange(len(y)),
+        test_size=test_size,
+        stratify=y,
+        random_state=seed,
+    )
+    return np.asarray(train_idx), np.asarray(test_idx)
 
 
 def train(
@@ -184,11 +223,12 @@ def train(
     y: np.ndarray,
     config: TrainConfig | None = None,
     feature_names: list[str] | None = None,
+    groups: np.ndarray | None = None,
 ) -> TrainResult:
-    """Train an XGBoost classifier with holdout + stratified K-fold CV.
+    """Train an XGBoost classifier with holdout + K-fold CV.
 
     Pipeline:
-      1. Stratified holdout split (default 10%) for honest evaluation
+      1. Holdout split (default 10%) for honest evaluation
       2. Compute feature standardization (mean/std) for pipeline compatibility
       3. K-fold CV on train+val for model selection metrics
       4. Retrain final model on all train+val data
@@ -198,6 +238,8 @@ def train(
         config = TrainConfig()
 
     np.random.seed(config.seed)
+    if groups is not None and len(groups) != len(y):
+        raise ValueError(f"groups length {len(groups)} does not match labels {len(y)}")
 
     n_features = X.shape[1]
     n_malware = int(np.sum(y == 1))
@@ -221,14 +263,24 @@ def train(
     # --- Holdout split ---
     n_min_class = min(n_malware, n_benign)
     if n_min_class >= MIN_HOLDOUT_CLASS_SIZE:
-        tv_idx, holdout_idx = train_test_split(
-            np.arange(len(y)),
-            test_size=config.holdout_fraction,
-            stratify=y,
-            random_state=config.seed,
-        )
+        if groups is not None:
+            tv_idx, holdout_idx = _grouped_split_indices(
+                y,
+                np.asarray(groups, dtype=object),
+                test_size=config.holdout_fraction,
+                seed=config.seed,
+            )
+        else:
+            tv_idx, holdout_idx = train_test_split(
+                np.arange(len(y)),
+                test_size=config.holdout_fraction,
+                stratify=y,
+                random_state=config.seed,
+            )
         X_tv, y_tv = X[tv_idx], y[tv_idx]
         X_holdout, y_holdout = X[holdout_idx], y[holdout_idx]
+        groups_tv = np.asarray(groups, dtype=object)[tv_idx] if groups is not None else None
+        groups_holdout = np.asarray(groups, dtype=object)[holdout_idx] if groups is not None else None
         log.info(
             "holdout: %d samples (%d malware, %d benign)",
             len(y_holdout),
@@ -238,6 +290,8 @@ def train(
     else:
         X_tv, y_tv = X, y
         X_holdout = y_holdout = None
+        groups_tv = np.asarray(groups, dtype=object) if groups is not None else None
+        groups_holdout = None
         log.warning(
             "dataset too small for holdout (%d min class), using all data",
             n_min_class,
@@ -275,14 +329,22 @@ def train(
 
     fold_metrics_list: list[dict[str, float]] = []
     cv_predictions = np.zeros(len(y_tv))
+    cv_policy = "none"
 
     if n_folds >= 2:
-        skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=config.seed)
+        if groups_tv is not None and len(np.unique(groups_tv)) >= n_folds:
+            skf = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=config.seed)
+            split_iter = skf.split(X_tv, y_tv, groups_tv)
+            cv_policy = "grouped"
+        else:
+            skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=config.seed)
+            split_iter = skf.split(X_tv, y_tv)
+            cv_policy = "stratified"
         log.info("running %d-fold cross-validation", n_folds)
         print(f"\n{'Fold':<6} {'AUC':>8} {'F1':>8} {'Prec':>8} {'Recall':>8}")
         print(f"{'-' * 42}")
 
-        for fold, (train_idx, val_idx) in enumerate(skf.split(X_tv, y_tv)):
+        for fold, (train_idx, val_idx) in enumerate(split_iter):
             fold_model = create_classifier(
                 n_benign=int(np.sum(y_tv[train_idx] == 0)),
                 n_malware=int(np.sum(y_tv[train_idx] == 1)),
@@ -341,7 +403,7 @@ def train(
 
     if X_holdout is not None:
         calibration_split, evaluation_split = _split_calibration_eval(
-            X_holdout, y_holdout, seed=config.seed,
+            X_holdout, y_holdout, groups_holdout=groups_holdout, seed=config.seed,
         )
         if calibration_split is None:
             log.warning(
@@ -367,6 +429,8 @@ def train(
             log.info("final model: %d trees", final_model.n_estimators)
         split_summary = {
             "policy": "train/calibration/evaluation" if calibration_split is not None else "train/holdout",
+            "holdout_split": "grouped" if groups is not None else "stratified",
+            "cv_split": cv_policy if n_folds >= 2 else "none",
             "train_samples": int(len(y_tv)),
             "calibration_samples": int(len(y_calib)),
             "evaluation_samples": int(len(y_eval)),
@@ -377,6 +441,8 @@ def train(
         final_model.fit(X_tv, y_tv, verbose=False)
         split_summary = {
             "policy": "train_only",
+            "holdout_split": "none",
+            "cv_split": cv_policy if n_folds >= 2 else "none",
             "train_samples": int(len(y_tv)),
             "calibration_samples": 0,
             "evaluation_samples": int(len(y_tv)),
@@ -406,7 +472,7 @@ def train(
         eval_y = y_tv
         eval_preds = all_preds
 
-    y_binary = (eval_preds > optimal_threshold).astype(int)
+    y_binary = (eval_preds >= optimal_threshold).astype(int)
     cm = confusion_matrix(eval_y, y_binary).tolist()
 
     # cm layout: [[TN, FP], [FN, TP]]

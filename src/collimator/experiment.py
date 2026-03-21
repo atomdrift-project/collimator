@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,7 +16,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from . import data, features, train
+from . import data, export, features, train
 from .model import predict_proba
 
 
@@ -26,6 +27,7 @@ class ExperimentSample:
     raw_report: str
     label: int
     is_test: bool
+    group_id: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,8 +81,8 @@ def sample_partitioned_reports(
         (True, 0): 0,
     }
 
-    for raw_report, label, is_test in data.stream_partitioned_raw_reports(db_path):
-        sample = ExperimentSample(raw_report=raw_report, label=label, is_test=is_test)
+    for raw_report, label, is_test, group_id in data.stream_partitioned_raw_reports_grouped(db_path):
+        sample = ExperimentSample(raw_report=raw_report, label=label, is_test=is_test, group_id=group_id)
         key = (is_test, label)
         if key == (False, 1):
             seen[key] = _reservoir_update(train_malware, sample, train_malware_target, seen[key], rng)
@@ -117,7 +119,7 @@ def _print_test_metrics(
     y_prob: np.ndarray,
     threshold: float,
 ) -> None:
-    y_pred = (y_prob > threshold).astype(int)
+    y_pred = (y_prob >= threshold).astype(int)
     print(f"\n{'FULL EXTERNAL TEST':=^60}")
     print(f"  Threshold: {threshold:.3f}")
     print(f"  Precision: {precision_score(y_true, y_pred, zero_division=0):.4f}")
@@ -132,6 +134,7 @@ def _print_test_metrics(
 def run_experiment(
     db_path: Path,
     *,
+    output_dir: Path | None = None,
     n_workers: int = 0,
     seed: int = 42,
     train_samples: int = 10_000,
@@ -180,13 +183,14 @@ def run_experiment(
             early_stopping_rounds=early_stopping_rounds,
         ),
         feature_names=spec.feature_names,
+        groups=np.array([sample.group_id for sample in corpus.train_samples], dtype=object),
     )
 
     sampled_test_metrics: dict[str, float] = {}
     if X_test.shape[0] > 0:
         probs = predict_proba(result.model, X_test)
         _print_test_metrics(y_test, probs, result.optimal_threshold)
-        y_pred = (probs > result.optimal_threshold).astype(int)
+        y_pred = (probs >= result.optimal_threshold).astype(int)
         sampled_test_metrics = {
             "precision": float(precision_score(y_test, y_pred, zero_division=0)),
             "recall": float(recall_score(y_test, y_pred, zero_division=0)),
@@ -200,11 +204,18 @@ def run_experiment(
     else:
         print("\nNo external test rows available.")
 
-    return {
+    results = {
         "train_rows": int(X_train.shape[0]),
         "test_rows": int(X_test.shape[0]),
         "n_features": int(spec.total_features),
         "train_metrics": result.metrics,
         "sampled_test_metrics": sampled_test_metrics,
         "threshold": float(result.optimal_threshold),
+        "split_summary": result.split_summary,
+        "db_path": str(db_path),
+        "seed": int(seed),
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
     }
+    if output_dir is not None:
+        export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
+    return results

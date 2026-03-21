@@ -20,7 +20,7 @@ model two complementary views per finding path:
 Feature groups:
   1. Path Presence: binary features for path existing at any crit ≥ baseline
   2. Path Max Criticality: ordinal (0-5) per path in presence vocab
-  3. Path Aggregates: breadth, concentration, and finding-density signals (22)
+  3. Path Aggregates: breadth, concentration, and finding-density signals (20)
   4. Third-Party / Well-Known Summary: aggregated match signals (6)
   5. Key Metrics: curated binary/text/PE metrics (16)
   6. File Type: multi-hot across all files in the report
@@ -267,7 +267,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     for path in presence_vocab:
         feature_names.append(f"maxcrit:{path}")
 
-    # Group 3: Path Aggregates (22).
+    # Group 3: Path Aggregates (20).
     # Ratio-based: forces the model to learn from relative concentration of
     # suspicious behavior rather than absolute counts. A tool with 23 suspicious
     # findings out of 154 total (15%) looks very different from malware with
@@ -293,8 +293,6 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         f"agg:top{TOP_K_RISK_FILES}_file_hostile_ratio_sum",
         f"agg:top{TOP_K_RISK_FILES}_file_suspicious_findings_log",
         f"agg:top{TOP_K_RISK_FILES}_file_hostile_findings_log",
-        f"agg:top{TOP_K_RISK_FILES}_file_suspicious_ratio_x_inner_files",
-        f"agg:top{TOP_K_RISK_FILES}_file_hostile_ratio_x_inner_files",
     ])
 
     # Group 4: Third-Party / Well-Known Summary (6).
@@ -669,10 +667,7 @@ def _apply_aggregate_features(
     vec[offset + 17] = topk_host_ratio
     vec[offset + 18] = topk_susp_log
     vec[offset + 19] = topk_host_log
-    inner_files_log = math.log1p(max(len(files) - 1, 0))
-    vec[offset + 20] = topk_susp_ratio * inner_files_log
-    vec[offset + 21] = topk_host_ratio * inner_files_log
-    return offset + 22
+    return offset + 20
 
 
 def _apply_external_signal_features(

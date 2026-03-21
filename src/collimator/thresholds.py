@@ -67,10 +67,11 @@ def show_thresholds(
     X_train, y_train, X_test, y_test = features.extract_partitioned_stream(
         data.stream_partitioned_raw_reports(db_path), spec, n_workers=n_workers,
     )
+    train_groups = data.load_train_group_ids(db_path)
     if X_train.shape[0] == 0:
         print("No training samples found.")
         return
-    result = train.train(X_train, y_train, feature_names=spec.feature_names)
+    result = train.train(X_train, y_train, feature_names=spec.feature_names, groups=train_groups)
     if X_test.shape[0] == 0:
         print("No test samples — cannot compute thresholds.")
         return

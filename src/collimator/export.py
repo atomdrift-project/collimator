@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import json
 import logging
 import platform
@@ -185,3 +186,20 @@ def save_evaluation(
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)
     log.info("saved evaluation to %s", output_path)
+
+
+def save_run_summary(
+    *,
+    kind: str,
+    payload: dict[str, object],
+    output_dir: Path,
+) -> Path:
+    """Save a timestamped run summary JSON for posterity."""
+    runs_dir = output_dir / "runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    output_path = runs_dir / f"{timestamp}-{kind}.json"
+    with open(output_path, "w") as f:
+        json.dump(payload, f, indent=2)
+    log.info("saved %s run summary to %s", kind, output_path)
+    return output_path

@@ -48,6 +48,7 @@ def run_benchmark(
             spec,
             n_workers=n_workers,
         )
+        train_groups = data.load_train_group_ids(db_path)
         extract_train_secs = time.perf_counter() - t1
 
         t2 = time.perf_counter()
@@ -56,6 +57,7 @@ def run_benchmark(
             y_train,
             train.TrainConfig(n_estimators=200, early_stopping_rounds=20),
             feature_names=spec.feature_names,
+            groups=train_groups,
         )
         train_secs = time.perf_counter() - t2
         model = result.model

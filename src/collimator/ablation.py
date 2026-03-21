@@ -40,6 +40,7 @@ def run_ablation(
         spec,
         n_workers=n_workers,
     )
+    train_groups = data.load_train_group_ids(db_path)
     group_names = groups if groups is not None else list(features.FEATURE_GROUPS)
 
     rows: list[dict[str, object]] = []
@@ -49,6 +50,7 @@ def run_ablation(
         y,
         train.TrainConfig(seed=seed),
         feature_names=spec.feature_names,
+        groups=train_groups,
     )
     rows.append(
         {
@@ -67,6 +69,7 @@ def run_ablation(
             y,
             train.TrainConfig(seed=seed),
             feature_names=feature_names,
+            groups=train_groups,
         )
         rows.append(
             {
