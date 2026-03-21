@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -50,6 +51,7 @@ class TrainConfig:
     gamma: float = 0.0
     reg_alpha: float = 0.0
     reg_lambda: float = 1.0
+    beta: float = 0.5  # F-beta for threshold selection; 0.5 = precision 2× recall
 
 
 @dataclass
@@ -64,6 +66,7 @@ class TrainResult:
     fold_metrics: list[dict[str, float]]
     feature_means: list[float] = field(default_factory=list)
     feature_stds: list[float] = field(default_factory=list)
+    isotonic_calibrator: IsotonicRegression | None = None
 
 
 def _compute_metrics(
@@ -342,6 +345,10 @@ def train(
             split_iter = skf.split(X_tv, y_tv)
             cv_policy = "stratified"
         log.info("running %d-fold cross-validation", n_folds)
+        # Suppress the XGBoost device-mismatch UserWarning for the CV loop.
+        # It fires on the first inplace_predict when data is on CPU and model
+        # on CUDA — expected behaviour, not actionable.
+        warnings.filterwarnings("ignore", category=UserWarning, module="xgboost.*")
         print(f"\n{'Fold':<6} {'AUC':>8} {'F1':>8} {'Prec':>8} {'Recall':>8}")
         print(f"{'-' * 42}")
 
@@ -362,11 +369,13 @@ def train(
                 reg_alpha=config.reg_alpha,
                 reg_lambda=config.reg_lambda,
             )
-            fold_model.fit(
-                X_tv[train_idx], y_tv[train_idx],
-                eval_set=[(X_tv[val_idx], y_tv[val_idx])],
-                verbose=False,
-            )
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=UserWarning, module="xgboost")
+                fold_model.fit(
+                    X_tv[train_idx], y_tv[train_idx],
+                    eval_set=[(X_tv[val_idx], y_tv[val_idx])],
+                    verbose=False,
+                )
 
             fold_preds = predict_proba(fold_model, X_tv[val_idx])
             cv_predictions[val_idx] = fold_preds
@@ -380,8 +389,10 @@ def train(
 
         cv_auc = np.mean([m["roc_auc"] for m in fold_metrics_list])
         cv_f1 = np.mean([m["f1"] for m in fold_metrics_list])
+        cv_prec = np.mean([m["precision"] for m in fold_metrics_list])
+        cv_rec = np.mean([m["recall"] for m in fold_metrics_list])
         print(f"{'-' * 42}")
-        print(f"{'Mean':<6} {cv_auc:>8.4f} {cv_f1:>8.4f}")
+        print(f"{'Mean':<6} {cv_auc:>8.4f} {cv_f1:>8.4f} {cv_prec:>8.4f} {cv_rec:>8.4f}")
 
     # --- Train final model on all train+val data ---
     log.info("training final model on %d samples", len(y_tv))
@@ -450,12 +461,13 @@ def train(
         }
 
     # --- Evaluation ---
+    iso_calibrator: IsotonicRegression | None = None
     if X_holdout is not None:
         calib_preds = predict_proba(final_model, X_calib)
         iso_calibrator = IsotonicRegression(out_of_bounds="clip")
         iso_calibrator.fit(calib_preds, y_calib)
         calib_preds_cal = iso_calibrator.predict(calib_preds)
-        optimal_threshold = _optimal_threshold(y_calib, calib_preds_cal)
+        optimal_threshold = _optimal_threshold(y_calib, calib_preds_cal, beta=config.beta)
         eval_preds = iso_calibrator.predict(predict_proba(final_model, X_eval))
         metrics = _compute_metrics(y_eval, eval_preds, optimal_threshold)
         calibration = _calibration_summary(y_eval, eval_preds)
@@ -484,32 +496,35 @@ def train(
     n_eval_benign = tn + fp
     n_eval_malware = tp + fn
 
-    print(f"\n{'=' * 50}")
+    n_actual_trees = (getattr(final_model, "best_iteration", None) or config.n_estimators - 1) + 1
+    imbalance = n_benign / max(n_malware, 1)
+
+    print(f"\n{'=' * 54}")
     print("TRAINING RESULTS")
-    print(f"{'=' * 50}")
-    print(f"Samples:     {len(y)} ({n_malware} malware, {n_benign} benign)")
+    print(f"{'=' * 54}")
+    print(f"Dataset:  {len(y)} ({n_malware} malware, {n_benign} benign, {imbalance:.1f}:1)")
+    print(f"Features: {n_features}")
+    print(
+        f"Model:    {n_actual_trees}/{config.n_estimators} trees  "
+        f"depth={config.max_depth}  lr={config.learning_rate}  "
+        f"β={config.beta}  seed={config.seed}"
+    )
+    print(f"{'─' * 20} Holdout {'─' * 26}")
     if X_holdout is not None:
-        print(f"Calibrate:   {len(y_calib)} samples")
-        print(f"Evaluate:    {len(y_eval)} samples")
-    print(f"Features:    {n_features}")
-    print(f"ROC AUC:     {metrics['roc_auc']:.4f}")
-    print(f"Avg Prec:    {metrics['avg_precision']:.4f}")
-    print(f"Brier:       {metrics['brier']:.4f}")
-    print(f"ECE:         {float(calibration['ece']):.4f}")
-    print(f"F1 Score:    {metrics['f1']:.4f}")
-    print(f"Precision:   {metrics['precision']:.4f}")
-    print(f"Recall:      {metrics['recall']:.4f}")
-    print(f"Threshold:   {optimal_threshold:.3f}")
-    print(f"{'-' * 50}")
-    print(f"  {'':>20}  {'Count':>6}  {'Rate':>8}")
-    print(f"  {'-' * 40}")
+        print(f"  n={len(y_eval)} ({n_eval_malware} malware, {n_eval_benign} benign)  threshold={optimal_threshold:.3f}")
+    print(
+        f"  ROC AUC  {metrics['roc_auc']:.4f}   Avg Prec  {metrics['avg_precision']:.4f}"
+        f"   Brier  {metrics['brier']:.4f}   ECE  {float(calibration['ece']):.4f}"
+    )
+    print(
+        f"  F1  {metrics['f1']:.4f}   Precision  {metrics['precision']:.4f}"
+        f"   Recall  {metrics['recall']:.4f}"
+    )
     if n_eval_malware:
-        print(f"  {'True Positives':>20}  {tp:>6}  {tp / n_eval_malware:>8.2%}")
-        print(f"  {'False Negatives':>20}  {fn:>6}  {fn / n_eval_malware:>8.2%}")
+        print(f"  TP {tp:5d} / {n_eval_malware}  ({tp / n_eval_malware:.2%})    FN {fn:5d} / {n_eval_malware}  ({fn / n_eval_malware:.2%})")
     if n_eval_benign:
-        print(f"  {'True Negatives':>20}  {tn:>6}  {tn / n_eval_benign:>8.2%}")
-        print(f"  {'False Positives':>20}  {fp:>6}  {fp / n_eval_benign:>8.2%}")
-    print(f"{'=' * 50}")
+        print(f"  TN {tn:5d} / {n_eval_benign}  ({tn / n_eval_benign:.2%})    FP {fp:5d} / {n_eval_benign}  ({fp / n_eval_benign:.2%})")
+    print(f"{'=' * 54}")
 
     return TrainResult(
         model=final_model,
@@ -522,4 +537,5 @@ def train(
         fold_metrics=fold_metrics_list,
         feature_means=feature_means.tolist(),
         feature_stds=feature_stds.tolist(),
+        isotonic_calibrator=iso_calibrator,
     )

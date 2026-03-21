@@ -124,8 +124,19 @@ def _threshold_stats(
     return thresholds, tp_vals, fp_vals, correct_vals, recall_vals, fpr_vals, n, n_malware, n_benign
 
 
-def print_recommendations(probs: np.ndarray, y: np.ndarray, title: str = "RECOMMENDED") -> None:
-    """Print the recommended threshold table for a set of predictions."""
+def print_recommendations(
+    probs: np.ndarray,
+    y: np.ndarray,
+    title: str = "RECOMMENDED",
+    *,
+    highlight_threshold: float | None = None,
+) -> None:
+    """Print the recommended threshold table for a set of predictions.
+
+    highlight_threshold: if provided, inserts this threshold (e.g. the
+    calibrated holdout threshold) into the fixed-thresholds table marked
+    with a ← so it's easy to find the operating point from training.
+    """
     thresholds, tp_vals, fp_vals, _correct_vals, recall_vals, fpr_vals, n, n_malware, n_benign = (
         _threshold_stats(probs, y)
     )
@@ -138,8 +149,6 @@ def print_recommendations(probs: np.ndarray, y: np.ndarray, title: str = "RECOMM
     print(f"  {'-'*52}")
 
     for level, min_tpr, max_fpr in RECOMMENDATIONS:
-        # valid = window where recall≥min AND fpr≤max (contiguous since both are
-        # monotone with threshold). First valid entry = highest threshold in window.
         valid = (recall_vals >= min_tpr) & (fpr_vals <= max_fpr)
         if valid.any():
             k = int(np.where(valid)[0][0])
@@ -152,15 +161,20 @@ def print_recommendations(probs: np.ndarray, y: np.ndarray, title: str = "RECOMM
             fpr_str = f"≤{max_fpr*100:.3f}% FPR"
             print(f"  {level:<12} {'—':>10} (no threshold achieves {tpr_str} and {fpr_str})")
 
-    # Fixed reference thresholds — straight numpy, no loop overhead.
+    # Fixed reference thresholds — include the calibrated holdout threshold if provided.
+    fixed_set: set[float] = {0.5, 0.8, 0.9, 0.98, 0.99, 0.995}
+    if highlight_threshold is not None:
+        fixed_set.add(highlight_threshold)
+    fixed = sorted(fixed_set)
     print(f"\n  {'— fixed thresholds —':-^52}")
     print(f"  {'Threshold':>22} {'Recall':>8} {'FPR':>8} {'TP':>8} {'FP':>8}")
-    for t in [0.5, 0.8, 0.9, 0.98, 0.99, 0.995]:
+    for t in fixed:
         tp = int(((probs >= t) & (y == 1)).sum())
         fp = int(((probs >= t) & (y == 0)).sum())
         tpr = tp / max(n_malware, 1)
         fpr = fp / max(n_benign, 1)
-        print(f"  {t:>22.3f} {tpr:>8.2%} {fpr:>8.3%} {tp:>8} {fp:>8}")
+        marker = " ←" if t is highlight_threshold or t == highlight_threshold else ""
+        print(f"  {t:>22.3f} {tpr:>8.2%} {fpr:>8.3%} {tp:>8} {fp:>8}{marker}")
 
     print()
 

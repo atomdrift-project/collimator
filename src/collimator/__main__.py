@@ -7,6 +7,7 @@ import json
 import logging
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -37,8 +38,53 @@ def _git_sha() -> str | None:
     return result.stdout.strip() or None
 
 
+def _print_test_block(
+    probs: np.ndarray,
+    y: np.ndarray,
+    threshold: float,
+) -> None:
+    """Print test-set metrics at the calibrated holdout threshold."""
+    from sklearn.metrics import (
+        average_precision_score,
+        brier_score_loss,
+        f1_score,
+        precision_score,
+        recall_score,
+        roc_auc_score,
+    )
+    from .train import _calibration_summary
+
+    n_malware = int(np.sum(y == 1))
+    n_benign = int(np.sum(y == 0))
+    y_pred = (probs >= threshold).astype(int)
+    tp = int(np.sum((y_pred == 1) & (y == 1)))
+    fp = int(np.sum((y_pred == 1) & (y == 0)))
+    fn = int(np.sum((y_pred == 0) & (y == 1)))
+    tn = int(np.sum((y_pred == 0) & (y == 0)))
+
+    print(f"{'─' * 20} Test Set {'─' * 25}")
+    print(f"  n={len(y)} ({n_malware} malware, {n_benign} benign)  threshold={threshold:.3f}")
+    if len(np.unique(y)) > 1:
+        calib = _calibration_summary(y, probs)
+        print(
+            f"  ROC AUC  {roc_auc_score(y, probs):.4f}   Avg Prec  {average_precision_score(y, probs):.4f}"
+            f"   Brier  {brier_score_loss(y, probs):.4f}   ECE  {float(calib['ece']):.4f}"
+        )
+        print(
+            f"  F1  {f1_score(y, y_pred, zero_division=0):.4f}"
+            f"   Precision  {precision_score(y, y_pred, zero_division=0):.4f}"
+            f"   Recall  {recall_score(y, y_pred, zero_division=0):.4f}"
+        )
+    if n_malware:
+        print(f"  TP {tp:5d} / {n_malware}  ({tp / n_malware:.2%})    FN {fn:5d} / {n_malware}  ({fn / n_malware:.2%})")
+    if n_benign:
+        print(f"  TN {tn:5d} / {n_benign}  ({tn / n_benign:.2%})    FP {fp:5d} / {n_benign}  ({fp / n_benign:.2%})")
+    print(f"{'=' * 54}")
+
+
 def cmd_train(args: argparse.Namespace) -> None:
     """Train a model and export to ONNX."""
+    t0 = time.time()
     db_path = Path(args.db)
     out_dir = Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -139,6 +185,19 @@ def cmd_train(args: argparse.Namespace) -> None:
         idx = rng.choice(X.shape[0], min(n, X.shape[0]), replace=False)
         return X[idx].toarray()
 
+    # Test set metrics at the calibrated threshold — print immediately after
+    # the holdout block so both are visible together for experiment comparison.
+    test_probs: np.ndarray | None = None
+    if X_test.shape[0] > 0:
+        from .model import predict_proba
+        test_probs_raw = predict_proba(result.model, X_test)
+        # Apply the same isotonic calibrator used for the holdout evaluation.
+        if result.isotonic_calibrator is not None:
+            test_probs = result.isotonic_calibrator.predict(test_probs_raw)
+        else:
+            test_probs = test_probs_raw
+        _print_test_block(test_probs, y_test, result.optimal_threshold)
+
     # Validate ONNX (100 samples).
     if not export.validate_onnx(
         result.model, out_dir / "model.onnx", spec.total_features,
@@ -159,19 +218,24 @@ def cmd_train(args: argparse.Namespace) -> None:
     X_fix = X[fix_idx].toarray()
     generate_fixtures(result.model, spec, X_fix, X_fix, out_dir)
 
-    # Threshold table on the deterministic test set.
-    if X_test.shape[0] > 0:
-        from .model import predict_proba
-        test_probs = predict_proba(result.model, X_test)
-        thresholds.print_threshold_table(test_probs, y_test)
+    # Operating-point table on the test set (skip the large accuracy tables).
+    if test_probs is not None:
+        thresholds.print_recommendations(
+            test_probs, y_test,
+            title="TEST SET OPERATING POINTS (held-out)",
+            highlight_threshold=result.optimal_threshold,
+        )
     else:
-        print("\nNo test samples — skipping threshold table.")
+        print("\nNo test samples — skipping operating-point table.")
+
+    elapsed = time.time() - t0
+    mins, secs = divmod(int(elapsed), 60)
 
     print(f"\nOutput files in {out_dir}/:")
     for f in sorted(out_dir.iterdir()):
         if f.is_file():
-            size = f.stat().st_size
-            print(f"  {f.name:<30s} {size:>10,d} bytes")
+            print(f"  {f.name}")
+    print(f"\nTotal time: {mins}m {secs:02d}s")
 
 
 def cmd_build_splits(args: argparse.Namespace) -> None:
