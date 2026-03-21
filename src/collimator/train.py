@@ -19,6 +19,7 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+from sklearn.isotonic import IsotonicRegression
 from sklearn.model_selection import GroupShuffleSplit, StratifiedGroupKFold, StratifiedKFold, train_test_split
 
 from .model import create_classifier, predict_proba
@@ -451,12 +452,15 @@ def train(
     # --- Evaluation ---
     if X_holdout is not None:
         calib_preds = predict_proba(final_model, X_calib)
-        optimal_threshold = _optimal_threshold(y_calib, calib_preds)
-        eval_preds = predict_proba(final_model, X_eval)
+        iso_calibrator = IsotonicRegression(out_of_bounds="clip")
+        iso_calibrator.fit(calib_preds, y_calib)
+        calib_preds_cal = iso_calibrator.predict(calib_preds)
+        optimal_threshold = _optimal_threshold(y_calib, calib_preds_cal)
+        eval_preds = iso_calibrator.predict(predict_proba(final_model, X_eval))
         metrics = _compute_metrics(y_eval, eval_preds, optimal_threshold)
         calibration = _calibration_summary(y_eval, eval_preds)
         eval_y = y_eval
-        log.info("evaluation: AUC=%.4f F1=%.4f threshold=%.3f",
+        log.info("evaluation: AUC=%.4f F1=%.4f threshold=%.3f (isotonic calibrated)",
                  metrics["roc_auc"], metrics["f1"], optimal_threshold)
     elif n_folds >= 2:
         optimal_threshold = _optimal_threshold(y_tv, cv_predictions)
