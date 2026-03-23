@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+
+log = logging.getLogger(__name__)
 from sklearn.metrics import (
     average_precision_score,
     brier_score_loss,
@@ -161,6 +164,12 @@ def run_experiment(
     max_depth: int = 6,
     learning_rate: float = 0.03,
     early_stopping_rounds: int = 25,
+    min_child_weight: int = 5,
+    colsample_bytree: float = 0.8,
+    subsample: float = 0.8,
+    gamma: float = 0.0,
+    reg_alpha: float = 0.0,
+    reg_lambda: float = 1.0,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     corpus = sample_partitioned_reports(
@@ -174,31 +183,27 @@ def run_experiment(
     if len(corpus.train_samples) < 10:
         raise ValueError(f"only {len(corpus.train_samples)} sampled training rows, need at least 10")
 
-    # Build frozensets of row IDs so each DB scan is a single pass with O(1) lookup.
-    # The corpus itself only holds ints/strings (~kilobytes), not raw JSON.
-    train_row_ids = frozenset(s.row_id for s in corpus.train_samples)
-    test_row_ids = frozenset(s.row_id for s in corpus.test_samples)
-    train_groups = np.array([s.group_id for s in corpus.train_samples], dtype=object)
+    # Sort corpus to match DB extraction order (by row_id).
+    sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
+    sorted_test = sorted(corpus.test_samples, key=lambda s: s.row_id)
+    train_groups = np.array([s.group_id for s in sorted_train], dtype=object)
+
+    log.info("pass 1: building vocabulary (worker-local DB fetching)")
+    spec = features.build_vocab_from_db(
+        db_path,
+        [s.row_id for s in sorted_train],
+        n_workers=n_workers,
+    )
+
+    log.info("pass 2: extracting all features (worker-local DB fetching)")
+    X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
+        db_path,
+        [(s.row_id, s.label) for s in sorted_train],
+        [(s.row_id, s.label) for s in sorted_test],
+        spec,
+        n_workers=n_workers,
+    )
     del corpus
-
-    spec = features.build_vocab(
-        (raw_json for raw_json, _ in data.stream_raw_reports_by_row_ids(db_path, train_row_ids)),
-        n_workers=n_workers,
-    )
-
-    X_train, y_train = features.extract_stream(
-        data.stream_raw_reports_by_row_ids(db_path, train_row_ids),
-        spec,
-        n_workers=n_workers,
-    )
-    del train_row_ids
-
-    X_test, y_test = features.extract_stream(
-        data.stream_raw_reports_by_row_ids(db_path, test_row_ids),
-        spec,
-        n_workers=n_workers,
-    )
-    del test_row_ids
 
     result = train.train(
         X_train,
@@ -210,6 +215,12 @@ def run_experiment(
             max_depth=max_depth,
             learning_rate=learning_rate,
             early_stopping_rounds=early_stopping_rounds,
+            min_child_weight=min_child_weight,
+            colsample_bytree=colsample_bytree,
+            subsample=subsample,
+            gamma=gamma,
+            reg_alpha=reg_alpha,
+            reg_lambda=reg_lambda,
             holdout_fraction=0.0,  # use all samples; CV predictions drive threshold
         ),
         feature_names=spec.feature_names,

@@ -641,6 +641,12 @@ def main() -> None:
         "--max-test-samples", type=int, default=0,
         help="Cap external test set via reservoir sampling (0 = full test bucket, default: 0)",
     )
+    p_exp.add_argument("--min-child-weight", type=int, default=5, help="Minimum child weight")
+    p_exp.add_argument("--colsample-bytree", type=float, default=0.8, help="Subsample ratio of columns")
+    p_exp.add_argument("--subsample", type=float, default=0.8, help="Subsample ratio of training instances")
+    p_exp.add_argument("--gamma", type=float, default=0.0, help="Minimum loss reduction to make a further partition")
+    p_exp.add_argument("--reg-alpha", type=float, default=0.0, help="L1 regularization term on weights")
+    p_exp.add_argument("--reg-lambda", type=float, default=1.0, help="L2 regularization term on weights")
     _add_workers_arg(p_exp)
     _add_seed_arg(p_exp)
 
@@ -735,6 +741,12 @@ def main() -> None:
             max_depth=args.max_depth,
             learning_rate=args.learning_rate,
             early_stopping_rounds=args.early_stopping_rounds,
+            min_child_weight=args.min_child_weight,
+            colsample_bytree=args.colsample_bytree,
+            subsample=args.subsample,
+            gamma=args.gamma,
+            reg_alpha=args.reg_alpha,
+            reg_lambda=args.reg_lambda,
         )
     elif args.command == "ablate":
         rows = ablation.run_ablation(

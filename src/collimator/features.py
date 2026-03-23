@@ -35,6 +35,7 @@ import logging
 import math
 import multiprocessing as mp
 import os
+import sqlite3
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
@@ -217,47 +218,8 @@ class FeatureSpec:
 # Vocabulary building
 # ---------------------------------------------------------------------------
 
-def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> FeatureSpec:
-    """Scan all reports to build the feature vocabulary.
-
-    Each path that appears in >= MIN_PATH_FREQ samples gets two features:
-      - present:X  (binary) — capability exists at any crit ≥ baseline
-      - maxcrit:X  (ordinal 0-5) — cleave's max criticality for this path
-
-    This lets the model learn from capability combinations (presence) while
-    optionally using criticality as a gradient signal (maxcrit). No binary
-    tier thresholds — the model decides what criticality levels matter.
-
-    Accepts any iterable of report dicts or raw JSON strings.
-    """
-    nw = resolve_worker_count(n_workers)
-    presence_counts: dict[str, int] = {}
-    filetypes: set[str] = set()
-    batch_size = max(64, 512 // max(nw, 1))
-
-    def _merge_batch(counts: dict[str, int], fts: list[str]) -> None:
-        for k, v in counts.items():
-            presence_counts[k] = presence_counts.get(k, 0) + v
-        filetypes.update(fts)
-
-    if nw > 1:
-        with ProcessPoolExecutor(
-            max_workers=nw,
-            mp_context=mp.get_context("spawn"),
-        ) as pool:
-            for counts, fts in _bounded_iter(
-                pool, _vocab_batch_worker, _batched(reports, batch_size),
-                max_inflight=2 * nw,
-            ):
-                _merge_batch(counts, fts)
-
-    if nw <= 1:
-        for counts, fts in map(_vocab_batch_worker, _batched(reports, batch_size)):
-            _merge_batch(counts, fts)
-
-    presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
-    filetype_vocab = sorted(filetypes)
-
+def _build_feature_names(presence_vocab: list[str], filetype_vocab: list[str]) -> list[str]:
+    """Generate the full ordered list of feature names for a given vocabulary."""
     feature_names: list[str] = []
 
     # Group 1: Path Presence — binary (capability exists?).
@@ -269,10 +231,6 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         feature_names.append(f"maxcrit:{path}")
 
     # Group 3: Path Aggregates (20).
-    # Ratio-based: forces the model to learn from relative concentration of
-    # suspicious behavior rather than absolute counts. A tool with 23 suspicious
-    # findings out of 154 total (15%) looks very different from malware with
-    # 10 suspicious out of 15 total (67%).
     feature_names.extend([
         "agg:max_crit",                  # highest crit seen (0-5)
         "agg:category_breadth",          # distinct top-level categories
@@ -323,6 +281,50 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         "struct:file_count_log",
         "struct:inner_file_count_log",
     ])
+    return feature_names
+
+
+def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> FeatureSpec:
+    """Scan all reports to build the feature vocabulary.
+
+    Each path that appears in >= MIN_PATH_FREQ samples gets two features:
+      - present:X  (binary) — capability exists at any crit ≥ baseline
+      - maxcrit:X  (ordinal 0-5) — cleave's max criticality for this path
+
+    This lets the model learn from capability combinations (presence) while
+    optionally using criticality as a gradient signal (maxcrit). No binary
+    tier thresholds — the model decides what criticality levels matter.
+
+    Accepts any iterable of report dicts or raw JSON strings.
+    """
+    nw = resolve_worker_count(n_workers)
+    presence_counts: dict[str, int] = {}
+    filetypes: set[str] = set()
+    batch_size = max(64, 512 // max(nw, 1))
+
+    def _merge_batch(counts: dict[str, int], fts: list[str]) -> None:
+        for k, v in counts.items():
+            presence_counts[k] = presence_counts.get(k, 0) + v
+        filetypes.update(fts)
+
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            for counts, fts in _bounded_iter(
+                pool, _vocab_batch_worker, _batched(reports, batch_size),
+                max_inflight=2 * nw,
+            ):
+                _merge_batch(counts, fts)
+
+    if nw <= 1:
+        for counts, fts in map(_vocab_batch_worker, _batched(reports, batch_size)):
+            _merge_batch(counts, fts)
+
+    presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
+    filetype_vocab = sorted(filetypes)
+    feature_names = _build_feature_names(presence_vocab, filetype_vocab)
 
     spec = FeatureSpec(
         presence_vocab=presence_vocab,
@@ -815,6 +817,21 @@ def _vocab_batch_worker(
     return presence_counts, filetypes
 
 
+def _vocab_db_batch_worker(
+    args: tuple[Path, list[int]],
+) -> tuple[dict[str, int], list[str]]:
+    """Fetch and count paths for a batch of IDs from the DB."""
+    db_path, ids = args
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        placeholders = ",".join("?" for _ in ids)
+        query = f"SELECT cleave_json FROM samples WHERE id IN ({placeholders})"
+        reports = [r for r, in conn.execute(query, ids)]
+        return _vocab_batch_worker(reports)
+    finally:
+        conn.close()
+
+
 def _extract_batch_worker(
     args: tuple[int, list[tuple[dict[str, Any] | str, int]], FeatureSpec],
 ) -> tuple[list[int], list[int], list[float], list[int]]:
@@ -878,9 +895,10 @@ def extract_all(
     reports: list[dict[str, Any]],
     labels: list[int],
     spec: FeatureSpec,
+    n_workers: int = 0,
 ) -> tuple[sp.csr_matrix, np.ndarray]:
     """Extract feature vectors for all samples as a sparse CSR matrix."""
-    return extract_stream(zip(reports, labels), spec)
+    return extract_stream(zip(reports, labels), spec, n_workers=n_workers)
 
 
 def extract_stream(
@@ -1023,6 +1041,34 @@ def _extract_partitioned_batch_worker(
     )
 
 
+def _extract_partitioned_db_batch_worker(
+    args: tuple[int, int, Path, list[tuple[int, int, bool]], FeatureSpec],
+) -> tuple[
+    list[int], list[int], list[float], list[int],
+    list[int], list[int], list[float], list[int],
+]:
+    """Fetch and extract train/test features for a batch of IDs from the DB."""
+    train_offset, test_offset, db_path, batch_ids, spec = args
+    import sqlite3
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        # Use a single batch query for IDs in this worker task.
+        ids = [rid for rid, _l, _t in batch_ids]
+        placeholders = ",".join("?" for _ in ids)
+        query = f"SELECT id, cleave_json FROM samples WHERE id IN ({placeholders})"
+        reports_map = {rid: r for rid, r in conn.execute(query, ids)}
+        
+        # Re-build the batch using the fetched reports.
+        batch = []
+        for rid, label, is_test in batch_ids:
+            if rid in reports_map:
+                batch.append((reports_map[rid], label, is_test))
+        
+        return _extract_partitioned_batch_worker((train_offset, test_offset, batch, spec))
+    finally:
+        conn.close()
+
+
 def _enumerate_partitioned_batches(
     items: Iterable[tuple[T, int, bool]],
     batch_size: int,
@@ -1090,7 +1136,7 @@ def extract_partitioned_stream(
             max_workers=nw,
             mp_context=mp.get_context("spawn"),
         ) as pool:
-            _consume(pool.map(_extract_partitioned_batch_worker, batch_args))
+            _consume(_bounded_iter(pool, _extract_partitioned_batch_worker, batch_args, max_inflight=2 * nw))
     else:
         _consume(map(_extract_partitioned_batch_worker, batch_args))
 
@@ -1118,6 +1164,102 @@ def extract_partitioned_stream(
         "extracted %d train + %d test samples x %d features",
         n_train, n_test, spec.total_features,
     )
+    return X_train, y_train, X_test, y_test
+
+
+def build_vocab_from_db(
+    db_path: Path,
+    row_ids: list[int],
+    n_workers: int = 0,
+) -> FeatureSpec:
+    """Scan sampled reports in the DB to build a feature vocabulary."""
+    nw = resolve_worker_count(n_workers)
+    presence_counts: dict[str, int] = {}
+    filetypes: set[str] = set()
+    batch_size = max(64, 512 // max(nw, 1))
+
+    def _merge_batch(counts: dict[str, int], fts: list[str]) -> None:
+        for k, v in counts.items():
+            presence_counts[k] = presence_counts.get(k, 0) + v
+        filetypes.update(fts)
+
+    batch_args = ((db_path, batch) for batch in _batched(row_ids, batch_size))
+
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            for counts, fts in _bounded_iter(
+                pool, _vocab_db_batch_worker, batch_args,
+                max_inflight=2 * nw,
+            ):
+                _merge_batch(counts, fts)
+    else:
+        for counts, fts in map(_vocab_db_batch_worker, batch_args):
+            _merge_batch(counts, fts)
+
+    presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
+    filetype_vocab = sorted(filetypes)
+    feature_names = _build_feature_names(presence_vocab, filetype_vocab)
+
+    spec = FeatureSpec(
+        presence_vocab=presence_vocab,
+        filetype_vocab=filetype_vocab,
+        feature_names=feature_names,
+        total_features=len(feature_names),
+    )
+    return spec
+
+
+def extract_partitioned_from_db(
+    db_path: Path,
+    train_ids_labels: list[tuple[int, int]],
+    test_ids_labels: list[tuple[int, int]],
+    spec: FeatureSpec,
+    n_workers: int = 0,
+) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
+    """Extract train/test features using worker-local DB fetching."""
+    nw = resolve_worker_count(n_workers)
+    batch_size = max(64, 512 // max(nw, 1))
+
+    # Combine all IDs into one mixed stream for partitioned extraction.
+    mixed_ids = (
+        [(rid, label, False) for rid, label in train_ids_labels] +
+        [(rid, label, True) for rid, label in test_ids_labels]
+    )
+    # Sort to ensure predictable row assignment if needed (not strictly required for sparse).
+    mixed_ids.sort(key=lambda x: x[0])
+
+    train_rows, train_cols, train_vals, train_labels = [], [], [], []
+    test_rows, test_cols, test_vals, test_labels = [], [], [], []
+
+    def _consume(batch_iter):
+        for (tr, tc, tv, tl, ter, tec, tev, tel) in batch_iter:
+            train_rows.extend(tr); train_cols.extend(tc); train_vals.extend(tv); train_labels.extend(tl)
+            test_rows.extend(ter); test_cols.extend(tec); test_vals.extend(tev); test_labels.extend(tel)
+
+    batch_args = (
+        (train_offset, test_offset, db_path, batch, spec)
+        for train_offset, test_offset, batch in _enumerate_partitioned_batches(
+            mixed_ids,
+            batch_size,
+        )
+    )
+
+    if nw > 1:
+        with ProcessPoolExecutor(max_workers=nw, mp_context=mp.get_context("spawn")) as pool:
+            _consume(_bounded_iter(pool, _extract_partitioned_db_batch_worker, batch_args, max_inflight=2 * nw))
+    else:
+        _consume(map(_extract_partitioned_db_batch_worker, batch_args))
+
+    # Build final matrices.
+    n_train = len(train_labels); n_test = len(test_labels)
+    X_train = sp.csr_matrix((np.array(train_vals, dtype=np.float32), (np.array(train_rows, dtype=np.int32), np.array(train_cols, dtype=np.int32))), shape=(n_train, spec.total_features))
+    y_train = np.array(train_labels, dtype=np.float32)
+    X_test = sp.csr_matrix((np.array(test_vals, dtype=np.float32), (np.array(test_rows, dtype=np.int32), np.array(test_cols, dtype=np.int32))), shape=(n_test, spec.total_features))
+    y_test = np.array(test_labels, dtype=np.float32)
+
     return X_train, y_train, X_test, y_test
 
 
