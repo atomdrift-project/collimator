@@ -41,10 +41,10 @@ class TrainConfig:
     device: str | None = None
     holdout_fraction: float = HOLDOUT_FRACTION
     n_folds: int = 5
-    n_estimators: int = 400
-    max_depth: int = 6
-    learning_rate: float = 0.03
-    early_stopping_rounds: int = 40
+    n_estimators: int = 600
+    max_depth: int = 10
+    learning_rate: float = 0.02
+    early_stopping_rounds: int = 100
     min_child_weight: int = 5
     colsample_bytree: float = 0.8
     subsample: float = 0.8

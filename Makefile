@@ -16,10 +16,20 @@ SEED ?= 42
 EXP_TRAIN_SAMPLES ?= 75000
 EXP_MAX_TEST_SAMPLES ?= 30000
 EXP_FOLDS ?= 2
-EXP_ESTIMATORS ?= 220
-EXP_MAX_DEPTH ?= 6
-EXP_LEARNING_RATE ?= 0.03
-EXP_EARLY_STOPPING ?= 50
+EXP_ESTIMATORS ?= 600
+EXP_MAX_DEPTH ?= 10
+EXP_LEARNING_RATE ?= 0.02
+EXP_EARLY_STOPPING ?= 100
+TRAIN_ESTIMATORS ?=
+TRAIN_MAX_DEPTH ?=
+TRAIN_LEARNING_RATE ?=
+TRAIN_EARLY_STOPPING ?=
+
+# Build optional train hyperparameter flags (only passed if set)
+_TRAIN_FLAGS := $(if $(TRAIN_ESTIMATORS),--n-estimators $(TRAIN_ESTIMATORS)) \
+                $(if $(TRAIN_MAX_DEPTH),--max-depth $(TRAIN_MAX_DEPTH)) \
+                $(if $(TRAIN_LEARNING_RATE),--learning-rate $(TRAIN_LEARNING_RATE)) \
+                $(if $(TRAIN_EARLY_STOPPING),--early-stopping-rounds $(TRAIN_EARLY_STOPPING))
 
 # Validate DB is set for targets that need it
 check-db:
@@ -38,7 +48,7 @@ $(VENV_DIR)/bin/activate: requirements.txt
 
 train: venv check-db
 	@mkdir -p $(LOG_DIR)
-	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
+	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json

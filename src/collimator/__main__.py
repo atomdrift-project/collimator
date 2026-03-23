@@ -112,7 +112,13 @@ def cmd_train(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     # Train.
-    config = train.TrainConfig(seed=args.seed)
+    config = train.TrainConfig(
+        seed=args.seed,
+        **({"n_estimators": args.n_estimators} if args.n_estimators is not None else {}),
+        **({"max_depth": args.max_depth} if args.max_depth is not None else {}),
+        **({"learning_rate": args.learning_rate} if args.learning_rate is not None else {}),
+        **({"early_stopping_rounds": args.early_stopping_rounds} if args.early_stopping_rounds is not None else {}),
+    )
     result = train.train(X, y, config, feature_names=spec.feature_names, groups=train_groups)
 
     # Attach standardization params to spec before saving.
@@ -500,6 +506,10 @@ def main() -> None:
     p_train.add_argument("--output", default="out", help="Output directory (default: out)")
     _add_workers_arg(p_train)
     _add_seed_arg(p_train)
+    p_train.add_argument("--n-estimators", type=int, default=None, help="Max XGBoost trees (default: TrainConfig default)")
+    p_train.add_argument("--max-depth", type=int, default=None, help="Tree depth limit (default: TrainConfig default)")
+    p_train.add_argument("--learning-rate", type=float, default=None, help="XGBoost learning rate (default: TrainConfig default)")
+    p_train.add_argument("--early-stopping-rounds", type=int, default=None, help="Early stopping patience (default: TrainConfig default)")
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Evaluate existing model")
