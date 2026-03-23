@@ -29,6 +29,7 @@ Feature groups:
 
 from __future__ import annotations
 
+import collections
 import json
 import logging
 import math
@@ -38,7 +39,7 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from itertools import islice
 from typing import Any, TypeVar
 
@@ -244,9 +245,9 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
             max_workers=nw,
             mp_context=mp.get_context("spawn"),
         ) as pool:
-            for counts, fts in pool.map(
-                _vocab_batch_worker,
-                _batched(reports, batch_size),
+            for counts, fts in _bounded_iter(
+                pool, _vocab_batch_worker, _batched(reports, batch_size),
+                max_inflight=2 * nw,
             ):
                 _merge_batch(counts, fts)
 
@@ -364,6 +365,7 @@ class _FindingSummary:
     notable_finding_count: int
     suspicious_finding_count: int
     hostile_finding_count: int
+    unique_notable_ids: int
     unique_suspicious_ids: int
     unique_hostile_ids: int
     third_party_max_crit: int
@@ -409,6 +411,7 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     notable_finding_count = 0
     suspicious_finding_count = 0
     hostile_finding_count = 0
+    notable_ids: set[str] = set()
     suspicious_ids: set[str] = set()
     hostile_ids: set[str] = set()
     third_party_max_crit = 0
@@ -428,6 +431,7 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
         if crit_ord >= 3:
             notable_finding_count += 1
+            notable_ids.add(fid)
         if crit_ord >= 4:
             suspicious_finding_count += 1
             suspicious_ids.add(fid)
@@ -459,6 +463,7 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         notable_finding_count=notable_finding_count,
         suspicious_finding_count=suspicious_finding_count,
         hostile_finding_count=hostile_finding_count,
+        unique_notable_ids=len(notable_ids),
         unique_suspicious_ids=len(suspicious_ids),
         unique_hostile_ids=len(hostile_ids),
         third_party_max_crit=third_party_max_crit,
@@ -482,6 +487,7 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
     notable_finding_count = 0
     suspicious_finding_count = 0
     hostile_finding_count = 0
+    unique_notable_ids: set[str] = set()
     unique_suspicious_ids: set[str] = set()
     unique_hostile_ids: set[str] = set()
     third_party_max_crit = 0
@@ -513,6 +519,8 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
             if not fid or _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
                 continue
             crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
+            if crit_ord >= 3:
+                unique_notable_ids.add(fid)
             if crit_ord >= 4:
                 unique_suspicious_ids.add(fid)
             if crit_ord >= 5:
@@ -524,6 +532,7 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
         notable_finding_count=notable_finding_count,
         suspicious_finding_count=suspicious_finding_count,
         hostile_finding_count=hostile_finding_count,
+        unique_notable_ids=len(unique_notable_ids),
         unique_suspicious_ids=len(unique_suspicious_ids),
         unique_hostile_ids=len(unique_hostile_ids),
         third_party_max_crit=third_party_max_crit,
@@ -900,31 +909,20 @@ def extract_stream(
             vals.extend(b_vals)
             labels.extend(b_labels)
 
+    batch_args = (
+        (offset, batch, spec)
+        for offset, batch in _enumerate_batches(report_labels, batch_size)
+    )
+
     if nw > 1:
         with ProcessPoolExecutor(
             max_workers=nw,
             mp_context=mp.get_context("spawn"),
         ) as pool:
-            _consume(
-                pool.map(
-                    _extract_batch_worker,
-                    (
-                        (offset, batch, spec)
-                        for offset, batch in _enumerate_batches(report_labels, batch_size)
-                    ),
-                )
-            )
+            _consume(_bounded_iter(pool, _extract_batch_worker, batch_args, max_inflight=2 * nw))
 
     if nw <= 1:
-        _consume(
-            map(
-                _extract_batch_worker,
-                (
-                    (offset, batch, spec)
-                    for offset, batch in _enumerate_batches(report_labels, batch_size)
-                ),
-            )
-        )
+        _consume(map(_extract_batch_worker, batch_args))
 
     n = len(labels)
 
@@ -951,6 +949,26 @@ def _enumerate_batches(
     for batch in _batched(items, batch_size):
         yield offset, batch
         offset += len(batch)
+
+
+def _bounded_iter(pool: ProcessPoolExecutor, fn, it: Iterable, *, max_inflight: int) -> Iterator:
+    """Submit tasks to pool with bounded concurrency, yielding results in order.
+
+    Unlike pool.map(), which eagerly submits all tasks before any results are
+    consumed, this keeps at most max_inflight tasks in flight at once. This
+    bounds the amount of pickled task data queued in the IPC pipe and the
+    number of raw-JSON strings materialised in the main process simultaneously.
+    """
+    pending: collections.deque = collections.deque()
+    source = iter(it)
+    for item in islice(source, max_inflight):
+        pending.append(pool.submit(fn, item))
+    while pending:
+        yield pending.popleft().result()
+        try:
+            pending.append(pool.submit(fn, next(source)))
+        except StopIteration:
+            pass
 
 
 def _extract_partitioned_batch_worker(

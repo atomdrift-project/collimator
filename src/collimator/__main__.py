@@ -627,6 +627,10 @@ def main() -> None:
         "--early-stopping-rounds", type=int, default=25,
         help="Early stopping rounds for the experiment",
     )
+    p_exp.add_argument(
+        "--max-test-samples", type=int, default=0,
+        help="Cap external test set via reservoir sampling (0 = full test bucket, default: 0)",
+    )
     _add_workers_arg(p_exp)
     _add_seed_arg(p_exp)
 
@@ -715,6 +719,7 @@ def main() -> None:
             n_workers=args.workers,
             seed=args.seed,
             train_samples=args.train_samples,
+            max_test_samples=args.max_test_samples,
             n_folds=args.n_folds,
             n_estimators=args.n_estimators,
             max_depth=args.max_depth,

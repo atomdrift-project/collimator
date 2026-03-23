@@ -24,7 +24,7 @@ from .model import predict_proba
 class ExperimentSample:
     """One sampled report retained for a fast experiment."""
 
-    raw_report: str
+    row_id: int
     label: int
     is_test: bool
     group_id: str
@@ -62,13 +62,22 @@ def sample_partitioned_reports(
     db_path: Path,
     *,
     train_samples: int,
+    max_test_samples: int = 0,
     seed: int = 42,
 ) -> ExperimentCorpus:
-    """Reservoir-sample train rows and keep the full external test bucket."""
+    """Reservoir-sample train rows and optionally cap the external test bucket.
+
+    max_test_samples=0 keeps the full test set (original behaviour).
+    Set it to a positive value to reservoir-sample the test set too,
+    which substantially reduces peak memory when the test bucket is large.
+    """
     rng = np.random.default_rng(seed)
 
     train_malware_target = max(train_samples // 2, 1) if train_samples > 1 else train_samples
     train_benign_target = max(train_samples - train_malware_target, 0)
+
+    test_malware_target = max(max_test_samples // 2, 1) if max_test_samples > 1 else max_test_samples
+    test_benign_target = max(max_test_samples - test_malware_target, 0) if max_test_samples > 0 else 0
 
     train_malware: list[ExperimentSample] = []
     train_benign: list[ExperimentSample] = []
@@ -81,17 +90,25 @@ def sample_partitioned_reports(
         (True, 0): 0,
     }
 
-    for raw_report, label, is_test, group_id in data.stream_partitioned_raw_reports_grouped(db_path):
-        sample = ExperimentSample(raw_report=raw_report, label=label, is_test=is_test, group_id=group_id)
+    for row_id, label, is_test, group_id in data.stream_partitioned_metadata_grouped(db_path):
+        sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id)
         key = (is_test, label)
         if key == (False, 1):
             seen[key] = _reservoir_update(train_malware, sample, train_malware_target, seen[key], rng)
         elif key == (False, 0):
             seen[key] = _reservoir_update(train_benign, sample, train_benign_target, seen[key], rng)
         elif key == (True, 1):
-            test_malware.append(sample)
+            if max_test_samples > 0:
+                seen[key] = _reservoir_update(test_malware, sample, test_malware_target, seen[key], rng)
+            else:
+                test_malware.append(sample)
+                seen[key] += 1
         else:
-            test_benign.append(sample)
+            if max_test_samples > 0:
+                seen[key] = _reservoir_update(test_benign, sample, test_benign_target, seen[key], rng)
+            else:
+                test_benign.append(sample)
+                seen[key] += 1
 
     return ExperimentCorpus(
         train_samples=train_benign + train_malware,
@@ -138,6 +155,7 @@ def run_experiment(
     n_workers: int = 0,
     seed: int = 42,
     train_samples: int = 10_000,
+    max_test_samples: int = 0,
     n_folds: int = 2,
     n_estimators: int = 220,
     max_depth: int = 6,
@@ -148,6 +166,7 @@ def run_experiment(
     corpus = sample_partitioned_reports(
         db_path,
         train_samples=train_samples,
+        max_test_samples=max_test_samples,
         seed=seed,
     )
     _print_dataset_summary(corpus)
@@ -155,21 +174,31 @@ def run_experiment(
     if len(corpus.train_samples) < 10:
         raise ValueError(f"only {len(corpus.train_samples)} sampled training rows, need at least 10")
 
+    # Build frozensets of row IDs so each DB scan is a single pass with O(1) lookup.
+    # The corpus itself only holds ints/strings (~kilobytes), not raw JSON.
+    train_row_ids = frozenset(s.row_id for s in corpus.train_samples)
+    test_row_ids = frozenset(s.row_id for s in corpus.test_samples)
+    train_groups = np.array([s.group_id for s in corpus.train_samples], dtype=object)
+    del corpus
+
     spec = features.build_vocab(
-        (sample.raw_report for sample in corpus.train_samples),
+        (raw_json for raw_json, _ in data.stream_raw_reports_by_row_ids(db_path, train_row_ids)),
         n_workers=n_workers,
     )
 
     X_train, y_train = features.extract_stream(
-        ((sample.raw_report, sample.label) for sample in corpus.train_samples),
+        data.stream_raw_reports_by_row_ids(db_path, train_row_ids),
         spec,
         n_workers=n_workers,
     )
+    del train_row_ids
+
     X_test, y_test = features.extract_stream(
-        ((sample.raw_report, sample.label) for sample in corpus.test_samples),
+        data.stream_raw_reports_by_row_ids(db_path, test_row_ids),
         spec,
         n_workers=n_workers,
     )
+    del test_row_ids
 
     result = train.train(
         X_train,
@@ -181,9 +210,10 @@ def run_experiment(
             max_depth=max_depth,
             learning_rate=learning_rate,
             early_stopping_rounds=early_stopping_rounds,
+            holdout_fraction=0.0,  # use all samples; CV predictions drive threshold
         ),
         feature_names=spec.feature_names,
-        groups=np.array([sample.group_id for sample in corpus.train_samples], dtype=object),
+        groups=train_groups,
     )
 
     sampled_test_metrics: dict[str, float] = {}

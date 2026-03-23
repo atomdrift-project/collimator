@@ -499,6 +499,71 @@ def stream_partitioned_raw_reports(
         conn.close()
 
 
+def stream_partitioned_metadata_grouped(
+    db_path: Path,
+) -> Iterator[tuple[int, int, bool, str]]:
+    """Yield (row_id, label, is_test, group_id) without loading raw JSON.
+
+    Used to reservoir-sample train/test splits without holding JSON in memory.
+    """
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found: {db_path}")
+
+    split_assignments = load_split_assignments(db_path)
+    placeholders = ",".join("?" for _ in ALL_TERMINAL)
+    query = (
+        "SELECT id, sha256, status"
+        f" FROM samples WHERE status IN ({placeholders})"
+    )
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        for row_id, sha256, status in conn.execute(query, tuple(sorted(ALL_TERMINAL))):
+            assignment = split_assignments.get(int(row_id))
+            if assignment is None:
+                group_id = sha256
+                is_test = is_test_sample(sha256)
+            else:
+                group_id = assignment.group_id
+                is_test = assignment.is_test
+            yield (
+                int(row_id),
+                1 if status in MALWARE_STATUSES else 0,
+                is_test,
+                group_id,
+            )
+    finally:
+        conn.close()
+
+
+def stream_raw_reports_by_row_ids(
+    db_path: Path,
+    row_ids: frozenset[int],
+) -> Iterator[tuple[str, int]]:
+    """Stream (raw_json, label) for selected row IDs via a full table scan.
+
+    Only the matching rows are yielded; unselected rows are skipped without
+    buffering them in memory, so peak memory is O(batch) not O(table).
+    """
+    if not row_ids:
+        return
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found: {db_path}")
+
+    placeholders = ",".join("?" for _ in ALL_TERMINAL)
+    query = (
+        "SELECT id, status, cleave_json"
+        f" FROM samples WHERE status IN ({placeholders})"
+    )
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        for row_id, status, cleave_json in conn.execute(query, tuple(sorted(ALL_TERMINAL))):
+            if int(row_id) not in row_ids or not cleave_json:
+                continue
+            yield cleave_json, (1 if status in MALWARE_STATUSES else 0)
+    finally:
+        conn.close()
+
+
 def stream_partitioned_raw_reports_grouped(
     db_path: Path,
 ) -> Iterator[tuple[str, int, bool, str]]:

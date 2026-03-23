@@ -41,10 +41,10 @@ class TrainConfig:
     device: str | None = None
     holdout_fraction: float = HOLDOUT_FRACTION
     n_folds: int = 5
-    n_estimators: int = 220
+    n_estimators: int = 400
     max_depth: int = 6
     learning_rate: float = 0.03
-    early_stopping_rounds: int = 25
+    early_stopping_rounds: int = 40
     min_child_weight: int = 5
     colsample_bytree: float = 0.8
     subsample: float = 0.8
@@ -266,7 +266,12 @@ def train(
 
     # --- Holdout split ---
     n_min_class = min(n_malware, n_benign)
-    if n_min_class >= MIN_HOLDOUT_CLASS_SIZE:
+    if config.holdout_fraction <= 0.0:
+        # No holdout requested — use all data for training; CV drives threshold.
+        X_tv, y_tv = X, y
+        groups_tv = groups
+        X_holdout = y_holdout = groups_holdout = None
+    elif n_min_class >= MIN_HOLDOUT_CLASS_SIZE:
         if groups is not None:
             tv_idx, holdout_idx = _grouped_split_indices(
                 y,
@@ -467,13 +472,25 @@ def train(
         iso_calibrator = IsotonicRegression(out_of_bounds="clip")
         iso_calibrator.fit(calib_preds, y_calib)
         calib_preds_cal = iso_calibrator.predict(calib_preds)
-        optimal_threshold = _optimal_threshold(y_calib, calib_preds_cal, beta=config.beta)
-        eval_preds = iso_calibrator.predict(predict_proba(final_model, X_eval))
+        # Detect degenerate calibration (too few unique outputs = overfitting on small split).
+        if len(np.unique(calib_preds_cal)) <= 5:
+            log.warning(
+                "isotonic calibration degenerate (%d unique outputs on %d samples); "
+                "falling back to raw scores for threshold",
+                len(np.unique(calib_preds_cal)), len(y_calib),
+            )
+            iso_calibrator = None
+            optimal_threshold = _optimal_threshold(y_calib, calib_preds, beta=config.beta)
+            eval_preds = predict_proba(final_model, X_eval)
+        else:
+            optimal_threshold = _optimal_threshold(y_calib, calib_preds_cal, beta=config.beta)
+            eval_preds = iso_calibrator.predict(predict_proba(final_model, X_eval))
         metrics = _compute_metrics(y_eval, eval_preds, optimal_threshold)
         calibration = _calibration_summary(y_eval, eval_preds)
         eval_y = y_eval
-        log.info("evaluation: AUC=%.4f F1=%.4f threshold=%.3f (isotonic calibrated)",
-                 metrics["roc_auc"], metrics["f1"], optimal_threshold)
+        cal_label = "isotonic calibrated" if iso_calibrator is not None else "raw (calibration degenerate)"
+        log.info("evaluation: AUC=%.4f F1=%.4f threshold=%.3f (%s)",
+                 metrics["roc_auc"], metrics["f1"], optimal_threshold, cal_label)
     elif n_folds >= 2:
         optimal_threshold = _optimal_threshold(y_tv, cv_predictions)
         metrics = _compute_metrics(y_tv, cv_predictions, optimal_threshold)
@@ -509,7 +526,8 @@ def train(
         f"depth={config.max_depth}  lr={config.learning_rate}  "
         f"β={config.beta}  seed={config.seed}"
     )
-    print(f"{'─' * 20} Holdout {'─' * 26}")
+    holdout_label = "Holdout" if X_holdout is not None else f"CV (out-of-fold, n={len(eval_y)})"
+    print(f"{'─' * 20} {holdout_label} {'─' * max(1, 54 - 22 - len(holdout_label))}")
     if X_holdout is not None:
         print(f"  n={len(y_eval)} ({n_eval_malware} malware, {n_eval_benign} benign)  threshold={optimal_threshold:.3f}")
     print(

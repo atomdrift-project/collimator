@@ -11,14 +11,15 @@ FILE ?=
 CLEAVE ?= cleave
 DEMO_DB ?= out/demo.db
 WORKERS ?= 0
-EXP_WORKERS ?= 1
+EXP_WORKERS ?= 8
 SEED ?= 42
-EXP_TRAIN_SAMPLES ?= 10000
+EXP_TRAIN_SAMPLES ?= 75000
+EXP_MAX_TEST_SAMPLES ?= 30000
 EXP_FOLDS ?= 2
 EXP_ESTIMATORS ?= 220
 EXP_MAX_DEPTH ?= 6
 EXP_LEARNING_RATE ?= 0.03
-EXP_EARLY_STOPPING ?= 25
+EXP_EARLY_STOPPING ?= 50
 
 # Validate DB is set for targets that need it
 check-db:
@@ -74,7 +75,7 @@ build-splits: venv check-db
 experiment: venv check-db
 	@mkdir -p $(LOG_DIR)
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --workers $(EXP_WORKERS) --seed $(SEED) \
-		--train-samples $(EXP_TRAIN_SAMPLES) \
+		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
 		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-experiment.log"
 
@@ -147,7 +148,8 @@ help:
 	@echo "  WORKERS=n       Feature extraction workers (default: 0=auto)"
 	@echo "  EXP_WORKERS=n   Experiment workers (default: 1)"
 	@echo "  SEED=n          Random seed for training/demo generation (default: 42)"
-	@echo "  EXP_TRAIN_SAMPLES=n   Experiment train rows (default: 10000)"
+	@echo "  EXP_TRAIN_SAMPLES=n   Experiment train rows (default: 75000)"
+	@echo "  EXP_MAX_TEST_SAMPLES=n  Cap test set via reservoir (0=full, default: 30000)"
 	@echo "  EXP_FOLDS=n           Experiment CV folds (default: 2)"
 	@echo "  EXP_ESTIMATORS=n      Experiment max trees (default: 220)"
 	@echo "  SAMPLE=sha256   SHA256 (or prefix) for inspect"
