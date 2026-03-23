@@ -51,7 +51,7 @@ class TrainConfig:
     gamma: float = 0.0
     reg_alpha: float = 0.0
     reg_lambda: float = 1.0
-    beta: float = 0.5  # F-beta for threshold selection; 0.5 = precision 2× recall
+    beta: float = 1.0  # F-beta for threshold selection; 1.0 = balanced precision and recall
 
 
 @dataclass

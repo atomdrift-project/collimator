@@ -177,9 +177,10 @@ def analyze_traits(
     sort_by: str = "precision",
     top_n: int = 50,
     output_path: Path | None = None,
+    limit: int = 50_000,
 ) -> list[TraitStat]:
     """Load a DB, compute trait statistics, print a report, optionally save."""
-    samples = load_samples(db_path)
+    samples = load_samples(db_path, limit=limit)
     stats = compute_trait_stats(samples, crit=crit, min_samples=min_samples)
     stats = sort_trait_stats(stats, sort_by)
     print_trait_stats(stats, top_n=top_n)

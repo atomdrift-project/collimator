@@ -33,8 +33,8 @@ BENIGN_STATUSES = frozenset({"good", "bad-benign"})
 ALL_TERMINAL = MALWARE_STATUSES | BENIGN_STATUSES
 
 # Samples whose SHA256 last byte falls in [0, TEST_BUCKET_MAX) are reserved
-# for threshold evaluation and excluded from training. 13/256 ≈ 5%.
-TEST_BUCKET_MAX = 13
+# for threshold evaluation and excluded from training. 32/256 = 12.5%.
+TEST_BUCKET_MAX = 32
 SPLIT_CACHE_VERSION = 1
 SPLIT_METADATA_TABLE = "collimator_split_metadata"
 SPLIT_ASSIGNMENTS_TABLE = "collimator_sample_splits"
@@ -62,6 +62,7 @@ def stream_samples(
     *,
     exclude_test: bool = False,
     only_test: bool = False,
+    limit: int = 0,
 ) -> Iterator[Sample]:
     """Yield labeled samples from the database without loading all rows."""
     if not db_path.exists():
@@ -73,6 +74,8 @@ def stream_samples(
         "SELECT id, sha256, path, status, cleave_json"
         f" FROM samples WHERE status IN ({placeholders})"
     )
+    if limit > 0:
+        query += f" LIMIT {limit}"
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     try:
         for row_id, sha256, path, status, cleave_json in conn.execute(
@@ -102,19 +105,10 @@ def stream_samples(
         conn.close()
 
 
-def load_samples(db_path: Path) -> list[Sample]:
-    """Load labeled samples from a cyclotron database.
-
-    Statuses used for training:
-      - 'bad', 'bad-review', 'bad-reversed', 'bad-gapped',
-        'bad-exhausted', 'good-malicious'  -> label 1 (malware)
-      - 'good', 'bad-benign'               -> label 0 (benign)
-
-    good-review, good-analyzed, good-exhausted are still excluded —
-    those are unconfirmed benign and may contain FP-flagged malware.
-    """
-    log.info("loading samples from %s", db_path)
-    samples = list(stream_samples(db_path))
+def load_samples(db_path: Path, limit: int = 0) -> list[Sample]:
+    """Load labeled samples from a cyclotron database."""
+    log.info("loading samples from %s (limit=%d)", db_path, limit)
+    samples = list(stream_samples(db_path, limit=limit))
 
     n_malware = sum(1 for s in samples if s.label == 1)
     n_benign = len(samples) - n_malware
@@ -304,28 +298,16 @@ def build_split_cache(db_path: Path) -> Path:
             len(root_outer_sha),
         )
 
-        group_is_test: dict[int, bool] = {}
-        for root, outer_sha in root_outer_sha.items():
-            bucket = hashlib.sha256(outer_sha.encode("ascii")).digest()[-1]
-            group_is_test[root] = bucket < TEST_BUCKET_MAX
-
         conn.executemany(
             f"INSERT INTO {SPLIT_ASSIGNMENTS_TABLE}(sample_row_id, group_id, is_test, split_version)"
-            " VALUES (?, ?, ?, ?)",
-            [
-                (
-                    row_id,
-                    group_id,
-                    1 if group_is_test[_find(parent, row_id)] else 0,
-                    SPLIT_CACHE_VERSION,
-                )
-                for row_id, group_id, _is_test in rows
-            ],
+            " SELECT id, 's'||id, (instr('0123456789abcdef', substr(sha256, -1, 1)) + 16 * instr('0123456789abcdef', substr(sha256, -2, 1)) - 17) < ?, ? FROM samples WHERE status IN (" + placeholders + ")",
+            [(TEST_BUCKET_MAX, SPLIT_CACHE_VERSION)],
         )
         conn.executemany(
             f"INSERT INTO {SPLIT_METADATA_TABLE}(key, value) VALUES (?, ?)",
             [
                 ("version", str(SPLIT_CACHE_VERSION)),
+                ("test_bucket_max", str(TEST_BUCKET_MAX)),
                 ("source_row_count", str(row_count)),
                 ("source_max_id", str(max_id)),
                 ("source_max_updated_at", str(max_updated)),
@@ -362,6 +344,7 @@ def ensure_split_cache(db_path: Path) -> Path:
 
     expected = {
         "version": str(SPLIT_CACHE_VERSION),
+        "test_bucket_max": str(TEST_BUCKET_MAX),
         "source_row_count": str(row_count),
         "source_max_id": str(max_id),
         "source_max_updated_at": str(max_updated),
