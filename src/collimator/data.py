@@ -17,7 +17,18 @@ log = logging.getLogger(__name__)
 
 # Terminal statuses that represent confirmed classifications.
 # See cyclotron/db.go for the full status state machine.
-MALWARE_STATUSES = frozenset({"bad", "good-malicious"})
+#
+# All bad* statuses (except bad-benign, which was reclassified as benign) are
+# treated as malware regardless of pipeline progress — this lets us train on
+# samples cleave hasn't fully confirmed, finding patterns it can't yet detect.
+MALWARE_STATUSES = frozenset({
+    "bad",           # known-bad, pending analysis
+    "bad-review",    # needs reverse engineering
+    "bad-reversed",  # has been reverse engineered
+    "bad-gapped",    # detection gaps identified
+    "bad-exhausted", # pipeline gave up, still malware
+    "good-malicious", # reclassified from good pipeline
+})
 BENIGN_STATUSES = frozenset({"good", "bad-benign"})
 ALL_TERMINAL = MALWARE_STATUSES | BENIGN_STATUSES
 
@@ -94,12 +105,13 @@ def stream_samples(
 def load_samples(db_path: Path) -> list[Sample]:
     """Load labeled samples from a cyclotron database.
 
-    Terminal statuses used for training:
-      - 'bad', 'good-malicious'  -> label 1 (malware)
-      - 'good', 'bad-benign'    -> label 0 (benign)
+    Statuses used for training:
+      - 'bad', 'bad-review', 'bad-reversed', 'bad-gapped',
+        'bad-exhausted', 'good-malicious'  -> label 1 (malware)
+      - 'good', 'bad-benign'               -> label 0 (benign)
 
-    Intermediate statuses (bad-review, bad-reversed, good-review, etc.)
-    are skipped to ensure clean training labels.
+    good-review, good-analyzed, good-exhausted are still excluded —
+    those are unconfirmed benign and may contain FP-flagged malware.
     """
     log.info("loading samples from %s", db_path)
     samples = list(stream_samples(db_path))

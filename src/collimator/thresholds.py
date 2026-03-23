@@ -17,7 +17,7 @@ ACCURACY_TARGETS = [0.80, 0.90, 0.95, 0.98, 0.99, 0.993, 0.996, 0.998, 0.999, 0.
 # (label, min recall, max FPR): highest threshold satisfying both constraints.
 # Highest threshold = most conservative call that still meets both targets.
 RECOMMENDATIONS = [
-    ("suspicious", 0.999,  0.002),   # catch 99.9% of malware, ≤0.2% FPR
+    ("suspicious", 0.9975, 0.002),   # catch 99.75% of malware, ≤0.2% FPR
     ("hostile",    0.980,  0.0002),  # catch 98.0% of malware, ≤0.02% FPR
 ]
 
@@ -162,7 +162,7 @@ def print_recommendations(
             print(f"  {level:<12} {'—':>10} (no threshold achieves {tpr_str} and {fpr_str})")
 
     # Fixed reference thresholds — include the calibrated holdout threshold if provided.
-    fixed_set: set[float] = {0.5, 0.8, 0.9, 0.98, 0.99, 0.995}
+    fixed_set: set[float] = {0.1, 0.25, 0.5, 0.6, 0.7, 0.8, 0.9, 0.98, 0.99, 0.995}
     if highlight_threshold is not None:
         fixed_set.add(highlight_threshold)
     fixed = sorted(fixed_set)
@@ -175,6 +175,23 @@ def print_recommendations(
         fpr = fp / max(n_benign, 1)
         marker = " ←" if t is highlight_threshold or t == highlight_threshold else ""
         print(f"  {t:>22.3f} {tpr:>8.2%} {fpr:>8.3%} {tp:>8} {fp:>8}{marker}")
+
+    # Recall-target table: highest threshold achieving each recall level.
+    recall_targets = [0.99, 0.995, 0.999, 0.9999, 0.99999]
+    print(f"\n  {'— by recall target —':-^52}")
+    print(f"  {'Recall target':>22} {'Threshold':>10} {'Actual':>8} {'FPR':>8} {'TP':>8} {'FP':>8}")
+    for target in recall_targets:
+        valid = recall_vals >= target
+        if valid.any():
+            k = int(np.where(valid)[0][0])
+            label = f"≥{target*100:.3f}%"
+            print(
+                f"  {label:>22} {thresholds[k]:>10.6f} {recall_vals[k]:>8.2%} "
+                f"{fpr_vals[k]:>8.3%} {tp_vals[k]:>8} {fp_vals[k]:>8}"
+            )
+        else:
+            label = f"≥{target*100:.3f}%"
+            print(f"  {label:>22} {'—':>10} (not achievable)")
 
     print()
 
