@@ -170,6 +170,7 @@ def run_experiment(
     gamma: float = 0.0,
     reg_alpha: float = 0.0,
     reg_lambda: float = 1.0,
+    beta: float = 1.0,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     corpus = sample_partitioned_reports(
@@ -205,6 +206,20 @@ def run_experiment(
     )
     del corpus
 
+    # Build monotonic constraints for all behavior features.
+    # We want to force the model to treat 'presence', 'criticality', and 'aggregate counts'
+    # of findings as purely additive signals for malware.
+    # We use a tuple aligned by index because XGBoost cannot reliably match
+    # feature names when training on sparse matrices.
+    constraints = [0] * len(spec.feature_names)
+    for i, name in enumerate(spec.feature_names):
+        if name.startswith(("present:", "maxcrit:")):
+            constraints[i] = 1
+        elif name.startswith("agg:") and ("suspicious" in name or "hostile" in name or "findings_log" in name):
+            constraints[i] = 1
+        elif name == "struct:stealth_potential":
+            constraints[i] = 1
+
     result = train.train(
         X_train,
         y_train,
@@ -221,6 +236,8 @@ def run_experiment(
             gamma=gamma,
             reg_alpha=reg_alpha,
             reg_lambda=reg_lambda,
+            beta=beta,
+            monotone_constraints=tuple(constraints),
             holdout_fraction=0.0,  # use all samples; CV predictions drive threshold
         ),
         feature_names=spec.feature_names,

@@ -68,6 +68,7 @@ def create_classifier(
     gamma: float = 0.0,
     reg_alpha: float = 0.0,
     reg_lambda: float = 1.0,
+    monotone_constraints: str | dict[str, int] | None = None,
 ) -> xgb.XGBClassifier:
     """Create an XGBoost classifier with defaults tuned for malware detection."""
     if device is None:
@@ -84,6 +85,7 @@ def create_classifier(
         gamma=gamma,
         reg_alpha=reg_alpha,
         reg_lambda=reg_lambda,
+        monotone_constraints=monotone_constraints,
         scale_pos_weight=n_benign / max(n_malware, 1),
         tree_method="hist",
         device=device,

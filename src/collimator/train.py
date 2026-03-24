@@ -52,6 +52,7 @@ class TrainConfig:
     reg_alpha: float = 0.0
     reg_lambda: float = 1.0
     beta: float = 1.0  # F-beta for threshold selection; 1.0 = balanced precision and recall
+    monotone_constraints: str | dict[str, int] | None = None
 
 
 @dataclass
@@ -416,8 +417,8 @@ def train(
         gamma=config.gamma,
         reg_alpha=config.reg_alpha,
         reg_lambda=config.reg_lambda,
-    )
-
+        monotone_constraints=config.monotone_constraints,
+        )
     if X_holdout is not None:
         calibration_split, evaluation_split = _split_calibration_eval(
             X_holdout, y_holdout, groups_holdout=groups_holdout, seed=config.seed,
@@ -492,7 +493,7 @@ def train(
         log.info("evaluation: AUC=%.4f F1=%.4f threshold=%.3f (%s)",
                  metrics["roc_auc"], metrics["f1"], optimal_threshold, cal_label)
     elif n_folds >= 2:
-        optimal_threshold = _optimal_threshold(y_tv, cv_predictions)
+        optimal_threshold = _optimal_threshold(y_tv, cv_predictions, beta=config.beta)
         metrics = _compute_metrics(y_tv, cv_predictions, optimal_threshold)
         calibration = _calibration_summary(y_tv, cv_predictions)
         eval_y = y_tv

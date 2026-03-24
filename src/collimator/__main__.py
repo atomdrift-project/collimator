@@ -118,6 +118,7 @@ def cmd_train(args: argparse.Namespace) -> None:
         **({"max_depth": args.max_depth} if args.max_depth is not None else {}),
         **({"learning_rate": args.learning_rate} if args.learning_rate is not None else {}),
         **({"early_stopping_rounds": args.early_stopping_rounds} if args.early_stopping_rounds is not None else {}),
+        **({"beta": args.beta} if args.beta is not None else {}),
     )
     result = train.train(X, y, config, feature_names=spec.feature_names, groups=train_groups)
 
@@ -510,6 +511,7 @@ def main() -> None:
     p_train.add_argument("--max-depth", type=int, default=None, help="Tree depth limit (default: TrainConfig default)")
     p_train.add_argument("--learning-rate", type=float, default=None, help="XGBoost learning rate (default: TrainConfig default)")
     p_train.add_argument("--early-stopping-rounds", type=int, default=None, help="Early stopping patience (default: TrainConfig default)")
+    p_train.add_argument("--beta", type=float, default=None, help="F-beta for threshold selection (default: TrainConfig default)")
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Evaluate existing model")
@@ -647,6 +649,7 @@ def main() -> None:
     p_exp.add_argument("--gamma", type=float, default=0.0, help="Minimum loss reduction to make a further partition")
     p_exp.add_argument("--reg-alpha", type=float, default=0.0, help="L1 regularization term on weights")
     p_exp.add_argument("--reg-lambda", type=float, default=1.0, help="L2 regularization term on weights")
+    p_exp.add_argument("--beta", type=float, default=1.0, help="F-beta for threshold selection (default: 1.0)")
     _add_workers_arg(p_exp)
     _add_seed_arg(p_exp)
 
@@ -747,6 +750,7 @@ def main() -> None:
             gamma=args.gamma,
             reg_alpha=args.reg_alpha,
             reg_lambda=args.reg_lambda,
+            beta=args.beta,
         )
     elif args.command == "ablate":
         rows = ablation.run_ablation(

@@ -13,23 +13,26 @@ DEMO_DB ?= out/demo.db
 WORKERS ?= 0
 EXP_WORKERS ?= 8
 SEED ?= 42
-EXP_TRAIN_SAMPLES ?= 150000
+EXP_TRAIN_SAMPLES ?= 300000
 EXP_MAX_TEST_SAMPLES ?= 30000
 EXP_FOLDS ?= 2
-EXP_ESTIMATORS ?= 600
-EXP_MAX_DEPTH ?= 10
+EXP_ESTIMATORS ?= 1000
+EXP_MAX_DEPTH ?= 16
 EXP_LEARNING_RATE ?= 0.02
 EXP_EARLY_STOPPING ?= 100
-TRAIN_ESTIMATORS ?=
-TRAIN_MAX_DEPTH ?=
-TRAIN_LEARNING_RATE ?=
-TRAIN_EARLY_STOPPING ?=
+EXP_BETA ?= 2.0
+TRAIN_ESTIMATORS ?= 1000
+TRAIN_MAX_DEPTH ?= 16
+TRAIN_LEARNING_RATE ?= 0.02
+TRAIN_EARLY_STOPPING ?= 100
+TRAIN_BETA ?= 2.0
 
 # Build optional train hyperparameter flags (only passed if set)
 _TRAIN_FLAGS := $(if $(TRAIN_ESTIMATORS),--n-estimators $(TRAIN_ESTIMATORS)) \
                 $(if $(TRAIN_MAX_DEPTH),--max-depth $(TRAIN_MAX_DEPTH)) \
                 $(if $(TRAIN_LEARNING_RATE),--learning-rate $(TRAIN_LEARNING_RATE)) \
-                $(if $(TRAIN_EARLY_STOPPING),--early-stopping-rounds $(TRAIN_EARLY_STOPPING))
+                $(if $(TRAIN_EARLY_STOPPING),--early-stopping-rounds $(TRAIN_EARLY_STOPPING)) \
+                $(if $(TRAIN_BETA),--beta $(TRAIN_BETA))
 
 # Validate DB is set for targets that need it
 check-db:
@@ -87,7 +90,8 @@ experiment: venv check-db
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --workers $(EXP_WORKERS) --seed $(SEED) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
-		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-experiment.log"
+		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING) \
+		--beta $(EXP_BETA) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-experiment.log"
 
 ablate: venv check-db
 	$(PYTHON) -m collimator ablate --db $(DB) --workers $(WORKERS) --seed $(SEED)

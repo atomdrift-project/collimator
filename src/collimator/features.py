@@ -74,7 +74,8 @@ RISK_ORDINAL: dict[str, int] = {
 }
 
 # Minimum number of samples a path must appear in to get a feature.
-MIN_PATH_FREQ = 30
+MIN_PATH_FREQ = 5
+
 
 # Minimum confidence for a finding to be included in feature extraction.
 # Low-confidence findings add noise without meaningful signal.
@@ -272,7 +273,7 @@ def _build_feature_names(presence_vocab: list[str], filetype_vocab: list[str]) -
     for ft in filetype_vocab:
         feature_names.append(f"filetype:{ft}")
 
-    # Group 7: Structural / container context (6).
+    # Group 7: Structural / container context (7).
     feature_names.extend([
         "struct:tiny_executable",
         "struct:no_imports",
@@ -280,6 +281,7 @@ def _build_feature_names(presence_vocab: list[str], filetype_vocab: list[str]) -
         "struct:finding_count_log",
         "struct:file_count_log",
         "struct:inner_file_count_log",
+        "struct:stealth_potential",
     ])
     return feature_names
 
@@ -731,11 +733,12 @@ def _apply_structural_features(
     vec: np.ndarray,
     offset: int,
 ) -> int:
-    """Group 7: report/container context features."""
+    """Group 7: structural / container context (7)."""
     binary_like = {"pe", "elf", "macho"}
     any_tiny_binary = False
     import_candidates = 0
     importless_candidates = 0
+    max_entropy = 0.0
     for file_entry in files:
         if file_entry.get("file_type", "") in binary_like and _float(file_entry.get("size", 0)) < 20000:
             any_tiny_binary = True
@@ -743,6 +746,14 @@ def _apply_structural_features(
             import_candidates += 1
             if len(file_entry.get("imports") or []) == 0:
                 importless_candidates += 1
+        
+        # Track max entropy across all files in the report.
+        metrics = file_entry.get("metrics") or {}
+        binary_metrics = metrics.get("binary") or {}
+        max_entropy = max(max_entropy, _float(binary_metrics.get("overall_entropy", 0.0)))
+
+    # Stealth potential: high entropy (packed/encrypted) but very few findings.
+    stealth_potential = 1.0 if (filtered_finding_count < 5 and max_entropy > 6.5) else 0.0
 
     vec[offset] = 1.0 if any_tiny_binary else 0.0
     vec[offset + 1] = 1.0 if (import_candidates > 0 and importless_candidates == import_candidates) else 0.0
@@ -750,6 +761,11 @@ def _apply_structural_features(
     vec[offset + 3] = math.log1p(filtered_finding_count)
     vec[offset + 4] = math.log1p(len(files))
     vec[offset + 5] = math.log1p(max(len(files) - 1, 0))
+    # Backward compatibility: only write stealth_potential if the vector was
+    # allocated large enough to hold it (v15+).
+    if offset + 6 < len(vec):
+        vec[offset + 6] = stealth_potential
+        return offset + 7
     return offset + 6
 
 
@@ -1208,6 +1224,12 @@ def build_vocab_from_db(
         filetype_vocab=filetype_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
+    )
+    log.info(
+        "vocab: %d paths (>=%d freq), %d filetypes -> %d features "
+        "(v14 presence+maxcrit+density)",
+        len(presence_vocab), MIN_PATH_FREQ,
+        len(filetype_vocab), spec.total_features,
     )
     return spec
 

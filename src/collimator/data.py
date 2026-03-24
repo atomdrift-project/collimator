@@ -250,59 +250,16 @@ def build_split_cache(db_path: Path) -> Path:
             )
         """)
 
-        parent: dict[int, int] = {}
-        comp_size: dict[int, int] = {}
-        first_seen_by_file_sha: dict[str, int] = {}
-        sample_outer_sha: dict[int, str] = {}
-
+        log.info("populating split cache via SQL (deterministic SHA256 buckets)")
         placeholders = ",".join("?" for _ in ALL_TERMINAL)
-        query = (
-            "SELECT id, sha256, cleave_json"
-            f" FROM samples WHERE status IN ({placeholders})"
-        )
-        seen_rows = 0
-        for row_id, sha256, cleave_json in conn.execute(query, tuple(sorted(ALL_TERMINAL))):
-            row_id = int(row_id)
-            seen_rows += 1
-            if seen_rows % 50_000 == 0:
-                log.info("building split groups: pass 1 processed %d rows", seen_rows)
-            parent[row_id] = row_id
-            comp_size[row_id] = 1
-            sample_outer_sha[row_id] = sha256
-            if not cleave_json:
-                file_shas = [sha256]
-            else:
-                file_shas = _extract_report_file_shas(cleave_json, sha256)
-            for file_sha in file_shas:
-                other = first_seen_by_file_sha.get(file_sha)
-                if other is None:
-                    first_seen_by_file_sha[file_sha] = row_id
-                    continue
-                rep = _union(parent, comp_size, row_id, other)
-                first_seen_by_file_sha[file_sha] = rep
-
-        log.info("building split groups: pass 1 complete (%d rows)", seen_rows)
-
-        root_outer_sha: dict[int, str] = {}
-        rows: list[tuple[int, str, int]] = []
-        for i, (row_id, outer_sha) in enumerate(sample_outer_sha.items(), start=1):
-            if i % 50_000 == 0:
-                log.info("building split groups: pass 2 processed %d rows", i)
-            root = _find(parent, row_id)
-            root_outer_sha[root] = min(root_outer_sha.get(root, outer_sha), outer_sha)
-            group_id = f"g{root}"
-            rows.append((row_id, group_id, 0))
-        log.info(
-            "building split groups: pass 2 complete (%d rows, %d groups)",
-            len(rows),
-            len(root_outer_sha),
-        )
-
-        conn.executemany(
+        # Order: TEST_BUCKET_MAX, SPLIT_CACHE_VERSION, then sorted(ALL_TERMINAL) for the IN clause.
+        sql_args = [TEST_BUCKET_MAX, SPLIT_CACHE_VERSION] + list(sorted(ALL_TERMINAL))
+        conn.execute(
             f"INSERT INTO {SPLIT_ASSIGNMENTS_TABLE}(sample_row_id, group_id, is_test, split_version)"
             " SELECT id, 's'||id, (instr('0123456789abcdef', substr(sha256, -1, 1)) + 16 * instr('0123456789abcdef', substr(sha256, -2, 1)) - 17) < ?, ? FROM samples WHERE status IN (" + placeholders + ")",
-            [(TEST_BUCKET_MAX, SPLIT_CACHE_VERSION)],
+            sql_args,
         )
+
         conn.executemany(
             f"INSERT INTO {SPLIT_METADATA_TABLE}(key, value) VALUES (?, ?)",
             [
@@ -356,10 +313,7 @@ def ensure_split_cache(db_path: Path) -> Path:
 
 def load_split_assignments(db_path: Path) -> dict[int, SplitAssignment]:
     """Load split assignments, rebuilding them automatically when needed."""
-    native_assignments = _load_native_split_assignments(db_path)
-    if native_assignments is not None:
-        return native_assignments
-
+    # We prioritize our internal cache because it respects the current TEST_BUCKET_MAX.
     ensure_split_cache(db_path)
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     try:
