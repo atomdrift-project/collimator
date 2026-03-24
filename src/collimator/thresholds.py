@@ -17,8 +17,8 @@ ACCURACY_TARGETS = [0.80, 0.90, 0.95, 0.98, 0.99, 0.993, 0.996, 0.998, 0.999, 0.
 # (label, min recall, max FPR): highest threshold satisfying both constraints.
 # Highest threshold = most conservative call that still meets both targets.
 RECOMMENDATIONS = [
-    ("suspicious", 0.9975, 0.002),   # catch 99.75% of malware, ≤0.2% FPR
-    ("hostile",    0.980,  0.0002),  # catch 98.0% of malware, ≤0.02% FPR
+    ("suspicious", 0.9975, 0.005),   # catch 99.75% of malware, ≤0.5% FPR
+    ("hostile",    0.980,  0.0005),  # catch 98.0% of malware, ≤0.05% FPR
 ]
 
 
