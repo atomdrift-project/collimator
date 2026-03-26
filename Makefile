@@ -10,7 +10,7 @@ SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
 DEMO_DB ?= out/demo.db
-WORKERS ?= 0
+WORKERS ?= 8
 EXP_WORKERS ?= 8
 SEED ?= 42
 EXP_TRAIN_SAMPLES ?= 300000
@@ -21,8 +21,8 @@ EXP_MAX_DEPTH ?= 16
 EXP_LEARNING_RATE ?= 0.02
 EXP_EARLY_STOPPING ?= 100
 EXP_BETA ?= 2.0
-TRAIN_ESTIMATORS ?= 1000
-TRAIN_MAX_DEPTH ?= 16
+TRAIN_ESTIMATORS ?= 600
+TRAIN_MAX_DEPTH ?= 10
 TRAIN_LEARNING_RATE ?= 0.02
 TRAIN_EARLY_STOPPING ?= 100
 TRAIN_BETA ?= 2.0
@@ -114,7 +114,8 @@ lint: venv
 	$(VENV_DIR)/bin/ruff check src/ tests/
 	$(VENV_DIR)/bin/mypy src/collimator/
 
-MODELS_DIR ?= ../litmus-models/scan-v$(shell $(PYTHON) -c "from collimator.features import FeatureSpec; print(FeatureSpec().version)")
+MODEL_VERSION ?= $(shell $(PYTHON) -c "from collimator.features import FeatureSpec; print(FeatureSpec().version)")
+MODELS_DIR ?= ../litmus-models/scan-v$(MODEL_VERSION)
 XGBOOST_NATIVE_DIR ?= ../xgboost-native
 
 LITMUS_DIR ?= ../litmus
@@ -125,7 +126,13 @@ deploy: verify-xgboost-native verify-litmus
 	cp $(OUT_DIR)/model.onnx $(MODELS_DIR)/model.onnx
 	cp $(OUT_DIR)/feature_spec.json $(MODELS_DIR)/feature_spec.json
 	cp $(OUT_DIR)/evaluation.json $(MODELS_DIR)/evaluation.json
+	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make train first"; exit 1; }
+	cp $(OUT_DIR)/extraction_fixture.json $(MODELS_DIR)/extraction_fixture.json
 	@$(PYTHON) -c "import json; e=json.load(open('$(OUT_DIR)/evaluation.json')); r=e.get('recommended_thresholds',{}); json.dump({k:v for k,v in r.items() if v is not None}, open('$(MODELS_DIR)/config.json','w'), indent=2); print('  config.json: ' + ', '.join(f'{k}={v:.6f}' for k,v in r.items() if v is not None))"
+	@echo "Running litmus deployed-model compatibility checks..."
+	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(abspath $(MODELS_DIR)) cargo test --release --test feature_spec
+	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(abspath $(MODELS_DIR)) cargo test --release --test extraction_parity
+	@echo "litmus: deployed model spec/ABI checks passed"
 	@echo "Deployed to $(MODELS_DIR)"
 
 .PHONY: verify-xgboost-native
@@ -141,6 +148,7 @@ verify-xgboost-native:
 verify-litmus:
 	@test -d $(LITMUS_DIR) || { echo "error: $(LITMUS_DIR) does not exist"; exit 1; }
 	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make train first"; exit 1; }
+	@rg -n 'const CURRENT_MODEL: &str = "scan-v$(MODEL_VERSION)";' $(LITMUS_DIR)/src/models_repo.rs >/dev/null || { echo "error: litmus CURRENT_MODEL is not scan-v$(MODEL_VERSION)"; exit 1; }
 	@echo "Running litmus feature-extraction parity tests..."
 	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(abspath $(OUT_DIR)) cargo test --release --test extraction_parity
 	@echo "litmus: extraction parity tests passed"

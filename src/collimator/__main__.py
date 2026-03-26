@@ -11,8 +11,10 @@ import time
 from pathlib import Path
 
 import numpy as np
+import scipy.sparse as sp
 
 from . import ablation, benchmark, data, demo, experiment, explain, export, features, inspect, thresholds, train, traits
+from .model import detect_device
 
 log = logging.getLogger(__name__)
 
@@ -107,36 +109,57 @@ def cmd_train(args: argparse.Namespace) -> None:
         log.info("auto workers: using %d worker processes", effective_workers)
     else:
         log.info("using %d worker processes", effective_workers)
+    log.info("xgboost requested device: auto")
+    log.info("xgboost effective device probe: %s", detect_device())
 
     # Load split assignments once and reuse across all passes.
     splits = data.load_split_assignments(db_path)
-
-    # Pass 1: stream reports to build vocabulary (no reports kept in memory).
-    # Includes synthesized single-file reports from embedded archive files.
-    from itertools import chain
+    raw_train_row_ids: list[int] = []
+    raw_train_ids_labels: list[tuple[int, int]] = []
+    raw_test_ids_labels: list[tuple[int, int]] = []
+    raw_train_groups: list[str] = []
+    for row_id, label, is_test, group_id in data.stream_partitioned_metadata_grouped(
+        db_path,
+        split_assignments=splits,
+    ):
+        if is_test:
+            raw_test_ids_labels.append((row_id, label))
+        else:
+            raw_train_row_ids.append(row_id)
+            raw_train_ids_labels.append((row_id, label))
+            raw_train_groups.append(group_id)
 
     log.info("pass 1: building vocabulary from %s (including embedded files)", db_path)
-    spec = features.build_vocab(
-        chain(
-            (report for report, _label in data.stream_raw_reports(db_path, exclude_test=True, split_assignments=splits)),
-            (report for report, _label in data.stream_embedded_file_reports(db_path, exclude_test=True, split_assignments=splits)),
-        ),
+    spec = features.build_vocab_mixed_from_db(
+        db_path,
+        raw_train_row_ids,
+        (report for report, _label in data.stream_embedded_file_reports(
+            db_path,
+            exclude_test=True,
+            split_assignments=splits,
+        )),
         n_workers=args.workers,
     )
 
-    # Pass 2: stream the corpus once to extract both training and held-out test features.
-    # Includes synthesized embedded file samples chained after real samples.
     log.info("pass 2: extracting training and test features (including embedded files)")
-    X, y, X_test, y_test = features.extract_partitioned_stream(
-        chain(
-            data.stream_partitioned_raw_reports(db_path, split_assignments=splits),
-            data.stream_partitioned_embedded_file_reports(db_path, split_assignments=splits),
-        ),
-        spec, n_workers=args.workers,
+    X_raw, y_raw, X_raw_test, y_raw_test = features.extract_partitioned_from_db(
+        db_path,
+        raw_train_ids_labels,
+        raw_test_ids_labels,
+        spec,
+        n_workers=args.workers,
     )
-    real_train_groups = data.load_train_group_ids(db_path, split_assignments=splits)
+    X_emb, y_emb, X_emb_test, y_emb_test = features.extract_partitioned_stream(
+        data.stream_partitioned_embedded_file_reports(db_path, split_assignments=splits),
+        spec,
+        n_workers=args.workers,
+    )
+    X = sp.vstack([X_raw, X_emb], format="csr")
+    y = np.concatenate([y_raw, y_emb])
+    X_test = sp.vstack([X_raw_test, X_emb_test], format="csr")
+    y_test = np.concatenate([y_raw_test, y_emb_test])
     emb_train_groups, _ = data.load_embedded_group_ids(db_path, split_assignments=splits)
-    train_groups = np.concatenate([real_train_groups, emb_train_groups])
+    train_groups = np.concatenate([np.array(raw_train_groups, dtype=object), emb_train_groups])
     if X.shape[0] < 10:
         print(f"ERROR: only {X.shape[0]} training samples, need at least 10")
         sys.exit(1)

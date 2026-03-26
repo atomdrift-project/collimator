@@ -30,6 +30,7 @@ Feature groups:
 from __future__ import annotations
 
 import collections
+import itertools
 import json
 import logging
 import math
@@ -430,7 +431,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     nw = resolve_worker_count(n_workers)
     presence_counts: dict[str, int] = {}
     filetypes: set[str] = set()
-    batch_size = max(64, 512 // max(nw, 1))
+    batch_size = _feature_batch_size(nw)
     n_batches = 0
     _PROGRESS_BATCH_INTERVAL = 500  # log every ~500 batches
 
@@ -1134,6 +1135,22 @@ def _vocab_db_batch_worker(
         conn.close()
 
 
+def _vocab_mixed_batch_worker(
+    args: tuple[Path, list[int], list[dict[str, Any] | str]],
+) -> tuple[dict[str, int], list[str]]:
+    """Count paths for a mixed batch of DB row IDs and inline reports."""
+    db_path, ids, reports = args
+    if ids:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            placeholders = ",".join("?" for _ in ids)
+            query = f"SELECT cleave_json FROM samples WHERE id IN ({placeholders})"
+            reports = [r for r, in conn.execute(query, ids)] + reports
+        finally:
+            conn.close()
+    return _vocab_batch_worker(reports)
+
+
 def _extract_batch_worker(
     args: tuple[int, list[tuple[dict[str, Any] | str, int]], FeatureSpec],
 ) -> tuple[list[int], list[int], list[float], list[int]]:
@@ -1164,7 +1181,18 @@ def _n_workers_default() -> int:
     cpu_count = os.cpu_count() or 1
     if cpu_count <= 2:
         return 1
-    return min(max(cpu_count // 2, 2), 16)
+    # JSON parsing + SQLite streaming hits diminishing returns quickly on this
+    # workload. Cap the auto setting lower to reduce IPC overhead and DB
+    # contention on larger hosts.
+    return min(max(cpu_count // 4, 2), 8)
+
+
+def _feature_batch_size(n_workers: int) -> int:
+    """Pick a batch size that amortises IPC overhead without huge tail latency."""
+    # Small batches create tens of thousands of tasks on full-corpus runs, and
+    # most of the time is spent serialising JSON between processes. Larger
+    # batches materially reduce scheduling and pickling overhead.
+    return min(512, max(128, 4096 // max(n_workers, 1)))
 
 
 def resolve_worker_count(n_workers: int) -> int:
@@ -1220,7 +1248,7 @@ def extract_stream(
     cols: list[int] = []
     vals: list[float] = []
     labels: list[int] = []
-    batch_size = max(64, 512 // max(nw, 1))
+    batch_size = _feature_batch_size(nw)
 
     def _consume(batch_iter: Iterable[tuple[list[int], list[int], list[float], list[int]]]) -> None:
         for b_rows, b_cols, b_vals, b_labels in batch_iter:
@@ -1392,7 +1420,7 @@ def extract_partitioned_stream(
 ) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
     """Extract train and test matrices from a mixed stream in one pass."""
     nw = resolve_worker_count(n_workers)
-    batch_size = max(64, 512 // max(nw, 1))
+    batch_size = _feature_batch_size(nw)
 
     train_rows: list[int] = []
     train_cols: list[int] = []
@@ -1489,7 +1517,7 @@ def build_vocab_from_db(
     nw = resolve_worker_count(n_workers)
     presence_counts: dict[str, int] = {}
     filetypes: set[str] = set()
-    batch_size = max(64, 512 // max(nw, 1))
+    batch_size = _feature_batch_size(nw)
 
     def _merge_batch(counts: dict[str, int], fts: list[str]) -> None:
         for k, v in counts.items():
@@ -1531,6 +1559,65 @@ def build_vocab_from_db(
     return spec
 
 
+def build_vocab_mixed_from_db(
+    db_path: Path,
+    row_ids: list[int],
+    reports: Iterable[dict[str, Any] | str],
+    n_workers: int = 0,
+) -> FeatureSpec:
+    """Scan DB-backed rows plus inline reports into one combined vocabulary."""
+    nw = resolve_worker_count(n_workers)
+    presence_counts: dict[str, int] = {}
+    filetypes: set[str] = set()
+    batch_size = _feature_batch_size(nw)
+
+    def _merge_batch(counts: dict[str, int], fts: list[str]) -> None:
+        for k, v in counts.items():
+            presence_counts[k] = presence_counts.get(k, 0) + v
+        filetypes.update(fts)
+
+    db_batches = _batched(row_ids, batch_size)
+    report_batches = _batched(reports, batch_size)
+    batch_args = itertools.zip_longest(
+        db_batches,
+        report_batches,
+        fillvalue=[],
+    )
+    worker_args = ((db_path, list(db_batch), list(report_batch)) for db_batch, report_batch in batch_args)
+
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            for counts, fts in _bounded_iter(
+                pool, _vocab_mixed_batch_worker, worker_args,
+                max_inflight=2 * nw,
+            ):
+                _merge_batch(counts, fts)
+    else:
+        for counts, fts in map(_vocab_mixed_batch_worker, worker_args):
+            _merge_batch(counts, fts)
+
+    presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
+    filetype_vocab = sorted(filetypes)
+    feature_names = _build_feature_names(presence_vocab, filetype_vocab)
+
+    spec = FeatureSpec(
+        presence_vocab=presence_vocab,
+        filetype_vocab=filetype_vocab,
+        feature_names=feature_names,
+        total_features=len(feature_names),
+    )
+    log.info(
+        "vocab: %d paths (>=%d freq), %d filetypes -> %d features "
+        "(v15 presence+maxcrit+hostile-escalation)",
+        len(presence_vocab), MIN_PATH_FREQ,
+        len(filetype_vocab), spec.total_features,
+    )
+    return spec
+
+
 def extract_partitioned_from_db(
     db_path: Path,
     train_ids_labels: list[tuple[int, int]],
@@ -1540,7 +1627,7 @@ def extract_partitioned_from_db(
 ) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
     """Extract train/test features using worker-local DB fetching."""
     nw = resolve_worker_count(n_workers)
-    batch_size = max(64, 512 // max(nw, 1))
+    batch_size = _feature_batch_size(nw)
 
     # Combine all IDs into one mixed stream for partitioned extraction.
     mixed_ids = (

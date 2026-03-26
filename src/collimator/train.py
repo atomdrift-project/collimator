@@ -23,7 +23,7 @@ from sklearn.metrics import (
 from sklearn.isotonic import IsotonicRegression
 from sklearn.model_selection import GroupShuffleSplit, StratifiedGroupKFold, StratifiedKFold, train_test_split
 
-from .model import create_classifier, predict_proba
+from .model import booster_device, create_classifier, predict_proba
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class TrainConfig:
     gamma: float = 0.0
     reg_alpha: float = 0.0
     reg_lambda: float = 1.0
-    beta: float = 1.0  # F-beta for threshold selection; 1.0 = balanced precision and recall
+    beta: float = 2.0  # F-beta for threshold selection; >1.0 favors recall on malware
     monotone_constraints: str | dict[str, int] | None = None
     threshold_mode: str = "fbeta"  # fbeta | max_recall_at_fpr
     threshold_fpr_target: float | None = None
@@ -549,6 +549,12 @@ def train(
 
             fm = _compute_metrics(y_tv[val_idx], fold_preds)
             fold_metrics_list.append(fm)
+            log.info(
+                "fold %d/%d: fitted on %s",
+                fold + 1,
+                n_folds,
+                booster_device(fold_model),
+            )
             print(
                 f"{fold + 1:<6} {fm['roc_auc']:>8.4f} {fm['f1']:>8.4f} "
                 f"{fm['precision']:>8.4f} {fm['recall']:>8.4f}"
@@ -648,9 +654,14 @@ def train(
             )
         best_iter = getattr(final_model, "best_iteration", None)
         if best_iter is not None:
-            log.info("final model: %d trees (early stopped at %d)", final_model.n_estimators, best_iter)
+            log.info(
+                "final model: %d trees (early stopped at %d) on %s",
+                final_model.n_estimators,
+                best_iter,
+                booster_device(final_model),
+            )
         else:
-            log.info("final model: %d trees", final_model.n_estimators)
+            log.info("final model: %d trees on %s", final_model.n_estimators, booster_device(final_model))
         split_summary = {
             "policy": "train/calibration/evaluation" if calibration_split is not None else "train/holdout",
             "holdout_split": "grouped" if groups is not None else "stratified",
@@ -663,6 +674,7 @@ def train(
         # No holdout — train without early stopping.
         final_model.set_params(early_stopping_rounds=None)
         final_model.fit(X_tv, y_tv, sample_weight=final_base_weight, verbose=False)
+        log.info("final model: %d trees on %s", final_model.n_estimators, booster_device(final_model))
         split_summary = {
             "policy": "train_only",
             "holdout_split": "none",

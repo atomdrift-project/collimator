@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 _device_cache: str | None = None
 
 
-def _booster_device(model: xgb.XGBClassifier) -> str:
+def booster_device(model: xgb.XGBClassifier) -> str:
     """Read the effective device from a fitted booster config."""
     try:
         cfg = json.loads(model.get_booster().save_config())
