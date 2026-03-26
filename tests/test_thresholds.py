@@ -20,8 +20,8 @@ def test_print_threshold_table_uses_called_subset_accuracy() -> None:
         print_threshold_table(probs, y)
     out = buf.getvalue()
 
-    hostile_line = re.search(r"80\.000%\s+0\.900000\s+2\s+0\s+2", out)
-    benign_line = re.search(r"80\.000%\s+0\.200000\s+1\s+0\s+1", out)
+    hostile_line = re.search(r"80\.000%\s+0\.900000\s+5\s+1\s+6", out)
+    benign_line = re.search(r"80\.000%\s+0\.900000\s+5\s+1\s+6", out)
 
     assert hostile_line is not None
     assert benign_line is not None

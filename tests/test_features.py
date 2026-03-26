@@ -1,4 +1,4 @@
-"""Tests for v13 capability-first feature extraction from cleave v3 AnalysisReport JSON."""
+"""Tests for capability-first feature extraction from cleave v3 AnalysisReport JSON."""
 
 import math
 
@@ -10,6 +10,7 @@ from collimator.features import (
     build_vocab,
     extract,
     extract_all,
+    feature_config_from_env,
     feature_group_indices,
     primary_file,
     report_files,
@@ -108,7 +109,7 @@ def test_build_vocab_empty() -> None:
     spec = build_vocab([_make_report()])
     assert spec.total_features > 0
     assert len(spec.feature_names) == spec.total_features
-    assert spec.version == 14
+    assert spec.version == 15
 
 
 def test_build_vocab_presence() -> None:
@@ -129,7 +130,7 @@ def test_build_vocab_presence() -> None:
 
 def test_build_vocab_freq_filter() -> None:
     # Below MIN_PATH_FREQ -> excluded.
-    reports = _reports_with_finding("objectives/rare", "hostile", n=5)
+    reports = _reports_with_finding("objectives/rare", "hostile", n=4)
     spec = build_vocab(reports)
     assert "objectives/rare" not in spec.presence_vocab
 
@@ -265,6 +266,185 @@ def test_extract_third_party_signals() -> None:
 
     idx = spec.feature_names.index("ext:has_yara_match")
     assert vec[idx] == 1.0
+
+
+def test_build_vocab_can_disable_feature_groups(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_DISABLE_FEATURE_GROUPS", "filetype,ext")
+    feature_config_from_env.cache_clear()
+    try:
+        reports = _reports_with_finding("objectives/evasion", "hostile", n=35)
+        spec = build_vocab(reports)
+    finally:
+        feature_config_from_env.cache_clear()
+
+    assert "filetype:elf" not in spec.feature_names
+    assert "ext:third_party_max_crit" not in spec.feature_names
+    assert "present:objectives" in spec.feature_names
+
+
+def test_build_vocab_uses_configured_top_k_risk_files(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_TOP_K_RISK_FILES", "3")
+    feature_config_from_env.cache_clear()
+    try:
+        spec = build_vocab(_reports_with_finding("objectives/evasion", "hostile", n=35))
+    finally:
+        feature_config_from_env.cache_clear()
+
+    assert "agg:top3_file_suspicious_ratio_sum" in spec.feature_names
+    assert "agg:top1_file_suspicious_ratio_sum" not in spec.feature_names
+
+
+def test_extract_struct_file_risk_coverage(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_STRUCT_FILE_RISK_COVERAGE", "1")
+    feature_config_from_env.cache_clear()
+    try:
+        report = {
+            "files": [
+                {
+                    "file_type": "elf",
+                    "size": 1000,
+                    "imports": [],
+                    "metrics": {},
+                    "findings": [{"id": "objectives/evasion::a", "crit": "suspicious", "conf": 0.95}],
+                },
+                {
+                    "file_type": "elf",
+                    "size": 1000,
+                    "imports": [],
+                    "metrics": {},
+                    "findings": [{"id": "objectives/evasion::b", "crit": "hostile", "conf": 0.95}],
+                },
+            ],
+        }
+        spec = build_vocab([report] * 35)
+        vec = extract(report, spec)
+    finally:
+        feature_config_from_env.cache_clear()
+
+    assert vec[spec.feature_names.index("struct:suspicious_file_fraction")] == 1.0
+    assert vec[spec.feature_names.index("struct:hostile_file_fraction")] == 0.5
+
+
+def test_extract_suspicious_breadth_density(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_SUSPICIOUS_BREADTH_DENSITY", "1")
+    feature_config_from_env.cache_clear()
+    try:
+        report = {
+            "files": [
+                {
+                    "file_type": "pe",
+                    "size": 1024,
+                    "imports": [],
+                    "metrics": {},
+                    "findings": [
+                        {"id": "objectives/evasion::a", "crit": "suspicious", "conf": 0.95},
+                        {"id": "metadata/format::b", "crit": "hostile", "conf": 0.95},
+                    ],
+                },
+                {
+                    "file_type": "javascript",
+                    "size": 4096,
+                    "imports": [],
+                    "metrics": {},
+                    "findings": [
+                        {"id": "micro-behaviors/network::c", "crit": "suspicious", "conf": 0.95},
+                    ],
+                },
+            ],
+        }
+        spec = build_vocab([report] * 35)
+        vec = extract(report, spec)
+    finally:
+        feature_config_from_env.cache_clear()
+
+    assert vec[spec.feature_names.index("agg:suspicious_category_breadth")] == 3.0
+    assert vec[spec.feature_names.index("agg:hostile_category_breadth")] == 1.0
+    assert vec[spec.feature_names.index("agg:suspicious_category_density")] == 1.0
+    assert vec[spec.feature_names.index("agg:hostile_category_density")] == 1 / 3
+    assert vec[spec.feature_names.index("agg:suspicious_findings_per_kb")] == 3 / 5
+    assert vec[spec.feature_names.index("agg:hostile_findings_per_kb")] == 1 / 5
+    assert vec[spec.feature_names.index("agg:suspicious_categories_per_kb")] == 3 / 5
+    assert vec[spec.feature_names.index("agg:hostile_categories_per_kb")] == 1 / 5
+    assert vec[spec.feature_names.index("agg:top1_file_suspicious_density_sum")] == 2.0
+    assert vec[spec.feature_names.index("agg:top1_file_hostile_density_sum")] == 1.0
+    assert vec[spec.feature_names.index("agg:top1_file_suspicious_category_breadth_sum")] == 2.0
+    assert vec[spec.feature_names.index("agg:top1_file_hostile_category_breadth_sum")] == 1.0
+
+
+def test_extract_hostile_escalation_features(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_HOSTILE_ESCALATION_FEATURES", "1")
+    feature_config_from_env.cache_clear()
+    try:
+        report = _make_report(findings=[
+            {"id": "objectives/evasion/process::a", "crit": "notable", "conf": 0.95},
+            {"id": "objectives/evasion/process::b", "crit": "suspicious", "conf": 0.95},
+            {"id": "metadata/format::c", "crit": "hostile", "conf": 0.95},
+        ])
+        spec = build_vocab([report] * 35)
+        vec = extract(report, spec)
+    finally:
+        feature_config_from_env.cache_clear()
+
+    assert vec[spec.feature_names.index("agg:hostile_escalation_rate")] == 0.0
+    assert vec[spec.feature_names.index("agg:hostile_share_of_suspicious")] == 0.0
+    assert vec[spec.feature_names.index("agg:suspicious_finding_escalation_rate")] == 2 / 3
+    assert vec[spec.feature_names.index("agg:hostile_finding_escalation_rate")] == 1 / 3
+    assert vec[spec.feature_names.index("agg:hostile_share_of_suspicious_findings")] == 0.5
+
+
+def test_extract_density_penalty_and_file_severity_features(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_HOSTILE_WEIGHTED_DENSITY", "1")
+    monkeypatch.setenv("COLLIMATOR_REPETITION_PENALTY_FEATURES", "1")
+    monkeypatch.setenv("COLLIMATOR_FILE_SEVERITY_DISTRIBUTION", "1")
+    feature_config_from_env.cache_clear()
+    try:
+        report = {
+            "files": [
+                {
+                    "file_type": "pe",
+                    "size": 1024,
+                    "imports": [],
+                    "metrics": {},
+                    "findings": [
+                        {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
+                        {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
+                        {"id": "metadata/format::b", "crit": "suspicious", "conf": 0.95},
+                    ],
+                },
+                {
+                    "file_type": "javascript",
+                    "size": 4096,
+                    "imports": [],
+                    "metrics": {},
+                    "findings": [
+                        {"id": "metadata/format::c", "crit": "suspicious", "conf": 0.95},
+                    ],
+                },
+                {
+                    "file_type": "zip",
+                    "size": 1024,
+                    "imports": [],
+                    "metrics": {},
+                    "findings": [
+                        {"id": "micro-behaviors/fs::d", "crit": "notable", "conf": 0.95},
+                    ],
+                },
+            ],
+        }
+        spec = build_vocab([report] * 35)
+        vec = extract(report, spec)
+    finally:
+        feature_config_from_env.cache_clear()
+
+    assert vec[spec.feature_names.index("agg:hostile_weighted_density")] == 0.5
+    assert vec[spec.feature_names.index("agg:top1_file_hostile_weighted_density_sum")] == 2.75
+    assert vec[spec.feature_names.index("agg:suspicious_id_repeat_ratio")] == 0.25
+    assert vec[spec.feature_names.index("agg:hostile_id_repeat_ratio")] == 0.5
+    assert vec[spec.feature_names.index("agg:suspicious_category_repeat_ratio")] == 0.5
+    assert vec[spec.feature_names.index("agg:hostile_category_repeat_ratio")] == 0.5
+    assert vec[spec.feature_names.index("agg:file_hostile_fraction")] == 1 / 3
+    assert vec[spec.feature_names.index("agg:file_suspicious_fraction")] == 1 / 3
+    assert vec[spec.feature_names.index("agg:file_notable_fraction")] == 1 / 3
 
 
 def test_extract_non_yara_third_party_does_not_set_yara_flag() -> None:
@@ -569,7 +749,7 @@ def test_feature_spec_save_load(tmp_path) -> None:
     assert loaded.presence_vocab == spec.presence_vocab
     assert loaded.filetype_vocab == spec.filetype_vocab
     assert loaded.feature_names == spec.feature_names
-    assert loaded.version == 14
+    assert loaded.version == 15
 
 
 def test_feature_spec_save_load_with_standardization(tmp_path) -> None:

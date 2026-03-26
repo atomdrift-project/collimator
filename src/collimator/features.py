@@ -1,6 +1,6 @@
 """Extract fixed-size numeric feature vectors from cleave v3 AnalysisReport JSON.
 
-v14: Capability-first features plus high-criticality finding-density signals.
+v15: Capability-first features plus hostile-escalation signals.
 
 The ML pipeline exists because cleave's criticality judgments are imperfect.
 The model must learn malicious *capability combinations* independently from
@@ -39,6 +39,7 @@ import sqlite3
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from collections.abc import Iterable, Iterator
 from itertools import islice
@@ -86,7 +87,7 @@ TOP_K_RISK_FILES = 1
 
 # Stable model ABI version shared with litmus.
 # Keep this in sync with FeatureSpec.version for a single compatibility number.
-MODEL_ABI_VERSION = 14
+MODEL_ABI_VERSION = 15
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
@@ -114,6 +115,66 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
 ]
 
 FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "struct")
+
+
+@dataclass(frozen=True, slots=True)
+class FeatureConfig:
+    """Experiment-only feature layout toggles controlled via environment."""
+
+    enabled_groups: frozenset[str]
+    top_k_risk_files: int
+    include_struct_file_risk_coverage: bool
+    include_suspicious_breadth_density: bool
+    include_hostile_escalation_features: bool
+    include_hostile_weighted_density: bool
+    include_repetition_penalty_features: bool
+    include_file_severity_distribution: bool
+
+
+@lru_cache(maxsize=1)
+def feature_config_from_env() -> FeatureConfig:
+    """Load experiment feature toggles from environment variables."""
+    raw_groups = os.getenv("COLLIMATOR_DISABLE_FEATURE_GROUPS", "").strip()
+    disabled = {part.strip() for part in raw_groups.split(",") if part.strip()}
+    unknown = disabled - set(FEATURE_GROUPS)
+    if unknown:
+        log.warning("ignoring unknown feature groups in COLLIMATOR_DISABLE_FEATURE_GROUPS: %s", sorted(unknown))
+    enabled_groups = frozenset(group for group in FEATURE_GROUPS if group not in disabled)
+
+    try:
+        top_k_risk_files = max(int(os.getenv("COLLIMATOR_TOP_K_RISK_FILES", str(TOP_K_RISK_FILES))), 0)
+    except ValueError:
+        log.warning("invalid COLLIMATOR_TOP_K_RISK_FILES=%r, falling back to %d", os.getenv("COLLIMATOR_TOP_K_RISK_FILES"), TOP_K_RISK_FILES)
+        top_k_risk_files = TOP_K_RISK_FILES
+
+    include_struct_file_risk_coverage = os.getenv("COLLIMATOR_STRUCT_FILE_RISK_COVERAGE", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    include_suspicious_breadth_density = os.getenv("COLLIMATOR_SUSPICIOUS_BREADTH_DENSITY", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    include_hostile_escalation_features = os.getenv("COLLIMATOR_HOSTILE_ESCALATION_FEATURES", "1").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    include_hostile_weighted_density = os.getenv("COLLIMATOR_HOSTILE_WEIGHTED_DENSITY", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    include_repetition_penalty_features = os.getenv("COLLIMATOR_REPETITION_PENALTY_FEATURES", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    include_file_severity_distribution = os.getenv("COLLIMATOR_FILE_SEVERITY_DISTRIBUTION", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    return FeatureConfig(
+        enabled_groups=enabled_groups,
+        top_k_risk_files=top_k_risk_files,
+        include_struct_file_risk_coverage=include_struct_file_risk_coverage,
+        include_suspicious_breadth_density=include_suspicious_breadth_density,
+        include_hostile_escalation_features=include_hostile_escalation_features,
+        include_hostile_weighted_density=include_hostile_weighted_density,
+        include_repetition_penalty_features=include_repetition_penalty_features,
+        include_file_severity_distribution=include_file_severity_distribution,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -161,13 +222,14 @@ def _finding_paths(finding_id: str) -> list[str]:
 class FeatureSpec:
     """Describes the feature vector layout. Exported for Rust inference parity.
 
-    Version 14: capability-first features. Each path in presence_vocab gets
+    Version 15: capability-first features with default hostile-escalation
+    aggregates. Each path in presence_vocab gets
     two features: a binary presence flag and an ordinal max-criticality value.
     No path×tier binary features — criticality is a gradient, not a threshold.
     """
 
     # NOTE: bumping this version requires a matching update in ../collimator (Rust).
-    version: int = 14
+    version: int = 15
     abi_version: int = MODEL_ABI_VERSION
     presence_vocab: list[str] = field(default_factory=list)
     filetype_vocab: list[str] = field(default_factory=list)
@@ -205,7 +267,7 @@ class FeatureSpec:
         version = data.get("version", 11)
         if version < 13:
             log.warning(
-                "loading feature spec version %d (expected 14); "
+                "loading feature spec version %d (expected 15); "
                 "models trained with older versions are not compatible",
                 version,
             )
@@ -228,68 +290,127 @@ class FeatureSpec:
 
 def _build_feature_names(presence_vocab: list[str], filetype_vocab: list[str]) -> list[str]:
     """Generate the full ordered list of feature names for a given vocabulary."""
+    config = feature_config_from_env()
     feature_names: list[str] = []
 
     # Group 1: Path Presence — binary (capability exists?).
-    for path in presence_vocab:
-        feature_names.append(f"present:{path}")
+    if "present" in config.enabled_groups:
+        for path in presence_vocab:
+            feature_names.append(f"present:{path}")
 
     # Group 2: Path Max Criticality — ordinal 0-5 (cleave's severity gradient).
-    for path in presence_vocab:
-        feature_names.append(f"maxcrit:{path}")
+    if "maxcrit" in config.enabled_groups:
+        for path in presence_vocab:
+            feature_names.append(f"maxcrit:{path}")
 
     # Group 3: Path Aggregates (20).
-    feature_names.extend([
-        "agg:max_crit",                  # highest crit seen (0-5)
-        "agg:category_breadth",          # distinct top-level categories
-        "agg:path_breadth_any",          # log1p of all 3-level paths (any crit)
-        "agg:total_active_paths",        # log1p of notable+ 3-level paths
-        "agg:suspicious_concentration",  # suspicious / all paths
-        "agg:hostile_concentration",     # hostile / all paths
-        "agg:escalation_rate",           # suspicious+ / notable+ (cleave escalation)
-        "agg:notable_only_fraction",     # notable_only / notable+ (how much stays at notable)
-        "agg:notable_findings_log",      # log1p of notable+ exact findings
-        "agg:suspicious_findings_log",   # log1p of suspicious+ exact findings
-        "agg:hostile_findings_log",      # log1p of hostile exact findings
-        "agg:notable_finding_ratio",     # notable+ / all filtered findings
-        "agg:suspicious_finding_ratio",  # suspicious+ / all filtered findings
-        "agg:hostile_finding_ratio",     # hostile / all filtered findings
-        "agg:unique_suspicious_ids_log", # log1p of unique suspicious+ trait IDs
-        "agg:unique_hostile_ids_log",    # log1p of unique hostile trait IDs
-        f"agg:top{TOP_K_RISK_FILES}_file_suspicious_ratio_sum",
-        f"agg:top{TOP_K_RISK_FILES}_file_hostile_ratio_sum",
-        f"agg:top{TOP_K_RISK_FILES}_file_suspicious_findings_log",
-        f"agg:top{TOP_K_RISK_FILES}_file_hostile_findings_log",
-    ])
+    if "agg" in config.enabled_groups:
+        feature_names.extend([
+            "agg:max_crit",                  # highest crit seen (0-5)
+            "agg:category_breadth",          # distinct top-level categories
+            "agg:path_breadth_any",          # log1p of all 3-level paths (any crit)
+            "agg:total_active_paths",        # log1p of notable+ 3-level paths
+            "agg:suspicious_concentration",  # suspicious / all paths
+            "agg:hostile_concentration",     # hostile / all paths
+            "agg:escalation_rate",           # suspicious+ / notable+ (cleave escalation)
+            "agg:notable_only_fraction",     # notable_only / notable+ (how much stays at notable)
+            "agg:notable_findings_log",      # log1p of notable+ exact findings
+            "agg:suspicious_findings_log",   # log1p of suspicious+ exact findings
+            "agg:hostile_findings_log",      # log1p of hostile exact findings
+            "agg:notable_finding_ratio",     # notable+ / all filtered findings
+            "agg:suspicious_finding_ratio",  # suspicious+ / all filtered findings
+            "agg:hostile_finding_ratio",     # hostile / all filtered findings
+            "agg:unique_suspicious_ids_log", # log1p of unique suspicious+ trait IDs
+            "agg:unique_hostile_ids_log",    # log1p of unique hostile trait IDs
+            f"agg:top{config.top_k_risk_files}_file_suspicious_ratio_sum",
+            f"agg:top{config.top_k_risk_files}_file_hostile_ratio_sum",
+            f"agg:top{config.top_k_risk_files}_file_suspicious_findings_log",
+            f"agg:top{config.top_k_risk_files}_file_hostile_findings_log",
+        ])
+        if config.include_suspicious_breadth_density:
+            feature_names.extend([
+                "agg:suspicious_category_breadth",
+                "agg:hostile_category_breadth",
+                "agg:suspicious_category_density",
+                "agg:hostile_category_density",
+                "agg:suspicious_findings_per_kb",
+                "agg:hostile_findings_per_kb",
+                "agg:suspicious_categories_per_kb",
+                "agg:hostile_categories_per_kb",
+                f"agg:top{config.top_k_risk_files}_file_suspicious_density_sum",
+                f"agg:top{config.top_k_risk_files}_file_hostile_density_sum",
+                f"agg:top{config.top_k_risk_files}_file_suspicious_category_breadth_sum",
+                f"agg:top{config.top_k_risk_files}_file_hostile_category_breadth_sum",
+            ])
+        if config.include_hostile_escalation_features:
+            feature_names.extend([
+                "agg:hostile_escalation_rate",
+                "agg:hostile_share_of_suspicious",
+                "agg:suspicious_finding_escalation_rate",
+                "agg:hostile_finding_escalation_rate",
+                "agg:hostile_share_of_suspicious_findings",
+            ])
+        if config.include_hostile_weighted_density:
+            feature_names.extend([
+                "agg:hostile_weighted_density",
+                f"agg:top{config.top_k_risk_files}_file_hostile_weighted_density_sum",
+            ])
+        if config.include_repetition_penalty_features:
+            feature_names.extend([
+                "agg:suspicious_id_repeat_ratio",
+                "agg:hostile_id_repeat_ratio",
+                "agg:suspicious_category_repeat_ratio",
+                "agg:hostile_category_repeat_ratio",
+            ])
+        if config.include_file_severity_distribution:
+            feature_names.extend([
+                "agg:file_hostile_fraction",
+                "agg:file_suspicious_fraction",
+                "agg:file_notable_fraction",
+                "agg:file_hostile_count_log",
+                "agg:file_suspicious_count_log",
+                "agg:file_notable_count_log",
+            ])
 
     # Group 4: Third-Party / Well-Known Summary (6).
-    feature_names.extend([
-        "ext:third_party_max_crit",
-        "ext:third_party_count",
-        "ext:well_known_max_crit",
-        "ext:well_known_hostile_count",
-        "ext:well_known_suspicious_count",
-        "ext:has_yara_match",
-    ])
+    if "ext" in config.enabled_groups:
+        feature_names.extend([
+            "ext:third_party_max_crit",
+            "ext:third_party_count",
+            "ext:well_known_max_crit",
+            "ext:well_known_hostile_count",
+            "ext:well_known_suspicious_count",
+            "ext:has_yara_match",
+        ])
 
     # Group 5: Key Metrics (16).
-    for group, fname, _ in KEY_METRICS:
-        feature_names.append(f"metrics:{group}_{fname}")
+    if "metrics" in config.enabled_groups:
+        for group, fname, _ in KEY_METRICS:
+            feature_names.append(f"metrics:{group}_{fname}")
 
     # Group 6: File Type multi-hot across all files in the report.
-    for ft in filetype_vocab:
-        feature_names.append(f"filetype:{ft}")
+    if "filetype" in config.enabled_groups:
+        for ft in filetype_vocab:
+            feature_names.append(f"filetype:{ft}")
 
     # Group 7: Structural / container context (7).
-    feature_names.extend([
-        "struct:tiny_executable",
-        "struct:no_imports",
-        "struct:zero_findings",
-        "struct:finding_count_log",
-        "struct:file_count_log",
-        "struct:inner_file_count_log",
-        "struct:stealth_potential",
-    ])
+    if "struct" in config.enabled_groups:
+        feature_names.extend([
+            "struct:tiny_executable",
+            "struct:no_imports",
+            "struct:zero_findings",
+            "struct:finding_count_log",
+            "struct:file_count_log",
+            "struct:inner_file_count_log",
+            "struct:stealth_potential",
+        ])
+        if config.include_struct_file_risk_coverage:
+            feature_names.extend([
+                "struct:suspicious_file_fraction",
+                "struct:hostile_file_fraction",
+                "struct:suspicious_file_count_log",
+                "struct:hostile_file_count_log",
+            ])
     return feature_names
 
 
@@ -353,7 +474,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     )
     log.info(
         "vocab: %d paths (>=%d freq), %d filetypes -> %d features "
-        "(v14 presence+maxcrit+density)",
+        "(v15 presence+maxcrit+hostile-escalation)",
         len(presence_vocab), MIN_PATH_FREQ,
         len(filetype_vocab), spec.total_features,
     )
@@ -389,6 +510,8 @@ class _FindingSummary:
     unique_notable_ids: int
     unique_suspicious_ids: int
     unique_hostile_ids: int
+    suspicious_category_breadth: int
+    hostile_category_breadth: int
     third_party_max_crit: int
     third_party_count: int
     well_known_max_crit: int
@@ -403,6 +526,11 @@ class _FileRiskStats:
     hostile_ratio: float
     suspicious_findings: int
     hostile_findings: int
+    suspicious_density: float
+    hostile_density: float
+    suspicious_category_breadth: int
+    hostile_category_breadth: int
+    max_crit: int
 
 
 def _merge_metric_values(files: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
@@ -435,6 +563,8 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     notable_ids: set[str] = set()
     suspicious_ids: set[str] = set()
     hostile_ids: set[str] = set()
+    suspicious_categories: set[str] = set()
+    hostile_categories: set[str] = set()
     third_party_max_crit = 0
     third_party_count = 0
     well_known_max_crit = 0
@@ -461,6 +591,10 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
             hostile_ids.add(fid)
 
         top = fid.split("/")[0]
+        if crit_ord >= 4:
+            suspicious_categories.add(top)
+        if crit_ord >= 5:
+            hostile_categories.add(top)
         if top == "third_party":
             third_party_count += 1
             if crit_ord > third_party_max_crit:
@@ -487,6 +621,8 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         unique_notable_ids=len(notable_ids),
         unique_suspicious_ids=len(suspicious_ids),
         unique_hostile_ids=len(hostile_ids),
+        suspicious_category_breadth=len(suspicious_categories),
+        hostile_category_breadth=len(hostile_categories),
         third_party_max_crit=third_party_max_crit,
         third_party_count=third_party_count,
         well_known_max_crit=well_known_max_crit,
@@ -511,6 +647,8 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
     unique_notable_ids: set[str] = set()
     unique_suspicious_ids: set[str] = set()
     unique_hostile_ids: set[str] = set()
+    suspicious_categories: set[str] = set()
+    hostile_categories: set[str] = set()
     third_party_max_crit = 0
     third_party_count = 0
     well_known_max_crit = 0
@@ -527,6 +665,16 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
         third_party_count += summary.third_party_count
         well_known_hostile += summary.well_known_hostile
         well_known_suspicious += summary.well_known_suspicious
+        suspicious_categories.update(
+            path.split("/")[0]
+            for path, max_ord in summary.sample_paths.items()
+            if max_ord >= 4
+        )
+        hostile_categories.update(
+            path.split("/")[0]
+            for path, max_ord in summary.sample_paths.items()
+            if max_ord >= 5
+        )
         third_party_max_crit = max(third_party_max_crit, summary.third_party_max_crit)
         well_known_max_crit = max(well_known_max_crit, summary.well_known_max_crit)
         has_yara = has_yara or summary.has_yara
@@ -556,6 +704,8 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
         unique_notable_ids=len(unique_notable_ids),
         unique_suspicious_ids=len(unique_suspicious_ids),
         unique_hostile_ids=len(unique_hostile_ids),
+        suspicious_category_breadth=len(suspicious_categories),
+        hostile_category_breadth=len(hostile_categories),
         third_party_max_crit=third_party_max_crit,
         third_party_count=third_party_count,
         well_known_max_crit=well_known_max_crit,
@@ -569,17 +719,28 @@ def _file_risk_stats(file_entry: dict[str, Any]) -> _FileRiskStats:
     """Compute per-file suspiciousness for top-k package aggregation."""
     summary = _summarize_findings(file_entry.get("findings") or [])
     denom = max(summary.filtered_finding_count, 1)
+    size_kb = max(_float(file_entry.get("size", 0.0)) / 1024.0, 1.0)
     return _FileRiskStats(
         suspicious_ratio=summary.suspicious_finding_count / denom,
         hostile_ratio=summary.hostile_finding_count / denom,
         suspicious_findings=summary.suspicious_finding_count,
         hostile_findings=summary.hostile_finding_count,
+        suspicious_density=summary.suspicious_finding_count / size_kb,
+        hostile_density=summary.hostile_finding_count / size_kb,
+        suspicious_category_breadth=summary.suspicious_category_breadth,
+        hostile_category_breadth=summary.hostile_category_breadth,
+        max_crit=max(summary.sample_paths.values(), default=0),
     )
 
 
 
 
-def _topk_file_risk_features(files: list[dict[str, Any]], k: int) -> tuple[float, float, float, float]:
+def _topk_file_risk_features(
+    files: list[dict[str, Any]],
+    k: int,
+    *,
+    include_breadth_density: bool = False,
+) -> tuple[float, ...]:
     """Summarize the riskiest files so a few bad files survive package dilution."""
     if k <= 0 or not files:
         return 0.0, 0.0, 0.0, 0.0
@@ -596,11 +757,19 @@ def _topk_file_risk_features(files: list[dict[str, Any]], k: int) -> tuple[float
         reverse=True,
     )[:k]
 
-    return (
+    base: tuple[float, ...] = (
         sum(s.suspicious_ratio for s in top_suspicious),
         sum(s.hostile_ratio for s in top_hostile),
         math.log1p(sum(s.suspicious_findings for s in top_suspicious)),
         math.log1p(sum(s.hostile_findings for s in top_hostile)),
+    )
+    if not include_breadth_density:
+        return base
+    return base + (
+        sum(s.suspicious_density for s in top_suspicious),
+        sum(s.hostile_density for s in top_hostile),
+        float(sum(s.suspicious_category_breadth for s in top_suspicious)),
+        float(sum(s.hostile_category_breadth for s in top_hostile)),
     )
 
 
@@ -638,6 +807,12 @@ def _apply_aggregate_features(
     files: list[dict[str, Any]],
     vec: np.ndarray,
     offset: int,
+    top_k_risk_files: int,
+    include_breadth_density: bool,
+    include_hostile_escalation: bool,
+    include_hostile_weighted_density: bool,
+    include_repetition_penalty: bool,
+    include_file_severity_distribution: bool,
 ) -> int:
     """Group 3: aggregate path breadth and concentration features."""
     sample_paths = summary.sample_paths
@@ -689,15 +864,72 @@ def _apply_aggregate_features(
     vec[offset + 13] = summary.hostile_finding_count / max(summary.filtered_finding_count, 1)
     vec[offset + 14] = math.log1p(summary.unique_suspicious_ids)
     vec[offset + 15] = math.log1p(summary.unique_hostile_ids)
-    topk_susp_ratio, topk_host_ratio, topk_susp_log, topk_host_log = _topk_file_risk_features(
+    total_kb = max(sum(_float(file_entry.get("size", 0.0)) for file_entry in files) / 1024.0, 1.0)
+    topk_features = _topk_file_risk_features(
         files,
-        TOP_K_RISK_FILES,
+        top_k_risk_files,
+        include_breadth_density=include_breadth_density,
     )
+    topk_susp_ratio, topk_host_ratio, topk_susp_log, topk_host_log = topk_features[:4]
     vec[offset + 16] = topk_susp_ratio
     vec[offset + 17] = topk_host_ratio
     vec[offset + 18] = topk_susp_log
     vec[offset + 19] = topk_host_log
-    return offset + 20
+    offset += 20
+    if include_breadth_density:
+        category_denom = max(len(categories), 1)
+        vec[offset] = float(summary.suspicious_category_breadth)
+        vec[offset + 1] = float(summary.hostile_category_breadth)
+        vec[offset + 2] = summary.suspicious_category_breadth / category_denom
+        vec[offset + 3] = summary.hostile_category_breadth / category_denom
+        vec[offset + 4] = summary.suspicious_finding_count / total_kb
+        vec[offset + 5] = summary.hostile_finding_count / total_kb
+        vec[offset + 6] = summary.suspicious_category_breadth / total_kb
+        vec[offset + 7] = summary.hostile_category_breadth / total_kb
+        vec[offset + 8] = topk_features[4]
+        vec[offset + 9] = topk_features[5]
+        vec[offset + 10] = topk_features[6]
+        vec[offset + 11] = topk_features[7]
+        offset += 12
+    if include_hostile_escalation:
+        vec[offset] = breadth_hostile / max(breadth_notable, 1)
+        vec[offset + 1] = breadth_hostile / max(breadth_suspicious, 1)
+        vec[offset + 2] = summary.suspicious_finding_count / max(summary.notable_finding_count, 1)
+        vec[offset + 3] = summary.hostile_finding_count / max(summary.notable_finding_count, 1)
+        vec[offset + 4] = summary.hostile_finding_count / max(summary.suspicious_finding_count, 1)
+        offset += 5
+    if include_hostile_weighted_density or include_file_severity_distribution:
+        stats = [_file_risk_stats(file_entry) for file_entry in files]
+    else:
+        stats = []
+    if include_hostile_weighted_density:
+        top_hostile_weighted = sorted(
+            stats,
+            key=lambda s: (s.hostile_density + 0.25 * s.suspicious_density, s.hostile_density, s.suspicious_density),
+            reverse=True,
+        )[:top_k_risk_files]
+        vec[offset] = summary.hostile_finding_count / total_kb + 0.25 * (summary.suspicious_finding_count / total_kb)
+        vec[offset + 1] = sum(s.hostile_density + 0.25 * s.suspicious_density for s in top_hostile_weighted)
+        offset += 2
+    if include_repetition_penalty:
+        vec[offset] = 1.0 - (summary.unique_suspicious_ids / max(summary.suspicious_finding_count, 1))
+        vec[offset + 1] = 1.0 - (summary.unique_hostile_ids / max(summary.hostile_finding_count, 1))
+        vec[offset + 2] = 1.0 - (summary.suspicious_category_breadth / max(summary.suspicious_finding_count, 1))
+        vec[offset + 3] = 1.0 - (summary.hostile_category_breadth / max(summary.hostile_finding_count, 1))
+        offset += 4
+    if include_file_severity_distribution:
+        n_files = max(len(files), 1)
+        hostile_files = sum(s.max_crit >= 5 for s in stats)
+        suspicious_files = sum(s.max_crit == 4 for s in stats)
+        notable_files = sum(s.max_crit == 3 for s in stats)
+        vec[offset] = hostile_files / n_files
+        vec[offset + 1] = suspicious_files / n_files
+        vec[offset + 2] = notable_files / n_files
+        vec[offset + 3] = math.log1p(hostile_files)
+        vec[offset + 4] = math.log1p(suspicious_files)
+        vec[offset + 5] = math.log1p(notable_files)
+        offset += 6
+    return offset
 
 
 def _apply_external_signal_features(
@@ -749,6 +981,7 @@ def _apply_structural_features(
     filtered_finding_count: int,
     vec: np.ndarray,
     offset: int,
+    include_file_risk_coverage: bool,
 ) -> int:
     """Group 7: structural / container context (7)."""
     binary_like = {"pe", "elf", "macho"}
@@ -756,6 +989,8 @@ def _apply_structural_features(
     import_candidates = 0
     importless_candidates = 0
     max_entropy = 0.0
+    suspicious_files = 0
+    hostile_files = 0
     for file_entry in files:
         if file_entry.get("file_type", "") in binary_like and _float(file_entry.get("size", 0)) < 20000:
             any_tiny_binary = True
@@ -763,11 +998,16 @@ def _apply_structural_features(
             import_candidates += 1
             if len(file_entry.get("imports") or []) == 0:
                 importless_candidates += 1
-        
+
         # Track max entropy across all files in the report.
         metrics = file_entry.get("metrics") or {}
         binary_metrics = metrics.get("binary") or {}
         max_entropy = max(max_entropy, _float(binary_metrics.get("overall_entropy", 0.0)))
+        file_summary = _summarize_findings(file_entry.get("findings") or [])
+        if file_summary.suspicious_finding_count > 0:
+            suspicious_files += 1
+        if file_summary.hostile_finding_count > 0:
+            hostile_files += 1
 
     # Stealth potential: high entropy (packed/encrypted) but very few findings.
     stealth_potential = 1.0 if (filtered_finding_count < 5 and max_entropy > 6.5) else 0.0
@@ -778,16 +1018,21 @@ def _apply_structural_features(
     vec[offset + 3] = math.log1p(filtered_finding_count)
     vec[offset + 4] = math.log1p(len(files))
     vec[offset + 5] = math.log1p(max(len(files) - 1, 0))
-    # Backward compatibility: only write stealth_potential if the vector was
-    # allocated large enough to hold it (v15+).
-    if offset + 6 < len(vec):
-        vec[offset + 6] = stealth_potential
-        return offset + 7
-    return offset + 6
+    vec[offset + 6] = stealth_potential
+    offset += 7
+    if include_file_risk_coverage:
+        file_count = max(len(files), 1)
+        vec[offset] = suspicious_files / file_count
+        vec[offset + 1] = hostile_files / file_count
+        vec[offset + 2] = math.log1p(suspicious_files)
+        vec[offset + 3] = math.log1p(hostile_files)
+        offset += 4
+    return offset
 
 
 def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray) -> None:
     """Extract features from a report into a pre-allocated vector."""
+    config = feature_config_from_env()
     files = report_files(report)
     if not files:
         files = [{}]
@@ -795,13 +1040,37 @@ def _extract_into(report: dict[str, Any], ctx: _ExtractContext, vec: np.ndarray)
     metrics = _merge_metric_values(files)
 
     offset = 0
-    offset = _apply_presence_features(summary.sample_paths, ctx, vec, offset)
-    offset = _apply_maxcrit_features(summary.sample_paths, ctx, vec, offset)
-    offset = _apply_aggregate_features(summary, files, vec, offset)
-    offset = _apply_external_signal_features(summary, vec, offset)
-    offset = _apply_metric_features(metrics, vec, offset)
-    offset = _apply_filetype_features(files, ctx, vec, offset)
-    _apply_structural_features(files, summary.filtered_finding_count, vec, offset)
+    if "present" in config.enabled_groups:
+        offset = _apply_presence_features(summary.sample_paths, ctx, vec, offset)
+    if "maxcrit" in config.enabled_groups:
+        offset = _apply_maxcrit_features(summary.sample_paths, ctx, vec, offset)
+    if "agg" in config.enabled_groups:
+        offset = _apply_aggregate_features(
+            summary,
+            files,
+            vec,
+            offset,
+            config.top_k_risk_files,
+            config.include_suspicious_breadth_density,
+            config.include_hostile_escalation_features,
+            config.include_hostile_weighted_density,
+            config.include_repetition_penalty_features,
+            config.include_file_severity_distribution,
+        )
+    if "ext" in config.enabled_groups:
+        offset = _apply_external_signal_features(summary, vec, offset)
+    if "metrics" in config.enabled_groups:
+        offset = _apply_metric_features(metrics, vec, offset)
+    if "filetype" in config.enabled_groups:
+        offset = _apply_filetype_features(files, ctx, vec, offset)
+    if "struct" in config.enabled_groups:
+        _apply_structural_features(
+            files,
+            summary.filtered_finding_count,
+            vec,
+            offset,
+            config.include_struct_file_risk_coverage,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1255,7 +1524,7 @@ def build_vocab_from_db(
     )
     log.info(
         "vocab: %d paths (>=%d freq), %d filetypes -> %d features "
-        "(v14 presence+maxcrit+density)",
+        "(v15 presence+maxcrit+hostile-escalation)",
         len(presence_vocab), MIN_PATH_FREQ,
         len(filetype_vocab), spec.total_features,
     )

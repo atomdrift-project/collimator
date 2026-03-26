@@ -7,6 +7,7 @@ import scipy.sparse as sp
 
 from collimator.train import (
     TrainConfig,
+    _compute_benign_filetype_weights,
     _compute_metrics,
     _grouped_split_indices,
     _split_calibration_eval,
@@ -101,3 +102,40 @@ def test_compute_metrics_treats_equal_threshold_as_positive() -> None:
     assert metrics["precision"] == 1.0
     assert metrics["recall"] == 1.0
     assert metrics["f1"] == 1.0
+
+
+def test_compute_benign_filetype_weights_only_affects_selected_benign_rows() -> None:
+    file_types = np.array(["pe", "javascript", "pe", "python"], dtype=object)
+    y = np.array([0, 0, 1, 0], dtype=np.float32)
+
+    weights = _compute_benign_filetype_weights(
+        file_types,
+        y,
+        weights_by_filetype={"pe": 2.0, "python": 1.5},
+    )
+
+    assert weights is not None
+    np.testing.assert_array_equal(weights, np.array([2.0, 1.0, 1.0, 1.5], dtype=np.float32))
+
+
+def test_train_rejects_filetype_weights_without_sample_file_types() -> None:
+    rng = np.random.default_rng(11)
+    X = sp.csr_matrix(rng.normal(size=(40, 6)).astype(np.float32))
+    y = np.array([0] * 20 + [1] * 20, dtype=np.float32)
+
+    try:
+        train(
+            X,
+            y,
+            TrainConfig(
+                n_estimators=5,
+                early_stopping_rounds=2,
+                n_folds=2,
+                device="cpu",
+                benign_filetype_weights={"pe": 2.0},
+            ),
+        )
+    except ValueError as exc:
+        assert "sample_file_types" in str(exc)
+    else:
+        raise AssertionError("expected ValueError when sample_file_types are missing")

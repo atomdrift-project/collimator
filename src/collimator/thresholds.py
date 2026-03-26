@@ -20,7 +20,7 @@ ACCURACY_TARGETS = [0.80, 0.90, 0.95, 0.98, 0.99, 0.993, 0.996, 0.998, 0.999, 0.
 #   hostile:    ≤1 in 500,000 benign flagged (2/1M)
 RECOMMENDATIONS = [
     ("suspicious", 0.00002),   # FPR ≤ 20 per million
-    ("hostile",    0.000002),  # FPR ≤ 2 per million
+    ("hostile",    0.000001),  # FPR ≤ 1 per million
 ]
 
 # Minimum benign samples needed to trust an FPR target (expect ≥5 FP at that rate).

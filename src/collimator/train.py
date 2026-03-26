@@ -53,6 +53,11 @@ class TrainConfig:
     reg_lambda: float = 1.0
     beta: float = 1.0  # F-beta for threshold selection; 1.0 = balanced precision and recall
     monotone_constraints: str | dict[str, int] | None = None
+    threshold_mode: str = "fbeta"  # fbeta | max_recall_at_fpr
+    threshold_fpr_target: float | None = None
+    hard_negative_fraction: float = 0.0
+    hard_negative_weight: float = 1.0
+    benign_filetype_weights: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -162,6 +167,102 @@ def _optimal_threshold(
     return 0.5
 
 
+def _max_recall_threshold_at_fpr(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    *,
+    max_fpr: float,
+) -> float:
+    """Lowest threshold with observed FPR <= max_fpr."""
+    if len(np.unique(y_true)) < 2:
+        return 0.5
+    benign = y_true == 0
+    n_benign = int(np.sum(benign))
+    if n_benign == 0:
+        return 0.5
+    order = np.argsort(y_prob)[::-1]
+    sorted_probs = y_prob[order]
+    sorted_y = y_true[order]
+    cum_fp = np.cumsum(sorted_y == 0)
+    change_mask = np.concatenate([np.diff(sorted_probs) != 0, [True]])
+    cuts = np.where(change_mask)[0]
+    thresholds = sorted_probs[cuts]
+    fp_vals = cum_fp[cuts]
+    valid = (fp_vals / n_benign) <= max_fpr
+    if valid.any():
+        return float(thresholds[np.where(valid)[0][-1]])
+    return float(np.nextafter(np.max(y_prob), np.inf))
+
+
+def _select_threshold(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    *,
+    mode: str,
+    beta: float,
+    max_fpr: float | None,
+) -> float:
+    if mode == "max_recall_at_fpr":
+        if max_fpr is None:
+            raise ValueError("threshold_fpr_target is required for max_recall_at_fpr mode")
+        return _max_recall_threshold_at_fpr(y_true, y_prob, max_fpr=max_fpr)
+    return _optimal_threshold(y_true, y_prob, beta=beta)
+
+
+def _compute_hard_negative_weights(
+    model: xgb.XGBClassifier,
+    X_train: np.ndarray | sp.spmatrix,
+    y_train: np.ndarray,
+    *,
+    fraction: float,
+    weight: float,
+) -> np.ndarray | None:
+    """Upweight top-scoring benign samples inside the current training split."""
+    if fraction <= 0.0 or weight <= 1.0:
+        return None
+    benign_idx = np.where(y_train == 0)[0]
+    if len(benign_idx) == 0:
+        return None
+    n_hard = max(int(np.ceil(len(benign_idx) * fraction)), 1)
+    benign_scores = predict_proba(model, X_train[benign_idx])
+    top_local = benign_idx[np.argsort(benign_scores)[-n_hard:]]
+    sample_weight = np.ones(len(y_train), dtype=np.float32)
+    sample_weight[top_local] = float(weight)
+    return sample_weight
+
+
+def _compute_benign_filetype_weights(
+    sample_file_types: np.ndarray,
+    y_train: np.ndarray,
+    *,
+    weights_by_filetype: dict[str, float],
+) -> np.ndarray | None:
+    """Upweight benign samples from selected file types."""
+    if not weights_by_filetype:
+        return None
+    sample_weight = np.ones(len(y_train), dtype=np.float32)
+    any_weighted = False
+    for file_type, weight in weights_by_filetype.items():
+        if weight <= 1.0:
+            continue
+        mask = (y_train == 0) & (sample_file_types == file_type)
+        if np.any(mask):
+            sample_weight[mask] = np.float32(weight)
+            any_weighted = True
+    return sample_weight if any_weighted else None
+
+
+def _merge_sample_weights(
+    base_weight: np.ndarray | None,
+    extra_weight: np.ndarray | None,
+) -> np.ndarray | None:
+    if base_weight is None:
+        return extra_weight
+    if extra_weight is None:
+        return base_weight
+    return (base_weight * extra_weight).astype(np.float32, copy=False)
+
+
 def _split_calibration_eval(
     X_holdout: np.ndarray | sp.spmatrix,
     y_holdout: np.ndarray,
@@ -234,6 +335,7 @@ def train(
     config: TrainConfig | None = None,
     feature_names: list[str] | None = None,
     groups: np.ndarray | None = None,
+    sample_file_types: np.ndarray | None = None,
 ) -> TrainResult:
     """Train an XGBoost classifier with holdout + K-fold CV.
 
@@ -250,6 +352,12 @@ def train(
     np.random.seed(config.seed)
     if groups is not None and len(groups) != len(y):
         raise ValueError(f"groups length {len(groups)} does not match labels {len(y)}")
+    if sample_file_types is not None and len(sample_file_types) != len(y):
+        raise ValueError(
+            f"sample_file_types length {len(sample_file_types)} does not match labels {len(y)}",
+        )
+    if config.benign_filetype_weights and sample_file_types is None:
+        raise ValueError("sample_file_types are required when benign_filetype_weights are configured")
 
     n_features = X.shape[1]
     n_malware = int(np.sum(y == 1))
@@ -277,6 +385,7 @@ def train(
         X_tv, y_tv = X, y
         groups_tv = groups
         X_holdout = y_holdout = groups_holdout = None
+        file_types_tv = np.asarray(sample_file_types, dtype=object) if sample_file_types is not None else None
     elif n_min_class >= MIN_HOLDOUT_CLASS_SIZE:
         if groups is not None:
             tv_idx, holdout_idx = _grouped_split_indices(
@@ -296,6 +405,7 @@ def train(
         X_holdout, y_holdout = X[holdout_idx], y[holdout_idx]
         groups_tv = np.asarray(groups, dtype=object)[tv_idx] if groups is not None else None
         groups_holdout = np.asarray(groups, dtype=object)[holdout_idx] if groups is not None else None
+        file_types_tv = np.asarray(sample_file_types, dtype=object)[tv_idx] if sample_file_types is not None else None
         log.info(
             "holdout: %d samples (%d malware, %d benign)",
             len(y_holdout),
@@ -307,6 +417,7 @@ def train(
         X_holdout = y_holdout = None
         groups_tv = np.asarray(groups, dtype=object) if groups is not None else None
         groups_holdout = None
+        file_types_tv = np.asarray(sample_file_types, dtype=object) if sample_file_types is not None else None
         log.warning(
             "dataset too small for holdout (%d min class), using all data",
             n_min_class,
@@ -364,6 +475,11 @@ def train(
         print(f"{'-' * 42}")
 
         for fold, (train_idx, val_idx) in enumerate(split_iter):
+            fold_base_weight = _compute_benign_filetype_weights(
+                file_types_tv[train_idx],
+                y_tv[train_idx],
+                weights_by_filetype=config.benign_filetype_weights,
+            ) if file_types_tv is not None else None
             fold_model = create_classifier(
                 n_benign=int(np.sum(y_tv[train_idx] == 0)),
                 n_malware=int(np.sum(y_tv[train_idx] == 1)),
@@ -382,11 +498,51 @@ def train(
             )
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=UserWarning, module="xgboost")
-                fold_model.fit(
-                    X_tv[train_idx], y_tv[train_idx],
-                    eval_set=[(X_tv[val_idx], y_tv[val_idx])],
-                    verbose=False,
-                )
+                if config.hard_negative_fraction > 0.0 and config.hard_negative_weight > 1.0:
+                    fold_model.fit(
+                        X_tv[train_idx], y_tv[train_idx],
+                        sample_weight=fold_base_weight,
+                        eval_set=[(X_tv[val_idx], y_tv[val_idx])],
+                        verbose=False,
+                    )
+                    hard_negative_weight = _compute_hard_negative_weights(
+                        fold_model,
+                        X_tv[train_idx],
+                        y_tv[train_idx],
+                        fraction=config.hard_negative_fraction,
+                        weight=config.hard_negative_weight,
+                    )
+                    sample_weight = _merge_sample_weights(fold_base_weight, hard_negative_weight)
+                    fold_model = create_classifier(
+                        n_benign=int(np.sum(y_tv[train_idx] == 0)),
+                        n_malware=int(np.sum(y_tv[train_idx] == 1)),
+                        device=config.device,
+                        random_state=config.seed,
+                        n_estimators=config.n_estimators,
+                        max_depth=config.max_depth,
+                        learning_rate=config.learning_rate,
+                        early_stopping_rounds=config.early_stopping_rounds,
+                        min_child_weight=config.min_child_weight,
+                        colsample_bytree=config.colsample_bytree,
+                        subsample=config.subsample,
+                        gamma=config.gamma,
+                        reg_alpha=config.reg_alpha,
+                        reg_lambda=config.reg_lambda,
+                        monotone_constraints=config.monotone_constraints,
+                    )
+                    fold_model.fit(
+                        X_tv[train_idx], y_tv[train_idx],
+                        sample_weight=sample_weight,
+                        eval_set=[(X_tv[val_idx], y_tv[val_idx])],
+                        verbose=False,
+                    )
+                else:
+                    fold_model.fit(
+                        X_tv[train_idx], y_tv[train_idx],
+                        sample_weight=fold_base_weight,
+                        eval_set=[(X_tv[val_idx], y_tv[val_idx])],
+                        verbose=False,
+                    )
 
             fold_preds = predict_proba(fold_model, X_tv[val_idx])
             cv_predictions[val_idx] = fold_preds
@@ -424,6 +580,11 @@ def train(
         reg_lambda=config.reg_lambda,
         monotone_constraints=config.monotone_constraints,
         )
+    final_base_weight = _compute_benign_filetype_weights(
+        file_types_tv,
+        y_tv,
+        weights_by_filetype=config.benign_filetype_weights,
+    ) if file_types_tv is not None else None
     if X_holdout is not None:
         calibration_split, evaluation_split = _split_calibration_eval(
             X_holdout, y_holdout, groups_holdout=groups_holdout, seed=config.seed,
@@ -440,11 +601,51 @@ def train(
             X_eval, y_eval = evaluation_split
 
         # Use calibration split for early stopping and threshold selection.
-        final_model.fit(
-            X_tv, y_tv,
-            eval_set=[(X_calib, y_calib)],
-            verbose=False,
-        )
+        if config.hard_negative_fraction > 0.0 and config.hard_negative_weight > 1.0:
+            final_model.fit(
+                X_tv, y_tv,
+                sample_weight=final_base_weight,
+                eval_set=[(X_calib, y_calib)],
+                verbose=False,
+            )
+            hard_negative_weight = _compute_hard_negative_weights(
+                final_model,
+                X_tv,
+                y_tv,
+                fraction=config.hard_negative_fraction,
+                weight=config.hard_negative_weight,
+            )
+            sample_weight = _merge_sample_weights(final_base_weight, hard_negative_weight)
+            final_model = create_classifier(
+                n_benign=n_tv_benign,
+                n_malware=n_tv_malware,
+                device=config.device,
+                random_state=config.seed,
+                n_estimators=config.n_estimators,
+                max_depth=config.max_depth,
+                learning_rate=config.learning_rate,
+                early_stopping_rounds=config.early_stopping_rounds,
+                min_child_weight=config.min_child_weight,
+                colsample_bytree=config.colsample_bytree,
+                subsample=config.subsample,
+                gamma=config.gamma,
+                reg_alpha=config.reg_alpha,
+                reg_lambda=config.reg_lambda,
+                monotone_constraints=config.monotone_constraints,
+            )
+            final_model.fit(
+                X_tv, y_tv,
+                sample_weight=sample_weight,
+                eval_set=[(X_calib, y_calib)],
+                verbose=False,
+            )
+        else:
+            final_model.fit(
+                X_tv, y_tv,
+                sample_weight=final_base_weight,
+                eval_set=[(X_calib, y_calib)],
+                verbose=False,
+            )
         best_iter = getattr(final_model, "best_iteration", None)
         if best_iter is not None:
             log.info("final model: %d trees (early stopped at %d)", final_model.n_estimators, best_iter)
@@ -461,7 +662,7 @@ def train(
     else:
         # No holdout — train without early stopping.
         final_model.set_params(early_stopping_rounds=None)
-        final_model.fit(X_tv, y_tv, verbose=False)
+        final_model.fit(X_tv, y_tv, sample_weight=final_base_weight, verbose=False)
         split_summary = {
             "policy": "train_only",
             "holdout_split": "none",
@@ -486,10 +687,22 @@ def train(
                 len(np.unique(calib_preds_cal)), len(y_calib),
             )
             iso_calibrator = None
-            optimal_threshold = _optimal_threshold(y_calib, calib_preds, beta=config.beta)
+            optimal_threshold = _select_threshold(
+                y_calib,
+                calib_preds,
+                mode=config.threshold_mode,
+                beta=config.beta,
+                max_fpr=config.threshold_fpr_target,
+            )
             eval_preds = predict_proba(final_model, X_eval)
         else:
-            optimal_threshold = _optimal_threshold(y_calib, calib_preds_cal, beta=config.beta)
+            optimal_threshold = _select_threshold(
+                y_calib,
+                calib_preds_cal,
+                mode=config.threshold_mode,
+                beta=config.beta,
+                max_fpr=config.threshold_fpr_target,
+            )
             eval_preds = iso_calibrator.predict(predict_proba(final_model, X_eval))
         metrics = _compute_metrics(y_eval, eval_preds, optimal_threshold)
         calibration = _calibration_summary(y_eval, eval_preds)
@@ -498,14 +711,26 @@ def train(
         log.info("evaluation: AUC=%.4f F1=%.4f threshold=%.3f (%s)",
                  metrics["roc_auc"], metrics["f1"], optimal_threshold, cal_label)
     elif n_folds >= 2:
-        optimal_threshold = _optimal_threshold(y_tv, cv_predictions, beta=config.beta)
+        optimal_threshold = _select_threshold(
+            y_tv,
+            cv_predictions,
+            mode=config.threshold_mode,
+            beta=config.beta,
+            max_fpr=config.threshold_fpr_target,
+        )
         metrics = _compute_metrics(y_tv, cv_predictions, optimal_threshold)
         calibration = _calibration_summary(y_tv, cv_predictions)
         eval_y = y_tv
         eval_preds = cv_predictions
     else:
         all_preds = predict_proba(final_model, X_tv)
-        optimal_threshold = _optimal_threshold(y_tv, all_preds)
+        optimal_threshold = _select_threshold(
+            y_tv,
+            all_preds,
+            mode=config.threshold_mode,
+            beta=config.beta,
+            max_fpr=config.threshold_fpr_target,
+        )
         metrics = _compute_metrics(y_tv, all_preds, optimal_threshold)
         calibration = _calibration_summary(y_tv, all_preds)
         eval_y = y_tv

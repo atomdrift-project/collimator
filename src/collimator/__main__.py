@@ -38,6 +38,20 @@ def _git_sha() -> str | None:
     return result.stdout.strip() or None
 
 
+def _parse_filetype_weights(entries: list[str] | None) -> dict[str, float]:
+    weights: dict[str, float] = {}
+    for entry in entries or []:
+        if "=" not in entry:
+            raise ValueError(f"invalid benign filetype weight '{entry}', expected filetype=weight")
+        file_type, raw_weight = entry.split("=", 1)
+        file_type = file_type.strip()
+        if not file_type:
+            raise ValueError(f"invalid benign filetype weight '{entry}', empty file type")
+        weight = float(raw_weight)
+        weights[file_type] = weight
+    return weights
+
+
 def _print_test_block(
     probs: np.ndarray,
     y: np.ndarray,
@@ -135,6 +149,10 @@ def cmd_train(args: argparse.Namespace) -> None:
         **({"learning_rate": args.learning_rate} if args.learning_rate is not None else {}),
         **({"early_stopping_rounds": args.early_stopping_rounds} if args.early_stopping_rounds is not None else {}),
         **({"beta": args.beta} if args.beta is not None else {}),
+        threshold_mode=args.threshold_mode,
+        threshold_fpr_target=args.threshold_fpr_target,
+        hard_negative_fraction=args.hard_negative_fraction,
+        hard_negative_weight=args.hard_negative_weight,
     )
     result = train.train(X, y, config, feature_names=spec.feature_names, groups=train_groups)
 
@@ -183,6 +201,10 @@ def cmd_train(args: argparse.Namespace) -> None:
                 "gamma": config.gamma,
                 "reg_alpha": config.reg_alpha,
                 "reg_lambda": config.reg_lambda,
+                "threshold_mode": config.threshold_mode,
+                "threshold_fpr_target": config.threshold_fpr_target,
+                "hard_negative_fraction": config.hard_negative_fraction,
+                "hard_negative_weight": config.hard_negative_weight,
             },
         },
         output_path=out_dir / "evaluation.json",
@@ -761,6 +783,10 @@ def main() -> None:
     p_train.add_argument("--learning-rate", type=float, default=None, help="XGBoost learning rate (default: TrainConfig default)")
     p_train.add_argument("--early-stopping-rounds", type=int, default=None, help="Early stopping patience (default: TrainConfig default)")
     p_train.add_argument("--beta", type=float, default=None, help="F-beta for threshold selection (default: TrainConfig default)")
+    p_train.add_argument("--threshold-mode", choices=["fbeta", "max_recall_at_fpr"], default="fbeta", help="Threshold selection strategy")
+    p_train.add_argument("--threshold-fpr-target", type=float, default=None, help="Max FPR target when threshold-mode=max_recall_at_fpr")
+    p_train.add_argument("--hard-negative-fraction", type=float, default=0.0, help="Fraction of benign train rows to upweight as hard negatives")
+    p_train.add_argument("--hard-negative-weight", type=float, default=1.0, help="Sample weight applied to hard benign negatives")
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Evaluate existing model")
@@ -899,6 +925,16 @@ def main() -> None:
     p_exp.add_argument("--reg-alpha", type=float, default=0.0, help="L1 regularization term on weights")
     p_exp.add_argument("--reg-lambda", type=float, default=1.0, help="L2 regularization term on weights")
     p_exp.add_argument("--beta", type=float, default=1.0, help="F-beta for threshold selection (default: 1.0)")
+    p_exp.add_argument("--threshold-mode", choices=["fbeta", "max_recall_at_fpr"], default="fbeta", help="Threshold selection strategy")
+    p_exp.add_argument("--threshold-fpr-target", type=float, default=None, help="Max FPR target when threshold-mode=max_recall_at_fpr")
+    p_exp.add_argument("--hard-negative-fraction", type=float, default=0.0, help="Fraction of benign train rows to upweight as hard negatives")
+    p_exp.add_argument("--hard-negative-weight", type=float, default=1.0, help="Sample weight applied to hard benign negatives")
+    p_exp.add_argument(
+        "--benign-filetype-weight",
+        action="append",
+        default=[],
+        help="Upweight benign training rows for a file type, format filetype=weight; repeatable",
+    )
     _add_workers_arg(p_exp)
     _add_seed_arg(p_exp)
 
@@ -1000,6 +1036,11 @@ def main() -> None:
             reg_alpha=args.reg_alpha,
             reg_lambda=args.reg_lambda,
             beta=args.beta,
+            threshold_mode=args.threshold_mode,
+            threshold_fpr_target=args.threshold_fpr_target,
+            hard_negative_fraction=args.hard_negative_fraction,
+            hard_negative_weight=args.hard_negative_weight,
+            benign_filetype_weights=_parse_filetype_weights(args.benign_filetype_weight),
         )
     elif args.command == "ablate":
         rows = ablation.run_ablation(

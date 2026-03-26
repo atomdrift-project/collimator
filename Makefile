@@ -120,7 +120,7 @@ XGBOOST_NATIVE_DIR ?= ../xgboost-native
 LITMUS_DIR ?= ../litmus
 
 deploy: verify-xgboost-native verify-litmus
-	@test -d $(MODELS_DIR) || { echo "error: $(MODELS_DIR) does not exist"; exit 1; }
+	@mkdir -p $(MODELS_DIR)
 	cp $(OUT_DIR)/model.json $(MODELS_DIR)/model.json
 	cp $(OUT_DIR)/model.onnx $(MODELS_DIR)/model.onnx
 	cp $(OUT_DIR)/feature_spec.json $(MODELS_DIR)/feature_spec.json

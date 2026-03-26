@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime
 from dataclasses import dataclass
@@ -151,6 +152,32 @@ def _print_test_metrics(
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
 
 
+def _load_primary_file_types(db_path: Path, row_ids: list[int]) -> np.ndarray:
+    file_types_by_row: dict[int, str] = {}
+    import sqlite3
+
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        chunk_size = 1000
+        for start in range(0, len(row_ids), chunk_size):
+            chunk = row_ids[start:start + chunk_size]
+            placeholders = ",".join("?" for _ in chunk)
+            query = f"SELECT id, cleave_json FROM samples WHERE id IN ({placeholders})"
+            for row_id, cleave_json in conn.execute(query, tuple(chunk)):
+                file_type = "unknown"
+                if cleave_json:
+                    try:
+                        report = json.loads(cleave_json)
+                        file_type = str(features.primary_file(report).get("file_type") or "unknown")
+                    except json.JSONDecodeError:
+                        pass
+                file_types_by_row[int(row_id)] = file_type
+    finally:
+        conn.close()
+
+    return np.asarray([file_types_by_row.get(row_id, "unknown") for row_id in row_ids], dtype=object)
+
+
 def run_experiment(
     db_path: Path,
     *,
@@ -171,6 +198,11 @@ def run_experiment(
     reg_alpha: float = 0.0,
     reg_lambda: float = 1.0,
     beta: float = 1.0,
+    threshold_mode: str = "fbeta",
+    threshold_fpr_target: float | None = None,
+    hard_negative_fraction: float = 0.0,
+    hard_negative_weight: float = 1.0,
+    benign_filetype_weights: dict[str, float] | None = None,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     corpus = sample_partitioned_reports(
@@ -188,6 +220,7 @@ def run_experiment(
     sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
     sorted_test = sorted(corpus.test_samples, key=lambda s: s.row_id)
     train_groups = np.array([s.group_id for s in sorted_train], dtype=object)
+    train_file_types = _load_primary_file_types(db_path, [s.row_id for s in sorted_train])
 
     log.info("pass 1: building vocabulary (worker-local DB fetching)")
     spec = features.build_vocab_from_db(
@@ -237,11 +270,17 @@ def run_experiment(
             reg_alpha=reg_alpha,
             reg_lambda=reg_lambda,
             beta=beta,
+            threshold_mode=threshold_mode,
+            threshold_fpr_target=threshold_fpr_target,
+            hard_negative_fraction=hard_negative_fraction,
+            hard_negative_weight=hard_negative_weight,
+            benign_filetype_weights=benign_filetype_weights or {},
             monotone_constraints=tuple(constraints),
             holdout_fraction=0.0,  # use all samples; CV predictions drive threshold
         ),
         feature_names=spec.feature_names,
         groups=train_groups,
+        sample_file_types=train_file_types,
     )
 
     sampled_test_metrics: dict[str, float] = {}
@@ -275,5 +314,7 @@ def run_experiment(
         "timestamp": datetime.now().isoformat(timespec="seconds"),
     }
     if output_dir is not None:
+        spec.save(output_dir / "feature_spec.json")
+        export.save_model(result.model, output_dir / "model.json")
         export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
     return results
