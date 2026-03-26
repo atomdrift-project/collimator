@@ -84,6 +84,10 @@ MIN_CONFIDENCE = 0.65
 # Number of riskiest files to summarize for package-level top-k signals.
 TOP_K_RISK_FILES = 1
 
+# Stable model ABI version shared with litmus.
+# Keep this in sync with FeatureSpec.version for a single compatibility number.
+MODEL_ABI_VERSION = 14
+
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
 KEY_METRICS: list[tuple[str, str, bool]] = [
@@ -164,6 +168,7 @@ class FeatureSpec:
 
     # NOTE: bumping this version requires a matching update in ../collimator (Rust).
     version: int = 14
+    abi_version: int = MODEL_ABI_VERSION
     presence_vocab: list[str] = field(default_factory=list)
     filetype_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
@@ -178,6 +183,7 @@ class FeatureSpec:
         path.parent.mkdir(parents=True, exist_ok=True)
         d: dict[str, Any] = {
             "version": self.version,
+            "abi_version": self.abi_version,
             "presence_vocab": self.presence_vocab,
             "filetype_vocab": self.filetype_vocab,
             "feature_names": self.feature_names,
@@ -205,6 +211,7 @@ class FeatureSpec:
             )
         return cls(
             version=version,
+            abi_version=data.get("abi_version", version),
             presence_vocab=data.get("presence_vocab", []),
             filetype_vocab=data.get("filetype_vocab", []),
             feature_names=data["feature_names"],
@@ -303,11 +310,20 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     presence_counts: dict[str, int] = {}
     filetypes: set[str] = set()
     batch_size = max(64, 512 // max(nw, 1))
+    n_batches = 0
+    _PROGRESS_BATCH_INTERVAL = 500  # log every ~500 batches
 
     def _merge_batch(counts: dict[str, int], fts: list[str]) -> None:
+        nonlocal n_batches
         for k, v in counts.items():
             presence_counts[k] = presence_counts.get(k, 0) + v
         filetypes.update(fts)
+        n_batches += 1
+        if n_batches % _PROGRESS_BATCH_INTERVAL == 0:
+            log.info(
+                "vocab: ~%d reports scanned (%d unique paths so far)",
+                n_batches * batch_size, len(presence_counts),
+            )
 
     if nw > 1:
         with ProcessPoolExecutor(
@@ -324,6 +340,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         for counts, fts in map(_vocab_batch_worker, _batched(reports, batch_size)):
             _merge_batch(counts, fts)
 
+    log.info("vocab: finished scanning ~%d reports", n_batches * batch_size)
     presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
     filetype_vocab = sorted(filetypes)
     feature_names = _build_feature_names(presence_vocab, filetype_vocab)
@@ -1118,6 +1135,9 @@ def extract_partitioned_stream(
     test_vals: list[float] = []
     test_labels: list[int] = []
 
+    n_batches = 0
+    _PROGRESS_BATCH_INTERVAL = 500
+
     def _consume(
         batch_iter: Iterable[
             tuple[
@@ -1126,6 +1146,7 @@ def extract_partitioned_stream(
             ]
         ],
     ) -> None:
+        nonlocal n_batches
         for (
             b_train_rows, b_train_cols, b_train_vals, b_train_labels,
             b_test_rows, b_test_cols, b_test_vals, b_test_labels,
@@ -1138,6 +1159,13 @@ def extract_partitioned_stream(
             test_cols.extend(b_test_cols)
             test_vals.extend(b_test_vals)
             test_labels.extend(b_test_labels)
+            n_batches += 1
+            if n_batches % _PROGRESS_BATCH_INTERVAL == 0:
+                log.info(
+                    "extract: ~%d samples processed (%d train, %d test)",
+                    len(train_labels) + len(test_labels),
+                    len(train_labels), len(test_labels),
+                )
 
     batch_args = (
         (train_offset, test_offset, batch, spec)

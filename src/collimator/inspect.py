@@ -27,6 +27,17 @@ log = logging.getLogger(__name__)
 def _predict(model: object, vec: np.ndarray) -> float:
     return float(predict_proba(model, vec.reshape(1, -1))[0])
 
+
+def _score_report(
+    model: object,
+    spec: FeatureSpec,
+    report: dict[str, object],
+) -> tuple[np.ndarray, np.ndarray, float]:
+    """Extract features for one report and return raw vec, model vec, probability."""
+    vec_raw = extract(report, spec)
+    vec = standardize(vec_raw, spec) if spec.standardized else vec_raw
+    return vec_raw, vec, _predict(model, vec)
+
 def _print_feature_vector(vec: np.ndarray, spec: FeatureSpec, top_n: int = 30) -> None:
     """Print the non-zero features, sorted by absolute value."""
     nonzero = [(i, vec[i]) for i in range(len(vec)) if vec[i] != 0.0]
@@ -109,9 +120,7 @@ def inspect_sample(
 
     report = json.loads(row["cleave_json"])
     pf = primary_file(report)
-    vec_raw = extract(report, spec)
-    vec = standardize(vec_raw, spec) if spec.standardized else vec_raw
-    prob = _predict(model, vec)
+    vec_raw, vec, prob = _score_report(model, spec, report)
 
     print(f"Sample:      {row['sha256']}")
     print(f"Path:        {row['path']}")
@@ -251,9 +260,27 @@ def scan_file(
 
     report = json.loads(result.stdout)
     pf = primary_file(report)
-    vec_raw = extract(report, spec)
-    vec = standardize(vec_raw, spec) if spec.standardized else vec_raw
-    prob = _predict(model, vec)
+    vec_raw, vec, prob = _score_report(model, spec, report)
+    effective_prob = prob
+    promoted_path: str | None = None
+    promoted_type: str | None = None
+
+    embedded_files = [
+        file_entry
+        for file_entry in report.get("files") or []
+        if isinstance(file_entry, dict) and int(file_entry.get("depth", 0) or 0) > 0
+    ]
+    for file_entry in embedded_files:
+        _ef_raw, _ef_vec, ef_prob = _score_report(
+            model,
+            spec,
+            {"files": [file_entry], "version": report.get("version", "3")},
+        )
+        if ef_prob > effective_prob:
+            effective_prob = ef_prob
+            full_path = str(file_entry.get("path", ""))
+            promoted_path = full_path.rsplit("!!", 1)[-1] if full_path else None
+            promoted_type = str(file_entry.get("file_type", "unknown"))
 
     findings = pf.get("findings") or []
     hostile = sum(1 for f in findings if f.get("crit") == "hostile")
@@ -261,7 +288,16 @@ def scan_file(
 
     print(f"File:        {file_path}")
     print(f"File type:   {pf.get('file_type', 'unknown')}")
-    print(f"Prediction:  {prob:.4f} ({'MALWARE' if prob > threshold else 'BENIGN'})")
+    print(
+        f"Prediction:  {effective_prob:.4f} "
+        f"({'MALWARE' if effective_prob > threshold else 'BENIGN'})"
+    )
+    if effective_prob != prob:
+        print(f"Report score: {prob:.4f} (top-level report only)")
+        print(
+            f"Promoted by:  {promoted_path or '<embedded>'} "
+            f"[{promoted_type or 'unknown'}] -> {effective_prob:.4f}"
+        )
     print(f"Findings:    {len(findings)} ({hostile} hostile, {suspicious} suspicious)")
 
     _print_feature_vector(vec_raw, spec)

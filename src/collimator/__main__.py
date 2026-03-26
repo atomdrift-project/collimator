@@ -94,19 +94,35 @@ def cmd_train(args: argparse.Namespace) -> None:
     else:
         log.info("using %d worker processes", effective_workers)
 
+    # Load split assignments once and reuse across all passes.
+    splits = data.load_split_assignments(db_path)
+
     # Pass 1: stream reports to build vocabulary (no reports kept in memory).
-    log.info("pass 1: building vocabulary from %s", db_path)
+    # Includes synthesized single-file reports from embedded archive files.
+    from itertools import chain
+
+    log.info("pass 1: building vocabulary from %s (including embedded files)", db_path)
     spec = features.build_vocab(
-        (report for report, _label in data.stream_raw_reports(db_path, exclude_test=True)),
+        chain(
+            (report for report, _label in data.stream_raw_reports(db_path, exclude_test=True, split_assignments=splits)),
+            (report for report, _label in data.stream_embedded_file_reports(db_path, exclude_test=True, split_assignments=splits)),
+        ),
         n_workers=args.workers,
     )
 
     # Pass 2: stream the corpus once to extract both training and held-out test features.
-    log.info("pass 2: extracting training and test features")
+    # Includes synthesized embedded file samples chained after real samples.
+    log.info("pass 2: extracting training and test features (including embedded files)")
     X, y, X_test, y_test = features.extract_partitioned_stream(
-        data.stream_partitioned_raw_reports(db_path), spec, n_workers=args.workers,
+        chain(
+            data.stream_partitioned_raw_reports(db_path, split_assignments=splits),
+            data.stream_partitioned_embedded_file_reports(db_path, split_assignments=splits),
+        ),
+        spec, n_workers=args.workers,
     )
-    train_groups = data.load_train_group_ids(db_path)
+    real_train_groups = data.load_train_group_ids(db_path, split_assignments=splits)
+    emb_train_groups, _ = data.load_embedded_group_ids(db_path, split_assignments=splits)
+    train_groups = np.concatenate([real_train_groups, emb_train_groups])
     if X.shape[0] < 10:
         print(f"ERROR: only {X.shape[0]} training samples, need at least 10")
         sys.exit(1)
@@ -130,6 +146,12 @@ def cmd_train(args: argparse.Namespace) -> None:
     spec.save(out_dir / "feature_spec.json")
     export.export_onnx(result.model, spec.total_features, out_dir / "model.onnx")
     export.save_model(result.model, out_dir / "model.json")
+
+    # Compute FPR-based recommended thresholds from out-of-fold CV predictions.
+    # These are honest (no data leakage) and available for every training sample.
+    recommended = thresholds.compute_recommendations(result.cv_predictions, result.cv_labels) \
+        if len(result.cv_predictions) > 0 else {}
+
     export.save_evaluation(
         metrics=result.metrics,
         calibration=result.calibration,
@@ -139,7 +161,10 @@ def cmd_train(args: argparse.Namespace) -> None:
         split_summary=result.split_summary,
         fold_metrics=result.fold_metrics,
         n_features=spec.total_features,
+        model_abi_version=spec.abi_version,
+        recommended_thresholds=recommended if recommended else None,
         experiment={
+            "model_abi_version": spec.abi_version,
             "seed": config.seed,
             "feature_spec_version": spec.version,
             "workers_requested": args.workers,
@@ -219,11 +244,25 @@ def cmd_train(args: argparse.Namespace) -> None:
         output_path=out_dir / "shap_importance.json",
     )
 
-    # Cross-language test fixtures (10 samples).
-    fix_idx = rng.choice(X.shape[0], min(10, X.shape[0]), replace=False)
+    # Cross-language test fixtures (50 samples).
+    fix_idx = rng.choice(X.shape[0], min(50, X.shape[0]), replace=False)
     fix_idx.sort()
     X_fix = X[fix_idx].toarray()
-    generate_fixtures(result.model, spec, X_fix, X_fix, out_dir)
+    generate_fixtures(result.model, spec, X_fix, X_fix, out_dir,
+                      optimal_threshold=result.optimal_threshold)
+
+    # Feature-extraction parity fixture (stream a few reports from DB).
+    extraction_reports = []
+    for report, _label in data.stream_reports(db_path):
+        extraction_reports.append(report)
+        if len(extraction_reports) >= 20:
+            break
+    if extraction_reports:
+        generate_extraction_fixture(
+            extraction_reports, spec, out_dir,
+            model=result.model, optimal_threshold=result.optimal_threshold,
+            recommended_thresholds=recommended,
+        )
 
     # Operating-point table on the test set (skip the large accuracy tables).
     if test_probs is not None:
@@ -234,6 +273,17 @@ def cmd_train(args: argparse.Namespace) -> None:
         )
     else:
         print("\nNo test samples — skipping operating-point table.")
+
+    # Combined CV + test operating points: honest predictions over the full DB
+    # for higher-confidence FPR measurement (especially for tight FPR targets).
+    if test_probs is not None and len(result.cv_predictions) > 0:
+        all_probs = np.concatenate([result.cv_predictions, test_probs])
+        all_labels = np.concatenate([result.cv_labels, y_test])
+        thresholds.print_recommendations(
+            all_probs, all_labels,
+            title="FULL DB OPERATING POINTS (CV + held-out)",
+            highlight_threshold=result.optimal_threshold,
+        )
 
     elapsed = time.time() - t0
     mins, secs = divmod(int(elapsed), 60)
@@ -391,24 +441,46 @@ def _add_seed_arg(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _predict_fixture_batch(
+    booster: object,
+    X: np.ndarray,
+    iteration_range: tuple[int, int],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+    """Predict probabilities, raw margins, and SHAP values for a feature matrix.
+
+    Returns (probabilities, raw_margins, shap_values, shap_bias).
+    """
+    import xgboost as xgb
+
+    dmat = xgb.DMatrix(X)
+    raw_margins = booster.predict(dmat, output_margin=True, iteration_range=iteration_range)
+    # sigmoid(margin) = probability
+    probs = 1.0 / (1.0 + np.exp(-raw_margins))
+    contribs = booster.predict(dmat, pred_contribs=True, iteration_range=iteration_range)
+    shap_values = contribs[:, :-1]
+    shap_bias = float(contribs[0, -1])
+    return probs, raw_margins, shap_values, shap_bias
+
+
 def generate_fixtures(
     model: object,
     spec: features.FeatureSpec,
     X_raw: object,
     X_std: object,
     out_dir: Path,
-    n_samples: int = 10,
+    n_samples: int = 50,
+    optimal_threshold: float = 0.5,
 ) -> None:
     """Generate cross-language test fixtures for xgboost-native.
 
     Writes two files into out_dir:
       - cross_language_fixture.json: raw features + expected predictions
         (tests the full Scaler → Model pipeline in Rust)
-      - reference.json: standardized features + predictions + SHAP values
+      - reference.json: standardized features + predictions + SHAP values,
+        including NaN-feature and extreme-value edge-case samples
         (tests Model inference and TreeSHAP in Rust)
     """
     import numpy as np
-    import xgboost as xgb
 
     from .model import predict_proba
 
@@ -423,21 +495,50 @@ def generate_fixtures(
     probs = predict_proba(model, X_std_sel)
 
     booster = model.get_booster()
-    dmat = xgb.DMatrix(X_std_sel)
-    raw_margins = booster.predict(dmat, output_margin=True)
-
-    shap_contribs = booster.predict(dmat, pred_contribs=True)
-    shap_values = shap_contribs[:, :-1]
-    shap_bias = float(shap_contribs[0, -1])
 
     best_iteration = getattr(model, "best_iteration", None)
     if best_iteration is None:
         best_iteration = len(booster.get_dump()) - 1
+    iteration_range = (0, best_iteration + 1)
+
+    _, raw_margins, shap_values, shap_bias = _predict_fixture_batch(
+        booster, X_std_sel, iteration_range,
+    )
+
+    # --- Edge-case samples for xgboost-native correctness ---
+    n_feat = spec.total_features
+
+    # NaN samples: take real samples and knock out random subsets of features.
+    # This exercises default_left routing in tree traversal and SHAP.
+    nan_samples = []
+    n_nan = min(10, n)
+    for i in range(n_nan):
+        row = X_std_sel[i].copy()
+        # Knock out ~30% of features at deterministic positions.
+        nan_mask = rng.random(n_feat) < 0.3
+        row[nan_mask] = np.nan
+        nan_samples.append(row)
+    X_nan = np.array(nan_samples, dtype=np.float32)
+
+    nan_probs, nan_margins, nan_shap, _ = _predict_fixture_batch(
+        booster, X_nan, iteration_range,
+    )
+
+    # Extreme-value samples: very large/small features to test sigmoid tails
+    # and tree traversal with values far outside training distribution.
+    X_extreme = np.array([
+        np.full(n_feat, 100.0, dtype=np.float32),   # all large positive
+        np.full(n_feat, -100.0, dtype=np.float32),   # all large negative
+        np.zeros(n_feat, dtype=np.float32),           # all zeros
+    ])
+    ext_probs, ext_margins, ext_shap, _ = _predict_fixture_batch(
+        booster, X_extreme, iteration_range,
+    )
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
     cross_fixture = {
-        "n_features": spec.total_features,
+        "n_features": n_feat,
         "raw_features": X_raw_sel.tolist(),
         "probabilities": probs.tolist(),
     }
@@ -447,18 +548,137 @@ def generate_fixtures(
     print(f"  wrote {cross_path.name} ({n} samples)")
 
     reference = {
-        "n_features": spec.total_features,
+        "n_features": n_feat,
         "best_iteration": best_iteration,
+        "optimal_threshold": optimal_threshold,
         "features": X_std_sel.tolist(),
         "probabilities": [float(p) for p in probs],
         "raw_margins": [float(m) for m in raw_margins],
         "shap_values": shap_values.tolist(),
         "shap_bias": shap_bias,
+        # NaN edge cases: features with NaN at ~30% of positions.
+        # Tests default_left routing in tree traversal and SHAP.
+        "nan_features": _nan_safe_tolist(X_nan),
+        "nan_probabilities": [float(p) for p in nan_probs],
+        "nan_raw_margins": [float(m) for m in nan_margins],
+        "nan_shap_values": nan_shap.tolist(),
+        # Extreme-value edge cases: [all +100, all -100, all zeros].
+        "extreme_features": X_extreme.tolist(),
+        "extreme_probabilities": [float(p) for p in ext_probs],
+        "extreme_raw_margins": [float(m) for m in ext_margins],
+        "extreme_shap_values": ext_shap.tolist(),
     }
     ref_path = out_dir / "reference.json"
     with open(ref_path, "w") as f:
         json.dump(reference, f)
-    print(f"  wrote {ref_path.name} ({n} samples, {spec.total_features} features)")
+    print(f"  wrote {ref_path.name} ({n}+{n_nan}+{len(X_extreme)} samples, {n_feat} features)")
+
+
+def generate_extraction_fixture(
+    reports: list[dict],
+    spec: features.FeatureSpec,
+    out_dir: Path,
+    n_samples: int = 10,
+    model: object | None = None,
+    optimal_threshold: float = 0.5,
+    recommended_thresholds: dict[str, float | None] | None = None,
+) -> None:
+    """Generate a feature-extraction parity fixture for litmus.
+
+    Writes extraction_fixture.json containing raw cleave reports and their
+    expected feature vectors, standardized features, probabilities, and
+    classifications. Tests the full pipeline: cleave JSON → extract → standardize
+    → predict → classify.
+
+    Classification uses the same three-tier logic as litmus's Thresholds::classify:
+      prob >= hostile  → "hostile"
+      prob >= suspicious → "suspicious"
+      otherwise        → "benign"
+
+    Thresholds are resolved in the same priority order as litmus: recommended
+    thresholds from evaluation.json, falling back to optimal_threshold as a
+    single hostile threshold.
+    """
+    from .model import predict_proba
+
+    rng = np.random.default_rng(99)
+    n = min(n_samples, len(reports))
+    idx = rng.choice(len(reports), n, replace=False)
+    idx.sort()
+
+    # Resolve thresholds to match litmus's Model::load priority:
+    # recommended_thresholds (suspicious + hostile) > optimal_threshold as hostile-only.
+    suspicious_thresh: float | None = None
+    hostile_thresh: float = optimal_threshold
+    if recommended_thresholds:
+        s = recommended_thresholds.get("suspicious")
+        h = recommended_thresholds.get("hostile")
+        if s is not None and h is not None:
+            suspicious_thresh = float(s)
+            hostile_thresh = float(h)
+
+    ctx = features._ExtractContext(spec)
+    samples = []
+    for i in idx:
+        report = reports[i]
+        vec = np.zeros(spec.total_features, dtype=np.float32)
+        features._extract_into(report, ctx, vec)
+
+        sample: dict = {
+            "report": report,
+            "expected_features": vec.tolist(),
+        }
+
+        # Add standardized features and end-to-end prediction if model available.
+        # Use dense arrays throughout to match litmus/xgboost-native inference
+        # (sparse inputs route zeros via default_left, which diverges).
+        if model is not None:
+            dense_vec = vec.reshape(1, -1)
+            if spec.standardized:
+                import scipy.sparse as sp
+                std_vec = features.standardize(sp.csr_matrix(dense_vec), spec)
+                std_dense = std_vec.toarray() if hasattr(std_vec, "toarray") else std_vec
+            else:
+                std_dense = dense_vec
+            prob = float(predict_proba(model, std_dense)[0])
+
+            # Three-tier classification matching litmus Thresholds::classify.
+            if prob >= hostile_thresh:
+                classification = "hostile"
+            elif suspicious_thresh is not None and prob >= suspicious_thresh:
+                classification = "suspicious"
+            else:
+                classification = "benign"
+
+            sample["expected_standardized"] = std_dense.flatten().tolist()
+            sample["expected_probability"] = prob
+            sample["expected_classification"] = classification
+            sample["threshold"] = optimal_threshold
+
+        samples.append(sample)
+
+    fixture = {
+        "n_features": spec.total_features,
+        "samples": samples,
+    }
+    path = out_dir / "extraction_fixture.json"
+    with open(path, "w") as f:
+        json.dump(fixture, f)
+    print(f"  wrote {path.name} ({n} samples, {spec.total_features} features)")
+
+
+def _nan_safe_tolist(arr: np.ndarray) -> list:
+    """Convert array to nested list, encoding NaN as the string "NaN".
+
+    JSON has no NaN literal, so we encode it as a string for the Rust
+    deserializer to interpret.
+    """
+    import math
+
+    def _convert(x: float) -> float | str:
+        return "NaN" if math.isnan(x) else float(x)
+
+    return [[_convert(v) for v in row] for row in arr]
 
 
 def cmd_fixture(args: argparse.Namespace) -> None:
@@ -469,26 +689,55 @@ def cmd_fixture(args: argparse.Namespace) -> None:
     spec_path = Path(args.spec)
     model_path = Path(args.model)
 
-    samples = data.load_samples(db_path)
     spec = features.FeatureSpec.load(spec_path)
     model = load_model(model_path)
 
-    reports = [s.report for s in samples]
-    labels = [s.label for s in samples]
+    # Reservoir-sample n_samples from the stream to avoid loading all data.
+    n = args.n_samples
+    rng = np.random.default_rng(42)
+    reservoir: list[data.Sample] = []
+    for i, sample in enumerate(data.stream_samples(db_path)):
+        if i < n:
+            reservoir.append(sample)
+        else:
+            j = int(rng.integers(i + 1))
+            if j < n:
+                reservoir[j] = sample
+
+    if not reservoir:
+        print("No samples found")
+        return
+
+    reports = [s.report for s in reservoir]
+    labels = [s.label for s in reservoir]
     X, _ = features.extract_all(reports, labels, spec)
 
-    # Only densify the small subset needed for fixtures.
-    rng = np.random.default_rng(42)
-    idx = rng.choice(X.shape[0], min(args.n_samples, X.shape[0]), replace=False)
-    idx.sort()
+    X_fix = X.toarray()
+    X_fix_std = features.standardize(X, spec) if spec.standardized else X_fix
 
-    X_fix = X[idx].toarray()
-    X_fix_std = features.standardize(X[idx], spec) if spec.standardized else X_fix
+    # Load the calibrated threshold from evaluation.json if available.
+    eval_path = Path(args.output) / "evaluation.json"
+    threshold = 0.5
+    if eval_path.exists():
+        threshold = export.load_threshold(eval_path)
+        log.info("using threshold %.3f from %s", threshold, eval_path)
 
     generate_fixtures(
         model, spec, X_fix, X_fix_std,
         out_dir=Path(args.output),
-        n_samples=args.n_samples,
+        n_samples=n,
+        optimal_threshold=threshold,
+    )
+
+    # Feature-extraction parity fixture for litmus.
+    recommended = None
+    if eval_path.exists():
+        eval_data = export.load_evaluation(eval_path)
+        recommended = eval_data.get("recommended_thresholds")
+    generate_extraction_fixture(
+        reports, spec, out_dir=Path(args.output),
+        model=model, optimal_threshold=threshold,
+        recommended_thresholds=recommended,
     )
 
 

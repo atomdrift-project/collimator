@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan traits thresholds benchmark build-splits experiment ablate demo-db test lint clean deploy venv help
+.PHONY: train evaluate explain inspect errors scan traits thresholds benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-native verify-litmus venv help
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -114,14 +114,36 @@ lint: venv
 	$(VENV_DIR)/bin/ruff check src/ tests/
 	$(VENV_DIR)/bin/mypy src/collimator/
 
-MODELS_DIR ?= ../litmus-models/v1/default
+MODELS_DIR ?= ../litmus-models/scan-v$(shell $(PYTHON) -c "from collimator.features import FeatureSpec; print(FeatureSpec().version)")
+XGBOOST_NATIVE_DIR ?= ../xgboost-native
 
-deploy:
+LITMUS_DIR ?= ../litmus
+
+deploy: verify-xgboost-native verify-litmus
 	@test -d $(MODELS_DIR) || { echo "error: $(MODELS_DIR) does not exist"; exit 1; }
 	cp $(OUT_DIR)/model.json $(MODELS_DIR)/model.json
 	cp $(OUT_DIR)/model.onnx $(MODELS_DIR)/model.onnx
 	cp $(OUT_DIR)/feature_spec.json $(MODELS_DIR)/feature_spec.json
+	cp $(OUT_DIR)/evaluation.json $(MODELS_DIR)/evaluation.json
+	@$(PYTHON) -c "import json; e=json.load(open('$(OUT_DIR)/evaluation.json')); r=e.get('recommended_thresholds',{}); json.dump({k:v for k,v in r.items() if v is not None}, open('$(MODELS_DIR)/config.json','w'), indent=2); print('  config.json: ' + ', '.join(f'{k}={v:.6f}' for k,v in r.items() if v is not None))"
 	@echo "Deployed to $(MODELS_DIR)"
+
+.PHONY: verify-xgboost-native
+verify-xgboost-native:
+	@test -d $(XGBOOST_NATIVE_DIR) || { echo "error: $(XGBOOST_NATIVE_DIR) does not exist"; exit 1; }
+	@test -f $(OUT_DIR)/reference.json || { echo "error: $(OUT_DIR)/reference.json not found — run make train first"; exit 1; }
+	cp $(OUT_DIR)/reference.json $(XGBOOST_NATIVE_DIR)/tests/fixtures/reference.json
+	@echo "Running xgboost-native tests to verify model agreement..."
+	cd $(XGBOOST_NATIVE_DIR) && cargo test --release
+	@echo "xgboost-native: all tests passed"
+
+.PHONY: verify-litmus
+verify-litmus:
+	@test -d $(LITMUS_DIR) || { echo "error: $(LITMUS_DIR) does not exist"; exit 1; }
+	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make train first"; exit 1; }
+	@echo "Running litmus feature-extraction parity tests..."
+	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(abspath $(OUT_DIR)) cargo test --release --test extraction_parity
+	@echo "litmus: extraction parity tests passed"
 
 clean:
 	rm -rf $(OUT_DIR) $(VENV_DIR) src/*.egg-info __pycache__ .mypy_cache .pytest_cache
@@ -170,7 +192,7 @@ help:
 	@echo "  FILE=path       File path for scan"
 	@echo "  CLEAVE=path     Path to cleave binary (default: cleave)"
 	@echo "  DEMO_DB=path    Output path for make demo-db (default: out/demo.db)"
-	@echo "  MODELS_DIR=path Deployment target (default: ../litmus-models/v1/default)"
+	@echo "  MODELS_DIR=path Deployment target (default: ../litmus-models/scan-v<version>)"
 
 # BEGIN: lint-install .
 # http://github.com/codeGROOVE-dev/lint-install

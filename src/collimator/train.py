@@ -68,6 +68,11 @@ class TrainResult:
     feature_means: list[float] = field(default_factory=list)
     feature_stds: list[float] = field(default_factory=list)
     isotonic_calibrator: IsotonicRegression | None = None
+    # Out-of-fold CV predictions and labels for the full training set.
+    # These are honest (no data leakage) and can be combined with test-set
+    # predictions for FPR measurement over the entire database.
+    cv_predictions: np.ndarray = field(default_factory=lambda: np.array([]))
+    cv_labels: np.ndarray = field(default_factory=lambda: np.array([]))
 
 
 def _compute_metrics(
@@ -557,4 +562,6 @@ def train(
         feature_means=feature_means.tolist(),
         feature_stds=feature_stds.tolist(),
         isotonic_calibrator=iso_calibrator,
+        cv_predictions=cv_predictions,
+        cv_labels=y_tv,
     )

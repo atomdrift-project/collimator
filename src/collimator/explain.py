@@ -46,7 +46,10 @@ def compute_shap_importance(
             dmat = xgb.DMatrix(X_explain, device=device)
         except Exception:
             dmat = xgb.DMatrix(X_explain)
-        contribs = model.get_booster().predict(dmat, pred_contribs=True)
+        booster = model.get_booster()
+        best_iteration = getattr(model, "best_iteration", None)
+        iteration_range = (0, best_iteration + 1) if best_iteration is not None else (0, 0)
+        contribs = booster.predict(dmat, pred_contribs=True, iteration_range=iteration_range)
         shap_values = contribs[:, :-1]  # last column is the bias term
     except Exception as exc:
         log.warning("native pred_contribs failed (%s); falling back to shap library", exc)

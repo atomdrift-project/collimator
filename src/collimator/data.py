@@ -63,12 +63,14 @@ def stream_samples(
     exclude_test: bool = False,
     only_test: bool = False,
     limit: int = 0,
+    split_assignments: dict[int, SplitAssignment] | None = None,
 ) -> Iterator[Sample]:
     """Yield labeled samples from the database without loading all rows."""
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
 
-    split_assignments = load_split_assignments(db_path)
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
     placeholders = ",".join("?" for _ in ALL_TERMINAL)
     query = (
         "SELECT id, sha256, path, status, cleave_json"
@@ -331,9 +333,14 @@ def load_split_assignments(db_path: Path) -> dict[int, SplitAssignment]:
         conn.close()
 
 
-def load_partitioned_group_ids(db_path: Path) -> tuple[np.ndarray, np.ndarray]:
+def load_partitioned_group_ids(
+    db_path: Path,
+    *,
+    split_assignments: dict[int, SplitAssignment] | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """Load cached group IDs aligned with partitioned raw-report streaming order."""
-    split_assignments = load_split_assignments(db_path)
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
     train_groups: list[str] = []
     test_groups: list[str] = []
     placeholders = ",".join("?" for _ in ALL_TERMINAL)
@@ -359,9 +366,15 @@ def load_partitioned_group_ids(db_path: Path) -> tuple[np.ndarray, np.ndarray]:
     return np.array(train_groups, dtype=object), np.array(test_groups, dtype=object)
 
 
-def load_train_group_ids(db_path: Path) -> np.ndarray:
+def load_train_group_ids(
+    db_path: Path,
+    *,
+    split_assignments: dict[int, SplitAssignment] | None = None,
+) -> np.ndarray:
     """Load cached group IDs aligned with non-test training stream order."""
-    train_groups, _test_groups = load_partitioned_group_ids(db_path)
+    train_groups, _test_groups = load_partitioned_group_ids(
+        db_path, split_assignments=split_assignments,
+    )
     return train_groups
 
 
@@ -370,6 +383,7 @@ def stream_reports(
     *,
     exclude_test: bool = False,
     only_test: bool = False,
+    split_assignments: dict[int, SplitAssignment] | None = None,
 ) -> Iterator[tuple[dict[str, Any], int]]:
     """Yield (report, label) pairs from the database without holding all in memory.
 
@@ -381,6 +395,7 @@ def stream_reports(
         db_path,
         exclude_test=exclude_test,
         only_test=only_test,
+        split_assignments=split_assignments,
     ):
         yield sample.report, sample.label
 
@@ -390,12 +405,14 @@ def stream_raw_reports(
     *,
     exclude_test: bool = False,
     only_test: bool = False,
+    split_assignments: dict[int, SplitAssignment] | None = None,
 ) -> Iterator[tuple[str, int]]:
     """Yield raw cleave JSON strings and labels without parent-process decoding."""
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
 
-    split_assignments = load_split_assignments(db_path)
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
     placeholders = ",".join("?" for _ in ALL_TERMINAL)
     query = (
         "SELECT id, sha256, status, cleave_json"
@@ -421,12 +438,15 @@ def stream_raw_reports(
 
 def stream_partitioned_raw_reports(
     db_path: Path,
+    *,
+    split_assignments: dict[int, SplitAssignment] | None = None,
 ) -> Iterator[tuple[str, int, bool]]:
     """Yield raw cleave JSON, label, and test-split membership in one pass."""
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
 
-    split_assignments = load_split_assignments(db_path)
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
     placeholders = ",".join("?" for _ in ALL_TERMINAL)
     query = (
         "SELECT id, sha256, status, cleave_json"
@@ -450,6 +470,8 @@ def stream_partitioned_raw_reports(
 
 def stream_partitioned_metadata_grouped(
     db_path: Path,
+    *,
+    split_assignments: dict[int, SplitAssignment] | None = None,
 ) -> Iterator[tuple[int, int, bool, str]]:
     """Yield (row_id, label, is_test, group_id) without loading raw JSON.
 
@@ -458,7 +480,8 @@ def stream_partitioned_metadata_grouped(
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
 
-    split_assignments = load_split_assignments(db_path)
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
     placeholders = ",".join("?" for _ in ALL_TERMINAL)
     query = (
         "SELECT id, sha256, status"
@@ -513,14 +536,225 @@ def stream_raw_reports_by_row_ids(
         conn.close()
 
 
+# ---------------------------------------------------------------------------
+# Embedded file streaming — synthesize single-file training samples from
+# archive members stored in sample_files + parent cleave_json.
+# ---------------------------------------------------------------------------
+
+# Minimum finding confidence for criticality scoring (matches features.MIN_CONFIDENCE).
+_MIN_CONFIDENCE = 0.65
+
+_CRIT_ORDINAL = {
+    "filtered": 0, "component": 1, "baseline": 2,
+    "notable": 3, "suspicious": 4, "hostile": 5,
+}
+
+
+def _score_file_criticality(file_entry: dict[str, Any]) -> int:
+    """Score a file entry by finding criticality for worst-file selection.
+
+    hostile_count * 1000 + suspicious_count * 100 + notable_count.
+    Only findings with conf >= MIN_CONFIDENCE are counted.
+    Mirrors cyclotron's FormatTopExtractedFiles scoring.
+    """
+    hostile = suspicious = notable = 0
+    for finding in file_entry.get("findings") or []:
+        conf = finding.get("conf", 1.0)
+        try:
+            conf = float(conf)
+        except (TypeError, ValueError):
+            conf = 1.0
+        if conf < _MIN_CONFIDENCE:
+            continue
+        crit = _CRIT_ORDINAL.get(finding.get("crit", "baseline"), 2)
+        if crit >= 5:
+            hostile += 1
+        if crit >= 4:
+            suspicious += 1
+        if crit >= 3:
+            notable += 1
+    return hostile * 1000 + suspicious * 100 + notable
+
+
+def _iter_embedded_files(
+    db_path: Path,
+    split_assignments: dict[int, SplitAssignment],
+    *,
+    exclude_test: bool = False,
+    only_test: bool = False,
+    include_partition: bool = False,
+    include_group: bool = False,
+) -> Iterator[tuple]:
+    """Core iterator for synthesized embedded-file reports.
+
+    Yields vary by flags:
+      default:            (json_str, label)
+      include_partition:  (json_str, label, is_test)
+      include_group:      (json_str, label, is_test, group_id)
+    """
+    seen_sha256: set[str] = set()
+    placeholders = ",".join("?" for _ in ALL_TERMINAL)
+    # Only scan samples that actually have embedded files (depth > 0 in sample_files).
+    query = (
+        "SELECT s.id, s.sha256, s.status, s.cleave_json"
+        " FROM samples s"
+        " WHERE s.status IN ({ph})"
+        " AND EXISTS (SELECT 1 FROM sample_files sf"
+        "   WHERE sf.sample_id = s.id AND sf.depth > 0)"
+    ).format(ph=placeholders)
+
+    n_benign = 0
+    n_malware = 0
+    n_skipped_dedup = 0
+
+    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    try:
+        for row_id, sha256, status, cleave_json in conn.execute(
+            query, tuple(sorted(ALL_TERMINAL)),
+        ):
+            if not cleave_json:
+                continue
+            row_id = int(row_id)
+            assignment = split_assignments.get(row_id)
+            is_test = assignment.is_test if assignment is not None else is_test_sample(sha256)
+            group_id = assignment.group_id if assignment is not None else sha256
+
+            if exclude_test and is_test:
+                continue
+            if only_test and not is_test:
+                continue
+
+            try:
+                report = json.loads(cleave_json)
+            except json.JSONDecodeError:
+                continue
+
+            files = report.get("files") or []
+            embedded = [
+                f for f in files
+                if isinstance(f, dict) and f.get("depth", 0) > 0
+            ]
+            if not embedded:
+                continue
+
+            parent_label = 1 if status in MALWARE_STATUSES else 0
+
+            if parent_label == 1:
+                # Malware: yield only the worst-scoring file.
+                worst = max(embedded, key=_score_file_criticality)
+                file_sha = worst.get("sha256", "")
+                if not file_sha or file_sha in seen_sha256:
+                    n_skipped_dedup += 1
+                    continue
+                seen_sha256.add(file_sha)
+                synthetic = json.dumps({"files": [worst]})
+                n_malware += 1
+                if include_group:
+                    yield synthetic, 1, is_test, group_id
+                elif include_partition:
+                    yield synthetic, 1, is_test
+                else:
+                    yield synthetic, 1
+            else:
+                # Benign: yield every embedded file.
+                for file_entry in embedded:
+                    file_sha = file_entry.get("sha256", "")
+                    if not file_sha or file_sha in seen_sha256:
+                        n_skipped_dedup += 1
+                        continue
+                    seen_sha256.add(file_sha)
+                    synthetic = json.dumps({"files": [file_entry]})
+                    n_benign += 1
+                    if include_group:
+                        yield synthetic, 0, is_test, group_id
+                    elif include_partition:
+                        yield synthetic, 0, is_test
+                    else:
+                        yield synthetic, 0
+    finally:
+        conn.close()
+
+    log.info(
+        "embedded files: %d benign + %d malware yielded, %d skipped (dedup)",
+        n_benign, n_malware, n_skipped_dedup,
+    )
+
+
+def stream_embedded_file_reports(
+    db_path: Path,
+    *,
+    exclude_test: bool = False,
+    only_test: bool = False,
+    split_assignments: dict[int, SplitAssignment] | None = None,
+) -> Iterator[tuple[str, int]]:
+    """Yield synthesized (cleave_json, label) for embedded archive files.
+
+    Benign archives: every depth>0 file yields a benign sample.
+    Malware archives: only the highest-criticality depth>0 file yields malware.
+    Deduplicates by file SHA256 (first occurrence wins).
+    """
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found: {db_path}")
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
+    yield from _iter_embedded_files(
+        db_path, split_assignments,
+        exclude_test=exclude_test, only_test=only_test,
+    )
+
+
+def stream_partitioned_embedded_file_reports(
+    db_path: Path,
+    *,
+    split_assignments: dict[int, SplitAssignment] | None = None,
+) -> Iterator[tuple[str, int, bool]]:
+    """Yield (cleave_json, label, is_test) for embedded files in one pass."""
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found: {db_path}")
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
+    yield from _iter_embedded_files(
+        db_path, split_assignments, include_partition=True,
+    )
+
+
+def load_embedded_group_ids(
+    db_path: Path,
+    *,
+    split_assignments: dict[int, SplitAssignment] | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return (train_groups, test_groups) for embedded file samples.
+
+    Aligned with stream_partitioned_embedded_file_reports order.
+    All files from the same parent share the parent's group_id.
+    """
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found: {db_path}")
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
+    train_groups: list[str] = []
+    test_groups: list[str] = []
+    for _, _, is_test, group_id in _iter_embedded_files(
+        db_path, split_assignments, include_partition=True, include_group=True,
+    ):
+        if is_test:
+            test_groups.append(group_id)
+        else:
+            train_groups.append(group_id)
+    return np.array(train_groups), np.array(test_groups)
+
+
 def stream_partitioned_raw_reports_grouped(
     db_path: Path,
+    *,
+    split_assignments: dict[int, SplitAssignment] | None = None,
 ) -> Iterator[tuple[str, int, bool, str]]:
     """Yield raw JSON, label, test membership, and cached group ID in one pass."""
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
 
-    split_assignments = load_split_assignments(db_path)
+    if split_assignments is None:
+        split_assignments = load_split_assignments(db_path)
     placeholders = ",".join("?" for _ in ALL_TERMINAL)
     query = (
         "SELECT id, sha256, status, cleave_json"

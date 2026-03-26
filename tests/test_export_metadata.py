@@ -23,13 +23,22 @@ def test_save_evaluation_includes_split_summary_and_environment(tmp_path) -> Non
         },
         fold_metrics=[],
         n_features=123,
-        experiment={"seed": 42, "feature_spec_version": 13, "workers": 1, "git_sha": None},
+        model_abi_version=14,
+        experiment={
+            "seed": 42,
+            "feature_spec_version": 13,
+            "model_abi_version": 14,
+            "workers": 1,
+            "git_sha": None,
+        },
         output_path=output,
     )
 
     data = json.loads(output.read_text())
     assert data["split_summary"]["policy"] == "train/calibration/evaluation"
+    assert data["model_abi_version"] == 14
     assert data["experiment"]["seed"] == 42
+    assert data["experiment"]["model_abi_version"] == 14
     assert data["calibration"]["ece"] == 0.02
     assert "python" in data["environment"]
     assert "xgboost" in data["environment"]

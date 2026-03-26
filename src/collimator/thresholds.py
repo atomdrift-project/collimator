@@ -14,12 +14,17 @@ log = logging.getLogger(__name__)
 
 ACCURACY_TARGETS = [0.80, 0.90, 0.95, 0.98, 0.99, 0.993, 0.996, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.9998, 0.9999, 0.99999]
 
-# (label, min recall, max FPR): highest threshold satisfying both constraints.
-# Highest threshold = most conservative call that still meets both targets.
+# (label, max FPR): lowest threshold (highest recall) meeting the FPR ceiling.
+# FPR targets are driven by acceptable false-positive rates for each tier:
+#   suspicious: ≤1 in 50,000 benign flagged (20/1M)
+#   hostile:    ≤1 in 500,000 benign flagged (2/1M)
 RECOMMENDATIONS = [
-    ("suspicious", 0.9975, 0.005),   # catch 99.75% of malware, ≤0.5% FPR
-    ("hostile",    0.980,  0.0005),  # catch 98.0% of malware, ≤0.05% FPR
+    ("suspicious", 0.00002),   # FPR ≤ 20 per million
+    ("hostile",    0.000002),  # FPR ≤ 2 per million
 ]
+
+# Minimum benign samples needed to trust an FPR target (expect ≥5 FP at that rate).
+MIN_SAMPLES_FOR_FPR = 5
 
 
 def show_thresholds(
@@ -124,6 +129,31 @@ def _threshold_stats(
     return thresholds, tp_vals, fp_vals, correct_vals, recall_vals, fpr_vals, n, n_malware, n_benign
 
 
+def compute_recommendations(
+    probs: np.ndarray,
+    y: np.ndarray,
+) -> dict[str, float | None]:
+    """Compute recommended thresholds for each level in RECOMMENDATIONS.
+
+    For each level, picks the lowest threshold (highest recall) that meets
+    the FPR ceiling. Returns a dict mapping level name → threshold (or None
+    if no threshold meets the FPR target).
+    """
+    thresholds, _tp, _fp, _correct, _recall_vals, fpr_vals, _n, _nm, _nb = (
+        _threshold_stats(probs, y)
+    )
+    result: dict[str, float | None] = {}
+    for level, max_fpr in RECOMMENDATIONS:
+        valid = fpr_vals <= max_fpr
+        if valid.any():
+            # Thresholds are in descending order; last valid = lowest threshold = highest recall.
+            k = int(np.where(valid)[0][-1])
+            result[level] = float(thresholds[k])
+        else:
+            result[level] = None
+    return result
+
+
 def print_recommendations(
     probs: np.ndarray,
     y: np.ndarray,
@@ -141,53 +171,66 @@ def print_recommendations(
         _threshold_stats(probs, y)
     )
 
-    print(f"\n{title:=^60}")
+    print(f"\n{title:=^70}")
     print(f"  {n} samples ({n_malware} malware, {n_benign} benign)")
-    print("  Highest threshold satisfying both recall and FPR targets")
-    print("  (most conservative call still meeting both constraints)")
-    print(f"  {'Level':<12} {'Threshold':>10} {'Recall':>8} {'FPR':>8} {'TP':>8} {'FP':>8}")
-    print(f"  {'-'*52}")
+    print("  Lowest threshold (highest recall) meeting FPR ceiling")
+    print(f"  {'Level':<12} {'Threshold':>10} {'Recall':>8} {'FPR':>8} {'FP/1M':>8} {'TP':>8} {'FP':>8}")
+    print(f"  {'-'*62}")
 
-    for level, min_tpr, max_fpr in RECOMMENDATIONS:
-        valid = (recall_vals >= min_tpr) & (fpr_vals <= max_fpr)
+    for level, max_fpr in RECOMMENDATIONS:
+        # Warn if test set is too small to measure this FPR with confidence.
+        min_benign = int(MIN_SAMPLES_FOR_FPR / max_fpr) if max_fpr > 0 else float("inf")
+        underpowered = n_benign < min_benign
+
+        valid = fpr_vals <= max_fpr
         if valid.any():
-            k = int(np.where(valid)[0][0])
+            # Last valid = lowest threshold = highest recall.
+            k = int(np.where(valid)[0][-1])
+            fp_per_million = fpr_vals[k] * 1_000_000
+            warn = ""
+            if underpowered:
+                warn = f"  ⚠ need ≥{min_benign:,} benign to measure 1/{1/max_fpr:,.0f} FPR"
             print(
                 f"  {level:<12} {thresholds[k]:>10.6f} {recall_vals[k]:>8.2%} "
-                f"{fpr_vals[k]:>8.3%} {tp_vals[k]:>8} {fp_vals[k]:>8}"
+                f"{fpr_vals[k]:>8.4%} {fp_per_million:>8.0f} {tp_vals[k]:>8} {fp_vals[k]:>8}"
             )
+            if warn:
+                print(warn)
         else:
-            tpr_str = f"≥{min_tpr*100:.1f}% recall"
-            fpr_str = f"≤{max_fpr*100:.3f}% FPR"
-            print(f"  {level:<12} {'—':>10} (no threshold achieves {tpr_str} and {fpr_str})")
+            fpr_str = f"≤{max_fpr*100:.4f}% FPR"
+            print(f"  {level:<12} {'—':>10} (no threshold achieves {fpr_str})")
+            if underpowered:
+                print(f"  ⚠ need ≥{min_benign:,} benign to measure 1/{1/max_fpr:,.0f} FPR")
 
     # Fixed reference thresholds — include the calibrated holdout threshold if provided.
     fixed_set: set[float] = {0.1, 0.25, 0.5, 0.6, 0.7, 0.8, 0.9, 0.98, 0.99, 0.995}
     if highlight_threshold is not None:
         fixed_set.add(highlight_threshold)
     fixed = sorted(fixed_set)
-    print(f"\n  {'— fixed thresholds —':-^52}")
-    print(f"  {'Threshold':>22} {'Recall':>8} {'FPR':>8} {'TP':>8} {'FP':>8}")
+    print(f"\n  {'— fixed thresholds —':-^62}")
+    print(f"  {'Threshold':>22} {'Recall':>8} {'FPR':>8} {'FP/1M':>8} {'TP':>8} {'FP':>8}")
     for t in fixed:
         tp = int(((probs >= t) & (y == 1)).sum())
         fp = int(((probs >= t) & (y == 0)).sum())
         tpr = tp / max(n_malware, 1)
         fpr = fp / max(n_benign, 1)
+        fp_per_million = fpr * 1_000_000
         marker = " ←" if t is highlight_threshold or t == highlight_threshold else ""
-        print(f"  {t:>22.3f} {tpr:>8.2%} {fpr:>8.3%} {tp:>8} {fp:>8}{marker}")
+        print(f"  {t:>22.3f} {tpr:>8.2%} {fpr:>8.4%} {fp_per_million:>8.0f} {tp:>8} {fp:>8}{marker}")
 
     # Recall-target table: highest threshold achieving each recall level.
     recall_targets = [0.99, 0.995, 0.999, 0.9999, 0.99999]
-    print(f"\n  {'— by recall target —':-^52}")
-    print(f"  {'Recall target':>22} {'Threshold':>10} {'Actual':>8} {'FPR':>8} {'TP':>8} {'FP':>8}")
+    print(f"\n  {'— by recall target —':-^62}")
+    print(f"  {'Recall target':>22} {'Threshold':>10} {'Actual':>8} {'FPR':>8} {'FP/1M':>8} {'TP':>8} {'FP':>8}")
     for target in recall_targets:
         valid = recall_vals >= target
         if valid.any():
             k = int(np.where(valid)[0][0])
             label = f"≥{target*100:.3f}%"
+            fp_per_million = fpr_vals[k] * 1_000_000
             print(
                 f"  {label:>22} {thresholds[k]:>10.6f} {recall_vals[k]:>8.2%} "
-                f"{fpr_vals[k]:>8.3%} {tp_vals[k]:>8} {fp_vals[k]:>8}"
+                f"{fpr_vals[k]:>8.4%} {fp_per_million:>8.0f} {tp_vals[k]:>8} {fp_vals[k]:>8}"
             )
         else:
             label = f"≥{target*100:.3f}%"

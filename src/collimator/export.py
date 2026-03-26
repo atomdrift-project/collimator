@@ -162,8 +162,10 @@ def save_evaluation(
     split_summary: dict[str, int | str],
     fold_metrics: list[dict[str, float]],
     n_features: int,
+    model_abi_version: int,
     experiment: dict[str, object],
     output_path: Path,
+    recommended_thresholds: dict[str, float | None] | None = None,
 ) -> None:
     """Save evaluation results as JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -171,11 +173,13 @@ def save_evaluation(
         "metrics": metrics,
         "calibration": calibration,
         "optimal_threshold": optimal_threshold,
+        "recommended_thresholds": recommended_thresholds,
         "confusion_matrix": confusion,
         "class_distribution": class_distribution,
         "split_summary": split_summary,
         "fold_metrics": fold_metrics,
         "n_features": n_features,
+        "model_abi_version": model_abi_version,
         "experiment": experiment,
         "environment": {
             "python": platform.python_version(),
