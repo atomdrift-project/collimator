@@ -28,6 +28,9 @@ def run_benchmark(
     print("\nBENCHMARK")
     print("=" * 60)
 
+    # Partition samples into train/test.
+    train_row_ids, train_ids_labels, test_ids_labels = data.partition_row_ids(db_path)
+
     t0 = time.perf_counter()
     if model_path is not None and spec_path is not None and model_path.exists() and spec_path.exists():
         spec = features.FeatureSpec.load(spec_path)
@@ -35,20 +38,21 @@ def run_benchmark(
         vocab_secs = 0.0
         train_secs = 0.0
         train_samples = None
-    else:
-        spec = features.build_vocab(
-            (report for report, _label in data.stream_raw_reports(db_path, exclude_test=True)),
-            n_workers=n_workers,
+
+        t_ext = time.perf_counter()
+        _, _, X_test, y_test = features.extract_partitioned_from_db(
+            db_path, [], test_ids_labels, spec, n_workers=n_workers,
         )
+        extract_test_secs = time.perf_counter() - t_ext
+        extract_train_secs = 0.0
+    else:
+        spec = features.build_vocab_from_db(db_path, train_row_ids, n_workers=n_workers)
         vocab_secs = time.perf_counter() - t0
 
         t1 = time.perf_counter()
-        X_train, y_train, X_test, y_test = features.extract_partitioned_stream(
-            data.stream_partitioned_raw_reports(db_path),
-            spec,
-            n_workers=n_workers,
+        X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
+            db_path, train_ids_labels, test_ids_labels, spec, n_workers=n_workers,
         )
-        train_groups = data.load_train_group_ids(db_path)
         extract_train_secs = time.perf_counter() - t1
 
         t2 = time.perf_counter()
@@ -57,21 +61,12 @@ def run_benchmark(
             y_train,
             train.TrainConfig(n_estimators=200, early_stopping_rounds=20),
             feature_names=spec.feature_names,
-            groups=train_groups,
         )
         train_secs = time.perf_counter() - t2
         model = result.model
         train_samples = X_train.shape[0]
         print(f"train extract: {extract_train_secs:8.3f}s  {_rate(X_train.shape[0], extract_train_secs):10.1f} rows/s")
         extract_test_secs = 0.0
-    if model_path is not None and spec_path is not None and model_path.exists() and spec_path.exists():
-        t3 = time.perf_counter()
-        X_test, y_test = features.extract_stream(
-            data.stream_raw_reports(db_path, only_test=True),
-            spec,
-            n_workers=n_workers,
-        )
-        extract_test_secs = time.perf_counter() - t3
 
     t4 = time.perf_counter()
     probs = predict_proba(model, X_test)

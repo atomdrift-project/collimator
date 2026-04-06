@@ -1,17 +1,17 @@
-"""Tests for SQLite data loading."""
+"""Tests for data loading from hopper databases."""
 
 import json
 import sqlite3
 import tempfile
 from pathlib import Path
 
-from collimator.data import ALL_TERMINAL, BENIGN_STATUSES, MALWARE_STATUSES, load_samples
+from collimator.data import load_samples
 
 
-def _create_test_db(samples: list[tuple[str, str, str, str | None]]) -> Path:
-    """Create a temporary SQLite DB with sample rows.
+def _create_test_db(samples: list[tuple[str, str, str | None]]) -> Path:
+    """Create a temporary hopper-schema SQLite DB.
 
-    Each tuple: (sha256, path, status, cleave_json)
+    Each tuple: (sha256, label, cleave_result)
     """
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = Path(tmp.name)
@@ -21,19 +21,33 @@ def _create_test_db(samples: list[tuple[str, str, str, str | None]]) -> Path:
         CREATE TABLE samples (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             sha256 TEXT UNIQUE NOT NULL,
-            path TEXT NOT NULL,
-            status TEXT NOT NULL,
-            updated_at INTEGER NOT NULL DEFAULT 0,
-            cleave_json TEXT,
-            risk TEXT,
-            finding_count INTEGER DEFAULT 0,
-            attempts INTEGER DEFAULT 0
+            source TEXT NOT NULL DEFAULT '',
+            feed TEXT NOT NULL DEFAULT '',
+            ecosystem TEXT NOT NULL DEFAULT '',
+            filename TEXT NOT NULL DEFAULT '',
+            file_type TEXT NOT NULL DEFAULT '',
+            size_bytes INTEGER NOT NULL DEFAULT 0,
+            label TEXT NOT NULL DEFAULT 'unknown',
+            label_source TEXT NOT NULL DEFAULT '',
+            cleave_result TEXT,
+            risk TEXT NOT NULL DEFAULT '',
+            finding_count INTEGER NOT NULL DEFAULT 0,
+            path TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT '',
+            note TEXT NOT NULL DEFAULT '',
+            canonical_sha256 TEXT NOT NULL DEFAULT '',
+            parent TEXT NOT NULL DEFAULT '',
+            skip TEXT NOT NULL DEFAULT '',
+            created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+            updated_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+            analyzed_at DATETIME
         )
     """)
-    for sha, path, status, cj in samples:
+    for sha, label, cr in samples:
         conn.execute(
-            "INSERT INTO samples (sha256, path, status, cleave_json) VALUES (?, ?, ?, ?)",
-            (sha, path, status, cj),
+            "INSERT INTO samples (sha256, label, canonical_sha256, cleave_result)"
+            " VALUES (?, ?, ?, ?)",
+            (sha, label, sha, cr),
         )
     conn.commit()
     conn.close()
@@ -58,12 +72,11 @@ def _minimal_report() -> str:
     })
 
 
-def test_load_terminal_statuses() -> None:
+def test_load_labeled_samples() -> None:
     db = _create_test_db([
-        ("aaa", "/tmp/a", "bad", _minimal_report()),
-        ("bbb", "/tmp/b", "good", _minimal_report()),
-        ("ccc", "/tmp/c", "bad-review", _minimal_report()),
-        ("ddd", "/tmp/d", "good-review", _minimal_report()),
+        ("aaa", "bad", _minimal_report()),
+        ("bbb", "good", _minimal_report()),
+        ("ccc", "unknown", _minimal_report()),  # excluded — not bad or good
     ])
     samples = load_samples(db)
     assert len(samples) == 2
@@ -72,38 +85,11 @@ def test_load_terminal_statuses() -> None:
     assert labels["bbb"] == 0  # benign
 
 
-def test_load_reclassified_statuses() -> None:
-    """bad-benign -> benign, good-malicious -> malware."""
-    db = _create_test_db([
-        ("aaa", "/tmp/a", "bad-benign", _minimal_report()),
-        ("bbb", "/tmp/b", "good-malicious", _minimal_report()),
-    ])
-    samples = load_samples(db)
-    assert len(samples) == 2
-    labels = {s.sha256: s.label for s in samples}
-    assert labels["aaa"] == 0  # reclassified as benign
-    assert labels["bbb"] == 1  # reclassified as malware
-
-
-def test_skip_intermediate_statuses() -> None:
-    db = _create_test_db([
-        ("aaa", "/tmp/a", "bad", _minimal_report()),
-        ("bbb", "/tmp/b", "bad-review", _minimal_report()),
-        ("ccc", "/tmp/c", "bad-reversed", _minimal_report()),
-        ("ddd", "/tmp/d", "bad-gapped", _minimal_report()),
-        ("eee", "/tmp/e", "good-review", _minimal_report()),
-        ("fff", "/tmp/f", "good-analyzed", _minimal_report()),
-    ])
-    samples = load_samples(db)
-    assert len(samples) == 1
-    assert samples[0].sha256 == "aaa"
-
-
 def test_skip_null_json() -> None:
     db = _create_test_db([
-        ("aaa", "/tmp/a", "bad", _minimal_report()),
-        ("bbb", "/tmp/b", "bad", ""),
-        ("ccc", "/tmp/c", "good", None),
+        ("aaa", "bad", _minimal_report()),
+        ("bbb", "bad", ""),
+        ("ccc", "good", None),
     ])
     samples = load_samples(db)
     assert len(samples) == 1
@@ -112,8 +98,8 @@ def test_skip_null_json() -> None:
 
 def test_skip_invalid_json() -> None:
     db = _create_test_db([
-        ("aaa", "/tmp/a", "bad", _minimal_report()),
-        ("bbb", "/tmp/b", "bad", "not valid json{{{"),
+        ("aaa", "bad", _minimal_report()),
+        ("bbb", "bad", "not valid json{{{"),
     ])
     samples = load_samples(db)
     assert len(samples) == 1
@@ -129,11 +115,3 @@ def test_file_not_found() -> None:
     import pytest
     with pytest.raises(FileNotFoundError):
         load_samples(Path("/nonexistent/database.db"))
-
-
-def test_status_constants() -> None:
-    assert "bad" in MALWARE_STATUSES
-    assert "good-malicious" in MALWARE_STATUSES
-    assert "good" in BENIGN_STATUSES
-    assert "bad-benign" in BENIGN_STATUSES
-    assert ALL_TERMINAL == MALWARE_STATUSES | BENIGN_STATUSES

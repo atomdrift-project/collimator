@@ -31,16 +31,12 @@ def run_ablation(
     groups: list[str] | None = None,
 ) -> list[dict[str, object]]:
     """Train baseline and leave-one-group-out ablations on the same dataset."""
-    spec = features.build_vocab(
-        (report for report, _label in data.stream_raw_reports(db_path, exclude_test=True)),
-        n_workers=n_workers,
+    train_row_ids, train_ids_labels, _ = data.partition_row_ids(db_path)
+
+    spec = features.build_vocab_from_db(db_path, train_row_ids, n_workers=n_workers)
+    X, y, _, _ = features.extract_partitioned_from_db(
+        db_path, train_ids_labels, [], spec, n_workers=n_workers,
     )
-    X, y = features.extract_stream(
-        data.stream_raw_reports(db_path, exclude_test=True),
-        spec,
-        n_workers=n_workers,
-    )
-    train_groups = data.load_train_group_ids(db_path)
     group_names = groups if groups is not None else list(features.FEATURE_GROUPS)
 
     rows: list[dict[str, object]] = []
@@ -50,7 +46,6 @@ def run_ablation(
         y,
         train.TrainConfig(seed=seed),
         feature_names=spec.feature_names,
-        groups=train_groups,
     )
     rows.append(
         {
@@ -69,7 +64,6 @@ def run_ablation(
             y,
             train.TrainConfig(seed=seed),
             feature_names=feature_names,
-            groups=train_groups,
         )
         rows.append(
             {

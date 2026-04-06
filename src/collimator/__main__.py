@@ -112,54 +112,25 @@ def cmd_train(args: argparse.Namespace) -> None:
     log.info("xgboost requested device: auto")
     log.info("xgboost effective device probe: %s", detect_device())
 
-    # Load split assignments once and reuse across all passes.
-    splits = data.load_split_assignments(db_path)
-    raw_train_row_ids: list[int] = []
-    raw_train_ids_labels: list[tuple[int, int]] = []
-    raw_test_ids_labels: list[tuple[int, int]] = []
-    raw_train_groups: list[str] = []
-    for row_id, label, is_test, group_id in data.stream_partitioned_metadata_grouped(
-        db_path,
-        split_assignments=splits,
-    ):
-        if is_test:
-            raw_test_ids_labels.append((row_id, label))
-        else:
-            raw_train_row_ids.append(row_id)
-            raw_train_ids_labels.append((row_id, label))
-            raw_train_groups.append(group_id)
+    # Partition samples into train/test using canonical_sha256.
+    # Exploded archive members are included as regular rows (filtered by skip='').
+    train_row_ids, train_ids_labels, test_ids_labels = data.partition_row_ids(db_path)
 
-    log.info("pass 1: building vocabulary from %s (including embedded files)", db_path)
-    spec = features.build_vocab_mixed_from_db(
+    log.info("pass 1: building vocabulary from %s", db_path)
+    spec = features.build_vocab_from_db(
         db_path,
-        raw_train_row_ids,
-        (report for report, _label in data.stream_embedded_file_reports(
-            db_path,
-            exclude_test=True,
-            split_assignments=splits,
-        )),
+        train_row_ids,
         n_workers=args.workers,
     )
 
-    log.info("pass 2: extracting training and test features (including embedded files)")
-    X_raw, y_raw, X_raw_test, y_raw_test = features.extract_partitioned_from_db(
+    log.info("pass 2: extracting training and test features")
+    X, y, X_test, y_test = features.extract_partitioned_from_db(
         db_path,
-        raw_train_ids_labels,
-        raw_test_ids_labels,
+        train_ids_labels,
+        test_ids_labels,
         spec,
         n_workers=args.workers,
     )
-    X_emb, y_emb, X_emb_test, y_emb_test = features.extract_partitioned_stream(
-        data.stream_partitioned_embedded_file_reports(db_path, split_assignments=splits),
-        spec,
-        n_workers=args.workers,
-    )
-    X = sp.vstack([X_raw, X_emb], format="csr")
-    y = np.concatenate([y_raw, y_emb])
-    X_test = sp.vstack([X_raw_test, X_emb_test], format="csr")
-    y_test = np.concatenate([y_raw_test, y_emb_test])
-    emb_train_groups, _ = data.load_embedded_group_ids(db_path, split_assignments=splits)
-    train_groups = np.concatenate([np.array(raw_train_groups, dtype=object), emb_train_groups])
     if X.shape[0] < 10:
         print(f"ERROR: only {X.shape[0]} training samples, need at least 10")
         sys.exit(1)
@@ -177,7 +148,7 @@ def cmd_train(args: argparse.Namespace) -> None:
         hard_negative_fraction=args.hard_negative_fraction,
         hard_negative_weight=args.hard_negative_weight,
     )
-    result = train.train(X, y, config, feature_names=spec.feature_names, groups=train_groups)
+    result = train.train(X, y, config, feature_names=spec.feature_names)
 
     # Attach standardization params to spec before saving.
     spec.feature_means = result.feature_means
@@ -338,12 +309,6 @@ def cmd_train(args: argparse.Namespace) -> None:
         if f.is_file():
             print(f"  {f.name}")
     print(f"\nTotal time: {mins}m {secs:02d}s")
-
-
-def cmd_build_splits(args: argparse.Namespace) -> None:
-    """Build or refresh cached split assignments for a database."""
-    cache_path = data.build_split_cache(Path(args.db))
-    print(cache_path)
 
 
 def cmd_evaluate(args: argparse.Namespace) -> None:
@@ -797,7 +762,7 @@ def main() -> None:
 
     # train
     p_train = subparsers.add_parser("train", help="Train model and export to ONNX")
-    p_train.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_train.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_train.add_argument("--output", default="out", help="Output directory (default: out)")
     _add_workers_arg(p_train)
     _add_seed_arg(p_train)
@@ -813,21 +778,21 @@ def main() -> None:
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Evaluate existing model")
-    p_eval.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_eval.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_eval.add_argument("--model", required=True, help="Path to ONNX model")
     p_eval.add_argument("--spec", required=True, help="Path to feature_spec.json")
     p_eval.add_argument("--eval-json", default=None, help="Path to evaluation.json for threshold")
 
     # explain
     p_explain = subparsers.add_parser("explain", help="SHAP feature importance analysis")
-    p_explain.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_explain.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_explain.add_argument("--model", required=True, help="Path to XGBoost model (.json)")
     p_explain.add_argument("--spec", required=True, help="Path to feature_spec.json")
     p_explain.add_argument("--output", default="out", help="Output directory")
 
     # inspect
     p_inspect = subparsers.add_parser("inspect", help="Inspect a single sample from the DB")
-    p_inspect.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_inspect.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_inspect.add_argument("--sample", required=True, help="SHA256 (or prefix) of sample")
     p_inspect.add_argument("--model", default="out/model.json", help="Path to XGBoost model")
     p_inspect.add_argument(
@@ -836,7 +801,7 @@ def main() -> None:
 
     # errors
     p_errors = subparsers.add_parser("errors", help="Show misclassified samples")
-    p_errors.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_errors.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_errors.add_argument("--model", default="out/model.json", help="Path to XGBoost model")
     p_errors.add_argument(
         "--spec", default="out/feature_spec.json", help="Path to feature_spec.json",
@@ -855,7 +820,7 @@ def main() -> None:
     p_fixture = subparsers.add_parser(
         "fixture", help="Generate cross-language test fixtures for xgboost-native",
     )
-    p_fixture.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_fixture.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_fixture.add_argument("--model", default="out/model.json", help="Path to XGBoost model")
     p_fixture.add_argument(
         "--spec", default="out/feature_spec.json", help="Path to feature_spec.json",
@@ -867,7 +832,7 @@ def main() -> None:
 
     # traits
     p_traits = subparsers.add_parser("traits", help="Analyze exact finding IDs across the DB")
-    p_traits.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_traits.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_traits.add_argument(
         "--crit",
         default="hostile",
@@ -892,7 +857,7 @@ def main() -> None:
     p_thresh = subparsers.add_parser(
         "thresholds", help="Show accuracy at various confidence thresholds",
     )
-    p_thresh.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_thresh.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_thresh.add_argument(
         "--model", default=None,
         help="Path to trained XGBoost model (.json) to reuse instead of retraining",
@@ -905,23 +870,17 @@ def main() -> None:
 
     # benchmark
     p_bench = subparsers.add_parser("benchmark", help="Benchmark extraction, training, and inference")
-    p_bench.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_bench.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_bench.add_argument("--model", default=None, help="Optional trained XGBoost model (.json)")
     p_bench.add_argument("--spec", default=None, help="Optional feature_spec.json")
     p_bench.add_argument("--output", default=None, help="Optional JSON output path")
     _add_workers_arg(p_bench)
 
-    # build-splits
-    p_splits = subparsers.add_parser(
-        "build-splits", help="Build cached split assignments for grouped external-test partitioning",
-    )
-    p_splits.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
-
     # experiment
     p_exp = subparsers.add_parser(
         "experiment", help="Run a fast subsampled experiment on the full external test bucket",
     )
-    p_exp.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_exp.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_exp.add_argument("--output", default="out", help="Directory for experiment summaries (default: out)")
     p_exp.add_argument(
         "--train-samples", type=int, default=10_000,
@@ -963,7 +922,7 @@ def main() -> None:
 
     # ablation
     p_ablate = subparsers.add_parser("ablate", help="Run leave-one-group-out feature ablations")
-    p_ablate.add_argument("--db", required=True, help="Path to cyclotron SQLite database")
+    p_ablate.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_ablate.add_argument(
         "--groups",
         nargs="*",
@@ -976,7 +935,7 @@ def main() -> None:
     _add_seed_arg(p_ablate)
 
     # demo-db
-    p_demo = subparsers.add_parser("demo-db", help="Create a small synthetic cyclotron database")
+    p_demo = subparsers.add_parser("demo-db", help="Create a small synthetic hopper database")
     p_demo.add_argument("--output", required=True, help="Path to output SQLite database")
     p_demo.add_argument("--n-benign", type=int, default=64, help="Number of benign samples")
     p_demo.add_argument("--n-malware", type=int, default=64, help="Number of malware samples")
@@ -1037,8 +996,6 @@ def main() -> None:
             spec_path=Path(args.spec) if args.spec else None,
             output_path=Path(args.output) if args.output else None,
         )
-    elif args.command == "build-splits":
-        cmd_build_splits(args)
     elif args.command == "experiment":
         experiment.run_experiment(
             db_path=Path(args.db),

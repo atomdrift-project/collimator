@@ -1,4 +1,4 @@
-"""Generate a tiny synthetic cyclotron database for local demos."""
+"""Generate a tiny synthetic hopper database for local demos."""
 
 from __future__ import annotations
 
@@ -68,7 +68,7 @@ def create_demo_db(
     n_malware: int = 64,
     seed: int = 42,
 ) -> None:
-    """Create a synthetic cyclotron-style SQLite database for demos/tests."""
+    """Create a synthetic hopper-schema SQLite database for demos/tests."""
     rng = np.random.default_rng(seed)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -79,26 +79,42 @@ def create_demo_db(
             CREATE TABLE samples (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 sha256 TEXT UNIQUE NOT NULL,
-                path TEXT NOT NULL,
-                status TEXT NOT NULL,
-                updated_at INTEGER NOT NULL DEFAULT 0,
-                cleave_json TEXT,
-                risk TEXT,
-                finding_count INTEGER DEFAULT 0,
-                attempts INTEGER DEFAULT 0
+                source TEXT NOT NULL DEFAULT '',
+                feed TEXT NOT NULL DEFAULT '',
+                ecosystem TEXT NOT NULL DEFAULT '',
+                filename TEXT NOT NULL DEFAULT '',
+                file_type TEXT NOT NULL DEFAULT '',
+                size_bytes INTEGER NOT NULL DEFAULT 0,
+                label TEXT NOT NULL DEFAULT 'unknown',
+                label_source TEXT NOT NULL DEFAULT '',
+                cleave_result TEXT,
+                risk TEXT NOT NULL DEFAULT '',
+                finding_count INTEGER NOT NULL DEFAULT 0,
+                path TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT '',
+                note TEXT NOT NULL DEFAULT '',
+                canonical_sha256 TEXT NOT NULL DEFAULT '',
+                parent TEXT NOT NULL DEFAULT '',
+                skip TEXT NOT NULL DEFAULT '',
+                created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+                updated_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+                analyzed_at DATETIME
             )
         """)
 
-        rows: list[tuple[str, str, str, str]] = []
+        rows: list[tuple[str, str, str, str, str]] = []
         for _ in range(n_benign):
             sha = _hex_sha(rng)
-            rows.append((sha, f"/demo/{sha[:12]}.bin", "good", _make_report(rng, malware=False, sha256=sha)))
+            report = _make_report(rng, malware=False, sha256=sha)
+            rows.append((sha, "good", f"/demo/{sha[:12]}.bin", sha, report))
         for _ in range(n_malware):
             sha = _hex_sha(rng)
-            rows.append((sha, f"/demo/{sha[:12]}.bin", "bad", _make_report(rng, malware=True, sha256=sha)))
+            report = _make_report(rng, malware=True, sha256=sha)
+            rows.append((sha, "bad", f"/demo/{sha[:12]}.bin", sha, report))
 
         conn.executemany(
-            "INSERT INTO samples (sha256, path, status, cleave_json) VALUES (?, ?, ?, ?)",
+            "INSERT INTO samples (sha256, label, path, canonical_sha256, cleave_result)"
+            " VALUES (?, ?, ?, ?, ?)",
             rows,
         )
         conn.commit()

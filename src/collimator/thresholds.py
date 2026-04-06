@@ -37,8 +37,11 @@ def show_thresholds(
     thresholds needed for each accuracy target on the test set.
 
     If model_path and spec_path are provided and exist, skip training
-    entirely and only stream the ~5% test-bucket samples.
+    entirely and only extract features for the test-bucket samples.
     """
+    # Partition samples into train/test.
+    train_row_ids, train_ids_labels, test_ids_labels = data.partition_row_ids(db_path)
+
     if (
         model_path is not None
         and spec_path is not None
@@ -51,10 +54,8 @@ def show_thresholds(
         spec = features.FeatureSpec.load(spec_path)
         model = load_model(model_path)
 
-        X_test, y_test = features.extract_stream(
-            data.stream_raw_reports(db_path, only_test=True),
-            spec,
-            n_workers=n_workers,
+        _, _, X_test, y_test = features.extract_partitioned_from_db(
+            db_path, [], test_ids_labels, spec, n_workers=n_workers,
         )
         if X_test.shape[0] == 0:
             print("No test samples — cannot compute thresholds.")
@@ -62,21 +63,16 @@ def show_thresholds(
         probs = predict_proba(model, X_test)
         print_threshold_table(probs, y_test)
         return
-    # Pass 1: build vocab from training samples (streaming).
-    spec = features.build_vocab(
-        (report for report, _label in data.stream_raw_reports(db_path, exclude_test=True)),
-        n_workers=n_workers,
-    )
 
-    # Pass 2: extract training and held-out test features in one pass.
-    X_train, y_train, X_test, y_test = features.extract_partitioned_stream(
-        data.stream_partitioned_raw_reports(db_path), spec, n_workers=n_workers,
+    spec = features.build_vocab_from_db(db_path, train_row_ids, n_workers=n_workers)
+
+    X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
+        db_path, train_ids_labels, test_ids_labels, spec, n_workers=n_workers,
     )
-    train_groups = data.load_train_group_ids(db_path)
     if X_train.shape[0] == 0:
         print("No training samples found.")
         return
-    result = train.train(X_train, y_train, feature_names=spec.feature_names, groups=train_groups)
+    result = train.train(X_train, y_train, feature_names=spec.feature_names)
     if X_test.shape[0] == 0:
         print("No test samples — cannot compute thresholds.")
         return

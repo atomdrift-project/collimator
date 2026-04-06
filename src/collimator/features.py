@@ -30,13 +30,11 @@ Feature groups:
 from __future__ import annotations
 
 import collections
-import itertools
 import json
 import logging
 import math
 import multiprocessing as mp
 import os
-import sqlite3
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
@@ -1121,34 +1119,14 @@ def _vocab_batch_worker(
 
 
 def _vocab_db_batch_worker(
-    args: tuple[Path, list[int]],
+    args: tuple[Path | str, list[int]],
 ) -> tuple[dict[str, int], list[str]]:
     """Fetch and count paths for a batch of IDs from the DB."""
-    db_path, ids = args
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        placeholders = ",".join("?" for _ in ids)
-        query = f"SELECT cleave_json FROM samples WHERE id IN ({placeholders})"
-        reports = [r for r, in conn.execute(query, ids)]
-        return _vocab_batch_worker(reports)
-    finally:
-        conn.close()
+    from . import data  # noqa: PLC0415 — deferred to avoid circular import in workers
 
-
-def _vocab_mixed_batch_worker(
-    args: tuple[Path, list[int], list[dict[str, Any] | str]],
-) -> tuple[dict[str, int], list[str]]:
-    """Count paths for a mixed batch of DB row IDs and inline reports."""
-    db_path, ids, reports = args
-    if ids:
-        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-        try:
-            placeholders = ",".join("?" for _ in ids)
-            query = f"SELECT cleave_json FROM samples WHERE id IN ({placeholders})"
-            reports = [r for r, in conn.execute(query, ids)] + reports
-        finally:
-            conn.close()
-    return _vocab_batch_worker(reports)
+    dsn, ids = args
+    results = data.fetch_cleave_results(dsn, ids)
+    return _vocab_batch_worker(list(results.values()))
 
 
 def _extract_batch_worker(
@@ -1372,31 +1350,24 @@ def _extract_partitioned_batch_worker(
 
 
 def _extract_partitioned_db_batch_worker(
-    args: tuple[int, int, Path, list[tuple[int, int, bool]], FeatureSpec],
+    args: tuple[int, int, Path | str, list[tuple[int, int, bool]], FeatureSpec],
 ) -> tuple[
     list[int], list[int], list[float], list[int],
     list[int], list[int], list[float], list[int],
 ]:
     """Fetch and extract train/test features for a batch of IDs from the DB."""
-    train_offset, test_offset, db_path, batch_ids, spec = args
-    import sqlite3
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        # Use a single batch query for IDs in this worker task.
-        ids = [rid for rid, _l, _t in batch_ids]
-        placeholders = ",".join("?" for _ in ids)
-        query = f"SELECT id, cleave_json FROM samples WHERE id IN ({placeholders})"
-        reports_map = {rid: r for rid, r in conn.execute(query, ids)}
-        
-        # Re-build the batch using the fetched reports.
-        batch = []
-        for rid, label, is_test in batch_ids:
-            if rid in reports_map:
-                batch.append((reports_map[rid], label, is_test))
-        
-        return _extract_partitioned_batch_worker((train_offset, test_offset, batch, spec))
-    finally:
-        conn.close()
+    from . import data  # noqa: PLC0415 — deferred to avoid circular import in workers
+
+    train_offset, test_offset, dsn, batch_ids, spec = args
+    ids = [rid for rid, _l, _t in batch_ids]
+    reports_map = data.fetch_cleave_results(dsn, ids)
+
+    batch = [
+        (reports_map[rid], label, is_test)
+        for rid, label, is_test in batch_ids
+        if rid in reports_map
+    ]
+    return _extract_partitioned_batch_worker((train_offset, test_offset, batch, spec))
 
 
 def _enumerate_partitioned_batches(
@@ -1413,103 +1384,8 @@ def _enumerate_partitioned_batches(
         test_offset += len(batch) - batch_train
 
 
-def extract_partitioned_stream(
-    report_labels_split: Iterable[tuple[dict[str, Any] | str, int, bool]],
-    spec: FeatureSpec,
-    n_workers: int = 0,
-) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
-    """Extract train and test matrices from a mixed stream in one pass."""
-    nw = resolve_worker_count(n_workers)
-    batch_size = _feature_batch_size(nw)
-
-    train_rows: list[int] = []
-    train_cols: list[int] = []
-    train_vals: list[float] = []
-    train_labels: list[int] = []
-
-    test_rows: list[int] = []
-    test_cols: list[int] = []
-    test_vals: list[float] = []
-    test_labels: list[int] = []
-
-    n_batches = 0
-    _PROGRESS_BATCH_INTERVAL = 500
-
-    def _consume(
-        batch_iter: Iterable[
-            tuple[
-                list[int], list[int], list[float], list[int],
-                list[int], list[int], list[float], list[int],
-            ]
-        ],
-    ) -> None:
-        nonlocal n_batches
-        for (
-            b_train_rows, b_train_cols, b_train_vals, b_train_labels,
-            b_test_rows, b_test_cols, b_test_vals, b_test_labels,
-        ) in batch_iter:
-            train_rows.extend(b_train_rows)
-            train_cols.extend(b_train_cols)
-            train_vals.extend(b_train_vals)
-            train_labels.extend(b_train_labels)
-            test_rows.extend(b_test_rows)
-            test_cols.extend(b_test_cols)
-            test_vals.extend(b_test_vals)
-            test_labels.extend(b_test_labels)
-            n_batches += 1
-            if n_batches % _PROGRESS_BATCH_INTERVAL == 0:
-                log.info(
-                    "extract: ~%d samples processed (%d train, %d test)",
-                    len(train_labels) + len(test_labels),
-                    len(train_labels), len(test_labels),
-                )
-
-    batch_args = (
-        (train_offset, test_offset, batch, spec)
-        for train_offset, test_offset, batch in _enumerate_partitioned_batches(
-            report_labels_split,
-            batch_size,
-        )
-    )
-
-    if nw > 1:
-        with ProcessPoolExecutor(
-            max_workers=nw,
-            mp_context=mp.get_context("spawn"),
-        ) as pool:
-            _consume(_bounded_iter(pool, _extract_partitioned_batch_worker, batch_args, max_inflight=2 * nw))
-    else:
-        _consume(map(_extract_partitioned_batch_worker, batch_args))
-
-    n_train = len(train_labels)
-    n_test = len(test_labels)
-    X_train = sp.csr_matrix(
-        (
-            np.array(train_vals, dtype=np.float32),
-            (np.array(train_rows, dtype=np.int32), np.array(train_cols, dtype=np.int32)),
-        ),
-        shape=(n_train, spec.total_features),
-    )
-    y_train = np.array(train_labels, dtype=np.float32)
-
-    X_test = sp.csr_matrix(
-        (
-            np.array(test_vals, dtype=np.float32),
-            (np.array(test_rows, dtype=np.int32), np.array(test_cols, dtype=np.int32)),
-        ),
-        shape=(n_test, spec.total_features),
-    )
-    y_test = np.array(test_labels, dtype=np.float32)
-
-    log.info(
-        "extracted %d train + %d test samples x %d features",
-        n_train, n_test, spec.total_features,
-    )
-    return X_train, y_train, X_test, y_test
-
-
 def build_vocab_from_db(
-    db_path: Path,
+    db_path: Path | str,
     row_ids: list[int],
     n_workers: int = 0,
 ) -> FeatureSpec:
@@ -1559,67 +1435,8 @@ def build_vocab_from_db(
     return spec
 
 
-def build_vocab_mixed_from_db(
-    db_path: Path,
-    row_ids: list[int],
-    reports: Iterable[dict[str, Any] | str],
-    n_workers: int = 0,
-) -> FeatureSpec:
-    """Scan DB-backed rows plus inline reports into one combined vocabulary."""
-    nw = resolve_worker_count(n_workers)
-    presence_counts: dict[str, int] = {}
-    filetypes: set[str] = set()
-    batch_size = _feature_batch_size(nw)
-
-    def _merge_batch(counts: dict[str, int], fts: list[str]) -> None:
-        for k, v in counts.items():
-            presence_counts[k] = presence_counts.get(k, 0) + v
-        filetypes.update(fts)
-
-    db_batches = _batched(row_ids, batch_size)
-    report_batches = _batched(reports, batch_size)
-    batch_args = itertools.zip_longest(
-        db_batches,
-        report_batches,
-        fillvalue=[],
-    )
-    worker_args = ((db_path, list(db_batch), list(report_batch)) for db_batch, report_batch in batch_args)
-
-    if nw > 1:
-        with ProcessPoolExecutor(
-            max_workers=nw,
-            mp_context=mp.get_context("spawn"),
-        ) as pool:
-            for counts, fts in _bounded_iter(
-                pool, _vocab_mixed_batch_worker, worker_args,
-                max_inflight=2 * nw,
-            ):
-                _merge_batch(counts, fts)
-    else:
-        for counts, fts in map(_vocab_mixed_batch_worker, worker_args):
-            _merge_batch(counts, fts)
-
-    presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
-    filetype_vocab = sorted(filetypes)
-    feature_names = _build_feature_names(presence_vocab, filetype_vocab)
-
-    spec = FeatureSpec(
-        presence_vocab=presence_vocab,
-        filetype_vocab=filetype_vocab,
-        feature_names=feature_names,
-        total_features=len(feature_names),
-    )
-    log.info(
-        "vocab: %d paths (>=%d freq), %d filetypes -> %d features "
-        "(v15 presence+maxcrit+hostile-escalation)",
-        len(presence_vocab), MIN_PATH_FREQ,
-        len(filetype_vocab), spec.total_features,
-    )
-    return spec
-
-
 def extract_partitioned_from_db(
-    db_path: Path,
+    db_path: Path | str,
     train_ids_labels: list[tuple[int, int]],
     test_ids_labels: list[tuple[int, int]],
     spec: FeatureSpec,

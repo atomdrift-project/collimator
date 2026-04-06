@@ -97,7 +97,7 @@ def inspect_sample(
     spec_path: Path,
 ) -> None:
     """Inspect a single sample from the database."""
-    import sqlite3
+    from . import data as datamod
 
     spec = FeatureSpec.load(spec_path)
     model = load_model(model_path)
@@ -106,25 +106,18 @@ def inspect_sample(
     if eval_path.exists():
         log.info("using threshold %.3f from %s", threshold, eval_path)
 
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    conn.row_factory = sqlite3.Row
-    row = conn.execute(
-        "SELECT sha256, path, status, cleave_json FROM samples WHERE sha256 LIKE ?",
-        (f"{sha256}%",),
-    ).fetchone()
-    conn.close()
-
-    if not row:
+    result = datamod.lookup_sample(db_path, sha256)
+    if not result:
         print(f"No sample found matching '{sha256}'")
         sys.exit(1)
 
-    report = json.loads(row["cleave_json"])
+    sample_sha, sample_path, sample_label, report = result
     pf = primary_file(report)
     vec_raw, vec, prob = _score_report(model, spec, report)
 
-    print(f"Sample:      {row['sha256']}")
-    print(f"Path:        {row['path']}")
-    print(f"Status:      {row['status']}")
+    print(f"Sample:      {sample_sha}")
+    print(f"Path:        {sample_path}")
+    print(f"Label:       {sample_label}")
     print(f"Prediction:  {prob:.4f} ({'MALWARE' if prob > threshold else 'BENIGN'})")
     print(f"File type:   {pf.get('file_type', 'unknown')}")
     print(f"Findings:    {len(pf.get('findings') or [])}")

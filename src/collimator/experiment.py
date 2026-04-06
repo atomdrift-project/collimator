@@ -152,28 +152,19 @@ def _print_test_metrics(
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
 
 
-def _load_primary_file_types(db_path: Path, row_ids: list[int]) -> np.ndarray:
+def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndarray:
     file_types_by_row: dict[int, str] = {}
-    import sqlite3
-
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        chunk_size = 1000
-        for start in range(0, len(row_ids), chunk_size):
-            chunk = row_ids[start:start + chunk_size]
-            placeholders = ",".join("?" for _ in chunk)
-            query = f"SELECT id, cleave_json FROM samples WHERE id IN ({placeholders})"
-            for row_id, cleave_json in conn.execute(query, tuple(chunk)):
-                file_type = "unknown"
-                if cleave_json:
-                    try:
-                        report = json.loads(cleave_json)
-                        file_type = str(features.primary_file(report).get("file_type") or "unknown")
-                    except json.JSONDecodeError:
-                        pass
-                file_types_by_row[int(row_id)] = file_type
-    finally:
-        conn.close()
+    chunk_size = 1000
+    for start in range(0, len(row_ids), chunk_size):
+        chunk = row_ids[start:start + chunk_size]
+        for row_id, cleave_result in data.fetch_cleave_results(db_path, chunk).items():
+            file_type = "unknown"
+            try:
+                report = json.loads(cleave_result)
+                file_type = str(features.primary_file(report).get("file_type") or "unknown")
+            except json.JSONDecodeError:
+                pass
+            file_types_by_row[row_id] = file_type
 
     return np.asarray([file_types_by_row.get(row_id, "unknown") for row_id in row_ids], dtype=object)
 
@@ -219,7 +210,6 @@ def run_experiment(
     # Sort corpus to match DB extraction order (by row_id).
     sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
     sorted_test = sorted(corpus.test_samples, key=lambda s: s.row_id)
-    train_groups = np.array([s.group_id for s in sorted_train], dtype=object)
     train_file_types = _load_primary_file_types(db_path, [s.row_id for s in sorted_train])
 
     log.info("pass 1: building vocabulary (worker-local DB fetching)")
@@ -279,7 +269,6 @@ def run_experiment(
             holdout_fraction=0.0,  # use all samples; CV predictions drive threshold
         ),
         feature_names=spec.feature_names,
-        groups=train_groups,
         sample_file_types=train_file_types,
     )
 

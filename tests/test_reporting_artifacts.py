@@ -22,29 +22,23 @@ def test_benchmark_can_write_json(tmp_path, monkeypatch) -> None:
         total_features = 5
         feature_names = [f"f{i}" for i in range(5)]
 
-    def _build_vocab(*args, **kwargs):
-        return _Spec()
-
-    def _extract_stream(*args, **kwargs):
+    def _extract_partitioned(*args, **kwargs):
         import numpy as np
         import scipy.sparse as sp
-        return sp.csr_matrix([[1, 0, 0, 1, 0]], dtype=np.float32), np.array([1], dtype=np.float32)
+        X = sp.csr_matrix([[1, 0, 0, 1, 0]], dtype=np.float32)
+        y = np.array([1], dtype=np.float32)
+        return X, y, X, y
 
     class _Model:
         pass
 
-    monkeypatch.setattr("collimator.benchmark.features.build_vocab", _build_vocab)
-    monkeypatch.setattr("collimator.benchmark.features.extract_stream", _extract_stream)
-    monkeypatch.setattr(
-        "collimator.benchmark.features.extract_partitioned_stream",
-        lambda *args, **kwargs: (*_extract_stream(), *_extract_stream()),
-    )
+    monkeypatch.setattr("collimator.benchmark.features.build_vocab_from_db", lambda *args, **kwargs: _Spec())
+    monkeypatch.setattr("collimator.benchmark.features.extract_partitioned_from_db", _extract_partitioned)
     monkeypatch.setattr("collimator.benchmark.train.train", lambda *args, **kwargs: type("R", (), {"model": _Model()})())
     monkeypatch.setattr("collimator.benchmark.predict_proba", lambda model, X: [0.75] * X.shape[0])
-    monkeypatch.setattr("collimator.benchmark.data.stream_reports", lambda *args, **kwargs: iter([({}, 1)]))
     monkeypatch.setattr(
-        "collimator.benchmark.data.stream_partitioned_raw_reports",
-        lambda *args, **kwargs: iter([("{}", 1, False)]),
+        "collimator.benchmark.data.stream_partitioned_metadata_grouped",
+        lambda *args, **kwargs: iter([(1, 1, False, "aa" * 32)]),
     )
 
     summary = run_benchmark(tmp_path / "dummy.db", output_path=output)

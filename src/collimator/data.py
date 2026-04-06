@@ -1,51 +1,32 @@
-"""Load labeled samples from cyclotron's SQLite database."""
+"""Load labeled samples from a hopper database (SQLite or PostgreSQL).
+
+Train/test splitting is deterministic and archive-aware: each sample's
+canonical_sha256 (the lexicographic minimum SHA256 across the sample
+itself and all embedded files, pre-computed by hopper) is used as the
+split key.  This ensures archives sharing an inner file always land in
+the same partition, preventing data leakage.
+
+  test set:  int(canonical_sha256[-2:], 16) < TEST_BUCKET_MAX   (12.5%)
+  train set: everything else                                     (87.5%)
+"""
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import sqlite3
 from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-
 log = logging.getLogger(__name__)
 
-# Terminal statuses that represent confirmed classifications.
-# See cyclotron/db.go for the full status state machine.
-#
-# All bad* statuses (except bad-benign, which was reclassified as benign) are
-# treated as malware regardless of pipeline progress — this lets us train on
-# samples cleave hasn't fully confirmed, finding patterns it can't yet detect.
-MALWARE_STATUSES = frozenset({
-    "bad",           # known-bad, pending analysis
-    "bad-review",    # needs reverse engineering
-    "bad-reversed",  # has been reverse engineered
-    "bad-gapped",    # detection gaps identified
-    "bad-exhausted", # pipeline gave up, still malware
-    "good-malicious", # reclassified from good pipeline
-})
-BENIGN_STATUSES = frozenset({"good", "bad-benign"})
-ALL_TERMINAL = MALWARE_STATUSES | BENIGN_STATUSES
-
-# Samples whose SHA256 last byte falls in [0, TEST_BUCKET_MAX) are reserved
-# for threshold evaluation and excluded from training. 32/256 = 12.5%.
+# Samples whose canonical_sha256 last byte falls in [0, TEST_BUCKET_MAX)
+# are reserved for threshold evaluation and excluded from training.
+# 32/256 = 12.5%.
 TEST_BUCKET_MAX = 32
-SPLIT_CACHE_VERSION = 1
-SPLIT_METADATA_TABLE = "collimator_split_metadata"
-SPLIT_ASSIGNMENTS_TABLE = "collimator_sample_splits"
-NATIVE_SPLIT_TABLE = "sample_splits"
-
-
-@dataclass(frozen=True, slots=True)
-class SplitAssignment:
-    sample_row_id: int
-    group_id: str
-    is_test: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,63 +36,162 @@ class Sample:
     path: str
     label: int  # 1 = malware, 0 = benign
     report: dict[str, Any]
+    canonical_sha256: str = ""
+
+
+def is_test_sample(canonical_sha256: str) -> bool:
+    """Deterministic test-set assignment based on canonical_sha256 last byte."""
+    return int(canonical_sha256[-2:], 16) < TEST_BUCKET_MAX
+
+
+def _label_int(label: str) -> int:
+    """Map hopper label string to int. 'bad' -> 1, everything else -> 0."""
+    return 1 if label == "bad" else 0
+
+
+# ---------------------------------------------------------------------------
+# Database access — the only place that knows about SQLite or PostgreSQL.
+# ---------------------------------------------------------------------------
+
+def _is_pg(dsn: Path | str) -> bool:
+    s = str(dsn)
+    return s.startswith(("postgres://", "postgresql://"))
+
+
+@contextmanager
+def _connect(dsn: Path | str):
+    """Open a read-only connection to the hopper database."""
+    if _is_pg(dsn):
+        try:
+            import psycopg  # noqa: PLC0415
+        except ImportError as exc:
+            raise ImportError(
+                "psycopg is required for PostgreSQL: pip install psycopg[binary]",
+            ) from exc
+        with psycopg.connect(str(dsn)) as conn:
+            yield conn
+    else:
+        db_path = Path(str(dsn))
+        if not db_path.exists():
+            raise FileNotFoundError(f"Database not found: {db_path}")
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            yield conn
+        finally:
+            conn.close()
+
+
+def _execute(conn, query: str, params=None):
+    """Execute a query, adapting for sqlite3 vs psycopg cursor styles."""
+    if isinstance(conn, sqlite3.Connection):
+        yield from conn.execute(query, params or [])
+    else:
+        # psycopg
+        with conn.cursor() as cur:
+            cur.execute(query, params)
+            yield from cur
+
+
+def _cleave_json(raw) -> str | None:
+    """Normalize cleave_result to a JSON string, handling psycopg's auto-decode."""
+    if raw is None:
+        return None
+    if isinstance(raw, str):
+        return raw
+    # psycopg auto-decodes JSONB to dict
+    return json.dumps(raw)
+
+
+def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, str]:
+    """Batch-fetch cleave_result JSON by row IDs.
+
+    Used by feature extraction workers. Each worker opens its own
+    connection via this function — safe for multiprocessing.
+    """
+    if not ids:
+        return {}
+    with _connect(dsn) as conn:
+        if _is_pg(dsn):
+            import psycopg  # noqa: PLC0415
+            # PostgreSQL: use ANY($1) with array parameter.
+            query = "SELECT id, cleave_result FROM samples WHERE id = ANY($1)"
+            with conn.cursor() as cur:
+                cur.execute(query, [ids])
+                return {
+                    int(rid): _cleave_json(cr)
+                    for rid, cr in cur
+                    if cr is not None
+                }
+        else:
+            placeholders = ",".join("?" for _ in ids)
+            query = f"SELECT id, cleave_result FROM samples WHERE id IN ({placeholders})"  # noqa: S608
+            return {
+                int(rid): cr
+                for rid, cr in conn.execute(query, ids)
+                if cr is not None
+            }
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+_TRAINABLE_QUERY = (
+    "SELECT id, sha256, path, label, canonical_sha256, cleave_result"
+    " FROM samples"
+    " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
+    " AND skip = ''"
+)
+
+_METADATA_QUERY = (
+    "SELECT id, sha256, label, canonical_sha256"
+    " FROM samples"
+    " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
+    " AND skip = ''"
+)
 
 
 def stream_samples(
-    db_path: Path,
+    db_path: Path | str,
     *,
     exclude_test: bool = False,
     only_test: bool = False,
     limit: int = 0,
-    split_assignments: dict[int, SplitAssignment] | None = None,
 ) -> Iterator[Sample]:
-    """Yield labeled samples from the database without loading all rows."""
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    query = (
-        "SELECT id, sha256, path, status, cleave_json"
-        f" FROM samples WHERE status IN ({placeholders})"
-    )
+    """Yield labeled samples from a hopper database (SQLite or PostgreSQL)."""
+    query = _TRAINABLE_QUERY
     if limit > 0:
         query += f" LIMIT {limit}"
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        for row_id, sha256, path, status, cleave_json in conn.execute(
-            query, tuple(sorted(ALL_TERMINAL)),
-        ):
-            if not cleave_json:
-                continue
-            assignment = split_assignments.get(int(row_id))
-            is_test = assignment.is_test if assignment is not None else is_test_sample(sha256)
+    with _connect(db_path) as conn:
+        for row_id, sha256, path, label, canonical, cleave_result in _execute(conn, query):
+            split_key = canonical or sha256
+            is_test = is_test_sample(split_key)
             if exclude_test and is_test:
                 continue
             if only_test and not is_test:
                 continue
+            raw = _cleave_json(cleave_result)
+            if raw is None:
+                continue
             try:
-                report = json.loads(cleave_json)
+                report = json.loads(raw)
             except json.JSONDecodeError:
                 log.warning("invalid JSON for %s, skipping", sha256)
                 continue
             yield Sample(
                 row_id=int(row_id),
                 sha256=sha256,
-                path=path,
-                label=1 if status in MALWARE_STATUSES else 0,
+                path=path or "",
+                label=_label_int(label),
                 report=report,
+                canonical_sha256=split_key,
             )
-    finally:
-        conn.close()
 
 
-def load_samples(db_path: Path, limit: int = 0) -> list[Sample]:
-    """Load labeled samples from a cyclotron database."""
+def load_samples(db_path: Path | str, limit: int = 0) -> list[Sample]:
+    """Load all labeled samples from a hopper database."""
     log.info("loading samples from %s (limit=%d)", db_path, limit)
     samples = list(stream_samples(db_path, limit=limit))
-
     n_malware = sum(1 for s in samples if s.label == 1)
     n_benign = len(samples) - n_malware
     log.info(
@@ -121,664 +201,70 @@ def load_samples(db_path: Path, limit: int = 0) -> list[Sample]:
     return samples
 
 
-def is_test_sample(sha256: str) -> bool:
-    """Deterministic test-set assignment based on SHA256 last byte."""
-    return int(sha256[-2:], 16) < TEST_BUCKET_MAX
-
-
-def _db_fingerprint(db_path: Path) -> tuple[int, int, int]:
-    """Return a fingerprint derived from the samples table, not DB file metadata."""
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        row_count, max_id, max_updated = conn.execute(
-            "SELECT COUNT(*), COALESCE(MAX(id), 0), COALESCE(MAX(updated_at), 0) FROM samples"
-        ).fetchone()
-    finally:
-        conn.close()
-    return int(row_count), int(max_id), int(max_updated)
-
-
-def _table_exists(conn: sqlite3.Connection, table_name: str) -> bool:
-    row = conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type IN ('table', 'view') AND name = ?",
-        (table_name,),
-    ).fetchone()
-    return row is not None
-
-
-def _load_native_split_assignments(db_path: Path) -> dict[int, SplitAssignment] | None:
-    """Load split assignments from cyclotron's native sample_splits table when available."""
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        if not _table_exists(conn, NATIVE_SPLIT_TABLE):
-            return None
-        placeholders = ",".join("?" for _ in ALL_TERMINAL)
-        expected_terminal = int(
-            conn.execute(
-                f"SELECT COUNT(*) FROM samples WHERE status IN ({placeholders})",
-                tuple(sorted(ALL_TERMINAL)),
-            ).fetchone()[0]
-        )
-        rows = list(
-            conn.execute(
-                (
-                    f"SELECT ss.sample_id, ss.split_name "
-                    f"FROM {NATIVE_SPLIT_TABLE} ss "
-                    "JOIN samples s ON s.id = ss.sample_id "
-                    f"WHERE s.status IN ({placeholders})"
-                ),
-                tuple(sorted(ALL_TERMINAL)),
-            )
-        )
-    finally:
-        conn.close()
-
-    if not rows or len(rows) != expected_terminal:
-        return None
-
-    return {
-        int(sample_id): SplitAssignment(
-            sample_row_id=int(sample_id),
-            group_id=f"s{int(sample_id)}",
-            is_test=(str(split_name) == "test"),
-        )
-        for sample_id, split_name in rows
-    }
-
-
-def _extract_report_file_shas(raw_report: str, outer_sha256: str) -> list[str]:
-    shas: list[str] = [outer_sha256]
-    try:
-        report = json.loads(raw_report)
-    except json.JSONDecodeError:
-        return shas
-
-    for file_entry in report.get("files") or []:
-        if not isinstance(file_entry, dict):
-            continue
-        file_sha = file_entry.get("sha256")
-        if isinstance(file_sha, str) and len(file_sha) == 64:
-            shas.append(file_sha)
-    return sorted(set(shas))
-
-
-def _find(parent: dict[int, int], x: int) -> int:
-    root = x
-    while parent[root] != root:
-        root = parent[root]
-    while parent[x] != x:
-        nxt = parent[x]
-        parent[x] = root
-        x = nxt
-    return root
-
-
-def _union(parent: dict[int, int], size: dict[int, int], a: int, b: int) -> int:
-    ra = _find(parent, a)
-    rb = _find(parent, b)
-    if ra == rb:
-        return ra
-    if size[ra] < size[rb]:
-        ra, rb = rb, ra
-    parent[rb] = ra
-    size[ra] += size[rb]
-    return ra
-
-
-def build_split_cache(db_path: Path) -> Path:
-    """Rebuild split assignments from scratch inside the given database."""
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    row_count, max_id, max_updated = _db_fingerprint(db_path)
-    conn = sqlite3.connect(str(db_path))
-    try:
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute(f"DROP TABLE IF EXISTS {SPLIT_METADATA_TABLE}")
-        conn.execute(f"DROP TABLE IF EXISTS {SPLIT_ASSIGNMENTS_TABLE}")
-        conn.execute(f"""
-            CREATE TABLE {SPLIT_METADATA_TABLE} (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
-            )
-        """)
-        conn.execute(f"""
-            CREATE TABLE {SPLIT_ASSIGNMENTS_TABLE} (
-                sample_row_id INTEGER PRIMARY KEY,
-                group_id TEXT NOT NULL,
-                is_test INTEGER NOT NULL,
-                split_version INTEGER NOT NULL,
-                FOREIGN KEY(sample_row_id) REFERENCES samples(id)
-            )
-        """)
-
-        log.info("populating split cache via SQL (deterministic SHA256 buckets)")
-        placeholders = ",".join("?" for _ in ALL_TERMINAL)
-        # Order: TEST_BUCKET_MAX, SPLIT_CACHE_VERSION, then sorted(ALL_TERMINAL) for the IN clause.
-        sql_args = [TEST_BUCKET_MAX, SPLIT_CACHE_VERSION] + list(sorted(ALL_TERMINAL))
-        conn.execute(
-            f"INSERT INTO {SPLIT_ASSIGNMENTS_TABLE}(sample_row_id, group_id, is_test, split_version)"
-            " SELECT id, 's'||id, (instr('0123456789abcdef', substr(sha256, -1, 1)) + 16 * instr('0123456789abcdef', substr(sha256, -2, 1)) - 17) < ?, ? FROM samples WHERE status IN (" + placeholders + ")",
-            sql_args,
-        )
-
-        conn.executemany(
-            f"INSERT INTO {SPLIT_METADATA_TABLE}(key, value) VALUES (?, ?)",
-            [
-                ("version", str(SPLIT_CACHE_VERSION)),
-                ("test_bucket_max", str(TEST_BUCKET_MAX)),
-                ("source_row_count", str(row_count)),
-                ("source_max_id", str(max_id)),
-                ("source_max_updated_at", str(max_updated)),
-            ],
-        )
-        conn.execute(
-            f"CREATE INDEX idx_collimator_sample_splits_is_test ON {SPLIT_ASSIGNMENTS_TABLE}(is_test)"
-        )
-        conn.execute(
-            f"CREATE INDEX idx_collimator_sample_splits_group_id ON {SPLIT_ASSIGNMENTS_TABLE}(group_id)"
-        )
-        conn.commit()
-    finally:
-        conn.close()
-
-    log.info("rebuilt split metadata in %s", db_path)
-    return db_path
-
-
-def ensure_split_cache(db_path: Path) -> Path:
-    """Ensure in-DB split assignments exist and match the current database."""
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    row_count, max_id, max_updated = _db_fingerprint(db_path)
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        metadata = dict(conn.execute(f"SELECT key, value FROM {SPLIT_METADATA_TABLE}"))
-        cached_rows = int(conn.execute(f"SELECT COUNT(*) FROM {SPLIT_ASSIGNMENTS_TABLE}").fetchone()[0])
-    except sqlite3.DatabaseError:
-        return build_split_cache(db_path)
-    finally:
-        conn.close()
-
-    expected = {
-        "version": str(SPLIT_CACHE_VERSION),
-        "test_bucket_max": str(TEST_BUCKET_MAX),
-        "source_row_count": str(row_count),
-        "source_max_id": str(max_id),
-        "source_max_updated_at": str(max_updated),
-    }
-    if metadata != expected or cached_rows != row_count:
-        return build_split_cache(db_path)
-    return db_path
-
-
-def load_split_assignments(db_path: Path) -> dict[int, SplitAssignment]:
-    """Load split assignments, rebuilding them automatically when needed."""
-    # We prioritize our internal cache because it respects the current TEST_BUCKET_MAX.
-    ensure_split_cache(db_path)
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        return {
-            int(row_id): SplitAssignment(
-                sample_row_id=int(row_id),
-                group_id=str(group_id),
-                is_test=bool(is_test),
-            )
-            for row_id, group_id, is_test in conn.execute(
-                f"SELECT sample_row_id, group_id, is_test FROM {SPLIT_ASSIGNMENTS_TABLE}"
-            )
-        }
-    finally:
-        conn.close()
-
-
-def load_partitioned_group_ids(
-    db_path: Path,
-    *,
-    split_assignments: dict[int, SplitAssignment] | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Load cached group IDs aligned with partitioned raw-report streaming order."""
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    train_groups: list[str] = []
-    test_groups: list[str] = []
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    query = (
-        "SELECT id, sha256, cleave_json, status"
-        f" FROM samples WHERE status IN ({placeholders})"
-    )
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        for row_id, sha256, cleave_json, status in conn.execute(query, tuple(sorted(ALL_TERMINAL))):
-            if status not in ALL_TERMINAL or not cleave_json:
-                continue
-            assignment = split_assignments.get(int(row_id))
-            group_id = assignment.group_id if assignment is not None else sha256
-            if assignment is not None and assignment.is_test:
-                test_groups.append(group_id)
-            elif assignment is None and is_test_sample(sha256):
-                test_groups.append(group_id)
-            else:
-                train_groups.append(group_id)
-    finally:
-        conn.close()
-    return np.array(train_groups, dtype=object), np.array(test_groups, dtype=object)
-
-
-def load_train_group_ids(
-    db_path: Path,
-    *,
-    split_assignments: dict[int, SplitAssignment] | None = None,
-) -> np.ndarray:
-    """Load cached group IDs aligned with non-test training stream order."""
-    train_groups, _test_groups = load_partitioned_group_ids(
-        db_path, split_assignments=split_assignments,
-    )
-    return train_groups
-
-
 def stream_reports(
-    db_path: Path,
+    db_path: Path | str,
     *,
     exclude_test: bool = False,
     only_test: bool = False,
-    split_assignments: dict[int, SplitAssignment] | None = None,
 ) -> Iterator[tuple[dict[str, Any], int]]:
-    """Yield (report, label) pairs from the database without holding all in memory.
-
-    Each report dict is parsed from JSON, yielded once, and discarded.
-    When exclude_test=True, test-bucket samples (5%) are skipped.
-    When only_test=True, only test-bucket samples are yielded.
-    """
+    """Yield (report, label) pairs."""
     for sample in stream_samples(
-        db_path,
-        exclude_test=exclude_test,
-        only_test=only_test,
-        split_assignments=split_assignments,
+        db_path, exclude_test=exclude_test, only_test=only_test,
     ):
         yield sample.report, sample.label
 
 
-def stream_raw_reports(
-    db_path: Path,
-    *,
-    exclude_test: bool = False,
-    only_test: bool = False,
-    split_assignments: dict[int, SplitAssignment] | None = None,
-) -> Iterator[tuple[str, int]]:
-    """Yield raw cleave JSON strings and labels without parent-process decoding."""
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
+def partition_row_ids(
+    db_path: Path | str,
+) -> tuple[list[int], list[tuple[int, int]], list[tuple[int, int]]]:
+    """Partition samples into train/test by canonical_sha256.
 
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    query = (
-        "SELECT id, sha256, status, cleave_json"
-        f" FROM samples WHERE status IN ({placeholders})"
-    )
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        for row_id, sha256, status, cleave_json in conn.execute(
-            query, tuple(sorted(ALL_TERMINAL)),
-        ):
-            if not cleave_json:
-                continue
-            assignment = split_assignments.get(int(row_id))
-            is_test = assignment.is_test if assignment is not None else is_test_sample(sha256)
-            if exclude_test and is_test:
-                continue
-            if only_test and not is_test:
-                continue
-            yield cleave_json, (1 if status in MALWARE_STATUSES else 0)
-    finally:
-        conn.close()
+    Returns (train_row_ids, train_ids_labels, test_ids_labels).
+    """
+    train_row_ids: list[int] = []
+    train_ids_labels: list[tuple[int, int]] = []
+    test_ids_labels: list[tuple[int, int]] = []
+    for row_id, label, is_test, _canonical in stream_partitioned_metadata_grouped(db_path):
+        if is_test:
+            test_ids_labels.append((row_id, label))
+        else:
+            train_row_ids.append(row_id)
+            train_ids_labels.append((row_id, label))
+    return train_row_ids, train_ids_labels, test_ids_labels
 
 
-def stream_partitioned_raw_reports(
-    db_path: Path,
-    *,
-    split_assignments: dict[int, SplitAssignment] | None = None,
-) -> Iterator[tuple[str, int, bool]]:
-    """Yield raw cleave JSON, label, and test-split membership in one pass."""
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    query = (
-        "SELECT id, sha256, status, cleave_json"
-        f" FROM samples WHERE status IN ({placeholders})"
-    )
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        for row_id, sha256, status, cleave_json in conn.execute(
-            query, tuple(sorted(ALL_TERMINAL)),
-        ):
-            if not cleave_json:
-                continue
-            yield (
-                cleave_json,
-                1 if status in MALWARE_STATUSES else 0,
-                split_assignments.get(int(row_id), SplitAssignment(int(row_id), "", is_test_sample(sha256))).is_test,
-            )
-    finally:
-        conn.close()
+def lookup_sample(
+    db_path: Path | str,
+    sha256_prefix: str,
+) -> tuple[str, str, str, dict[str, Any]] | None:
+    """Look up a sample by SHA256 prefix. Returns (sha256, path, label, report) or None."""
+    with _connect(db_path) as conn:
+        query = "SELECT sha256, path, label, cleave_result FROM samples WHERE sha256 LIKE ?"
+        params: list[Any] = [f"{sha256_prefix}%"]
+        if not isinstance(conn, sqlite3.Connection):
+            query = "SELECT sha256, path, label, cleave_result FROM samples WHERE sha256 LIKE $1"
+        for sha256, path, label, cleave_result in _execute(conn, query, params):
+            raw = _cleave_json(cleave_result)
+            if raw is None:
+                return None
+            try:
+                report = json.loads(raw)
+            except json.JSONDecodeError:
+                return None
+            return sha256, path or "", label, report
+    return None
 
 
 def stream_partitioned_metadata_grouped(
-    db_path: Path,
-    *,
-    split_assignments: dict[int, SplitAssignment] | None = None,
+    db_path: Path | str,
 ) -> Iterator[tuple[int, int, bool, str]]:
-    """Yield (row_id, label, is_test, group_id) without loading raw JSON.
-
-    Used to reservoir-sample train/test splits without holding JSON in memory.
-    """
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    query = (
-        "SELECT id, sha256, status"
-        f" FROM samples WHERE status IN ({placeholders})"
-    )
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        for row_id, sha256, status in conn.execute(query, tuple(sorted(ALL_TERMINAL))):
-            assignment = split_assignments.get(int(row_id))
-            if assignment is None:
-                group_id = sha256
-                is_test = is_test_sample(sha256)
-            else:
-                group_id = assignment.group_id
-                is_test = assignment.is_test
+    """Yield (row_id, label, is_test, canonical_sha256) without loading raw JSON."""
+    with _connect(db_path) as conn:
+        for row_id, sha256, label, canonical in _execute(conn, _METADATA_QUERY):
+            split_key = canonical or sha256
             yield (
                 int(row_id),
-                1 if status in MALWARE_STATUSES else 0,
-                is_test,
-                group_id,
+                _label_int(label),
+                is_test_sample(split_key),
+                split_key,
             )
-    finally:
-        conn.close()
-
-
-def stream_raw_reports_by_row_ids(
-    db_path: Path,
-    row_ids: frozenset[int],
-) -> Iterator[tuple[str, int]]:
-    """Stream (raw_json, label) for selected row IDs via a full table scan.
-
-    Only the matching rows are yielded; unselected rows are skipped without
-    buffering them in memory, so peak memory is O(batch) not O(table).
-    """
-    if not row_ids:
-        return
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    query = (
-        "SELECT id, status, cleave_json"
-        f" FROM samples WHERE status IN ({placeholders})"
-    )
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        for row_id, status, cleave_json in conn.execute(query, tuple(sorted(ALL_TERMINAL))):
-            if int(row_id) not in row_ids or not cleave_json:
-                continue
-            yield cleave_json, (1 if status in MALWARE_STATUSES else 0)
-    finally:
-        conn.close()
-
-
-# ---------------------------------------------------------------------------
-# Embedded file streaming — synthesize single-file training samples from
-# archive members stored in sample_files + parent cleave_json.
-# ---------------------------------------------------------------------------
-
-# Minimum finding confidence for criticality scoring (matches features.MIN_CONFIDENCE).
-_MIN_CONFIDENCE = 0.65
-
-_CRIT_ORDINAL = {
-    "filtered": 0, "component": 1, "baseline": 2,
-    "notable": 3, "suspicious": 4, "hostile": 5,
-}
-
-
-def _score_file_criticality(file_entry: dict[str, Any]) -> int:
-    """Score a file entry by finding criticality for worst-file selection.
-
-    hostile_count * 1000 + suspicious_count * 100 + notable_count.
-    Only findings with conf >= MIN_CONFIDENCE are counted.
-    Mirrors cyclotron's FormatTopExtractedFiles scoring.
-    """
-    hostile = suspicious = notable = 0
-    for finding in file_entry.get("findings") or []:
-        conf = finding.get("conf", 1.0)
-        try:
-            conf = float(conf)
-        except (TypeError, ValueError):
-            conf = 1.0
-        if conf < _MIN_CONFIDENCE:
-            continue
-        crit = _CRIT_ORDINAL.get(finding.get("crit", "baseline"), 2)
-        if crit >= 5:
-            hostile += 1
-        if crit >= 4:
-            suspicious += 1
-        if crit >= 3:
-            notable += 1
-    return hostile * 1000 + suspicious * 100 + notable
-
-
-def _iter_embedded_files(
-    db_path: Path,
-    split_assignments: dict[int, SplitAssignment],
-    *,
-    exclude_test: bool = False,
-    only_test: bool = False,
-    include_partition: bool = False,
-    include_group: bool = False,
-) -> Iterator[tuple]:
-    """Core iterator for synthesized embedded-file reports.
-
-    Yields vary by flags:
-      default:            (json_str, label)
-      include_partition:  (json_str, label, is_test)
-      include_group:      (json_str, label, is_test, group_id)
-    """
-    seen_sha256: set[str] = set()
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    # Only scan samples that actually have embedded files (depth > 0 in sample_files).
-    query = (
-        "SELECT s.id, s.sha256, s.status, s.cleave_json"
-        " FROM samples s"
-        " WHERE s.status IN ({ph})"
-        " AND EXISTS (SELECT 1 FROM sample_files sf"
-        "   WHERE sf.sample_id = s.id AND sf.depth > 0)"
-    ).format(ph=placeholders)
-
-    n_benign = 0
-    n_malware = 0
-    n_skipped_dedup = 0
-
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        for row_id, sha256, status, cleave_json in conn.execute(
-            query, tuple(sorted(ALL_TERMINAL)),
-        ):
-            if not cleave_json:
-                continue
-            row_id = int(row_id)
-            assignment = split_assignments.get(row_id)
-            is_test = assignment.is_test if assignment is not None else is_test_sample(sha256)
-            group_id = assignment.group_id if assignment is not None else sha256
-
-            if exclude_test and is_test:
-                continue
-            if only_test and not is_test:
-                continue
-
-            try:
-                report = json.loads(cleave_json)
-            except json.JSONDecodeError:
-                continue
-
-            files = report.get("files") or []
-            embedded = [
-                f for f in files
-                if isinstance(f, dict) and f.get("depth", 0) > 0
-            ]
-            if not embedded:
-                continue
-
-            parent_label = 1 if status in MALWARE_STATUSES else 0
-
-            if parent_label == 1:
-                # Malware: yield only the worst-scoring file.
-                worst = max(embedded, key=_score_file_criticality)
-                file_sha = worst.get("sha256", "")
-                if not file_sha or file_sha in seen_sha256:
-                    n_skipped_dedup += 1
-                    continue
-                seen_sha256.add(file_sha)
-                synthetic = json.dumps({"files": [worst]})
-                n_malware += 1
-                if include_group:
-                    yield synthetic, 1, is_test, group_id
-                elif include_partition:
-                    yield synthetic, 1, is_test
-                else:
-                    yield synthetic, 1
-            else:
-                # Benign: yield every embedded file.
-                for file_entry in embedded:
-                    file_sha = file_entry.get("sha256", "")
-                    if not file_sha or file_sha in seen_sha256:
-                        n_skipped_dedup += 1
-                        continue
-                    seen_sha256.add(file_sha)
-                    synthetic = json.dumps({"files": [file_entry]})
-                    n_benign += 1
-                    if include_group:
-                        yield synthetic, 0, is_test, group_id
-                    elif include_partition:
-                        yield synthetic, 0, is_test
-                    else:
-                        yield synthetic, 0
-    finally:
-        conn.close()
-
-    log.info(
-        "embedded files: %d benign + %d malware yielded, %d skipped (dedup)",
-        n_benign, n_malware, n_skipped_dedup,
-    )
-
-
-def stream_embedded_file_reports(
-    db_path: Path,
-    *,
-    exclude_test: bool = False,
-    only_test: bool = False,
-    split_assignments: dict[int, SplitAssignment] | None = None,
-) -> Iterator[tuple[str, int]]:
-    """Yield synthesized (cleave_json, label) for embedded archive files.
-
-    Benign archives: every depth>0 file yields a benign sample.
-    Malware archives: only the highest-criticality depth>0 file yields malware.
-    Deduplicates by file SHA256 (first occurrence wins).
-    """
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    yield from _iter_embedded_files(
-        db_path, split_assignments,
-        exclude_test=exclude_test, only_test=only_test,
-    )
-
-
-def stream_partitioned_embedded_file_reports(
-    db_path: Path,
-    *,
-    split_assignments: dict[int, SplitAssignment] | None = None,
-) -> Iterator[tuple[str, int, bool]]:
-    """Yield (cleave_json, label, is_test) for embedded files in one pass."""
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    yield from _iter_embedded_files(
-        db_path, split_assignments, include_partition=True,
-    )
-
-
-def load_embedded_group_ids(
-    db_path: Path,
-    *,
-    split_assignments: dict[int, SplitAssignment] | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Return (train_groups, test_groups) for embedded file samples.
-
-    Aligned with stream_partitioned_embedded_file_reports order.
-    All files from the same parent share the parent's group_id.
-    """
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    train_groups: list[str] = []
-    test_groups: list[str] = []
-    for _, _, is_test, group_id in _iter_embedded_files(
-        db_path, split_assignments, include_partition=True, include_group=True,
-    ):
-        if is_test:
-            test_groups.append(group_id)
-        else:
-            train_groups.append(group_id)
-    return np.array(train_groups), np.array(test_groups)
-
-
-def stream_partitioned_raw_reports_grouped(
-    db_path: Path,
-    *,
-    split_assignments: dict[int, SplitAssignment] | None = None,
-) -> Iterator[tuple[str, int, bool, str]]:
-    """Yield raw JSON, label, test membership, and cached group ID in one pass."""
-    if not db_path.exists():
-        raise FileNotFoundError(f"Database not found: {db_path}")
-
-    if split_assignments is None:
-        split_assignments = load_split_assignments(db_path)
-    placeholders = ",".join("?" for _ in ALL_TERMINAL)
-    query = (
-        "SELECT id, sha256, status, cleave_json"
-        f" FROM samples WHERE status IN ({placeholders})"
-    )
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    try:
-        for row_id, sha256, status, cleave_json in conn.execute(
-            query, tuple(sorted(ALL_TERMINAL)),
-        ):
-            if not cleave_json:
-                continue
-            assignment = split_assignments.get(int(row_id))
-            if assignment is None:
-                group_id = sha256
-                is_test = is_test_sample(sha256)
-            else:
-                group_id = assignment.group_id
-                is_test = assignment.is_test
-            yield (
-                cleave_json,
-                1 if status in MALWARE_STATUSES else 0,
-                is_test,
-                group_id,
-            )
-    finally:
-        conn.close()
