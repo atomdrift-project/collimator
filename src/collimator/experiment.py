@@ -161,7 +161,7 @@ def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndar
             file_type = "unknown"
             try:
                 report = json.loads(cleave_result)
-                file_type = str(features.primary_file(report).get("file_type") or "unknown")
+                file_type = str(features.primary_file(report).get("type") or "unknown")
             except json.JSONDecodeError:
                 pass
             file_types_by_row[row_id] = file_type

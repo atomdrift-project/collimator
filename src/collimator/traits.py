@@ -43,10 +43,10 @@ def compute_trait_stats(
     for sample in samples:
         seen: set[str] = set()
         for file_entry in report_files(sample.report):
-            for finding in file_entry.get("findings") or []:
-                if crit is not None and finding.get("crit") != crit:
+            for finding in file_entry.get("ts") or []:
+                if crit is not None and finding.get("l") != crit:
                     continue
-                trait_id = finding.get("id", "")
+                trait_id = finding.get("i", "")
                 if not trait_id:
                     continue
 

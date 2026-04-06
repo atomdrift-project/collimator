@@ -260,27 +260,27 @@ def scan_file(
 
     embedded_files = [
         file_entry
-        for file_entry in report.get("files") or []
-        if isinstance(file_entry, dict) and int(file_entry.get("depth", 0) or 0) > 0
+        for file_entry in report.get("fs") or []
+        if isinstance(file_entry, dict) and int(file_entry.get("dp", 0) or 0) > 0
     ]
     for file_entry in embedded_files:
         _ef_raw, _ef_vec, ef_prob = _score_report(
             model,
             spec,
-            {"files": [file_entry], "version": report.get("version", "3")},
+            {"fs": [file_entry], "v": "4"},
         )
         if ef_prob > effective_prob:
             effective_prob = ef_prob
             full_path = str(file_entry.get("path", ""))
             promoted_path = full_path.rsplit("!!", 1)[-1] if full_path else None
-            promoted_type = str(file_entry.get("file_type", "unknown"))
+            promoted_type = str(file_entry.get("type", "unknown"))
 
-    findings = pf.get("findings") or []
-    hostile = sum(1 for f in findings if f.get("crit") == "hostile")
-    suspicious = sum(1 for f in findings if f.get("crit") == "suspicious")
+    findings = pf.get("ts") or []
+    hostile = sum(1 for f in findings if f.get("l") == 5)
+    suspicious = sum(1 for f in findings if f.get("l") == 4)
 
     print(f"File:        {file_path}")
-    print(f"File type:   {pf.get('file_type', 'unknown')}")
+    print(f"File type:   {pf.get('type', 'unknown')}")
     print(
         f"Prediction:  {effective_prob:.4f} "
         f"({'MALWARE' if effective_prob > threshold else 'BENIGN'})"

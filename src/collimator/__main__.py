@@ -975,7 +975,7 @@ def main() -> None:
     elif args.command == "traits":
         traits.analyze_traits(
             db_path=Path(args.db),
-            crit=None if args.crit == "any" else args.crit,
+            crit=None if args.crit == "any" else {"filtered": 0, "component": 1, "baseline": 2, "notable": 3, "suspicious": 4, "hostile": 5}.get(args.crit, 0),
             min_samples=args.min_samples,
             sort_by=args.sort,
             top_n=args.top,

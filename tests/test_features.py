@@ -18,34 +18,30 @@ from collimator.features import (
 )
 
 
+_CRIT_MAP = {"filtered": 0, "component": 1, "baseline": 2, "notable": 3, "suspicious": 4, "hostile": 5}
+
 def _make_report(
     findings: list[dict] | None = None,
-    imports: list[dict] | None = None,
+    imports: list[str] | None = None,
     metrics: dict | None = None,
     file_type: str = "elf",
     size: int = 1024,
 ) -> dict:
-    """Create a report in the v3 schema."""
+    """Create a report in the v4 schema."""
     return {
-        "version": "3",
-        "files": [{
+        "v": "4",
+        "fs": [{
             "id": 0,
             "path": "/tmp/test",
-            "depth": 0,
-            "file_type": file_type,
-            "sha256": "abc123",
-            "size": size,
-            "findings": findings or [],
-            "imports": imports or [],
-            "strings": [],
-            "sections": [],
-            "metrics": metrics or {},
+            "dp": 0,
+            "type": file_type,
+            "sha": "abc123",
+            "sz": size,
+            "ts": findings or [],
+            "is": imports or [],
+            "ss": [],
+            "ms": metrics or {},
         }],
-        "summary": {
-            "files_analyzed": 1,
-            "duration_ms": 10,
-            "tools": ["test"],
-        },
     }
 
 
@@ -53,7 +49,7 @@ def _make_report(
 def _reports_with_finding(finding_id: str, crit: str, n: int = 35) -> list[dict]:
     """Create n reports each containing one finding with the given id and crit."""
     return [
-        _make_report(findings=[{"id": finding_id, "crit": crit, "conf": 0.9}])
+        _make_report(findings=[{"i": finding_id, "l": _CRIT_MAP.get(crit, 0), "c": 0.9}])
         for _ in range(n)
     ]
 
@@ -84,21 +80,21 @@ def test_finding_paths_single() -> None:
 def test_primary_file_returns_first() -> None:
     report = _make_report()
     pf = primary_file(report)
-    assert pf["file_type"] == "elf"
-    assert pf["sha256"] == "abc123"
+    assert pf["type"] == "elf"
+    assert pf["sha"] == "abc123"
 
 
 def test_primary_file_empty() -> None:
     assert primary_file({}) == {}
-    assert primary_file({"files": []}) == {}
-    assert primary_file({"files": [None]}) == {}
+    assert primary_file({"fs": []}) == {}
+    assert primary_file({"fs": [None]}) == {}
 
 
 def test_report_files_filters_invalid_entries() -> None:
-    report = {"files": [None, {"file_type": "zip"}, "bad", {"file_type": "python"}]}
+    report = {"fs": [None, {"type": "zip"}, "bad", {"type": "python"}]}
     files = report_files(report)
 
-    assert [f["file_type"] for f in files] == ["zip", "python"]
+    assert [f["type"] for f in files] == ["zip", "python"]
 
 
 # ---------------------------------------------------------------------------
@@ -232,10 +228,10 @@ def test_extract_aggregates() -> None:
 
 def test_extract_finding_density_features() -> None:
     report = _make_report(findings=[
-        {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
-        {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
-        {"id": "objectives/evasion/process::b", "crit": "suspicious", "conf": 0.95},
-        {"id": "metadata/format::x", "crit": "baseline", "conf": 0.95},
+        {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
+        {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
+        {"i": "objectives/evasion/process::b", "l": 4, "c":0.95},
+        {"i": "metadata/format::x", "l": 2, "c":0.95},
     ])
     spec = build_vocab([report] * 35)
     vec = extract(report, spec)
@@ -252,8 +248,8 @@ def test_extract_finding_density_features() -> None:
 
 def test_extract_third_party_signals() -> None:
     report = _make_report(findings=[
-        {"id": "third_party/yara_match", "crit": "hostile", "conf": 1.0},
-        {"id": "third_party/another", "crit": "suspicious", "conf": 0.8},
+        {"i": "third_party/yara_match", "l": 5, "c":1.0},
+        {"i": "third_party/another", "l": 4, "c":0.8},
     ])
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -299,20 +295,20 @@ def test_extract_struct_file_risk_coverage(monkeypatch) -> None:
     feature_config_from_env.cache_clear()
     try:
         report = {
-            "files": [
+            "fs": [
                 {
-                    "file_type": "elf",
-                    "size": 1000,
-                    "imports": [],
-                    "metrics": {},
-                    "findings": [{"id": "objectives/evasion::a", "crit": "suspicious", "conf": 0.95}],
+                    "type":"elf",
+                    "sz":1000,
+                    "is":[],
+                    "ms":{},
+                    "ts": [{"i": "objectives/evasion::a", "l": 4, "c":0.95}],
                 },
                 {
-                    "file_type": "elf",
-                    "size": 1000,
-                    "imports": [],
-                    "metrics": {},
-                    "findings": [{"id": "objectives/evasion::b", "crit": "hostile", "conf": 0.95}],
+                    "type":"elf",
+                    "sz":1000,
+                    "is":[],
+                    "ms":{},
+                    "ts": [{"i": "objectives/evasion::b", "l": 5, "c":0.95}],
                 },
             ],
         }
@@ -330,24 +326,24 @@ def test_extract_suspicious_breadth_density(monkeypatch) -> None:
     feature_config_from_env.cache_clear()
     try:
         report = {
-            "files": [
+            "fs": [
                 {
-                    "file_type": "pe",
-                    "size": 1024,
-                    "imports": [],
-                    "metrics": {},
-                    "findings": [
-                        {"id": "objectives/evasion::a", "crit": "suspicious", "conf": 0.95},
-                        {"id": "metadata/format::b", "crit": "hostile", "conf": 0.95},
+                    "type":"pe",
+                    "sz":1024,
+                    "is":[],
+                    "ms":{},
+                    "ts": [
+                        {"i": "objectives/evasion::a", "l": 4, "c":0.95},
+                        {"i": "metadata/format::b", "l": 5, "c":0.95},
                     ],
                 },
                 {
-                    "file_type": "javascript",
-                    "size": 4096,
-                    "imports": [],
-                    "metrics": {},
-                    "findings": [
-                        {"id": "micro-behaviors/network::c", "crit": "suspicious", "conf": 0.95},
+                    "type":"javascript",
+                    "sz":4096,
+                    "is":[],
+                    "ms":{},
+                    "ts": [
+                        {"i": "micro-behaviors/network::c", "l": 4, "c":0.95},
                     ],
                 },
             ],
@@ -376,9 +372,9 @@ def test_extract_hostile_escalation_features(monkeypatch) -> None:
     feature_config_from_env.cache_clear()
     try:
         report = _make_report(findings=[
-            {"id": "objectives/evasion/process::a", "crit": "notable", "conf": 0.95},
-            {"id": "objectives/evasion/process::b", "crit": "suspicious", "conf": 0.95},
-            {"id": "metadata/format::c", "crit": "hostile", "conf": 0.95},
+            {"i": "objectives/evasion/process::a", "l": 3, "c":0.95},
+            {"i": "objectives/evasion/process::b", "l": 4, "c":0.95},
+            {"i": "metadata/format::c", "l": 5, "c":0.95},
         ])
         spec = build_vocab([report] * 35)
         vec = extract(report, spec)
@@ -399,34 +395,34 @@ def test_extract_density_penalty_and_file_severity_features(monkeypatch) -> None
     feature_config_from_env.cache_clear()
     try:
         report = {
-            "files": [
+            "fs": [
                 {
-                    "file_type": "pe",
-                    "size": 1024,
-                    "imports": [],
-                    "metrics": {},
-                    "findings": [
-                        {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
-                        {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
-                        {"id": "metadata/format::b", "crit": "suspicious", "conf": 0.95},
+                    "type":"pe",
+                    "sz":1024,
+                    "is":[],
+                    "ms":{},
+                    "ts": [
+                        {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
+                        {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
+                        {"i": "metadata/format::b", "l": 4, "c":0.95},
                     ],
                 },
                 {
-                    "file_type": "javascript",
-                    "size": 4096,
-                    "imports": [],
-                    "metrics": {},
-                    "findings": [
-                        {"id": "metadata/format::c", "crit": "suspicious", "conf": 0.95},
+                    "type":"javascript",
+                    "sz":4096,
+                    "is":[],
+                    "ms":{},
+                    "ts": [
+                        {"i": "metadata/format::c", "l": 4, "c":0.95},
                     ],
                 },
                 {
-                    "file_type": "zip",
-                    "size": 1024,
-                    "imports": [],
-                    "metrics": {},
-                    "findings": [
-                        {"id": "micro-behaviors/fs::d", "crit": "notable", "conf": 0.95},
+                    "type":"zip",
+                    "sz":1024,
+                    "is":[],
+                    "ms":{},
+                    "ts": [
+                        {"i": "micro-behaviors/fs::d", "l": 3, "c":0.95},
                     ],
                 },
             ],
@@ -449,7 +445,7 @@ def test_extract_density_penalty_and_file_severity_features(monkeypatch) -> None
 
 def test_extract_non_yara_third_party_does_not_set_yara_flag() -> None:
     report = _make_report(findings=[
-        {"id": "third_party/packer_match", "crit": "hostile", "conf": 1.0},
+        {"i": "third_party/packer_match", "l": 5, "c":1.0},
     ])
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -460,8 +456,8 @@ def test_extract_non_yara_third_party_does_not_set_yara_flag() -> None:
 
 def test_extract_well_known_signals() -> None:
     report = _make_report(findings=[
-        {"id": "well-known/cobalt", "crit": "hostile", "conf": 1.0},
-        {"id": "well-known/meterpreter", "crit": "suspicious", "conf": 0.9},
+        {"i": "well-known/cobalt", "l": 5, "c":1.0},
+        {"i": "well-known/meterpreter", "l": 4, "c":0.9},
     ])
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -497,34 +493,34 @@ def test_extract_key_metrics() -> None:
 def test_extract_uses_inner_files_from_archive() -> None:
     report = {
         "version": "3",
-        "files": [
+        "fs": [
             {
                 "id": 0,
                 "path": "/tmp/archive.zip",
                 "depth": 0,
-                "file_type": "zip",
+                "type":"zip",
                 "sha256": "outer",
-                "size": 4096,
-                "findings": [],
-                "imports": [],
+                "sz":4096,
+                "ts": [],
+                "is":[],
                 "strings": [],
                 "sections": [],
-                "metrics": {},
+                "ms":{},
             },
             {
                 "id": 1,
                 "path": "archive.zip!!hello.py",
                 "depth": 1,
-                "file_type": "python",
+                "type":"python",
                 "sha256": "inner",
-                "size": 512,
-                "findings": [
-                    {"id": "objectives/evasion/process", "crit": "hostile", "conf": 0.95},
+                "sz":512,
+                "ts": [
+                    {"i": "objectives/evasion/process", "l": 5, "c":0.95},
                 ],
-                "imports": [{"module": "os"}],
+                "is":[{"module": "os"}],
                 "strings": [],
                 "sections": [],
-                "metrics": {
+                "ms":{
                     "text": {"char_entropy": 5.5},
                 },
             },
@@ -550,50 +546,50 @@ def test_extract_uses_inner_files_from_archive() -> None:
 def test_extract_topk_file_risk_features() -> None:
     report = {
         "version": "3",
-        "files": [
+        "fs": [
             {
                 "id": 0,
                 "path": "/tmp/pkg.zip",
                 "depth": 0,
-                "file_type": "zip",
+                "type":"zip",
                 "sha256": "outer",
-                "size": 1024,
-                "findings": [],
-                "imports": [],
+                "sz":1024,
+                "ts": [],
+                "is":[],
                 "strings": [],
                 "sections": [],
-                "metrics": {},
+                "ms":{},
             },
             {
                 "id": 1,
                 "path": "pkg.zip!!benign.py",
                 "depth": 1,
-                "file_type": "python",
+                "type":"python",
                 "sha256": "b",
-                "size": 100,
-                "findings": [
-                    {"id": "metadata/format::x", "crit": "baseline", "conf": 0.95},
+                "sz":100,
+                "ts": [
+                    {"i": "metadata/format::x", "l": 2, "c":0.95},
                 ],
-                "imports": [],
+                "is":[],
                 "strings": [],
                 "sections": [],
-                "metrics": {},
+                "ms":{},
             },
             {
                 "id": 2,
                 "path": "pkg.zip!!evil.py",
                 "depth": 1,
-                "file_type": "python",
+                "type":"python",
                 "sha256": "e",
-                "size": 100,
-                "findings": [
-                    {"id": "objectives/evasion/process::a", "crit": "hostile", "conf": 0.95},
-                    {"id": "objectives/evasion/process::b", "crit": "suspicious", "conf": 0.95},
+                "sz":100,
+                "ts": [
+                    {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
+                    {"i": "objectives/evasion/process::b", "l": 4, "c":0.95},
                 ],
-                "imports": [],
+                "is":[],
                 "strings": [],
                 "sections": [],
-                "metrics": {},
+                "ms":{},
             },
         ],
         "summary": {"files_analyzed": 3, "duration_ms": 10, "tools": ["test"]},
@@ -649,9 +645,9 @@ def test_extract_zero_findings() -> None:
 
 def test_extract_finding_count_log() -> None:
     report = _make_report(findings=[
-        {"id": "a", "crit": "baseline", "conf": 0.9},
-        {"id": "b", "crit": "baseline", "conf": 0.9},
-        {"id": "c", "crit": "baseline", "conf": 0.9},
+        {"i": "a", "l": 2, "c":0.9},
+        {"i": "b", "l": 2, "c":0.9},
+        {"i": "c", "l": 2, "c":0.9},
     ])
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -677,7 +673,7 @@ def test_extract_all_shape() -> None:
 
 def test_extract_vector_length_matches_spec() -> None:
     report = _make_report(
-        findings=[{"id": "net/socket", "crit": "hostile", "conf": 1.0}],
+        findings=[{"i": "net/socket", "l": 5, "c":1.0}],
         imports=[{"symbol": "connect", "source": "goblin"}],
     )
     spec = build_vocab([report])
@@ -687,13 +683,13 @@ def test_extract_vector_length_matches_spec() -> None:
 
 def test_unknown_path_ignored() -> None:
     report = _make_report(findings=[
-        {"id": "known/path", "crit": "baseline", "conf": 0.5},
+        {"i": "known/path", "l": 2, "c":0.5},
     ])
     spec = build_vocab([report])
 
     report_new = _make_report(findings=[
-        {"id": "known/path", "crit": "baseline", "conf": 0.5},
-        {"id": "unknown_new/deep/thing", "crit": "hostile", "conf": 1.0},
+        {"i": "known/path", "l": 2, "c":0.5},
+        {"i": "unknown_new/deep/thing", "l": 5, "c":1.0},
     ])
     vec = extract(report_new, spec)
     assert len(vec) == spec.total_features
@@ -703,13 +699,13 @@ def test_null_json_fields() -> None:
     """All list fields may be absent or null in sparse reports."""
     report = {
         "version": "3",
-        "files": [{
+        "fs": [{
             "id": 0,
             "path": "/tmp/x",
             "depth": 0,
-            "file_type": "elf",
+            "type":"elf",
             "sha256": "abc",
-            "size": 1024,
+            "sz":1024,
         }],
         "summary": {"files_analyzed": 1, "duration_ms": 1, "tools": []},
     }
@@ -720,7 +716,7 @@ def test_null_json_fields() -> None:
 
 
 def test_empty_files_array() -> None:
-    report = {"version": "3", "files": []}
+    report = {"version": "3", "fs": []}
     spec = build_vocab([report])
     vec = extract(report, spec)
     assert len(vec) == spec.total_features

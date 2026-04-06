@@ -54,24 +54,8 @@ T = TypeVar("T")
 # Constants
 # ---------------------------------------------------------------------------
 
-CRITICALITY_ORDINAL: dict[str, int] = {
-    "filtered": 0,
-    "component": 1,
-    "baseline": 2,
-    "notable": 3,
-    "suspicious": 4,
-    "hostile": 5,
-}
-
-RISK_ORDINAL: dict[str, int] = {
-    "": 0,
-    "filtered": 0,
-    "component": 1,
-    "baseline": 2,
-    "notable": 3,
-    "suspicious": 4,
-    "hostile": 5,
-}
+# v4: criticality is already an integer ordinal (0-5) in the JSON.
+# 0=filtered, 1=component, 2=baseline, 3=notable, 4=suspicious, 5=hostile
 
 # Minimum number of samples a path must appear in to get a feature.
 MIN_PATH_FREQ = 5
@@ -181,8 +165,8 @@ def feature_config_from_env() -> FeatureConfig:
 # ---------------------------------------------------------------------------
 
 def report_files(report: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return all valid file entries from a v3 report."""
-    files = report.get("files") or []
+    """Return all valid file entries from a v4 report."""
+    files = report.get("fs") or []
     return [f for f in files if isinstance(f, dict)]
 
 
@@ -540,7 +524,7 @@ def _merge_metric_values(files: list[dict[str, Any]]) -> dict[str, dict[str, flo
     """
     merged: dict[str, dict[str, float]] = {}
     for file_entry in files:
-        metrics = file_entry.get("metrics") or {}
+        metrics = file_entry.get("ms") or {}
         for group, fields in metrics.items():
             if not isinstance(fields, dict):
                 continue
@@ -572,13 +556,13 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     has_yara = False
 
     for finding in findings:
-        fid = finding.get("id", "")
+        fid = finding.get("i", "")
         if not fid:
             continue
-        if _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
+        if _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
             continue
         filtered_finding_count += 1
-        crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
+        crit_ord = finding.get("l", 0)
         if crit_ord >= 3:
             notable_finding_count += 1
             notable_ids.add(fid)
@@ -656,7 +640,7 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
     has_yara = False
 
     for file_entry in files:
-        summary = _summarize_findings(file_entry.get("findings") or [])
+        summary = _summarize_findings(file_entry.get("ts") or [])
         filtered_finding_count += summary.filtered_finding_count
         notable_finding_count += summary.notable_finding_count
         suspicious_finding_count += summary.suspicious_finding_count
@@ -682,11 +666,11 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
             if max_ord > sample_paths.get(path, -1):
                 sample_paths[path] = max_ord
 
-        for finding in file_entry.get("findings") or []:
-            fid = finding.get("id", "")
-            if not fid or _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
+        for finding in file_entry.get("ts") or []:
+            fid = finding.get("i", "")
+            if not fid or _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
                 continue
-            crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
+            crit_ord = finding.get("l", 0)
             if crit_ord >= 3:
                 unique_notable_ids.add(fid)
             if crit_ord >= 4:
@@ -716,9 +700,9 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
 
 def _file_risk_stats(file_entry: dict[str, Any]) -> _FileRiskStats:
     """Compute per-file suspiciousness for top-k package aggregation."""
-    summary = _summarize_findings(file_entry.get("findings") or [])
+    summary = _summarize_findings(file_entry.get("ts") or [])
     denom = max(summary.filtered_finding_count, 1)
-    size_kb = max(_float(file_entry.get("size", 0.0)) / 1024.0, 1.0)
+    size_kb = max(_float(file_entry.get("sz", 0.0)) / 1024.0, 1.0)
     return _FileRiskStats(
         suspicious_ratio=summary.suspicious_finding_count / denom,
         hostile_ratio=summary.hostile_finding_count / denom,
@@ -863,7 +847,7 @@ def _apply_aggregate_features(
     vec[offset + 13] = summary.hostile_finding_count / max(summary.filtered_finding_count, 1)
     vec[offset + 14] = math.log1p(summary.unique_suspicious_ids)
     vec[offset + 15] = math.log1p(summary.unique_hostile_ids)
-    total_kb = max(sum(_float(file_entry.get("size", 0.0)) for file_entry in files) / 1024.0, 1.0)
+    total_kb = max(sum(_float(file_entry.get("sz", 0.0)) for file_entry in files) / 1024.0, 1.0)
     topk_features = _topk_file_risk_features(
         files,
         top_k_risk_files,
@@ -969,7 +953,7 @@ def _apply_filetype_features(
 ) -> int:
     """Group 6: file type multi-hot features across all files."""
     for file_entry in files:
-        idx = ctx.ft_lookup.get(file_entry.get("file_type", ""))
+        idx = ctx.ft_lookup.get(file_entry.get("type", ""))
         if idx is not None:
             vec[offset + idx] = 1.0
     return offset + ctx.n_ft
@@ -991,18 +975,18 @@ def _apply_structural_features(
     suspicious_files = 0
     hostile_files = 0
     for file_entry in files:
-        if file_entry.get("file_type", "") in binary_like and _float(file_entry.get("size", 0)) < 20000:
+        if file_entry.get("type", "") in binary_like and _float(file_entry.get("sz", 0)) < 20000:
             any_tiny_binary = True
-        if "imports" in file_entry:
+        if "is" in file_entry:
             import_candidates += 1
-            if len(file_entry.get("imports") or []) == 0:
+            if len(file_entry.get("is") or []) == 0:
                 importless_candidates += 1
 
         # Track max entropy across all files in the report.
-        metrics = file_entry.get("metrics") or {}
+        metrics = file_entry.get("ms") or {}
         binary_metrics = metrics.get("binary") or {}
         max_entropy = max(max_entropy, _float(binary_metrics.get("overall_entropy", 0.0)))
-        file_summary = _summarize_findings(file_entry.get("findings") or [])
+        file_summary = _summarize_findings(file_entry.get("ts") or [])
         if file_summary.suspicious_finding_count > 0:
             suspicious_files += 1
         if file_summary.hostile_finding_count > 0:
@@ -1099,16 +1083,16 @@ def _vocab_batch_worker(
             continue
         sample_paths: dict[str, int] = {}
         for file_entry in report_files(report):
-            ftype = file_entry.get("file_type", "")
+            ftype = file_entry.get("type", "")
             if ftype:
                 filetypes.append(ftype)
-            for finding in file_entry.get("findings") or []:
-                fid = finding.get("id", "")
+            for finding in file_entry.get("ts") or []:
+                fid = finding.get("i", "")
                 if not fid:
                     continue
-                if _float(finding.get("conf", 1.0)) < MIN_CONFIDENCE:
+                if _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
                     continue
-                crit_ord = CRITICALITY_ORDINAL.get(finding.get("crit", "baseline"), 2)
+                crit_ord = finding.get("l", 0)
                 for path in _finding_paths(fid):
                     if crit_ord > sample_paths.get(path, -1):
                         sample_paths[path] = crit_ord
