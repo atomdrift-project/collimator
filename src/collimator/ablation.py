@@ -24,7 +24,7 @@ def _drop_groups(
 
 
 def run_ablation(
-    db_path: Path,
+    db_path: Path | str,
     *,
     n_workers: int = 1,
     seed: int = 42,

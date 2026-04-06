@@ -17,7 +17,7 @@ def _rate(n: int, seconds: float) -> float:
 
 
 def run_benchmark(
-    db_path: Path,
+    db_path: Path | str,
     *,
     n_workers: int = 1,
     model_path: Path | None = None,

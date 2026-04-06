@@ -170,7 +170,7 @@ def print_trait_stats(stats: list[TraitStat], *, top_n: int) -> None:
 
 
 def analyze_traits(
-    db_path: Path,
+    db_path: Path | str,
     *,
     crit: str | None = "hostile",
     min_samples: int = 1,

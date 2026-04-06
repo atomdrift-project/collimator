@@ -19,6 +19,13 @@ from .model import detect_device
 log = logging.getLogger(__name__)
 
 
+def _db_dsn(raw: str) -> Path | str:
+    """Return *raw* as-is for postgres:// DSNs, or as a Path for SQLite files."""
+    if raw.startswith(("postgres://", "postgresql://")):
+        return raw
+    return Path(raw)
+
+
 def setup_logging() -> None:
     logging.basicConfig(
         level=logging.INFO,
@@ -101,7 +108,7 @@ def _print_test_block(
 def cmd_train(args: argparse.Namespace) -> None:
     """Train a model and export to ONNX."""
     t0 = time.time()
-    db_path = Path(args.db)
+    db_path = _db_dsn(args.db)
     out_dir = Path(args.output)
     out_dir.mkdir(parents=True, exist_ok=True)
     effective_workers = features.resolve_worker_count(args.workers)
@@ -313,7 +320,7 @@ def cmd_train(args: argparse.Namespace) -> None:
 
 def cmd_evaluate(args: argparse.Namespace) -> None:
     """Evaluate an existing model against a database."""
-    db_path = Path(args.db)
+    db_path = _db_dsn(args.db)
     spec_path = Path(args.spec)
     model_path = Path(args.model)
 
@@ -395,7 +402,7 @@ def cmd_explain(args: argparse.Namespace) -> None:
     """Run SHAP analysis on a trained model."""
     from .model import load_model
 
-    db_path = Path(args.db)
+    db_path = _db_dsn(args.db)
     spec_path = Path(args.spec)
     model_path = Path(args.model)
     out_dir = Path(args.output)
@@ -695,7 +702,7 @@ def cmd_fixture(args: argparse.Namespace) -> None:
     """Generate cross-language test fixtures for xgboost-native."""
     from .model import load_model
 
-    db_path = Path(args.db)
+    db_path = _db_dsn(args.db)
     spec_path = Path(args.spec)
     model_path = Path(args.model)
 
@@ -952,13 +959,13 @@ def main() -> None:
     elif args.command == "inspect":
         inspect.inspect_sample(
             sha256=args.sample,
-            db_path=Path(args.db),
+            db_path=_db_dsn(args.db),
             model_path=Path(args.model),
             spec_path=Path(args.spec),
         )
     elif args.command == "errors":
         inspect.inspect_errors(
-            db_path=Path(args.db),
+            db_path=_db_dsn(args.db),
             model_path=Path(args.model),
             spec_path=Path(args.spec),
             top_n=args.top,
@@ -974,7 +981,7 @@ def main() -> None:
         cmd_fixture(args)
     elif args.command == "traits":
         traits.analyze_traits(
-            db_path=Path(args.db),
+            db_path=_db_dsn(args.db),
             crit=None if args.crit == "any" else {"filtered": 0, "component": 1, "baseline": 2, "notable": 3, "suspicious": 4, "hostile": 5}.get(args.crit, 0),
             min_samples=args.min_samples,
             sort_by=args.sort,
@@ -983,14 +990,14 @@ def main() -> None:
         )
     elif args.command == "thresholds":
         thresholds.show_thresholds(
-            db_path=Path(args.db),
+            db_path=_db_dsn(args.db),
             model_path=Path(args.model) if args.model else None,
             spec_path=Path(args.spec) if args.spec else None,
             n_workers=args.workers,
         )
     elif args.command == "benchmark":
         benchmark.run_benchmark(
-            db_path=Path(args.db),
+            db_path=_db_dsn(args.db),
             n_workers=args.workers,
             model_path=Path(args.model) if args.model else None,
             spec_path=Path(args.spec) if args.spec else None,
@@ -998,7 +1005,7 @@ def main() -> None:
         )
     elif args.command == "experiment":
         experiment.run_experiment(
-            db_path=Path(args.db),
+            db_path=_db_dsn(args.db),
             output_dir=Path(args.output),
             n_workers=args.workers,
             seed=args.seed,
@@ -1024,7 +1031,7 @@ def main() -> None:
         )
     elif args.command == "ablate":
         rows = ablation.run_ablation(
-            db_path=Path(args.db),
+            db_path=_db_dsn(args.db),
             n_workers=args.workers,
             seed=args.seed,
             groups=args.groups,

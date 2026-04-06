@@ -1,11 +1,11 @@
 # collimator
 
 `collimator` is a compact, streaming-first malware-classification pipeline built around XGBoost.
-It reads labeled samples from a [cyclotron](https://codeberg.org/atomdrift/cyclotron) SQLite database, extracts sparse numeric features from cleave reports, trains a calibrated classifier, and exports both XGBoost and ONNX artifacts for downstream inference.
+It reads labeled samples from a [hopper](https://codeberg.org/atomdrift/hopper) database (PostgreSQL or SQLite), extracts sparse numeric features from cleave reports, trains a calibrated classifier, and exports both XGBoost and ONNX artifacts for downstream inference.
 
 Part of the broader toolchain:
 
-`cleave -> cyclotron -> collimator -> litmus`
+`cleave -> hopper -> collimator -> litmus`
 
 ## Goals
 
@@ -20,7 +20,7 @@ This repo is intentionally optimized for four things at once:
 
 The core pipeline is:
 
-1. Load labeled samples from `cyclotron`.
+1. Load labeled samples from `hopper`.
 2. Build a feature vocabulary from training samples only.
 3. Extract sparse features for train/test streams.
 4. Train XGBoost on raw sparse features.
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 
 ### Synthetic demo database
 
-Generate a small self-contained SQLite database that matches the `cyclotron` schema:
+Generate a small self-contained SQLite database that matches the `hopper` schema:
 
 ```bash
 python -m collimator demo-db --output out/demo.db
@@ -105,13 +105,13 @@ make demo-db
 ### Train
 
 ```bash
-python -m collimator train --db /path/to/cyclotron.db --output out
+python -m collimator train --db postgres://hopper@localhost/hopper --output out
 ```
 
 Or via `make`:
 
 ```bash
-make train DB=/path/to/cyclotron.db
+make train DB=postgres://hopper@localhost/hopper
 ```
 
 This writes:
@@ -127,7 +127,7 @@ This writes:
 ### Train and export
 
 ```bash
-python -m collimator train --db /path/to/cyclotron.db --output out --seed 42
+python -m collimator train --db postgres://hopper@localhost/hopper --output out --seed 42
 ```
 
 Demo run:
@@ -139,49 +139,49 @@ python -m collimator train --db out/demo.db --output out
 ### Evaluate an exported ONNX model
 
 ```bash
-python -m collimator evaluate --db /path/to/cyclotron.db --model out/model.onnx --spec out/feature_spec.json
+python -m collimator evaluate --db postgres://hopper@localhost/hopper --model out/model.onnx --spec out/feature_spec.json
 ```
 
 ### Analyze operating thresholds
 
 ```bash
-python -m collimator thresholds --db /path/to/cyclotron.db --model out/model.json --spec out/feature_spec.json
+python -m collimator thresholds --db postgres://hopper@localhost/hopper --model out/model.json --spec out/feature_spec.json
 ```
 
 ### Run feature-group ablations
 
 ```bash
-python -m collimator ablate --db /path/to/cyclotron.db
+python -m collimator ablate --db postgres://hopper@localhost/hopper
 ```
 
 Optional subset:
 
 ```bash
-python -m collimator ablate --db /path/to/cyclotron.db --groups present metrics struct
+python -m collimator ablate --db postgres://hopper@localhost/hopper --groups present metrics struct
 ```
 
 Save JSON:
 
 ```bash
-python -m collimator ablate --db /path/to/cyclotron.db --output out/ablation.json
+python -m collimator ablate --db postgres://hopper@localhost/hopper --output out/ablation.json
 ```
 
 ### Benchmark throughput
 
 ```bash
-python -m collimator benchmark --db /path/to/cyclotron.db
+python -m collimator benchmark --db postgres://hopper@localhost/hopper
 ```
 
 Reuse an existing model/spec:
 
 ```bash
-python -m collimator benchmark --db /path/to/cyclotron.db --model out/model.json --spec out/feature_spec.json
+python -m collimator benchmark --db postgres://hopper@localhost/hopper --model out/model.json --spec out/feature_spec.json
 ```
 
 Save JSON:
 
 ```bash
-python -m collimator benchmark --db /path/to/cyclotron.db --output out/benchmark.json
+python -m collimator benchmark --db postgres://hopper@localhost/hopper --output out/benchmark.json
 ```
 
 ## Interpreting Outputs

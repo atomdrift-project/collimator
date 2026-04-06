@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
-DB ?= $(HOME)/.local/share/cyclotron/cyclotron.db
+DB ?= postgres://hopper@localhost:5432/hopper
 OUT_DIR ?= out
 LOG_DIR ?= $(OUT_DIR)/logs
 SAMPLE ?=
@@ -37,7 +37,7 @@ _TRAIN_FLAGS := $(if $(TRAIN_ESTIMATORS),--n-estimators $(TRAIN_ESTIMATORS)) \
 # Validate DB is set for targets that need it
 check-db:
 ifndef DB
-	$(error DB is required. Usage: make train DB=/path/to/cyclotron.db)
+	$(error DB is required. Usage: make train DB=postgres://hopper@localhost/hopper)
 endif
 
 venv: $(VENV_DIR)/bin/activate
@@ -186,7 +186,7 @@ help:
 	@echo "  make clean                         Remove build artifacts"
 	@echo ""
 	@echo "Configuration:"
-	@echo "  DB=path         Path to cyclotron SQLite database (default: $$HOME/.local/share/cyclotron/cyclotron.db)"
+	@echo "  DB=dsn          Hopper database DSN (postgres:// or SQLite path, default: postgres://hopper@localhost:5432/hopper)"
 	@echo "  OUT_DIR=path    Output directory (default: out)"
 	@echo "  LOG_DIR=path    Text log directory (default: out/logs)"
 	@echo "  WORKERS=n       Feature extraction workers (default: 0=auto)"

@@ -63,7 +63,7 @@ def _reservoir_update(
 
 
 def sample_partitioned_reports(
-    db_path: Path,
+    db_path: Path | str,
     *,
     train_samples: int,
     max_test_samples: int = 0,
@@ -170,7 +170,7 @@ def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndar
 
 
 def run_experiment(
-    db_path: Path,
+    db_path: Path | str,
     *,
     output_dir: Path | None = None,
     n_workers: int = 0,

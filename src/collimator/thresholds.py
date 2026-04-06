@@ -28,7 +28,7 @@ MIN_SAMPLES_FOR_FPR = 5
 
 
 def show_thresholds(
-    db_path: Path,
+    db_path: Path | str,
     model_path: Path | None = None,
     spec_path: Path | None = None,
     n_workers: int = 0,

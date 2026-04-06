@@ -1,6 +1,9 @@
 
 # added by lint-install
 out/
+*.db
+*.db-shm
+*.db-wal
 __pycache__/
 src/collimator/__pycache__/
 tests/__pycache__/

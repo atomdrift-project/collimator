@@ -92,7 +92,7 @@ def _print_shap_breakdown(
 
 def inspect_sample(
     sha256: str,
-    db_path: Path,
+    db_path: Path | str,
     model_path: Path,
     spec_path: Path,
 ) -> None:
@@ -127,7 +127,7 @@ def inspect_sample(
 
 
 def inspect_errors(
-    db_path: Path,
+    db_path: Path | str,
     model_path: Path,
     spec_path: Path,
     top_n: int = 20,

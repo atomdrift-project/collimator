@@ -59,8 +59,16 @@ def _is_pg(dsn: Path | str) -> bool:
 
 
 @contextmanager
-def _connect(dsn: Path | str):
-    """Open a read-only connection to the hopper database."""
+def _connect(dsn: Path | str, *, repeatable_read: bool = False):
+    """Open a read-only connection to the hopper database.
+
+    When *repeatable_read* is True the PostgreSQL connection uses
+    REPEATABLE READ isolation, pinning a consistent snapshot for the
+    lifetime of the connection.  This prevents concurrent hopper writes
+    (new samples, label changes) from altering the row set mid-scan.
+    SQLite read-only connections are already snapshot-isolated, so the
+    flag is a no-op there.
+    """
     if _is_pg(dsn):
         try:
             import psycopg  # noqa: PLC0415
@@ -68,7 +76,11 @@ def _connect(dsn: Path | str):
             raise ImportError(
                 "psycopg is required for PostgreSQL: pip install psycopg[binary]",
             ) from exc
-        with psycopg.connect(str(dsn)) as conn:
+        with psycopg.connect(
+            str(dsn),
+            autocommit=False,
+            options="-c default_transaction_isolation=repeatable\\ read" if repeatable_read else "",
+        ) as conn:
             yield conn
     else:
         db_path = Path(str(dsn))
@@ -112,9 +124,8 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, str]:
         return {}
     with _connect(dsn) as conn:
         if _is_pg(dsn):
-            import psycopg  # noqa: PLC0415
-            # PostgreSQL: use ANY($1) with array parameter.
-            query = "SELECT id, cleave_result FROM samples WHERE id = ANY($1)"
+            # PostgreSQL: use ANY(%s) with array parameter.
+            query = "SELECT id, cleave_result FROM samples WHERE id = ANY(%s)"
             with conn.cursor() as cur:
                 cur.execute(query, [ids])
                 return {
@@ -141,6 +152,7 @@ _TRAINABLE_QUERY = (
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
     " AND skip = ''"
+    " ORDER BY id"
 )
 
 _METADATA_QUERY = (
@@ -148,6 +160,7 @@ _METADATA_QUERY = (
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
     " AND skip = ''"
+    " ORDER BY id"
 )
 
 
@@ -162,7 +175,7 @@ def stream_samples(
     query = _TRAINABLE_QUERY
     if limit > 0:
         query += f" LIMIT {limit}"
-    with _connect(db_path) as conn:
+    with _connect(db_path, repeatable_read=True) as conn:
         for row_id, sha256, path, label, canonical, cleave_result in _execute(conn, query):
             split_key = canonical or sha256
             is_test = is_test_sample(split_key)
@@ -259,7 +272,7 @@ def stream_partitioned_metadata_grouped(
     db_path: Path | str,
 ) -> Iterator[tuple[int, int, bool, str]]:
     """Yield (row_id, label, is_test, canonical_sha256) without loading raw JSON."""
-    with _connect(db_path) as conn:
+    with _connect(db_path, repeatable_read=True) as conn:
         for row_id, sha256, label, canonical in _execute(conn, _METADATA_QUERY):
             split_key = canonical or sha256
             yield (
