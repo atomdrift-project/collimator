@@ -126,7 +126,7 @@ def cmd_train(args: argparse.Namespace) -> None:
     log.info("pass 1: building vocabulary from %s", db_path)
     spec = features.build_vocab_from_db(
         db_path,
-        train_row_ids,
+        train_ids_labels,
         n_workers=args.workers,
     )
 

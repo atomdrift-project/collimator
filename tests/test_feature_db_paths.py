@@ -59,7 +59,7 @@ def test_extract_partitioned_from_db_matches_stream_extraction(tmp_path) -> None
 
     spec = features.build_vocab_from_db(
         db_path,
-        [row_id for row_id, _label in train_ids_labels],
+        train_ids_labels,
         n_workers=1,
     )
     expected_X_train, expected_y_train, expected_X_test, expected_y_test = features.extract_partitioned_stream(

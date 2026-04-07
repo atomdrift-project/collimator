@@ -64,7 +64,7 @@ def show_thresholds(
         print_threshold_table(probs, y_test)
         return
 
-    spec = features.build_vocab_from_db(db_path, train_row_ids, n_workers=n_workers)
+    spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=n_workers)
 
     X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
         db_path, train_ids_labels, test_ids_labels, spec, n_workers=n_workers,

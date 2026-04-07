@@ -46,7 +46,7 @@ def run_benchmark(
         extract_test_secs = time.perf_counter() - t_ext
         extract_train_secs = 0.0
     else:
-        spec = features.build_vocab_from_db(db_path, train_row_ids, n_workers=n_workers)
+        spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=n_workers)
         vocab_secs = time.perf_counter() - t0
 
         t1 = time.perf_counter()

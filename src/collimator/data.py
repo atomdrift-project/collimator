@@ -36,6 +36,9 @@ class Sample:
     path: str
     label: int  # 1 = malware, 0 = benign
     report: dict[str, Any]
+    formula: str = ""
+    elements: str = ""
+    score: int = 0
     canonical_sha256: str = ""
 
 
@@ -114,8 +117,8 @@ def _cleave_json(raw) -> str | None:
     return json.dumps(raw)
 
 
-def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, str]:
-    """Batch-fetch cleave_result JSON by row IDs.
+def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str, Any]]:
+    """Batch-fetch cleave_result JSON and related metadata by row IDs.
 
     Used by feature extraction workers. Each worker opens its own
     connection via this function — safe for multiprocessing.
@@ -125,20 +128,30 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, str]:
     with _connect(dsn) as conn:
         if _is_pg(dsn):
             # PostgreSQL: use ANY(%s) with array parameter.
-            query = "SELECT id, cleave_result FROM samples WHERE id = ANY(%s)"
+            query = "SELECT id, cleave_result, formula, elements, score FROM samples WHERE id = ANY(%s)"
             with conn.cursor() as cur:
                 cur.execute(query, [ids])
                 return {
-                    int(rid): _cleave_json(cr)
-                    for rid, cr in cur
+                    int(rid): {
+                        "cleave_result": _cleave_json(cr),
+                        "formula": formula,
+                        "elements": elements,
+                        "score": score,
+                    }
+                    for rid, cr, formula, elements, score in cur
                     if cr is not None
                 }
         else:
             placeholders = ",".join("?" for _ in ids)
-            query = f"SELECT id, cleave_result FROM samples WHERE id IN ({placeholders})"  # noqa: S608
+            query = f"SELECT id, cleave_result, formula, elements, score FROM samples WHERE id IN ({placeholders})"  # noqa: S608
             return {
-                int(rid): cr
-                for rid, cr in conn.execute(query, ids)
+                int(rid): {
+                    "cleave_result": cr,
+                    "formula": formula,
+                    "elements": elements,
+                    "score": score,
+                }
+                for rid, cr, formula, elements, score in conn.execute(query, ids)
                 if cr is not None
             }
 
@@ -148,7 +161,7 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, str]:
 # ---------------------------------------------------------------------------
 
 _TRAINABLE_QUERY = (
-    "SELECT id, sha256, path, label, canonical_sha256, cleave_result"
+    "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score"
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
     " AND skip = ''"
@@ -176,7 +189,7 @@ def stream_samples(
     if limit > 0:
         query += f" LIMIT {limit}"
     with _connect(db_path, repeatable_read=True) as conn:
-        for row_id, sha256, path, label, canonical, cleave_result in _execute(conn, query):
+        for row_id, sha256, path, label, canonical, cleave_result, formula, elements, score in _execute(conn, query):
             split_key = canonical or sha256
             is_test = is_test_sample(split_key)
             if exclude_test and is_test:
@@ -197,6 +210,9 @@ def stream_samples(
                 path=path or "",
                 label=_label_int(label),
                 report=report,
+                formula=formula or "",
+                elements=elements or "",
+                score=score or 0,
                 canonical_sha256=split_key,
             )
 

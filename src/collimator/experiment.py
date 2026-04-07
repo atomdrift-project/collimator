@@ -157,7 +157,8 @@ def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndar
     chunk_size = 1000
     for start in range(0, len(row_ids), chunk_size):
         chunk = row_ids[start:start + chunk_size]
-        for row_id, cleave_result in data.fetch_cleave_results(db_path, chunk).items():
+        for row_id, item in data.fetch_cleave_results(db_path, chunk).items():
+            cleave_result = item["cleave_result"]
             file_type = "unknown"
             try:
                 report = json.loads(cleave_result)
@@ -215,7 +216,7 @@ def run_experiment(
     log.info("pass 1: building vocabulary (worker-local DB fetching)")
     spec = features.build_vocab_from_db(
         db_path,
-        [s.row_id for s in sorted_train],
+        [(s.row_id, s.label) for s in sorted_train],
         n_workers=n_workers,
     )
 
