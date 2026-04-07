@@ -97,7 +97,7 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
     ("pe", "rsrc_size", True),
 ]
 
-FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "struct", "elements", "formula", "score", "bigrams", "ghosts", "skeletons")
+FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "struct", "elements", "formula", "score", "bigrams", "ghosts", "skeletons", "rares", "trigrams")
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,6 +113,8 @@ class FeatureConfig:
     include_repetition_penalty_features: bool
     include_file_severity_distribution: bool
     include_score_weighted_traits: bool
+    include_soft_presence: bool
+    include_blindfold: bool
 
 
 @lru_cache(maxsize=1)
@@ -152,6 +154,12 @@ def feature_config_from_env() -> FeatureConfig:
     include_score_weighted_traits = os.getenv("COLLIMATOR_SCORE_WEIGHTED_TRAITS", "").strip().lower() in {
         "1", "true", "yes", "on",
     }
+    include_soft_presence = os.getenv("COLLIMATOR_SOFT_PRESENCE", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    include_blindfold = os.getenv("COLLIMATOR_BLINDFOLD", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
     return FeatureConfig(
         enabled_groups=enabled_groups,
         top_k_risk_files=top_k_risk_files,
@@ -162,6 +170,8 @@ def feature_config_from_env() -> FeatureConfig:
         include_repetition_penalty_features=include_repetition_penalty_features,
         include_file_severity_distribution=include_file_severity_distribution,
         include_score_weighted_traits=include_score_weighted_traits,
+        include_soft_presence=include_soft_presence,
+        include_blindfold=include_blindfold,
     )
 
 
@@ -226,6 +236,7 @@ class FeatureSpec:
     ghost_vocab: list[str] = field(default_factory=list)
     skeleton_vocab: list[str] = field(default_factory=list)
     rare_element_vocab: list[str] = field(default_factory=list)
+    trigram_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
     total_features: int = 0
     feature_means: list[float] | None = None
@@ -246,6 +257,7 @@ class FeatureSpec:
             "ghost_vocab": self.ghost_vocab,
             "skeleton_vocab": self.skeleton_vocab,
             "rare_element_vocab": self.rare_element_vocab,
+            "trigram_vocab": self.trigram_vocab,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -279,6 +291,7 @@ class FeatureSpec:
             ghost_vocab=data.get("ghost_vocab", []),
             skeleton_vocab=data.get("skeleton_vocab", []),
             rare_element_vocab=data.get("rare_element_vocab", []),
+            trigram_vocab=data.get("trigram_vocab", []),
             feature_names=data["feature_names"],
             total_features=data["total_features"],
             feature_means=data.get("feature_means"),
@@ -299,6 +312,7 @@ def _build_feature_names(
     ghost_vocab: list[str],
     skeleton_vocab: list[str],
     rare_element_vocab: list[str],
+    trigram_vocab: list[str],
 ) -> list[str]:
     """Generate the full ordered list of feature names for a given vocabulary."""
     config = feature_config_from_env()
@@ -401,8 +415,8 @@ def _build_feature_names(
 
     # Group 6: File Type multi-hot across all files in the report.
     if "filetype" in config.enabled_groups:
-        for ft in filetype_vocab:
-            feature_names.append(f"filetype:{ft}")
+        for ftype in filetype_vocab:
+            feature_names.append(f"filetype:{ftype}")
 
     # Group 7: Structural / container context (7).
     if "struct" in config.enabled_groups:
@@ -427,6 +441,9 @@ def _build_feature_names(
     if "elements" in config.enabled_groups:
         for el in element_vocab:
             feature_names.append(f"elements:{el}")
+            # Interaction with filetype
+            for ft in filetype_vocab:
+                feature_names.append(f"inter:{ft}*{el}")
 
     # Group 9: Formula.
     if "formula" in config.enabled_groups:
@@ -442,6 +459,9 @@ def _build_feature_names(
             "score:hopper_score",
             "score:density",  # score / log1p(size)
         ])
+        # Interaction with filetype
+        for ft in filetype_vocab:
+            feature_names.append(f"inter:{ft}*score")
 
     # Group 11: Bigrams multi-hot.
     if "bigrams" in config.enabled_groups:
@@ -469,6 +489,16 @@ def _build_feature_names(
     # Group 15: Structural interactions (Experiment 25).
     if "struct" in config.enabled_groups:
         feature_names.append("struct:packaged_capability")
+        # Experiment 30
+        feature_names.extend([
+            "struct:mtime_range_hours",
+            "struct:mtime_std_dev_hours",
+        ])
+
+    # Group 16: Trigrams multi-hot.
+    if "trigrams" in config.enabled_groups:
+        for trigram in trigram_vocab:
+            feature_names.append(f"trigram:{trigram}")
 
     return feature_names
 
@@ -553,10 +583,13 @@ class _ExtractContext:
         "element_lookup", "n_el", "bigram_lookup", "n_bi",
         "ghost_vocab", "ghost_lookup", "n_gh",
         "skeleton_lookup", "n_sk",
-        "rare_element_lookup", "n_re", "total_features"
+        "rare_element_lookup", "n_re",
+        "trigram_lookup", "n_tri", "blindfold", "total_features"
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
+        config = feature_config_from_env()
+        self.blindfold = config.include_blindfold
         self.presence_lookup: dict[str, int] = {
             path: i for i, path in enumerate(spec.presence_vocab)
         }
@@ -574,6 +607,8 @@ class _ExtractContext:
         self.n_sk = len(spec.skeleton_vocab)
         self.rare_element_lookup = {re: i for i, re in enumerate(spec.rare_element_vocab)}
         self.n_re = len(spec.rare_element_vocab)
+        self.trigram_lookup = {tri: i for i, tri in enumerate(spec.trigram_vocab)}
+        self.n_tri = len(spec.trigram_vocab)
         self.total_features = spec.total_features
 
 
@@ -595,6 +630,8 @@ class _FindingSummary:
     well_known_hostile: int
     well_known_suspicious: int
     has_yara: bool
+    path_confidences: dict[str, float] = field(default_factory=dict)
+    finding_confidences: list[float] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -632,7 +669,10 @@ def _merge_metric_values(files: list[dict[str, Any]]) -> dict[str, dict[str, flo
 
 def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     """Collect reusable per-report finding statistics."""
+    config = feature_config_from_env()
     sample_paths: dict[str, int] = {}
+    path_confidences: dict[str, float] = {}
+    finding_confidences: list[float] = []
     filtered_finding_count = 0
     notable_finding_count = 0
     suspicious_finding_count = 0
@@ -653,8 +693,10 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         fid = finding.get("i", "")
         if not fid:
             continue
-        if _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
+        conf = _float(finding.get("c", 1.0))
+        if conf < MIN_CONFIDENCE:
             continue
+        finding_confidences.append(conf)
         filtered_finding_count += 1
         crit_ord = finding.get("l", 0)
         if crit_ord >= 3:
@@ -688,6 +730,8 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         for path in _finding_paths(fid):
             if crit_ord > sample_paths.get(path, -1):
                 sample_paths[path] = crit_ord
+            if config.include_soft_presence:
+                path_confidences[path] = max(path_confidences.get(path, 0.0), conf)
 
     return _FindingSummary(
         sample_paths=sample_paths,
@@ -706,6 +750,8 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         well_known_hostile=well_known_hostile,
         well_known_suspicious=well_known_suspicious,
         has_yara=has_yara,
+        path_confidences=path_confidences,
+        finding_confidences=finding_confidences,
     )
 
 
@@ -732,6 +778,8 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
     well_known_hostile = 0
     well_known_suspicious = 0
     has_yara = False
+    path_confidences: dict[str, float] = {}
+    finding_confidences: list[float] = []
 
     for file_entry in files:
         summary = _summarize_findings(file_entry.get("ts") or [])
@@ -759,6 +807,9 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
         for path, max_ord in summary.sample_paths.items():
             if max_ord > sample_paths.get(path, -1):
                 sample_paths[path] = max_ord
+            path_confidences[path] = max(path_confidences.get(path, 0.0), summary.path_confidences.get(path, 0.0))
+
+        finding_confidences.extend(summary.finding_confidences)
 
         for finding in file_entry.get("ts") or []:
             fid = finding.get("i", "")
@@ -789,6 +840,8 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
         well_known_hostile=well_known_hostile,
         well_known_suspicious=well_known_suspicious,
         has_yara=has_yara,
+        path_confidences=path_confidences,
+        finding_confidences=finding_confidences,
     )
 
 
@@ -851,43 +904,50 @@ def _topk_file_risk_features(
 
 
 def _apply_presence_features(
-    sample_paths: dict[str, int],
+    summary: _FindingSummary,
     ctx: _ExtractContext,
     vec: np.ndarray,
     offset: int,
     score: int = 0,
 ) -> int:
     """Group 1: path presence features."""
-    weight = 1.0
+    config = feature_config_from_env()
+    sample_paths = summary.sample_paths
+    score_weight = 1.0
     if score > 0:
-        # Use log-scaled score as a presence multiplier for Experiment 18.
-        # This gives the model a hint that these capabilities were found in a
-        # file cleave already flagged as high-risk.
-        weight = float(math.log1p(score))
+        score_weight = float(math.log1p(score))
 
     for path, max_ord in sample_paths.items():
         if max_ord >= 2:  # baseline or above
             feat_idx = ctx.presence_lookup.get(path)
             if feat_idx is not None:
+                weight = score_weight
+                if config.include_soft_presence:
+                    weight *= summary.path_confidences.get(path, 1.0)
                 vec[offset + feat_idx] = weight
     return offset + ctx.n_paths
 
 
 def _apply_maxcrit_features(
-    sample_paths: dict[str, int],
+    summary: _FindingSummary,
     ctx: _ExtractContext,
     vec: np.ndarray,
     offset: int,
     score: int = 0,
 ) -> int:
     """Group 2: path maximum criticality features."""
-    weight = 1.0
+    config = feature_config_from_env()
+    sample_paths = summary.sample_paths
+    score_weight = 1.0
     if score > 0:
-        weight = float(math.log1p(score))
+        score_weight = float(math.log1p(score))
 
     for path, max_ord in sample_paths.items():
         feat_idx = ctx.presence_lookup.get(path)
         if feat_idx is not None:
+            weight = score_weight
+            if config.include_soft_presence:
+                weight *= summary.path_confidences.get(path, 1.0)
             vec[offset + feat_idx] = float(max_ord) * weight
     return offset + ctx.n_paths
 
@@ -949,11 +1009,14 @@ def _apply_aggregate_features(
     vec[offset + 8] = math.log1p(summary.notable_finding_count)
     vec[offset + 9] = math.log1p(summary.suspicious_finding_count)
     vec[offset + 10] = math.log1p(summary.hostile_finding_count)
-    vec[offset + 11] = summary.notable_finding_count / max(summary.filtered_finding_count, 1)
-    vec[offset + 12] = summary.suspicious_finding_count / max(summary.filtered_finding_count, 1)
-    vec[offset + 13] = summary.hostile_finding_count / max(summary.filtered_finding_count, 1)
-    vec[offset + 14] = math.log1p(summary.unique_suspicious_ids)
-    vec[offset + 15] = math.log1p(summary.unique_hostile_ids)
+    
+    # Pruned raw IDs for density-first metrics.
+    total_kb = max(sum(_float(file_entry.get("sz", 0.0)) for file_entry in files) / 1024.0, 0.1)
+    vec[offset + 11] = summary.notable_finding_count / total_kb
+    vec[offset + 12] = summary.suspicious_finding_count / total_kb
+    vec[offset + 13] = summary.hostile_finding_count / total_kb
+    vec[offset + 14] = math.log1p(summary.unique_suspicious_ids) / math.log1p(total_kb)
+    vec[offset + 15] = math.log1p(summary.unique_hostile_ids) / math.log1p(total_kb)
     total_kb = max(sum(_float(file_entry.get("sz", 0.0)) for file_entry in files) / 1024.0, 1.0)
     topk_features = _topk_file_risk_features(
         files,
@@ -1059,27 +1122,42 @@ def _apply_filetype_features(
     offset: int,
 ) -> int:
     """Group 6: file type multi-hot features across all files."""
-    for file_entry in files:
-        idx = ctx.ft_lookup.get(file_entry.get("type", ""))
-        if idx is not None:
-            vec[offset + idx] = 1.0
+    if not ctx.blindfold:
+        for file_entry in files:
+            idx = ctx.ft_lookup.get(file_entry.get("type", ""))
+            if idx is not None:
+                vec[offset + idx] = 1.0
+    # ALWAYS advance by n_ft to maintain feature index stability
+    # regardless of whether the specific features were written.
     return offset + ctx.n_ft
 
 
 def _apply_element_features(
     elements: str,
+    files: list[dict[str, Any]],
     ctx: _ExtractContext,
     vec: np.ndarray,
     offset: int,
 ) -> int:
-    """Group 8: element multi-hot features."""
+    """Group 8: element multi-hot features and filetype interactions."""
     if elements:
         for el in elements.split(","):
             el = el.strip()
-            idx = ctx.element_lookup.get(el)
-            if idx is not None:
-                vec[offset + idx] = 1.0
-    return offset + ctx.n_el
+            el_idx = ctx.element_lookup.get(el)
+            if el_idx is not None:
+                # Base element feature.
+                vec[offset + el_idx] = 1.0
+
+                # Interaction with filetype.
+                for file_entry in files:
+                    ft = file_entry.get("type", "")
+                    ft_idx = ctx.ft_lookup.get(ft)
+                    if ft_idx is not None:
+                        # Interaction index: offset + base elements + (el_index * n_ft) + ft_idx
+                        inter_idx = offset + ctx.n_el + (el_idx * ctx.n_ft) + ft_idx
+                        vec[inter_idx] = 1.0
+
+    return offset + ctx.n_el * (1 + ctx.n_ft)
 
 
 def _apply_formula_features(
@@ -1101,13 +1179,23 @@ def _apply_formula_features(
 def _apply_score_features(
     score: int,
     total_size: float,
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
     vec: np.ndarray,
     offset: int,
 ) -> int:
-    """Group 10: hopper score features."""
+    """Group 10: hopper score features and filetype interactions."""
     vec[offset] = float(score)
     vec[offset + 1] = float(score) / math.log1p(total_size)
-    return offset + 2
+    
+    # Interaction with filetype.
+    for file_entry in files:
+        ft = file_entry.get("type", "")
+        ft_idx = ctx.ft_lookup.get(ft)
+        if ft_idx is not None:
+            vec[offset + 2 + ft_idx] = float(score)
+
+    return offset + 2 + ctx.n_ft
 
 
 def _apply_structural_features(
@@ -1116,6 +1204,7 @@ def _apply_structural_features(
     vec: np.ndarray,
     offset: int,
     include_file_risk_coverage: bool,
+    mtime_str: str = "",
 ) -> int:
     """Group 7: structural / container context (7)."""
     binary_like = {"pe", "elf", "macho"}
@@ -1125,6 +1214,17 @@ def _apply_structural_features(
     max_entropy = 0.0
     suspicious_files = 0
     hostile_files = 0
+
+    # Track mtimes across the report if available.
+    mtimes: list[float] = []
+    if mtime_str:
+        try:
+            # Example: 2026-04-07 14:00:00+00
+            dt = datetime.fromisoformat(mtime_str.replace(" ", "T"))
+            mtimes.append(dt.timestamp())
+        except (ValueError, TypeError):
+            pass
+
     for file_entry in files:
         if file_entry.get("type", "") in binary_like and _float(file_entry.get("sz", 0)) < 20000:
             any_tiny_binary = True
@@ -1167,6 +1267,17 @@ def _apply_structural_features(
     unique_elements = float(len(set("".join([c for c in (files[0].get("formula") or "") if c.isalpha()]))))
     vec[offset] = unique_elements * max_entropy
     offset += 1
+
+    # Group 17: Mtime anomalies (Experiment 30).
+    # Inconsistency in timestamps often signals tampering.
+    if len(mtimes) > 1:
+        m_arr = np.array(mtimes)
+        vec[offset] = float(np.max(m_arr) - np.min(m_arr)) / 3600.0  # Range in hours
+        vec[offset + 1] = float(np.std(m_arr)) / 3600.0
+    else:
+        vec[offset] = 0.0
+        vec[offset + 1] = 0.0
+    offset += 2
 
     return offset
 
@@ -1230,6 +1341,8 @@ def _apply_skeleton_features(
         vec[offset + sk_idx] = 1.0
 
         # Interaction features with filetype.
+        # Note: We ALWAYS use n_ft here for indexing, regardless of whether 
+        # Group 6 (raw filetypes) is enabled or blindfolded.
         for file_entry in files:
             ft = file_entry.get("type", "")
             ft_idx = ctx.ft_lookup.get(ft)
@@ -1244,18 +1357,51 @@ def _apply_skeleton_features(
 
 def _apply_rare_element_features(
     elements: str,
+    summary: _FindingSummary,
     ctx: _ExtractContext,
     vec: np.ndarray,
     offset: int,
 ) -> int:
     """Group 14: rare element multi-hot features (smoking guns)."""
+    config = feature_config_from_env()
+    weight = 1.0
+    if config.include_soft_presence and summary.finding_confidences:
+        weight = float(np.mean(summary.finding_confidences))
+
     if elements:
         for el in elements.split(","):
             el = el.strip()
             idx = ctx.rare_element_lookup.get(el)
             if idx is not None:
-                vec[offset + idx] = 1.0
+                vec[offset + idx] = weight
     return offset + ctx.n_re
+
+
+def _apply_trigram_features(
+    report: dict[str, Any],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 16: trait trigram multi-hot features."""
+    for file_entry in report_files(report):
+        file_traits: set[str] = set()
+        for finding in file_entry.get("ts") or []:
+            fid = finding.get("i", "")
+            if fid and _float(finding.get("c", 1.0)) >= MIN_CONFIDENCE:
+                file_traits.add(fid)
+
+        # Using 3-level path base to match vocabulary.
+        paths_list = sorted({fid.split("::")[0] for fid in file_traits})
+        for i, p1 in enumerate(paths_list):
+            for j in range(i + 1, len(paths_list)):
+                p2 = paths_list[j]
+                for p3 in paths_list[j + 1 :]:
+                    trigram = f"{p1} + {p2} + {p3}"
+                    idx = ctx.trigram_lookup.get(trigram)
+                    if idx is not None:
+                        vec[offset + idx] = 1.0
+    return offset + ctx.n_tri
 
 
 def _extract_into(
@@ -1265,6 +1411,7 @@ def _extract_into(
     formula: str = "",
     elements: str = "",
     score: int = 0,
+    mtime: str = "",
 ) -> None:
     """Extract features from a report into a pre-allocated vector."""
     config = feature_config_from_env()
@@ -1277,12 +1424,12 @@ def _extract_into(
     offset = 0
     if "present" in config.enabled_groups:
         offset = _apply_presence_features(
-            summary.sample_paths, ctx, vec, offset,
+            summary, ctx, vec, offset,
             score=score if config.include_score_weighted_traits else 0,
         )
     if "maxcrit" in config.enabled_groups:
         offset = _apply_maxcrit_features(
-            summary.sample_paths, ctx, vec, offset,
+            summary, ctx, vec, offset,
             score=score if config.include_score_weighted_traits else 0,
         )
     if "agg" in config.enabled_groups:
@@ -1311,14 +1458,15 @@ def _extract_into(
             vec,
             offset,
             config.include_struct_file_risk_coverage,
+            mtime_str=mtime,
         )
     if "elements" in config.enabled_groups:
-        offset = _apply_element_features(elements, ctx, vec, offset)
+        offset = _apply_element_features(elements, files, ctx, vec, offset)
     if "formula" in config.enabled_groups:
         offset = _apply_formula_features(formula, summary.filtered_finding_count, vec, offset)
     if "score" in config.enabled_groups:
         total_size = sum(_float(f.get("sz", 0)) for f in files)
-        offset = _apply_score_features(score, total_size, vec, offset)
+        offset = _apply_score_features(score, total_size, files, ctx, vec, offset)
 
     if "bigrams" in config.enabled_groups:
         offset = _apply_bigram_features(report, ctx, vec, offset)
@@ -1330,7 +1478,10 @@ def _extract_into(
         offset = _apply_skeleton_features(formula, files, ctx, vec, offset)
 
     if "rares" in config.enabled_groups:
-        _apply_rare_element_features(elements, ctx, vec, offset)
+        offset = _apply_rare_element_features(elements, summary, ctx, vec, offset)
+
+    if "trigrams" in config.enabled_groups:
+        _apply_trigram_features(report, ctx, vec, offset)
 
 
 # ---------------------------------------------------------------------------
@@ -1447,15 +1598,16 @@ def _extract_batch_worker(
             formula = item.get("formula", "")
             elements = item.get("elements", "")
             score = item.get("score", 0)
+            mtime = item.get("mtime", "")
         else:
             raw_report = item
-            formula, elements, score = "", "", 0
+            formula, elements, score, mtime = "", "", 0, ""
 
         report = _coerce_report(raw_report)
         if report is None:
             continue
         vec[:] = 0.0
-        _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score)
+        _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score, mtime=mtime)
         nz = np.nonzero(vec)[0]
         rows.extend([offset + i] * len(nz))
         cols.extend(nz.tolist())
@@ -1637,15 +1789,16 @@ def _extract_partitioned_batch_worker(
             formula = item.get("formula", "")
             elements = item.get("elements", "")
             score = item.get("score", 0)
+            mtime = item.get("mtime", "")
         else:
             raw_report = item
-            formula, elements, score = "", "", 0
+            formula, elements, score, mtime = "", "", 0, ""
 
         report = _coerce_report(raw_report)
         if report is None:
             continue
         vec[:] = 0.0
-        _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score)
+        _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score, mtime=mtime)
         nz = np.nonzero(vec)[0]
         if is_test:
             row = test_offset + local_test
@@ -1705,7 +1858,7 @@ def _enumerate_partitioned_batches(
 
 def _vocab_labeled_db_batch_worker(
     args: tuple[Path | str, list[tuple[int, int]]],
-) -> tuple[dict[str, int], list[str], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
+) -> tuple[dict[str, int], list[str], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
     """Fetch and count paths for a batch of IDs with labels."""
     from . import data  # noqa: PLC0415
 
@@ -1722,6 +1875,8 @@ def _vocab_labeled_db_batch_worker(
     skeleton_counts: dict[str, int] = {}
     benign_elements: dict[str, int] = {}
     malware_elements: dict[str, int] = {}
+    trigram_counts: dict[str, int] = {}
+    benign_trigrams: dict[str, int] = {}
 
     benign_ids = {rid for rid, label in ids_labels if label == 0}
 
@@ -1768,9 +1923,18 @@ def _vocab_labeled_db_batch_worker(
             paths_list = sorted({fid.split("::")[0] for fid in file_traits})
             for i, p1 in enumerate(paths_list):
                 for p2 in paths_list[i + 1 :]:
-                    if len(bigram_counts) < 50000:
+                    # Hard cap at 100,000 unique bigrams per worker batch.
+                    if len(bigram_counts) < 100000:
                         bigram = f"{p1} + {p2}"
                         bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
+                    
+                    for p3 in paths_list[i + 2 :]:
+                        # Hard cap at 50,000 unique trigrams per worker batch.
+                        if len(trigram_counts) < 50000:
+                            trigram = f"{p1} + {p2} + {p3}"
+                            trigram_counts[trigram] = trigram_counts.get(trigram, 0) + 1
+                            if rid in benign_ids:
+                                benign_trigrams[trigram] = benign_trigrams.get(trigram, 0) + 1
 
         for path, max_ord in sample_paths.items():
             if max_ord >= 2:
@@ -1783,7 +1947,7 @@ def _vocab_labeled_db_batch_worker(
     return (
         presence_counts, filetypes, element_counts, bigram_counts,
         benign_presence, malware_presence, skeleton_counts,
-        benign_elements, malware_elements
+        benign_elements, malware_elements, trigram_counts, benign_trigrams
     )
 
 
@@ -1803,6 +1967,8 @@ def build_vocab_from_db(
     skeleton_counts: dict[str, int] = {}
     benign_elements: dict[str, int] = {}
     malware_elements: dict[str, int] = {}
+    trigram_counts: dict[str, int] = {}
+    benign_trigrams: dict[str, int] = {}
     batch_size = _feature_batch_size(nw)
 
     benign_total = sum(1 for _rid, label in row_ids_labels if label == 0)
@@ -1818,6 +1984,8 @@ def build_vocab_from_db(
         sk_counts: dict[str, int],
         b_els: dict[str, int],
         m_els: dict[str, int],
+        tri_counts: dict[str, int],
+        b_tris: dict[str, int],
     ) -> None:
         for k, v in counts.items():
             presence_counts[k] = presence_counts.get(k, 0) + v
@@ -1836,6 +2004,10 @@ def build_vocab_from_db(
             benign_elements[k] = benign_elements.get(k, 0) + v
         for k, v in m_els.items():
             malware_elements[k] = malware_elements.get(k, 0) + v
+        for k, v in tri_counts.items():
+            trigram_counts[k] = trigram_counts.get(k, 0) + v
+        for k, v in b_tris.items():
+            benign_trigrams[k] = benign_trigrams.get(k, 0) + v
 
     batch_args = ((db_path, batch) for batch in _batched(row_ids_labels, batch_size))
 
@@ -1859,6 +2031,14 @@ def build_vocab_from_db(
     bigram_vocab = sorted(k for k, c in bigram_counts.items() if c >= 1000)[:5000]
     skeleton_vocab = sorted(k for k, c in skeleton_counts.items() if c >= 100)
 
+    # Trigrams: highly specific malware-only triplets (top 500 by frequency).
+    malware_only_trigrams = sorted(
+        [(k, c) for k, c in trigram_counts.items() if benign_trigrams.get(k, 0) == 0 and c >= 5],
+        key=lambda x: x[1],
+        reverse=True,
+    )[:500]
+    trigram_vocab = sorted(k for k, c in malware_only_trigrams)
+
     # Rare Elements: highly specific to malware (e.g. 0% benign, >= 5 malware samples).
     rare_element_vocab = sorted([
         el for el, m_count in malware_elements.items()
@@ -1872,7 +2052,7 @@ def build_vocab_from_db(
     ])
 
     feature_names = _build_feature_names(
-        presence_vocab, filetype_vocab, element_vocab, bigram_vocab, ghost_vocab, skeleton_vocab, rare_element_vocab
+        presence_vocab, filetype_vocab, element_vocab, bigram_vocab, ghost_vocab, skeleton_vocab, rare_element_vocab, trigram_vocab
     )
 
     spec = FeatureSpec(
@@ -1883,6 +2063,7 @@ def build_vocab_from_db(
         ghost_vocab=ghost_vocab,
         skeleton_vocab=skeleton_vocab,
         rare_element_vocab=rare_element_vocab,
+        trigram_vocab=trigram_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
     )

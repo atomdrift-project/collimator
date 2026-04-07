@@ -39,6 +39,7 @@ class Sample:
     formula: str = ""
     elements: str = ""
     score: int = 0
+    mtime: str = ""
     canonical_sha256: str = ""
 
 
@@ -128,7 +129,7 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str,
     with _connect(dsn) as conn:
         if _is_pg(dsn):
             # PostgreSQL: use ANY(%s) with array parameter.
-            query = "SELECT id, cleave_result, formula, elements, score FROM samples WHERE id = ANY(%s)"
+            query = "SELECT id, cleave_result, formula, elements, score, mtime FROM samples WHERE id = ANY(%s)"
             with conn.cursor() as cur:
                 cur.execute(query, [ids])
                 return {
@@ -137,21 +138,23 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str,
                         "formula": formula,
                         "elements": elements,
                         "score": score,
+                        "mtime": str(mtime) if mtime else "",
                     }
-                    for rid, cr, formula, elements, score in cur
+                    for rid, cr, formula, elements, score, mtime in cur
                     if cr is not None
                 }
         else:
             placeholders = ",".join("?" for _ in ids)
-            query = f"SELECT id, cleave_result, formula, elements, score FROM samples WHERE id IN ({placeholders})"  # noqa: S608
+            query = f"SELECT id, cleave_result, formula, elements, score, mtime FROM samples WHERE id IN ({placeholders})"  # noqa: S608
             return {
                 int(rid): {
                     "cleave_result": cr,
                     "formula": formula,
                     "elements": elements,
                     "score": score,
+                    "mtime": str(mtime) if mtime else "",
                 }
-                for rid, cr, formula, elements, score in conn.execute(query, ids)
+                for rid, cr, formula, elements, score, mtime in conn.execute(query, ids)
                 if cr is not None
             }
 
@@ -161,7 +164,7 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str,
 # ---------------------------------------------------------------------------
 
 _TRAINABLE_QUERY = (
-    "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score"
+    "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score, mtime"
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
     " AND skip = ''"
@@ -189,7 +192,7 @@ def stream_samples(
     if limit > 0:
         query += f" LIMIT {limit}"
     with _connect(db_path, repeatable_read=True) as conn:
-        for row_id, sha256, path, label, canonical, cleave_result, formula, elements, score in _execute(conn, query):
+        for row_id, sha256, path, label, canonical, cleave_result, formula, elements, score, mtime in _execute(conn, query):
             split_key = canonical or sha256
             is_test = is_test_sample(split_key)
             if exclude_test and is_test:
@@ -213,6 +216,7 @@ def stream_samples(
                 formula=formula or "",
                 elements=elements or "",
                 score=score or 0,
+                mtime=str(mtime) if mtime else "",
                 canonical_sha256=split_key,
             )
 
