@@ -152,6 +152,73 @@ def _print_test_metrics(
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
 
 
+def _extract_with_clusters(
+    db_path: Path | str,
+    train_samples: list[data.Sample],
+    test_samples: list[data.Sample],
+    spec: features.FeatureSpec,
+    id_to_cluster: dict[int, int],
+    n_workers: int,
+) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
+    """Helper to re-extract features while injecting assigned cluster IDs."""
+    from concurrent.futures import ProcessPoolExecutor
+    import multiprocessing as mp
+
+    nw = features.resolve_worker_count(n_workers)
+    
+    # We create a special stream that includes cluster_id in the item dict.
+    def _clustered_stream(samples):
+        for s in samples:
+            # We fetch report from DB again via the standard extraction path
+            # but we'll need a worker that knows about the cluster mapping.
+            yield (s.row_id, s.label)
+
+    # Simplified: reuse extract_partitioned_from_db but wrap the worker.
+    # To avoid complex pickling of the mapping, we'll just implement a surgical
+    # re-extraction here.
+    
+    # Update: Let's actually just modify the sparse matrix directly for efficiency.
+    # The 'cluster:N' features are at the end of the feature vector.
+    # We find the start index of Group 21.
+    cluster_start_idx = -1
+    for i, name in enumerate(spec.feature_names):
+        if name.startswith("cluster:0"):
+            cluster_start_idx = i
+            break
+    
+    if cluster_start_idx == -1:
+        return features.extract_partitioned_from_db(
+            db_path,
+            [(s.row_id, s.label) for s in train_samples],
+            [(s.row_id, s.label) for s in test_samples],
+            spec,
+            n_workers=n_workers
+        )
+
+    # Standard extraction first.
+    X_tr, y_tr, X_te, y_te = features.extract_partitioned_from_db(
+        db_path,
+        [(s.row_id, s.label) for s in train_samples],
+        [(s.row_id, s.label) for s in test_samples],
+        spec,
+        n_workers=n_workers
+    )
+
+    # Convert to LIL for easy row modification, then back to CSR.
+    X_tr_lil = X_tr.tolil()
+    for i, s in enumerate(train_samples):
+        c_id = id_to_cluster.get(s.row_id, -1)
+        if 0 <= c_id < 10:
+            X_tr_lil[i, cluster_start_idx + c_id] = 1.0
+    
+    X_te_lil = X_te.tolil()
+    for i, s in enumerate(test_samples):
+        c_id = id_to_cluster.get(s.row_id, -1)
+        if 0 <= c_id < 10:
+            X_te_lil[i, cluster_start_idx + c_id] = 1.0
+            
+    return X_tr_lil.tocsr(), y_tr, X_te_lil.tocsr(), y_te
+            
 def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndarray:
     file_types_by_row: dict[int, str] = {}
     chunk_size = 1000
@@ -228,6 +295,25 @@ def run_experiment(
         spec,
         n_workers=n_workers,
     )
+
+    # Experiment 38: Semantic Clustering.
+    if "clusters" in features.feature_config_from_env().enabled_groups:
+        log.info("clustering benign training samples...")
+        from sklearn.cluster import KMeans
+        benign_indices = np.where(y_train == 0)[0]
+        if len(benign_indices) >= 10:
+            kmeans = KMeans(n_clusters=10, random_state=seed, n_init=10).fit(X_train[benign_indices])
+            train_clusters = kmeans.predict(X_train)
+            test_clusters = kmeans.predict(X_test)
+            
+            id_to_cluster = {sorted_train[i].row_id: int(train_clusters[i]) for i in range(len(sorted_train))}
+            id_to_cluster.update({sorted_test[i].row_id: int(test_clusters[i]) for i in range(len(sorted_test))})
+            
+            # Re-extract with cluster IDs.
+            log.info("re-extracting with cluster IDs...")
+            X_train, y_train, X_test, y_test = _extract_with_clusters(
+                db_path, sorted_train, sorted_test, spec, id_to_cluster, n_workers
+            )
     del corpus
 
     # Build monotonic constraints for all behavior features.

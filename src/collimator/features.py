@@ -97,7 +97,23 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
     ("pe", "rsrc_size", True),
 ]
 
-FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "struct", "elements", "formula", "score", "bigrams", "ghosts", "skeletons", "rares", "trigrams")
+LOGIC_GAPS = {
+    # Behavior Category -> (List of imports that imply it, List of trait paths that represent it)
+    "network": (
+        {"socket", "urllib", "requests", "http", "curl", "wininet", "winhttp"},
+        {"micro-behaviors/network", "objectives/command-and-control"},
+    ),
+    "process": (
+        {"subprocess", "os.spawn", "os.system", "CreateProcess", "ShellExecute", "posix_spawn"},
+        {"micro-behaviors/process/create", "objectives/execution"},
+    ),
+    "crypto": (
+        {"cryptography", "Crypto", "hashlib", "CryptAcquireContext", "BCryptOpenAlgorithmProvider"},
+        {"micro-behaviors/crypto", "metadata/encoded-payload"},
+    ),
+}
+
+FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "struct", "elements", "formula", "score", "bigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters")
 
 
 @dataclass(frozen=True, slots=True)
@@ -493,12 +509,31 @@ def _build_feature_names(
         feature_names.extend([
             "struct:mtime_range_hours",
             "struct:mtime_std_dev_hours",
+            "struct:max_nesting_depth_log",
+            "struct:inner_file_ratio",
+            "struct:entropy_std_dev",
+            "struct:entropy_max_diff",
         ])
 
     # Group 16: Trigrams multi-hot.
     if "trigrams" in config.enabled_groups:
         for trigram in trigram_vocab:
             feature_names.append(f"trigram:{trigram}")
+
+    # Group 19: Logic Gaps (Exp 35).
+    if "logic_gaps" in config.enabled_groups:
+        for cat in sorted(LOGIC_GAPS.keys()):
+            feature_names.append(f"gap:{cat}")
+
+    # Group 20: Signature Synergy (Exp 37).
+    if "signature_synergy" in config.enabled_groups:
+        for bigram in bigram_vocab:
+            feature_names.append(f"unsigned_bigram:{bigram}")
+
+    # Group 21: Semantic Clusters (Exp 38).
+    if "clusters" in config.enabled_groups:
+        for i in range(10):  # Assume 10 clusters
+            feature_names.append(f"cluster:{i}")
 
     return feature_names
 
@@ -1214,18 +1249,40 @@ def _apply_structural_features(
     max_entropy = 0.0
     suspicious_files = 0
     hostile_files = 0
+    inner_file_count = 0
 
-    # Track mtimes across the report if available.
+    # Track mtimes and entropies across the report.
     mtimes: list[float] = []
+    entropies: list[float] = []
     if mtime_str:
         try:
-            # Example: 2026-04-07 14:00:00+00
             dt = datetime.fromisoformat(mtime_str.replace(" ", "T"))
             mtimes.append(dt.timestamp())
         except (ValueError, TypeError):
             pass
 
+    # Nesting depth calculation.
+    depths: dict[str, int] = {}
     for file_entry in files:
+        fpath = file_entry.get("path", "")
+        parent = file_entry.get("p", "")
+        if not parent:
+            depths[fpath] = 0
+        else:
+            depths[fpath] = depths.get(parent, 0) + 1
+    max_nesting_depth = max(depths.values(), default=0)
+
+    for file_entry in files:
+        if file_entry.get("p"):
+            inner_file_count += 1
+        
+        fmt = file_entry.get("mt")
+        if fmt:
+            try:
+                mtimes.append(datetime.fromisoformat(str(fmt).replace(" ", "T")).timestamp())
+            except (ValueError, TypeError):
+                pass
+
         if file_entry.get("type", "") in binary_like and _float(file_entry.get("sz", 0)) < 20000:
             any_tiny_binary = True
         if "is" in file_entry:
@@ -1236,7 +1293,10 @@ def _apply_structural_features(
         # Track max entropy across all files in the report.
         metrics = file_entry.get("ms") or {}
         binary_metrics = metrics.get("binary") or {}
-        max_entropy = max(max_entropy, _float(binary_metrics.get("overall_entropy", 0.0)))
+        ent = _float(binary_metrics.get("overall_entropy", 0.0))
+        if ent > 0:
+            entropies.append(ent)
+        max_entropy = max(max_entropy, ent)
         file_summary = _summarize_findings(file_entry.get("ts") or [])
         if file_summary.suspicious_finding_count > 0:
             suspicious_files += 1
@@ -1278,6 +1338,18 @@ def _apply_structural_features(
         vec[offset] = 0.0
         vec[offset + 1] = 0.0
     offset += 2
+
+    # Group 18: Structural Depth and Entropy Gradients (Exp 36).
+    vec[offset] = math.log1p(max_nesting_depth)
+    vec[offset + 1] = float(inner_file_count) / max(len(files), 1)
+    if len(entropies) > 1:
+        e_arr = np.array(entropies)
+        vec[offset + 2] = float(np.std(e_arr))
+        vec[offset + 3] = float(np.max(e_arr) - np.mean(e_arr))
+    else:
+        vec[offset + 2] = 0.0
+        vec[offset + 3] = 0.0
+    offset += 4
 
     return offset
 
@@ -1404,6 +1476,79 @@ def _apply_trigram_features(
     return offset + ctx.n_tri
 
 
+def _apply_logic_gap_features(
+    files: list[dict[str, Any]],
+    summary: _FindingSummary,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 19: logic gap features (imports present without behavior)."""
+    # Collect all unique imports across the report.
+    all_imports: set[str] = set()
+    for file_entry in files:
+        imports = file_entry.get("is") or []
+        for imp in imports:
+            # Cleave imports are often list of dicts with 'n' key
+            if isinstance(imp, dict):
+                all_imports.add(imp.get("n", ""))
+            else:
+                all_imports.add(str(imp))
+
+    sample_paths = summary.sample_paths
+    for i, (cat, (imports_set, traits_set)) in enumerate(sorted(LOGIC_GAPS.items())):
+        has_import = any(imp in all_imports for imp in imports_set)
+        has_behavior = any(
+            any(path.startswith(t) for t in traits_set)
+            for path, max_ord in sample_paths.items()
+            if max_ord >= 3  # notable or above
+        )
+        if has_import and not has_behavior:
+            vec[offset + i] = 1.0
+
+    return offset + len(LOGIC_GAPS)
+
+
+def _apply_signature_synergy_features(
+    report: dict[str, Any],
+    summary: _FindingSummary,
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 20: signature synergy (unsigned + behavioral patterns)."""
+    # Check if any file in the report is unsigned.
+    is_unsigned = "metadata/unsigned" in summary.sample_paths
+    if not is_unsigned:
+        return offset + ctx.n_bi
+
+    for file_entry in report_files(report):
+        file_traits: set[str] = set()
+        for finding in file_entry.get("ts") or []:
+            fid = finding.get("i", "")
+            if fid and _float(finding.get("c", 1.0)) >= MIN_CONFIDENCE:
+                file_traits.add(fid)
+
+        paths_list = sorted({fid.split("::")[0] for fid in file_traits})
+        for i, p1 in enumerate(paths_list):
+            for p2 in paths_list[i + 1 :]:
+                bigram = f"{p1} + {p2}"
+                idx = ctx.bigram_lookup.get(bigram)
+                if idx is not None:
+                    vec[offset + idx] = 1.0
+    return offset + ctx.n_bi
+
+
+def _apply_cluster_features(
+    cluster_id: int,
+    vec: np.ndarray,
+    offset: int,
+) -> int:
+    """Group 21: semantic intent cluster features."""
+    if 0 <= cluster_id < 10:
+        vec[offset + cluster_id] = 1.0
+    return offset + 10
+
+
 def _extract_into(
     report: dict[str, Any],
     ctx: _ExtractContext,
@@ -1412,6 +1557,7 @@ def _extract_into(
     elements: str = "",
     score: int = 0,
     mtime: str = "",
+    cluster_id: int = -1,
 ) -> None:
     """Extract features from a report into a pre-allocated vector."""
     config = feature_config_from_env()
@@ -1481,7 +1627,16 @@ def _extract_into(
         offset = _apply_rare_element_features(elements, summary, ctx, vec, offset)
 
     if "trigrams" in config.enabled_groups:
-        _apply_trigram_features(report, ctx, vec, offset)
+        offset = _apply_trigram_features(report, ctx, vec, offset)
+
+    if "logic_gaps" in config.enabled_groups:
+        offset = _apply_logic_gap_features(files, summary, vec, offset)
+
+    if "signature_synergy" in config.enabled_groups:
+        offset = _apply_signature_synergy_features(report, summary, ctx, vec, offset)
+
+    if "clusters" in config.enabled_groups:
+        _apply_cluster_features(cluster_id, vec, offset)
 
 
 # ---------------------------------------------------------------------------
@@ -1599,15 +1754,16 @@ def _extract_batch_worker(
             elements = item.get("elements", "")
             score = item.get("score", 0)
             mtime = item.get("mtime", "")
+            cluster_id = item.get("cluster_id", -1)
         else:
             raw_report = item
-            formula, elements, score, mtime = "", "", 0, ""
+            formula, elements, score, mtime, cluster_id = "", "", 0, "", -1
 
         report = _coerce_report(raw_report)
         if report is None:
             continue
         vec[:] = 0.0
-        _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score, mtime=mtime)
+        _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score, mtime=mtime, cluster_id=cluster_id)
         nz = np.nonzero(vec)[0]
         rows.extend([offset + i] * len(nz))
         cols.extend(nz.tolist())
@@ -1790,15 +1946,16 @@ def _extract_partitioned_batch_worker(
             elements = item.get("elements", "")
             score = item.get("score", 0)
             mtime = item.get("mtime", "")
+            cluster_id = item.get("cluster_id", -1)
         else:
             raw_report = item
-            formula, elements, score, mtime = "", "", 0, ""
+            formula, elements, score, mtime, cluster_id = "", "", 0, "", -1
 
         report = _coerce_report(raw_report)
         if report is None:
             continue
         vec[:] = 0.0
-        _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score, mtime=mtime)
+        _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score, mtime=mtime, cluster_id=cluster_id)
         nz = np.nonzero(vec)[0]
         if is_test:
             row = test_offset + local_test
