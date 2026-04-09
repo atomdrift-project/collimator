@@ -294,10 +294,14 @@ def lookup_sample(
 
 def stream_partitioned_metadata_grouped(
     db_path: Path | str,
+    limit: int = 0,
 ) -> Iterator[tuple[int, int, bool, str]]:
     """Yield (row_id, label, is_test, canonical_sha256) without loading raw JSON."""
+    query = _METADATA_QUERY
+    if limit > 0:
+        query += f" LIMIT {limit}"
     with _connect(db_path, repeatable_read=True) as conn:
-        for row_id, sha256, label, canonical in _execute(conn, _METADATA_QUERY):
+        for row_id, sha256, label, canonical in _execute(conn, query):
             split_key = canonical or sha256
             yield (
                 int(row_id),

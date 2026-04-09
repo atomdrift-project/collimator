@@ -68,12 +68,17 @@ def sample_partitioned_reports(
     train_samples: int,
     max_test_samples: int = 0,
     seed: int = 42,
+    total_limit: int = 0,
 ) -> ExperimentCorpus:
     """Reservoir-sample train rows and optionally cap the external test bucket.
 
-    max_test_samples=0 keeps the full test set (original behaviour).
-    Set it to a positive value to reservoir-sample the test set too,
-    which substantially reduces peak memory when the test bucket is large.
+    If train_samples > 0, we reservoir-sample train rows to that target, 
+    balancing malware/benign 50/50.
+    If train_samples == 0, we take ALL non-test rows from the stream (natural distribution).
+
+    If max_test_samples > 0, we reservoir-sample test rows to that target,
+    balancing malware/benign 50/50.
+    If max_test_samples == 0, we take ALL test rows from the stream (natural distribution).
     """
     rng = np.random.default_rng(seed)
 
@@ -94,24 +99,33 @@ def sample_partitioned_reports(
         (True, 0): 0,
     }
 
-    for row_id, label, is_test, group_id in data.stream_partitioned_metadata_grouped(db_path):
+    for row_id, label, is_test, group_id in data.stream_partitioned_metadata_grouped(db_path, limit=total_limit):
         sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id)
         key = (is_test, label)
-        if key == (False, 1):
-            seen[key] = _reservoir_update(train_malware, sample, train_malware_target, seen[key], rng)
-        elif key == (False, 0):
-            seen[key] = _reservoir_update(train_benign, sample, train_benign_target, seen[key], rng)
-        elif key == (True, 1):
-            if max_test_samples > 0:
-                seen[key] = _reservoir_update(test_malware, sample, test_malware_target, seen[key], rng)
+        
+        if not is_test:
+            if train_samples > 0:
+                if label == 1:
+                    seen[key] = _reservoir_update(train_malware, sample, train_malware_target, seen[key], rng)
+                else:
+                    seen[key] = _reservoir_update(train_benign, sample, train_benign_target, seen[key], rng)
             else:
-                test_malware.append(sample)
+                if label == 1:
+                    train_malware.append(sample)
+                else:
+                    train_benign.append(sample)
                 seen[key] += 1
         else:
             if max_test_samples > 0:
-                seen[key] = _reservoir_update(test_benign, sample, test_benign_target, seen[key], rng)
+                if label == 1:
+                    seen[key] = _reservoir_update(test_malware, sample, test_malware_target, seen[key], rng)
+                else:
+                    seen[key] = _reservoir_update(test_benign, sample, test_benign_target, seen[key], rng)
             else:
-                test_benign.append(sample)
+                if label == 1:
+                    test_malware.append(sample)
+                else:
+                    test_benign.append(sample)
                 seen[key] += 1
 
     return ExperimentCorpus(
@@ -152,73 +166,6 @@ def _print_test_metrics(
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
 
 
-def _extract_with_clusters(
-    db_path: Path | str,
-    train_samples: list[data.Sample],
-    test_samples: list[data.Sample],
-    spec: features.FeatureSpec,
-    id_to_cluster: dict[int, int],
-    n_workers: int,
-) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
-    """Helper to re-extract features while injecting assigned cluster IDs."""
-    from concurrent.futures import ProcessPoolExecutor
-    import multiprocessing as mp
-
-    nw = features.resolve_worker_count(n_workers)
-    
-    # We create a special stream that includes cluster_id in the item dict.
-    def _clustered_stream(samples):
-        for s in samples:
-            # We fetch report from DB again via the standard extraction path
-            # but we'll need a worker that knows about the cluster mapping.
-            yield (s.row_id, s.label)
-
-    # Simplified: reuse extract_partitioned_from_db but wrap the worker.
-    # To avoid complex pickling of the mapping, we'll just implement a surgical
-    # re-extraction here.
-    
-    # Update: Let's actually just modify the sparse matrix directly for efficiency.
-    # The 'cluster:N' features are at the end of the feature vector.
-    # We find the start index of Group 21.
-    cluster_start_idx = -1
-    for i, name in enumerate(spec.feature_names):
-        if name.startswith("cluster:0"):
-            cluster_start_idx = i
-            break
-    
-    if cluster_start_idx == -1:
-        return features.extract_partitioned_from_db(
-            db_path,
-            [(s.row_id, s.label) for s in train_samples],
-            [(s.row_id, s.label) for s in test_samples],
-            spec,
-            n_workers=n_workers
-        )
-
-    # Standard extraction first.
-    X_tr, y_tr, X_te, y_te = features.extract_partitioned_from_db(
-        db_path,
-        [(s.row_id, s.label) for s in train_samples],
-        [(s.row_id, s.label) for s in test_samples],
-        spec,
-        n_workers=n_workers
-    )
-
-    # Convert to LIL for easy row modification, then back to CSR.
-    X_tr_lil = X_tr.tolil()
-    for i, s in enumerate(train_samples):
-        c_id = id_to_cluster.get(s.row_id, -1)
-        if 0 <= c_id < 10:
-            X_tr_lil[i, cluster_start_idx + c_id] = 1.0
-    
-    X_te_lil = X_te.tolil()
-    for i, s in enumerate(test_samples):
-        c_id = id_to_cluster.get(s.row_id, -1)
-        if 0 <= c_id < 10:
-            X_te_lil[i, cluster_start_idx + c_id] = 1.0
-            
-    return X_tr_lil.tocsr(), y_tr, X_te_lil.tocsr(), y_te
-            
 def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndarray:
     file_types_by_row: dict[int, str] = {}
     chunk_size = 1000
@@ -262,6 +209,8 @@ def run_experiment(
     hard_negative_fraction: float = 0.0,
     hard_negative_weight: float = 1.0,
     benign_filetype_weights: dict[str, float] | None = None,
+    total_limit: int = 0,
+    monotone_constraints: dict[str, int] | None = None,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     corpus = sample_partitioned_reports(
@@ -269,6 +218,7 @@ def run_experiment(
         train_samples=train_samples,
         max_test_samples=max_test_samples,
         seed=seed,
+        total_limit=total_limit,
     )
     _print_dataset_summary(corpus)
 
@@ -304,16 +254,35 @@ def run_experiment(
         if len(benign_indices) >= 10:
             kmeans = KMeans(n_clusters=10, random_state=seed, n_init=10).fit(X_train[benign_indices])
             train_clusters = kmeans.predict(X_train)
+            train_dists = kmeans.transform(X_train).min(axis=1)
             test_clusters = kmeans.predict(X_test)
-            
-            id_to_cluster = {sorted_train[i].row_id: int(train_clusters[i]) for i in range(len(sorted_train))}
-            id_to_cluster.update({sorted_test[i].row_id: int(test_clusters[i]) for i in range(len(sorted_test))})
-            
-            # Re-extract with cluster IDs.
-            log.info("re-extracting with cluster IDs...")
-            X_train, y_train, X_test, y_test = _extract_with_clusters(
-                db_path, sorted_train, sorted_test, spec, id_to_cluster, n_workers
-            )
+            test_dists = kmeans.transform(X_test).min(axis=1)
+
+            # Find the start index of Group 21: Semantic Clusters.
+            cluster_start_idx = -1
+            for i, name in enumerate(spec.feature_names):
+                if name == "cluster:0":
+                    cluster_start_idx = i
+                    break
+
+            if cluster_start_idx != -1:
+                log.info("applying cluster IDs and distances to feature matrices...")
+                # Convert to LIL for efficient row-wise modification of specific columns.
+                X_train_lil = X_train.tolil()
+                for i, (c_id, dist) in enumerate(zip(train_clusters, train_dists)):
+                    if 0 <= c_id < 10:
+                        X_train_lil[i, cluster_start_idx + c_id] = 1.0
+                    X_train_lil[i, cluster_start_idx + 10] = float(dist)
+                X_train = X_train_lil.tocsr()
+
+                X_test_lil = X_test.tolil()
+                for i, (c_id, dist) in enumerate(zip(test_clusters, test_dists)):
+                    if 0 <= c_id < 10:
+                        X_test_lil[i, cluster_start_idx + c_id] = 1.0
+                    X_test_lil[i, cluster_start_idx + 10] = float(dist)
+                X_test = X_test_lil.tocsr()
+            else:
+                log.warning("clustering enabled but 'cluster:0' feature not found in spec")
     del corpus
 
     # Build monotonic constraints for all behavior features.
@@ -323,11 +292,17 @@ def run_experiment(
     # feature names when training on sparse matrices.
     constraints = [0] * len(spec.feature_names)
     for i, name in enumerate(spec.feature_names):
+        if monotone_constraints and name in monotone_constraints:
+            constraints[i] = monotone_constraints[name]
+            continue
+
         if name.startswith(("present:", "maxcrit:")):
             constraints[i] = 1
         elif name.startswith("agg:") and ("suspicious" in name or "hostile" in name or "findings_log" in name):
             constraints[i] = 1
-        elif name == "struct:stealth_potential":
+        elif name in ("struct:stealth_potential", "struct:silent_packer_signal"):
+            constraints[i] = 1
+        elif name.startswith("gap:"):
             constraints[i] = 1
 
     result = train.train(

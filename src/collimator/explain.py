@@ -86,9 +86,15 @@ def compute_shap_importance(
             for idx in sorted_idx[:50]
             if idx < len(spec.feature_names)
         ]
+        significant = [
+            spec.feature_names[idx]
+            for idx in sorted_idx
+            if idx < len(spec.feature_names) and mean_abs[idx] >= 0.001
+        ]
         with open(output_path, "w") as f:
             json.dump({
                 "top_features": top_50,
+                "significant_features": significant,
                 "useless_feature_count": useless,
                 "total_features": len(mean_abs),
             }, f, indent=2)

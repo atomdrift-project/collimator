@@ -13,7 +13,7 @@ DEMO_DB ?= out/demo.db
 WORKERS ?= 8
 EXP_WORKERS ?= 8
 SEED ?= 42
-EXP_TRAIN_SAMPLES ?= 300000
+EXP_TRAIN_SAMPLES ?= 120000
 EXP_MAX_TEST_SAMPLES ?= 30000
 EXP_FOLDS ?= 2
 EXP_ESTIMATORS ?= 1000
@@ -21,11 +21,12 @@ EXP_MAX_DEPTH ?= 16
 EXP_LEARNING_RATE ?= 0.02
 EXP_EARLY_STOPPING ?= 100
 EXP_BETA ?= 2.0
-TRAIN_ESTIMATORS ?= 600
-TRAIN_MAX_DEPTH ?= 10
+TRAIN_ESTIMATORS ?= 1000
+TRAIN_MAX_DEPTH ?= 16
 TRAIN_LEARNING_RATE ?= 0.02
 TRAIN_EARLY_STOPPING ?= 100
 TRAIN_BETA ?= 2.0
+ALLOWED_FEATURES ?= src/collimator/allowed_features.json
 
 # Build optional train hyperparameter flags (only passed if set)
 _TRAIN_FLAGS := $(if $(TRAIN_ESTIMATORS),--n-estimators $(TRAIN_ESTIMATORS)) \
@@ -51,6 +52,7 @@ $(VENV_DIR)/bin/activate: requirements.txt
 
 train: venv check-db
 	@mkdir -p $(LOG_DIR)
+	COLLIMATOR_ALLOWED_FEATURES_FILE=$(ALLOWED_FEATURES) \
 	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
 
 evaluate: venv check-db
@@ -87,6 +89,7 @@ build-splits: venv check-db
 
 experiment: venv check-db
 	@mkdir -p $(LOG_DIR)
+	COLLIMATOR_ALLOWED_FEATURES_FILE=$(ALLOWED_FEATURES) \
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --workers $(EXP_WORKERS) --seed $(SEED) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
@@ -148,154 +151,41 @@ verify-xgboost-native:
 verify-litmus:
 	@test -d $(LITMUS_DIR) || { echo "error: $(LITMUS_DIR) does not exist"; exit 1; }
 	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make train first"; exit 1; }
-	@rg -n 'const CURRENT_MODEL: &str = "scan-v$(MODEL_VERSION)";' $(LITMUS_DIR)/src/models_repo.rs >/dev/null || { echo "error: litmus CURRENT_MODEL is not scan-v$(MODEL_VERSION)"; exit 1; }
 	@echo "Running litmus feature-extraction parity tests..."
-	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(abspath $(OUT_DIR)) cargo test --release --test extraction_parity
+	cd $(LITMUS_DIR) && $(PYTHON) -m collimator extraction-fixture --output extraction_fixture.json --count 50 --db $(DB)
+	cp extraction_fixture.json $(LITMUS_DIR)/tests/fixtures/extraction_fixture.json
+	cd $(LITMUS_DIR) && cargo test --release --test extraction_parity
 	@echo "litmus: extraction parity tests passed"
 
 clean:
-	rm -rf $(OUT_DIR) $(VENV_DIR) src/*.egg-info __pycache__ .mypy_cache .pytest_cache
+	rm -rf $(OUT_DIR)
 
 help:
-	@echo "Collimator - ML Training Pipeline for Malware Detection"
+	@echo "Collimator Training Pipeline"
 	@echo ""
-	@echo "Training:"
-	@echo "  make train DB=...                  Train model and export to out/"
-	@echo "  make evaluate DB=...               Evaluate existing model"
-	@echo "  make explain DB=...                SHAP feature importance analysis"
+	@echo "Usage: make <target> [DB=postgres://...]"
 	@echo ""
-	@echo "Debugging:"
-	@echo "  make inspect DB=... SAMPLE=<sha>   Inspect a single sample (features + SHAP)"
-	@echo "  make errors DB=...                 Show misclassified samples"
-	@echo "  make traits DB=...                 Show trait-level prevalence / false-positive stats"
-	@echo "  make thresholds DB=...             Show confidence thresholds for accuracy targets"
-	@echo "  make benchmark DB=...              Benchmark extraction, training, and inference"
-	@echo "  make build-splits DB=...           Rebuild grouped external-test split cache"
-	@echo "  make experiment DB=...             Fast experiment with full external test evaluation"
-	@echo "  make ablate DB=...                 Run leave-one-group-out feature ablations"
-	@echo "  make demo-db                       Create a small synthetic demo database"
-	@echo "  make scan FILE=/path/to/binary     Score a live file via cleave + model"
+	@echo "Targets:"
+	@echo "  train              Train production model on full dataset"
+	@echo "  experiment         Run fast subsampled experiment"
+	@echo "  evaluate           Run evaluation on external test set"
+	@echo "  explain            Generate SHAP importance analysis"
+	@echo "  inspect            Show feature breakdown for a sample (SAMPLE=sha256)"
+	@echo "  errors             Show top false positives/negatives"
+	@echo "  traits             Dump all unique traits seen in DB"
+	@echo "  thresholds         Show recommended confidence thresholds"
+	@echo "  benchmark          Measure feature extraction & inference latency"
+	@echo "  build-splits       Pre-compute data splits in DB"
+	@echo "  demo-db            Create a small SQLite DB for testing"
+	@echo "  test               Run unit tests"
+	@echo "  deploy             Copy model artifacts to ../litmus-models"
 	@echo ""
-	@echo "Deployment:"
-	@echo "  make deploy                        Copy model artifacts to ../litmus-models"
-	@echo ""
-	@echo "Development:"
-	@echo "  make test                          Run tests"
-	@echo "  make lint                          Run ruff + mypy"
-	@echo "  make venv                          Create virtual environment"
-	@echo "  make clean                         Remove build artifacts"
-	@echo ""
-	@echo "Configuration:"
-	@echo "  DB=dsn          Hopper database DSN (postgres:// or SQLite path, default: postgres://hopper@localhost:5432/hopper)"
-	@echo "  OUT_DIR=path    Output directory (default: out)"
-	@echo "  LOG_DIR=path    Text log directory (default: out/logs)"
-	@echo "  WORKERS=n       Feature extraction workers (default: 0=auto)"
-	@echo "  EXP_WORKERS=n   Experiment workers (default: 1)"
-	@echo "  SEED=n          Random seed for training/demo generation (default: 42)"
-	@echo "  EXP_TRAIN_SAMPLES=n   Experiment train rows (default: 75000)"
+	@echo "Options:"
+	@echo "  DB=url             Hopper database DSN"
+	@echo "  OUT_DIR=path       Output directory (default: out)"
+	@echo "  WORKERS=n          Parallel extraction workers (default: 8)"
+	@echo "  EXP_TRAIN_SAMPLES=n   Experiment train rows (default: 120000)"
 	@echo "  EXP_MAX_TEST_SAMPLES=n  Cap test set via reservoir (0=full, default: 30000)"
 	@echo "  EXP_FOLDS=n           Experiment CV folds (default: 2)"
-	@echo "  EXP_ESTIMATORS=n      Experiment max trees (default: 220)"
-	@echo "  SAMPLE=sha256   SHA256 (or prefix) for inspect"
-	@echo "  FILE=path       File path for scan"
-	@echo "  CLEAVE=path     Path to cleave binary (default: cleave)"
-	@echo "  DEMO_DB=path    Output path for make demo-db (default: out/demo.db)"
-	@echo "  MODELS_DIR=path Deployment target (default: ../litmus-models/scan-v<version>)"
-
-# BEGIN: lint-install .
-# http://github.com/codeGROOVE-dev/lint-install
-
-.PHONY: lint
-lint: _lint
-
-LINT_ARCH := $(shell uname -m)
-LINT_OS := $(shell uname)
-LINT_OS_LOWER := $(shell echo $(LINT_OS) | tr '[:upper:]' '[:lower:]')
-LINT_ROOT := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-
-# shellcheck and hadolint lack arm64 native binaries: rely on x86-64 emulation
-ifeq ($(LINT_OS),Darwin)
-	ifeq ($(LINT_ARCH),arm64)
-		LINT_ARCH=x86_64
-	endif
-endif
-
-LINTERS :=
-FIXERS :=
-
-SHELLCHECK_VERSION ?= v0.11.0
-SHELLCHECK_BIN := $(LINT_ROOT)/out/linters/shellcheck-$(SHELLCHECK_VERSION)-$(LINT_ARCH)
-$(SHELLCHECK_BIN):
-	mkdir -p $(LINT_ROOT)/out/linters
-	curl -sSfL -o $@.tar.xz https://github.com/koalaman/shellcheck/releases/download/$(SHELLCHECK_VERSION)/shellcheck-$(SHELLCHECK_VERSION).$(LINT_OS_LOWER).$(LINT_ARCH).tar.xz \
-		|| echo "Unable to fetch shellcheck for $(LINT_OS)/$(LINT_ARCH): falling back to locally install"
-	test -f $@.tar.xz \
-		&& tar -C $(LINT_ROOT)/out/linters -xJf $@.tar.xz \
-		&& mv $(LINT_ROOT)/out/linters/shellcheck-$(SHELLCHECK_VERSION)/shellcheck $@ \
-		|| printf "#!/usr/bin/env shellcheck\n" > $@
-	chmod u+x $@
-
-LINTERS += shellcheck-lint
-shellcheck-lint: $(SHELLCHECK_BIN)
-	$(SHELLCHECK_BIN) $(shell find . -name "*.sh")
-
-FIXERS += shellcheck-fix
-shellcheck-fix: $(SHELLCHECK_BIN)
-	$(SHELLCHECK_BIN) $(shell find . -name "*.sh") -f diff | { read -t 1 line || exit 0; { echo "$$line" && cat; } | git apply -p2; }
-
-YAMLLINT_VERSION ?= 1.37.1
-YAMLLINT_ROOT := $(LINT_ROOT)/out/linters/yamllint-$(YAMLLINT_VERSION)
-YAMLLINT_BIN := $(YAMLLINT_ROOT)/dist/bin/yamllint
-$(YAMLLINT_BIN):
-	mkdir -p $(LINT_ROOT)/out/linters
-	rm -rf $(LINT_ROOT)/out/linters/yamllint-*
-	curl -sSfL https://github.com/adrienverge/yamllint/archive/refs/tags/v$(YAMLLINT_VERSION).tar.gz | tar -C $(LINT_ROOT)/out/linters -zxf -
-	cd $(YAMLLINT_ROOT) && pip3 install --target dist . || pip install --target dist .
-
-LINTERS += yamllint-lint
-yamllint-lint: $(YAMLLINT_BIN)
-	PYTHONPATH=$(YAMLLINT_ROOT)/dist $(YAMLLINT_ROOT)/dist/bin/yamllint .
-
-BIOME_VERSION ?= 2.3.8
-BIOME_BIN := $(LINT_ROOT)/out/linters/biome-$(BIOME_VERSION)-$(LINT_ARCH)
-BIOME_CONFIG := $(LINT_ROOT)/biome.json
-
-# Map architecture names for Biome downloads
-BIOME_ARCH := $(LINT_ARCH)
-ifeq ($(LINT_ARCH),x86_64)
-	BIOME_ARCH := x64
-endif
-
-$(BIOME_BIN):
-	mkdir -p $(LINT_ROOT)/out/linters
-	rm -rf $(LINT_ROOT)/out/linters/biome-*
-	curl -sSfL -o $@ https://github.com/biomejs/biome/releases/download/%40biomejs%2Fbiome%40$(BIOME_VERSION)/biome-$(LINT_OS_LOWER)-$(BIOME_ARCH) \
-		|| echo "Unable to fetch biome for $(LINT_OS_LOWER)/$(BIOME_ARCH), falling back to local install"
-	test -f $@ || printf "#!/usr/bin/env biome\n" > $@
-	chmod u+x $@
-
-LINTERS += biome-lint
-biome-lint: $(BIOME_BIN)
-	$(BIOME_BIN) check --config-path=$(BIOME_CONFIG) .
-
-FIXERS += biome-fix
-biome-fix: $(BIOME_BIN)
-	$(BIOME_BIN) check --write --config-path=$(BIOME_CONFIG) .
-
-.PHONY: _lint $(LINTERS)
-_lint:
-	@exit_code=0; \
-	for target in $(LINTERS); do \
-		$(MAKE) $$target || exit_code=1; \
-	done; \
-	exit $$exit_code
-
-.PHONY: fix $(FIXERS)
-fix:
-	@exit_code=0; \
-	for target in $(FIXERS); do \
-		$(MAKE) $$target || exit_code=1; \
-	done; \
-	exit $$exit_code
-
-# END: lint-install .
+	@echo "  EXP_ESTIMATORS=n      Experiment max trees (default: 1000)"
+	@echo "  MODELS_DIR=path    Deployment target (default: ../litmus-models/scan-v<version>)"

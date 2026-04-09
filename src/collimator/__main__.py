@@ -924,6 +924,14 @@ def main() -> None:
         default=[],
         help="Upweight benign training rows for a file type, format filetype=weight; repeatable",
     )
+    p_exp.add_argument(
+        "--total-limit", type=int, default=0,
+        help="Cap total records scanned from DB (oldest first, 0 = unlimited)",
+    )
+    p_exp.add_argument(
+        "--monotone-json",
+        help="JSON dictionary mapping feature name prefixes to 1 or -1 constraints",
+    )
     _add_workers_arg(p_exp)
     _add_seed_arg(p_exp)
 
@@ -1028,6 +1036,8 @@ def main() -> None:
             hard_negative_fraction=args.hard_negative_fraction,
             hard_negative_weight=args.hard_negative_weight,
             benign_filetype_weights=_parse_filetype_weights(args.benign_filetype_weight),
+            total_limit=args.total_limit,
+            monotone_constraints=json.loads(args.monotone_json) if args.monotone_json else None,
         )
     elif args.command == "ablate":
         rows = ablation.run_ablation(
