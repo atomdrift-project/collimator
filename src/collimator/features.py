@@ -72,7 +72,7 @@ TOP_K_RISK_FILES = 1
 
 # Stable model ABI version shared with litmus.
 # Keep this in sync with FeatureSpec.version for a single compatibility number.
-MODEL_ABI_VERSION = 15
+MODEL_ABI_VERSION = 16
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
@@ -157,6 +157,17 @@ class FeatureConfig:
     include_mtime_kurtosis: bool
     include_air_gap_signal: bool
     include_extreme_features: bool
+    # If False, drops inter:{ft}*{element} and inter:{ft}*{skeleton} cross-products
+    # (~163k mostly-useless features in v15). inter:{ft}*score is always kept.
+    include_filetype_interactions: bool
+    # Individual extreme-feature toggles (Exps 48, 49, 51, 54, 55, 56).
+    # Each defaults to include_extreme_features for backwards compatibility.
+    include_anachronistic_injection: bool
+    include_code_entropy_spike: bool
+    include_foreign_binary_signal: bool
+    include_extension_mismatch_signal: bool
+    include_hostile_finding_density: bool
+    include_hostile_depth_weight: bool
 
 
 @lru_cache(maxsize=1)
@@ -202,6 +213,19 @@ def feature_config_from_env() -> FeatureConfig:
     include_blindfold = os.getenv("COLLIMATOR_BLINDFOLD", "1").strip().lower() in {
         "1", "true", "yes", "on",
     }
+    # v16 default: OFF. Drops 163k mostly-useless inter:{ft}*{element/skeleton} features.
+    include_filetype_interactions = os.getenv("COLLIMATOR_FILETYPE_INTERACTIONS", "0").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+    include_extreme_features = os.getenv("COLLIMATOR_EXTREME_FEATURES") == "1"
+    # Per-feature defaults inherit from the master EXTREME_FEATURES toggle.
+    # Treat empty string as "not set" so Make can pass `VAR=` for inherit.
+    def _extreme_flag(name: str) -> bool:
+        raw = (os.getenv(name) or "").strip().lower()
+        if not raw:
+            return include_extreme_features
+        return raw in {"1", "true", "yes", "on"}
 
     return FeatureConfig(
         enabled_groups=enabled_groups,
@@ -215,10 +239,17 @@ def feature_config_from_env() -> FeatureConfig:
         include_score_weighted_traits=include_score_weighted_traits,
         include_soft_presence=include_soft_presence,
         include_blindfold=include_blindfold,
+        include_filetype_interactions=include_filetype_interactions,
         include_silent_packer_signal=os.getenv("COLLIMATOR_SILENT_PACKER_SIGNAL") == "1",
         include_mtime_kurtosis=os.getenv("COLLIMATOR_MTIME_KURTOSIS") == "1",
         include_air_gap_signal=os.getenv("COLLIMATOR_AIR_GAP_SIGNAL") == "1",
-        include_extreme_features=os.getenv("COLLIMATOR_EXTREME_FEATURES") == "1",
+        include_extreme_features=include_extreme_features,
+        include_anachronistic_injection=_extreme_flag("COLLIMATOR_ANACHRONISTIC_INJECTION"),
+        include_code_entropy_spike=_extreme_flag("COLLIMATOR_CODE_ENTROPY_SPIKE"),
+        include_foreign_binary_signal=_extreme_flag("COLLIMATOR_FOREIGN_BINARY_SIGNAL"),
+        include_extension_mismatch_signal=_extreme_flag("COLLIMATOR_EXTENSION_MISMATCH_SIGNAL"),
+        include_hostile_finding_density=_extreme_flag("COLLIMATOR_HOSTILE_FINDING_DENSITY"),
+        include_hostile_depth_weight=_extreme_flag("COLLIMATOR_HOSTILE_DEPTH_WEIGHT"),
     )
 
 
@@ -273,8 +304,8 @@ class FeatureSpec:
     No path×tier binary features — criticality is a gradient, not a threshold.
     """
 
-    # NOTE: bumping this version requires a matching update in ../collimator (Rust).
-    version: int = 15
+    # NOTE: bumping this version requires a matching update in ../litmus (Rust).
+    version: int = 16
     abi_version: int = MODEL_ABI_VERSION
     presence_vocab: list[str] = field(default_factory=list)
     filetype_vocab: list[str] = field(default_factory=list)
@@ -461,7 +492,7 @@ def _build_feature_names(
                 "agg:file_suspicious_count_log",
                 "agg:file_notable_count_log",
             ])
-        if config.include_extreme_features:
+        if config.include_hostile_depth_weight:
             feature_names.append("agg:hostile_depth_weight")
 
     # Group 4: Third-Party / Well-Known Summary (6).
@@ -508,9 +539,10 @@ def _build_feature_names(
     if "elements" in config.enabled_groups:
         for el in element_vocab:
             feature_names.append(f"elements:{el}")
-            # Interaction with filetype
-            for ft in filetype_vocab:
-                feature_names.append(f"inter:{ft}*{el}")
+            # Interaction with filetype (gated; mostly-useless cross-product in v15)
+            if config.include_filetype_interactions:
+                for ft in filetype_vocab:
+                    feature_names.append(f"inter:{ft}*{el}")
 
     # Group 9: Formula.
     if "formula" in config.enabled_groups:
@@ -544,9 +576,10 @@ def _build_feature_names(
     if "skeletons" in config.enabled_groups:
         for skel in skeleton_vocab:
             feature_names.append(f"skeleton:{skel}")
-            # Cross-product with filetype for Experiment 22.
-            for ft in filetype_vocab:
-                feature_names.append(f"inter:{ft}*{skel}")
+            # Cross-product with filetype (Exp 22; gated, mostly-useless in v15)
+            if config.include_filetype_interactions:
+                for ft in filetype_vocab:
+                    feature_names.append(f"inter:{ft}*{skel}")
 
     # Group 14: Rare elements (smoking guns).
     if "rares" in config.enabled_groups:
@@ -571,14 +604,16 @@ def _build_feature_names(
             feature_names.append("struct:mtime_kurtosis")
         if config.include_air_gap_signal:
             feature_names.append("struct:air_gap_signal")
-        if config.include_extreme_features:
-            feature_names.extend([
-                "struct:anachronistic_injection",
-                "struct:code_entropy_spike",
-                "struct:foreign_binary_signal",
-                "struct:extension_mismatch_signal",
-                "struct:hostile_finding_density",
-            ])
+        if config.include_anachronistic_injection:
+            feature_names.append("struct:anachronistic_injection")
+        if config.include_code_entropy_spike:
+            feature_names.append("struct:code_entropy_spike")
+        if config.include_foreign_binary_signal:
+            feature_names.append("struct:foreign_binary_signal")
+        if config.include_extension_mismatch_signal:
+            feature_names.append("struct:extension_mismatch_signal")
+        if config.include_hostile_finding_density:
+            feature_names.append("struct:hostile_finding_density")
 
     # Group 16: Trigrams multi-hot.
     if "trigrams" in config.enabled_groups:
@@ -1521,32 +1556,36 @@ def _apply_structural_features(
         val = 1.0 if (hostile_files > 0 and hostile_files_with_parent == 0) else 0.0
         _assign(vec, lookup.get("struct:air_gap_signal"), val)
 
-    # Exp 48 & 49: Extreme Features
-    if os.getenv("COLLIMATOR_EXTREME_FEATURES") == "1":
-        # 48: Anachronistic Injection
+    # Extreme features (Exps 48, 49, 54, 55, 56) — each individually toggleable.
+    config = feature_config_from_env()
+    if config.include_anachronistic_injection:
+        # Exp 48: Anachronistic Injection
         if mtimes and hostile_mtimes:
             median_mtime = float(np.median(mtimes))
             max_delta = max(abs(t - median_mtime) for t in hostile_mtimes)
             _assign(vec, lookup.get("struct:anachronistic_injection"), max_delta / 3600.0)
         else:
             _assign(vec, lookup.get("struct:anachronistic_injection"), 0.0)
-        
-        # 49: Code Entropy Spike
+
+    if config.include_code_entropy_spike:
+        # Exp 49: Code Entropy Spike
         if code_entropies:
             avg_ent = float(np.mean(entropies)) if entropies else 0.0
             max_code_ent = max(code_entropies)
             _assign(vec, lookup.get("struct:code_entropy_spike"), max_code_ent - avg_ent)
         else:
             _assign(vec, lookup.get("struct:code_entropy_spike"), 0.0)
-        
-        # 54: Foreign Binary Signal
+
+    if config.include_foreign_binary_signal:
+        # Exp 54: Foreign Binary Signal
         _assign(vec, lookup.get("struct:foreign_binary_signal"), 1.0 if has_foreign_binaries else 0.0)
 
-        # 55: Extension Mismatch Signal
+    if config.include_extension_mismatch_signal:
+        # Exp 55: Extension Mismatch Signal
         _assign(vec, lookup.get("struct:extension_mismatch_signal"), float(extension_mismatches))
 
-        # 56: Hostile Density Signal
-        # Findings per 1000 lines of code
+    if config.include_hostile_finding_density:
+        # Exp 56: Hostile Density Signal — findings per 1000 lines of code
         if total_loc > 0:
             _assign(vec, lookup.get("struct:hostile_finding_density"), (hostile_files * 1000.0) / total_loc)
         else:
@@ -1788,13 +1827,13 @@ def _extract_into(
     if "agg" in config.enabled_groups:
         # Exp 51: hostile_depth_weight calculation
         hostile_depth_weight = 0.0
-        if config.include_extreme_features:
+        if config.include_hostile_depth_weight:
             depths: dict[str, int] = {}
             for file_entry in files:
                 fpath = file_entry.get("path", "")
                 parent = file_entry.get("p", "")
                 depths[fpath] = depths.get(parent, 0) + 1 if parent else 0
-            
+
             for file_entry in files:
                 fpath = file_entry.get("path", "")
                 depth = depths.get(fpath, 0)
@@ -1813,7 +1852,7 @@ def _extract_into(
             config.include_repetition_penalty_features,
             config.include_file_severity_distribution,
         )
-        if config.include_extreme_features:
+        if config.include_hostile_depth_weight:
             _assign(vec, ctx.absolute_lookup.get("agg:hostile_depth_weight"), hostile_depth_weight)
 
     if "ext" in config.enabled_groups:

@@ -71,6 +71,7 @@ def sample_partitioned_reports(
     seed: int = 42,
     total_limit: int = 0,
     min_malware_training_score: int = 0,
+    max_id: int = 0,
 ) -> ExperimentCorpus:
     """Reservoir-sample train rows and optionally cap the external test bucket.
 
@@ -101,7 +102,7 @@ def sample_partitioned_reports(
         (True, 0): 0,
     }
 
-    for row_id, label, is_test, group_id, score in data.stream_partitioned_metadata_grouped(db_path, limit=total_limit):
+    for row_id, label, is_test, group_id, score in data.stream_partitioned_metadata_grouped(db_path, limit=total_limit, max_id=max_id):
         sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id, score=score)
         key = (is_test, label)
         
@@ -220,6 +221,10 @@ def run_experiment(
     min_malware_training_score: int = 0,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
+    # Pin the dataset to a single max(id) snapshot so concurrent inserts to the
+    # hopper DB don't cause drift between this run and any others.
+    pinned_max_id = data.snapshot_max_id(db_path)
+    log.info("dataset snapshot: max_id=%d", pinned_max_id)
     corpus = sample_partitioned_reports(
         db_path,
         train_samples=train_samples,
@@ -227,6 +232,7 @@ def run_experiment(
         seed=seed,
         total_limit=total_limit,
         min_malware_training_score=min_malware_training_score,
+        max_id=pinned_max_id,
     )
     _print_dataset_summary(corpus)
 

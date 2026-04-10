@@ -119,11 +119,17 @@ def cmd_train(args: argparse.Namespace) -> None:
     log.info("xgboost requested device: auto")
     log.info("xgboost effective device probe: %s", detect_device())
 
+    # Pin the dataset to a single max(id) snapshot so concurrent inserts to the
+    # hopper DB don't cause drift mid-run.
+    pinned_max_id = data.snapshot_max_id(db_path)
+    log.info("dataset snapshot: max_id=%d", pinned_max_id)
+
     # Partition samples into train/test using canonical_sha256.
     # Exploded archive members are included as regular rows (filtered by skip='').
     train_row_ids, train_ids_labels, test_ids_labels = data.partition_row_ids(
         db_path,
         min_malware_training_score=args.min_malware_score,
+        max_id=pinned_max_id,
     )
 
     log.info("pass 1: building vocabulary from %s", db_path)

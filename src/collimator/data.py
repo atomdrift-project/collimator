@@ -166,11 +166,38 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str,
 # Public API
 # ---------------------------------------------------------------------------
 
+# Minimum hopper score for a sample to be considered trainable / evaluable.
+# This filter exists to keep unsupported file formats and otherwise-empty
+# cleave results out of the data pipeline. v15 used >= 8, v16 lowered to >= 3
+# (the threshold that produces a balanced ~1:1 bad:good pool from the labeled
+# corpus, since most score==0 rows are unsupported file types).
+MIN_SAMPLE_SCORE = 3
+
+
+def snapshot_max_id(db_path: Path | str) -> int:
+    """Return max(id) of trainable samples at this moment.
+
+    Used to pin the dataset for a single experiment / training run so that
+    concurrent inserts to the hopper database don't cause drift between runs.
+    Pass the returned value as ``max_id`` to ``stream_partitioned_metadata_grouped``
+    or ``partition_row_ids``.
+    """
+    query = (
+        "SELECT MAX(id) FROM samples"
+        " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
+        f" AND score >= {MIN_SAMPLE_SCORE} AND skip = ''"
+    )
+    with _connect(db_path) as conn:
+        for (max_id,) in _execute(conn, query):
+            return int(max_id) if max_id is not None else 0
+    return 0
+
+
 _TRAINABLE_QUERY = (
     "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score, mtime, 0 AS cluster_id"
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
-    " AND score >= 8"
+    f" AND score >= {MIN_SAMPLE_SCORE}"
     " AND skip = ''"
     " ORDER BY id"
 )
@@ -179,7 +206,7 @@ _METADATA_QUERY = (
     "SELECT id, sha256, label, canonical_sha256, score"
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
-    " AND score >= 8"
+    f" AND score >= {MIN_SAMPLE_SCORE}"
     " AND skip = ''"
     " ORDER BY id"
 )
@@ -256,15 +283,17 @@ def stream_reports(
 def partition_row_ids(
     db_path: Path | str,
     min_malware_training_score: int = 0,
+    max_id: int = 0,
 ) -> tuple[list[int], list[tuple[int, int]], list[tuple[int, int]]]:
     """Partition samples into train/test by canonical_sha256.
 
     Returns (train_row_ids, train_ids_labels, test_ids_labels).
+    Pass ``max_id`` from ``snapshot_max_id`` to pin the dataset.
     """
     train_row_ids: list[int] = []
     train_ids_labels: list[tuple[int, int]] = []
     test_ids_labels: list[tuple[int, int]] = []
-    for row_id, label, is_test, _canonical, score in stream_partitioned_metadata_grouped(db_path):
+    for row_id, label, is_test, _canonical, score in stream_partitioned_metadata_grouped(db_path, max_id=max_id):
         if is_test:
             test_ids_labels.append((row_id, label))
         else:
@@ -301,9 +330,18 @@ def lookup_sample(
 def stream_partitioned_metadata_grouped(
     db_path: Path | str,
     limit: int = 0,
+    max_id: int = 0,
 ) -> Iterator[tuple[int, int, bool, str, int]]:
-    """Yield (row_id, label, is_test, canonical_sha256, score) without loading raw JSON."""
+    """Yield (row_id, label, is_test, canonical_sha256, score) without loading raw JSON.
+
+    If ``max_id`` > 0, only rows with ``id <= max_id`` are returned. Use this with
+    a value from ``snapshot_max_id`` to pin the dataset for a single run, so that
+    concurrent inserts don't cause drift.
+    """
     query = _METADATA_QUERY
+    if max_id > 0:
+        # Inject id cap before ORDER BY. _METADATA_QUERY ends with ORDER BY id.
+        query = query.replace(" ORDER BY id", f" AND id <= {int(max_id)} ORDER BY id")
     if limit > 0:
         query += f" LIMIT {limit}"
     with _connect(db_path, repeatable_read=True) as conn:

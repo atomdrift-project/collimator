@@ -31,7 +31,8 @@ def run_ablation(
     groups: list[str] | None = None,
 ) -> list[dict[str, object]]:
     """Train baseline and leave-one-group-out ablations on the same dataset."""
-    _, train_ids_labels, _ = data.partition_row_ids(db_path)
+    pinned_max_id = data.snapshot_max_id(db_path)
+    _, train_ids_labels, _ = data.partition_row_ids(db_path, max_id=pinned_max_id)
 
     spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=n_workers)
     X, y, _, _ = features.extract_partitioned_from_db(
