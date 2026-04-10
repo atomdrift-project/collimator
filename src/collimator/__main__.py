@@ -121,7 +121,10 @@ def cmd_train(args: argparse.Namespace) -> None:
 
     # Partition samples into train/test using canonical_sha256.
     # Exploded archive members are included as regular rows (filtered by skip='').
-    train_row_ids, train_ids_labels, test_ids_labels = data.partition_row_ids(db_path)
+    train_row_ids, train_ids_labels, test_ids_labels = data.partition_row_ids(
+        db_path,
+        min_malware_training_score=args.min_malware_score,
+    )
 
     log.info("pass 1: building vocabulary from %s", db_path)
     spec = features.build_vocab_from_db(
@@ -782,6 +785,10 @@ def main() -> None:
     p_train.add_argument("--threshold-fpr-target", type=float, default=None, help="Max FPR target when threshold-mode=max_recall_at_fpr")
     p_train.add_argument("--hard-negative-fraction", type=float, default=0.0, help="Fraction of benign train rows to upweight as hard negatives")
     p_train.add_argument("--hard-negative-weight", type=float, default=1.0, help="Sample weight applied to hard benign negatives")
+    p_train.add_argument(
+        "--min-malware-score", type=int, default=0,
+        help="Ignore malware samples with score below this threshold during training",
+    )
 
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Evaluate existing model")
@@ -932,6 +939,10 @@ def main() -> None:
         "--monotone-json",
         help="JSON dictionary mapping feature name prefixes to 1 or -1 constraints",
     )
+    p_exp.add_argument(
+        "--min-malware-score", type=int, default=0,
+        help="Ignore malware samples with score below this threshold during training (but keep in test)",
+    )
     _add_workers_arg(p_exp)
     _add_seed_arg(p_exp)
 
@@ -1038,6 +1049,7 @@ def main() -> None:
             benign_filetype_weights=_parse_filetype_weights(args.benign_filetype_weight),
             total_limit=args.total_limit,
             monotone_constraints=json.loads(args.monotone_json) if args.monotone_json else None,
+            min_malware_training_score=args.min_malware_score,
         )
     elif args.command == "ablate":
         rows = ablation.run_ablation(

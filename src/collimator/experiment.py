@@ -32,6 +32,7 @@ class ExperimentSample:
     label: int
     is_test: bool
     group_id: str
+    score: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,6 +70,7 @@ def sample_partitioned_reports(
     max_test_samples: int = 0,
     seed: int = 42,
     total_limit: int = 0,
+    min_malware_training_score: int = 0,
 ) -> ExperimentCorpus:
     """Reservoir-sample train rows and optionally cap the external test bucket.
 
@@ -99,11 +101,15 @@ def sample_partitioned_reports(
         (True, 0): 0,
     }
 
-    for row_id, label, is_test, group_id in data.stream_partitioned_metadata_grouped(db_path, limit=total_limit):
-        sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id)
+    for row_id, label, is_test, group_id, score in data.stream_partitioned_metadata_grouped(db_path, limit=total_limit):
+        sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id, score=score)
         key = (is_test, label)
         
         if not is_test:
+            # Heuristic pruning: skip malware with very low scores during training.
+            if label == 1 and score < min_malware_training_score:
+                continue
+
             if train_samples > 0:
                 if label == 1:
                     seen[key] = _reservoir_update(train_malware, sample, train_malware_target, seen[key], rng)
@@ -211,6 +217,7 @@ def run_experiment(
     benign_filetype_weights: dict[str, float] | None = None,
     total_limit: int = 0,
     monotone_constraints: dict[str, int] | None = None,
+    min_malware_training_score: int = 0,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     corpus = sample_partitioned_reports(
@@ -219,6 +226,7 @@ def run_experiment(
         max_test_samples=max_test_samples,
         seed=seed,
         total_limit=total_limit,
+        min_malware_training_score=min_malware_training_score,
     )
     _print_dataset_summary(corpus)
 
@@ -251,8 +259,8 @@ def run_experiment(
         log.info("clustering benign training samples...")
         from sklearn.cluster import KMeans
         benign_indices = np.where(y_train == 0)[0]
-        if len(benign_indices) >= 10:
-            kmeans = KMeans(n_clusters=10, random_state=seed, n_init=10).fit(X_train[benign_indices])
+        if len(benign_indices) >= 50:
+            kmeans = KMeans(n_clusters=50, random_state=seed, n_init=10).fit(X_train[benign_indices])
             train_clusters = kmeans.predict(X_train)
             train_dists = kmeans.transform(X_train).min(axis=1)
             test_clusters = kmeans.predict(X_test)
@@ -270,16 +278,16 @@ def run_experiment(
                 # Convert to LIL for efficient row-wise modification of specific columns.
                 X_train_lil = X_train.tolil()
                 for i, (c_id, dist) in enumerate(zip(train_clusters, train_dists)):
-                    if 0 <= c_id < 10:
+                    if 0 <= c_id < 50:
                         X_train_lil[i, cluster_start_idx + c_id] = 1.0
-                    X_train_lil[i, cluster_start_idx + 10] = float(dist)
+                    X_train_lil[i, cluster_start_idx + 50] = float(dist)
                 X_train = X_train_lil.tocsr()
 
                 X_test_lil = X_test.tolil()
                 for i, (c_id, dist) in enumerate(zip(test_clusters, test_dists)):
-                    if 0 <= c_id < 10:
+                    if 0 <= c_id < 50:
                         X_test_lil[i, cluster_start_idx + c_id] = 1.0
-                    X_test_lil[i, cluster_start_idx + 10] = float(dist)
+                    X_test_lil[i, cluster_start_idx + 50] = float(dist)
                 X_test = X_test_lil.tocsr()
             else:
                 log.warning("clustering enabled but 'cluster:0' feature not found in spec")

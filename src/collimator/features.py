@@ -1526,6 +1526,25 @@ def _apply_structural_features(
         _safe_assign(vec, offset, 0, val)
         offset += 1
 
+    # Exp 48 & 49: Extreme Features
+    if os.getenv("COLLIMATOR_EXTREME_FEATURES") == "1":
+        # 48: Anachronistic Injection
+        if mtimes and hostile_mtimes:
+            median_mtime = float(np.median(mtimes))
+            max_delta = max(abs(t - median_mtime) for t in hostile_mtimes)
+            _safe_assign(vec, offset, 0, max_delta / 3600.0)
+        else:
+            _safe_assign(vec, offset, 0, 0.0)
+        
+        # 49: Code Entropy Spike
+        if code_entropies:
+            avg_ent = float(np.mean(entropies)) if entropies else 0.0
+            max_code_ent = max(code_entropies)
+            _safe_assign(vec, offset, 1, max_code_ent - avg_ent)
+        else:
+            _safe_assign(vec, offset, 1, 0.0)
+        offset += 2
+
     return offset
 
 
@@ -1765,9 +1784,9 @@ def _apply_cluster_features(
     offset: int,
 ) -> int:
     """Group 21: semantic intent cluster features."""
-    if 0 <= cluster_id < 10:
+    if 0 <= cluster_id < 50:
         _safe_assign(vec, offset, cluster_id, 1.0)
-    return offset + 10
+    return offset + 50
 
 
 def _extract_into(
@@ -1802,6 +1821,21 @@ def _extract_into(
         )
         offset += ctx.n_paths
     if "agg" in config.enabled_groups:
+        # Exp 51: hostile_depth_weight calculation
+        hostile_depth_weight = 0.0
+        if config.include_extreme_features:
+            depths: dict[str, int] = {}
+            for file_entry in files:
+                fpath = file_entry.get("path", "")
+                parent = file_entry.get("p", "")
+                depths[fpath] = depths.get(parent, 0) + 1 if parent else 0
+            
+            for file_entry in files:
+                fpath = file_entry.get("path", "")
+                depth = depths.get(fpath, 0)
+                file_summary = _summarize_findings(file_entry.get("ts") or [])
+                hostile_depth_weight += file_summary.hostile_finding_count * depth
+
         offset = _apply_aggregate_features(
             summary,
             files,
@@ -1814,6 +1848,9 @@ def _extract_into(
             config.include_repetition_penalty_features,
             config.include_file_severity_distribution,
         )
+        if config.include_extreme_features:
+            _safe_assign(vec, offset, 0, hostile_depth_weight)
+            offset += 1
     if "ext" in config.enabled_groups:
         offset = _apply_external_signal_features(summary, vec, offset)
     if "metrics" in config.enabled_groups:

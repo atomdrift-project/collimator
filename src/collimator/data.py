@@ -175,7 +175,7 @@ _TRAINABLE_QUERY = (
 )
 
 _METADATA_QUERY = (
-    "SELECT id, sha256, label, canonical_sha256"
+    "SELECT id, sha256, label, canonical_sha256, score"
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
     " AND skip = ''"
@@ -253,6 +253,7 @@ def stream_reports(
 
 def partition_row_ids(
     db_path: Path | str,
+    min_malware_training_score: int = 0,
 ) -> tuple[list[int], list[tuple[int, int]], list[tuple[int, int]]]:
     """Partition samples into train/test by canonical_sha256.
 
@@ -261,10 +262,13 @@ def partition_row_ids(
     train_row_ids: list[int] = []
     train_ids_labels: list[tuple[int, int]] = []
     test_ids_labels: list[tuple[int, int]] = []
-    for row_id, label, is_test, _canonical in stream_partitioned_metadata_grouped(db_path):
+    for row_id, label, is_test, _canonical, score in stream_partitioned_metadata_grouped(db_path):
         if is_test:
             test_ids_labels.append((row_id, label))
         else:
+            # Heuristic pruning: ignore low-score malware during training.
+            if label == 1 and score < min_malware_training_score:
+                continue
             train_row_ids.append(row_id)
             train_ids_labels.append((row_id, label))
     return train_row_ids, train_ids_labels, test_ids_labels
@@ -295,17 +299,18 @@ def lookup_sample(
 def stream_partitioned_metadata_grouped(
     db_path: Path | str,
     limit: int = 0,
-) -> Iterator[tuple[int, int, bool, str]]:
-    """Yield (row_id, label, is_test, canonical_sha256) without loading raw JSON."""
+) -> Iterator[tuple[int, int, bool, str, int]]:
+    """Yield (row_id, label, is_test, canonical_sha256, score) without loading raw JSON."""
     query = _METADATA_QUERY
     if limit > 0:
         query += f" LIMIT {limit}"
     with _connect(db_path, repeatable_read=True) as conn:
-        for row_id, sha256, label, canonical in _execute(conn, query):
+        for row_id, sha256, label, canonical, score in _execute(conn, query):
             split_key = canonical or sha256
             yield (
                 int(row_id),
                 _label_int(label),
                 is_test_sample(split_key),
                 split_key,
+                score or 0,
             )

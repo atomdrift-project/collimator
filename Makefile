@@ -52,8 +52,13 @@ $(VENV_DIR)/bin/activate: requirements.txt
 
 train: venv check-db
 	@mkdir -p $(LOG_DIR)
-	COLLIMATOR_ALLOWED_FEATURES_FILE=$(ALLOWED_FEATURES) \
-	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
+	COLLIMATOR_ALLOWED_FEATURES_FILE= \
+	COLLIMATOR_SILENT_PACKER_SIGNAL=1 \
+	COLLIMATOR_MTIME_KURTOSIS=1 \
+	COLLIMATOR_AIR_GAP_SIGNAL=1 \
+	COLLIMATOR_EXTREME_FEATURES=1 \
+	COLLIMATOR_DISABLE_FEATURE_GROUPS= \
+	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) --min-malware-score 9 $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
@@ -89,11 +94,17 @@ build-splits: venv check-db
 
 experiment: venv check-db
 	@mkdir -p $(LOG_DIR)
-	COLLIMATOR_ALLOWED_FEATURES_FILE=$(ALLOWED_FEATURES) \
+	COLLIMATOR_ALLOWED_FEATURES_FILE= \
+	COLLIMATOR_SILENT_PACKER_SIGNAL=1 \
+	COLLIMATOR_MTIME_KURTOSIS=1 \
+	COLLIMATOR_AIR_GAP_SIGNAL=1 \
+	COLLIMATOR_EXTREME_FEATURES=1 \
+	COLLIMATOR_DISABLE_FEATURE_GROUPS= \
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --workers $(EXP_WORKERS) --seed $(SEED) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
 		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING) \
+		--min-malware-score 9 \
 		--beta $(EXP_BETA) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-experiment.log"
 
 ablate: venv check-db
