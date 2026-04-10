@@ -575,6 +575,9 @@ def _build_feature_names(
             feature_names.extend([
                 "struct:anachronistic_injection",
                 "struct:code_entropy_spike",
+                "struct:foreign_binary_signal",
+                "struct:extension_mismatch_signal",
+                "struct:hostile_finding_density",
             ])
 
     # Group 16: Trigrams multi-hot.
@@ -697,13 +700,14 @@ class _ExtractContext:
     """Pre-built lookup tables for fast repeated extraction against a spec."""
 
     __slots__ = (
-        "presence_lookup", "n_paths", "ft_lookup", "n_ft",
+        "presence_lookup", "maxcrit_lookup", "ft_lookup", "n_ft",
         "element_lookup", "element_interaction_lookup", "n_el", "bigram_lookup", "n_bi",
         "ghost_vocab", "ghost_lookup", "n_gh",
         "skeleton_lookup", "skeleton_interaction_lookup", "n_sk",
         "rare_element_lookup", "n_re",
         "trigram_lookup", "n_tri", "blindfold", "total_features",
-        "score_interaction_lookup", "synergy_lookup"
+        "score_interaction_lookup", "synergy_lookup",
+        "absolute_lookup"
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
@@ -713,12 +717,15 @@ class _ExtractContext:
         
         # Build lookups that map to the actual indices in feature_names.
         name_to_idx = {name: i for i, name in enumerate(spec.feature_names)}
-        
+        self.absolute_lookup = name_to_idx
+
         self.presence_lookup: dict[str, int] = {}
+        self.maxcrit_lookup: dict[str, int] = {}
         for path in spec.presence_vocab:
             if (idx := name_to_idx.get(f"present:{path}")) is not None:
                 self.presence_lookup[path] = idx
-        self.n_paths = len(spec.presence_vocab)
+            if (idx := name_to_idx.get(f"maxcrit:{path}")) is not None:
+                self.maxcrit_lookup[path] = idx
 
         self.ft_lookup: dict[str, int] = {}
         for ft in spec.filetype_vocab:
@@ -742,18 +749,10 @@ class _ExtractContext:
                 self.score_interaction_lookup[ft] = idx
 
         self.bigram_lookup: dict[str, int] = {}
+        self.synergy_lookup: dict[str, int] = {}
         for bi in spec.bigram_vocab:
             if (idx := name_to_idx.get(f"bigrams:{bi}")) is not None:
                 self.bigram_lookup[bi] = idx
-            # Synergy bigrams use the same vocab.
-            if (idx := name_to_idx.get(f"unsigned_bigram:{bi}")) is not None:
-                # We can't share lookup if they have different prefixes in spec.
-                # Signature synergy uses unsigned_bigram: prefix.
-                pass 
-        
-        # Explicit synergy lookup to be safe.
-        self.synergy_lookup: dict[str, int] = {}
-        for bi in spec.bigram_vocab:
             if (idx := name_to_idx.get(f"unsigned_bigram:{bi}")) is not None:
                 self.synergy_lookup[bi] = idx
         self.n_bi = len(spec.bigram_vocab)
@@ -1079,20 +1078,18 @@ def _topk_file_risk_features(
     )
 
 
-def _safe_assign(vec: np.ndarray, offset: int, idx: int, value: float) -> None:
-    """Assign value to vec[offset + idx] if it's within bounds."""
-    target = offset + idx
-    if target < len(vec):
-        vec[target] = value
+def _assign(vec: np.ndarray, idx: int | None, value: float) -> None:
+    """Assign value to vec[idx] if idx is not None."""
+    if idx is not None:
+        vec[idx] = value
 
 
 def _apply_presence_features(
     summary: _FindingSummary,
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
     score: int = 0,
-) -> int:
+) -> None:
     """Group 1: path presence features."""
     config = feature_config_from_env()
     sample_paths = summary.sample_paths
@@ -1102,22 +1099,19 @@ def _apply_presence_features(
 
     for path, max_ord in sample_paths.items():
         if max_ord >= 2:  # baseline or above
-            feat_idx = ctx.presence_lookup.get(path)
-            if feat_idx is not None:
-                weight = score_weight
-                if config.include_soft_presence:
-                    weight *= summary.path_confidences.get(path, 1.0)
-                _safe_assign(vec, offset, feat_idx, weight)
-    return offset + ctx.n_paths
+            idx = ctx.presence_lookup.get(path)
+            weight = score_weight
+            if config.include_soft_presence:
+                weight *= summary.path_confidences.get(path, 1.0)
+            _assign(vec, idx, weight)
 
 
 def _apply_maxcrit_features(
     summary: _FindingSummary,
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
     score: int = 0,
-) -> int:
+) -> None:
     """Group 2: path maximum criticality features."""
     config = feature_config_from_env()
     sample_paths = summary.sample_paths
@@ -1126,27 +1120,25 @@ def _apply_maxcrit_features(
         score_weight = float(math.log1p(score))
 
     for path, max_ord in sample_paths.items():
-        feat_idx = ctx.presence_lookup.get(path)
-        if feat_idx is not None:
-            weight = score_weight
-            if config.include_soft_presence:
-                weight *= summary.path_confidences.get(path, 1.0)
-            _safe_assign(vec, offset, feat_idx, float(max_ord) * weight)
-    return offset + ctx.n_paths
+        idx = ctx.maxcrit_lookup.get(path)
+        weight = score_weight
+        if config.include_soft_presence:
+            weight *= summary.path_confidences.get(path, 1.0)
+        _assign(vec, idx, float(max_ord) * weight)
 
 
 def _apply_aggregate_features(
     summary: _FindingSummary,
     files: list[dict[str, Any]],
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
     top_k_risk_files: int,
     include_breadth_density: bool,
     include_hostile_escalation: bool,
     include_hostile_weighted_density: bool,
     include_repetition_penalty: bool,
     include_file_severity_distribution: bool,
-) -> int:
+) -> None:
     """Group 3: aggregate path breadth and concentration features."""
     sample_paths = summary.sample_paths
     breadth_notable = 0
@@ -1180,26 +1172,27 @@ def _apply_aggregate_features(
         elif max_ord == 3:
             breadth_notable_only += 1
 
-    _safe_assign(vec, offset, 0, max_crit)
-    _safe_assign(vec, offset, 1, len(categories))
-    _safe_assign(vec, offset, 2, math.log1p(path_breadth_any))
-    _safe_assign(vec, offset, 3, math.log1p(total_active))
+    lookup = ctx.absolute_lookup
+    _assign(vec, lookup.get("agg:max_crit"), max_crit)
+    _assign(vec, lookup.get("agg:category_breadth"), len(categories))
+    _assign(vec, lookup.get("agg:path_breadth_any"), math.log1p(path_breadth_any))
+    _assign(vec, lookup.get("agg:total_active_paths"), math.log1p(total_active))
     # Concentration ratios — what fraction of behavior is suspicious?
-    _safe_assign(vec, offset, 4, breadth_suspicious / max(path_breadth_any, 1))
-    _safe_assign(vec, offset, 5, breadth_hostile / max(path_breadth_any, 1))
-    _safe_assign(vec, offset, 6, breadth_suspicious / max(breadth_notable, 1))
-    _safe_assign(vec, offset, 7, breadth_notable_only / max(breadth_notable, 1))
-    _safe_assign(vec, offset, 8, math.log1p(summary.notable_finding_count))
-    _safe_assign(vec, offset, 9, math.log1p(summary.suspicious_finding_count))
-    _safe_assign(vec, offset, 10, math.log1p(summary.hostile_finding_count))
+    _assign(vec, lookup.get("agg:suspicious_concentration"), breadth_suspicious / max(path_breadth_any, 1))
+    _assign(vec, lookup.get("agg:hostile_concentration"), breadth_hostile / max(path_breadth_any, 1))
+    _assign(vec, lookup.get("agg:escalation_rate"), breadth_suspicious / max(breadth_notable, 1))
+    _assign(vec, lookup.get("agg:notable_only_fraction"), breadth_notable_only / max(breadth_notable, 1))
+    _assign(vec, lookup.get("agg:notable_findings_log"), math.log1p(summary.notable_finding_count))
+    _assign(vec, lookup.get("agg:suspicious_findings_log"), math.log1p(summary.suspicious_finding_count))
+    _assign(vec, lookup.get("agg:hostile_findings_log"), math.log1p(summary.hostile_finding_count))
     
     # Pruned raw IDs for density-first metrics.
     total_kb = max(sum(_float(file_entry.get("sz", 0.0)) for file_entry in files) / 1024.0, 0.1)
-    _safe_assign(vec, offset, 11, summary.notable_finding_count / total_kb)
-    _safe_assign(vec, offset, 12, summary.suspicious_finding_count / total_kb)
-    _safe_assign(vec, offset, 13, summary.hostile_finding_count / total_kb)
-    _safe_assign(vec, offset, 14, math.log1p(summary.unique_suspicious_ids) / math.log1p(total_kb))
-    _safe_assign(vec, offset, 15, math.log1p(summary.unique_hostile_ids) / math.log1p(total_kb))
+    _assign(vec, lookup.get("agg:notable_finding_ratio"), summary.notable_finding_count / total_kb)
+    _assign(vec, lookup.get("agg:suspicious_finding_ratio"), summary.suspicious_finding_count / total_kb)
+    _assign(vec, lookup.get("agg:hostile_finding_ratio"), summary.hostile_finding_count / total_kb)
+    _assign(vec, lookup.get("agg:unique_suspicious_ids_log"), math.log1p(summary.unique_suspicious_ids) / math.log1p(total_kb))
+    _assign(vec, lookup.get("agg:unique_hostile_ids_log"), math.log1p(summary.unique_hostile_ids) / math.log1p(total_kb))
     total_kb = max(sum(_float(file_entry.get("sz", 0.0)) for file_entry in files) / 1024.0, 1.0)
     topk_features = _topk_file_risk_features(
         files,
@@ -1207,112 +1200,105 @@ def _apply_aggregate_features(
         include_breadth_density=include_breadth_density,
     )
     topk_susp_ratio, topk_host_ratio, topk_susp_log, topk_host_log = topk_features[:4]
-    _safe_assign(vec, offset, 16,  topk_susp_ratio)
-    _safe_assign(vec, offset, 17,  topk_host_ratio)
-    _safe_assign(vec, offset, 18,  topk_susp_log)
-    _safe_assign(vec, offset, 19,  topk_host_log)
-    offset += 20
+    _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_suspicious_ratio_sum"), topk_susp_ratio)
+    _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_hostile_ratio_sum"), topk_host_ratio)
+    _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_suspicious_findings_log"), topk_susp_log)
+    _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_hostile_findings_log"), topk_host_log)
+    
     if include_breadth_density:
         category_denom = max(len(categories), 1)
-        _safe_assign(vec, offset, 0, float(summary.suspicious_category_breadth))
-        _safe_assign(vec, offset, 1, float(summary.hostile_category_breadth))
-        _safe_assign(vec, offset, 2, summary.suspicious_category_breadth / category_denom)
-        _safe_assign(vec, offset, 3, summary.hostile_category_breadth / category_denom)
-        _safe_assign(vec, offset, 4, summary.suspicious_finding_count / total_kb)
-        _safe_assign(vec, offset, 5, summary.hostile_finding_count / total_kb)
-        _safe_assign(vec, offset, 6, summary.suspicious_category_breadth / total_kb)
-        _safe_assign(vec, offset, 7, summary.hostile_category_breadth / total_kb)
-        _safe_assign(vec, offset, 8, topk_features[4])
-        _safe_assign(vec, offset, 9, topk_features[5])
-        _safe_assign(vec, offset, 10, topk_features[6])
-        _safe_assign(vec, offset, 11, topk_features[7])
-        offset += 12
+        _assign(vec, lookup.get("agg:suspicious_category_breadth"), float(summary.suspicious_category_breadth))
+        _assign(vec, lookup.get("agg:hostile_category_breadth"), float(summary.hostile_category_breadth))
+        _assign(vec, lookup.get("agg:suspicious_category_density"), summary.suspicious_category_breadth / category_denom)
+        _assign(vec, lookup.get("agg:hostile_category_density"), summary.hostile_category_breadth / category_denom)
+        _assign(vec, lookup.get("agg:suspicious_findings_per_kb"), summary.suspicious_finding_count / total_kb)
+        _assign(vec, lookup.get("agg:hostile_findings_per_kb"), summary.hostile_finding_count / total_kb)
+        _assign(vec, lookup.get("agg:suspicious_categories_per_kb"), summary.suspicious_category_breadth / total_kb)
+        _assign(vec, lookup.get("agg:hostile_categories_per_kb"), summary.hostile_category_breadth / total_kb)
+        _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_suspicious_density_sum"), topk_features[4])
+        _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_hostile_density_sum"), topk_features[5])
+        _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_suspicious_category_breadth_sum"), topk_features[6])
+        _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_hostile_category_breadth_sum"), topk_features[7])
+
     if include_hostile_escalation:
-        _safe_assign(vec, offset, 0, breadth_hostile / max(breadth_notable, 1))
-        _safe_assign(vec, offset, 1, breadth_hostile / max(breadth_suspicious, 1))
-        _safe_assign(vec, offset, 2, summary.suspicious_finding_count / max(summary.notable_finding_count, 1))
-        _safe_assign(vec, offset, 3, summary.hostile_finding_count / max(summary.notable_finding_count, 1))
-        _safe_assign(vec, offset, 4, summary.hostile_finding_count / max(summary.suspicious_finding_count, 1))
-        offset += 5
+        _assign(vec, lookup.get("agg:hostile_escalation_rate"), breadth_hostile / max(breadth_notable, 1))
+        _assign(vec, lookup.get("agg:hostile_share_of_suspicious"), breadth_hostile / max(breadth_suspicious, 1))
+        _assign(vec, lookup.get("agg:suspicious_finding_escalation_rate"), summary.suspicious_finding_count / max(summary.notable_finding_count, 1))
+        _assign(vec, lookup.get("agg:hostile_finding_escalation_rate"), summary.hostile_finding_count / max(summary.notable_finding_count, 1))
+        _assign(vec, lookup.get("agg:hostile_share_of_suspicious_findings"), summary.hostile_finding_count / max(summary.suspicious_finding_count, 1))
+
     if include_hostile_weighted_density or include_file_severity_distribution:
         stats = [_file_risk_stats(file_entry) for file_entry in files]
     else:
         stats = []
+
     if include_hostile_weighted_density:
         top_hostile_weighted = sorted(
             stats,
             key=lambda s: (s.hostile_density + 0.25 * s.suspicious_density, s.hostile_density, s.suspicious_density),
             reverse=True,
         )[:top_k_risk_files]
-        _safe_assign(vec, offset, 0, summary.hostile_finding_count / total_kb + 0.25 * (summary.suspicious_finding_count / total_kb))
-        _safe_assign(vec, offset, 1, sum(s.hostile_density + 0.25 * s.suspicious_density for s in top_hostile_weighted))
-        offset += 2
+        _assign(vec, lookup.get("agg:hostile_weighted_density"), summary.hostile_finding_count / total_kb + 0.25 * (summary.suspicious_finding_count / total_kb))
+        _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_hostile_weighted_density_sum"), sum(s.hostile_density + 0.25 * s.suspicious_density for s in top_hostile_weighted))
+
     if include_repetition_penalty:
-        _safe_assign(vec, offset, 0, 1.0 - (summary.unique_suspicious_ids / max(summary.suspicious_finding_count, 1)))
-        _safe_assign(vec, offset, 1, 1.0 - (summary.unique_hostile_ids / max(summary.hostile_finding_count, 1)))
-        _safe_assign(vec, offset, 2, 1.0 - (summary.suspicious_category_breadth / max(summary.suspicious_finding_count, 1)))
-        _safe_assign(vec, offset, 3, 1.0 - (summary.hostile_category_breadth / max(summary.hostile_finding_count, 1)))
-        offset += 4
+        _assign(vec, lookup.get("agg:suspicious_id_repeat_ratio"), 1.0 - (summary.unique_suspicious_ids / max(summary.suspicious_finding_count, 1)))
+        _assign(vec, lookup.get("agg:hostile_id_repeat_ratio"), 1.0 - (summary.unique_hostile_ids / max(summary.hostile_finding_count, 1)))
+        _assign(vec, lookup.get("agg:suspicious_category_repeat_ratio"), 1.0 - (summary.suspicious_category_breadth / max(summary.suspicious_finding_count, 1)))
+        _assign(vec, lookup.get("agg:hostile_category_repeat_ratio"), 1.0 - (summary.hostile_category_breadth / max(summary.hostile_finding_count, 1)))
+
     if include_file_severity_distribution:
         n_files = max(len(files), 1)
         hostile_files = sum(s.max_crit >= 5 for s in stats)
         suspicious_files = sum(s.max_crit == 4 for s in stats)
         notable_files = sum(s.max_crit == 3 for s in stats)
-        _safe_assign(vec, offset, 0, hostile_files / n_files)
-        _safe_assign(vec, offset, 1, suspicious_files / n_files)
-        _safe_assign(vec, offset, 2, notable_files / n_files)
-        _safe_assign(vec, offset, 3, math.log1p(hostile_files))
-        _safe_assign(vec, offset, 4, math.log1p(suspicious_files))
-        _safe_assign(vec, offset, 5, math.log1p(notable_files))
-        offset += 6
-    return offset
+        _assign(vec, lookup.get("agg:file_hostile_fraction"), hostile_files / n_files)
+        _assign(vec, lookup.get("agg:file_suspicious_fraction"), suspicious_files / n_files)
+        _assign(vec, lookup.get("agg:file_notable_fraction"), notable_files / n_files)
+        _assign(vec, lookup.get("agg:file_hostile_count_log"), math.log1p(hostile_files))
+        _assign(vec, lookup.get("agg:file_suspicious_count_log"), math.log1p(suspicious_files))
+        _assign(vec, lookup.get("agg:file_notable_count_log"), math.log1p(notable_files))
 
 
 def _apply_external_signal_features(
     summary: _FindingSummary,
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 4: aggregated third-party and well-known signals."""
-    _safe_assign(vec, offset, 0, summary.third_party_max_crit)
-    _safe_assign(vec, offset, 1, math.log1p(summary.third_party_count))
-    _safe_assign(vec, offset, 2, summary.well_known_max_crit)
-    _safe_assign(vec, offset, 3, summary.well_known_hostile)
-    _safe_assign(vec, offset, 4, summary.well_known_suspicious)
-    _safe_assign(vec, offset, 5, 1.0 if summary.has_yara else 0.0)
-    return offset + 6
+    lookup = ctx.absolute_lookup
+    _assign(vec, lookup.get("ext:third_party_max_crit"), summary.third_party_max_crit)
+    _assign(vec, lookup.get("ext:third_party_count"), math.log1p(summary.third_party_count))
+    _assign(vec, lookup.get("ext:well_known_max_crit"), summary.well_known_max_crit)
+    _assign(vec, lookup.get("ext:well_known_hostile_count"), summary.well_known_hostile)
+    _assign(vec, lookup.get("ext:well_known_suspicious_count"), summary.well_known_suspicious)
+    _assign(vec, lookup.get("ext:has_yara_match"), 1.0 if summary.has_yara else 0.0)
 
 
 def _apply_metric_features(
     metrics: dict[str, Any],
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 5: curated numeric metrics."""
+    lookup = ctx.absolute_lookup
     for group, fname, use_log in KEY_METRICS:
         val = _float((metrics.get(group) or {}).get(fname))
         if use_log:
             val = math.log1p(abs(val))
-        _safe_assign(vec, offset, 0, val)
-        offset += 1
-    return offset
+        _assign(vec, lookup.get(f"metrics:{group}_{fname}"), val)
 
 
 def _apply_filetype_features(
     files: list[dict[str, Any]],
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 6: file type multi-hot features across all files."""
     if not ctx.blindfold:
         for file_entry in files:
             idx = ctx.ft_lookup.get(file_entry.get("type", ""))
-            if idx is not None:
-                _safe_assign(vec, offset, idx, 1.0)
-    # ALWAYS advance by n_ft to maintain feature index stability
-    # regardless of whether the specific features were written.
-    return offset + ctx.n_ft
+            _assign(vec, idx, 1.0)
 
 
 def _apply_element_features(
@@ -1320,36 +1306,30 @@ def _apply_element_features(
     files: list[dict[str, Any]],
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 8: element multi-hot features and filetype interactions."""
     if elements:
         present_types = {f.get("type", "") for f in files if f.get("type")}
         for el in elements.split(","):
             el = el.strip()
-            if (idx := ctx.element_lookup.get(el)) is not None:
-                _safe_assign(vec, 0, idx, 1.0)
+            _assign(vec, ctx.element_lookup.get(el), 1.0)
             for ft in present_types:
-                if (idx := ctx.element_interaction_lookup.get((ft, el))) is not None:
-                    _safe_assign(vec, 0, idx, 1.0)
-
-    return offset + ctx.n_el * (1 + ctx.n_ft)
+                _assign(vec, ctx.element_interaction_lookup.get((ft, el)), 1.0)
 
 
 def _apply_formula_features(
     formula: str,
     finding_count: int,
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 9: formula features."""
-    # formula example: "A2B1C5" -> skeleton: "ABC", unique: 3
+    lookup = ctx.absolute_lookup
     skeleton = "".join([c for c in formula if c.isalpha()])
-    _safe_assign(vec, offset, 0, float(len(skeleton)))
-    _safe_assign(vec, offset, 1, float(len(set(skeleton))))
+    _assign(vec, lookup.get("formula:skeleton_len"), float(len(skeleton)))
+    _assign(vec, lookup.get("formula:unique_elements"), float(len(set(skeleton))))
     if finding_count > 0:
-        _safe_assign(vec, offset, 2, float(len(formula)) / finding_count)
-    return offset + 3
+        _assign(vec, lookup.get("formula:complexity_ratio"), float(len(formula)) / finding_count)
 
 
 def _apply_score_features(
@@ -1358,30 +1338,28 @@ def _apply_score_features(
     files: list[dict[str, Any]],
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 10: hopper score features and filetype interactions."""
-    _safe_assign(vec, offset, 0, float(score))
-    _safe_assign(vec, offset, 1, float(score) / math.log1p(total_size) if total_size > 0 else 0.0)
+    lookup = ctx.absolute_lookup
+    _assign(vec, lookup.get("score:hopper_score"), float(score))
+    _assign(vec, lookup.get("score:density"), float(score) / math.log1p(total_size) if total_size > 0 else 0.0)
     
     # Interaction with filetype.
     for file_entry in files:
         ft = file_entry.get("type", "")
-        if (idx := ctx.score_interaction_lookup.get(ft)) is not None:
-            _safe_assign(vec, 0, idx, float(score))
-
-    return offset + 2 + ctx.n_ft
+        _assign(vec, ctx.score_interaction_lookup.get(ft), float(score))
 
 
 def _apply_structural_features(
     files: list[dict[str, Any]],
     filtered_finding_count: int,
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
     include_file_risk_coverage: bool,
     mtime_str: str = "",
-) -> int:
+) -> None:
     """Group 7: structural / container context (7)."""
+    lookup = ctx.absolute_lookup
     binary_like = {"pe", "elf", "macho"}
     any_tiny_binary = False
     import_candidates = 0
@@ -1391,6 +1369,11 @@ def _apply_structural_features(
     hostile_files = 0
     hostile_files_with_parent = 0
     inner_file_count = 0
+    total_loc = 0
+    extension_mismatches = 0
+    has_source_files = False
+    has_foreign_binaries = False
+    source_types = {"javascript", "python", "typescript", "ruby", "php"}
 
     # Track mtimes and entropies across the report.
     mtimes: list[float] = []
@@ -1419,6 +1402,25 @@ def _apply_structural_features(
         if file_entry.get("p"):
             inner_file_count += 1
         
+        ftype = file_entry.get("type", "")
+        if ftype in source_types:
+            has_source_files = True
+        if ftype in binary_like:
+            if has_source_files:
+                has_foreign_binaries = True
+        
+        # Track lines of code for density
+        file_metrics = file_entry.get("ms") or {}
+        text_metrics = file_metrics.get("text") or {}
+        total_loc += int(_float(text_metrics.get("total_lines", 0)))
+
+        # Track extension mismatches
+        fpath = file_entry.get("path", "")
+        if fpath and "." in fpath:
+            ext = fpath.split(".")[-1].lower()
+            if ftype in binary_like and ext in {"txt", "md", "json", "png", "jpg"}:
+                extension_mismatches += 1
+
         fmt = file_entry.get("mt")
         if fmt:
             try:
@@ -1459,72 +1461,65 @@ def _apply_structural_features(
     # Stealth potential: high entropy (packed/encrypted) but very few findings.
     stealth_potential = 1.0 if (filtered_finding_count < 5 and max_entropy > 6.5) else 0.0
 
-    _safe_assign(vec, offset, 0, 1.0 if any_tiny_binary else 0.0)
-    _safe_assign(vec, offset, 1, 1.0 if (import_candidates > 0 and importless_candidates == import_candidates) else 0.0)
-    _safe_assign(vec, offset, 2, 1.0 if filtered_finding_count == 0 else 0.0)
-    _safe_assign(vec, offset, 3, math.log1p(filtered_finding_count))
-    _safe_assign(vec, offset, 4, math.log1p(len(files)))
-    _safe_assign(vec, offset, 5, math.log1p(max(len(files) - 1, 0)))
-    _safe_assign(vec, offset, 6, stealth_potential)
-    offset += 7
+    _assign(vec, lookup.get("struct:tiny_executable"), 1.0 if any_tiny_binary else 0.0)
+    _assign(vec, lookup.get("struct:no_imports"), 1.0 if (import_candidates > 0 and importless_candidates == import_candidates) else 0.0)
+    _assign(vec, lookup.get("struct:zero_findings"), 1.0 if filtered_finding_count == 0 else 0.0)
+    _assign(vec, lookup.get("struct:finding_count_log"), math.log1p(filtered_finding_count))
+    _assign(vec, lookup.get("struct:file_count_log"), math.log1p(len(files)))
+    _assign(vec, lookup.get("struct:inner_file_count_log"), math.log1p(max(len(files) - 1, 0)))
+    _assign(vec, lookup.get("struct:stealth_potential"), stealth_potential)
+    
     if include_file_risk_coverage:
         file_count = max(len(files), 1)
-        _safe_assign(vec, offset, 0, suspicious_files / file_count)
-        _safe_assign(vec, offset, 1, hostile_files / file_count)
-        _safe_assign(vec, offset, 2, math.log1p(suspicious_files))
-        _safe_assign(vec, offset, 3, math.log1p(hostile_files))
-        offset += 4
+        _assign(vec, lookup.get("struct:suspicious_file_fraction"), suspicious_files / file_count)
+        _assign(vec, lookup.get("struct:hostile_file_fraction"), hostile_files / file_count)
+        _assign(vec, lookup.get("struct:suspicious_file_count_log"), math.log1p(suspicious_files))
+        _assign(vec, lookup.get("struct:hostile_file_count_log"), math.log1p(hostile_files))
 
     # Group 15: Packaged capability (Experiment 25).
     # Unique element variety * max binary entropy.
     unique_elements = float(len(set("".join([c for c in (files[0].get("formula") or "") if c.isalpha()]))))
-    _safe_assign(vec, offset, 0, unique_elements * max_entropy)
-    offset += 1
+    _assign(vec, lookup.get("struct:packaged_capability"), unique_elements * max_entropy)
 
     # Group 17: Mtime anomalies (Experiment 30).
     # Inconsistency in timestamps often signals tampering.
     if len(mtimes) > 1:
         m_arr = np.array(mtimes)
-        _safe_assign(vec, offset, 0, float(np.max(m_arr) - np.min(m_arr)) / 3600.0)
-        _safe_assign(vec, offset, 1, float(np.std(m_arr)) / 3600.0)
+        _assign(vec, lookup.get("struct:mtime_range_hours"), float(np.max(m_arr) - np.min(m_arr)) / 3600.0)
+        _assign(vec, lookup.get("struct:mtime_std_dev_hours"), float(np.std(m_arr)) / 3600.0)
     else:
-        _safe_assign(vec, offset, 0, 0.0)
-        _safe_assign(vec, offset, 1, 0.0)
-    offset += 2
+        _assign(vec, lookup.get("struct:mtime_range_hours"), 0.0)
+        _assign(vec, lookup.get("struct:mtime_std_dev_hours"), 0.0)
 
     # Group 18: Structural Depth and Entropy Gradients (Exp 36).
-    _safe_assign(vec, offset, 0, math.log1p(max_nesting_depth))
-    _safe_assign(vec, offset, 1, float(inner_file_count) / max(len(files), 1))
+    _assign(vec, lookup.get("struct:max_nesting_depth_log"), math.log1p(max_nesting_depth))
+    _assign(vec, lookup.get("struct:inner_file_ratio"), float(inner_file_count) / max(len(files), 1))
     if len(entropies) > 1:
         e_arr = np.array(entropies)
-        _safe_assign(vec, offset, 2, float(np.std(e_arr)))
-        _safe_assign(vec, offset, 3, float(np.max(e_arr) - np.mean(e_arr)))
+        _assign(vec, lookup.get("struct:entropy_std_dev"), float(np.std(e_arr)))
+        _assign(vec, lookup.get("struct:entropy_max_diff"), float(np.max(e_arr) - np.mean(e_arr)))
     else:
-        _safe_assign(vec, offset, 2, 0.0)
-        _safe_assign(vec, offset, 3, 0.0)
-    offset += 4
+        _assign(vec, lookup.get("struct:entropy_std_dev"), 0.0)
+        _assign(vec, lookup.get("struct:entropy_max_diff"), 0.0)
     
     # Exp 43: Silent Packer Signal
     if os.getenv("COLLIMATOR_SILENT_PACKER_SIGNAL") == "1":
         total_size = sum(_float(f.get("sz", 0)) for f in files)
         size_mb = total_size / (1024 * 1024)
-        _safe_assign(vec, offset, 0, math.log1p(size_mb) / (filtered_finding_count + 1))
-        offset += 1
+        _assign(vec, lookup.get("struct:silent_packer_signal"), math.log1p(size_mb) / (filtered_finding_count + 1))
 
     # Exp 44: Mtime Kurtosis
     if os.getenv("COLLIMATOR_MTIME_KURTOSIS") == "1":
         if len(mtimes) > 3:
-            _safe_assign(vec, offset, 0, float(stats.kurtosis(mtimes)))
+            _assign(vec, lookup.get("struct:mtime_kurtosis"), float(stats.kurtosis(mtimes)))
         else:
-            _safe_assign(vec, offset, 0, 0.0)
-        offset += 1
+            _assign(vec, lookup.get("struct:mtime_kurtosis"), 0.0)
 
     # Exp 46: Behavioral Air-Gap
     if os.getenv("COLLIMATOR_AIR_GAP_SIGNAL") == "1":
         # If we have hostile files, but NONE of them have parents, it's an air-gap.
         val = 1.0 if (hostile_files > 0 and hostile_files_with_parent == 0) else 0.0
-        _safe_assign(vec, offset, 0, val)
-        offset += 1
+        _assign(vec, lookup.get("struct:air_gap_signal"), val)
 
     # Exp 48 & 49: Extreme Features
     if os.getenv("COLLIMATOR_EXTREME_FEATURES") == "1":
@@ -1532,47 +1527,53 @@ def _apply_structural_features(
         if mtimes and hostile_mtimes:
             median_mtime = float(np.median(mtimes))
             max_delta = max(abs(t - median_mtime) for t in hostile_mtimes)
-            _safe_assign(vec, offset, 0, max_delta / 3600.0)
+            _assign(vec, lookup.get("struct:anachronistic_injection"), max_delta / 3600.0)
         else:
-            _safe_assign(vec, offset, 0, 0.0)
+            _assign(vec, lookup.get("struct:anachronistic_injection"), 0.0)
         
         # 49: Code Entropy Spike
         if code_entropies:
             avg_ent = float(np.mean(entropies)) if entropies else 0.0
             max_code_ent = max(code_entropies)
-            _safe_assign(vec, offset, 1, max_code_ent - avg_ent)
+            _assign(vec, lookup.get("struct:code_entropy_spike"), max_code_ent - avg_ent)
         else:
-            _safe_assign(vec, offset, 1, 0.0)
-        offset += 2
+            _assign(vec, lookup.get("struct:code_entropy_spike"), 0.0)
+        
+        # 54: Foreign Binary Signal
+        _assign(vec, lookup.get("struct:foreign_binary_signal"), 1.0 if has_foreign_binaries else 0.0)
 
-    return offset
+        # 55: Extension Mismatch Signal
+        _assign(vec, lookup.get("struct:extension_mismatch_signal"), float(extension_mismatches))
+
+        # 56: Hostile Density Signal
+        # Findings per 1000 lines of code
+        if total_loc > 0:
+            _assign(vec, lookup.get("struct:hostile_finding_density"), (hostile_files * 1000.0) / total_loc)
+        else:
+            _assign(vec, lookup.get("struct:hostile_finding_density"), 0.0)
 
 
 def _apply_neg_space_features(
     files: list[dict[str, Any]],
     sample_paths: dict[str, int],
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 23: negative space / missing expected behavior."""
     file_types = {f.get("type", "") for f in files}
-    local_offset = 0
     for ftype, traits in sorted(EXPECTED_GHOSTS.items()):
         has_type = ftype in file_types
         for trait in traits:
             # If the type is present but the trait is missing, it's a "ghost".
             val = 1.0 if (has_type and (trait not in sample_paths or sample_paths[trait] < 1)) else 0.0
-            _safe_assign(vec, offset, local_offset, val)
-            local_offset += 1
-    return offset + local_offset
+            _assign(vec, ctx.absolute_lookup.get(f"missing:{ftype}*{trait}"), val)
 
 
 def _apply_bigram_features(
     report: dict[str, Any],
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 11: trait bigram multi-hot features."""
     for file_entry in report_files(report):
         file_traits: set[str] = set()
@@ -1586,26 +1587,19 @@ def _apply_bigram_features(
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
                 bigram = f"{p1} + {p2}"
-                idx = ctx.bigram_lookup.get(bigram)
-                if idx is not None:
-                    _safe_assign(vec, offset, idx, 1.0)
-    return offset + ctx.n_bi
+                _assign(vec, ctx.bigram_lookup.get(bigram), 1.0)
 
 
 def _apply_ghost_features(
     sample_paths: dict[str, int],
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 12: ghost features (absence of expected benign behavior)."""
     for path in ctx.ghost_vocab:
         # 1.0 if the expected benign path is MISSING.
         if path not in sample_paths or sample_paths[path] < 2:
-            idx = ctx.ghost_lookup.get(path)
-            if idx is not None:
-                _safe_assign(vec, offset, idx, 1.0)
-    return offset + ctx.n_gh
+            _assign(vec, ctx.ghost_lookup.get(path), 1.0)
 
 
 def _apply_skeleton_features(
@@ -1613,27 +1607,18 @@ def _apply_skeleton_features(
     files: list[dict[str, Any]],
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 13: skeleton categorical and filetype interactions."""
     skeleton = "".join([c for c in formula if c.isalpha()])
     if not skeleton:
-        return offset + ctx.n_sk * (1 + ctx.n_ft)
+        return
 
-    sk_idx = ctx.skeleton_lookup.get(skeleton)
-    if sk_idx is not None:
-        # Base skeleton feature.
-        _safe_assign(vec, offset, sk_idx, 1.0)
+    _assign(vec, ctx.skeleton_lookup.get(skeleton), 1.0)
 
-        # Interaction features with filetype.
-        for file_entry in files:
-            ft = file_entry.get("type", "")
-            ft_idx = ctx.ft_lookup.get(ft)
-            if ft_idx is not None:
-                inter_idx = offset + ctx.n_sk + (sk_idx * ctx.n_ft) + ft_idx
-                _safe_assign(vec, inter_idx, 0, 1.0)
-
-    return offset + ctx.n_sk * (1 + ctx.n_ft)
+    # Interaction features with filetype.
+    for file_entry in files:
+        ft = file_entry.get("type", "")
+        _assign(vec, ctx.skeleton_interaction_lookup.get((ft, skeleton)), 1.0)
 
 
 def _apply_rare_element_features(
@@ -1641,8 +1626,7 @@ def _apply_rare_element_features(
     summary: _FindingSummary,
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 14: rare element multi-hot features (smoking guns)."""
     config = feature_config_from_env()
     weight = 1.0
@@ -1652,18 +1636,14 @@ def _apply_rare_element_features(
     if elements:
         for el in elements.split(","):
             el = el.strip()
-            idx = ctx.rare_element_lookup.get(el)
-            if idx is not None:
-                _safe_assign(vec, offset, idx, weight)
-    return offset + ctx.n_re
+            _assign(vec, ctx.rare_element_lookup.get(el), weight)
 
 
 def _apply_trigram_features(
     report: dict[str, Any],
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 16: trait trigram multi-hot features."""
     for file_entry in report_files(report):
         file_traits: set[str] = set()
@@ -1679,18 +1659,15 @@ def _apply_trigram_features(
                 p2 = paths_list[j]
                 for p3 in paths_list[j + 1 :]:
                     trigram = f"{p1} + {p2} + {p3}"
-                    idx = ctx.trigram_lookup.get(trigram)
-                    if idx is not None:
-                        _safe_assign(vec, offset, idx, 1.0)
-    return offset + ctx.n_tri
+                    _assign(vec, ctx.trigram_lookup.get(trigram), 1.0)
 
 
 def _apply_logic_gap_features(
     files: list[dict[str, Any]],
     summary: _FindingSummary,
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 19: logic gap features (imports present without behavior)."""
     # Collect all unique imports across the report.
     all_imports: set[str] = set()
@@ -1704,7 +1681,7 @@ def _apply_logic_gap_features(
                 all_imports.add(str(imp))
 
     sample_paths = summary.sample_paths
-    for i, (cat, (imports_set, traits_set)) in enumerate(sorted(LOGIC_GAPS.items())):
+    for cat, (imports_set, traits_set) in sorted(LOGIC_GAPS.items()):
         has_import = any(imp in all_imports for imp in imports_set)
         has_behavior = any(
             any(path.startswith(t) for t in traits_set)
@@ -1712,9 +1689,7 @@ def _apply_logic_gap_features(
             if max_ord >= 3  # notable or above
         )
         if has_import and not has_behavior:
-            _safe_assign(vec, offset, i, 1.0)
-
-    return offset + len(LOGIC_GAPS)
+            _assign(vec, ctx.absolute_lookup.get(f"gap:{cat}"), 1.0)
 
 
 def _apply_signature_synergy_features(
@@ -1722,13 +1697,12 @@ def _apply_signature_synergy_features(
     summary: _FindingSummary,
     ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 20: signature synergy (unsigned + behavioral patterns)."""
     # Check if any file in the report is unsigned.
     is_unsigned = "metadata/unsigned" in summary.sample_paths
     if not is_unsigned:
-        return offset + ctx.n_bi
+        return
 
     for file_entry in report_files(report):
         file_traits: set[str] = set()
@@ -1741,17 +1715,14 @@ def _apply_signature_synergy_features(
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
                 bigram = f"{p1} + {p2}"
-                idx = ctx.bigram_lookup.get(bigram)
-                if idx is not None:
-                    _safe_assign(vec, offset, idx, 1.0)
-    return offset + ctx.n_bi
+                _assign(vec, ctx.synergy_lookup.get(bigram), 1.0)
 
 
 def _apply_intent_gap_features(
     summary: _FindingSummary,
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 22: package intent gaps (risky behavior without documentation)."""
     has_doc = "metadata/package/documentation" in summary.sample_paths
     has_help = "metadata/package/help" in summary.sample_paths
@@ -1765,7 +1736,7 @@ def _apply_intent_gap_features(
         "crypto": ["objectives/crypto", "micro-behaviors/crypto"],
     }
 
-    for i, (cat, traits) in enumerate(sorted(risky_behaviors.items())):
+    for cat, traits in sorted(risky_behaviors.items()):
         has_behavior = any(
             any(path.startswith(t) for t in traits)
             for path, max_ord in summary.sample_paths.items()
@@ -1773,20 +1744,17 @@ def _apply_intent_gap_features(
         )
         # Gap exists if they have the behavior but NO documentation/help intent.
         if has_behavior and not intent_signal:
-            _safe_assign(vec, offset, i, 1.0)
-
-    return offset + 4
+            _assign(vec, ctx.absolute_lookup.get(f"intent_gap:{cat}"), 1.0)
 
 
 def _apply_cluster_features(
     cluster_id: int,
+    ctx: _ExtractContext,
     vec: np.ndarray,
-    offset: int,
-) -> int:
+) -> None:
     """Group 21: semantic intent cluster features."""
     if 0 <= cluster_id < 50:
-        _safe_assign(vec, offset, cluster_id, 1.0)
-    return offset + 50
+        _assign(vec, ctx.absolute_lookup.get(f"cluster:{cluster_id}"), 1.0)
 
 
 def _extract_into(
@@ -1807,19 +1775,16 @@ def _extract_into(
     summary = _summarize_report_files(files)
     metrics = _merge_metric_values(files)
 
-    offset = 0
     if "present" in config.enabled_groups:
         _apply_presence_features(
-            summary, ctx, vec, offset,
+            summary, ctx, vec,
             score=score if config.include_score_weighted_traits else 0,
         )
-        offset += ctx.n_paths
     if "maxcrit" in config.enabled_groups:
         _apply_maxcrit_features(
-            summary, ctx, vec, offset,
+            summary, ctx, vec,
             score=score if config.include_score_weighted_traits else 0,
         )
-        offset += ctx.n_paths
     if "agg" in config.enabled_groups:
         # Exp 51: hostile_depth_weight calculation
         hostile_depth_weight = 0.0
@@ -1836,11 +1801,11 @@ def _extract_into(
                 file_summary = _summarize_findings(file_entry.get("ts") or [])
                 hostile_depth_weight += file_summary.hostile_finding_count * depth
 
-        offset = _apply_aggregate_features(
+        _apply_aggregate_features(
             summary,
             files,
+            ctx,
             vec,
-            offset,
             config.top_k_risk_files,
             config.include_suspicious_breadth_density,
             config.include_hostile_escalation_features,
@@ -1849,68 +1814,60 @@ def _extract_into(
             config.include_file_severity_distribution,
         )
         if config.include_extreme_features:
-            _safe_assign(vec, offset, 0, hostile_depth_weight)
-            offset += 1
+            _assign(vec, ctx.absolute_lookup.get("agg:hostile_depth_weight"), hostile_depth_weight)
+
     if "ext" in config.enabled_groups:
-        offset = _apply_external_signal_features(summary, vec, offset)
+        _apply_external_signal_features(summary, ctx, vec)
     if "metrics" in config.enabled_groups:
-        offset = _apply_metric_features(metrics, vec, offset)
+        _apply_metric_features(metrics, ctx, vec)
     if "filetype" in config.enabled_groups:
-        offset = _apply_filetype_features(files, ctx, vec, offset)
+        _apply_filetype_features(files, ctx, vec)
     if "struct" in config.enabled_groups:
-        offset = _apply_structural_features(
+        _apply_structural_features(
             files,
             summary.filtered_finding_count,
+            ctx,
             vec,
-            offset,
             config.include_struct_file_risk_coverage,
             mtime_str=mtime,
         )
     if "elements" in config.enabled_groups:
-        offset = _apply_element_features(elements, files, ctx, vec, offset)
+        _apply_element_features(elements, files, ctx, vec)
     if "formula" in config.enabled_groups:
-        offset = _apply_formula_features(formula, summary.filtered_finding_count, vec, offset)
+        _apply_formula_features(formula, summary.filtered_finding_count, ctx, vec)
     if "score" in config.enabled_groups:
         total_size = sum(_float(f.get("sz", 0)) for f in files)
-        offset = _apply_score_features(score, total_size, files, ctx, vec, offset)
+        _apply_score_features(score, total_size, files, ctx, vec)
 
     if "bigrams" in config.enabled_groups:
-        _apply_bigram_features(report, ctx, vec, offset)
-        offset += ctx.n_bi
+        _apply_bigram_features(report, ctx, vec)
 
     if "ghosts" in config.enabled_groups:
-        _apply_ghost_features(summary.sample_paths, ctx, vec, offset)
-        offset += ctx.n_gh
+        _apply_ghost_features(summary.sample_paths, ctx, vec)
 
     if "skeletons" in config.enabled_groups:
-        _apply_skeleton_features(formula, files, ctx, vec, offset)
-        offset += ctx.n_sk * (1 + ctx.n_ft)
+        _apply_skeleton_features(formula, files, ctx, vec)
 
     if "rares" in config.enabled_groups:
-        _apply_rare_element_features(elements, summary, ctx, vec, offset)
-        offset += ctx.n_re
+        _apply_rare_element_features(elements, summary, ctx, vec)
 
     if "trigrams" in config.enabled_groups:
-        _apply_trigram_features(report, ctx, vec, offset)
-        offset += ctx.n_tri
+        _apply_trigram_features(report, ctx, vec)
 
     if "logic_gaps" in config.enabled_groups:
-        _apply_logic_gap_features(files, summary, vec, offset)
-        offset += len(LOGIC_GAPS)
+        _apply_logic_gap_features(files, summary, ctx, vec)
 
     if "signature_synergy" in config.enabled_groups:
-        _apply_signature_synergy_features(report, summary, ctx, vec, offset)
-        offset += ctx.n_bi
+        _apply_signature_synergy_features(report, summary, ctx, vec)
 
     if "clusters" in config.enabled_groups:
-        offset = _apply_cluster_features(cluster_id, vec, offset)
+        _apply_cluster_features(cluster_id, ctx, vec)
 
     if "intent_gaps" in config.enabled_groups:
-        _apply_intent_gap_features(summary, vec, offset)
-        offset += 4  # fixed categories
+        _apply_intent_gap_features(summary, ctx, vec)
 
     if "neg_space" in config.enabled_groups:
-        offset = _apply_neg_space_features(files, summary.sample_paths, vec, offset)
+        _apply_neg_space_features(files, summary.sample_paths, ctx, vec)
 
 
 # ---------------------------------------------------------------------------

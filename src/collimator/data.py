@@ -170,6 +170,7 @@ _TRAINABLE_QUERY = (
     "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score, mtime, 0 AS cluster_id"
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
+    " AND score >= 8"
     " AND skip = ''"
     " ORDER BY id"
 )
@@ -178,6 +179,7 @@ _METADATA_QUERY = (
     "SELECT id, sha256, label, canonical_sha256, score"
     " FROM samples"
     " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
+    " AND score >= 8"
     " AND skip = ''"
     " ORDER BY id"
 )
@@ -283,7 +285,7 @@ def lookup_sample(
         query = "SELECT sha256, path, label, cleave_result FROM samples WHERE sha256 LIKE ?"
         params: list[Any] = [f"{sha256_prefix}%"]
         if not isinstance(conn, sqlite3.Connection):
-            query = "SELECT sha256, path, label, cleave_result FROM samples WHERE sha256 LIKE $1"
+            query = "SELECT sha256, path, label, cleave_result FROM samples WHERE sha256 LIKE %s"
         for sha256, path, label, cleave_result in _execute(conn, query, params):
             raw = _cleave_json(cleave_result)
             if raw is None:

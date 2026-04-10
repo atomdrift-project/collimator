@@ -167,12 +167,12 @@ def inspect_errors(
                 continue
             if sample.label == 0:
                 total_fp += 1
-                heapq.heappush(false_positives, (float(prob), sample))
+                heapq.heappush(false_positives, (float(prob), sample.sha256, sample))
                 if len(false_positives) > top_n:
                     heapq.heappop(false_positives)
             else:
                 total_fn += 1
-                heapq.heappush(false_negatives, (-float(prob), sample))
+                heapq.heappush(false_negatives, (-float(prob), sample.sha256, sample))
                 if len(false_negatives) > top_n:
                     heapq.heappop(false_negatives)
         sample_batch.clear()
@@ -192,7 +192,7 @@ def inspect_errors(
         return
 
     false_positives.sort(key=lambda x: x[0], reverse=True)
-    false_negatives = [(-score, sample) for score, sample in false_negatives]
+    false_negatives = [(-score, sha, sample) for score, sha, sample in false_negatives]
     false_negatives.sort(key=lambda x: x[0])
 
     print(f"Total samples:    {total}")
@@ -205,7 +205,7 @@ def inspect_errors(
               "(benign samples scored as malware):")
         print(f"  {'Score':>7} {'SHA256':<20} {'Path'}")
         print(f"  {'-' * 60}")
-        for prob, sample in false_positives[:top_n]:
+        for prob, _, sample in false_positives[:top_n]:
             sha_short = sample.sha256[:16]
             print(f"  {prob:>7.4f} {sha_short:<20} {sample.path}")
 
@@ -214,7 +214,7 @@ def inspect_errors(
               "(malware samples scored as benign):")
         print(f"  {'Score':>7} {'SHA256':<20} {'Path'}")
         print(f"  {'-' * 60}")
-        for prob, sample in false_negatives[:top_n]:
+        for prob, _, sample in false_negatives[:top_n]:
             sha_short = sample.sha256[:16]
             print(f"  {prob:>7.4f} {sha_short:<20} {sample.path}")
 
