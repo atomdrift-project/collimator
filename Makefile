@@ -21,6 +21,19 @@ EXP_MAX_DEPTH ?= 16
 EXP_LEARNING_RATE ?= 0.02
 EXP_EARLY_STOPPING ?= 100
 EXP_BETA ?= 2.0
+EXP_MIN_MALWARE_SCORE ?= 9
+# Ablation 2026-04-10: silent_packer (Exp 43) and mtime_kurtosis (Exp 44) were
+# net-negative at 75k experiment scale. air_gap_signal (Exp 46) and the
+# extreme-features bundle (Exps 48/49/54/55/56) are kept ON.
+EXP_SILENT_PACKER_SIGNAL ?= 0
+EXP_MTIME_KURTOSIS ?= 0
+EXP_AIR_GAP_SIGNAL ?= 1
+EXP_EXTREME_FEATURES ?= 1
+TRAIN_MIN_MALWARE_SCORE ?= 9
+TRAIN_SILENT_PACKER_SIGNAL ?= 0
+TRAIN_MTIME_KURTOSIS ?= 0
+TRAIN_AIR_GAP_SIGNAL ?= 1
+TRAIN_EXTREME_FEATURES ?= 1
 TRAIN_ESTIMATORS ?= 1000
 TRAIN_MAX_DEPTH ?= 16
 TRAIN_LEARNING_RATE ?= 0.02
@@ -53,12 +66,12 @@ $(VENV_DIR)/bin/activate: requirements.txt
 train: venv check-db
 	@mkdir -p $(LOG_DIR)
 	COLLIMATOR_ALLOWED_FEATURES_FILE= \
-	COLLIMATOR_SILENT_PACKER_SIGNAL=1 \
-	COLLIMATOR_MTIME_KURTOSIS=1 \
-	COLLIMATOR_AIR_GAP_SIGNAL=1 \
-	COLLIMATOR_EXTREME_FEATURES=1 \
+	COLLIMATOR_SILENT_PACKER_SIGNAL=$(TRAIN_SILENT_PACKER_SIGNAL) \
+	COLLIMATOR_MTIME_KURTOSIS=$(TRAIN_MTIME_KURTOSIS) \
+	COLLIMATOR_AIR_GAP_SIGNAL=$(TRAIN_AIR_GAP_SIGNAL) \
+	COLLIMATOR_EXTREME_FEATURES=$(TRAIN_EXTREME_FEATURES) \
 	COLLIMATOR_DISABLE_FEATURE_GROUPS= \
-	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) --min-malware-score 9 $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
+	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
@@ -95,17 +108,17 @@ build-splits: venv check-db
 experiment: venv check-db
 	@mkdir -p $(LOG_DIR)
 	COLLIMATOR_ALLOWED_FEATURES_FILE= \
-	COLLIMATOR_SILENT_PACKER_SIGNAL=1 \
-	COLLIMATOR_MTIME_KURTOSIS=1 \
-	COLLIMATOR_AIR_GAP_SIGNAL=1 \
-	COLLIMATOR_EXTREME_FEATURES=1 \
+	COLLIMATOR_SILENT_PACKER_SIGNAL=$(EXP_SILENT_PACKER_SIGNAL) \
+	COLLIMATOR_MTIME_KURTOSIS=$(EXP_MTIME_KURTOSIS) \
+	COLLIMATOR_AIR_GAP_SIGNAL=$(EXP_AIR_GAP_SIGNAL) \
+	COLLIMATOR_EXTREME_FEATURES=$(EXP_EXTREME_FEATURES) \
 	COLLIMATOR_DISABLE_FEATURE_GROUPS= \
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --workers $(EXP_WORKERS) --seed $(SEED) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
 		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING) \
-		--min-malware-score 9 \
-		--beta $(EXP_BETA) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-experiment.log"
+		--min-malware-score $(EXP_MIN_MALWARE_SCORE) \
+		--beta $(EXP_BETA) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-experiment$(EXP_TAG).log"
 
 ablate: venv check-db
 	$(PYTHON) -m collimator ablate --db $(DB) --workers $(WORKERS) --seed $(SEED)
