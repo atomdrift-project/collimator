@@ -40,6 +40,10 @@ def _hopper_schema_sql() -> str:
             canonical_sha256 TEXT NOT NULL DEFAULT '',
             parent TEXT NOT NULL DEFAULT '',
             skip TEXT NOT NULL DEFAULT '',
+            formula TEXT NOT NULL DEFAULT '',
+            elements TEXT NOT NULL DEFAULT '',
+            score INTEGER NOT NULL DEFAULT 10,
+            mtime DATETIME,
             created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
             updated_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
             analyzed_at DATETIME
@@ -145,9 +149,10 @@ def test_partitioned_metadata_labels(tmp_path) -> None:
     rows = list(stream_partitioned_metadata_grouped(db_path))
     assert len(rows) == 40
 
-    # Every row should have (row_id, label, is_test, canonical_sha256).
-    for row_id, label, is_test, canonical in rows:
+    # Every row should have (row_id, label, is_test, canonical_sha256, score).
+    for row_id, label, is_test, canonical, score in rows:
         assert isinstance(row_id, int)
         assert label in (0, 1)
         assert isinstance(is_test, bool)
         assert isinstance(canonical, str)
+        assert isinstance(score, int)

@@ -5,9 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 import scipy.sparse as sp
 
 from . import data, features, train
+from .model import predict_proba
 
 
 def _drop_groups(
@@ -23,75 +25,152 @@ def _drop_groups(
     return X_kept, kept_names
 
 
+def _test_metrics(
+    model: object,
+    X_test: sp.csr_matrix,
+    y_test: np.ndarray,
+    threshold: float,
+) -> dict[str, float]:
+    """Evaluate a trained model against a held-out test set at a given threshold."""
+    if X_test.shape[0] == 0 or len(y_test) == 0:
+        return {
+            "test_n": 0,
+            "test_f1": 0.0,
+            "test_precision": 0.0,
+            "test_recall": 0.0,
+            "test_tp": 0,
+            "test_fp": 0,
+            "test_fn": 0,
+            "test_tn": 0,
+        }
+    probs = predict_proba(model, X_test)
+    y_pred = (probs >= threshold).astype(int)
+    y_true = y_test.astype(int)
+    tp = int(((y_pred == 1) & (y_true == 1)).sum())
+    fp = int(((y_pred == 1) & (y_true == 0)).sum())
+    fn = int(((y_pred == 0) & (y_true == 1)).sum())
+    tn = int(((y_pred == 0) & (y_true == 0)).sum())
+    precision = tp / max(tp + fp, 1)
+    recall = tp / max(tp + fn, 1)
+    f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) > 0 else 0.0
+    return {
+        "test_n": int(len(y_true)),
+        "test_f1": float(f1),
+        "test_precision": float(precision),
+        "test_recall": float(recall),
+        "test_tp": tp,
+        "test_fp": fp,
+        "test_fn": fn,
+        "test_tn": tn,
+    }
+
+
 def run_ablation(
     db_path: Path | str,
     *,
     n_workers: int = 1,
     seed: int = 42,
     groups: list[str] | None = None,
+    min_malware_training_score: int = 0,
+    n_estimators: int | None = None,
+    max_depth: int | None = None,
+    learning_rate: float | None = None,
+    early_stopping_rounds: int | None = None,
+    beta: float | None = None,
+    n_folds: int | None = None,
 ) -> list[dict[str, object]]:
-    """Train baseline and leave-one-group-out ablations on the same dataset."""
+    """Train baseline and leave-one-group-out ablations on the same dataset.
+
+    Evaluates each ablation on both CV and the held-out is_test partition
+    so we see how each group affects the user-visible operating point
+    (not just in-CV F1). Hyperparameters default to the layered v16
+    baseline if not overridden.
+    """
     pinned_max_id = data.snapshot_max_id(db_path)
-    _, train_ids_labels, _ = data.partition_row_ids(db_path, max_id=pinned_max_id)
+    _, train_ids_labels, test_ids_labels = data.partition_row_ids(
+        db_path,
+        min_malware_training_score=min_malware_training_score,
+        max_id=pinned_max_id,
+    )
 
     spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=n_workers)
-    X, y, _, _ = features.extract_partitioned_from_db(
-        db_path, train_ids_labels, [], spec, n_workers=n_workers,
+    X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
+        db_path, train_ids_labels, test_ids_labels, spec, n_workers=n_workers,
     )
     group_names = groups if groups is not None else list(features.FEATURE_GROUPS)
 
+    # Build a TrainConfig honoring the caller's overrides, defaulting to the
+    # layered v16 baseline (same hyperparams as make train).
+    cfg_kwargs: dict[str, object] = {"seed": seed}
+    if n_estimators is not None:
+        cfg_kwargs["n_estimators"] = n_estimators
+    if max_depth is not None:
+        cfg_kwargs["max_depth"] = max_depth
+    if learning_rate is not None:
+        cfg_kwargs["learning_rate"] = learning_rate
+    if early_stopping_rounds is not None:
+        cfg_kwargs["early_stopping_rounds"] = early_stopping_rounds
+    if beta is not None:
+        cfg_kwargs["beta"] = beta
+    if n_folds is not None:
+        cfg_kwargs["n_folds"] = n_folds
+    base_cfg = train.TrainConfig(**cfg_kwargs)  # type: ignore[arg-type]
+
     rows: list[dict[str, object]] = []
 
-    baseline = train.train(
-        X,
-        y,
-        train.TrainConfig(seed=seed),
-        feature_names=spec.feature_names,
-    )
-    rows.append(
-        {
-            "ablation": "baseline",
-            "dropped_groups": [],
+    def _run_one(label: str, dropped: list[str], X: sp.csr_matrix, names: list[str]) -> None:
+        result = train.train(X, y_train, base_cfg, feature_names=names)
+        # Drop the same columns from the test matrix.
+        if dropped:
+            X_test_dropped, _ = _drop_groups(X_test, spec, dropped)
+        else:
+            X_test_dropped = X_test
+        test_metrics = _test_metrics(
+            result.model, X_test_dropped, y_test, result.optimal_threshold,
+        )
+        rows.append({
+            "ablation": label,
+            "dropped_groups": dropped,
             "n_features": X.shape[1],
-            "metrics": baseline.metrics,
-            "split_summary": baseline.split_summary,
-        }
-    )
+            "optimal_threshold": float(result.optimal_threshold),
+            "cv_metrics": result.metrics,
+            "test_metrics": test_metrics,
+            "split_summary": result.split_summary,
+        })
 
+    _run_one("baseline", [], X_train, spec.feature_names)
     for group in group_names:
-        X_drop, feature_names = _drop_groups(X, spec, [group])
-        result = train.train(
-            X_drop,
-            y,
-            train.TrainConfig(seed=seed),
-            feature_names=feature_names,
-        )
-        rows.append(
-            {
-                "ablation": f"drop:{group}",
-                "dropped_groups": [group],
-                "n_features": X_drop.shape[1],
-                "metrics": result.metrics,
-                "split_summary": result.split_summary,
-            }
-        )
+        X_drop, feature_names = _drop_groups(X_train, spec, [group])
+        _run_one(f"drop:{group}", [group], X_drop, feature_names)
 
     return rows
 
 
 def print_ablation(rows: list[dict[str, object]]) -> None:
-    """Print a compact ablation table."""
+    """Print a compact ablation table with CV + test metrics + FP/FN counts."""
     print("\nABLATION")
-    print("=" * 72)
-    print(f"{'Run':<18} {'Features':>9} {'ROC AUC':>8} {'AvgPrec':>8} {'Brier':>8} {'F1':>8}")
-    print("-" * 72)
+    print("=" * 110)
+    print(
+        f"{'Run':<22} {'nFeat':>7} {'thresh':>7} "
+        f"{'cv_F1':>7} {'cv_AUC':>7} "
+        f"{'tF1':>7} {'tPrec':>7} {'tRec':>7} {'tFP':>6} {'tFN':>5}"
+    )
+    print("-" * 110)
     for row in rows:
-        metrics = row["metrics"]
-        assert isinstance(metrics, dict)
+        cv = row["cv_metrics"]
+        t = row["test_metrics"]
+        assert isinstance(cv, dict) and isinstance(t, dict)
         print(
-            f"{str(row['ablation']):<18} {int(row['n_features']):>9} "
-            f"{float(metrics['roc_auc']):>8.4f} {float(metrics['avg_precision']):>8.4f} "
-            f"{float(metrics['brier']):>8.4f} {float(metrics['f1']):>8.4f}"
+            f"{str(row['ablation']):<22} "
+            f"{int(row['n_features']):>7} "
+            f"{float(row.get('optimal_threshold', 0.5)):>7.3f} "
+            f"{float(cv.get('f1', 0.0)):>7.4f} "
+            f"{float(cv.get('roc_auc', 0.0)):>7.4f} "
+            f"{float(t.get('test_f1', 0.0)):>7.4f} "
+            f"{float(t.get('test_precision', 0.0)):>7.4f} "
+            f"{float(t.get('test_recall', 0.0)):>7.4f} "
+            f"{int(t.get('test_fp', 0)):>6d} "
+            f"{int(t.get('test_fn', 0)):>5d}"
         )
 
 

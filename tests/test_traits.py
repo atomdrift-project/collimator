@@ -3,27 +3,49 @@
 from collimator.data import Sample
 from collimator.traits import compute_trait_stats, sort_trait_stats
 
+_CRIT_NAME_TO_L = {
+    "filtered": 0,
+    "component": 1,
+    "baseline": 2,
+    "notable": 3,
+    "suspicious": 4,
+    "hostile": 5,
+}
+
 
 def _sample(sha: str, label: int, findings: list[dict]) -> Sample:
+    """Create a Sample with v4 schema from human-readable findings.
+
+    Input findings use {"id": ..., "crit": "hostile"} style; this helper
+    translates them into cleave v4 format {"i": ..., "l": 5, "c": 1.0}.
+    """
+    v4_findings = [
+        {
+            "i": f.get("id", ""),
+            "l": _CRIT_NAME_TO_L.get(f.get("crit", ""), 0),
+            "c": 1.0,
+        }
+        for f in findings
+    ]
     return Sample(
         row_id=0,
         sha256=sha,
         path=f"/tmp/{sha}",
         label=label,
         report={
-            "version": "3",
-            "files": [{
+            "v": "4",
+            "fs": [{
                 "id": 0,
                 "path": f"/tmp/{sha}",
-                "depth": 0,
-                "file_type": "elf",
-                "sha256": sha,
-                "size": 1024,
-                "findings": findings,
-                "structure": [],
-                "strings": [],
+                "dp": 0,
+                "type": "elf",
+                "sha": sha,
+                "sz": 1024,
+                "ts": v4_findings,
+                "is": [],
+                "ss": [],
+                "ms": {},
             }],
-            "summary": {"files_analyzed": 1, "duration_ms": 1, "tools": []},
         },
     )
 

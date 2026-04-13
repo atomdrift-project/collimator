@@ -96,25 +96,31 @@ def create_demo_db(
                 canonical_sha256 TEXT NOT NULL DEFAULT '',
                 parent TEXT NOT NULL DEFAULT '',
                 skip TEXT NOT NULL DEFAULT '',
+                formula TEXT NOT NULL DEFAULT '',
+                elements TEXT NOT NULL DEFAULT '',
+                score INTEGER NOT NULL DEFAULT 0,
+                mtime DATETIME,
                 created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
                 updated_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
                 analyzed_at DATETIME
             )
         """)
 
-        rows: list[tuple[str, str, str, str, str]] = []
+        # Populate score above MIN_SAMPLE_SCORE (=3 in v16) so demo rows
+        # survive the data.py SQL filter. score=10 is a safe default.
+        rows: list[tuple[str, str, str, str, str, int]] = []
         for _ in range(n_benign):
             sha = _hex_sha(rng)
             report = _make_report(rng, malware=False, sha256=sha)
-            rows.append((sha, "good", f"/demo/{sha[:12]}.bin", sha, report))
+            rows.append((sha, "good", f"/demo/{sha[:12]}.bin", sha, report, 10))
         for _ in range(n_malware):
             sha = _hex_sha(rng)
             report = _make_report(rng, malware=True, sha256=sha)
-            rows.append((sha, "bad", f"/demo/{sha[:12]}.bin", sha, report))
+            rows.append((sha, "bad", f"/demo/{sha[:12]}.bin", sha, report, 10))
 
         conn.executemany(
-            "INSERT INTO samples (sha256, label, path, canonical_sha256, cleave_result)"
-            " VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO samples (sha256, label, path, canonical_sha256, cleave_result, score)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
             rows,
         )
         conn.commit()

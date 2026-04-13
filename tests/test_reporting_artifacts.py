@@ -38,7 +38,7 @@ def test_benchmark_can_write_json(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr("collimator.benchmark.predict_proba", lambda model, X: [0.75] * X.shape[0])
     monkeypatch.setattr(
         "collimator.benchmark.data.stream_partitioned_metadata_grouped",
-        lambda *args, **kwargs: iter([(1, 1, False, "aa" * 32)]),
+        lambda *args, **kwargs: iter([(1, 1, False, "aa" * 32, 10)]),
     )
 
     summary = run_benchmark(tmp_path / "dummy.db", output_path=output)

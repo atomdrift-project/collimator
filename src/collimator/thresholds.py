@@ -15,9 +15,7 @@ log = logging.getLogger(__name__)
 ACCURACY_TARGETS = [0.80, 0.90, 0.95, 0.98, 0.99, 0.993, 0.996, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.9998, 0.9999, 0.99999]
 
 # (label, max FPR): lowest threshold (highest recall) meeting the FPR ceiling.
-# FPR targets are driven by acceptable false-positive rates for each tier:
-#   suspicious: ≤1 in 50,000 benign flagged (20/1M)
-#   hostile:    ≤1 in 500,000 benign flagged (2/1M)
+# Used by `compute_recommendations` (legacy FPR-based mode).
 RECOMMENDATIONS = [
     ("suspicious", 0.00002),   # FPR ≤ 20 per million
     ("hostile",    0.000001),  # FPR ≤ 1 per million
@@ -25,6 +23,21 @@ RECOMMENDATIONS = [
 
 # Minimum benign samples needed to trust an FPR target (expect ≥5 FP at that rate).
 MIN_SAMPLES_FOR_FPR = 5
+
+# (label, min precision): lowest threshold (highest recall) where precision
+# (TP / (TP+FP)) on the test set meets or exceeds the floor.
+# Used by `compute_precision_recommendations` (the default since v16).
+# Intuition: "of all things flagged at this threshold, X% are real malware".
+#   suspicious: 99% of flags are real (1 wrong-flag per 100)
+#   hostile:    99.9% of flags are real (1 wrong-flag per 1000)
+PRECISION_RECOMMENDATIONS = [
+    ("suspicious", 0.99),
+    ("hostile",    0.999),
+]
+
+# Minimum number of flagged samples required before a precision number is
+# trustworthy. Avoids picking a threshold based on 1-2 samples.
+MIN_FLAGGED_FOR_PRECISION = 50
 
 
 def show_thresholds(
@@ -131,9 +144,9 @@ def compute_recommendations(
 ) -> dict[str, float | None]:
     """Compute recommended thresholds for each level in RECOMMENDATIONS.
 
-    For each level, picks the lowest threshold (highest recall) that meets
-    the FPR ceiling. Returns a dict mapping level name → threshold (or None
-    if no threshold meets the FPR target).
+    Legacy FPR-based mode: for each level, picks the lowest threshold
+    (highest recall) that meets the FPR ceiling. Returns a dict mapping
+    level name → threshold (or None if no threshold meets the FPR target).
     """
     thresholds, _tp, _fp, _correct, _recall_vals, fpr_vals, _n, _nm, _nb = (
         _threshold_stats(probs, y)
@@ -143,6 +156,41 @@ def compute_recommendations(
         valid = fpr_vals <= max_fpr
         if valid.any():
             # Thresholds are in descending order; last valid = lowest threshold = highest recall.
+            k = int(np.where(valid)[0][-1])
+            result[level] = float(thresholds[k])
+        else:
+            result[level] = None
+    return result
+
+
+def compute_precision_recommendations(
+    probs: np.ndarray,
+    y: np.ndarray,
+) -> dict[str, float | None]:
+    """Compute recommended thresholds for each level in PRECISION_RECOMMENDATIONS.
+
+    For each level (suspicious/hostile), picks the lowest threshold
+    (highest recall) where the test-set precision is at least the target
+    AND at least MIN_FLAGGED_FOR_PRECISION samples are flagged at that
+    threshold. Intuition: "if I flag X at this threshold, I'm right ≥99%
+    of the time".
+
+    Returns a dict mapping level name → threshold (or None if no threshold
+    meets the precision target with enough flagged samples).
+    """
+    thresholds, tp_vals, fp_vals, _correct, _recall_vals, _fpr_vals, _n, _nm, _nb = (
+        _threshold_stats(probs, y)
+    )
+    flagged = tp_vals + fp_vals
+    # Precision = TP / (TP + FP); when no flags, treat as 1.0 (vacuous).
+    with np.errstate(divide="ignore", invalid="ignore"):
+        precision = np.where(flagged > 0, tp_vals / np.maximum(flagged, 1), 1.0)
+
+    result: dict[str, float | None] = {}
+    for level, min_precision in PRECISION_RECOMMENDATIONS:
+        valid = (precision >= min_precision) & (flagged >= MIN_FLAGGED_FOR_PRECISION)
+        if valid.any():
+            # Thresholds descending → last valid = lowest threshold = highest recall.
             k = int(np.where(valid)[0][-1])
             result[level] = float(thresholds[k])
         else:

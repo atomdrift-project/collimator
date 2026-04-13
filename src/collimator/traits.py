@@ -9,6 +9,16 @@ from pathlib import Path
 from .data import Sample, load_samples
 from .features import report_files
 
+# Map v4 criticality ordinals to human-readable names (and reverse).
+_CRIT_NAME_TO_ORDINAL: dict[str, int] = {
+    "filtered": 0,
+    "component": 1,
+    "baseline": 2,
+    "notable": 3,
+    "suspicious": 4,
+    "hostile": 5,
+}
+
 
 @dataclass(frozen=True, slots=True)
 class TraitStat:
@@ -40,11 +50,14 @@ def compute_trait_stats(
     benign_occurrence_counts: dict[str, int] = {}
     malware_occurrence_counts: dict[str, int] = {}
 
+    # Convert the string crit filter to a v4 ordinal once up front.
+    crit_ordinal = _CRIT_NAME_TO_ORDINAL.get(crit) if crit is not None else None
+
     for sample in samples:
         seen: set[str] = set()
         for file_entry in report_files(sample.report):
             for finding in file_entry.get("ts") or []:
-                if crit is not None and finding.get("l") != crit:
+                if crit_ordinal is not None and finding.get("l") != crit_ordinal:
                     continue
                 trait_id = finding.get("i", "")
                 if not trait_id:

@@ -13,6 +13,7 @@ the same partition, preventing data leakage.
 from __future__ import annotations
 
 import json
+import os
 import logging
 import sqlite3
 from collections.abc import Iterator
@@ -167,11 +168,14 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str,
 # ---------------------------------------------------------------------------
 
 # Minimum hopper score for a sample to be considered trainable / evaluable.
-# This filter exists to keep unsupported file formats and otherwise-empty
-# cleave results out of the data pipeline. v15 used >= 8, v16 lowered to >= 3
-# (the threshold that produces a balanced ~1:1 bad:good pool from the labeled
-# corpus, since most score==0 rows are unsupported file types).
-MIN_SAMPLE_SCORE = 3
+# Controls the SQL-level filter applied to _TRAINABLE_QUERY and _METADATA_QUERY.
+# Override via COLLIMATOR_MIN_SAMPLE_SCORE env var for experiments.
+# v15 used >= 8, v16 lowered to >= 3 (balanced ~1:1 bad:good pool).
+_default_min = 3
+try:
+    MIN_SAMPLE_SCORE = int(os.getenv("COLLIMATOR_MIN_SAMPLE_SCORE", str(_default_min)))
+except ValueError:
+    MIN_SAMPLE_SCORE = _default_min
 
 
 def snapshot_max_id(db_path: Path | str) -> int:

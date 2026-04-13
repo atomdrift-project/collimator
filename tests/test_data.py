@@ -38,6 +38,10 @@ def _create_test_db(samples: list[tuple[str, str, str | None]]) -> Path:
             canonical_sha256 TEXT NOT NULL DEFAULT '',
             parent TEXT NOT NULL DEFAULT '',
             skip TEXT NOT NULL DEFAULT '',
+            formula TEXT NOT NULL DEFAULT '',
+            elements TEXT NOT NULL DEFAULT '',
+            score INTEGER NOT NULL DEFAULT 10,
+            mtime DATETIME,
             created_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
             updated_at DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
             analyzed_at DATETIME

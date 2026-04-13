@@ -18,7 +18,7 @@ from .features import (
     primary_file,
     standardize,
 )
-from .export import load_threshold
+from .export import load_recommended_thresholds, load_threshold
 from .model import load_model, predict_proba
 
 log = logging.getLogger(__name__)
@@ -219,6 +219,23 @@ def inspect_errors(
             print(f"  {prob:>7.4f} {sha_short:<20} {sample.path}")
 
 
+def _classify(prob: float, recommended: dict[str, float], fallback: float) -> str:
+    """Three-tier classification matching litmus's Thresholds::classify.
+
+    Uses recommended_thresholds (suspicious + hostile) when both are present;
+    otherwise falls back to a single hostile-only threshold.
+    """
+    s = recommended.get("suspicious")
+    h = recommended.get("hostile")
+    if s is not None and h is not None:
+        if prob >= h:
+            return "HOSTILE"
+        if prob >= s:
+            return "SUSPICIOUS"
+        return "BENIGN"
+    return "MALWARE" if prob > fallback else "BENIGN"
+
+
 def scan_file(
     file_path: str,
     model_path: Path,
@@ -230,8 +247,15 @@ def scan_file(
     model = load_model(model_path)
     eval_path = model_path.parent / "evaluation.json"
     threshold = load_threshold(eval_path)
+    recommended = load_recommended_thresholds(eval_path)
     if eval_path.exists():
-        log.info("using threshold %.3f from %s", threshold, eval_path)
+        if recommended.get("suspicious") is not None and recommended.get("hostile") is not None:
+            log.info(
+                "using thresholds suspicious=%.3f hostile=%.3f from %s",
+                recommended["suspicious"], recommended["hostile"], eval_path,
+            )
+        else:
+            log.info("using single threshold %.3f from %s", threshold, eval_path)
 
     try:
         result = subprocess.run(
@@ -279,12 +303,10 @@ def scan_file(
     hostile = sum(1 for f in findings if f.get("l") == 5)
     suspicious = sum(1 for f in findings if f.get("l") == 4)
 
+    classification = _classify(effective_prob, recommended, threshold)
     print(f"File:        {file_path}")
     print(f"File type:   {pf.get('type', 'unknown')}")
-    print(
-        f"Prediction:  {effective_prob:.4f} "
-        f"({'MALWARE' if effective_prob > threshold else 'BENIGN'})"
-    )
+    print(f"Prediction:  {effective_prob:.4f} ({classification})")
     if effective_prob != prob:
         print(f"Report score: {prob:.4f} (top-level report only)")
         print(

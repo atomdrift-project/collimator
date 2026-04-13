@@ -8,7 +8,9 @@ from collimator.model import create_classifier, predict_proba
 def test_create_classifier_defaults() -> None:
     model = create_classifier(n_benign=100, n_malware=50, device="cpu")
     assert model.get_params()["objective"] == "binary:logistic"
-    assert model.get_params()["max_depth"] == 6
+    # Default max_depth bumped from 6 → 10 for v16 (deeper trees for the larger
+    # feature space). Tests specifying a specific depth should pass it explicitly.
+    assert model.get_params()["max_depth"] == 10
 
 
 def test_create_classifier_custom_params() -> None:

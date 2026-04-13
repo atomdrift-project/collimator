@@ -168,6 +168,14 @@ class FeatureConfig:
     include_extension_mismatch_signal: bool
     include_hostile_finding_density: bool
     include_hostile_depth_weight: bool
+    # N-gram path depth: 0 = full base path (default), 2/3 = truncate finding
+    # IDs to that many directory levels before generating bigrams/trigrams.
+    # Coarser paths produce more generalizable n-grams.
+    ngram_path_depth: int
+    # N-gram minimum criticality: only findings at this level or above
+    # participate in bigram/trigram generation. 0 = all (default/current),
+    # 1 = component+, 2 = baseline+, 3 = notable+, 4 = suspicious+, 5 = hostile.
+    ngram_min_crit: int
 
 
 @lru_cache(maxsize=1)
@@ -218,6 +226,15 @@ def feature_config_from_env() -> FeatureConfig:
         "1", "true", "yes", "on",
     }
 
+    try:
+        ngram_path_depth = int(os.getenv("COLLIMATOR_NGRAM_PATH_DEPTH", "0"))
+    except ValueError:
+        ngram_path_depth = 0
+    try:
+        ngram_min_crit = int(os.getenv("COLLIMATOR_NGRAM_MIN_CRIT", "0"))
+    except ValueError:
+        ngram_min_crit = 0
+
     include_extreme_features = os.getenv("COLLIMATOR_EXTREME_FEATURES") == "1"
     # Per-feature defaults inherit from the master EXTREME_FEATURES toggle.
     # Treat empty string as "not set" so Make can pass `VAR=` for inherit.
@@ -250,6 +267,8 @@ def feature_config_from_env() -> FeatureConfig:
         include_extension_mismatch_signal=_extreme_flag("COLLIMATOR_EXTENSION_MISMATCH_SIGNAL"),
         include_hostile_finding_density=_extreme_flag("COLLIMATOR_HOSTILE_FINDING_DENSITY"),
         include_hostile_depth_weight=_extreme_flag("COLLIMATOR_HOSTILE_DEPTH_WEIGHT"),
+        ngram_path_depth=ngram_path_depth,
+        ngram_min_crit=ngram_min_crit,
     )
 
 
@@ -494,6 +513,16 @@ def _build_feature_names(
             ])
         if config.include_hostile_depth_weight:
             feature_names.append("agg:hostile_depth_weight")
+        # 2-level category breadth: distinct 2nd-level paths at each tier.
+        # More discriminative than top-1 (e.g., "micro-behaviors/network" ≠
+        # "micro-behaviors/anti-analysis"). Also: objectives/* breadth counts
+        # distinct objectives sub-paths at any crit (how many distinct attack
+        # objectives the sample touches).
+        feature_names.extend([
+            "agg:suspicious_2level_breadth",
+            "agg:hostile_2level_breadth",
+            "agg:objectives_breadth",
+        ])
 
     # Group 4: Third-Party / Well-Known Summary (6).
     if "ext" in config.enabled_groups:
@@ -712,7 +741,20 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     bigram_vocab = sorted(k for k, c in bigram_counts.items() if c >= 1000)[:5000]
     skeleton_vocab = sorted(k for k, c in skeleton_counts.items() if c >= 100)
     ghost_vocab: list[str] = []
-    feature_names = _build_feature_names(presence_vocab, filetype_vocab, element_vocab, bigram_vocab, ghost_vocab, skeleton_vocab)
+    # Legacy build_vocab doesn't track rare_elements or trigrams — those need
+    # labeled data and a streaming pass. build_vocab_from_db is the full path.
+    rare_element_vocab: list[str] = []
+    trigram_vocab: list[str] = []
+    feature_names = _build_feature_names(
+        presence_vocab,
+        filetype_vocab,
+        element_vocab,
+        bigram_vocab,
+        ghost_vocab,
+        skeleton_vocab,
+        rare_element_vocab,
+        trigram_vocab,
+    )
 
     spec = FeatureSpec(
         presence_vocab=presence_vocab,
@@ -721,6 +763,8 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         bigram_vocab=bigram_vocab,
         ghost_vocab=ghost_vocab,
         skeleton_vocab=skeleton_vocab,
+        rare_element_vocab=rare_element_vocab,
+        trigram_vocab=trigram_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
     )
@@ -1184,15 +1228,29 @@ def _apply_aggregate_features(
     total_active = 0
     categories: set[str] = set()
     path_breadth_any = 0
+    # 2-level breadth: "micro-behaviors/network" is more specific than "micro-behaviors".
+    suspicious_2level: set[str] = set()
+    hostile_2level: set[str] = set()
+    objectives_2level: set[str] = set()  # any crit under objectives/
 
     for path, max_ord in sample_paths.items():
+        parts = path.split("/")
         if max_ord >= 2:
-            top = path.split("/")[0]
-            categories.add(top)
-            if path.count("/") >= 2:
+            categories.add(parts[0])
+            if len(parts) >= 3:
                 path_breadth_any += 1
 
-        if path.count("/") < 2:
+        # Track 2-level paths for the new breadth features.
+        if len(parts) >= 2:
+            two_level = f"{parts[0]}/{parts[1]}"
+            if max_ord >= 4:
+                suspicious_2level.add(two_level)
+            if max_ord >= 5:
+                hostile_2level.add(two_level)
+            if parts[0] == "objectives" and max_ord >= 2:
+                objectives_2level.add(two_level)
+
+        if len(parts) < 3:
             continue
         if max_ord < 3:
             continue
@@ -1294,6 +1352,11 @@ def _apply_aggregate_features(
         _assign(vec, lookup.get("agg:file_suspicious_count_log"), math.log1p(suspicious_files))
         _assign(vec, lookup.get("agg:file_notable_count_log"), math.log1p(notable_files))
 
+    # 2-level breadth features: more discriminative than top-1 category breadth.
+    _assign(vec, lookup.get("agg:suspicious_2level_breadth"), float(len(suspicious_2level)))
+    _assign(vec, lookup.get("agg:hostile_2level_breadth"), float(len(hostile_2level)))
+    _assign(vec, lookup.get("agg:objectives_breadth"), float(len(objectives_2level)))
+
 
 def _apply_external_signal_features(
     summary: _FindingSummary,
@@ -1392,6 +1455,8 @@ def _apply_structural_features(
     vec: np.ndarray,
     include_file_risk_coverage: bool,
     mtime_str: str = "",
+    formula: str = "",
+    summary: "_FindingSummary | None" = None,
 ) -> None:
     """Group 7: structural / container context (7)."""
     lookup = ctx.absolute_lookup
@@ -1512,9 +1577,29 @@ def _apply_structural_features(
         _assign(vec, lookup.get("struct:hostile_file_count_log"), math.log1p(hostile_files))
 
     # Group 15: Packaged capability (Experiment 25).
-    # Unique element variety * max binary entropy.
-    unique_elements = float(len(set("".join([c for c in (files[0].get("formula") or "") if c.isalpha()]))))
-    _assign(vec, lookup.get("struct:packaged_capability"), unique_elements * max_entropy)
+    # packaged_capability: distinct capability paths × max binary entropy.
+    # Content-based interpretation: "how many distinct capability slots does
+    # this sample touch, weighted by how packed the binary is". Selected after
+    # a 5-way ablation (zero / chars / tokens / paths / findings — see
+    # EXPERIMENTS.md 2026-04-10). Mode is overridable via env var for
+    # future experiments but defaults to `paths`.
+    _pc_mode = os.getenv("COLLIMATOR_PACKAGED_CAPABILITY_MODE", "paths").strip().lower()
+    if _pc_mode == "zero" or _pc_mode == "none":
+        _pc_value = 0.0
+    elif _pc_mode == "chars":
+        _pc_value = float(len({c for c in formula if c.isalpha()})) * max_entropy
+    elif _pc_mode == "tokens":
+        import re as _re
+        _pc_value = float(len(set(_re.findall(r"[A-Z][a-z]?", formula)))) * max_entropy
+    elif _pc_mode == "findings" and summary is not None:
+        _pc_value = float(
+            summary.unique_notable_ids
+            + summary.unique_suspicious_ids
+            + summary.unique_hostile_ids
+        ) * max_entropy
+    else:  # "paths" (default)
+        _pc_value = float(len(summary.sample_paths)) * max_entropy if summary is not None else 0.0
+    _assign(vec, lookup.get("struct:packaged_capability"), _pc_value)
 
     # Group 17: Mtime anomalies (Experiment 30).
     # Inconsistency in timestamps often signals tampering.
@@ -1608,21 +1693,51 @@ def _apply_neg_space_features(
             _assign(vec, ctx.absolute_lookup.get(f"missing:{ftype}*{trait}"), val)
 
 
+def _truncate_path(base: str, depth: int) -> str:
+    """Truncate a finding path to at most `depth` directory segments.
+
+    If depth <= 0, returns the full base path (no truncation).
+    "objectives/supply-chain/hidden-payload/staging" at depth=2 → "objectives/supply-chain"
+    """
+    if depth <= 0:
+        return base
+    parts = base.split("/")
+    return "/".join(parts[:depth])
+
+
+def _ngram_paths_for_file(
+    file_entry: dict[str, Any],
+    depth: int,
+    min_crit: int = 0,
+) -> list[str]:
+    """Collect the unique (optionally truncated) finding paths for one file.
+
+    depth=0 → full base paths; depth=2/3 → truncated to that many segments.
+    min_crit=0 → all findings; 3 → notable+; 4 → suspicious+; etc.
+    Shared by bigram, trigram, and unsigned-bigram generation.
+    """
+    file_traits: set[str] = set()
+    for finding in file_entry.get("ts") or []:
+        fid = finding.get("i", "")
+        if not fid:
+            continue
+        if _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
+            continue
+        if min_crit > 0 and finding.get("l", 0) < min_crit:
+            continue
+        file_traits.add(fid)
+    return sorted({_truncate_path(fid.split("::")[0], depth) for fid in file_traits})
+
+
 def _apply_bigram_features(
     report: dict[str, Any],
     ctx: _ExtractContext,
     vec: np.ndarray,
 ) -> None:
     """Group 11: trait bigram multi-hot features."""
+    config = feature_config_from_env()
     for file_entry in report_files(report):
-        file_traits: set[str] = set()
-        for finding in file_entry.get("ts") or []:
-            fid = finding.get("i", "")
-            if fid and _float(finding.get("c", 1.0)) >= MIN_CONFIDENCE:
-                file_traits.add(fid)
-
-        # Using 3-level path base to match vocabulary.
-        paths_list = sorted({fid.split("::")[0] for fid in file_traits})
+        paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
                 bigram = f"{p1} + {p2}"
@@ -1684,15 +1799,9 @@ def _apply_trigram_features(
     vec: np.ndarray,
 ) -> None:
     """Group 16: trait trigram multi-hot features."""
+    config = feature_config_from_env()
     for file_entry in report_files(report):
-        file_traits: set[str] = set()
-        for finding in file_entry.get("ts") or []:
-            fid = finding.get("i", "")
-            if fid and _float(finding.get("c", 1.0)) >= MIN_CONFIDENCE:
-                file_traits.add(fid)
-
-        # Using 3-level path base to match vocabulary.
-        paths_list = sorted({fid.split("::")[0] for fid in file_traits})
+        paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
         for i, p1 in enumerate(paths_list):
             for j in range(i + 1, len(paths_list)):
                 p2 = paths_list[j]
@@ -1738,19 +1847,13 @@ def _apply_signature_synergy_features(
     vec: np.ndarray,
 ) -> None:
     """Group 20: signature synergy (unsigned + behavioral patterns)."""
-    # Check if any file in the report is unsigned.
     is_unsigned = "metadata/unsigned" in summary.sample_paths
     if not is_unsigned:
         return
 
+    config = feature_config_from_env()
     for file_entry in report_files(report):
-        file_traits: set[str] = set()
-        for finding in file_entry.get("ts") or []:
-            fid = finding.get("i", "")
-            if fid and _float(finding.get("c", 1.0)) >= MIN_CONFIDENCE:
-                file_traits.add(fid)
-
-        paths_list = sorted({fid.split("::")[0] for fid in file_traits})
+        paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
                 bigram = f"{p1} + {p2}"
@@ -1869,6 +1972,8 @@ def _extract_into(
             vec,
             config.include_struct_file_risk_coverage,
             mtime_str=mtime,
+            formula=formula,
+            summary=summary,
         )
     if "elements" in config.enabled_groups:
         _apply_element_features(elements, files, ctx, vec)
@@ -1979,8 +2084,9 @@ def _vocab_batch_worker(
                         sample_paths[path] = crit_ord
 
             # Collect co-occurring path pairs (bigrams) within each file.
-            # Using the 3-level base path to capture broader "behavioral phrases".
-            paths_list = sorted({fid.split("::")[0] for fid in file_traits})
+            # Uses shared helper that respects NGRAM_PATH_DEPTH and NGRAM_MIN_CRIT.
+            config = feature_config_from_env()
+            paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
             for i, p1 in enumerate(paths_list):
                 for p2 in paths_list[i + 1 :]:
                     # Hard cap at 50,000 unique bigrams per worker batch to prevent
@@ -2080,10 +2186,47 @@ def _batched(items: Iterable[T], batch_size: int) -> Iterable[list[T]]:
 # Public API
 # ---------------------------------------------------------------------------
 
+def canonical_fields_from_report(report: dict[str, Any]) -> tuple[str, str, int]:
+    """Extract (formula, elements, score) from a cleave report's depth-0 file.
+
+    Mirrors hopper's parseCleaveFile (hopper.go:160). The depth-0 entry in
+    ``fs`` is the top-level analyzed file; for archives, deeper entries are
+    inner files. ``samples.formula``, ``samples.elements``, and
+    ``samples.score`` columns are all populated from this file by hopper.
+
+    Returns ("", "", 0) if no depth-0 file is found.
+    """
+    files = report.get("fs") or []
+    for f in files:
+        if not isinstance(f, dict):
+            continue
+        if int(f.get("dp") or 0) == 0:
+            formula = str(f.get("f") or "")
+            # Strip Unicode subscript digits ₀-₉ to match hopper.stripSubscripts.
+            elements = "".join(c for c in formula if not ("₀" <= c <= "₉"))
+            score = int(f.get("x") or 0)
+            return formula, elements, score
+    return "", "", 0
+
+
 def extract(report: dict[str, Any], spec: FeatureSpec) -> np.ndarray:
-    """Extract a feature vector from a single cleave AnalysisReport."""
+    """Extract a feature vector from a single cleave AnalysisReport.
+
+    Pulls ``formula``, ``elements``, and ``score`` from the depth-0 file in
+    the report so that live-scoring (e.g. ``make scan``, litmus) produces the
+    same feature values as training (where these come from DB columns
+    populated by hopper from the same source).
+    """
     vec = np.zeros(spec.total_features, dtype=np.float32)
-    _extract_into(report, _ExtractContext(spec), vec)
+    formula, elements, score = canonical_fields_from_report(report)
+    _extract_into(
+        report,
+        _ExtractContext(spec),
+        vec,
+        formula=formula,
+        elements=elements,
+        score=score,
+    )
     return vec
 
 
@@ -2347,15 +2490,19 @@ def _vocab_labeled_db_batch_worker(
                     if crit_ord > sample_paths.get(path, -1):
                         sample_paths[path] = crit_ord
 
-            paths_list = sorted({fid.split("::")[0] for fid in file_traits})
+            # Uses shared helper for n-gram paths (respects NGRAM_PATH_DEPTH + NGRAM_MIN_CRIT).
+            config = feature_config_from_env()
+            paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
             for i, p1 in enumerate(paths_list):
                 for p2 in paths_list[i + 1 :]:
                     # Hard cap at 100,000 unique bigrams per worker batch.
                     if len(bigram_counts) < 100000:
                         bigram = f"{p1} + {p2}"
                         bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
-                    
-                    for p3 in paths_list[i + 2 :]:
+
+                for j in range(i + 1, len(paths_list)):
+                    p2 = paths_list[j]
+                    for p3 in paths_list[j + 1 :]:
                         # Hard cap at 50,000 unique trigrams per worker batch.
                         if len(trigram_counts) < 50000:
                             trigram = f"{p1} + {p2} + {p3}"

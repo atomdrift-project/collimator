@@ -29,6 +29,22 @@ def load_threshold(path: Path, default: float = 0.5) -> float:
     return float(data.get("optimal_threshold", default))
 
 
+def load_recommended_thresholds(path: Path) -> dict[str, float]:
+    """Load suspicious/hostile recommended thresholds from an evaluation artifact.
+
+    Returns the same dict that ``recommended_thresholds`` was saved as. Missing
+    or unparseable evaluation files yield an empty dict.
+    """
+    try:
+        data = load_evaluation(path)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    raw = data.get("recommended_thresholds") or {}
+    if not isinstance(raw, dict):
+        return {}
+    return {k: float(v) for k, v in raw.items() if v is not None}
+
+
 def predict_onnx_proba(session: object, X: np.ndarray) -> np.ndarray:
     """Run ONNX inference and return class-1 probabilities as a 1D array."""
     results = session.run(None, {"features": X})

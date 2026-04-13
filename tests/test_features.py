@@ -49,7 +49,7 @@ def _make_report(
 def _reports_with_finding(finding_id: str, crit: str, n: int = 35) -> list[dict]:
     """Create n reports each containing one finding with the given id and crit."""
     return [
-        _make_report(findings=[{"i": finding_id, "l": _CRIT_MAP.get(crit, 0), "c": 0.9}])
+        _make_report(findings=[{"i": finding_id, "l": _CRIT_MAP.get(crit, 0), "c": 1.0}])
         for _ in range(n)
     ]
 
@@ -105,7 +105,7 @@ def test_build_vocab_empty() -> None:
     spec = build_vocab([_make_report()])
     assert spec.total_features > 0
     assert len(spec.feature_names) == spec.total_features
-    assert spec.version == 15
+    assert spec.version == 16
 
 
 def test_build_vocab_presence() -> None:
@@ -227,29 +227,44 @@ def test_extract_aggregates() -> None:
 
 
 def test_extract_finding_density_features() -> None:
+    # NB: _make_report defaults to size=1024 → size_kb = 1.0 → total_kb_p1 = 1.0.
+    # agg:*_finding_ratio features are per-KB density (count / total_kb_p1),
+    # not per-finding ratio; and agg:unique_*_ids_log is log1p(N)/log1p(total_kb_p1).
     report = _make_report(findings=[
-        {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
-        {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
-        {"i": "objectives/evasion/process::b", "l": 4, "c":0.95},
-        {"i": "metadata/format::x", "l": 2, "c":0.95},
+        {"i": "objectives/evasion/process::a", "l": 5, "c":1.0},
+        {"i": "objectives/evasion/process::a", "l": 5, "c":1.0},
+        {"i": "objectives/evasion/process::b", "l": 4, "c":1.0},
+        {"i": "metadata/format::x", "l": 2, "c":1.0},
     ])
     spec = build_vocab([report] * 35)
     vec = extract(report, spec)
+    total_kb_p1 = max(1024 / 1024.0, 0.1)  # = 1.0
+    log_kb = math.log1p(total_kb_p1)         # = ln(2)
 
     assert vec[spec.feature_names.index("agg:notable_findings_log")] == math.log1p(3)
     assert vec[spec.feature_names.index("agg:suspicious_findings_log")] == math.log1p(3)
     assert vec[spec.feature_names.index("agg:hostile_findings_log")] == math.log1p(2)
-    assert vec[spec.feature_names.index("agg:notable_finding_ratio")] == 3 / 4
-    assert vec[spec.feature_names.index("agg:suspicious_finding_ratio")] == 3 / 4
-    assert vec[spec.feature_names.index("agg:hostile_finding_ratio")] == 2 / 4
-    assert vec[spec.feature_names.index("agg:unique_suspicious_ids_log")] == math.log1p(2)
-    assert vec[spec.feature_names.index("agg:unique_hostile_ids_log")] == math.log1p(1)
+    # Per-KB density: notable(3)/total_kb_p1(1.0) = 3.0, etc.
+    assert vec[spec.feature_names.index("agg:notable_finding_ratio")] == 3.0
+    assert vec[spec.feature_names.index("agg:suspicious_finding_ratio")] == 3.0
+    assert vec[spec.feature_names.index("agg:hostile_finding_ratio")] == 2.0
+    # log1p(N) / log1p(total_kb_p1)
+    assert math.isclose(
+        float(vec[spec.feature_names.index("agg:unique_suspicious_ids_log")]),
+        math.log1p(2) / log_kb,
+        rel_tol=1e-5,
+    )
+    assert math.isclose(
+        float(vec[spec.feature_names.index("agg:unique_hostile_ids_log")]),
+        math.log1p(1) / log_kb,
+        rel_tol=1e-5,
+    )
 
 
 def test_extract_third_party_signals() -> None:
     report = _make_report(findings=[
         {"i": "third_party/yara_match", "l": 5, "c":1.0},
-        {"i": "third_party/another", "l": 4, "c":0.8},
+        {"i": "third_party/another", "l": 4, "c":1.0},
     ])
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -301,14 +316,14 @@ def test_extract_struct_file_risk_coverage(monkeypatch) -> None:
                     "sz":1000,
                     "is":[],
                     "ms":{},
-                    "ts": [{"i": "objectives/evasion::a", "l": 4, "c":0.95}],
+                    "ts": [{"i": "objectives/evasion::a", "l": 4, "c":1.0}],
                 },
                 {
                     "type":"elf",
                     "sz":1000,
                     "is":[],
                     "ms":{},
-                    "ts": [{"i": "objectives/evasion::b", "l": 5, "c":0.95}],
+                    "ts": [{"i": "objectives/evasion::b", "l": 5, "c":1.0}],
                 },
             ],
         }
@@ -333,8 +348,8 @@ def test_extract_suspicious_breadth_density(monkeypatch) -> None:
                     "is":[],
                     "ms":{},
                     "ts": [
-                        {"i": "objectives/evasion::a", "l": 4, "c":0.95},
-                        {"i": "metadata/format::b", "l": 5, "c":0.95},
+                        {"i": "objectives/evasion::a", "l": 4, "c":1.0},
+                        {"i": "metadata/format::b", "l": 5, "c":1.0},
                     ],
                 },
                 {
@@ -343,7 +358,7 @@ def test_extract_suspicious_breadth_density(monkeypatch) -> None:
                     "is":[],
                     "ms":{},
                     "ts": [
-                        {"i": "micro-behaviors/network::c", "l": 4, "c":0.95},
+                        {"i": "micro-behaviors/network::c", "l": 4, "c":1.0},
                     ],
                 },
             ],
@@ -372,9 +387,9 @@ def test_extract_hostile_escalation_features(monkeypatch) -> None:
     feature_config_from_env.cache_clear()
     try:
         report = _make_report(findings=[
-            {"i": "objectives/evasion/process::a", "l": 3, "c":0.95},
-            {"i": "objectives/evasion/process::b", "l": 4, "c":0.95},
-            {"i": "metadata/format::c", "l": 5, "c":0.95},
+            {"i": "objectives/evasion/process::a", "l": 3, "c":1.0},
+            {"i": "objectives/evasion/process::b", "l": 4, "c":1.0},
+            {"i": "metadata/format::c", "l": 5, "c":1.0},
         ])
         spec = build_vocab([report] * 35)
         vec = extract(report, spec)
@@ -402,9 +417,9 @@ def test_extract_density_penalty_and_file_severity_features(monkeypatch) -> None
                     "is":[],
                     "ms":{},
                     "ts": [
-                        {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
-                        {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
-                        {"i": "metadata/format::b", "l": 4, "c":0.95},
+                        {"i": "objectives/evasion/process::a", "l": 5, "c":1.0},
+                        {"i": "objectives/evasion/process::a", "l": 5, "c":1.0},
+                        {"i": "metadata/format::b", "l": 4, "c":1.0},
                     ],
                 },
                 {
@@ -413,7 +428,7 @@ def test_extract_density_penalty_and_file_severity_features(monkeypatch) -> None
                     "is":[],
                     "ms":{},
                     "ts": [
-                        {"i": "metadata/format::c", "l": 4, "c":0.95},
+                        {"i": "metadata/format::c", "l": 4, "c":1.0},
                     ],
                 },
                 {
@@ -422,7 +437,7 @@ def test_extract_density_penalty_and_file_severity_features(monkeypatch) -> None
                     "is":[],
                     "ms":{},
                     "ts": [
-                        {"i": "micro-behaviors/fs::d", "l": 3, "c":0.95},
+                        {"i": "micro-behaviors/fs::d", "l": 3, "c":1.0},
                     ],
                 },
             ],
@@ -457,7 +472,7 @@ def test_extract_non_yara_third_party_does_not_set_yara_flag() -> None:
 def test_extract_well_known_signals() -> None:
     report = _make_report(findings=[
         {"i": "well-known/cobalt", "l": 5, "c":1.0},
-        {"i": "well-known/meterpreter", "l": 4, "c":0.9},
+        {"i": "well-known/meterpreter", "l": 4, "c":1.0},
     ])
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -490,7 +505,10 @@ def test_extract_key_metrics() -> None:
     assert vec[idx] == 5.5
 
 
-def test_extract_uses_inner_files_from_archive() -> None:
+def test_extract_uses_inner_files_from_archive(monkeypatch) -> None:
+    # BLINDFOLD=1 (v16 default) skips filetype one-hot writes; disable for this test.
+    monkeypatch.setenv("COLLIMATOR_BLINDFOLD", "0")
+    feature_config_from_env.cache_clear()
     report = {
         "version": "3",
         "fs": [
@@ -515,7 +533,7 @@ def test_extract_uses_inner_files_from_archive() -> None:
                 "sha256": "inner",
                 "sz":512,
                 "ts": [
-                    {"i": "objectives/evasion/process", "l": 5, "c":0.95},
+                    {"i": "objectives/evasion/process", "l": 5, "c":1.0},
                 ],
                 "is":[{"module": "os"}],
                 "strings": [],
@@ -568,7 +586,7 @@ def test_extract_topk_file_risk_features() -> None:
                 "sha256": "b",
                 "sz":100,
                 "ts": [
-                    {"i": "metadata/format::x", "l": 2, "c":0.95},
+                    {"i": "metadata/format::x", "l": 2, "c":1.0},
                 ],
                 "is":[],
                 "strings": [],
@@ -583,8 +601,8 @@ def test_extract_topk_file_risk_features() -> None:
                 "sha256": "e",
                 "sz":100,
                 "ts": [
-                    {"i": "objectives/evasion/process::a", "l": 5, "c":0.95},
-                    {"i": "objectives/evasion/process::b", "l": 4, "c":0.95},
+                    {"i": "objectives/evasion/process::a", "l": 5, "c":1.0},
+                    {"i": "objectives/evasion/process::b", "l": 4, "c":1.0},
                 ],
                 "is":[],
                 "strings": [],
@@ -603,13 +621,18 @@ def test_extract_topk_file_risk_features() -> None:
     assert vec[spec.feature_names.index("agg:top1_file_hostile_findings_log")] == math.log1p(1)
 
 
-def test_extract_filetype_onehot() -> None:
+def test_extract_filetype_onehot(monkeypatch) -> None:
+    # BLINDFOLD=1 is the v16 default, which *skips* the filetype write loop.
+    # Disable it here so we can assert on the filetype one-hot directly.
+    monkeypatch.setenv("COLLIMATOR_BLINDFOLD", "0")
+    feature_config_from_env.cache_clear()
     reports = [_make_report(file_type="elf"), _make_report(file_type="pe")]
     spec = build_vocab(reports)
     vec = extract(reports[0], spec)
 
     assert vec[spec.feature_names.index("filetype:elf")] == 1.0
     assert vec[spec.feature_names.index("filetype:pe")] == 0.0
+    feature_config_from_env.cache_clear()
 
 
 def test_extract_structural() -> None:
@@ -645,9 +668,9 @@ def test_extract_zero_findings() -> None:
 
 def test_extract_finding_count_log() -> None:
     report = _make_report(findings=[
-        {"i": "a", "l": 2, "c":0.9},
-        {"i": "b", "l": 2, "c":0.9},
-        {"i": "c", "l": 2, "c":0.9},
+        {"i": "a", "l": 2, "c":1.0},
+        {"i": "b", "l": 2, "c":1.0},
+        {"i": "c", "l": 2, "c":1.0},
     ])
     spec = build_vocab([report])
     vec = extract(report, spec)
@@ -695,7 +718,9 @@ def test_unknown_path_ignored() -> None:
     assert len(vec) == spec.total_features
 
 
-def test_null_json_fields() -> None:
+def test_null_json_fields(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_BLINDFOLD", "0")
+    feature_config_from_env.cache_clear()
     """All list fields may be absent or null in sparse reports."""
     report = {
         "version": "3",
@@ -745,7 +770,7 @@ def test_feature_spec_save_load(tmp_path) -> None:
     assert loaded.presence_vocab == spec.presence_vocab
     assert loaded.filetype_vocab == spec.filetype_vocab
     assert loaded.feature_names == spec.feature_names
-    assert loaded.version == 15
+    assert loaded.version == 16
 
 
 def test_feature_spec_save_load_with_standardization(tmp_path) -> None:

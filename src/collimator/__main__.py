@@ -175,9 +175,13 @@ def cmd_train(args: argparse.Namespace) -> None:
     export.export_onnx(result.model, spec.total_features, out_dir / "model.onnx")
     export.save_model(result.model, out_dir / "model.json")
 
-    # Compute FPR-based recommended thresholds from out-of-fold CV predictions.
-    # These are honest (no data leakage) and available for every training sample.
-    recommended = thresholds.compute_recommendations(result.cv_predictions, result.cv_labels) \
+    # Compute precision-floor recommended thresholds from out-of-fold CV
+    # predictions. The semantics: at the suspicious threshold, ≥99% of
+    # flagged samples are real malware; at the hostile threshold, ≥99.9%
+    # are real. This replaces the older FPR-based recommendation
+    # (compute_recommendations) which was too conservative for the v16
+    # model — see PRECISION_RECOMMENDATIONS in thresholds.py.
+    recommended = thresholds.compute_precision_recommendations(result.cv_predictions, result.cv_labels) \
         if len(result.cv_predictions) > 0 else {}
 
     export.save_evaluation(
@@ -648,7 +652,13 @@ def generate_extraction_fixture(
     for i in idx:
         report = reports[i]
         vec = np.zeros(spec.total_features, dtype=np.float32)
-        features._extract_into(report, ctx, vec)
+        # Pull score/formula/elements from the cleave report itself (matching
+        # hopper's parseCleaveFile and the live-scan path in features.extract).
+        formula, elements, score = features.canonical_fields_from_report(report)
+        features._extract_into(
+            report, ctx, vec,
+            formula=formula, elements=elements, score=score,
+        )
 
         sample: dict = {
             "report": report,
@@ -902,6 +912,7 @@ def main() -> None:
     )
     p_exp.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_exp.add_argument("--output", default="out", help="Directory for experiment summaries (default: out)")
+    p_exp.add_argument("--cache-dir", default=None, help="Directory for experiment data caches (corpus + matrices)")
     p_exp.add_argument(
         "--train-samples", type=int, default=10_000,
         help="Approximate sampled training rows (default: 10000)",
@@ -963,6 +974,16 @@ def main() -> None:
         help="Optional subset of feature groups to ablate",
     )
     p_ablate.add_argument("--output", default=None, help="Optional JSON output path")
+    p_ablate.add_argument("--n-estimators", type=int, default=None)
+    p_ablate.add_argument("--max-depth", type=int, default=None)
+    p_ablate.add_argument("--learning-rate", type=float, default=None)
+    p_ablate.add_argument("--early-stopping-rounds", type=int, default=None)
+    p_ablate.add_argument("--beta", type=float, default=None)
+    p_ablate.add_argument("--n-folds", type=int, default=None)
+    p_ablate.add_argument(
+        "--min-malware-score", type=int, default=0,
+        help="Ignore malware samples with score below this threshold during training",
+    )
     _add_workers_arg(p_ablate)
     _add_seed_arg(p_ablate)
 
@@ -1032,6 +1053,7 @@ def main() -> None:
         experiment.run_experiment(
             db_path=_db_dsn(args.db),
             output_dir=Path(args.output),
+            cache_dir=Path(args.cache_dir) if args.cache_dir else None,
             n_workers=args.workers,
             seed=args.seed,
             train_samples=args.train_samples,
@@ -1063,6 +1085,13 @@ def main() -> None:
             n_workers=args.workers,
             seed=args.seed,
             groups=args.groups,
+            min_malware_training_score=args.min_malware_score,
+            n_estimators=args.n_estimators,
+            max_depth=args.max_depth,
+            learning_rate=args.learning_rate,
+            early_stopping_rounds=args.early_stopping_rounds,
+            beta=args.beta,
+            n_folds=args.n_folds,
         )
         ablation.print_ablation(rows)
         if args.output:
