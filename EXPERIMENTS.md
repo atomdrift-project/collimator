@@ -102,7 +102,19 @@ Common: 100K (92K actual train after score≥9), 12.8K test, 2-fold, depth=10, l
 **Top extended metrics by XGBoost gain:**
 - `pe_icon_count` (424), `pe_checksum_mismatch` (239), `binary_overlay_ratio` (115), `text_suspicious_string_ratio` (79), `binary_export_count` (57) — total gain 1401.
 
-**Verdict:** At β=2.0, the extended metrics push recall at the cost of precision (−0.0034 F1). At β=1.0, they're a **clear precision win** (+0.0032 test precision, +0.0014 test F1). The features help the model confidently *exclude* benign samples — exactly what `checksum_mismatch`, `icon_count`, and `overlay_ratio` are measuring. **Promoted as default** (`EXP_EXTENDED_METRICS=1`).
+**Verdict:** At β=2.0, the extended metrics push recall at the cost of precision (−0.0034 F1). At β=1.0, they're a **clear precision win** (+0.0032 test precision, +0.0014 test F1). The features help the model confidently *exclude* benign samples — exactly what `checksum_mismatch`, `icon_count`, and `overlay_ratio` are measuring.
+
+### Follow-up: Dynamic metric vocabulary (all ms.* keys)
+
+Replaced the hand-picked 36 metrics with a dynamic vocabulary scan: extract ALL numeric `ms.*` keys appearing in ≥5% of training data. This discovered **258 keys** covering PE headers, ELF structure, binary analysis, text/identifier stats, string patterns, image metrics, archive metadata, and more.
+
+| Config | Features | CV F1 | CV Prec | Test F1 | Test Prec | Test Recall |
+|---|---:|---:|---:|---:|---:|---:|
+| Baseline (16 metrics) | 15494 | 0.9888 | 0.9868 | 0.9808 | 0.9833 | 0.9783 |
+| +36 hand-picked | 15530 | 0.9897 | 0.9889 | 0.9822 | 0.9865 | 0.9778 |
+| **+258 dynamic** | **15752** | **0.9904** | **0.9896** | **0.9834** | **0.9874** | **0.9794** |
+
+**Verdict:** Dynamic vocabulary wins across the board — +0.0026 test F1, +0.0041 test precision vs baseline. The additional 222 metrics (string length distributions, identifier patterns, PE timestamp fields, ELF structure, etc.) each add marginal signal that compounds. "Let XGBoost sort it out" beats hand-picking. **Promoted as default.**
 
 ---
 

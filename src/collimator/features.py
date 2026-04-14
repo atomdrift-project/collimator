@@ -99,52 +99,8 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
     ("pe", "rsrc_size", True),
 ]
 
-# Extended metrics: raw numeric values from the ms field that showed strong
-# malware/benign separation in a 500-sample survey. Gated behind
-# COLLIMATOR_EXTENDED_METRICS=1. Each is its own feature with the raw value,
-# letting XGBoost find optimal splits.
-EXTENDED_METRICS: list[tuple[str, str, bool]] = [
-    # PE structure — near-perfect discriminators
-    ("pe", "checksum_mismatch", False),       # 1599/1604 = malware
-    ("pe", "api_hashing_indicators", False),   # 1103/1203 = malware
-    ("pe", "timestamp_anomaly", False),        # 147/203 = malware
-    ("pe", "checksum_missing", False),
-    ("pe", "manifest_present", False),
-    ("pe", "rich_header_present", False),
-    ("pe", "has_signature", False),
-    ("pe", "icon_count", False),
-    ("pe", "import_dll_count", True),
-    ("pe", "timestamp_year", False),
-    ("pe", "linker_major_version", False),
-    # Binary analysis — strong separation
-    ("binary", "has_malformed_structure", False),  # 650/653 = malware
-    ("binary", "wx_sections", False),              # 242/242 = malware!
-    ("binary", "has_overlay", False),
-    ("binary", "overlay_ratio", False),
-    ("binary", "overlay_entropy", False),
-    ("binary", "import_density", False),          # 81% separation
-    ("binary", "import_count", True),
-    ("binary", "entropy_variance", False),
-    ("binary", "data_entropy", False),
-    ("binary", "dependency_count", True),
-    ("binary", "export_count", True),
-    ("binary", "writable_sections", False),
-    ("binary", "avg_function_size", True),
-    ("binary", "avg_complexity", False),
-    ("binary", "function_density", False),
-    ("binary", "code_section_ratio", False),
-    ("binary", "has_signature", False),
-    # Text/identifier metrics
-    ("text", "import_density", False),
-    ("text", "suspicious_identifier_ratio", False),
-    ("text", "suspicious_string_ratio", False),
-    ("identifiers", "reuse_ratio", False),
-    ("identifiers", "high_entropy_ratio", False),
-    # String patterns
-    ("strings", "entropy_stddev", False),
-    ("strings", "shell_command_strings", True),
-    ("strings", "path_count", True),
-]
+# Metric keys where log1p should be applied (counts, sizes, lengths).
+_LOG_METRIC_WORDS = frozenset({"count", "size", "total", "bytes", "length"})
 
 LOGIC_GAPS = {
     # Behavior Category -> (List of imports that imply it, List of trait paths that represent it)
@@ -413,6 +369,7 @@ class FeatureSpec:
     skeleton_vocab: list[str] = field(default_factory=list)
     rare_element_vocab: list[str] = field(default_factory=list)
     trigram_vocab: list[str] = field(default_factory=list)
+    metric_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
     total_features: int = 0
     feature_means: list[float] | None = None
@@ -434,6 +391,7 @@ class FeatureSpec:
             "skeleton_vocab": self.skeleton_vocab,
             "rare_element_vocab": self.rare_element_vocab,
             "trigram_vocab": self.trigram_vocab,
+            "metric_vocab": self.metric_vocab,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -468,6 +426,7 @@ class FeatureSpec:
             skeleton_vocab=data.get("skeleton_vocab", []),
             rare_element_vocab=data.get("rare_element_vocab", []),
             trigram_vocab=data.get("trigram_vocab", []),
+            metric_vocab=data.get("metric_vocab", []),
             feature_names=data["feature_names"],
             total_features=data["total_features"],
             feature_means=data.get("feature_means"),
@@ -507,6 +466,7 @@ def _build_feature_names(
     skeleton_vocab: list[str],
     rare_element_vocab: list[str],
     trigram_vocab: list[str],
+    metric_vocab: list[str] | None = None,
 ) -> list[str]:
     """Generate the full ordered list of feature names for a given vocabulary."""
     config = feature_config_from_env()
@@ -648,13 +608,13 @@ def _build_feature_names(
             "ext:has_yara_match",
         ])
 
-    # Group 5: Key Metrics (16 base + 36 extended).
+    # Group 5: Key Metrics (16 base) + extended metric vocab.
     if "metrics" in config.enabled_groups:
         for group, fname, _ in KEY_METRICS:
             feature_names.append(f"metrics:{group}_{fname}")
         if config.include_extended_metrics:
-            for group, fname, _ in EXTENDED_METRICS:
-                feature_names.append(f"metrics:{group}_{fname}")
+            for mk in metric_vocab:
+                feature_names.append(f"metrics:{mk}")
 
     # Group 6: File Type multi-hot across all files in the report.
     if "filetype" in config.enabled_groups:
@@ -1678,7 +1638,7 @@ def _apply_metric_features(
     ctx: _ExtractContext,
     vec: np.ndarray,
 ) -> None:
-    """Group 5: curated numeric metrics + extended metrics."""
+    """Group 5: curated numeric metrics + extended metric vocabulary."""
     lookup = ctx.absolute_lookup
     for group, fname, use_log in KEY_METRICS:
         val = _float((metrics.get(group) or {}).get(fname))
@@ -1686,11 +1646,18 @@ def _apply_metric_features(
             val = math.log1p(abs(val))
         _assign(vec, lookup.get(f"metrics:{group}_{fname}"), val)
     if feature_config_from_env().include_extended_metrics:
-        for group, fname, use_log in EXTENDED_METRICS:
-            val = _float((metrics.get(group) or {}).get(fname))
-            if use_log:
-                val = math.log1p(abs(val))
-            _assign(vec, lookup.get(f"metrics:{group}_{fname}"), val)
+        # Extract all numeric metrics and assign those in the vocabulary.
+        for group, fields in metrics.items():
+            if not isinstance(fields, dict):
+                continue
+            for fname, raw_value in fields.items():
+                key = f"{group}_{fname}"
+                idx = lookup.get(f"metrics:{key}")
+                if idx is not None:
+                    val = _float(raw_value)
+                    if any(w in fname for w in ("count", "size", "total", "bytes", "length")):
+                        val = math.log1p(abs(val))
+                    _assign(vec, idx, val)
 
 
 def _apply_filetype_features(
@@ -2939,8 +2906,44 @@ def build_vocab_from_db(
         if b_count >= 0.02 * benign_total and malware_presence.get(path, 0) < 0.005 * malware_total
     ])
 
+    # Extended metrics vocabulary: scan a sample of reports for all numeric
+    # ms.* keys that appear in ≥5% of training data. Quick single-pass scan
+    # (reuses the same DB connection pattern as vocab workers).
+    config = feature_config_from_env()
+    metric_vocab: list[str] = []
+    if config.include_extended_metrics:
+        from . import data as _data  # noqa: PLC0415
+        metric_key_counts: dict[str, int] = {}
+        # Scan a random subset for speed (5000 rows is enough to find common keys).
+        scan_ids = [rid for rid, _l in row_ids_labels[:5000]]
+        for start in range(0, len(scan_ids), 500):
+            chunk = scan_ids[start:start + 500]
+            for _rid, item in _data.fetch_cleave_results(db_path, chunk).items():
+                report = _coerce_report(item["cleave_result"])
+                if report is None:
+                    continue
+                for file_entry in report_files(report):
+                    ms = file_entry.get("ms") or {}
+                    for group, fields in ms.items():
+                        if not isinstance(fields, dict):
+                            continue
+                        for k, v in fields.items():
+                            if isinstance(v, (int, float)):
+                                mk = f"{group}_{k}"
+                                metric_key_counts[mk] = metric_key_counts.get(mk, 0) + 1
+        # Keep keys appearing in ≥5% of scanned rows. Exclude keys already in KEY_METRICS.
+        base_keys = {f"{g}_{f}" for g, f, _ in KEY_METRICS}
+        threshold = max(len(scan_ids) * 0.05, 10)
+        metric_vocab = sorted(
+            k for k, c in metric_key_counts.items()
+            if c >= threshold and k not in base_keys
+        )
+        log.info("extended metrics: %d keys from %d scanned rows", len(metric_vocab), len(scan_ids))
+
     feature_names = _build_feature_names(
-        presence_vocab, filetype_vocab, element_vocab, bigram_vocab, ghost_vocab, skeleton_vocab, rare_element_vocab, trigram_vocab
+        presence_vocab, filetype_vocab, element_vocab, bigram_vocab,
+        ghost_vocab, skeleton_vocab, rare_element_vocab, trigram_vocab,
+        metric_vocab,
     )
 
     spec = FeatureSpec(
@@ -2952,12 +2955,14 @@ def build_vocab_from_db(
         skeleton_vocab=skeleton_vocab,
         rare_element_vocab=rare_element_vocab,
         trigram_vocab=trigram_vocab,
+        metric_vocab=metric_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
     )
     log.info(
-        "vocab: %d paths, %d filetypes, %d elements, %d bigrams, %d ghosts -> %d features",
-        len(presence_vocab), len(filetype_vocab), len(element_vocab), len(bigram_vocab), len(ghost_vocab), spec.total_features,
+        "vocab: %d paths, %d filetypes, %d elements, %d bigrams, %d ghosts, %d ext_metrics -> %d features",
+        len(presence_vocab), len(filetype_vocab), len(element_vocab), len(bigram_vocab),
+        len(ghost_vocab), len(metric_vocab), spec.total_features,
     )
     return spec
 
