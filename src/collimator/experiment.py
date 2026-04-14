@@ -321,21 +321,50 @@ def _print_test_metrics(
 
 
 def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndarray:
+    """Load primary file types for a set of row IDs.
+
+    Uses the lightweight ``file_type`` column when available (Postgres),
+    falling back to parsing cleave_result JSON (SQLite/demo DBs).
+    """
     file_types_by_row: dict[int, str] = {}
-    chunk_size = 1000
+    chunk_size = 5000
     for start in range(0, len(row_ids), chunk_size):
-        chunk = row_ids[start:start + chunk_size]
-        for row_id, item in data.fetch_cleave_results(db_path, chunk).items():
-            cleave_result = item["cleave_result"]
-            file_type = "unknown"
-            try:
-                report = json.loads(cleave_result)
-                file_type = str(features.primary_file(report).get("type") or "unknown")
-            except json.JSONDecodeError:
-                pass
-            file_types_by_row[row_id] = file_type
+        chunk = row_ids[start : start + chunk_size]
+        try:
+            file_types_by_row.update(_fetch_file_types_lightweight(db_path, chunk))
+        except Exception:
+            # Fallback: parse from cleave_result JSON (slower, for SQLite).
+            for row_id, item in data.fetch_cleave_results(db_path, chunk).items():
+                file_type = "unknown"
+                try:
+                    report = json.loads(item["cleave_result"])
+                    file_type = str(features.primary_file(report).get("type") or "unknown")
+                except (json.JSONDecodeError, KeyError):
+                    pass
+                file_types_by_row[row_id] = file_type
 
     return np.asarray([file_types_by_row.get(row_id, "unknown") for row_id in row_ids], dtype=object)
+
+
+def _fetch_file_types_lightweight(
+    db_path: Path | str, ids: list[int],
+) -> dict[int, str]:
+    """Fetch file_type column directly — no JSON parsing needed."""
+    if not ids:
+        return {}
+    with data._connect(db_path) as conn:
+        if data._is_pg(db_path):
+            with conn.cursor() as cur:
+                cur.execute("SELECT id, file_type FROM samples WHERE id = ANY(%s)", [ids])
+                return {int(rid): (ft or "unknown") for rid, ft in cur}
+        else:
+            placeholders = ",".join("?" for _ in ids)
+            return {
+                int(rid): (ft or "unknown")
+                for rid, ft in conn.execute(
+                    f"SELECT id, file_type FROM samples WHERE id IN ({placeholders})", ids  # noqa: S608
+                )
+            }
 
 
 def run_experiment(
