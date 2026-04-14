@@ -59,6 +59,33 @@ External test set: 3,488 malware + 15,000 benign.
 
 ---
 
+## 2026-04-14 Experimental Feature Batch (100k scale, 10 experiments)
+
+Screened 10 new feature ideas at 100K scale (92k actual train after score≥9 pruning, 12.8k test). Each adds 1-2 features to the `agg` group, gated by `COLLIMATOR_EXP_<N>=1`. Common: 2-fold, depth=10, lr=0.03, 200 trees, β=2.0, seed=42, NGRAM_PATH_DEPTH=4, NGRAM_MIN_CRIT=2.
+
+| # | Experiment | Signal | Features | CV F1 | Test F1 | Test Prec | Test Recall | vs Baseline |
+|---|---|---|---:|---:|---:|---:|---:|---|
+| — | **Baseline** | — | 15494 | 0.9869 | **0.9787** | **0.9749** | 0.9825 | — |
+| 3 | Confidence mean/std | Finding confidence distribution | 15496 | **0.9872** | 0.9786 | 0.9749 | 0.9823 | −0.0001 |
+| 9 | Hostile objective diversity | Distinct hostile-level objective categories | 15495 | 0.9870 | 0.9779 | 0.9742 | 0.9816 | −0.0008 |
+| 8 | Entropy × hostile | Binary entropy × hostile finding concentration | 15495 | **0.9872** | 0.9779 | 0.9742 | 0.9816 | −0.0008 |
+| — | **All 10 combined** | — | 15505 | 0.9865 | 0.9772 | 0.9719 | 0.9825 | −0.0015 |
+| 10 | Import/finding ratio | log(imports) / log(findings) | 15495 | 0.9855 | 0.9759 | 0.9689 | 0.9830 | −0.0028 |
+| 1 | Import category count | Functional API groups (network, crypto, etc.) | 15495 | 0.9860 | 0.9757 | 0.9691 | 0.9825 | −0.0030 |
+| 4 | Finding depth variance | Std dev of taxonomy path depths | 15495 | 0.9853 | 0.9751 | 0.9671 | 0.9832 | −0.0036 |
+| 7 | Unsigned × import density | Unsigned binary × import density interaction | 15495 | 0.9853 | 0.9743 | 0.9659 | 0.9828 | −0.0044 |
+| 2 | Suspicious API combo | Count of high-risk API categories present | 15495 | 0.9847 | 0.9733 | 0.9630 | 0.9839 | −0.0054 |
+| 5 | Multi-file crit spread | Max criticality gap across files in archives | 15495 | 0.9845 | 0.9728 | 0.9617 | 0.9841 | −0.0059 |
+| 6 | Metric anomaly composite | Binned sum of 5 suspicious binary metrics | 15495 | 0.9842 | 0.9719 | 0.9603 | 0.9839 | −0.0068 |
+
+**Verdict: None promoted.** At 100K scale the model is well-saturated — single-feature additions shift the decision threshold lower, trading precision for recall. The combined run (-0.0015) confirms additive noise. Exp 3 (confidence distribution) was the only near-neutral result and had the best CV F1 (0.9872), suggesting it may have signal that doesn't generalize to the test partition.
+
+**Pattern:** Features that bias toward recall (5, 6, 2) cause the biggest F1 drops. The model's precision-recall tradeoff is already near-optimal at this operating point; further gains likely require either (a) new signal sources from cleave (ATT&CK/MBC IDs), (b) feature interactions via deeper trees, or (c) larger/more diverse training data.
+
+All features remain available behind `COLLIMATOR_EXP_<N>=1` toggles for re-evaluation on future data.
+
+---
+
 ## 2026-04-13 N-gram Path Depth × Min Criticality Screen (50k, cached)
 
 Screened 24 combinations: 4 path depths (0/full, 2, 3, 4) × 6 min criticality levels (0/all, 1/component+, 2/baseline+, 3/notable+, 4/suspicious+, 5/hostile). All at 50k train, 10k test, 2-fold, depth=8, lr=0.05, 80 trees, β=2.0, seed=42.

@@ -179,6 +179,18 @@ class FeatureConfig:
     # Taxonomy-exploitation features: kill chain span, cross-domain
     # co-occurrence, depth signal, and objective/micro-behavior ratio.
     include_taxonomy_features: bool
+    # Experimental feature batch (2026-04-13): 10 new features, each
+    # individually toggleable via COLLIMATOR_EXP_<N>=1 for screening.
+    exp_import_categories: bool      # 1: import functional category count
+    exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
+    exp_confidence_skew: bool        # 3: finding confidence distribution skew
+    exp_finding_depth_var: bool      # 4: taxonomy depth variance
+    exp_multifile_crit_spread: bool  # 5: max crit difference across files
+    exp_metric_anomaly: bool         # 6: composite metric anomaly score
+    exp_unsigned_import_density: bool # 7: unsigned × import density interaction
+    exp_entropy_hostile: bool        # 8: entropy × hostile concentration
+    exp_hostile_objective_div: bool  # 9: hostile-level objective category diversity
+    exp_import_finding_ratio: bool   # 10: import count / finding count ratio
 
 
 @lru_cache(maxsize=1)
@@ -275,6 +287,16 @@ def feature_config_from_env() -> FeatureConfig:
         include_taxonomy_features=os.getenv("COLLIMATOR_TAXONOMY_FEATURES") in {
             "1", "true", "yes", "on",
         },
+        exp_import_categories=os.getenv("COLLIMATOR_EXP_1") == "1",
+        exp_suspicious_api_combo=os.getenv("COLLIMATOR_EXP_2") == "1",
+        exp_confidence_skew=os.getenv("COLLIMATOR_EXP_3") == "1",
+        exp_finding_depth_var=os.getenv("COLLIMATOR_EXP_4") == "1",
+        exp_multifile_crit_spread=os.getenv("COLLIMATOR_EXP_5") == "1",
+        exp_metric_anomaly=os.getenv("COLLIMATOR_EXP_6") == "1",
+        exp_unsigned_import_density=os.getenv("COLLIMATOR_EXP_7") == "1",
+        exp_entropy_hostile=os.getenv("COLLIMATOR_EXP_8") == "1",
+        exp_hostile_objective_div=os.getenv("COLLIMATOR_EXP_9") == "1",
+        exp_import_finding_ratio=os.getenv("COLLIMATOR_EXP_10") == "1",
     )
 
 
@@ -542,6 +564,27 @@ def _build_feature_names(
                 # Cross-domain density: objectives breadth × hostile concentration.
                 "agg:objective_hostile_density",
             ])
+        # Experimental feature batch (2026-04-13).
+        if config.exp_import_categories:
+            feature_names.append("agg:import_category_count")
+        if config.exp_suspicious_api_combo:
+            feature_names.append("agg:suspicious_api_combo")
+        if config.exp_confidence_skew:
+            feature_names.extend(["agg:confidence_mean", "agg:confidence_std"])
+        if config.exp_finding_depth_var:
+            feature_names.append("agg:finding_depth_var")
+        if config.exp_multifile_crit_spread:
+            feature_names.append("agg:multifile_crit_spread")
+        if config.exp_metric_anomaly:
+            feature_names.append("agg:metric_anomaly")
+        if config.exp_unsigned_import_density:
+            feature_names.append("agg:unsigned_import_density")
+        if config.exp_entropy_hostile:
+            feature_names.append("agg:entropy_hostile")
+        if config.exp_hostile_objective_div:
+            feature_names.append("agg:hostile_objective_diversity")
+        if config.exp_import_finding_ratio:
+            feature_names.append("agg:import_finding_ratio")
 
     # Group 4: Third-Party / Well-Known Summary (6).
     if "ext" in config.enabled_groups:
@@ -1399,6 +1442,168 @@ def _apply_aggregate_features(
             float(len(objectives_2level)) * hostile_conc)
 
 
+# ---------------------------------------------------------------------------
+# Import functional categories for experiments 1 & 2.
+# ---------------------------------------------------------------------------
+
+_SUSPICIOUS_API_CATEGORIES = {
+    "process_inject": {"VirtualAllocEx", "WriteProcessMemory", "CreateRemoteThread",
+                       "NtUnmapViewOfSection", "QueueUserAPC", "NtWriteVirtualMemory"},
+    "network": {"InternetOpenA", "InternetOpenW", "InternetOpenUrlA", "InternetOpenUrlW",
+                "URLDownloadToFileA", "URLDownloadToFileW", "HttpSendRequestA",
+                "HttpSendRequestW", "WSAStartup", "WinHttpOpen", "HttpOpenRequestA"},
+    "crypto": {"CryptEncrypt", "CryptDecrypt", "CryptHashData", "CryptCreateHash",
+               "CryptAcquireContextA", "CryptAcquireContextW", "BCryptEncrypt"},
+    "anti_debug": {"IsDebuggerPresent", "CheckRemoteDebuggerPresent",
+                   "NtQueryInformationProcess", "OutputDebugStringA"},
+    "service": {"CreateServiceA", "CreateServiceW", "StartServiceA", "StartServiceW",
+                "OpenSCManagerA", "OpenSCManagerW", "ChangeServiceConfigA"},
+    "registry": {"RegSetValueExA", "RegSetValueExW", "RegCreateKeyExA",
+                 "RegCreateKeyExW", "RegDeleteKeyA", "RegDeleteKeyW",
+                 "RegDeleteValueA", "RegDeleteValueW"},
+    "privilege": {"AdjustTokenPrivileges", "OpenProcessToken", "LookupPrivilegeValueA",
+                  "LookupPrivilegeValueW", "ImpersonateLoggedOnUser"},
+    "execution": {"ShellExecuteA", "ShellExecuteW", "ShellExecuteExA", "ShellExecuteExW",
+                  "CreateProcessA", "CreateProcessW", "WinExec", "system"},
+    "stealth": {"SetWindowsHookExA", "SetWindowsHookExW", "DeleteFileA", "DeleteFileW",
+                "MoveFileA", "MoveFileW", "SetFileAttributesA", "SetFileAttributesW"},
+    "keylog": {"GetAsyncKeyState", "GetKeyState", "SetWindowsHookExA",
+               "GetForegroundWindow", "GetWindowTextA", "GetWindowTextW"},
+}
+
+# Flatten for quick lookup: symbol → set of categories it belongs to.
+_SYMBOL_TO_CATEGORIES: dict[str, set[str]] = {}
+for _cat, _syms in _SUSPICIOUS_API_CATEGORIES.items():
+    for _s in _syms:
+        _SYMBOL_TO_CATEGORIES.setdefault(_s, set()).add(_cat)
+
+# Categories considered especially suspicious when co-occurring.
+_HIGH_RISK_COMBOS = {"process_inject", "network", "crypto", "anti_debug", "privilege", "keylog"}
+
+
+def _apply_experimental_features(
+    report: dict[str, Any],
+    summary: _FindingSummary,
+    files: list[dict[str, Any]],
+    metrics: dict[str, dict[str, float]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+    score: int,
+) -> None:
+    """Compute the 10 experimental features (2026-04-13 batch)."""
+    config = feature_config_from_env()
+    lookup = ctx.absolute_lookup
+
+    # Collect import data once for import-based features.
+    import_categories: set[str] = set()
+    total_imports = 0
+    if config.exp_import_categories or config.exp_suspicious_api_combo or \
+       config.exp_unsigned_import_density or config.exp_import_finding_ratio:
+        import re
+        api_pattern = re.compile(r'^[A-Z][a-zA-Z0-9_]{3,}[A-Za-z]$')
+        for file_entry in files:
+            for sym in (file_entry.get("is") or []):
+                if not api_pattern.match(sym):
+                    continue
+                total_imports += 1
+                cats = _SYMBOL_TO_CATEGORIES.get(sym)
+                if cats:
+                    import_categories.update(cats)
+
+    # Exp 1: Import functional category count.
+    if config.exp_import_categories:
+        _assign(vec, lookup.get("agg:import_category_count"), float(len(import_categories)))
+
+    # Exp 2: Suspicious API combo score — count of high-risk categories present.
+    if config.exp_suspicious_api_combo:
+        high_risk_present = import_categories & _HIGH_RISK_COMBOS
+        _assign(vec, lookup.get("agg:suspicious_api_combo"), float(len(high_risk_present)))
+
+    # Exp 3: Confidence distribution features.
+    if config.exp_confidence_skew:
+        confs = summary.finding_confidences
+        if confs:
+            mean_c = sum(confs) / len(confs)
+            var_c = sum((c - mean_c) ** 2 for c in confs) / len(confs)
+            _assign(vec, lookup.get("agg:confidence_mean"), mean_c)
+            _assign(vec, lookup.get("agg:confidence_std"), var_c ** 0.5)
+
+    # Exp 4: Finding depth variance.
+    if config.exp_finding_depth_var:
+        depths = [len(p.split("/")) for p in summary.sample_paths]
+        if len(depths) >= 2:
+            mean_d = sum(depths) / len(depths)
+            var_d = sum((d - mean_d) ** 2 for d in depths) / len(depths)
+            _assign(vec, lookup.get("agg:finding_depth_var"), var_d ** 0.5)
+
+    # Exp 5: Multi-file crit spread — max crit difference across files.
+    if config.exp_multifile_crit_spread:
+        file_max_crits: list[int] = []
+        for file_entry in files:
+            fmax = 0
+            for finding in (file_entry.get("ts") or []):
+                crit = finding.get("l", 0)
+                if crit > fmax:
+                    fmax = crit
+            file_max_crits.append(fmax)
+        if len(file_max_crits) >= 2:
+            spread = max(file_max_crits) - min(file_max_crits)
+            _assign(vec, lookup.get("agg:multifile_crit_spread"), float(spread))
+
+    # Exp 6: Metric anomaly composite — normalized sum of suspicious metrics.
+    if config.exp_metric_anomaly:
+        binary = metrics.get("binary", metrics.get("pe", {}))
+        anomaly = 0.0
+        entropy = _float(binary.get("overall_entropy", 0))
+        if entropy > 6.5:
+            anomaly += 1.0  # high entropy
+        import_density = _float(binary.get("import_density", 0))
+        if import_density > 5.0:
+            anomaly += 1.0  # high import density
+        overlay_ratio = _float(binary.get("overlay_ratio", 0))
+        if overlay_ratio > 0.3:
+            anomaly += 1.0  # large overlay
+        func_count = _float(binary.get("function_count", 0))
+        if 0 < func_count < 10:
+            anomaly += 1.0  # suspiciously few functions
+        complexity = _float(binary.get("complexity_per_kb", 0))
+        if complexity > 2.0:
+            anomaly += 1.0  # high complexity
+        _assign(vec, lookup.get("agg:metric_anomaly"), anomaly)
+
+    # Exp 7: Unsigned × import density interaction.
+    if config.exp_unsigned_import_density:
+        is_unsigned = "metadata/unsigned" in summary.sample_paths
+        if is_unsigned and total_imports > 0:
+            total_size = sum(_float(f.get("sz", 0)) for f in files) or 1.0
+            density = total_imports / (total_size / 1024.0)
+            _assign(vec, lookup.get("agg:unsigned_import_density"), density)
+
+    # Exp 8: Entropy × hostile concentration.
+    if config.exp_entropy_hostile:
+        binary = metrics.get("binary", metrics.get("pe", {}))
+        entropy = _float(binary.get("overall_entropy", 0))
+        total_findings = max(summary.filtered_finding_count, 1)
+        hostile_conc = summary.hostile_finding_count / total_findings
+        _assign(vec, lookup.get("agg:entropy_hostile"), entropy * hostile_conc)
+
+    # Exp 9: Hostile-level objective category diversity.
+    if config.exp_hostile_objective_div:
+        hostile_obj_cats: set[str] = set()
+        for path, max_ord in summary.sample_paths.items():
+            if max_ord >= 5 and path.startswith("objectives/"):
+                parts = path.split("/")
+                if len(parts) >= 2:
+                    hostile_obj_cats.add(parts[1])
+        _assign(vec, lookup.get("agg:hostile_objective_diversity"), float(len(hostile_obj_cats)))
+
+    # Exp 10: Import-to-finding ratio.
+    if config.exp_import_finding_ratio:
+        finding_count = max(summary.filtered_finding_count, 1)
+        _assign(vec, lookup.get("agg:import_finding_ratio"),
+                math.log1p(total_imports) / math.log1p(finding_count))
+
+
 def _apply_external_signal_features(
     summary: _FindingSummary,
     ctx: _ExtractContext,
@@ -2053,6 +2258,14 @@ def _extract_into(
 
     if "neg_space" in config.enabled_groups:
         _apply_neg_space_features(files, summary.sample_paths, ctx, vec)
+
+    # Experimental feature batch.
+    if any((config.exp_import_categories, config.exp_suspicious_api_combo,
+            config.exp_confidence_skew, config.exp_finding_depth_var,
+            config.exp_multifile_crit_spread, config.exp_metric_anomaly,
+            config.exp_unsigned_import_density, config.exp_entropy_hostile,
+            config.exp_hostile_objective_div, config.exp_import_finding_ratio)):
+        _apply_experimental_features(report, summary, files, metrics, ctx, vec, score)
 
 
 # ---------------------------------------------------------------------------
