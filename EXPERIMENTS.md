@@ -86,6 +86,26 @@ All features remain available behind `COLLIMATOR_EXP_<N>=1` toggles for re-evalu
 
 ---
 
+## 2026-04-14 Extended Metrics (100k, 36 raw ms.* features)
+
+Expanded the metrics group from 16 hand-picked features to 52 (16 base + 36 extended) by adding raw numeric values from the `ms` field that showed strong malware/benign separation. Key additions: `pe.checksum_mismatch` (1599/1604 malware), `binary.has_malformed_structure` (650/653 malware), `binary.wx_sections` (242/242 malware), `pe.icon_count`, `binary.overlay_ratio`, and 31 others. Toggle: `COLLIMATOR_EXTENDED_METRICS=1`.
+
+Common: 100K (92K actual train after score≥9), 12.8K test, 2-fold, depth=10, lr=0.03, 200 trees, seed=42.
+
+| Config | β | Features | CV F1 | CV Prec | Test F1 | Test Prec | Test Recall |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Baseline | 2.0 | 15494 | 0.9869 | 0.9798 | 0.9787 | 0.9749 | 0.9825 |
+| +Extended | 2.0 | 15530 | 0.9865 | 0.9769 | 0.9753 | 0.9663 | **0.9844** |
+| Baseline | 1.0 | 15494 | 0.9888 | 0.9868 | 0.9808 | 0.9833 | 0.9783 |
+| **+Extended** | **1.0** | **15530** | **0.9897** | **0.9889** | **0.9822** | **0.9865** | 0.9778 |
+
+**Top extended metrics by XGBoost gain:**
+- `pe_icon_count` (424), `pe_checksum_mismatch` (239), `binary_overlay_ratio` (115), `text_suspicious_string_ratio` (79), `binary_export_count` (57) — total gain 1401.
+
+**Verdict:** At β=2.0, the extended metrics push recall at the cost of precision (−0.0034 F1). At β=1.0, they're a **clear precision win** (+0.0032 test precision, +0.0014 test F1). The features help the model confidently *exclude* benign samples — exactly what `checksum_mismatch`, `icon_count`, and `overlay_ratio` are measuring. **Promoted as default** (`EXP_EXTENDED_METRICS=1`).
+
+---
+
 ## 2026-04-13 N-gram Path Depth × Min Criticality Screen (50k, cached)
 
 Screened 24 combinations: 4 path depths (0/full, 2, 3, 4) × 6 min criticality levels (0/all, 1/component+, 2/baseline+, 3/notable+, 4/suspicious+, 5/hostile). All at 50k train, 10k test, 2-fold, depth=8, lr=0.05, 80 trees, β=2.0, seed=42.

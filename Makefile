@@ -54,6 +54,7 @@ EXP_MIN_SAMPLE_SCORE ?= 3
 EXP_NGRAM_PATH_DEPTH ?= 4
 EXP_NGRAM_MIN_CRIT ?= 2
 EXP_TAXONOMY_FEATURES ?= 0
+EXP_EXTENDED_METRICS ?= 1
 EXP_DISABLE_FEATURE_GROUPS ?= clusters
 # packaged_capability compute mode: zero | chars | tokens | paths | findings
 EXP_PACKAGED_CAPABILITY_MODE ?= paths
@@ -237,6 +238,7 @@ experiment: venv check-db
 	COLLIMATOR_NGRAM_PATH_DEPTH=$(EXP_NGRAM_PATH_DEPTH) \
 	COLLIMATOR_NGRAM_MIN_CRIT=$(EXP_NGRAM_MIN_CRIT) \
 	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
+	COLLIMATOR_EXTENDED_METRICS=$(EXP_EXTENDED_METRICS) \
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --workers $(EXP_WORKERS) --seed $(SEED) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \

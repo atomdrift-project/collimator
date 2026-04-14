@@ -99,6 +99,53 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
     ("pe", "rsrc_size", True),
 ]
 
+# Extended metrics: raw numeric values from the ms field that showed strong
+# malware/benign separation in a 500-sample survey. Gated behind
+# COLLIMATOR_EXTENDED_METRICS=1. Each is its own feature with the raw value,
+# letting XGBoost find optimal splits.
+EXTENDED_METRICS: list[tuple[str, str, bool]] = [
+    # PE structure — near-perfect discriminators
+    ("pe", "checksum_mismatch", False),       # 1599/1604 = malware
+    ("pe", "api_hashing_indicators", False),   # 1103/1203 = malware
+    ("pe", "timestamp_anomaly", False),        # 147/203 = malware
+    ("pe", "checksum_missing", False),
+    ("pe", "manifest_present", False),
+    ("pe", "rich_header_present", False),
+    ("pe", "has_signature", False),
+    ("pe", "icon_count", False),
+    ("pe", "import_dll_count", True),
+    ("pe", "timestamp_year", False),
+    ("pe", "linker_major_version", False),
+    # Binary analysis — strong separation
+    ("binary", "has_malformed_structure", False),  # 650/653 = malware
+    ("binary", "wx_sections", False),              # 242/242 = malware!
+    ("binary", "has_overlay", False),
+    ("binary", "overlay_ratio", False),
+    ("binary", "overlay_entropy", False),
+    ("binary", "import_density", False),          # 81% separation
+    ("binary", "import_count", True),
+    ("binary", "entropy_variance", False),
+    ("binary", "data_entropy", False),
+    ("binary", "dependency_count", True),
+    ("binary", "export_count", True),
+    ("binary", "writable_sections", False),
+    ("binary", "avg_function_size", True),
+    ("binary", "avg_complexity", False),
+    ("binary", "function_density", False),
+    ("binary", "code_section_ratio", False),
+    ("binary", "has_signature", False),
+    # Text/identifier metrics
+    ("text", "import_density", False),
+    ("text", "suspicious_identifier_ratio", False),
+    ("text", "suspicious_string_ratio", False),
+    ("identifiers", "reuse_ratio", False),
+    ("identifiers", "high_entropy_ratio", False),
+    # String patterns
+    ("strings", "entropy_stddev", False),
+    ("strings", "shell_command_strings", True),
+    ("strings", "path_count", True),
+]
+
 LOGIC_GAPS = {
     # Behavior Category -> (List of imports that imply it, List of trait paths that represent it)
     "network": (
@@ -181,6 +228,7 @@ class FeatureConfig:
     include_taxonomy_features: bool
     # Experimental feature batch (2026-04-13): 10 new features, each
     # individually toggleable via COLLIMATOR_EXP_<N>=1 for screening.
+    include_extended_metrics: bool   # 36 additional raw metrics from ms field
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
     exp_confidence_skew: bool        # 3: finding confidence distribution skew
@@ -285,6 +333,9 @@ def feature_config_from_env() -> FeatureConfig:
         ngram_path_depth=ngram_path_depth,
         ngram_min_crit=ngram_min_crit,
         include_taxonomy_features=os.getenv("COLLIMATOR_TAXONOMY_FEATURES") in {
+            "1", "true", "yes", "on",
+        },
+        include_extended_metrics=os.getenv("COLLIMATOR_EXTENDED_METRICS") in {
             "1", "true", "yes", "on",
         },
         exp_import_categories=os.getenv("COLLIMATOR_EXP_1") == "1",
@@ -597,10 +648,13 @@ def _build_feature_names(
             "ext:has_yara_match",
         ])
 
-    # Group 5: Key Metrics (16).
+    # Group 5: Key Metrics (16 base + 36 extended).
     if "metrics" in config.enabled_groups:
         for group, fname, _ in KEY_METRICS:
             feature_names.append(f"metrics:{group}_{fname}")
+        if config.include_extended_metrics:
+            for group, fname, _ in EXTENDED_METRICS:
+                feature_names.append(f"metrics:{group}_{fname}")
 
     # Group 6: File Type multi-hot across all files in the report.
     if "filetype" in config.enabled_groups:
@@ -1624,13 +1678,19 @@ def _apply_metric_features(
     ctx: _ExtractContext,
     vec: np.ndarray,
 ) -> None:
-    """Group 5: curated numeric metrics."""
+    """Group 5: curated numeric metrics + extended metrics."""
     lookup = ctx.absolute_lookup
     for group, fname, use_log in KEY_METRICS:
         val = _float((metrics.get(group) or {}).get(fname))
         if use_log:
             val = math.log1p(abs(val))
         _assign(vec, lookup.get(f"metrics:{group}_{fname}"), val)
+    if feature_config_from_env().include_extended_metrics:
+        for group, fname, use_log in EXTENDED_METRICS:
+            val = _float((metrics.get(group) or {}).get(fname))
+            if use_log:
+                val = math.log1p(abs(val))
+            _assign(vec, lookup.get(f"metrics:{group}_{fname}"), val)
 
 
 def _apply_filetype_features(
