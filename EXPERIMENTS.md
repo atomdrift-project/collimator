@@ -59,6 +59,76 @@ External test set: 3,488 malware + 15,000 benign.
 
 ---
 
+## 2026-04-13 N-gram Path Depth × Min Criticality Screen (50k, cached)
+
+Screened 24 combinations: 4 path depths (0/full, 2, 3, 4) × 6 min criticality levels (0/all, 1/component+, 2/baseline+, 3/notable+, 4/suspicious+, 5/hostile). All at 50k train, 10k test, 2-fold, depth=8, lr=0.05, 80 trees, β=2.0, seed=42.
+
+**Top 5 by test F1:**
+
+| Depth | Min Crit | Features | CV F1 | Test F1 | Test Prec | Test Recall |
+|---:|---:|---:|---:|---:|---:|---:|
+| **4** | **2 (baseline+)** | 13699 | **0.9837** | **0.9751** | **0.9688** | 0.9814 |
+| 0 | 2 (baseline+) | 13699 | 0.9817 | 0.9733 | 0.9639 | 0.9828 |
+| 3 | 2 (baseline+) | 13699 | 0.9814 | 0.9713 | 0.9619 | 0.9808 |
+| 4 | 0 (all) | 13699 | 0.9802 | 0.9710 | 0.9590 | 0.9832 |
+| 3 | 1 (component+) | 13699 | 0.9827 | 0.9707 | 0.9639 | 0.9776 |
+
+**Key findings:**
+- **crit=2 (baseline+) wins at every depth** — filtering component-level noise boosts precision ~1% with no recall cost.
+- **depth=4 is the best depth** — 4-level directory paths hit the sweet spot of generalizability vs specificity.
+- **crit=0 and crit=1 are identical** — component-level findings add zero n-gram signal.
+- **crit≥4 collapses feature count** to ~3700 and hurts — too aggressive.
+
+**Applied:** `NGRAM_PATH_DEPTH=4 NGRAM_MIN_CRIT=2` as new defaults for both experiment and train.
+
+---
+
+## 2026-04-13 Trigram vs Bigram Isolation (50k, depth=4/crit=2)
+
+Ablated bigrams and trigrams independently to measure each group's contribution. All at 50k train, 10k test, 2-fold, depth=8, lr=0.05, 80 trees, β=2.0, seed=42, NGRAM_PATH_DEPTH=4, NGRAM_MIN_CRIT=2.
+
+| Config | Features | CV F1 | CV Prec | Test F1 | Test Prec | Test Recall |
+|---|---:|---:|---:|---:|---:|---:|
+| **Both** (baseline) | 13699 | **0.9837** | 0.9688 | **0.9751** | 0.9688 | 0.9814 |
+| Trigrams only (no bigrams) | 8699 | 0.9826 | **0.9725** | 0.9731 | **0.9659** | 0.9804 |
+| Bigrams only (no trigrams) | 13199 | 0.9816 | 0.9690 | 0.9719 | 0.9611 | 0.9830 |
+| Neither (no n-grams) | 8199 | 0.9790 | 0.9632 | 0.9667 | 0.9509 | 0.9830 |
+
+**Key findings:**
+- **N-grams together add +0.84% test F1** and +1.8% precision over the no-ngrams baseline.
+- **Trigrams alone (+0.64% F1) outperform bigrams alone (+0.52% F1)** — 3-way co-occurrence is more specific.
+- **Trigrams have the best standalone precision** (0.9725 CV) — high specificity signal.
+- **Both together still win** — complementary, not redundant.
+
+---
+
+## 2026-04-13 Taxonomy-Exploitation Features (30k screen)
+
+Tested 4 new aggregate features that exploit the hierarchical taxonomy structure:
+- `kill_chain_span`: distinct ATT&CK-like phases (objectives/* 2nd-level categories)
+- `objective_micro_ratio`: ratio of objectives/* paths to micro-behaviors/* paths
+- `avg_finding_depth`: average taxonomy depth (deeper = more specific findings)
+- `objective_hostile_density`: objectives breadth × hostile concentration
+
+Three additional candidates (has_objectives_and_micro, max_finding_depth, suspicious_top_category_count) were pruned after showing zero gain in an initial 30k/80-tree screen.
+
+Common: 30k train, 10k test, 2-fold, depth=10, lr=0.03, 200 trees, β=2.0, seed=42, depth=4/crit=2 n-gram config.
+
+| Config | Features | CV F1 | CV Prec | CV FP | CV FN | Test F1 | Test Prec | Test Recall |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Baseline | 12804 | **0.9855** | **0.9780** | **335** | 104 | **0.9773** | **0.9759** | 0.9788 |
+| +taxonomy (4 feats) | 12808 | 0.9835 | 0.9731 | 412 | **89** | 0.9758 | 0.9709 | **0.9808** |
+
+**Feature importance (gain) from the +taxonomy model:**
+- `objective_micro_ratio`: 9.38 — strongest; malware has higher intent-to-implementation ratio
+- `avg_finding_depth`: 9.16 — deeper findings = more specific = more suspicious
+- `objective_hostile_density`: 8.80 — cross-domain signal works
+- `kill_chain_span`: 2.46 — mild contribution
+
+**Verdict: Not promoted.** The 4 features trade precision for recall (+77 FP, −15 FN in CV). They have real signal (non-zero gain), but net F1 is slightly worse at this operating point. May benefit from monotonic constraints or become more useful once cleave emits ATT&CK/MBC IDs for denser objective coverage. Kept behind `COLLIMATOR_TAXONOMY_FEATURES=1` toggle for future re-evaluation.
+
+---
+
 ## 2026-04-13 Score Filter Boundary Experiment (100k scale)
 
 Tested whether lowering the SQL-level score filter (MIN_SAMPLE_SCORE) from the current ≥3 to ≥2, ≥1, or ≥0 improves the model by including more benign training data. Run on local replica (~100k trainable at score≥3, ~233k at score≥0).

@@ -176,6 +176,9 @@ class FeatureConfig:
     # participate in bigram/trigram generation. 0 = all (default/current),
     # 1 = component+, 2 = baseline+, 3 = notable+, 4 = suspicious+, 5 = hostile.
     ngram_min_crit: int
+    # Taxonomy-exploitation features: kill chain span, cross-domain
+    # co-occurrence, depth signal, and objective/micro-behavior ratio.
+    include_taxonomy_features: bool
 
 
 @lru_cache(maxsize=1)
@@ -269,6 +272,9 @@ def feature_config_from_env() -> FeatureConfig:
         include_hostile_depth_weight=_extreme_flag("COLLIMATOR_HOSTILE_DEPTH_WEIGHT"),
         ngram_path_depth=ngram_path_depth,
         ngram_min_crit=ngram_min_crit,
+        include_taxonomy_features=os.getenv("COLLIMATOR_TAXONOMY_FEATURES") in {
+            "1", "true", "yes", "on",
+        },
     )
 
 
@@ -523,6 +529,19 @@ def _build_feature_names(
             "agg:hostile_2level_breadth",
             "agg:objectives_breadth",
         ])
+        if config.include_taxonomy_features:
+            feature_names.extend([
+                # Kill chain span: distinct ATT&CK-like phases (objectives/*
+                # 2nd-level categories) the sample covers.
+                "agg:kill_chain_span",
+                # Objective-to-micro-behavior ratio: high = more intent signals
+                # relative to implementation noise.
+                "agg:objective_micro_ratio",
+                # Average taxonomy depth of all findings (deeper = more specific).
+                "agg:avg_finding_depth",
+                # Cross-domain density: objectives breadth × hostile concentration.
+                "agg:objective_hostile_density",
+            ])
 
     # Group 4: Third-Party / Well-Known Summary (6).
     if "ext" in config.enabled_groups:
@@ -1233,8 +1252,16 @@ def _apply_aggregate_features(
     hostile_2level: set[str] = set()
     objectives_2level: set[str] = set()  # any crit under objectives/
 
+    # Taxonomy-exploitation tracking.
+    objectives_phases: set[str] = set()  # 2nd-level under objectives/ (kill chain phases)
+    micro_behavior_count = 0
+    objectives_count = 0
+    all_depths: list[int] = []
+
     for path, max_ord in sample_paths.items():
         parts = path.split("/")
+        all_depths.append(len(parts))
+
         if max_ord >= 2:
             categories.add(parts[0])
             if len(parts) >= 3:
@@ -1249,6 +1276,10 @@ def _apply_aggregate_features(
                 hostile_2level.add(two_level)
             if parts[0] == "objectives" and max_ord >= 2:
                 objectives_2level.add(two_level)
+                objectives_phases.add(parts[1])
+                objectives_count += 1
+            elif parts[0] == "micro-behaviors":
+                micro_behavior_count += 1
 
         if len(parts) < 3:
             continue
@@ -1356,6 +1387,16 @@ def _apply_aggregate_features(
     _assign(vec, lookup.get("agg:suspicious_2level_breadth"), float(len(suspicious_2level)))
     _assign(vec, lookup.get("agg:hostile_2level_breadth"), float(len(hostile_2level)))
     _assign(vec, lookup.get("agg:objectives_breadth"), float(len(objectives_2level)))
+
+    # Taxonomy-exploitation features.
+    _assign(vec, lookup.get("agg:kill_chain_span"), float(len(objectives_phases)))
+    _assign(vec, lookup.get("agg:objective_micro_ratio"),
+            objectives_count / max(micro_behavior_count, 1))
+    avg_depth = sum(all_depths) / max(len(all_depths), 1) if all_depths else 0.0
+    _assign(vec, lookup.get("agg:avg_finding_depth"), avg_depth)
+    hostile_conc = breadth_hostile / max(total_active, 1) if total_active > 0 else 0.0
+    _assign(vec, lookup.get("agg:objective_hostile_density"),
+            float(len(objectives_2level)) * hostile_conc)
 
 
 def _apply_external_signal_features(
