@@ -20,7 +20,7 @@ EXP_ESTIMATORS ?= 1000
 EXP_MAX_DEPTH ?= 16
 EXP_LEARNING_RATE ?= 0.02
 EXP_EARLY_STOPPING ?= 100
-EXP_BETA ?= 2.0
+EXP_BETA ?= 1.25
 EXP_MIN_MALWARE_SCORE ?= 9
 # Ablation 2026-04-10: silent_packer (Exp 43) and mtime_kurtosis (Exp 44) were
 # net-negative at 75k experiment scale. air_gap_signal (Exp 46) and the
@@ -91,7 +91,7 @@ TRAIN_ESTIMATORS ?= 1000
 TRAIN_MAX_DEPTH ?= 16
 TRAIN_LEARNING_RATE ?= 0.02
 TRAIN_EARLY_STOPPING ?= 100
-TRAIN_BETA ?= 2.0
+TRAIN_BETA ?= 1.25
 ALLOWED_FEATURES ?= src/collimator/allowed_features.json
 
 # Build optional train hyperparameter flags (only passed if set)
