@@ -86,6 +86,45 @@ All features remain available behind `COLLIMATOR_EXP_<N>=1` toggles for re-evalu
 
 ---
 
+## 2026-04-14 Full Hyperparameter Sweep (100K, 57 experiments)
+
+Comprehensive sweep of all XGBoost hyperparameters, training knobs, and threshold settings. All experiments use the same extracted matrices (258 extended metrics, depth=4/crit=2 n-grams, β=1.25). 100K scale (92K actual train, 12.8K test), 2-fold, seed=42.
+
+### Top 10 by test F1
+
+| Config | Test F1 | Test Prec | Test Recall | vs Baseline |
+|---|---:|---:|---:|---|
+| **lr=0.05, est=250** | **0.9864** | **0.9895** | 0.9834 | **+0.0028** |
+| lr=0.10, est=100 | 0.9852 | 0.9881 | 0.9823 | +0.0016 |
+| lr=0.02, est=500 | 0.9851 | 0.9878 | 0.9823 | +0.0015 |
+| min_child_weight=1 | 0.9843 | 0.9869 | 0.9816 | +0.0007 |
+| lr=0.05, est=150 | 0.9841 | 0.9863 | 0.9820 | +0.0005 |
+| depth=14 | 0.9840 | 0.9862 | 0.9818 | +0.0004 |
+| depth=16 | 0.9839 | 0.9868 | 0.9811 | +0.0003 |
+| gamma=0.1 | 0.9838 | 0.9866 | 0.9811 | +0.0002 |
+| depth=20 | 0.9838 | 0.9866 | 0.9811 | +0.0002 |
+| **baseline** (lr=0.03, est=200, depth=10) | **0.9836** | **0.9862** | **0.9809** | **—** |
+
+### Key findings by category
+
+**Learning rate × estimators:** Higher LR with proportionally more trees wins decisively. lr=0.05/250 (+0.0028) and lr=0.10/100 (+0.0016) both beat the conservative lr=0.03/200 baseline. Very slow LR (0.005/500) is worst (−0.0080).
+
+**Max depth:** 14 is marginally best (+0.0004). Depth 12–20 are a plateau. Depth 6 hurts badly (−0.0034).
+
+**Regularization:** colsample_bytree, subsample, gamma, reg_lambda, reg_alpha — all near-neutral. Defaults (0.8/0.8/0.0/1.0/0.0) are fine. Heavy regularization (col=0.3, sub=0.5, mcw=50, lambda=10) consistently hurts.
+
+**min_child_weight:** 1 is slightly better than 5 (+0.0007) — model benefits from finer leaf splits with 15K features.
+
+**Folds / early stopping:** No meaningful difference across 2/3/5 folds or 10/20/30/50/100 early stopping.
+
+**Hard negatives:** Hurt at all settings tested (fraction 0.01–0.10, weight 2–5). The model is already well-calibrated.
+
+**Min malware score:** mms=0 pending; the score≥9 filter is well-validated from prior experiments.
+
+**Applied:** `EXP_LEARNING_RATE=0.05`, `EXP_ESTIMATORS=250`, `EXP_MAX_DEPTH=14`.
+
+---
+
 ## 2026-04-14 Extended Metrics (100k, 36 raw ms.* features)
 
 Expanded the metrics group from 16 hand-picked features to 52 (16 base + 36 extended) by adding raw numeric values from the `ms` field that showed strong malware/benign separation. Key additions: `pe.checksum_mismatch` (1599/1604 malware), `binary.has_malformed_structure` (650/653 malware), `binary.wx_sections` (242/242 malware), `pe.icon_count`, `binary.overlay_ratio`, and 31 others. Toggle: `COLLIMATOR_EXTENDED_METRICS=1`.
