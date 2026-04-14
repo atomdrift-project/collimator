@@ -123,6 +123,37 @@ Comprehensive sweep of all XGBoost hyperparameters, training knobs, and threshol
 
 **Applied:** `EXP_LEARNING_RATE=0.05`, `EXP_ESTIMATORS=250`, `EXP_MAX_DEPTH=14`.
 
+### Feature Knob Sweep (17 experiments, tuned hyperparams)
+
+All use lr=0.05, est=250, depth=14, β=1.25, 100K scale, extended metrics on.
+
+| Config | Features | Test F1 | Test Prec | vs Baseline |
+|---|---:|---:|---:|---|
+| **ngram_d0c2** (full depth) | 15752 | **0.9870** | 0.9906 | **+0.0005** |
+| drop_trigrams | 15252 | 0.9869 | 0.9902 | +0.0004 |
+| filetype_inter (163K cross) | 174464 | 0.9869 | **0.9919** | +0.0004 |
+| drop_logic_gaps | 15749 | 0.9869 | 0.9911 | +0.0004 |
+| taxonomy | 15756 | 0.9866 | 0.9894 | +0.0001 |
+| mtime_kurtosis | 15753 | 0.9866 | 0.9897 | +0.0001 |
+| drop_bigrams | 10752 | 0.9866 | 0.9918 | +0.0001 |
+| drop_sig_synergy | 10752 | 0.9866 | 0.9907 | +0.0001 |
+| drop_elements | 13454 | 0.9866 | 0.9885 | +0.0001 |
+| **tuned_baseline** (d4c2) | 15752 | 0.9865 | 0.9890 | — |
+| no_blindfold | 15752 | 0.9864 | 0.9887 | −0.0001 |
+| ngram_d3c2 | 15752 | 0.9865 | 0.9899 | 0.0000 |
+| ngram_d4c3 | 15752 | 0.9862 | 0.9906 | −0.0003 |
+| silent_packer | 15753 | 0.9862 | 0.9885 | −0.0003 |
+| ngram_d4c0 | 15752 | 0.9858 | 0.9878 | −0.0007 |
+| no_ext_metrics | 15494 | 0.9847 | 0.9871 | −0.0018 |
+| enable_clusters | — | OOM | — | — |
+
+**Key findings:**
+- **Full-depth n-grams (d0c2) beat depth=4 at 100K** — more data supports more specific paths.
+- **Dropping trigrams helps** — 500 malware-only trigrams are overfitting. Tune vocab size next.
+- **Dropping logic_gaps helps** — 3 noisy features.
+- **Extended metrics are critical** — removing costs −0.0018 F1.
+- **Filetype interactions** have best precision (0.9919) but 174K features is heavy.
+
 ---
 
 ## 2026-04-14 Extended Metrics (100k, 36 raw ms.* features)
