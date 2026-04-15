@@ -189,6 +189,8 @@ class FeatureConfig:
     bigram_min_freq: int             # min frequency for bigram inclusion
     trigram_max: int                 # max trigram vocab size
     trigram_max_benign_frac: float   # max benign fraction for trigram inclusion
+    include_attack_features: bool    # ATT&CK technique/tactic features from 'a' field
+    include_confidence_weighted_ngrams: bool  # weight bigrams/trigrams by confidence
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
     exp_confidence_skew: bool        # 3: finding confidence distribution skew
@@ -296,6 +298,12 @@ def feature_config_from_env() -> FeatureConfig:
             "1", "true", "yes", "on",
         },
         include_extended_metrics=os.getenv("COLLIMATOR_EXTENDED_METRICS") in {
+            "1", "true", "yes", "on",
+        },
+        include_attack_features=os.getenv("COLLIMATOR_ATTACK_FEATURES") in {
+            "1", "true", "yes", "on",
+        },
+        include_confidence_weighted_ngrams=os.getenv("COLLIMATOR_CONFIDENCE_WEIGHTED_NGRAMS") in {
             "1", "true", "yes", "on",
         },
         bigram_max=int(os.getenv("COLLIMATOR_BIGRAM_MAX", "5000")),
@@ -604,6 +612,13 @@ def _build_feature_names(
             feature_names.append("agg:hostile_objective_diversity")
         if config.exp_import_finding_ratio:
             feature_names.append("agg:import_finding_ratio")
+        if config.include_attack_features:
+            feature_names.extend([
+                "agg:attack_technique_count",    # distinct ATT&CK T-codes
+                "agg:attack_tactic_count",       # distinct tactic prefixes (T1xxx → tactic)
+                "agg:mbc_behavior_count",        # distinct MBC B-codes
+                "agg:has_attack_and_objective",   # has T-codes AND objectives/* findings
+            ])
 
     # Group 4: Third-Party / Well-Known Summary (6).
     if "ext" in config.enabled_groups:
@@ -1625,6 +1640,29 @@ def _apply_experimental_features(
         _assign(vec, lookup.get("agg:import_finding_ratio"),
                 math.log1p(total_imports) / math.log1p(finding_count))
 
+    # ATT&CK / MBC features from 'a' and 'm' fields in findings.
+    if config.include_attack_features:
+        attack_techniques: set[str] = set()
+        mbc_behaviors: set[str] = set()
+        for file_entry in files:
+            for finding in file_entry.get("ts") or []:
+                a = finding.get("a")
+                if a:
+                    attack_techniques.add(a)
+                m = finding.get("m")
+                if m:
+                    mbc_behaviors.add(m)
+        # ATT&CK tactics: T1xxx.yyy → T1xxx is the technique, first 2 digits = tactic
+        # But T-codes don't directly encode tactics — use unique technique count instead.
+        _assign(vec, lookup.get("agg:attack_technique_count"), float(len(attack_techniques)))
+        # Group by technique prefix (e.g., T10xx = execution, T15xx = defense evasion)
+        tactic_prefixes = {t[:4] for t in attack_techniques if t.startswith("T") and len(t) >= 4}
+        _assign(vec, lookup.get("agg:attack_tactic_count"), float(len(tactic_prefixes)))
+        _assign(vec, lookup.get("agg:mbc_behavior_count"), float(len(mbc_behaviors)))
+        has_objectives = any(p.startswith("objectives/") for p in summary.sample_paths)
+        _assign(vec, lookup.get("agg:has_attack_and_objective"),
+                1.0 if attack_techniques and has_objectives else 0.0)
+
 
 def _apply_external_signal_features(
     summary: _FindingSummary,
@@ -2019,15 +2057,22 @@ def _apply_bigram_features(
     report: dict[str, Any],
     ctx: _ExtractContext,
     vec: np.ndarray,
+    summary: "_FindingSummary | None" = None,
 ) -> None:
     """Group 11: trait bigram multi-hot features."""
     config = feature_config_from_env()
+    use_conf = config.include_confidence_weighted_ngrams and summary is not None
     for file_entry in report_files(report):
         paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
                 bigram = f"{p1} + {p2}"
-                _assign(vec, ctx.bigram_lookup.get(bigram), 1.0)
+                if use_conf:
+                    c1 = summary.path_confidences.get(p1, 1.0)
+                    c2 = summary.path_confidences.get(p2, 1.0)
+                    _assign(vec, ctx.bigram_lookup.get(bigram), (c1 + c2) / 2.0)
+                else:
+                    _assign(vec, ctx.bigram_lookup.get(bigram), 1.0)
 
 
 def _apply_ghost_features(
@@ -2270,7 +2315,7 @@ def _extract_into(
         _apply_score_features(score, total_size, files, ctx, vec)
 
     if "bigrams" in config.enabled_groups:
-        _apply_bigram_features(report, ctx, vec)
+        _apply_bigram_features(report, ctx, vec, summary=summary)
 
     if "ghosts" in config.enabled_groups:
         _apply_ghost_features(summary.sample_paths, ctx, vec)
