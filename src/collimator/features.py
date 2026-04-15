@@ -184,7 +184,11 @@ class FeatureConfig:
     include_taxonomy_features: bool
     # Experimental feature batch (2026-04-13): 10 new features, each
     # individually toggleable via COLLIMATOR_EXP_<N>=1 for screening.
-    include_extended_metrics: bool   # 36 additional raw metrics from ms field
+    include_extended_metrics: bool   # all numeric ms.* metrics from vocab scan
+    bigram_max: int                  # max bigram vocab size
+    bigram_min_freq: int             # min frequency for bigram inclusion
+    trigram_max: int                 # max trigram vocab size
+    trigram_max_benign_frac: float   # max benign fraction for trigram inclusion
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
     exp_confidence_skew: bool        # 3: finding confidence distribution skew
@@ -294,6 +298,10 @@ def feature_config_from_env() -> FeatureConfig:
         include_extended_metrics=os.getenv("COLLIMATOR_EXTENDED_METRICS") in {
             "1", "true", "yes", "on",
         },
+        bigram_max=int(os.getenv("COLLIMATOR_BIGRAM_MAX", "5000")),
+        bigram_min_freq=int(os.getenv("COLLIMATOR_BIGRAM_MIN_FREQ", "1000")),
+        trigram_max=int(os.getenv("COLLIMATOR_TRIGRAM_MAX", "500")),
+        trigram_max_benign_frac=float(os.getenv("COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC", "0.0")),
         exp_import_categories=os.getenv("COLLIMATOR_EXP_1") == "1",
         exp_suspicious_api_combo=os.getenv("COLLIMATOR_EXP_2") == "1",
         exp_confidence_skew=os.getenv("COLLIMATOR_EXP_3") == "1",
@@ -2812,6 +2820,7 @@ def build_vocab_from_db(
     n_workers: int = 0,
 ) -> FeatureSpec:
     """Scan sampled reports in the DB to build a feature vocabulary."""
+    config = feature_config_from_env()
     nw = resolve_worker_count(n_workers)
     presence_counts: dict[str, int] = {}
     filetypes: set[str] = set()
@@ -2883,15 +2892,19 @@ def build_vocab_from_db(
     presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
     filetype_vocab = sorted(filetypes)
     element_vocab = sorted(k for k, c in element_counts.items() if c >= MIN_PATH_FREQ)
-    bigram_vocab = sorted(k for k, c in bigram_counts.items() if c >= 1000)[:5000]
+    # Bigram/trigram vocab sizes are controlled by FeatureConfig (which reads
+    # from env vars) so they're included in the matrix cache key.
+    bigram_vocab = sorted(k for k, c in bigram_counts.items() if c >= config.bigram_min_freq)[:config.bigram_max]
     skeleton_vocab = sorted(k for k, c in skeleton_counts.items() if c >= 100)
 
-    # Trigrams: highly specific malware-only triplets (top 500 by frequency).
+    # Trigrams: malware-enriched triplets, top N by frequency.
+    trigram_benign_ceil = int(config.trigram_max_benign_frac * benign_total) if config.trigram_max_benign_frac > 0 else 0
     malware_only_trigrams = sorted(
-        [(k, c) for k, c in trigram_counts.items() if benign_trigrams.get(k, 0) == 0 and c >= 5],
+        [(k, c) for k, c in trigram_counts.items()
+         if benign_trigrams.get(k, 0) <= trigram_benign_ceil and c >= 5],
         key=lambda x: x[1],
         reverse=True,
-    )[:500]
+    )[:config.trigram_max]
     trigram_vocab = sorted(k for k, c in malware_only_trigrams)
 
     # Rare Elements: highly specific to malware (e.g. 0% benign, >= 5 malware samples).
@@ -2909,7 +2922,6 @@ def build_vocab_from_db(
     # Extended metrics vocabulary: scan a sample of reports for all numeric
     # ms.* keys that appear in ≥5% of training data. Quick single-pass scan
     # (reuses the same DB connection pattern as vocab workers).
-    config = feature_config_from_env()
     metric_vocab: list[str] = []
     if config.include_extended_metrics:
         from . import data as _data  # noqa: PLC0415
