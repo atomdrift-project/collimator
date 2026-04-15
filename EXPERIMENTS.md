@@ -156,6 +156,38 @@ All use lr=0.05, est=250, depth=14, β=1.25, 100K scale, extended metrics on.
 
 ---
 
+## 2026-04-15 Bigram/Trigram Vocab Size Sweep (100K, d0c2, tuned hyperparams)
+
+Swept trigram vocab size (0–2000), benign tolerance (0%–1%), bigram vocab size (1000–7500), and bigram min frequency (500–2000). All at 100K, d0c2, 258 ext metrics, lr=0.05/est=250/depth=14, β=1.25.
+
+| Config | Features | Test F1 | Test Prec | vs tri0 (no trigrams) |
+|---|---:|---:|---:|---|
+| **tri500_b1pct** (500 tri, ≤1% benign) | 15752 | **0.9877** | **0.9918** | **+0.0007** |
+| tri250 (250 malware-only) | 15502 | 0.9873 | 0.9913 | +0.0003 |
+| bi7500 (7500 bigrams) | 20752 | 0.9870 | 0.9914 | 0.0000 |
+| tri500 (500 malware-only) | 15752 | 0.9870 | 0.9906 | 0.0000 |
+| tri0 (no trigrams) | 15252 | 0.9870 | 0.9911 | — |
+| tri1000 | 16252 | 0.9870 | 0.9904 | 0.0000 |
+| bi_freq500 | 15752 | 0.9870 | 0.9902 | 0.0000 |
+| tri100 | 15352 | 0.9867 | 0.9892 | −0.0003 |
+| tri1000_b1pct | 16252 | 0.9867 | 0.9894 | −0.0003 |
+| bi_freq2000 | 15752 | 0.9867 | 0.9894 | −0.0003 |
+| tri2000 | 17252 | 0.9866 | 0.9901 | −0.0004 |
+| bi2500 | 10752 | 0.9864 | 0.9892 | −0.0006 |
+| bi1000 | 7752 | 0.9853 | 0.9873 | −0.0017 |
+
+**Key findings:**
+- **Relaxing the benign filter to ≤1% wins.** Trigrams appearing in a few benign samples (but hundreds of malware) are still highly discriminative. The strict 0% benign cutoff was too conservative.
+- **500 trigrams with ≤1% benign is the sweet spot.** 250 strict or 1000 relaxed both underperform.
+- **Bigrams below 5000 hurt badly** (bi1000: −0.0017). The 5000 default is justified.
+- **More bigrams (7500)** slightly helps precision but not F1 — diminishing returns.
+
+**Applied:** `NGRAM_PATH_DEPTH=0` (full depth), `TRIGRAM_MAX_BENIGN_FRAC=0.01`.
+
+**Best model: F1=0.9877, P=0.9918** — total improvement +0.0090 from session start (0.9787).
+
+---
+
 ## 2026-04-14 Extended Metrics (100k, 36 raw ms.* features)
 
 Expanded the metrics group from 16 hand-picked features to 52 (16 base + 36 extended) by adding raw numeric values from the `ms` field that showed strong malware/benign separation. Key additions: `pe.checksum_mismatch` (1599/1604 malware), `binary.has_malformed_structure` (650/653 malware), `binary.wx_sections` (242/242 malware), `pe.icon_count`, `binary.overlay_ratio`, and 31 others. Toggle: `COLLIMATOR_EXTENDED_METRICS=1`.

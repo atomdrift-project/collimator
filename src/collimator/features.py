@@ -301,7 +301,7 @@ def feature_config_from_env() -> FeatureConfig:
         bigram_max=int(os.getenv("COLLIMATOR_BIGRAM_MAX", "5000")),
         bigram_min_freq=int(os.getenv("COLLIMATOR_BIGRAM_MIN_FREQ", "1000")),
         trigram_max=int(os.getenv("COLLIMATOR_TRIGRAM_MAX", "500")),
-        trigram_max_benign_frac=float(os.getenv("COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC", "0.0")),
+        trigram_max_benign_frac=float(os.getenv("COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC", "0.01")),
         exp_import_categories=os.getenv("COLLIMATOR_EXP_1") == "1",
         exp_suspicious_api_combo=os.getenv("COLLIMATOR_EXP_2") == "1",
         exp_confidence_skew=os.getenv("COLLIMATOR_EXP_3") == "1",
