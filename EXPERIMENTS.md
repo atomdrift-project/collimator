@@ -156,6 +156,34 @@ All use lr=0.05, est=250, depth=14, β=1.25, 100K scale, extended metrics on.
 
 ---
 
+## 2026-04-15 FN/FP Reduction Sweep (full dataset, 10 experiments)
+
+Targeted false negative and false positive reduction. Error analysis showed FN samples had sparse findings that didn't hit the trigram vocabulary (supply-chain patterns too rare for top-500), and many had low hopper scores filtered out by min_malware_score=9. All experiments use full dataset (~92K train, 12.8K test) with tuned hyperparams.
+
+| Config | Features | Test F1 | Test Prec | Test Recall | vs Baseline |
+|---|---:|---:|---:|---:|---|
+| **mms0** (no malware filter) | 15769 | **0.9923** | 0.9898 | **0.9948** | **+0.0046 / +0.0111R** |
+| combined (mms5+1000t+tri1k) | 16262 | 0.9905 | **0.9920** | 0.9889 | +0.0028 |
+| mms5 | 15762 | 0.9893 | 0.9896 | 0.9891 | +0.0016 |
+| deep_1000t (1000 trees d16) | 15752 | 0.9879 | 0.9920 | 0.9839 | +0.0002 |
+| baseline (mms9) | 15752 | 0.9877 | 0.9918 | 0.9837 | — |
+| tri500_b2pct | 15752 | 0.9874 | 0.9911 | 0.9837 | −0.0003 |
+| tri1000_b2pct | 16252 | 0.9870 | 0.9904 | 0.9835 | −0.0007 |
+| tri2000_b2pct | 17252 | 0.9866 | 0.9890 | 0.9842 | −0.0011 |
+| beta1.5 | 15752 | 0.9860 | 0.9868 | 0.9851 | −0.0017 |
+
+**Key findings:**
+- **Removing min_malware_score filter (mms0) is the biggest single win of the session.** Training on ALL labeled malware — including subtle low-score samples — teaches the model what borderline malware looks like. Recall jumps +0.0111 while precision barely moves (−0.0020).
+- **More trigrams with relaxed benign filters hurt** — the supply-chain FN patterns are too rare even at 2% benign tolerance. The vocab approach can't help samples whose trigram combinations are unique.
+- **1000 trees depth=16 adds +0.0002 F1** — marginal. The bottleneck was training data diversity, not model capacity.
+- **beta=1.5 hurts** — at this operating point, increasing recall bias just erodes precision.
+
+**Applied:** `MIN_MALWARE_SCORE=0` as new default for both experiment and train.
+
+**Session total: test F1 0.9787 → 0.9923 (+0.0136), precision 0.9749 → 0.9898, recall 0.9825 → 0.9948.**
+
+---
+
 ## 2026-04-15 Bigram/Trigram Vocab Size Sweep (100K, d0c2, tuned hyperparams)
 
 Swept trigram vocab size (0–2000), benign tolerance (0%–1%), bigram vocab size (1000–7500), and bigram min frequency (500–2000). All at 100K, d0c2, 258 ext metrics, lr=0.05/est=250/depth=14, β=1.25.

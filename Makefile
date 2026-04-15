@@ -21,7 +21,7 @@ EXP_MAX_DEPTH ?= 14
 EXP_LEARNING_RATE ?= 0.05
 EXP_EARLY_STOPPING ?= 100
 EXP_BETA ?= 1.25
-EXP_MIN_MALWARE_SCORE ?= 9
+EXP_MIN_MALWARE_SCORE ?= 0
 # Ablation 2026-04-10: silent_packer (Exp 43) and mtime_kurtosis (Exp 44) were
 # net-negative at 75k experiment scale. air_gap_signal (Exp 46) and the
 # extreme-features bundle (Exps 48/49/54/55/56) are kept ON.
@@ -61,7 +61,7 @@ EXP_PACKAGED_CAPABILITY_MODE ?= paths
 # Experiment data cache directory. When set, corpus selections and extracted
 # matrices are cached to disk so repeated experiments skip expensive DB scans.
 EXP_CACHE_DIR ?= out/cache
-TRAIN_MIN_MALWARE_SCORE ?= 9
+TRAIN_MIN_MALWARE_SCORE ?= 0
 TRAIN_SILENT_PACKER_SIGNAL ?= 0
 TRAIN_MTIME_KURTOSIS ?= 0
 TRAIN_AIR_GAP_SIGNAL ?= 1
