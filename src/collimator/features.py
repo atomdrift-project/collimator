@@ -1654,12 +1654,17 @@ def _apply_metric_features(
             val = math.log1p(abs(val))
         _assign(vec, lookup.get(f"metrics:{group}_{fname}"), val)
     if feature_config_from_env().include_extended_metrics:
-        # Extract all numeric metrics and assign those in the vocabulary.
+        # Extract all numeric metrics in the extended vocabulary.
+        # Skip keys already handled by KEY_METRICS to avoid overwriting
+        # their log-transformed values with raw values.
+        base_keys = {f"{g}_{f}" for g, f, _ in KEY_METRICS}
         for group, fields in metrics.items():
             if not isinstance(fields, dict):
                 continue
             for fname, raw_value in fields.items():
                 key = f"{group}_{fname}"
+                if key in base_keys:
+                    continue
                 idx = lookup.get(f"metrics:{key}")
                 if idx is not None:
                     val = _float(raw_value)

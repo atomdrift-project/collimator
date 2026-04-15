@@ -287,15 +287,13 @@ def cmd_train(args: argparse.Namespace) -> None:
     generate_fixtures(result.model, spec, X_fix, X_fix, out_dir,
                       optimal_threshold=result.optimal_threshold)
 
-    # Feature-extraction parity fixture (stream a few reports from DB).
-    extraction_reports = []
-    for report, _label in data.stream_reports(db_path):
-        extraction_reports.append(report)
-        if len(extraction_reports) >= 20:
-            break
+    # Feature-extraction parity fixture: diverse samples covering all
+    # file types, score ranges, multi-file archives, and label classes.
+    extraction_reports = _gather_diverse_fixture_reports(db_path)
     if extraction_reports:
         generate_extraction_fixture(
             extraction_reports, spec, out_dir,
+            n_samples=len(extraction_reports),
             model=result.model, optimal_threshold=result.optimal_threshold,
             recommended_thresholds=recommended,
         )
@@ -604,6 +602,100 @@ def generate_fixtures(
     print(f"  wrote {ref_path.name} ({n}+{n_nan}+{len(X_extreme)} samples, {n_feat} features)")
 
 
+def _gather_diverse_fixture_reports(
+    db_path: Path | str,
+    target_per_bucket: int = 3,
+) -> list[dict]:
+    """Gather a diverse set of reports for the extraction parity fixture.
+
+    Ensures coverage across:
+    - File types: PE, ELF, Macho, JavaScript, Python, Go, Rust, Shell, etc.
+    - Score ranges: low (3-10), medium (11-50), high (50+)
+    - Labels: malware and benign
+    - Multi-file samples: archives/packages with inner files
+    - Edge cases: unsigned binaries, packed, supply-chain patterns
+
+    Returns ~50-80 reports covering all important code paths.
+    """
+    import psycopg  # noqa: PLC0415
+
+    reports: list[dict] = []
+    seen_ids: set[int] = set()
+
+    dsn = str(db_path)
+    if not dsn.startswith(("postgres://", "postgresql://")):
+        # SQLite fallback — just stream whatever is available.
+        for report, _label in data.stream_reports(db_path):
+            reports.append(report)
+            if len(reports) >= 30:
+                break
+        return reports
+
+    conn = psycopg.connect(dsn)
+
+    def _fetch(query: str, params: list | None = None) -> None:
+        with conn.cursor() as cur:
+            cur.execute(query, params or [])
+            for (rid, raw) in cur:
+                rid = int(rid)
+                if rid in seen_ids:
+                    continue
+                seen_ids.add(rid)
+                report = json.loads(raw) if isinstance(raw, str) else raw
+                if isinstance(report, dict):
+                    reports.append(report)
+
+    # Cover each major file type × label combo
+    file_types = ["pe", "elf", "macho", "javascript", "python", "go",
+                  "rust", "shell", "c", "ruby", "perl"]
+    for ft in file_types:
+        for label in ["bad", "good"]:
+            _fetch(
+                "SELECT id, cleave_result FROM samples "
+                "WHERE file_type = %s AND label = %s AND cleave_result IS NOT NULL "
+                "AND score >= 3 AND skip = '' ORDER BY random() LIMIT %s",
+                [ft, label, target_per_bucket],
+            )
+
+    # Multi-file samples (archives, packages with inner files)
+    _fetch(
+        "SELECT id, cleave_result FROM samples "
+        "WHERE cleave_result IS NOT NULL AND score >= 5 AND skip = '' "
+        "AND label = 'bad' AND jsonb_array_length(cleave_result->'fs') > 1 "
+        "ORDER BY random() LIMIT %s",
+        [target_per_bucket * 2],
+    )
+    _fetch(
+        "SELECT id, cleave_result FROM samples "
+        "WHERE cleave_result IS NOT NULL AND score >= 5 AND skip = '' "
+        "AND label = 'good' AND jsonb_array_length(cleave_result->'fs') > 1 "
+        "ORDER BY random() LIMIT %s",
+        [target_per_bucket * 2],
+    )
+
+    # High-score malware (likely to exercise many features)
+    _fetch(
+        "SELECT id, cleave_result FROM samples "
+        "WHERE label = 'bad' AND cleave_result IS NOT NULL "
+        "AND score >= 50 AND skip = '' ORDER BY random() LIMIT %s",
+        [target_per_bucket],
+    )
+
+    # Low-score edge cases (the FN population)
+    _fetch(
+        "SELECT id, cleave_result FROM samples "
+        "WHERE label = 'bad' AND cleave_result IS NOT NULL "
+        "AND score >= 3 AND score <= 5 AND skip = '' ORDER BY random() LIMIT %s",
+        [target_per_bucket],
+    )
+
+    conn.close()
+    log.info("fixture: gathered %d diverse reports (%d file types, %d with inner files)",
+             len(reports), len(file_types), sum(1 for r in reports if any(
+                 f.get("dp", 0) > 0 for f in (r.get("fs") or []))))
+    return reports
+
+
 def generate_extraction_fixture(
     reports: list[dict],
     spec: features.FeatureSpec,
@@ -695,6 +787,7 @@ def generate_extraction_fixture(
 
     fixture = {
         "n_features": spec.total_features,
+        "feature_names": spec.feature_names,
         "samples": samples,
     }
     path = out_dir / "extraction_fixture.json"
@@ -765,16 +858,19 @@ def cmd_fixture(args: argparse.Namespace) -> None:
         optimal_threshold=threshold,
     )
 
-    # Feature-extraction parity fixture for litmus.
+    # Feature-extraction parity fixture for litmus — diverse samples.
     recommended = None
     if eval_path.exists():
         eval_data = export.load_evaluation(eval_path)
         recommended = eval_data.get("recommended_thresholds")
-    generate_extraction_fixture(
-        reports, spec, out_dir=Path(args.output),
-        model=model, optimal_threshold=threshold,
-        recommended_thresholds=recommended,
-    )
+    extraction_reports = _gather_diverse_fixture_reports(db_path)
+    if extraction_reports:
+        generate_extraction_fixture(
+            extraction_reports, spec, out_dir=Path(args.output),
+            n_samples=len(extraction_reports),
+            model=model, optimal_threshold=threshold,
+            recommended_thresholds=recommended,
+        )
 
 
 def main() -> None:
