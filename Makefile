@@ -312,18 +312,25 @@ XGBOOST_NATIVE_DIR ?= ../xgboost-native
 LITMUS_DIR ?= ../litmus
 
 deploy: verify-xgboost-native verify-litmus
+	@# Stage to a temp dir first — only promote to MODELS_DIR after all
+	@# post-deploy checks pass. This prevents partial/broken deploys.
+	$(eval _STAGE := $(shell mktemp -d))
+	cp $(OUT_DIR)/model.json $(_STAGE)/model.json
+	cp $(OUT_DIR)/model.onnx $(_STAGE)/model.onnx
+	cp $(OUT_DIR)/feature_spec.json $(_STAGE)/feature_spec.json
+	cp $(OUT_DIR)/evaluation.json $(_STAGE)/evaluation.json
+	@test -f $(OUT_DIR)/extraction_fixture.json || { rm -rf $(_STAGE); echo "error: extraction_fixture.json not found"; exit 1; }
+	cp $(OUT_DIR)/extraction_fixture.json $(_STAGE)/extraction_fixture.json
+	@$(PYTHON) -c "import json; e=json.load(open('$(OUT_DIR)/evaluation.json')); r=e.get('recommended_thresholds',{}); json.dump({k:v for k,v in r.items() if v is not None}, open('$(_STAGE)/config.json','w'), indent=2); print('  config.json: ' + ', '.join(f'{k}={v:.6f}' for k,v in r.items() if v is not None))"
+	@echo "Running litmus deployed-model compatibility checks against staged copy..."
+	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test feature_spec || { rm -rf $(_STAGE); exit 1; }
+	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test extraction_parity || { rm -rf $(_STAGE); exit 1; }
+	@# All checks passed — promote atomically.
 	@mkdir -p $(MODELS_DIR)
-	cp $(OUT_DIR)/model.json $(MODELS_DIR)/model.json
-	cp $(OUT_DIR)/model.onnx $(MODELS_DIR)/model.onnx
-	cp $(OUT_DIR)/feature_spec.json $(MODELS_DIR)/feature_spec.json
-	cp $(OUT_DIR)/evaluation.json $(MODELS_DIR)/evaluation.json
-	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make train first"; exit 1; }
-	cp $(OUT_DIR)/extraction_fixture.json $(MODELS_DIR)/extraction_fixture.json
-	@$(PYTHON) -c "import json; e=json.load(open('$(OUT_DIR)/evaluation.json')); r=e.get('recommended_thresholds',{}); json.dump({k:v for k,v in r.items() if v is not None}, open('$(MODELS_DIR)/config.json','w'), indent=2); print('  config.json: ' + ', '.join(f'{k}={v:.6f}' for k,v in r.items() if v is not None))"
-	@echo "Running litmus deployed-model compatibility checks..."
-	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(abspath $(MODELS_DIR)) cargo test --release --test feature_spec
-	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(abspath $(MODELS_DIR)) cargo test --release --test extraction_parity
-	@echo "litmus: deployed model spec/ABI checks passed"
+	rm -rf $(MODELS_DIR).old 2>/dev/null; mv $(MODELS_DIR) $(MODELS_DIR).old 2>/dev/null || true
+	mv $(_STAGE) $(MODELS_DIR)
+	rm -rf $(MODELS_DIR).old 2>/dev/null || true
+	@echo "litmus: all deploy checks passed"
 	@echo "Deployed to $(MODELS_DIR)"
 
 .PHONY: verify-xgboost-native

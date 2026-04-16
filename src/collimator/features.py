@@ -413,9 +413,10 @@ class FeatureSpec:
         }
         d["standardized"] = self.standardized
         if self.feature_means is not None:
-            d["feature_means"] = self.feature_means
+            d["feature_means"] = [0.0 if (math.isinf(v) or math.isnan(v)) else v for v in self.feature_means]
         if self.feature_stds is not None:
-            d["feature_stds"] = self.feature_stds
+            # Replace inf/nan stds with 1.0 (identity transform — feature passes through raw).
+            d["feature_stds"] = [1.0 if (math.isinf(v) or math.isnan(v)) else v for v in self.feature_stds]
         with open(path, "w") as f:
             json.dump(d, f, indent=2)
         log.info("saved feature spec: %d features to %s", self.total_features, path)
@@ -2344,8 +2345,9 @@ def _extract_into(
     if "neg_space" in config.enabled_groups:
         _apply_neg_space_features(files, summary.sample_paths, ctx, vec)
 
-    # Experimental feature batch.
-    if any((config.exp_import_categories, config.exp_suspicious_api_combo,
+    # Experimental feature batch + ATT&CK features.
+    if any((config.include_attack_features,
+            config.exp_import_categories, config.exp_suspicious_api_combo,
             config.exp_confidence_skew, config.exp_finding_depth_var,
             config.exp_multifile_crit_spread, config.exp_metric_anomaly,
             config.exp_unsigned_import_density, config.exp_entropy_hostile,

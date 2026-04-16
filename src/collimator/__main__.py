@@ -604,7 +604,7 @@ def generate_fixtures(
 
 def _gather_diverse_fixture_reports(
     db_path: Path | str,
-    target_per_bucket: int = 3,
+    target_per_bucket: int = 2,
 ) -> list[dict]:
     """Gather a diverse set of reports for the extraction parity fixture.
 
@@ -663,14 +663,14 @@ def _gather_diverse_fixture_reports(
         "WHERE cleave_result IS NOT NULL AND score >= 5 AND skip = '' "
         "AND label = 'bad' AND jsonb_array_length(cleave_result->'fs') > 1 "
         "ORDER BY random() LIMIT %s",
-        [target_per_bucket * 2],
+        [target_per_bucket],
     )
     _fetch(
         "SELECT id, cleave_result FROM samples "
         "WHERE cleave_result IS NOT NULL AND score >= 5 AND skip = '' "
         "AND label = 'good' AND jsonb_array_length(cleave_result->'fs') > 1 "
         "ORDER BY random() LIMIT %s",
-        [target_per_bucket * 2],
+        [target_per_bucket],
     )
 
     # High-score malware (likely to exercise many features)
