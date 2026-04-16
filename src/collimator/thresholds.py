@@ -28,11 +28,13 @@ MIN_SAMPLES_FOR_FPR = 5
 # (TP / (TP+FP)) on the test set meets or exceeds the floor.
 # Used by `compute_precision_recommendations` (the default since v16).
 # Intuition: "of all things flagged at this threshold, X% are real malware".
-#   suspicious: 99% of flags are real (1 wrong-flag per 100)
-#   hostile:    99.9% of flags are real (1 wrong-flag per 1000)
+#   suspicious: "unusual, take a look" — 1 wrong flag per 200
+#   hostile:    "must look NOW"        — 1 wrong flag per 2000
+# These floors are set to be statistically measurable with ~70K benign
+# samples. As the benign pool grows, they can be tightened.
 PRECISION_RECOMMENDATIONS = [
-    ("suspicious", 0.99),
-    ("hostile",    0.999),
+    ("suspicious", 0.995),
+    ("hostile",    0.9995),
 ]
 
 # Minimum number of flagged samples required before a precision number is

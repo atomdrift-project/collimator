@@ -184,6 +184,16 @@ def cmd_train(args: argparse.Namespace) -> None:
     recommended = thresholds.compute_precision_recommendations(result.cv_predictions, result.cv_labels) \
         if len(result.cv_predictions) > 0 else {}
 
+    # Save CV predictions + test predictions for threshold recomputation
+    # without retraining. ~2MB compressed for 180K samples.
+    if len(result.cv_predictions) > 0:
+        cv_data = {"cv_predictions": result.cv_predictions, "cv_labels": result.cv_labels}
+        if test_probs is not None:
+            cv_data["test_predictions"] = test_probs
+            cv_data["test_labels"] = y_test
+        np.savez_compressed(out_dir / "cv_predictions.npz", **cv_data)
+        log.info("saved CV predictions to %s", out_dir / "cv_predictions.npz")
+
     export.save_evaluation(
         metrics=result.metrics,
         calibration=result.calibration,
@@ -942,6 +952,12 @@ def main() -> None:
     p_scan.add_argument("--cleave", default="cleave", help="Path to cleave binary")
     p_scan.add_argument("--db", default=None, help="Background DB for SHAP context (optional)")
 
+    # rethreshold
+    p_rethresh = subparsers.add_parser(
+        "rethreshold", help="Recompute suspicious/hostile thresholds from saved CV predictions",
+    )
+    p_rethresh.add_argument("--output", default="out", help="Directory with cv_predictions.npz")
+
     # fixture
     p_fixture = subparsers.add_parser(
         "fixture", help="Generate cross-language test fixtures for xgboost-native",
@@ -1119,6 +1135,31 @@ def main() -> None:
             spec_path=Path(args.spec),
             cleave_bin=args.cleave,
         )
+    elif args.command == "rethreshold":
+        cv_path = Path(args.output) / "cv_predictions.npz"
+        if not cv_path.exists():
+            print(f"error: {cv_path} not found — run make train first")
+            sys.exit(1)
+        arrays = np.load(str(cv_path))
+        cv_preds = arrays["cv_predictions"]
+        cv_labels = arrays["cv_labels"]
+        all_preds = cv_preds
+        all_labels = cv_labels
+        if "test_predictions" in arrays:
+            all_preds = np.concatenate([cv_preds, arrays["test_predictions"]])
+            all_labels = np.concatenate([cv_labels, arrays["test_labels"]])
+        print(f"Loaded {len(cv_preds)} CV + {len(all_preds) - len(cv_preds)} test predictions")
+        recommended = thresholds.compute_precision_recommendations(all_preds, all_labels)
+        print(f"Recommended thresholds: {recommended}")
+        # Update evaluation.json
+        eval_path = Path(args.output) / "evaluation.json"
+        if eval_path.exists():
+            eval_data = json.load(open(eval_path))
+            eval_data["recommended_thresholds"] = recommended
+            with open(eval_path, "w") as f:
+                json.dump(eval_data, f, indent=2)
+            print(f"Updated {eval_path}")
+        thresholds.print_recommendations(all_preds, all_labels, title="FULL DB")
     elif args.command == "fixture":
         cmd_fixture(args)
     elif args.command == "traits":
