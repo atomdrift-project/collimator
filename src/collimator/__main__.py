@@ -181,7 +181,7 @@ def cmd_train(args: argparse.Namespace) -> None:
     # are real. This replaces the older FPR-based recommendation
     # (compute_recommendations) which was too conservative for the v16
     # model — see PRECISION_RECOMMENDATIONS in thresholds.py.
-    recommended = thresholds.compute_precision_recommendations(result.cv_predictions, result.cv_labels) \
+    recommended = thresholds.compute_recall_fpr_recommendations(result.cv_predictions, result.cv_labels) \
         if len(result.cv_predictions) > 0 else {}
 
     export.save_evaluation(
@@ -1149,7 +1149,7 @@ def main() -> None:
             all_preds = np.concatenate([cv_preds, arrays["test_predictions"]])
             all_labels = np.concatenate([cv_labels, arrays["test_labels"]])
         print(f"Loaded {len(cv_preds)} CV + {len(all_preds) - len(cv_preds)} test predictions")
-        recommended = thresholds.compute_precision_recommendations(all_preds, all_labels)
+        recommended = thresholds.compute_fpr_recommendations(all_preds, all_labels)
         print(f"Recommended thresholds: {recommended}")
         # Update evaluation.json
         eval_path = Path(args.output) / "evaluation.json"

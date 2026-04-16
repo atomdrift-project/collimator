@@ -26,12 +26,7 @@ MIN_SAMPLES_FOR_FPR = 5
 
 # (label, min precision): lowest threshold (highest recall) where precision
 # (TP / (TP+FP)) on the test set meets or exceeds the floor.
-# Used by `compute_precision_recommendations` (the default since v16).
-# Intuition: "of all things flagged at this threshold, X% are real malware".
-#   suspicious: "unusual, take a look" — 1 wrong flag per 200
-#   hostile:    "must look NOW"        — 1 wrong flag per 2000
-# These floors are set to be statistically measurable with ~70K benign
-# samples. As the benign pool grows, they can be tightened.
+# Used by `compute_precision_recommendations` (legacy, not the default).
 PRECISION_RECOMMENDATIONS = [
     ("suspicious", 0.995),
     ("hostile",    0.9995),
@@ -40,6 +35,26 @@ PRECISION_RECOMMENDATIONS = [
 # Minimum number of flagged samples required before a precision number is
 # trustworthy. Avoids picking a threshold based on 1-2 samples.
 MIN_FLAGGED_FOR_PRECISION = 50
+
+# Recall-floor + aspirational FPR targets.
+# Used by `compute_recall_fpr_recommendations` (the default since v16).
+#
+# Each entry: (label, min_recall, aspirational_fpr_per_million)
+#   - Always guarantees at least min_recall.
+#   - If the benign pool is large enough to measure the FPR target,
+#     tightens the threshold to meet it (as long as recall stays above floor).
+#   - As data grows, thresholds naturally tighten toward the FPR target.
+#
+# Intuition:
+#   suspicious: "unusual, take a look" — catch ≥95% of malware
+#   hostile:    "must look NOW"        — catch ≥80%, very few false alarms
+RECALL_FPR_RECOMMENDATIONS = [
+    ("suspicious", 0.95, 500),   # ≥95% recall, aspirational ≤500 FP/1M
+    ("hostile",    0.80, 100),   # ≥80% recall, aspirational ≤100 FP/1M
+]
+
+# Minimum expected FP to trust an FPR measurement.
+MIN_EXPECTED_FP_FOR_FPR = 5
 
 
 def show_thresholds(
@@ -195,6 +210,120 @@ def compute_precision_recommendations(
             # Thresholds descending → last valid = lowest threshold = highest recall.
             k = int(np.where(valid)[0][-1])
             result[level] = float(thresholds[k])
+        else:
+            result[level] = None
+    return result
+
+
+def compute_recall_fpr_recommendations(
+    probs: np.ndarray,
+    y: np.ndarray,
+) -> dict[str, float | None]:
+    """Compute recommended thresholds using recall floors + aspirational FPR.
+
+    For each level:
+    1. Find the highest threshold achieving ≥min_recall (guarantees recall).
+    2. If we have enough benign data, try to tighten to meet the FPR target
+       — but never drop recall below the floor.
+    3. Return the tighter of the two (higher threshold = fewer FP).
+
+    This auto-scales: with more benign data the FPR target becomes
+    measurable and thresholds tighten. With little data, recall floor
+    governs.
+    """
+    thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, n_malware, n_benign = (
+        _threshold_stats(probs, y)
+    )
+    fpm = fpr_vals * 1_000_000
+
+    result: dict[str, float | None] = {}
+    for level, min_recall, target_fpm in RECALL_FPR_RECOMMENDATIONS:
+        # Step 1: recall-floor threshold (always available).
+        recall_valid = recall_vals >= min_recall
+        if not recall_valid.any():
+            log.warning("%s: cannot achieve %.0f%% recall", level, min_recall * 100)
+            result[level] = None
+            continue
+        # Last valid index = lowest threshold meeting recall floor.
+        recall_idx = int(np.where(recall_valid)[0][-1])
+        recall_threshold = float(thresholds[recall_idx])
+
+        # Step 2: FPR-target threshold (if measurable).
+        expected_fp = n_benign * target_fpm / 1_000_000
+        fpr_threshold = None
+        if expected_fp >= MIN_EXPECTED_FP_FOR_FPR:
+            fpr_valid = (fpm <= target_fpm) & (recall_vals >= min_recall)
+            if fpr_valid.any():
+                fpr_idx = int(np.where(fpr_valid)[0][-1])
+                fpr_threshold = float(thresholds[fpr_idx])
+
+        # Pick the tighter threshold (higher = fewer FP).
+        if fpr_threshold is not None and fpr_threshold > recall_threshold:
+            chosen = fpr_threshold
+            source = "FPR"
+        else:
+            chosen = recall_threshold
+            source = "recall"
+
+        result[level] = chosen
+
+        # Log the choice.
+        idx = int(np.searchsorted(-thresholds, -chosen))
+        idx = min(idx, len(thresholds) - 1)
+        log.info(
+            "%s: threshold=%.4f (from %s floor) recall=%.2f%% FPR=%d/1M (%d FP)",
+            level, chosen, source,
+            float(recall_vals[idx] * 100),
+            int(fpm[idx]),
+            int(fp_vals[idx]),
+        )
+
+    return result
+
+
+def compute_fpr_recommendations(
+    probs: np.ndarray,
+    y: np.ndarray,
+) -> dict[str, float | None]:
+    """Compute recommended thresholds based on FPR ceilings.
+
+    For each level (suspicious/hostile), picks the lowest threshold
+    (highest recall) where FP-per-million-benign stays at or below
+    the target. This directly controls the false alarm rate.
+
+    The FPR targets in FPR_RECOMMENDATIONS scale naturally: as the
+    benign pool grows, finer FPR granularity becomes measurable and
+    the thresholds tighten automatically.
+    """
+    thresholds, tp_vals, fp_vals, _correct, _recall_vals, fpr_vals, _n, _nm, n_benign = (
+        _threshold_stats(probs, y)
+    )
+    # Convert FPR to FP-per-million for comparison with targets.
+    fpm = fpr_vals * 1_000_000
+
+    result: dict[str, float | None] = {}
+    for level, max_fpm in FPR_RECOMMENDATIONS:
+        # Check if we have enough benign samples to measure this FPR.
+        min_benign = int(MIN_BENIGN_FOR_FPR / (max_fpm / 1_000_000))
+        if n_benign < min_benign:
+            log.warning(
+                "%s: need ≥%d benign to measure ≤%d FP/1M (have %d)",
+                level, min_benign, max_fpm, n_benign,
+            )
+            result[level] = None
+            continue
+
+        valid = fpm <= max_fpm
+        if valid.any():
+            # Thresholds descending → last valid = lowest threshold = highest recall.
+            k = int(np.where(valid)[0][-1])
+            result[level] = float(thresholds[k])
+            log.info(
+                "%s: threshold=%.4f recall=%.2f%% FPR=%.4f%% (%d FP/1M)",
+                level, thresholds[k],
+                float(tp_vals[k] / max(tp_vals[k] + (_n - tp_vals[k] - fp_vals[k] - (n_benign - fp_vals[k])), 1) * 100),
+                float(fpr_vals[k] * 100), int(fpm[k]),
+            )
         else:
             result[level] = None
     return result
