@@ -184,16 +184,6 @@ def cmd_train(args: argparse.Namespace) -> None:
     recommended = thresholds.compute_precision_recommendations(result.cv_predictions, result.cv_labels) \
         if len(result.cv_predictions) > 0 else {}
 
-    # Save CV predictions + test predictions for threshold recomputation
-    # without retraining. ~2MB compressed for 180K samples.
-    if len(result.cv_predictions) > 0:
-        cv_data = {"cv_predictions": result.cv_predictions, "cv_labels": result.cv_labels}
-        if test_probs is not None:
-            cv_data["test_predictions"] = test_probs
-            cv_data["test_labels"] = y_test
-        np.savez_compressed(out_dir / "cv_predictions.npz", **cv_data)
-        log.info("saved CV predictions to %s", out_dir / "cv_predictions.npz")
-
     export.save_evaluation(
         metrics=result.metrics,
         calibration=result.calibration,
@@ -275,6 +265,16 @@ def cmd_train(args: argparse.Namespace) -> None:
         else:
             test_probs = test_probs_raw
         _print_test_block(test_probs, y_test, result.optimal_threshold)
+
+    # Save CV predictions + test predictions for threshold recomputation
+    # without retraining. ~2MB compressed for 180K samples.
+    if len(result.cv_predictions) > 0:
+        cv_data = {"cv_predictions": result.cv_predictions, "cv_labels": result.cv_labels}
+        if test_probs is not None:
+            cv_data["test_predictions"] = test_probs
+            cv_data["test_labels"] = y_test
+        np.savez_compressed(out_dir / "cv_predictions.npz", **cv_data)
+        log.info("saved CV predictions to %s", out_dir / "cv_predictions.npz")
 
     # Validate ONNX (100 samples).
     if not export.validate_onnx(
