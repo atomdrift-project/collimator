@@ -191,6 +191,10 @@ class FeatureConfig:
     trigram_max_benign_frac: float   # max benign fraction for trigram inclusion
     include_attack_features: bool    # ATT&CK technique/tactic features from 'a' field
     include_confidence_weighted_ngrams: bool  # weight bigrams/trigrams by confidence
+    # Targeted n-gram variants for catching low-density malware patterns.
+    include_objective_trigrams: bool  # trigrams from objectives/* and well-known/* paths only
+    include_suspicious_trigrams: bool # trigrams from suspicious+ (crit>=4) findings only
+    include_attack_ngrams: bool      # bigrams/trigrams from ATT&CK T-codes
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
     exp_confidence_skew: bool        # 3: finding confidence distribution skew
@@ -304,6 +308,15 @@ def feature_config_from_env() -> FeatureConfig:
             "1", "true", "yes", "on",
         },
         include_confidence_weighted_ngrams=os.getenv("COLLIMATOR_CONFIDENCE_WEIGHTED_NGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        include_objective_trigrams=os.getenv("COLLIMATOR_OBJECTIVE_TRIGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        include_suspicious_trigrams=os.getenv("COLLIMATOR_SUSPICIOUS_TRIGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        include_attack_ngrams=os.getenv("COLLIMATOR_ATTACK_NGRAMS") in {
             "1", "true", "yes", "on",
         },
         bigram_max=int(os.getenv("COLLIMATOR_BIGRAM_MAX", "5000")),
@@ -619,6 +632,22 @@ def _build_feature_names(
                 "agg:attack_tactic_count",       # distinct tactic prefixes (T1xxx → tactic)
                 "agg:mbc_behavior_count",        # distinct MBC B-codes
                 "agg:has_attack_and_objective",   # has T-codes AND objectives/* findings
+            ])
+        if config.include_objective_trigrams:
+            feature_names.extend([
+                "agg:objective_trigram_count",    # distinct 3-way objective path combos
+                "agg:objective_bigram_count",     # distinct 2-way objective path combos
+            ])
+        if config.include_suspicious_trigrams:
+            feature_names.extend([
+                "agg:suspicious_trigram_count",   # distinct 3-way combos from crit>=4 findings
+                "agg:suspicious_bigram_count",    # distinct 2-way combos from crit>=4 findings
+            ])
+        if config.include_attack_ngrams:
+            feature_names.extend([
+                "agg:attack_bigram_count",        # distinct ATT&CK T-code pairs
+                "agg:attack_trigram_count",        # distinct ATT&CK T-code triples
+                "agg:mbc_bigram_count",           # distinct MBC code pairs
             ])
 
     # Group 4: Third-Party / Well-Known Summary (6).
@@ -1664,6 +1693,56 @@ def _apply_experimental_features(
         _assign(vec, lookup.get("agg:has_attack_and_objective"),
                 1.0 if attack_techniques and has_objectives else 0.0)
 
+    # Objective-only trigrams: combinations of objectives/* and well-known/* paths.
+    # These capture attack-intent patterns regardless of criticality level.
+    if config.include_objective_trigrams:
+        obj_paths: set[str] = set()
+        for path in summary.sample_paths:
+            if path.startswith(("objectives/", "well-known/")):
+                obj_paths.add(path)
+        obj_sorted = sorted(obj_paths)
+        n_obj_bi = 0
+        n_obj_tri = 0
+        for i in range(len(obj_sorted)):
+            for j in range(i + 1, len(obj_sorted)):
+                n_obj_bi += 1
+                for k in range(j + 1, min(len(obj_sorted), j + 20)):  # cap to avoid O(n^3) explosion
+                    n_obj_tri += 1
+        _assign(vec, lookup.get("agg:objective_bigram_count"), math.log1p(n_obj_bi))
+        _assign(vec, lookup.get("agg:objective_trigram_count"), math.log1p(n_obj_tri))
+
+    # Suspicious+ trigrams: combinations from only suspicious/hostile findings.
+    if config.include_suspicious_trigrams:
+        sus_paths = sorted({
+            path for path, max_ord in summary.sample_paths.items()
+            if max_ord >= 4
+        })
+        n_sus_bi = 0
+        n_sus_tri = 0
+        for i in range(len(sus_paths)):
+            for j in range(i + 1, len(sus_paths)):
+                n_sus_bi += 1
+                for k in range(j + 1, min(len(sus_paths), j + 20)):
+                    n_sus_tri += 1
+        _assign(vec, lookup.get("agg:suspicious_bigram_count"), math.log1p(n_sus_bi))
+        _assign(vec, lookup.get("agg:suspicious_trigram_count"), math.log1p(n_sus_tri))
+
+    # ATT&CK/MBC n-grams: co-occurring ATT&CK techniques and MBC behaviors.
+    if config.include_attack_ngrams and attack_techniques:
+        sorted_attacks = sorted(attack_techniques)
+        n_atk_bi = 0
+        n_atk_tri = 0
+        for i in range(len(sorted_attacks)):
+            for j in range(i + 1, len(sorted_attacks)):
+                n_atk_bi += 1
+                for k in range(j + 1, len(sorted_attacks)):
+                    n_atk_tri += 1
+        _assign(vec, lookup.get("agg:attack_bigram_count"), math.log1p(n_atk_bi))
+        _assign(vec, lookup.get("agg:attack_trigram_count"), math.log1p(n_atk_tri))
+        sorted_mbc = sorted(mbc_behaviors)
+        n_mbc_bi = sum(1 for i in range(len(sorted_mbc)) for j in range(i + 1, len(sorted_mbc)))
+        _assign(vec, lookup.get("agg:mbc_bigram_count"), math.log1p(n_mbc_bi))
+
 
 def _apply_external_signal_features(
     summary: _FindingSummary,
@@ -2345,8 +2424,10 @@ def _extract_into(
     if "neg_space" in config.enabled_groups:
         _apply_neg_space_features(files, summary.sample_paths, ctx, vec)
 
-    # Experimental feature batch + ATT&CK features.
+    # Experimental feature batch + ATT&CK + targeted n-grams.
     if any((config.include_attack_features,
+            config.include_objective_trigrams, config.include_suspicious_trigrams,
+            config.include_attack_ngrams,
             config.exp_import_categories, config.exp_suspicious_api_combo,
             config.exp_confidence_skew, config.exp_finding_depth_var,
             config.exp_multifile_crit_spread, config.exp_metric_anomaly,
