@@ -233,6 +233,10 @@ class FeatureConfig:
     # Tokens: h:=hostile, s:=suspicious, n:=notable, top-level category.
     # Small stable vocabulary discovered from training data.
     include_crit_category_ngrams: bool
+    # Vocab-based ATT&CK technique and MBC behavior n-grams.
+    # Builds bigram/trigram vocabs from T-codes and MBC B-codes
+    # discovered in training data.
+    include_attack_code_ngrams: bool
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
     exp_confidence_skew: bool        # 3: finding confidence distribution skew
@@ -360,6 +364,9 @@ def feature_config_from_env() -> FeatureConfig:
         include_crit_category_ngrams=os.getenv("COLLIMATOR_CRIT_CATEGORY_NGRAMS") in {
             "1", "true", "yes", "on",
         },
+        include_attack_code_ngrams=os.getenv("COLLIMATOR_ATTACK_CODE_NGRAMS") in {
+            "1", "true", "yes", "on",
+        },
         bigram_max=int(os.getenv("COLLIMATOR_BIGRAM_MAX", "5000")),
         bigram_min_freq=int(os.getenv("COLLIMATOR_BIGRAM_MIN_FREQ", "1000")),
         trigram_max=int(os.getenv("COLLIMATOR_TRIGRAM_MAX", "500")),
@@ -443,6 +450,10 @@ class FeatureSpec:
     crit_unigram_vocab: list[str] = field(default_factory=list)
     crit_bigram_vocab: list[str] = field(default_factory=list)
     crit_trigram_vocab: list[str] = field(default_factory=list)
+    attack_bigram_vocab: list[str] = field(default_factory=list)
+    attack_trigram_vocab: list[str] = field(default_factory=list)
+    mbc_bigram_vocab: list[str] = field(default_factory=list)
+    mbc_trigram_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
     total_features: int = 0
     feature_means: list[float] | None = None
@@ -468,6 +479,10 @@ class FeatureSpec:
             "crit_unigram_vocab": self.crit_unigram_vocab,
             "crit_bigram_vocab": self.crit_bigram_vocab,
             "crit_trigram_vocab": self.crit_trigram_vocab,
+            "attack_bigram_vocab": self.attack_bigram_vocab,
+            "attack_trigram_vocab": self.attack_trigram_vocab,
+            "mbc_bigram_vocab": self.mbc_bigram_vocab,
+            "mbc_trigram_vocab": self.mbc_trigram_vocab,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -507,6 +522,10 @@ class FeatureSpec:
             crit_unigram_vocab=data.get("crit_unigram_vocab", []),
             crit_bigram_vocab=data.get("crit_bigram_vocab", []),
             crit_trigram_vocab=data.get("crit_trigram_vocab", []),
+            attack_bigram_vocab=data.get("attack_bigram_vocab", []),
+            attack_trigram_vocab=data.get("attack_trigram_vocab", []),
+            mbc_bigram_vocab=data.get("mbc_bigram_vocab", []),
+            mbc_trigram_vocab=data.get("mbc_trigram_vocab", []),
             feature_names=data["feature_names"],
             total_features=data["total_features"],
             feature_means=data.get("feature_means"),
@@ -550,6 +569,10 @@ def _build_feature_names(
     crit_unigram_vocab: list[str] | None = None,
     crit_bigram_vocab: list[str] | None = None,
     crit_trigram_vocab: list[str] | None = None,
+    attack_bigram_vocab: list[str] | None = None,
+    attack_trigram_vocab: list[str] | None = None,
+    mbc_bigram_vocab: list[str] | None = None,
+    mbc_trigram_vocab: list[str] | None = None,
 ) -> list[str]:
     """Generate the full ordered list of feature names for a given vocabulary."""
     config = feature_config_from_env()
@@ -709,6 +732,15 @@ def _build_feature_names(
                 feature_names.append(f"critbi:{cb}")
             for ct in (crit_trigram_vocab or []):
                 feature_names.append(f"crittri:{ct}")
+        if config.include_attack_code_ngrams:
+            for ab in (attack_bigram_vocab or []):
+                feature_names.append(f"atkbi:{ab}")
+            for at in (attack_trigram_vocab or []):
+                feature_names.append(f"atktri:{at}")
+            for mb in (mbc_bigram_vocab or []):
+                feature_names.append(f"mbcbi:{mb}")
+            for mt in (mbc_trigram_vocab or []):
+                feature_names.append(f"mbctri:{mt}")
 
     # Group 4: Third-Party / Well-Known Summary (6).
     if "ext" in config.enabled_groups:
@@ -2495,6 +2527,34 @@ def _extract_into(
             config.exp_hostile_objective_div, config.exp_import_finding_ratio)):
         _apply_experimental_features(report, summary, files, metrics, ctx, vec, score)
 
+    # ATT&CK/MBC code n-grams: vocab-based features from T-codes and MBC B-codes.
+    if config.include_attack_code_ngrams:
+        atk_codes: set[str] = set()
+        mbc_codes: set[str] = set()
+        for file_entry in files:
+            for finding in file_entry.get("ts") or []:
+                a = finding.get("a")
+                if a:
+                    atk_codes.add(a)
+                m = finding.get("m")
+                if m:
+                    mbc_codes.add(m)
+        lookup = ctx.absolute_lookup
+        sorted_a = sorted(atk_codes)
+        for i, a1 in enumerate(sorted_a):
+            for j in range(i + 1, len(sorted_a)):
+                a2 = sorted_a[j]
+                _assign(vec, lookup.get(f"atkbi:{a1} + {a2}"), 1.0)
+                for a3 in sorted_a[j + 1:]:
+                    _assign(vec, lookup.get(f"atktri:{a1} + {a2} + {a3}"), 1.0)
+        sorted_m = sorted(mbc_codes)
+        for i, m1 in enumerate(sorted_m):
+            for j in range(i + 1, len(sorted_m)):
+                m2 = sorted_m[j]
+                _assign(vec, lookup.get(f"mbcbi:{m1} + {m2}"), 1.0)
+                for m3 in sorted_m[j + 1:]:
+                    _assign(vec, lookup.get(f"mbctri:{m1} + {m2} + {m3}"), 1.0)
+
     # Crit-category n-grams: vocab-based features from crit:category tokens.
     if config.include_crit_category_ngrams:
         tokens = _crit_category_tokens(summary.sample_paths)
@@ -3228,10 +3288,92 @@ def build_vocab_from_db(
             len(crit_unigram_vocab), len(crit_bigram_vocab), len(crit_trigram_vocab), n_scan,
         )
 
+    # ATT&CK/MBC code n-gram vocabulary: bigrams/trigrams from T-codes and MBC B-codes.
+    attack_bigram_vocab: list[str] = []
+    attack_trigram_vocab: list[str] = []
+    mbc_bigram_vocab: list[str] = []
+    mbc_trigram_vocab: list[str] = []
+    if config.include_attack_code_ngrams:
+        from . import data as _data  # noqa: PLC0415
+        atk_bi_counts: dict[str, int] = {}
+        atk_tri_counts: dict[str, int] = {}
+        mbc_bi_counts: dict[str, int] = {}
+        mbc_tri_counts: dict[str, int] = {}
+        atk_bi_benign: dict[str, int] = {}
+        mbc_bi_benign: dict[str, int] = {}
+        scan_ids_labels = row_ids_labels[:5000]
+        benign_scan = {rid for rid, label in scan_ids_labels if label == 0}
+        for start in range(0, len(scan_ids_labels), 500):
+            chunk_ids = [rid for rid, _l in scan_ids_labels[start:start + 500]]
+            for rid, item in _data.fetch_cleave_results(db_path, chunk_ids).items():
+                report = _coerce_report(item["cleave_result"])
+                if report is None:
+                    continue
+                is_benign = rid in benign_scan
+                attacks: set[str] = set()
+                mbcs: set[str] = set()
+                for fe in report_files(report):
+                    for finding in fe.get("ts") or []:
+                        a = finding.get("a")
+                        if a:
+                            attacks.add(a)
+                        m = finding.get("m")
+                        if m:
+                            mbcs.add(m)
+                # ATT&CK bigrams/trigrams
+                sorted_a = sorted(attacks)
+                for i, a1 in enumerate(sorted_a):
+                    for j in range(i + 1, len(sorted_a)):
+                        a2 = sorted_a[j]
+                        bi = f"{a1} + {a2}"
+                        atk_bi_counts[bi] = atk_bi_counts.get(bi, 0) + 1
+                        if is_benign:
+                            atk_bi_benign[bi] = atk_bi_benign.get(bi, 0) + 1
+                        for a3 in sorted_a[j + 1:]:
+                            tri = f"{a1} + {a2} + {a3}"
+                            atk_tri_counts[tri] = atk_tri_counts.get(tri, 0) + 1
+                # MBC bigrams/trigrams
+                sorted_m = sorted(mbcs)
+                for i, m1 in enumerate(sorted_m):
+                    for j in range(i + 1, len(sorted_m)):
+                        m2 = sorted_m[j]
+                        bi = f"{m1} + {m2}"
+                        mbc_bi_counts[bi] = mbc_bi_counts.get(bi, 0) + 1
+                        if is_benign:
+                            mbc_bi_benign[bi] = mbc_bi_benign.get(bi, 0) + 1
+                        for m3 in sorted_m[j + 1:]:
+                            tri = f"{m1} + {m2} + {m3}"
+                            mbc_tri_counts[tri] = mbc_tri_counts.get(tri, 0) + 1
+
+        n_benign_scan = len(benign_scan)
+        benign_ceil = int(0.01 * n_benign_scan)
+        attack_bigram_vocab = sorted(
+            k for k, c in sorted(atk_bi_counts.items(), key=lambda x: -x[1])[:500]
+            if c >= 5 and atk_bi_benign.get(k, 0) <= benign_ceil
+        )
+        attack_trigram_vocab = sorted(
+            k for k, c in sorted(atk_tri_counts.items(), key=lambda x: -x[1])[:500]
+            if c >= 3
+        )
+        mbc_bigram_vocab = sorted(
+            k for k, c in sorted(mbc_bi_counts.items(), key=lambda x: -x[1])[:500]
+            if c >= 5 and mbc_bi_benign.get(k, 0) <= benign_ceil
+        )
+        mbc_trigram_vocab = sorted(
+            k for k, c in sorted(mbc_tri_counts.items(), key=lambda x: -x[1])[:500]
+            if c >= 3
+        )
+        log.info(
+            "ATT&CK/MBC n-grams: %d/%d atk bi/tri, %d/%d mbc bi/tri from %d scanned rows",
+            len(attack_bigram_vocab), len(attack_trigram_vocab),
+            len(mbc_bigram_vocab), len(mbc_trigram_vocab), len(scan_ids_labels),
+        )
+
     feature_names = _build_feature_names(
         presence_vocab, filetype_vocab, element_vocab, bigram_vocab,
         ghost_vocab, skeleton_vocab, rare_element_vocab, trigram_vocab,
         metric_vocab, crit_unigram_vocab, crit_bigram_vocab, crit_trigram_vocab,
+        attack_bigram_vocab, attack_trigram_vocab, mbc_bigram_vocab, mbc_trigram_vocab,
     )
 
     spec = FeatureSpec(
@@ -3247,6 +3389,10 @@ def build_vocab_from_db(
         crit_unigram_vocab=crit_unigram_vocab,
         crit_bigram_vocab=crit_bigram_vocab,
         crit_trigram_vocab=crit_trigram_vocab,
+        attack_bigram_vocab=attack_bigram_vocab,
+        attack_trigram_vocab=attack_trigram_vocab,
+        mbc_bigram_vocab=mbc_bigram_vocab,
+        mbc_trigram_vocab=mbc_trigram_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
     )

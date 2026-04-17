@@ -147,6 +147,7 @@ train: venv check-db
 	COLLIMATOR_EXTENDED_METRICS=1 \
 	COLLIMATOR_ATTACK_FEATURES=1 \
 	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
+	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
 	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
 	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
 
@@ -244,6 +245,7 @@ experiment: venv check-db
 	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
 	COLLIMATOR_EXTENDED_METRICS=$(EXP_EXTENDED_METRICS) \
 	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
+	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --workers $(EXP_WORKERS) --seed $(SEED) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
