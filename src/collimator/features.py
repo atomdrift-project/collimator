@@ -102,6 +102,39 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
 # Metric keys where log1p should be applied (counts, sizes, lengths).
 _LOG_METRIC_WORDS = frozenset({"count", "size", "total", "bytes", "length"})
 
+_CRIT_PREFIX = {3: "n", 4: "s", 5: "h"}  # notable, suspicious, hostile
+
+# Top-level categories included in crit-category n-grams.
+# objectives/* and well-known/* are attack-intent categories.
+# Others (micro-behaviors, metadata) can be added but may add noise.
+_CRIT_NGRAM_CATEGORIES = frozenset({
+    "objectives", "well-known", "supply-chain",
+    "anti-analysis", "anti-static", "command-and-control",
+    "evasion", "execution", "exfiltration",
+})
+
+
+def _crit_category_tokens(sample_paths: dict[str, int]) -> list[str]:
+    """Generate sorted crit:category tokens from sample_paths.
+
+    Uses 2nd-level path (e.g., objectives/anti-analysis → objectives/anti-analysis)
+    prefixed with max criticality: h:objectives/evasion, s:objectives/c2.
+    Only includes paths under attack-relevant top-level categories.
+    """
+    path_max_crit: dict[str, int] = {}
+    for path, max_ord in sample_paths.items():
+        if max_ord < 3:
+            continue
+        parts = path.split("/")
+        top = parts[0]
+        if top not in _CRIT_NGRAM_CATEGORIES:
+            continue
+        # Use 2nd-level for specificity: objectives/anti-analysis, not just objectives
+        key = "/".join(parts[:2]) if len(parts) >= 2 else top
+        if max_ord > path_max_crit.get(key, 0):
+            path_max_crit[key] = max_ord
+    return sorted(f"{_CRIT_PREFIX.get(crit, 'n')}:{key}" for key, crit in path_max_crit.items())
+
 LOGIC_GAPS = {
     # Behavior Category -> (List of imports that imply it, List of trait paths that represent it)
     "network": (
@@ -192,9 +225,14 @@ class FeatureConfig:
     include_attack_features: bool    # ATT&CK technique/tactic features from 'a' field
     include_confidence_weighted_ngrams: bool  # weight bigrams/trigrams by confidence
     # Targeted n-gram variants for catching low-density malware patterns.
-    include_objective_trigrams: bool  # trigrams from objectives/* and well-known/* paths only
-    include_suspicious_trigrams: bool # trigrams from suspicious+ (crit>=4) findings only
-    include_attack_ngrams: bool      # bigrams/trigrams from ATT&CK T-codes
+    include_objective_trigrams: bool  # count-based objective path combos (deprecated)
+    include_suspicious_trigrams: bool # count-based suspicious+ combos (deprecated)
+    include_attack_ngrams: bool      # count-based ATT&CK code combos (deprecated)
+    # Crit-category n-grams: vocab-based bigrams/trigrams from "crit:category"
+    # tokens. e.g., "s:anti-analysis + s:command-and-control + n:evasion".
+    # Tokens: h:=hostile, s:=suspicious, n:=notable, top-level category.
+    # Small stable vocabulary discovered from training data.
+    include_crit_category_ngrams: bool
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
     exp_confidence_skew: bool        # 3: finding confidence distribution skew
@@ -319,6 +357,9 @@ def feature_config_from_env() -> FeatureConfig:
         include_attack_ngrams=os.getenv("COLLIMATOR_ATTACK_NGRAMS") in {
             "1", "true", "yes", "on",
         },
+        include_crit_category_ngrams=os.getenv("COLLIMATOR_CRIT_CATEGORY_NGRAMS") in {
+            "1", "true", "yes", "on",
+        },
         bigram_max=int(os.getenv("COLLIMATOR_BIGRAM_MAX", "5000")),
         bigram_min_freq=int(os.getenv("COLLIMATOR_BIGRAM_MIN_FREQ", "1000")),
         trigram_max=int(os.getenv("COLLIMATOR_TRIGRAM_MAX", "500")),
@@ -399,6 +440,9 @@ class FeatureSpec:
     rare_element_vocab: list[str] = field(default_factory=list)
     trigram_vocab: list[str] = field(default_factory=list)
     metric_vocab: list[str] = field(default_factory=list)
+    crit_unigram_vocab: list[str] = field(default_factory=list)
+    crit_bigram_vocab: list[str] = field(default_factory=list)
+    crit_trigram_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
     total_features: int = 0
     feature_means: list[float] | None = None
@@ -421,6 +465,9 @@ class FeatureSpec:
             "rare_element_vocab": self.rare_element_vocab,
             "trigram_vocab": self.trigram_vocab,
             "metric_vocab": self.metric_vocab,
+            "crit_unigram_vocab": self.crit_unigram_vocab,
+            "crit_bigram_vocab": self.crit_bigram_vocab,
+            "crit_trigram_vocab": self.crit_trigram_vocab,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -457,6 +504,9 @@ class FeatureSpec:
             rare_element_vocab=data.get("rare_element_vocab", []),
             trigram_vocab=data.get("trigram_vocab", []),
             metric_vocab=data.get("metric_vocab", []),
+            crit_unigram_vocab=data.get("crit_unigram_vocab", []),
+            crit_bigram_vocab=data.get("crit_bigram_vocab", []),
+            crit_trigram_vocab=data.get("crit_trigram_vocab", []),
             feature_names=data["feature_names"],
             total_features=data["total_features"],
             feature_means=data.get("feature_means"),
@@ -497,6 +547,9 @@ def _build_feature_names(
     rare_element_vocab: list[str],
     trigram_vocab: list[str],
     metric_vocab: list[str] | None = None,
+    crit_unigram_vocab: list[str] | None = None,
+    crit_bigram_vocab: list[str] | None = None,
+    crit_trigram_vocab: list[str] | None = None,
 ) -> list[str]:
     """Generate the full ordered list of feature names for a given vocabulary."""
     config = feature_config_from_env()
@@ -649,6 +702,13 @@ def _build_feature_names(
                 "agg:attack_trigram_count",        # distinct ATT&CK T-code triples
                 "agg:mbc_bigram_count",           # distinct MBC code pairs
             ])
+        if config.include_crit_category_ngrams:
+            for cu in (crit_unigram_vocab or []):
+                feature_names.append(f"crit:{cu}")
+            for cb in (crit_bigram_vocab or []):
+                feature_names.append(f"critbi:{cb}")
+            for ct in (crit_trigram_vocab or []):
+                feature_names.append(f"crittri:{ct}")
 
     # Group 4: Third-Party / Well-Known Summary (6).
     if "ext" in config.enabled_groups:
@@ -2435,6 +2495,20 @@ def _extract_into(
             config.exp_hostile_objective_div, config.exp_import_finding_ratio)):
         _apply_experimental_features(report, summary, files, metrics, ctx, vec, score)
 
+    # Crit-category n-grams: vocab-based features from crit:category tokens.
+    if config.include_crit_category_ngrams:
+        tokens = _crit_category_tokens(summary.sample_paths)
+        lookup = ctx.absolute_lookup
+        for t in tokens:
+            _assign(vec, lookup.get(f"crit:{t}"), 1.0)
+        for i, t1 in enumerate(tokens):
+            for t2 in tokens[i + 1:]:
+                _assign(vec, lookup.get(f"critbi:{t1} + {t2}"), 1.0)
+            for j in range(i + 1, len(tokens)):
+                t2 = tokens[j]
+                for t3 in tokens[j + 1:]:
+                    _assign(vec, lookup.get(f"crittri:{t1} + {t2} + {t3}"), 1.0)
+
 
 # ---------------------------------------------------------------------------
 # Parallel worker functions (module-level for multiprocessing pickling)
@@ -3085,10 +3159,79 @@ def build_vocab_from_db(
         )
         log.info("extended metrics: %d keys from %d scanned rows", len(metric_vocab), len(scan_ids))
 
+    # Crit-category n-gram vocabulary: build from the same sample_paths
+    # already computed by the vocab workers (stored in presence_counts).
+    # Quick scan of training data to find common crit:category tokens.
+    crit_unigram_vocab: list[str] = []
+    crit_bigram_vocab: list[str] = []
+    crit_trigram_vocab: list[str] = []
+    if config.include_crit_category_ngrams:
+        from . import data as _data  # noqa: PLC0415
+        crit_uni_counts: dict[str, int] = {}
+        crit_bi_counts: dict[str, int] = {}
+        crit_tri_counts: dict[str, int] = {}
+        crit_bi_benign: dict[str, int] = {}
+        crit_tri_benign: dict[str, int] = {}
+        scan_ids_labels = row_ids_labels[:5000]
+        benign_scan_ids = {rid for rid, label in scan_ids_labels if label == 0}
+        for start in range(0, len(scan_ids_labels), 500):
+            chunk_ids = [rid for rid, _l in scan_ids_labels[start:start + 500]]
+            for rid, item in _data.fetch_cleave_results(db_path, chunk_ids).items():
+                report = _coerce_report(item["cleave_result"])
+                if report is None:
+                    continue
+                # Build sample_paths from all findings
+                sp: dict[str, int] = {}
+                for fe in report_files(report):
+                    for finding in fe.get("ts") or []:
+                        fid = finding.get("i", "")
+                        if not fid or _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
+                            continue
+                        for path in _finding_paths(fid):
+                            crit_ord = finding.get("l", 0)
+                            if crit_ord > sp.get(path, -1):
+                                sp[path] = crit_ord
+                tokens = _crit_category_tokens(sp)
+                is_benign = rid in benign_scan_ids
+                for t in tokens:
+                    crit_uni_counts[t] = crit_uni_counts.get(t, 0) + 1
+                for i, t1 in enumerate(tokens):
+                    for t2 in tokens[i + 1:]:
+                        bi = f"{t1} + {t2}"
+                        crit_bi_counts[bi] = crit_bi_counts.get(bi, 0) + 1
+                        if is_benign:
+                            crit_bi_benign[bi] = crit_bi_benign.get(bi, 0) + 1
+                    for j in range(i + 1, len(tokens)):
+                        t2 = tokens[j]
+                        for t3 in tokens[j + 1:]:
+                            tri = f"{t1} + {t2} + {t3}"
+                            crit_tri_counts[tri] = crit_tri_counts.get(tri, 0) + 1
+                            if is_benign:
+                                crit_tri_benign[tri] = crit_tri_benign.get(tri, 0) + 1
+
+        n_scan = len(scan_ids_labels)
+        benign_frac = 0.01  # allow ≤1% benign
+        n_benign_scan = len(benign_scan_ids)
+        benign_ceil = int(benign_frac * n_benign_scan)
+
+        crit_unigram_vocab = sorted(k for k, c in crit_uni_counts.items() if c >= 10)
+        crit_bigram_vocab = sorted(
+            k for k, c in sorted(crit_bi_counts.items(), key=lambda x: -x[1])[:500]
+            if c >= 5 and crit_bi_benign.get(k, 0) <= benign_ceil
+        )
+        crit_trigram_vocab = sorted(
+            k for k, c in sorted(crit_tri_counts.items(), key=lambda x: -x[1])[:500]
+            if c >= 3 and crit_tri_benign.get(k, 0) <= benign_ceil
+        )
+        log.info(
+            "crit-category n-grams: %d unigrams, %d bigrams, %d trigrams from %d scanned rows",
+            len(crit_unigram_vocab), len(crit_bigram_vocab), len(crit_trigram_vocab), n_scan,
+        )
+
     feature_names = _build_feature_names(
         presence_vocab, filetype_vocab, element_vocab, bigram_vocab,
         ghost_vocab, skeleton_vocab, rare_element_vocab, trigram_vocab,
-        metric_vocab,
+        metric_vocab, crit_unigram_vocab, crit_bigram_vocab, crit_trigram_vocab,
     )
 
     spec = FeatureSpec(
@@ -3101,6 +3244,9 @@ def build_vocab_from_db(
         rare_element_vocab=rare_element_vocab,
         trigram_vocab=trigram_vocab,
         metric_vocab=metric_vocab,
+        crit_unigram_vocab=crit_unigram_vocab,
+        crit_bigram_vocab=crit_bigram_vocab,
+        crit_trigram_vocab=crit_trigram_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
     )
