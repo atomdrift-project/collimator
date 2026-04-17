@@ -3210,9 +3210,11 @@ def build_vocab_from_db(
                             if isinstance(v, (int, float)):
                                 mk = f"{group}_{k}"
                                 metric_key_counts[mk] = metric_key_counts.get(mk, 0) + 1
-        # Keep keys appearing in ≥5% of scanned rows. Exclude keys already in KEY_METRICS.
+        # Keep keys appearing above a frequency threshold. Exclude keys already in KEY_METRICS.
+        # Default 5%; override via COLLIMATOR_METRIC_MIN_FREQ_PCT for experiments.
         base_keys = {f"{g}_{f}" for g, f, _ in KEY_METRICS}
-        threshold = max(len(scan_ids) * 0.05, 10)
+        metric_pct = float(os.getenv("COLLIMATOR_METRIC_MIN_FREQ_PCT", "5")) / 100
+        threshold = max(len(scan_ids) * metric_pct, 10)
         metric_vocab = sorted(
             k for k, c in metric_key_counts.items()
             if c >= threshold and k not in base_keys

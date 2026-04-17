@@ -78,6 +78,8 @@ def run_ablation(
     early_stopping_rounds: int | None = None,
     beta: float | None = None,
     n_folds: int | None = None,
+    train_samples: int = 0,
+    max_test_samples: int = 0,
 ) -> list[dict[str, object]]:
     """Train baseline and leave-one-group-out ablations on the same dataset.
 
@@ -85,6 +87,9 @@ def run_ablation(
     so we see how each group affects the user-visible operating point
     (not just in-CV F1). Hyperparameters default to the layered v16
     baseline if not overridden.
+
+    If train_samples > 0, reservoir-samples the training data to that size
+    (balanced malware/benign). If max_test_samples > 0, caps test data.
     """
     pinned_max_id = data.snapshot_max_id(db_path)
     _, train_ids_labels, test_ids_labels = data.partition_row_ids(
@@ -92,6 +97,21 @@ def run_ablation(
         min_malware_training_score=min_malware_training_score,
         max_id=pinned_max_id,
     )
+
+    # Subsample if requested.
+    if train_samples > 0 and len(train_ids_labels) > train_samples:
+        rng = np.random.default_rng(seed)
+        mal = [(rid, l) for rid, l in train_ids_labels if l == 1]
+        ben = [(rid, l) for rid, l in train_ids_labels if l == 0]
+        n_mal = min(train_samples // 2, len(mal))
+        n_ben = min(train_samples - n_mal, len(ben))
+        mal_idx = rng.choice(len(mal), n_mal, replace=False)
+        ben_idx = rng.choice(len(ben), n_ben, replace=False)
+        train_ids_labels = [mal[i] for i in mal_idx] + [ben[i] for i in ben_idx]
+    if max_test_samples > 0 and len(test_ids_labels) > max_test_samples:
+        rng = np.random.default_rng(seed + 1)
+        idx = rng.choice(len(test_ids_labels), max_test_samples, replace=False)
+        test_ids_labels = [test_ids_labels[i] for i in idx]
 
     spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=n_workers)
     X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(

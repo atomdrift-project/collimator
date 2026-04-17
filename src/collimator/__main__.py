@@ -1096,6 +1096,14 @@ def main() -> None:
         "--min-malware-score", type=int, default=0,
         help="Ignore malware samples with score below this threshold during training",
     )
+    p_ablate.add_argument(
+        "--train-samples", type=int, default=0,
+        help="Subsample training data to this size (0 = all, balanced malware/benign)",
+    )
+    p_ablate.add_argument(
+        "--max-test-samples", type=int, default=0,
+        help="Cap test data to this size (0 = all)",
+    )
     _add_workers_arg(p_ablate)
     _add_seed_arg(p_ablate)
 
@@ -1229,6 +1237,8 @@ def main() -> None:
             early_stopping_rounds=args.early_stopping_rounds,
             beta=args.beta,
             n_folds=args.n_folds,
+            train_samples=args.train_samples,
+            max_test_samples=args.max_test_samples,
         )
         ablation.print_ablation(rows)
         if args.output:

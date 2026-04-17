@@ -375,14 +375,16 @@ def train(
     # the model was trained that way — but for v13+ we skip it.
     if sp.issparse(X_tv):
         feature_means = np.asarray(X_tv.mean(axis=0), dtype=np.float32).ravel()
-        # Var = E[X^2] - E[X]^2, computed without densifying.
-        X_tv_sq = X_tv.copy()
-        X_tv_sq.data **= 2
+        # Var = E[X^2] - E[X]^2, computed without densifying or copying.
+        # Square just the data array (avoids copying the full sparse structure).
+        orig_data = X_tv.data.copy()  # save original values (~200MB vs 1.7GB full copy)
+        X_tv.data **= 2
         variance = (
-            np.asarray(X_tv_sq.mean(axis=0), dtype=np.float32).ravel()
+            np.asarray(X_tv.mean(axis=0), dtype=np.float32).ravel()
             - feature_means ** 2
         )
-        del X_tv_sq
+        X_tv.data[:] = orig_data  # restore
+        del orig_data
         feature_stds = np.sqrt(np.maximum(variance, 0)).astype(np.float32)
         del variance
     else:
