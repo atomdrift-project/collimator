@@ -107,6 +107,18 @@ ifndef DB
 	$(error DB is required. Usage: make train DB=postgres://hopper@localhost/hopper)
 endif
 
+# Fail if the newest sample is older than 24 hours (replication may be broken)
+check-db-fresh: check-db
+	@age_hours=$$(psql "$(DB)" -tAc \
+		"SELECT EXTRACT(EPOCH FROM now() - MAX(updated_at)) / 3600 FROM samples;") ; \
+	age_hours=$${age_hours%.*} ; \
+	if [ "$$age_hours" -gt 2 ] 2>/dev/null; then \
+		echo "ERROR: newest sample is $${age_hours}h old (>2h). Check logical replication status:" >&2 ; \
+		echo "  sudo -u postgres psql -d hopper -c \"SELECT * FROM pg_stat_subscription;\"" >&2 ; \
+		echo "  tail -20 /var/log/postgresql/postgresql-17-main.log" >&2 ; \
+		exit 1 ; \
+	fi
+
 venv: $(VENV_DIR)/bin/activate
 
 $(VENV_DIR)/bin/activate: requirements.txt
@@ -116,7 +128,7 @@ $(VENV_DIR)/bin/activate: requirements.txt
 	$(VENV_DIR)/bin/pip install -e .
 	touch $(VENV_DIR)/bin/activate
 
-train: venv check-db
+train: venv check-db-fresh
 	@mkdir -p $(LOG_DIR)
 	COLLIMATOR_ALLOWED_FEATURES_FILE= \
 	COLLIMATOR_SILENT_PACKER_SIGNAL=$(TRAIN_SILENT_PACKER_SIGNAL) \
