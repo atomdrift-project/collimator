@@ -148,6 +148,12 @@ python -m collimator evaluate --db postgres://hopper@localhost/hopper --model ou
 python -m collimator thresholds --db postgres://hopper@localhost/hopper --model out/model.json --spec out/feature_spec.json
 ```
 
+### Tune suspicious/hostile thresholds on the full corpus
+
+```bash
+python -m collimator tune-thresholds --db postgres://hopper@localhost/hopper --model out/model.json --spec out/feature_spec.json --workers 16
+```
+
 ### Run feature-group ablations
 
 ```bash
@@ -236,7 +242,7 @@ make explain    DB=...                 SHAP feature importance analysis
 make inspect    DB=... SAMPLE=<sha>    Inspect one sample
 make errors     DB=...                 Show top false positives/negatives
 make traits     DB=...                 Trait-level prevalence diagnostics
-make thresholds DB=...                 Show threshold tables
+make thresholds DB=...                 Tune suspicious/hostile thresholds on the full corpus
 make benchmark  DB=...                 Benchmark extraction/training/inference
 make ablate     DB=...                 Run feature-group ablations
 make demo-db                           Create a small synthetic demo database

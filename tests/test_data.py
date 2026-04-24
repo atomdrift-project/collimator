@@ -5,13 +5,14 @@ import sqlite3
 import tempfile
 from pathlib import Path
 
-from collimator.data import load_samples
+from collimator.data import load_samples, stream_labeled_samples_full
 
 
-def _create_test_db(samples: list[tuple[str, str, str | None]]) -> Path:
+def _create_test_db(samples: list[tuple[str, str, str | None] | dict[str, str | int | None]]) -> Path:
     """Create a temporary hopper-schema SQLite DB.
 
     Each tuple: (sha256, label, cleave_result)
+    Or dict with optional path/score/skip overrides.
     """
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = Path(tmp.name)
@@ -47,11 +48,23 @@ def _create_test_db(samples: list[tuple[str, str, str | None]]) -> Path:
             analyzed_at DATETIME
         )
     """)
-    for sha, label, cr in samples:
+    for entry in samples:
+        if isinstance(entry, dict):
+            sha = str(entry["sha256"])
+            label = str(entry["label"])
+            cr = entry["cleave_result"]
+            path = str(entry.get("path", ""))
+            score = int(entry.get("score", 10))
+            skip = str(entry.get("skip", ""))
+        else:
+            sha, label, cr = entry
+            path = ""
+            score = 10
+            skip = ""
         conn.execute(
-            "INSERT INTO samples (sha256, label, canonical_sha256, cleave_result)"
-            " VALUES (?, ?, ?, ?)",
-            (sha, label, sha, cr),
+            "INSERT INTO samples (sha256, label, canonical_sha256, cleave_result, path, score, skip)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (sha, label, sha, cr, path, score, skip),
         )
     conn.commit()
     conn.close()
@@ -119,3 +132,14 @@ def test_file_not_found() -> None:
     import pytest
     with pytest.raises(FileNotFoundError):
         load_samples(Path("/nonexistent/database.db"))
+
+
+def test_stream_labeled_samples_full_includes_low_score_and_applies_filters() -> None:
+    db = _create_test_db([
+        {"sha256": "aaa", "label": "good", "cleave_result": _minimal_report(), "path": "/repo/harvest/low.py", "score": 0},
+        {"sha256": "bbb", "label": "bad", "cleave_result": _minimal_report(), "path": "/repo/harvest/high.py", "score": 42},
+        {"sha256": "ccc", "label": "good", "cleave_result": _minimal_report(), "path": "/repo/other/x.py", "score": 7, "skip": "y"},
+    ])
+    samples = list(stream_labeled_samples_full(db, path_substr="harvest"))
+    assert [sample.sha256 for sample in samples] == ["aaa", "bbb"]
+    assert [sample.score for sample in samples] == [0, 42]

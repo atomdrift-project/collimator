@@ -2705,14 +2705,9 @@ def _extract_batch_worker(
 
 
 def _n_workers_default() -> int:
-    """Choose a conservative parallelism level for JSON-heavy feature work."""
+    """Choose the default parallelism level for feature extraction."""
     cpu_count = os.cpu_count() or 1
-    if cpu_count <= 2:
-        return 1
-    # JSON parsing + SQLite streaming hits diminishing returns quickly on this
-    # workload. Cap the auto setting lower to reduce IPC overhead and DB
-    # contention on larger hosts.
-    return min(max(cpu_count // 4, 2), 8)
+    return max(1, min(cpu_count, 16))
 
 
 def _feature_batch_size(n_workers: int) -> int:
@@ -2794,6 +2789,57 @@ def extract_all(
 ) -> tuple[sp.csr_matrix, np.ndarray]:
     """Extract feature vectors for all samples as a sparse CSR matrix."""
     return extract_stream(zip(reports, labels), spec, n_workers=n_workers)
+
+
+def extract_stream_batches(
+    report_labels: Iterable[tuple[dict[str, Any] | str, int]],
+    spec: FeatureSpec,
+    *,
+    n_workers: int = 0,
+    batch_size: int | None = None,
+) -> Iterator[tuple[sp.csr_matrix, np.ndarray]]:
+    """Yield extracted feature matrices batch-by-batch using one worker pool.
+
+    This is the high-throughput path for large inference jobs: it reuses a
+    single ProcessPoolExecutor across the full stream instead of rebuilding the
+    pool for each caller-defined scoring batch.
+    """
+    nw = resolve_worker_count(n_workers)
+    eff_batch_size = batch_size if batch_size is not None and batch_size > 0 else _feature_batch_size(nw)
+    batch_iter = (
+        (0, batch, spec)
+        for _offset, batch in _enumerate_batches(report_labels, eff_batch_size)
+    )
+
+    def _to_matrix(
+        result: tuple[list[int], list[int], list[float], list[int]],
+    ) -> tuple[sp.csr_matrix, np.ndarray]:
+        rows, cols, vals, labels = result
+        n = len(labels)
+        y = np.array(labels, dtype=np.float32)
+        X = sp.csr_matrix(
+            (np.array(vals, dtype=np.float32),
+             (np.array(rows, dtype=np.int32), np.array(cols, dtype=np.int32))),
+            shape=(n, spec.total_features),
+        )
+        log.info(
+            "extracted %d samples x %d features (nnz=%d, density=%.1f%%)",
+            n, spec.total_features, X.nnz,
+            100.0 * X.nnz / max(n * spec.total_features, 1),
+        )
+        return X, y
+
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            for result in _bounded_iter(pool, _extract_batch_worker, batch_iter, max_inflight=2 * nw):
+                yield _to_matrix(result)
+        return
+
+    for args in batch_iter:
+        yield _to_matrix(_extract_batch_worker(args))
 
 
 def extract_stream(

@@ -10,7 +10,7 @@ SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
 DEMO_DB ?= out/demo.db
-WORKERS ?= 8
+WORKERS ?= 16
 EXP_WORKERS ?= 8
 SEED ?= 42
 EXP_TRAIN_SAMPLES ?= 120000
@@ -213,10 +213,11 @@ traits: venv check-db
 	$(PYTHON) -m collimator traits --db $(DB)
 
 thresholds: venv check-db
-	$(PYTHON) -m collimator thresholds --db $(DB) \
+	$(PYTHON) -u -m collimator tune-thresholds --db $(DB) \
+		--model $(OUT_DIR)/model.json \
+		--spec $(OUT_DIR)/feature_spec.json \
 		--workers $(WORKERS) \
-		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
-		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
+		--output $(OUT_DIR)/threshold_tuning.json
 
 benchmark: venv check-db
 	$(PYTHON) -m collimator benchmark --db $(DB) --workers $(WORKERS) \
@@ -392,7 +393,7 @@ help:
 	@echo "  inspect            Show feature breakdown for a sample (SAMPLE=sha256)"
 	@echo "  errors             Show top false positives/negatives"
 	@echo "  traits             Dump all unique traits seen in DB"
-	@echo "  thresholds         Show recommended confidence thresholds"
+	@echo "  thresholds         Tune suspicious/hostile thresholds on the full corpus"
 	@echo "  benchmark          Measure feature extraction & inference latency"
 	@echo "  build-splits       Pre-compute data splits in DB"
 	@echo "  demo-db            Create a small SQLite DB for testing"

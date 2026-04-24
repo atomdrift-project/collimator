@@ -258,6 +258,71 @@ def stream_samples(
             )
 
 
+def stream_labeled_samples_full(
+    db_path: Path | str,
+    *,
+    path_substr: str | None = None,
+    min_score: int | None = None,
+    max_score: int | None = None,
+    limit: int = 0,
+    max_id: int = 0,
+) -> Iterator[Sample]:
+    """Yield labeled, non-skipped samples without the MIN_SAMPLE_SCORE filter.
+
+    This is for operational corpus analysis over the full labeled hopper set,
+    including low-score benign rows that are intentionally excluded from
+    training/evaluation partitions.
+    """
+    with _connect(db_path, repeatable_read=True) as conn:
+        params: list[Any] = []
+        placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
+        query = (
+            "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score, mtime, 0 AS cluster_id"
+            " FROM samples"
+            " WHERE label IN ('bad', 'good')"
+            " AND cleave_result IS NOT NULL"
+            " AND skip = ''"
+        )
+        if max_id > 0:
+            query += f" AND id <= {int(max_id)}"
+        if path_substr:
+            query += f" AND LOWER(path) LIKE {placeholder}"
+            params.append(f"%{path_substr.lower()}%")
+        if min_score is not None:
+            query += f" AND score >= {placeholder}"
+            params.append(int(min_score))
+        if max_score is not None:
+            query += f" AND score <= {placeholder}"
+            params.append(int(max_score))
+        query += " ORDER BY id"
+        if limit > 0:
+            query += f" LIMIT {int(limit)}"
+
+        for row_id, sha256, path, label, canonical, cleave_result, formula, elements, score, mtime, cluster_id in _execute(conn, query, params):
+            split_key = canonical or sha256
+            raw = _cleave_json(cleave_result)
+            if raw is None:
+                continue
+            try:
+                report = json.loads(raw)
+            except json.JSONDecodeError:
+                log.warning("invalid JSON for %s, skipping", sha256)
+                continue
+            yield Sample(
+                row_id=int(row_id),
+                sha256=sha256,
+                path=path or "",
+                label=_label_int(label),
+                report=report,
+                formula=formula or "",
+                elements=elements or "",
+                score=score or 0,
+                mtime=str(mtime) if mtime else "",
+                cluster_id=cluster_id,
+                canonical_sha256=split_key,
+            )
+
+
 def load_samples(db_path: Path | str, limit: int = 0) -> list[Sample]:
     """Load all labeled samples from a hopper database."""
     log.info("loading samples from %s (limit=%d)", db_path, limit)

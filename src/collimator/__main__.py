@@ -1010,6 +1010,22 @@ def main() -> None:
     )
     _add_workers_arg(p_thresh)
 
+    # tune-thresholds
+    p_tune = subparsers.add_parser(
+        "tune-thresholds",
+        help="Score the full labeled corpus with an existing model and compare threshold policies",
+    )
+    p_tune.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
+    p_tune.add_argument("--model", default="out/model.json", help="Path to trained XGBoost model")
+    p_tune.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
+    p_tune.add_argument("--path-substr", default=None, help="Only include rows whose sample path contains this substring")
+    p_tune.add_argument("--min-score", type=int, default=None, help="Optional minimum hopper score to include")
+    p_tune.add_argument("--max-score", type=int, default=None, help="Optional maximum hopper score to include")
+    p_tune.add_argument("--top-errors", type=int, default=20, help="How many FP/FN paths to show per policy level")
+    p_tune.add_argument("--output", default=None, help="Optional JSON output path")
+    p_tune.add_argument("--limit", type=int, default=0, help="Optional row cap after filters (0 = no cap)")
+    _add_workers_arg(p_tune)
+
     # benchmark
     p_bench = subparsers.add_parser("benchmark", help="Benchmark extraction, training, and inference")
     p_bench.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
@@ -1184,6 +1200,19 @@ def main() -> None:
             db_path=_db_dsn(args.db),
             model_path=Path(args.model) if args.model else None,
             spec_path=Path(args.spec) if args.spec else None,
+            n_workers=args.workers,
+        )
+    elif args.command == "tune-thresholds":
+        thresholds.tune_thresholds(
+            db_path=_db_dsn(args.db),
+            model_path=Path(args.model),
+            spec_path=Path(args.spec),
+            path_substr=args.path_substr,
+            min_score=args.min_score,
+            max_score=args.max_score,
+            top_errors=args.top_errors,
+            output_path=Path(args.output) if args.output else None,
+            limit=args.limit,
             n_workers=args.workers,
         )
     elif args.command == "benchmark":
