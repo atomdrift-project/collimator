@@ -175,14 +175,14 @@ def cmd_train(args: argparse.Namespace) -> None:
     export.export_onnx(result.model, spec.total_features, out_dir / "model.onnx")
     export.save_model(result.model, out_dir / "model.json")
 
-    # Compute precision-floor recommended thresholds from out-of-fold CV
-    # predictions. The semantics: at the suspicious threshold, ≥99% of
-    # flagged samples are real malware; at the hostile threshold, ≥99.9%
-    # are real. This replaces the older FPR-based recommendation
-    # (compute_recommendations) which was too conservative for the v16
-    # model — see PRECISION_RECOMMENDATIONS in thresholds.py.
-    recommended = thresholds.compute_recall_fpr_recommendations(result.cv_predictions, result.cv_labels) \
-        if len(result.cv_predictions) > 0 else {}
+    # Compute deploy thresholds from the same full labeled corpus used by
+    # `make thresholds`: suspicious ~= 1/100k good FP, hostile ~= 1/1M good FP.
+    recommended = thresholds.compute_default_recommendations_for_corpus(
+        db_path,
+        model_path=out_dir / "model.json",
+        spec_path=out_dir / "feature_spec.json",
+        n_workers=effective_workers,
+    )
 
     export.save_evaluation(
         metrics=result.metrics,
@@ -1173,7 +1173,7 @@ def main() -> None:
             all_preds = np.concatenate([cv_preds, arrays["test_predictions"]])
             all_labels = np.concatenate([cv_labels, arrays["test_labels"]])
         print(f"Loaded {len(cv_preds)} CV + {len(all_preds) - len(cv_preds)} test predictions")
-        recommended = thresholds.compute_fpr_recommendations(all_preds, all_labels)
+        recommended = thresholds.compute_default_recommendations(all_preds, all_labels)
         print(f"Recommended thresholds: {recommended}")
         # Update evaluation.json
         eval_path = Path(args.output) / "evaluation.json"

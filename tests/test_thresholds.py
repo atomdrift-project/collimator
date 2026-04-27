@@ -9,7 +9,13 @@ from contextlib import redirect_stdout
 import numpy as np
 
 from collimator.data import Sample
-from collimator.thresholds import evaluate_policies, print_threshold_table, _error_rows_for_threshold
+from collimator.thresholds import (
+    compute_default_recommendations,
+    evaluate_policies,
+    fp_budget_tables,
+    print_threshold_table,
+    _error_rows_for_threshold,
+)
 
 
 def test_print_threshold_table_uses_called_subset_accuracy() -> None:
@@ -35,10 +41,27 @@ def test_evaluate_policies_returns_named_candidates() -> None:
     policies = evaluate_policies(probs, y)
 
     names = [policy["name"] for policy in policies]
+    assert "default_fp_rate" in names
     assert "ultra_low_fpr" in names
     assert "recall_plus_fpr" in names
     assert "precision_floor" in names
     assert all("suspicious" in policy and "hostile" in policy for policy in policies)
+
+
+def test_default_recommendations_derive_budgets_from_good_count() -> None:
+    y = np.array([1] * 20 + [0] * 1_000_001, dtype=np.float32)
+    probs = np.concatenate([
+        np.linspace(0.99, 0.80, 20, dtype=np.float32),
+        np.linspace(0.70, 0.01, 1_000_001, dtype=np.float32),
+    ])
+
+    recs = compute_default_recommendations(probs, y)
+    budgets = fp_budget_tables(probs, y)
+    hostile_row = next(row for row in budgets["hostile"] if row["max_fp_budget"] == 1)
+    suspicious_row = next(row for row in budgets["suspicious"] if row["max_fp_budget"] == 10)
+
+    assert recs["hostile"] == hostile_row["threshold"]
+    assert recs["suspicious"] == suspicious_row["threshold"]
 
 
 def test_error_rows_for_threshold_returns_full_paths_and_confidence() -> None:
@@ -53,6 +76,6 @@ def test_error_rows_for_threshold_returns_full_paths_and_confidence() -> None:
     fp_rows, fn_rows = _error_rows_for_threshold(samples, probs, y, 0.90, top_n=10)
 
     assert fp_rows[0]["path"] == "/repo/harvest/fp.py"
-    assert fp_rows[0]["probability"] == 0.95
+    assert np.isclose(fp_rows[0]["probability"], 0.95)
     assert fn_rows[0]["path"] == "/repo/harvest/fn.py"
-    assert fn_rows[0]["probability"] == 0.10
+    assert np.isclose(fn_rows[0]["probability"], 0.10)

@@ -39,8 +39,25 @@ PRECISION_RECOMMENDATIONS = [
 # trustworthy. Avoids picking a threshold based on 1-2 samples.
 MIN_FLAGGED_FOR_PRECISION = 50
 
+# Default deployment operating points.
+#
+# Each entry: (label, target false-positive rate among the benign/good set).
+# Pick the lowest threshold with FP <= floor(good_count * rate), which maximizes
+# TP rate while respecting the target false-positive rate in the scored good
+# corpus. At ~1M good files this is 10 suspicious FP and 1 hostile FP.
+DEFAULT_FP_RATE_RECOMMENDATIONS = [
+    ("suspicious", 1 / 100_000),
+    ("hostile", 1 / 1_000_000),
+]
+
+# Legacy FP-per-million equivalent of the default rates.
+FPR_RECOMMENDATIONS = [
+    (level, rate * 1_000_000)
+    for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS
+]
+
 # Recall-floor + aspirational FPR targets.
-# Used by `compute_recall_fpr_recommendations` (the default since v16).
+# Used by `compute_recall_fpr_recommendations` (legacy).
 #
 # Each entry: (label, min_recall, aspirational_fpr_per_million)
 #   - Always guarantees at least min_recall.
@@ -77,6 +94,12 @@ class PolicySpec:
 
 
 POLICY_SPECS = [
+    PolicySpec(
+        name="default_fp_rate",
+        description="Default deploy policy: suspicious <=1/100k good FP, hostile <=1/1M good FP",
+        suspicious=PolicyLevel("suspicious", "max_recall_at_fp_rate", 1 / 100_000),
+        hostile=PolicyLevel("hostile", "max_recall_at_fp_rate", 1 / 1_000_000),
+    ),
     PolicySpec(
         name="ultra_low_fpr",
         description="Max recall at 10 FP/1M suspicious and 1 FP/1M hostile",
@@ -149,6 +172,24 @@ def _select_threshold_at_fp_budget(
     return stats
 
 
+def _fp_budget_for_rate(n_benign: int, rate: float) -> int:
+    """Allowed benign false positives for a target per-good-file FP rate."""
+    if n_benign <= 0:
+        return 0
+    return max(1, int(np.floor(n_benign * rate)))
+
+
+def _nearby_budgets(target: int) -> list[int]:
+    """Small readable budget window around the selected operating point."""
+    values = {0, 1, target}
+    for delta in (-5, -2, -1, 1, 2, 5):
+        if target + delta >= 0:
+            values.add(target + delta)
+    if target >= 10:
+        values.update({target - 10, target + 10})
+    return sorted(values)
+
+
 def _stats_dict_at_index(
     thresholds: np.ndarray,
     tp_vals: np.ndarray,
@@ -202,6 +243,17 @@ def _select_policy_level(
         else:
             warning = None
         return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, index), warning
+
+    if mode == "max_recall_at_fp_rate":
+        budget = _fp_budget_for_rate(n_benign, level.target)
+        row = _select_threshold_at_fp_budget(
+            thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign,
+            max_fp=budget,
+        )
+        if row is None:
+            return None, f"no threshold reaches <= {budget} FP"
+        row["target_fp_rate"] = float(level.target)
+        return row, None
 
     if mode == "highest_threshold_at_recall":
         valid = recall_vals >= level.target
@@ -276,8 +328,12 @@ def fp_budget_tables(
     thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, _nm, n_benign = (
         _threshold_stats(probs, y)
     )
-    hostile_budgets = hostile_budgets or [0, 1]
-    suspicious_budgets = suspicious_budgets or list(range(1, 11))
+    default_budgets = {
+        level: _fp_budget_for_rate(n_benign, rate)
+        for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS
+    }
+    hostile_budgets = hostile_budgets or _nearby_budgets(default_budgets["hostile"])
+    suspicious_budgets = suspicious_budgets or _nearby_budgets(default_budgets["suspicious"])
 
     def _rows(budgets: list[int]) -> list[dict[str, float | int]]:
         rows: list[dict[str, float | int]] = []
@@ -351,7 +407,7 @@ def _score_samples(
     return np.concatenate(pred_batches) if pred_batches else np.array([], dtype=np.float32)
 
 
-def tune_thresholds(
+def _score_labeled_corpus(
     db_path: Path | str,
     *,
     model_path: Path,
@@ -359,12 +415,10 @@ def tune_thresholds(
     path_substr: str | None = None,
     min_score: int | None = None,
     max_score: int | None = None,
-    top_errors: int = 20,
-    output_path: Path | None = None,
     limit: int = 0,
     n_workers: int = 0,
-) -> dict[str, Any]:
-    """Score the full labeled corpus and report threshold policy candidates."""
+) -> tuple[list[ScoredSample], np.ndarray, np.ndarray]:
+    """Score the full labeled corpus used for operational threshold tuning."""
     spec = features.FeatureSpec.load(spec_path)
     sample_stream = data.stream_labeled_samples_full(
         db_path,
@@ -398,6 +452,50 @@ def tune_thresholds(
         n_workers=n_workers,
     )
     y = np.array([sample.label for sample in samples], dtype=np.float32)
+    return samples, probs, y
+
+
+def compute_default_recommendations_for_corpus(
+    db_path: Path | str,
+    *,
+    model_path: Path,
+    spec_path: Path,
+    n_workers: int = 0,
+) -> dict[str, float | None]:
+    """Compute deploy thresholds by scoring the full labeled hopper corpus."""
+    _samples, probs, y = _score_labeled_corpus(
+        db_path,
+        model_path=model_path,
+        spec_path=spec_path,
+        n_workers=n_workers,
+    )
+    return compute_default_recommendations(probs, y)
+
+
+def tune_thresholds(
+    db_path: Path | str,
+    *,
+    model_path: Path,
+    spec_path: Path,
+    path_substr: str | None = None,
+    min_score: int | None = None,
+    max_score: int | None = None,
+    top_errors: int = 20,
+    output_path: Path | None = None,
+    limit: int = 0,
+    n_workers: int = 0,
+) -> dict[str, Any]:
+    """Score the full labeled corpus and report threshold policy candidates."""
+    samples, probs, y = _score_labeled_corpus(
+        db_path,
+        model_path=model_path,
+        spec_path=spec_path,
+        path_substr=path_substr,
+        min_score=min_score,
+        max_score=max_score,
+        limit=limit,
+        n_workers=n_workers,
+    )
     benign = int(np.sum(y == 0))
     malware = int(np.sum(y == 1))
     policies = evaluate_policies(probs, y)
@@ -431,6 +529,13 @@ def tune_thresholds(
             "malware": malware,
             "benign": benign,
         },
+        "default_fp_rate_targets": {
+            level: {
+                "target_rate": rate,
+                "max_fp_budget": _fp_budget_for_rate(benign, rate),
+            }
+            for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS
+        },
         "fp_budget_tables": budgets,
         "policies": policies,
     }
@@ -443,7 +548,7 @@ def tune_thresholds(
         print(f"Filter: score range [{min_score if min_score is not None else '-inf'}, {max_score if max_score is not None else 'inf'}]")
     print(f"Top errors per level: {top_errors}")
     print()
-    print(f"{'Policy':<18} {'Level':<12} {'Threshold':>10} {'Recall':>8} {'Prec':>8} {'FP/1M':>10} {'TP':>7} {'FP':>7}")
+    print(f"{'Policy':<18} {'Level':<12} {'Threshold':>10} {'TP Rate':>8} {'Prec':>8} {'FP/1M':>10} {'TP':>7} {'FP':>7}")
     print(f"{'-'*78}")
     for policy in policies:
         for level_name in ("suspicious", "hostile"):
@@ -460,25 +565,33 @@ def tune_thresholds(
             print(f"  warning: {warning}")
         print()
 
-    print(f"{'HOSTILE BY ALLOWED FP':=^78}")
-    print(f"{'Allowed FP':>10} {'Benign %':>10} {'Threshold':>10} {'Recall':>8} {'Prec':>8} {'TP':>7} {'FP':>7} {'FN':>7}")
+    target_budgets = {
+        level: _fp_budget_for_rate(benign, rate)
+        for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS
+    }
+    print(f"{'HOSTILE BY GOOD FP BUDGET':=^78}")
+    print(f"Target: <=1 FP per 1,000,000 good files; current budget = {target_budgets['hostile']} FP")
+    print(f"{'Allowed FP':>10} {'Good %':>10} {'Threshold':>10} {'TP Rate':>8} {'Prec':>8} {'TP':>7} {'FP':>7} {'FN':>7}")
     for row in budgets["hostile"]:
         fn = malware - int(row["tp"])
+        marker = " *" if int(row["max_fp_budget"]) == target_budgets["hostile"] else ""
         print(
             f"{int(row['max_fp_budget']):>10} {100.0 * int(row['fp']) / max(benign, 1):>9.4f}% "
             f"{float(row['threshold']):>10.6f} {float(row['recall']):>8.2%} {float(row['precision']):>8.2%} "
-            f"{int(row['tp']):>7} {int(row['fp']):>7} {fn:>7}"
+            f"{int(row['tp']):>7} {int(row['fp']):>7} {fn:>7}{marker}"
         )
     print()
 
-    print(f"{'SUSPICIOUS BY ALLOWED FP':=^78}")
-    print(f"{'Allowed FP':>10} {'Benign %':>10} {'Threshold':>10} {'Recall':>8} {'Prec':>8} {'TP':>7} {'FP':>7} {'FN':>7}")
+    print(f"{'SUSPICIOUS BY GOOD FP BUDGET':=^78}")
+    print(f"Target: <=1 FP per 100,000 good files; current budget = {target_budgets['suspicious']} FP")
+    print(f"{'Allowed FP':>10} {'Good %':>10} {'Threshold':>10} {'TP Rate':>8} {'Prec':>8} {'TP':>7} {'FP':>7} {'FN':>7}")
     for row in budgets["suspicious"]:
         fn = malware - int(row["tp"])
+        marker = " *" if int(row["max_fp_budget"]) == target_budgets["suspicious"] else ""
         print(
             f"{int(row['max_fp_budget']):>10} {100.0 * int(row['fp']) / max(benign, 1):>9.4f}% "
             f"{float(row['threshold']):>10.6f} {float(row['recall']):>8.2%} {float(row['precision']):>8.2%} "
-            f"{int(row['tp']):>7} {int(row['fp']):>7} {fn:>7}"
+            f"{int(row['tp']):>7} {int(row['fp']):>7} {fn:>7}{marker}"
         )
     print()
 
@@ -736,6 +849,38 @@ def compute_recall_fpr_recommendations(
     return result
 
 
+def compute_default_recommendations(
+    probs: np.ndarray,
+    y: np.ndarray,
+) -> dict[str, float | None]:
+    """Compute deploy thresholds from target FP rates over the good corpus."""
+    thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, _nm, n_benign = (
+        _threshold_stats(probs, y)
+    )
+
+    result: dict[str, float | None] = {}
+    for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS:
+        budget = _fp_budget_for_rate(n_benign, rate)
+        row = _select_threshold_at_fp_budget(
+            thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign,
+            max_fp=budget,
+        )
+        if row is None:
+            result[level] = None
+            continue
+        result[level] = float(row["threshold"])
+        log.info(
+            "%s: threshold=%.4f TP-rate=%.2f%% FP=%d/%d good files (target %.1e)",
+            level,
+            float(row["threshold"]),
+            float(row["recall"]) * 100,
+            int(row["fp"]),
+            n_benign,
+            rate,
+        )
+    return result
+
+
 def compute_fpr_recommendations(
     probs: np.ndarray,
     y: np.ndarray,
@@ -759,7 +904,7 @@ def compute_fpr_recommendations(
     result: dict[str, float | None] = {}
     for level, max_fpm in FPR_RECOMMENDATIONS:
         # Check if we have enough benign samples to measure this FPR.
-        min_benign = int(MIN_BENIGN_FOR_FPR / (max_fpm / 1_000_000))
+        min_benign = int(MIN_EXPECTED_FP_FOR_FPR / (max_fpm / 1_000_000))
         if n_benign < min_benign:
             log.warning(
                 "%s: need ≥%d benign to measure ≤%d FP/1M (have %d)",
@@ -803,34 +948,23 @@ def print_recommendations(
 
     print(f"\n{title:=^70}")
     print(f"  {n} samples ({n_malware} malware, {n_benign} benign)")
-    print("  Lowest threshold (highest recall) meeting FPR ceiling")
-    print(f"  {'Level':<12} {'Threshold':>10} {'Recall':>8} {'FPR':>8} {'FP/1M':>8} {'TP':>8} {'FP':>8}")
+    print("  Lowest threshold (highest TP rate) meeting default good-file FP-rate targets")
+    print(f"  {'Level':<12} {'Threshold':>10} {'TP Rate':>8} {'FPR':>8} {'FP/1M':>8} {'TP':>8} {'FP':>8} {'Budget':>8}")
     print(f"  {'-'*62}")
 
-    for level, max_fpr in RECOMMENDATIONS:
-        # Warn if test set is too small to measure this FPR with confidence.
-        min_benign = int(MIN_SAMPLES_FOR_FPR / max_fpr) if max_fpr > 0 else float("inf")
-        underpowered = n_benign < min_benign
-
-        valid = fpr_vals <= max_fpr
+    for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS:
+        budget = _fp_budget_for_rate(n_benign, rate)
+        valid = fp_vals <= budget
         if valid.any():
-            # Last valid = lowest threshold = highest recall.
+            # Last valid = lowest threshold = highest TP rate.
             k = int(np.where(valid)[0][-1])
             fp_per_million = fpr_vals[k] * 1_000_000
-            warn = ""
-            if underpowered:
-                warn = f"  ⚠ need ≥{min_benign:,} benign to measure 1/{1/max_fpr:,.0f} FPR"
             print(
                 f"  {level:<12} {thresholds[k]:>10.6f} {recall_vals[k]:>8.2%} "
-                f"{fpr_vals[k]:>8.4%} {fp_per_million:>8.0f} {tp_vals[k]:>8} {fp_vals[k]:>8}"
+                f"{fpr_vals[k]:>8.4%} {fp_per_million:>8.0f} {tp_vals[k]:>8} {fp_vals[k]:>8} {budget:>8}"
             )
-            if warn:
-                print(warn)
         else:
-            fpr_str = f"≤{max_fpr*100:.4f}% FPR"
-            print(f"  {level:<12} {'—':>10} (no threshold achieves {fpr_str})")
-            if underpowered:
-                print(f"  ⚠ need ≥{min_benign:,} benign to measure 1/{1/max_fpr:,.0f} FPR")
+            print(f"  {level:<12} {'—':>10} (no threshold achieves <= {budget} FP)")
 
     # Fixed reference thresholds — include the calibrated holdout threshold if provided.
     fixed_set: set[float] = {0.1, 0.25, 0.5, 0.6, 0.7, 0.8, 0.9, 0.98, 0.99, 0.995}
