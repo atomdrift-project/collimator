@@ -119,14 +119,16 @@ check-db-fresh: check-db
 		exit 1 ; \
 	fi
 
-venv: $(VENV_DIR)/bin/activate
+venv: $(VENV_DIR)/.deps.stamp
 
-$(VENV_DIR)/bin/activate: requirements.txt
+$(VENV_DIR)/bin/python:
 	python3 -m venv $(VENV_DIR)
+
+$(VENV_DIR)/.deps.stamp: requirements.txt pyproject.toml | $(VENV_DIR)/bin/python
 	$(VENV_DIR)/bin/pip install --upgrade pip
 	$(VENV_DIR)/bin/pip install -r requirements.txt
 	$(VENV_DIR)/bin/pip install -e .
-	touch $(VENV_DIR)/bin/activate
+	touch $(VENV_DIR)/.deps.stamp
 
 train: venv check-db-fresh
 	@mkdir -p $(LOG_DIR)
