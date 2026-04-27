@@ -374,19 +374,19 @@ def train(
     # export them so the Rust inference pipeline can apply standardization if
     # the model was trained that way — but for v13+ we skip it.
     if sp.issparse(X_tv):
-        feature_means = np.asarray(X_tv.mean(axis=0), dtype=np.float32).ravel()
-        # Var = E[X^2] - E[X]^2, computed without densifying or copying.
-        # Square just the data array (avoids copying the full sparse structure).
-        orig_data = X_tv.data.copy()  # save original values (~200MB vs 1.7GB full copy)
-        X_tv.data **= 2
+        feature_means64 = np.asarray(X_tv.mean(axis=0), dtype=np.float64).ravel()
+        # Var = E[X^2] - E[X]^2, computed without densifying or mutating X_tv.
+        # Some aggregate features can exceed float32's safe square range.
+        X_sq = X_tv.copy()
+        X_sq.data = X_sq.data.astype(np.float64, copy=False)
+        X_sq.data **= 2
         variance = (
-            np.asarray(X_tv.mean(axis=0), dtype=np.float32).ravel()
-            - feature_means ** 2
+            np.asarray(X_sq.mean(axis=0), dtype=np.float64).ravel()
+            - feature_means64 ** 2
         )
-        X_tv.data[:] = orig_data  # restore
-        del orig_data
+        feature_means = feature_means64.astype(np.float32)
         feature_stds = np.sqrt(np.maximum(variance, 0)).astype(np.float32)
-        del variance
+        del X_sq, feature_means64, variance
     else:
         feature_means = X_tv.mean(axis=0).astype(np.float32)
         feature_stds = X_tv.std(axis=0).astype(np.float32)

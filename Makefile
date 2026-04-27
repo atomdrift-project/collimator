@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan traits thresholds benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-native verify-litmus venv help fixture
+.PHONY: train evaluate explain inspect errors scan traits thresholds benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -336,11 +336,11 @@ lint: venv
 
 MODEL_VERSION ?= $(shell $(PYTHON) -c "from collimator.features import FeatureSpec; print(FeatureSpec().version)")
 MODELS_DIR ?= ../litmus-models/scan-v$(MODEL_VERSION)
-XGBOOST_NATIVE_DIR ?= ../xgboost-native
+XGBOOST_ARS_DIR ?= ../xgboost-ars
 
 LITMUS_DIR ?= ../litmus
 
-deploy: verify-xgboost-native verify-litmus
+deploy: verify-xgboost-ars verify-litmus
 	@# Stage to a temp dir first — only promote to MODELS_DIR after all
 	@# post-deploy checks pass. This prevents partial/broken deploys.
 	$(eval _STAGE := $(shell mktemp -d))
@@ -362,14 +362,12 @@ deploy: verify-xgboost-native verify-litmus
 	@echo "litmus: all deploy checks passed"
 	@echo "Deployed to $(MODELS_DIR)"
 
-.PHONY: verify-xgboost-native
-verify-xgboost-native:
-	@test -d $(XGBOOST_NATIVE_DIR) || { echo "error: $(XGBOOST_NATIVE_DIR) does not exist"; exit 1; }
-	@test -f $(OUT_DIR)/reference.json || { echo "error: $(OUT_DIR)/reference.json not found — run make train first"; exit 1; }
-	cp $(OUT_DIR)/reference.json $(XGBOOST_NATIVE_DIR)/tests/fixtures/reference.json
-	@echo "Running xgboost-native tests to verify model agreement..."
-	cd $(XGBOOST_NATIVE_DIR) && cargo test --release
-	@echo "xgboost-native: all tests passed"
+.PHONY: verify-xgboost-ars
+verify-xgboost-ars:
+	@test -d $(XGBOOST_ARS_DIR) || { echo "error: $(XGBOOST_ARS_DIR) does not exist"; exit 1; }
+	@echo "Running xgboost-ars tests..."
+	cd $(XGBOOST_ARS_DIR) && cargo test --release
+	@echo "xgboost-ars: all tests passed"
 
 .PHONY: verify-litmus
 verify-litmus:

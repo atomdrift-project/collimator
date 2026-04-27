@@ -509,7 +509,7 @@ def generate_fixtures(
     n_samples: int = 50,
     optimal_threshold: float = 0.5,
 ) -> None:
-    """Generate cross-language test fixtures for xgboost-native.
+    """Generate cross-language test fixtures for xgboost-ars.
 
     Writes two files into out_dir:
       - cross_language_fixture.json: raw features + expected predictions
@@ -543,7 +543,7 @@ def generate_fixtures(
         booster, X_std_sel, iteration_range,
     )
 
-    # --- Edge-case samples for xgboost-native correctness ---
+    # --- Edge-case samples for xgboost-ars correctness ---
     n_feat = spec.total_features
 
     # NaN samples: take real samples and knock out random subsets of features.
@@ -768,7 +768,7 @@ def generate_extraction_fixture(
         }
 
         # Add standardized features and end-to-end prediction if model available.
-        # Use dense arrays throughout to match litmus/xgboost-native inference
+        # Use dense arrays throughout to match litmus/xgboost-ars inference
         # (sparse inputs route zeros via default_left, which diverges).
         if model is not None:
             dense_vec = vec.reshape(1, -1)
@@ -821,7 +821,7 @@ def _nan_safe_tolist(arr: np.ndarray) -> list:
 
 
 def cmd_fixture(args: argparse.Namespace) -> None:
-    """Generate cross-language test fixtures for xgboost-native."""
+    """Generate cross-language test fixtures for xgboost-ars."""
     from .model import load_model
 
     db_path = _db_dsn(args.db)
@@ -960,7 +960,7 @@ def main() -> None:
 
     # fixture
     p_fixture = subparsers.add_parser(
-        "fixture", help="Generate cross-language test fixtures for xgboost-native",
+        "fixture", help="Generate cross-language test fixtures for xgboost-ars",
     )
     p_fixture.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_fixture.add_argument("--model", default="out/model.json", help="Path to XGBoost model")
