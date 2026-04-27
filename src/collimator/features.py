@@ -35,6 +35,7 @@ import logging
 import math
 import multiprocessing as mp
 import os
+import subprocess
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
@@ -2706,8 +2707,25 @@ def _extract_batch_worker(
 
 def _n_workers_default() -> int:
     """Choose the default parallelism level for feature extraction."""
-    cpu_count = os.cpu_count() or 1
-    return max(1, min(cpu_count, 16))
+    cpu_count = _physical_cpu_count() or os.cpu_count()
+    return max(1, cpu_count or 1)
+
+
+def _physical_cpu_count() -> int | None:
+    try:
+        out = subprocess.check_output(
+            ["lscpu", "-p=Core,Socket"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    cores = {
+        tuple(line.split(",", 1))
+        for line in out.splitlines()
+        if line and not line.startswith("#") and "," in line
+    }
+    return len(cores) or None
 
 
 def _feature_batch_size(n_workers: int) -> int:

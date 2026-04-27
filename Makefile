@@ -10,8 +10,10 @@ SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
 DEMO_DB ?= out/demo.db
-WORKERS ?= 16
-EXP_WORKERS ?= 8
+WORKERS ?=
+EXP_WORKERS ?= $(WORKERS)
+WORKERS_ARG := $(if $(WORKERS),--workers $(WORKERS),)
+EXP_WORKERS_ARG := $(if $(EXP_WORKERS),--workers $(EXP_WORKERS),)
 SEED ?= 42
 EXP_TRAIN_SAMPLES ?= 120000
 EXP_MAX_TEST_SAMPLES ?= 30000
@@ -163,7 +165,7 @@ train: venv check-db-fresh
 	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
 	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
 	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
-	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --workers $(WORKERS) --seed $(SEED) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
+	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) $(WORKERS_ARG) --seed $(SEED) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
 
 fixture: venv check-db
 	@# Regenerate extraction_fixture.json and cross_language_fixture.json
@@ -218,11 +220,11 @@ thresholds: venv check-db
 	$(PYTHON) -u -m collimator tune-thresholds --db $(DB) \
 		--model $(OUT_DIR)/model.json \
 		--spec $(OUT_DIR)/feature_spec.json \
-		--workers $(WORKERS) \
+		$(WORKERS_ARG) \
 		--output $(OUT_DIR)/threshold_tuning.json
 
 benchmark: venv check-db
-	$(PYTHON) -m collimator benchmark --db $(DB) --workers $(WORKERS) \
+	$(PYTHON) -m collimator benchmark --db $(DB) $(WORKERS_ARG) \
 		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
 		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
 
@@ -261,7 +263,7 @@ experiment: venv check-db
 	COLLIMATOR_EXTENDED_METRICS=$(EXP_EXTENDED_METRICS) \
 	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
 	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
-	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --workers $(EXP_WORKERS) --seed $(SEED) \
+	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) $(EXP_WORKERS_ARG) --seed $(SEED) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
 		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING) \
@@ -304,7 +306,7 @@ ablate: venv check-db
 	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
 	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
 	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
-	$(PYTHON) -m collimator ablate --db $(DB) --workers $(WORKERS) --seed $(SEED) \
+	$(PYTHON) -m collimator ablate --db $(DB) $(WORKERS_ARG) --seed $(SEED) \
 		--n-estimators $(TRAIN_ESTIMATORS) --max-depth $(TRAIN_MAX_DEPTH) \
 		--learning-rate $(TRAIN_LEARNING_RATE) --early-stopping-rounds $(TRAIN_EARLY_STOPPING) \
 		--beta $(TRAIN_BETA) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) \
@@ -405,7 +407,7 @@ help:
 	@echo "Options:"
 	@echo "  DB=url             Hopper database DSN"
 	@echo "  OUT_DIR=path       Output directory (default: out)"
-	@echo "  WORKERS=n          Parallel extraction workers (default: 8)"
+	@echo "  WORKERS=n          Parallel extraction workers (default: auto = physical cores)"
 	@echo "  EXP_TRAIN_SAMPLES=n   Experiment train rows (default: 120000)"
 	@echo "  EXP_MAX_TEST_SAMPLES=n  Cap test set via reservoir (0=full, default: 30000)"
 	@echo "  EXP_FOLDS=n           Experiment CV folds (default: 2)"

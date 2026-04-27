@@ -4,3 +4,13 @@ onnxmltools>=1.12
 numpy>=1.24
 scikit-learn>=1.3
 shap>=0.44
+psycopg[binary]>=3.1
+
+[dev]
+pytest>=8.0
+
+[explain]
+shap>=0.44
+
+[export]
+onnxruntime>=1.18
