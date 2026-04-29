@@ -101,3 +101,53 @@ def test_error_rows_for_threshold_returns_full_paths_and_confidence() -> None:
     assert np.isclose(fp_rows[0]["probability"], 0.95)
     assert fn_rows[0]["path"] == "/repo/harvest/fn.py"
     assert np.isclose(fn_rows[0]["probability"], 0.10)
+
+
+def test_error_rows_for_threshold_sorts_both_error_types_by_descending_confidence() -> None:
+    samples = [
+        Sample(1, "a" * 64, "/repo/harvest/fp-low.py", 0, {}, score=1),
+        Sample(2, "b" * 64, "/repo/harvest/fp-high.py", 0, {}, score=1),
+        Sample(3, "c" * 64, "/repo/harvest/fn-low.py", 1, {}, score=9),
+        Sample(4, "d" * 64, "/repo/harvest/fn-high.py", 1, {}, score=9),
+    ]
+    probs = np.array([0.91, 0.99, 0.10, 0.80], dtype=np.float32)
+    y = np.array([0, 0, 1, 1], dtype=np.float32)
+
+    fp_rows, fn_rows = _error_rows_for_threshold(samples, probs, y, 0.90, top_n=10)
+
+    assert [row["path"] for row in fp_rows] == [
+        "/repo/harvest/fp-high.py",
+        "/repo/harvest/fp-low.py",
+    ]
+    assert [row["path"] for row in fn_rows] == [
+        "/repo/harvest/fn-high.py",
+        "/repo/harvest/fn-low.py",
+    ]
+
+
+def test_error_rows_for_threshold_collapses_archive_members_to_outer_paths() -> None:
+    samples = [
+        Sample(1, "a" * 64, "/repo/pkg.zip!!inner/fp-high.py", 0, {}, score=1),
+        Sample(2, "b" * 64, "/repo/pkg.zip!!inner/fp-low.py", 0, {}, score=1),
+        Sample(3, "c" * 64, "/repo/other.zip!!inner/fp.py", 0, {}, score=1),
+        Sample(4, "d" * 64, "/repo/bad.zip!!inner/fn-high.py", 1, {}, score=9),
+        Sample(5, "e" * 64, "/repo/bad.zip!!inner/fn-low.py", 1, {}, score=9),
+        Sample(6, "f" * 64, "/repo/missed.zip!!inner/fn.py", 1, {}, score=9),
+    ]
+    probs = np.array([0.99, 0.98, 0.97, 0.80, 0.10, 0.70], dtype=np.float32)
+    y = np.array([0, 0, 0, 1, 1, 1], dtype=np.float32)
+
+    fp_rows, fn_rows = _error_rows_for_threshold(samples, probs, y, 0.90, top_n=2)
+
+    assert [row["path"] for row in fp_rows] == [
+        "/repo/pkg.zip",
+        "/repo/other.zip",
+    ]
+    assert np.isclose(fp_rows[0]["probability"], 0.99)
+    assert np.isclose(fp_rows[1]["probability"], 0.97)
+    assert [row["path"] for row in fn_rows] == [
+        "/repo/bad.zip",
+        "/repo/missed.zip",
+    ]
+    assert np.isclose(fn_rows[0]["probability"], 0.80)
+    assert np.isclose(fn_rows[1]["probability"], 0.70)

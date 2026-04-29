@@ -65,6 +65,17 @@ def _test_metrics(
     }
 
 
+def _load_ablation(output_path: Path | None) -> list[dict[str, object]]:
+    """Load previously saved ablation rows for resumable long runs."""
+    if output_path is None or not output_path.exists():
+        return []
+    with open(output_path) as f:
+        rows = json.load(f)
+    if not isinstance(rows, list):
+        raise ValueError(f"invalid ablation output {output_path}: expected JSON list")
+    return [row for row in rows if isinstance(row, dict)]
+
+
 def run_ablation(
     db_path: Path | str,
     *,
@@ -77,9 +88,11 @@ def run_ablation(
     learning_rate: float | None = None,
     early_stopping_rounds: int | None = None,
     beta: float | None = None,
+    device: str | None = None,
     n_folds: int | None = None,
     train_samples: int = 0,
     max_test_samples: int = 0,
+    output_path: Path | None = None,
 ) -> list[dict[str, object]]:
     """Train baseline and leave-one-group-out ablations on the same dataset.
 
@@ -117,11 +130,22 @@ def run_ablation(
     X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
         db_path, train_ids_labels, test_ids_labels, spec, n_workers=n_workers,
     )
-    group_names = groups if groups is not None else list(features.FEATURE_GROUPS)
+    group_indices = features.feature_group_indices(spec)
+    if groups is not None:
+        group_names = [group for group in groups if group_indices.get(group)]
+        skipped = [group for group in groups if not group_indices.get(group)]
+        if skipped:
+            print(f"Skipping empty/unknown groups: {', '.join(skipped)}")
+    else:
+        group_names = [
+            group for group, indices in group_indices.items() if indices
+        ]
 
     # Build a TrainConfig honoring the caller's overrides, defaulting to the
     # layered v16 baseline (same hyperparams as make train).
     cfg_kwargs: dict[str, object] = {"seed": seed}
+    if device is not None:
+        cfg_kwargs["device"] = device
     if n_estimators is not None:
         cfg_kwargs["n_estimators"] = n_estimators
     if max_depth is not None:
@@ -136,9 +160,19 @@ def run_ablation(
         cfg_kwargs["n_folds"] = n_folds
     base_cfg = train.TrainConfig(**cfg_kwargs)  # type: ignore[arg-type]
 
-    rows: list[dict[str, object]] = []
+    rows = _load_ablation(output_path)
+    completed = {
+        str(row.get("ablation"))
+        for row in rows
+        if row.get("ablation") is not None
+    }
+    if completed:
+        print(f"Resuming ablation from {output_path}: {len(completed)} completed rows")
 
     def _run_one(label: str, dropped: list[str], X: sp.csr_matrix, names: list[str]) -> None:
+        if label in completed:
+            print(f"Skipping completed ablation: {label}")
+            return
         result = train.train(X, y_train, base_cfg, feature_names=names)
         # Drop the same columns from the test matrix.
         if dropped:
@@ -157,6 +191,9 @@ def run_ablation(
             "test_metrics": test_metrics,
             "split_summary": result.split_summary,
         })
+        completed.add(label)
+        if output_path is not None:
+            save_ablation(rows, output_path)
 
     _run_one("baseline", [], X_train, spec.feature_names)
     for group in group_names:
@@ -197,5 +234,7 @@ def print_ablation(rows: list[dict[str, object]]) -> None:
 def save_ablation(rows: list[dict[str, object]], output_path: Path) -> None:
     """Save ablation results as JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w") as f:
+    tmp_path = output_path.with_suffix(f"{output_path.suffix}.tmp")
+    with open(tmp_path, "w") as f:
         json.dump(rows, f, indent=2)
+    tmp_path.replace(output_path)

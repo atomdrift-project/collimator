@@ -1037,7 +1037,7 @@ def main() -> None:
     p_fp.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_fp.add_argument("--model", default="out/model.json", help="Path to trained XGBoost model")
     p_fp.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
-    p_fp.add_argument("--top-errors", type=int, default=50, help="How many false positives to show")
+    p_fp.add_argument("--top-errors", type=int, default=100, help="How many false positives to show")
     p_fp.add_argument("--output", default=None, help="Optional JSON output path")
     p_fp.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
     p_fp.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
@@ -1051,7 +1051,7 @@ def main() -> None:
     p_fn.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_fn.add_argument("--model", default="out/model.json", help="Path to trained XGBoost model")
     p_fn.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
-    p_fn.add_argument("--top-errors", type=int, default=50, help="How many false negatives to show")
+    p_fn.add_argument("--top-errors", type=int, default=100, help="How many false negatives to show")
     p_fn.add_argument("--output", default=None, help="Optional JSON output path")
     p_fn.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
     p_fn.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
@@ -1128,9 +1128,8 @@ def main() -> None:
     p_ablate.add_argument(
         "--groups",
         nargs="*",
-        choices=list(features.FEATURE_GROUPS),
         default=None,
-        help="Optional subset of feature groups to ablate",
+        help="Optional subset of feature prefixes to ablate",
     )
     p_ablate.add_argument("--output", default=None, help="Optional JSON output path")
     p_ablate.add_argument("--n-estimators", type=int, default=None)
@@ -1326,6 +1325,7 @@ def main() -> None:
             n_folds=args.n_folds,
             train_samples=args.train_samples,
             max_test_samples=args.max_test_samples,
+            output_path=Path(args.output) if args.output else None,
         )
         ablation.print_ablation(rows)
         if args.output:

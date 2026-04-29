@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan traits thresholds thresholds-refresh false-positives false-negatives benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
+.PHONY: train evaluate explain inspect errors scan traits thresholds thresholds-refresh false-positives false-negatives false-positives-archive false-negatives-archive benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -7,8 +7,11 @@ DB ?= postgres://hopper@localhost:5432/hopper
 OUT_DIR ?= out
 LOG_DIR ?= $(OUT_DIR)/logs
 THRESHOLD_SCORES ?= $(OUT_DIR)/threshold_scores.npz
-TOP_ERRORS ?= 50
+TOP_ERRORS ?= 100
 THRESHOLD_TOP_ERRORS ?= 0
+SAMPLES_DIR ?= /data/samples
+FALSE_POSITIVES_ARCHIVE ?= /tmp/false-positives.tgz
+FALSE_NEGATIVES_ARCHIVE ?= /tmp/false-negatives.tgz
 SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
@@ -256,6 +259,22 @@ false-negatives: venv check-db
 		--top-errors $(TOP_ERRORS) \
 		--output $(OUT_DIR)/false_negatives.json
 
+false-positives-archive: false-positives
+	$(PYTHON) scripts/archive_error_samples.py \
+		--report $(OUT_DIR)/false_positives.json \
+		--output $(FALSE_POSITIVES_ARCHIVE) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-positives \
+		--top $(TOP_ERRORS)
+
+false-negatives-archive: false-negatives
+	$(PYTHON) scripts/archive_error_samples.py \
+		--report $(OUT_DIR)/false_negatives.json \
+		--output $(FALSE_NEGATIVES_ARCHIVE) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-negatives \
+		--top $(TOP_ERRORS)
+
 benchmark: venv check-db
 	$(PYTHON) -m collimator benchmark --db $(DB) $(WORKERS_ARG) \
 		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
@@ -433,6 +452,8 @@ help:
 	@echo "  thresholds-refresh Rebuild cached threshold scores, then tune thresholds"
 	@echo "  false-positives    Show false positives grouped by severity level"
 	@echo "  false-negatives    Show false negatives grouped by severity level"
+	@echo "  false-positives-archive Package top false positives into a tgz"
+	@echo "  false-negatives-archive Package top false negatives into a tgz"
 	@echo "  benchmark          Measure feature extraction & inference latency"
 	@echo "  build-splits       Pre-compute data splits in DB"
 	@echo "  demo-db            Create a small SQLite DB for testing"

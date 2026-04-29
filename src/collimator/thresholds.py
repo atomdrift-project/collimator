@@ -436,13 +436,36 @@ def _row_for_sample(sample: ScoredSample, probability: float, label: int, levels
     return {
         "row_id": sample.row_id,
         "sha256": sample.sha256,
-        "path": sample.path,
+        "path": _outermost_sample_path(sample.path),
         "score": sample.score,
         "probability": float(probability),
         "label": "bad" if int(label) == 1 else "good",
         "suspicious_level": _first_matching_level(float(probability), levels, "suspicious"),
         "hostile_level": _first_matching_level(float(probability), levels, "hostile"),
     }
+
+
+def _outermost_sample_path(path: str) -> str:
+    """Return the archive path for an embedded member path."""
+    return path.split("!!", 1)[0]
+
+
+def _outermost_error_rows(rows: list[dict[str, Any]], *, limit: int) -> list[dict[str, Any]]:
+    """Collapse embedded archive member rows to one row per outer sample path."""
+    seen: set[str] = set()
+    selected: list[dict[str, Any]] = []
+    for row in rows:
+        outer_path = _outermost_sample_path(str(row.get("path") or ""))
+        key = outer_path or str(row.get("path") or "")
+        if key in seen:
+            continue
+        seen.add(key)
+        row = dict(row)
+        row["path"] = outer_path
+        selected.append(row)
+        if len(selected) >= limit:
+            break
+    return selected
 
 
 def _print_severity_table(title: str, levels: list[dict[str, Any]], name: str) -> None:
@@ -481,7 +504,7 @@ def _error_rows_for_threshold(
         row = {
             "row_id": sample.row_id,
             "sha256": sample.sha256,
-            "path": sample.path,
+            "path": _outermost_sample_path(sample.path),
             "score": sample.score,
             "probability": float(prob),
             "label": "bad" if int(label) == 1 else "good",
@@ -491,8 +514,11 @@ def _error_rows_for_threshold(
         elif int(label) == 1 and prob < threshold:
             fn_rows.append(row)
     fp_rows.sort(key=lambda row: float(row["probability"]), reverse=True)
-    fn_rows.sort(key=lambda row: float(row["probability"]))
-    return fp_rows[:top_n], fn_rows[:top_n]
+    fn_rows.sort(key=lambda row: float(row["probability"]), reverse=True)
+    return (
+        _outermost_error_rows(fp_rows, limit=top_n),
+        _outermost_error_rows(fn_rows, limit=top_n),
+    )
 
 
 def _score_samples(
@@ -820,7 +846,7 @@ def show_false_positives(
     *,
     model_path: Path,
     spec_path: Path,
-    top_errors: int = 50,
+    top_errors: int = 100,
     output_path: Path | None = None,
     n_workers: int = 0,
     cache_path: Path | None = None,
@@ -847,6 +873,7 @@ def show_false_positives(
         )
     ]
     rows.sort(key=lambda row: float(row["probability"]), reverse=True)
+    rows = _outermost_error_rows(rows, limit=len(rows))
 
     payload: dict[str, Any] = {
         "corpus": {
@@ -896,7 +923,7 @@ def show_false_negatives(
     *,
     model_path: Path,
     spec_path: Path,
-    top_errors: int = 50,
+    top_errors: int = 100,
     output_path: Path | None = None,
     n_workers: int = 0,
     cache_path: Path | None = None,
@@ -919,7 +946,8 @@ def show_false_negatives(
         for sample, prob, label in zip(samples, probs, y, strict=False)
         if int(label) == 1
     ]
-    rows.sort(key=lambda row: float(row["probability"]))
+    rows.sort(key=lambda row: float(row["probability"]), reverse=True)
+    rows = _outermost_error_rows(rows, limit=len(rows))
     uncaught = [
         row for row in rows
         if row["suspicious_level"] is None and row["hostile_level"] is None
@@ -949,7 +977,7 @@ def show_false_negatives(
         print(f"  {name}: {counts}")
     print(f"  uncaught by level 9: {len(uncaught)}")
     if uncaught:
-        print("\n  lowest-probability uncaught bad samples:")
+        print("\n  highest-probability uncaught bad samples:")
         for row in uncaught[:top_errors]:
             print(
                 f"    {row['probability']:.6f}  H=- S=- score={row['score']:<4} "
