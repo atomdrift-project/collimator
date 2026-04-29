@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan traits thresholds thresholds-refresh false-positives false-negatives false-positives-archive false-negatives-archive benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
+.PHONY: train evaluate explain inspect errors scan traits thresholds thresholds-refresh false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -12,6 +12,8 @@ THRESHOLD_TOP_ERRORS ?= 0
 SAMPLES_DIR ?= /data/samples
 FALSE_POSITIVES_ARCHIVE ?= /tmp/false-positives.tgz
 FALSE_NEGATIVES_ARCHIVE ?= /tmp/false-negatives.tgz
+NEAR_FALSE_POSITIVES_ARCHIVE ?= /tmp/near-false-positives.tgz
+NEAR_FALSE_NEGATIVES_ARCHIVE ?= /tmp/near-false-negatives.tgz
 SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
@@ -250,6 +252,15 @@ false-positives: venv check-db
 		--top-errors $(TOP_ERRORS) \
 		--output $(OUT_DIR)/false_positives.json
 
+near-false-positives: venv check-db
+	$(PYTHON) -u -m collimator near-false-positives --db $(DB) \
+		--model $(OUT_DIR)/model.json \
+		--spec $(OUT_DIR)/feature_spec.json \
+		$(WORKERS_ARG) \
+		--scores-cache $(THRESHOLD_SCORES) \
+		--top-errors $(TOP_ERRORS) \
+		--output $(OUT_DIR)/near_false_positives.json
+
 false-negatives: venv check-db
 	$(PYTHON) -u -m collimator false-negatives --db $(DB) \
 		--model $(OUT_DIR)/model.json \
@@ -258,6 +269,15 @@ false-negatives: venv check-db
 		--scores-cache $(THRESHOLD_SCORES) \
 		--top-errors $(TOP_ERRORS) \
 		--output $(OUT_DIR)/false_negatives.json
+
+near-false-negatives: venv check-db
+	$(PYTHON) -u -m collimator near-false-negatives --db $(DB) \
+		--model $(OUT_DIR)/model.json \
+		--spec $(OUT_DIR)/feature_spec.json \
+		$(WORKERS_ARG) \
+		--scores-cache $(THRESHOLD_SCORES) \
+		--top-errors $(TOP_ERRORS) \
+		--output $(OUT_DIR)/near_false_negatives.json
 
 false-positives-archive: false-positives
 	$(PYTHON) scripts/archive_error_samples.py \
@@ -273,6 +293,22 @@ false-negatives-archive: false-negatives
 		--output $(FALSE_NEGATIVES_ARCHIVE) \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-negatives \
+		--top $(TOP_ERRORS)
+
+near-false-positives-archive: near-false-positives
+	$(PYTHON) scripts/archive_error_samples.py \
+		--report $(OUT_DIR)/near_false_positives.json \
+		--output $(NEAR_FALSE_POSITIVES_ARCHIVE) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind near-false-positives \
+		--top $(TOP_ERRORS)
+
+near-false-negatives-archive: near-false-negatives
+	$(PYTHON) scripts/archive_error_samples.py \
+		--report $(OUT_DIR)/near_false_negatives.json \
+		--output $(NEAR_FALSE_NEGATIVES_ARCHIVE) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind near-false-negatives \
 		--top $(TOP_ERRORS)
 
 benchmark: venv check-db
@@ -452,8 +488,12 @@ help:
 	@echo "  thresholds-refresh Rebuild cached threshold scores, then tune thresholds"
 	@echo "  false-positives    Show false positives grouped by severity level"
 	@echo "  false-negatives    Show false negatives grouped by severity level"
+	@echo "  near-false-positives Show benign rows newly flagged by twice-looser level 9"
+	@echo "  near-false-negatives Show bad rows newly caught by twice-looser level 9"
 	@echo "  false-positives-archive Package top false positives into a tgz"
 	@echo "  false-negatives-archive Package top false negatives into a tgz"
+	@echo "  near-false-positives-archive Package top near false positives into a tgz"
+	@echo "  near-false-negatives-archive Package top near false negatives into a tgz"
 	@echo "  benchmark          Measure feature extraction & inference latency"
 	@echo "  build-splits       Pre-compute data splits in DB"
 	@echo "  demo-db            Create a small SQLite DB for testing"

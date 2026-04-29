@@ -435,6 +435,27 @@ def _matches_severity_level(probability: float, level: dict[str, Any], name: str
     return isinstance(metric, dict) and probability >= float(metric["threshold"])
 
 
+def _near_severity_level(level: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of a severity level with thresholds twice as far from 1.0."""
+    near: dict[str, Any] = {
+        "level": level.get("level"),
+        "basis_level": level.get("level"),
+        "targets": level.get("targets", {}),
+        "budgets": level.get("budgets", {}),
+    }
+    for name in ("hostile", "suspicious"):
+        metric = level.get(name)
+        if isinstance(metric, dict):
+            near_metric = dict(metric)
+            threshold = float(metric["threshold"])
+            near_metric["threshold"] = max(0.0, 1.0 - (2.0 * (1.0 - threshold)))
+            near_metric["basis_threshold"] = threshold
+            near[name] = near_metric
+        else:
+            near[name] = None
+    return near
+
+
 def _first_matching_level(probability: float, levels: list[dict[str, Any]], name: str) -> int | None:
     for row in levels:
         metric = row.get(name)
@@ -905,7 +926,9 @@ def show_false_positives(
 
     for name in ("suspicious", "hostile"):
         for level in range(1, 10):
-            payload["counts"][name][str(level)] = sum(1 for row in rows if row[f"{name}_level"] == level)
+            payload["counts"][name][str(level)] = sum(
+                1 for row in rows if row[f"{name}_level"] == level
+            )
 
     print(f"\n{'FALSE POSITIVES BY SEVERITY LEVEL':=^78}")
     print(f"Corpus: {len(samples)} samples ({malware} malware, {benign} good)")
@@ -935,6 +958,113 @@ def show_false_positives(
             import json
             json.dump(payload, f, indent=2)
         print(f"\nSaved false-positive report to {output_path}")
+
+    return payload
+
+
+def show_near_false_positives(
+    db_path: Path | str,
+    *,
+    model_path: Path,
+    spec_path: Path,
+    top_errors: int = 100,
+    output_path: Path | None = None,
+    n_workers: int = 0,
+    cache_path: Path | None = None,
+    refresh_cache: bool = False,
+) -> dict[str, Any]:
+    """Print benign samples that newly match a twice-looser level-9 threshold."""
+    samples, probs, y = _score_labeled_corpus(
+        db_path,
+        model_path=model_path,
+        spec_path=spec_path,
+        n_workers=n_workers,
+        cache_path=cache_path,
+        refresh_cache=refresh_cache,
+    )
+    benign = int(np.sum(y == 0))
+    malware = int(np.sum(y == 1))
+    severity_levels = compute_severity_levels(probs, y)
+    basis_level = _most_open_severity_level(severity_levels)
+    near_level = _near_severity_level(basis_level) if basis_level is not None else None
+    raw_rows = [
+        _row_for_sample(sample, float(prob), int(label), severity_levels)
+        for sample, prob, label in zip(samples, probs, y, strict=False)
+        if int(label) == 0
+        and basis_level is not None
+        and near_level is not None
+        and not (
+            _matches_severity_level(float(prob), basis_level, "suspicious")
+            or _matches_severity_level(float(prob), basis_level, "hostile")
+        )
+        and (
+            _matches_severity_level(float(prob), near_level, "suspicious")
+            or _matches_severity_level(float(prob), near_level, "hostile")
+        )
+    ]
+    rows = list(raw_rows)
+    rows.sort(key=lambda row: float(row["probability"]), reverse=True)
+    rows = _outermost_error_rows(rows, limit=len(rows))
+
+    payload: dict[str, Any] = {
+        "corpus": {
+            "samples": len(samples),
+            "malware": malware,
+            "benign": benign,
+        },
+        "severity_level_targets": SEVERITY_LEVEL_TARGETS,
+        "severity_levels": severity_levels,
+        "basis_level": int(basis_level["level"]) if basis_level is not None else None,
+        "near_level": near_level,
+        "raw_near_false_positive_count": len(raw_rows),
+        "outer_near_false_positive_count": len(rows),
+        "near_false_positives": rows[:top_errors],
+        "counts": {"suspicious": {}, "hostile": {}},
+    }
+
+    for name in ("suspicious", "hostile"):
+        for level in range(1, 10):
+            payload["counts"][name][str(level)] = sum(
+                1 for row in rows if row[f"{name}_level"] == level
+            )
+
+    print(f"\n{'NEAR FALSE POSITIVES BY SEVERITY LEVEL':=^78}")
+    print(f"Corpus: {len(samples)} samples ({malware} malware, {benign} good)")
+    if basis_level is not None and near_level is not None:
+        print(
+            f"Basis: level {basis_level['level']} with twice-looser thresholds "
+            f"(raw rows: {len(raw_rows)}, outer files: {len(rows)})"
+        )
+        for name in ("hostile", "suspicious"):
+            metric = near_level.get(name)
+            if isinstance(metric, dict):
+                print(
+                    f"  {name}: {float(metric['basis_threshold']):.6f} -> "
+                    f"{float(metric['threshold']):.6f}"
+                )
+    print("Existing first level counts for near rows:")
+    for name in ("hostile", "suspicious"):
+        counts = ", ".join(
+            f"L{level}={payload['counts'][name][str(level)]}" for level in range(1, 10)
+        )
+        print(f"  {name}: {counts}")
+    if rows:
+        print("\n  top near false positives:")
+        for row in rows[:top_errors]:
+            print(
+                f"    {row['probability']:.6f}  H={row['hostile_level'] or '-'} "
+                f"S={row['suspicious_level'] or '-'} score={row['score']:<4} "
+                f"{row['sha256'][:16]}  {row['path']}"
+            )
+    else:
+        print("\n  near false positives: none")
+
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            import json
+            json.dump(payload, f, indent=2)
+        print(f"\nSaved near-false-positive report to {output_path}")
 
     return payload
 
@@ -1013,6 +1143,100 @@ def show_false_negatives(
             import json
             json.dump(payload, f, indent=2)
         print(f"\nSaved false-negative report to {output_path}")
+
+    return payload
+
+
+def show_near_false_negatives(
+    db_path: Path | str,
+    *,
+    model_path: Path,
+    spec_path: Path,
+    top_errors: int = 100,
+    output_path: Path | None = None,
+    n_workers: int = 0,
+    cache_path: Path | None = None,
+    refresh_cache: bool = False,
+) -> dict[str, Any]:
+    """Print malware samples caught by a twice-looser level-9 threshold only."""
+    samples, probs, y = _score_labeled_corpus(
+        db_path,
+        model_path=model_path,
+        spec_path=spec_path,
+        n_workers=n_workers,
+        cache_path=cache_path,
+        refresh_cache=refresh_cache,
+    )
+    benign = int(np.sum(y == 0))
+    malware = int(np.sum(y == 1))
+    severity_levels = compute_severity_levels(probs, y)
+    basis_level = _most_open_severity_level(severity_levels)
+    near_level = _near_severity_level(basis_level) if basis_level is not None else None
+    raw_rows = [
+        _row_for_sample(sample, float(prob), int(label), severity_levels)
+        for sample, prob, label in zip(samples, probs, y, strict=False)
+        if int(label) == 1
+        and basis_level is not None
+        and near_level is not None
+        and not (
+            _matches_severity_level(float(prob), basis_level, "suspicious")
+            or _matches_severity_level(float(prob), basis_level, "hostile")
+        )
+        and (
+            _matches_severity_level(float(prob), near_level, "suspicious")
+            or _matches_severity_level(float(prob), near_level, "hostile")
+        )
+    ]
+    rows = list(raw_rows)
+    rows.sort(key=lambda row: float(row["probability"]), reverse=True)
+    rows = _outermost_error_rows(rows, limit=len(rows))
+
+    payload: dict[str, Any] = {
+        "corpus": {
+            "samples": len(samples),
+            "malware": malware,
+            "benign": benign,
+        },
+        "severity_level_targets": SEVERITY_LEVEL_TARGETS,
+        "severity_levels": severity_levels,
+        "basis_level": int(basis_level["level"]) if basis_level is not None else None,
+        "near_level": near_level,
+        "raw_near_false_negative_count": len(raw_rows),
+        "outer_near_false_negative_count": len(rows),
+        "near_false_negatives": rows[:top_errors],
+    }
+
+    print(f"\n{'NEAR FALSE NEGATIVES BY SEVERITY LEVEL':=^78}")
+    print(f"Corpus: {len(samples)} samples ({malware} malware, {benign} good)")
+    if basis_level is not None and near_level is not None:
+        print(
+            f"Basis: level {basis_level['level']} with twice-looser thresholds "
+            f"(raw rows: {len(raw_rows)}, outer files: {len(rows)})"
+        )
+        for name in ("hostile", "suspicious"):
+            metric = near_level.get(name)
+            if isinstance(metric, dict):
+                print(
+                    f"  {name}: {float(metric['basis_threshold']):.6f} -> "
+                    f"{float(metric['threshold']):.6f}"
+                )
+    if rows:
+        print("\n  top near false negatives:")
+        for row in rows[:top_errors]:
+            print(
+                f"    {row['probability']:.6f}  H={row['hostile_level'] or '-'} "
+                f"S={row['suspicious_level'] or '-'} score={row['score']:<4} "
+                f"{row['sha256'][:16]}  {row['path']}"
+            )
+    else:
+        print("\n  near false negatives: none")
+
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            import json
+            json.dump(payload, f, indent=2)
+        print(f"\nSaved near-false-negative report to {output_path}")
 
     return payload
 

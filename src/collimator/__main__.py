@@ -1043,6 +1043,22 @@ def main() -> None:
     p_fp.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
     _add_workers_arg(p_fp)
 
+    # near-false-positives
+    p_near_fp = subparsers.add_parser(
+        "near-false-positives",
+        help="Show benign samples newly flagged by a twice-looser level-9 threshold",
+    )
+    p_near_fp.add_argument(
+        "--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)"
+    )
+    p_near_fp.add_argument("--model", default="out/model.json", help="Path to trained XGBoost model")
+    p_near_fp.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
+    p_near_fp.add_argument("--top-errors", type=int, default=100, help="How many near false positives to show")
+    p_near_fp.add_argument("--output", default=None, help="Optional JSON output path")
+    p_near_fp.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
+    p_near_fp.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
+    _add_workers_arg(p_near_fp)
+
     # false-negatives
     p_fn = subparsers.add_parser(
         "false-negatives",
@@ -1056,6 +1072,22 @@ def main() -> None:
     p_fn.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
     p_fn.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
     _add_workers_arg(p_fn)
+
+    # near-false-negatives
+    p_near_fn = subparsers.add_parser(
+        "near-false-negatives",
+        help="Show malware samples newly caught by a twice-looser level-9 threshold",
+    )
+    p_near_fn.add_argument(
+        "--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)"
+    )
+    p_near_fn.add_argument("--model", default="out/model.json", help="Path to trained XGBoost model")
+    p_near_fn.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
+    p_near_fn.add_argument("--top-errors", type=int, default=100, help="How many near false negatives to show")
+    p_near_fn.add_argument("--output", default=None, help="Optional JSON output path")
+    p_near_fn.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
+    p_near_fn.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
+    _add_workers_arg(p_near_fn)
 
     # benchmark
     p_bench = subparsers.add_parser("benchmark", help="Benchmark extraction, training, and inference")
@@ -1261,8 +1293,30 @@ def main() -> None:
             cache_path=Path(args.scores_cache) if args.scores_cache else None,
             refresh_cache=args.refresh_cache,
         )
+    elif args.command == "near-false-positives":
+        thresholds.show_near_false_positives(
+            db_path=_db_dsn(args.db),
+            model_path=Path(args.model),
+            spec_path=Path(args.spec),
+            top_errors=args.top_errors,
+            output_path=Path(args.output) if args.output else None,
+            n_workers=args.workers,
+            cache_path=Path(args.scores_cache) if args.scores_cache else None,
+            refresh_cache=args.refresh_cache,
+        )
     elif args.command == "false-negatives":
         thresholds.show_false_negatives(
+            db_path=_db_dsn(args.db),
+            model_path=Path(args.model),
+            spec_path=Path(args.spec),
+            top_errors=args.top_errors,
+            output_path=Path(args.output) if args.output else None,
+            n_workers=args.workers,
+            cache_path=Path(args.scores_cache) if args.scores_cache else None,
+            refresh_cache=args.refresh_cache,
+        )
+    elif args.command == "near-false-negatives":
+        thresholds.show_near_false_negatives(
             db_path=_db_dsn(args.db),
             model_path=Path(args.model),
             spec_path=Path(args.spec),

@@ -8,14 +8,17 @@ from contextlib import redirect_stdout
 
 import numpy as np
 
+from collimator import thresholds
 from collimator.data import Sample
 from collimator.thresholds import (
+    ScoredSample,
+    _error_rows_for_threshold,
+    _near_severity_level,
     compute_default_recommendations,
     compute_severity_levels,
     evaluate_policies,
     fp_budget_tables,
     print_threshold_table,
-    _error_rows_for_threshold,
 )
 
 
@@ -84,6 +87,61 @@ def test_severity_levels_derive_budgets_from_good_count() -> None:
     assert by_level[5]["hostile"]["fp"] <= 1
     assert by_level[5]["suspicious"]["fp"] <= 10
     assert "true_negative_rate" in by_level[5]["hostile"]
+
+
+def test_near_severity_level_doubles_distance_from_full_confidence() -> None:
+    near = _near_severity_level({
+        "level": 9,
+        "hostile": {"threshold": 0.95},
+        "suspicious": {"threshold": 0.90},
+    })
+
+    assert np.isclose(near["hostile"]["threshold"], 0.90)
+    assert np.isclose(near["suspicious"]["threshold"], 0.80)
+    assert np.isclose(near["hostile"]["basis_threshold"], 0.95)
+    assert np.isclose(near["suspicious"]["basis_threshold"], 0.90)
+
+
+def test_near_false_reports_only_newly_crossing_rows(monkeypatch) -> None:
+    samples = [
+        ScoredSample(1, "a" * 64, "/repo/good-near.py", 0, 0),
+        ScoredSample(2, "b" * 64, "/repo/good-false.py", 0, 0),
+        ScoredSample(3, "c" * 64, "/repo/good-low.py", 0, 0),
+        ScoredSample(4, "d" * 64, "/repo/bad-near.py", 9, 1),
+        ScoredSample(5, "e" * 64, "/repo/bad-false.py", 9, 1),
+        ScoredSample(6, "f" * 64, "/repo/bad-low.py", 9, 1),
+    ]
+    probs = np.array([0.85, 0.95, 0.75, 0.88, 0.95, 0.70], dtype=np.float32)
+    y = np.array([0, 0, 0, 1, 1, 1], dtype=np.float32)
+    severity_levels = [
+        {
+            "level": 9,
+            "hostile": {"threshold": 0.90},
+            "suspicious": {"threshold": 0.90},
+        },
+    ]
+
+    def fake_score(*args, **kwargs):
+        return samples, probs, y
+
+    monkeypatch.setattr(thresholds, "_score_labeled_corpus", fake_score)
+    monkeypatch.setattr(thresholds, "compute_severity_levels", lambda _probs, _y: severity_levels)
+
+    fp_payload = thresholds.show_near_false_positives(
+        "db",
+        model_path="model",
+        spec_path="spec",
+        top_errors=10,
+    )
+    fn_payload = thresholds.show_near_false_negatives(
+        "db",
+        model_path="model",
+        spec_path="spec",
+        top_errors=10,
+    )
+
+    assert [row["path"] for row in fp_payload["near_false_positives"]] == ["/repo/good-near.py"]
+    assert [row["path"] for row in fn_payload["near_false_negatives"]] == ["/repo/bad-near.py"]
 
 
 def test_error_rows_for_threshold_returns_full_paths_and_confidence() -> None:
