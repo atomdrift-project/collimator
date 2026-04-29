@@ -424,6 +424,17 @@ def _severity_level_by_number(levels: list[dict[str, Any]], level_number: int) -
     return None
 
 
+def _most_open_severity_level(levels: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not levels:
+        return None
+    return max(levels, key=lambda row: int(row.get("level", 0)))
+
+
+def _matches_severity_level(probability: float, level: dict[str, Any], name: str) -> bool:
+    metric = level.get(name)
+    return isinstance(metric, dict) and probability >= float(metric["threshold"])
+
+
 def _first_matching_level(probability: float, levels: list[dict[str, Any]], name: str) -> int | None:
     for row in levels:
         metric = row.get(name)
@@ -864,14 +875,16 @@ def show_false_positives(
     benign = int(np.sum(y == 0))
     malware = int(np.sum(y == 1))
     severity_levels = compute_severity_levels(probs, y)
-    rows = [
+    basis_level = _most_open_severity_level(severity_levels)
+    raw_rows = [
         _row_for_sample(sample, float(prob), int(label), severity_levels)
         for sample, prob, label in zip(samples, probs, y, strict=False)
-        if int(label) == 0 and (
-            _first_matching_level(float(prob), severity_levels, "suspicious") is not None
-            or _first_matching_level(float(prob), severity_levels, "hostile") is not None
+        if int(label) == 0 and basis_level is not None and (
+            _matches_severity_level(float(prob), basis_level, "suspicious")
+            or _matches_severity_level(float(prob), basis_level, "hostile")
         )
     ]
+    rows = list(raw_rows)
     rows.sort(key=lambda row: float(row["probability"]), reverse=True)
     rows = _outermost_error_rows(rows, limit=len(rows))
 
@@ -883,6 +896,9 @@ def show_false_positives(
         },
         "severity_level_targets": SEVERITY_LEVEL_TARGETS,
         "severity_levels": severity_levels,
+        "basis_level": int(basis_level["level"]) if basis_level is not None else None,
+        "raw_false_positive_count": len(raw_rows),
+        "outer_false_positive_count": len(rows),
         "false_positives": rows[:top_errors],
         "counts": {"suspicious": {}, "hostile": {}},
     }
@@ -893,6 +909,11 @@ def show_false_positives(
 
     print(f"\n{'FALSE POSITIVES BY SEVERITY LEVEL':=^78}")
     print(f"Corpus: {len(samples)} samples ({malware} malware, {benign} good)")
+    if basis_level is not None:
+        print(
+            f"Basis: level {basis_level['level']} "
+            f"(raw rows: {len(raw_rows)}, outer files: {len(rows)})"
+        )
     print("First level counts:")
     for name in ("hostile", "suspicious"):
         counts = ", ".join(f"L{level}={payload['counts'][name][str(level)]}" for level in range(1, 10))
