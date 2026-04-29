@@ -1,11 +1,14 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan traits thresholds benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
+.PHONY: train evaluate explain inspect errors scan traits thresholds thresholds-refresh false-positives false-negatives benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
 DB ?= postgres://hopper@localhost:5432/hopper
 OUT_DIR ?= out
 LOG_DIR ?= $(OUT_DIR)/logs
+THRESHOLD_SCORES ?= $(OUT_DIR)/threshold_scores.npz
+TOP_ERRORS ?= 50
+THRESHOLD_TOP_ERRORS ?= 0
 SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
@@ -221,7 +224,37 @@ thresholds: venv check-db
 		--model $(OUT_DIR)/model.json \
 		--spec $(OUT_DIR)/feature_spec.json \
 		$(WORKERS_ARG) \
+		--scores-cache $(THRESHOLD_SCORES) \
+		--top-errors $(THRESHOLD_TOP_ERRORS) \
 		--output $(OUT_DIR)/threshold_tuning.json
+
+thresholds-refresh: venv check-db
+	$(PYTHON) -u -m collimator tune-thresholds --db $(DB) \
+		--model $(OUT_DIR)/model.json \
+		--spec $(OUT_DIR)/feature_spec.json \
+		$(WORKERS_ARG) \
+		--scores-cache $(THRESHOLD_SCORES) \
+		--refresh-cache \
+		--top-errors $(THRESHOLD_TOP_ERRORS) \
+		--output $(OUT_DIR)/threshold_tuning.json
+
+false-positives: venv check-db
+	$(PYTHON) -u -m collimator false-positives --db $(DB) \
+		--model $(OUT_DIR)/model.json \
+		--spec $(OUT_DIR)/feature_spec.json \
+		$(WORKERS_ARG) \
+		--scores-cache $(THRESHOLD_SCORES) \
+		--top-errors $(TOP_ERRORS) \
+		--output $(OUT_DIR)/false_positives.json
+
+false-negatives: venv check-db
+	$(PYTHON) -u -m collimator false-negatives --db $(DB) \
+		--model $(OUT_DIR)/model.json \
+		--spec $(OUT_DIR)/feature_spec.json \
+		$(WORKERS_ARG) \
+		--scores-cache $(THRESHOLD_SCORES) \
+		--top-errors $(TOP_ERRORS) \
+		--output $(OUT_DIR)/false_negatives.json
 
 benchmark: venv check-db
 	$(PYTHON) -m collimator benchmark --db $(DB) $(WORKERS_ARG) \
@@ -350,7 +383,7 @@ deploy: verify-xgboost-ars verify-litmus
 	cp $(OUT_DIR)/evaluation.json $(_STAGE)/evaluation.json
 	@test -f $(OUT_DIR)/extraction_fixture.json || { rm -rf $(_STAGE); echo "error: extraction_fixture.json not found"; exit 1; }
 	cp $(OUT_DIR)/extraction_fixture.json $(_STAGE)/extraction_fixture.json
-	@$(PYTHON) -c "import json; e=json.load(open('$(OUT_DIR)/evaluation.json')); r=e.get('recommended_thresholds',{}); json.dump({k:v for k,v in r.items() if v is not None}, open('$(_STAGE)/config.json','w'), indent=2); print('  config.json: ' + ', '.join(f'{k}={v:.6f}' for k,v in r.items() if v is not None))"
+	@$(PYTHON) scripts/build_litmus_config.py --threshold-tuning $(OUT_DIR)/threshold_tuning.json --output $(_STAGE)/config.json || { rm -rf $(_STAGE); exit 1; }
 	@echo "Running litmus deployed-model compatibility checks against staged copy..."
 	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test feature_spec || { rm -rf $(_STAGE); exit 1; }
 	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test extraction_parity || { rm -rf $(_STAGE); exit 1; }
@@ -365,8 +398,9 @@ deploy: verify-xgboost-ars verify-litmus
 .PHONY: verify-xgboost-ars
 verify-xgboost-ars:
 	@test -d $(XGBOOST_ARS_DIR) || { echo "error: $(XGBOOST_ARS_DIR) does not exist"; exit 1; }
+	@test -f $(OUT_DIR)/reference.json || { echo "error: $(OUT_DIR)/reference.json not found — run make train first"; exit 1; }
 	@echo "Running xgboost-ars tests..."
-	cd $(XGBOOST_ARS_DIR) && cargo test --release
+	cd $(XGBOOST_ARS_DIR) && XGBOOST_ARS_REFERENCE_JSON=$(abspath $(OUT_DIR)/reference.json) cargo test --release
 	@echo "xgboost-ars: all tests passed"
 
 .PHONY: verify-litmus
@@ -395,7 +429,10 @@ help:
 	@echo "  inspect            Show feature breakdown for a sample (SAMPLE=sha256)"
 	@echo "  errors             Show top false positives/negatives"
 	@echo "  traits             Dump all unique traits seen in DB"
-	@echo "  thresholds         Tune suspicious/hostile thresholds on the full corpus"
+	@echo "  thresholds         Tune severity thresholds on the full corpus"
+	@echo "  thresholds-refresh Rebuild cached threshold scores, then tune thresholds"
+	@echo "  false-positives    Show false positives grouped by severity level"
+	@echo "  false-negatives    Show false negatives grouped by severity level"
 	@echo "  benchmark          Measure feature extraction & inference latency"
 	@echo "  build-splits       Pre-compute data splits in DB"
 	@echo "  demo-db            Create a small SQLite DB for testing"

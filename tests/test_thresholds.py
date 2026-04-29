@@ -11,6 +11,7 @@ import numpy as np
 from collimator.data import Sample
 from collimator.thresholds import (
     compute_default_recommendations,
+    compute_severity_levels,
     evaluate_policies,
     fp_budget_tables,
     print_threshold_table,
@@ -62,6 +63,27 @@ def test_default_recommendations_derive_budgets_from_good_count() -> None:
 
     assert recs["hostile"] == hostile_row["threshold"]
     assert recs["suspicious"] == suspicious_row["threshold"]
+
+
+def test_severity_levels_derive_budgets_from_good_count() -> None:
+    y = np.array([1] * 20 + [0] * 1_000_001, dtype=np.float32)
+    probs = np.concatenate([
+        np.linspace(0.99, 0.80, 20, dtype=np.float32),
+        np.linspace(0.70, 0.01, 1_000_001, dtype=np.float32),
+    ])
+
+    levels = compute_severity_levels(probs, y)
+    by_level = {row["level"]: row for row in levels}
+
+    assert by_level[1]["budgets"]["hostile_fp"] == 0
+    assert by_level[1]["budgets"]["suspicious_fp"] == 0
+    assert by_level[5]["budgets"]["hostile_fp"] == 1
+    assert by_level[5]["budgets"]["suspicious_fp"] == 10
+    assert by_level[9]["budgets"]["hostile_fp"] == 5
+    assert by_level[9]["budgets"]["suspicious_fp"] == 50
+    assert by_level[5]["hostile"]["fp"] <= 1
+    assert by_level[5]["suspicious"]["fp"] <= 10
+    assert "true_negative_rate" in by_level[5]["hostile"]
 
 
 def test_error_rows_for_threshold_returns_full_paths_and_confidence() -> None:

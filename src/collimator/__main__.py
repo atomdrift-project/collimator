@@ -175,14 +175,13 @@ def cmd_train(args: argparse.Namespace) -> None:
     export.export_onnx(result.model, spec.total_features, out_dir / "model.onnx")
     export.save_model(result.model, out_dir / "model.json")
 
-    # Compute deploy thresholds from the same full labeled corpus used by
-    # `make thresholds`: suspicious ~= 1/100k good FP, hostile ~= 1/1M good FP.
-    recommended = thresholds.compute_default_recommendations_for_corpus(
-        db_path,
-        model_path=out_dir / "model.json",
-        spec_path=out_dir / "feature_spec.json",
-        n_workers=effective_workers,
-    )
+    # Fast in-run estimate from out-of-fold CV predictions. Run
+    # `make thresholds-refresh` after training to compute deploy thresholds
+    # against the full labeled good corpus, including low-score good rows.
+    recommended = thresholds.compute_default_recommendations(result.cv_predictions, result.cv_labels) \
+        if len(result.cv_predictions) > 0 else {}
+    severity_levels = thresholds.compute_severity_levels(result.cv_predictions, result.cv_labels) \
+        if len(result.cv_predictions) > 0 else []
 
     export.save_evaluation(
         metrics=result.metrics,
@@ -195,6 +194,8 @@ def cmd_train(args: argparse.Namespace) -> None:
         n_features=spec.total_features,
         model_abi_version=spec.abi_version,
         recommended_thresholds=recommended if recommended else None,
+        severity_levels=severity_levels if severity_levels else None,
+        severity_level_targets=thresholds.SEVERITY_LEVEL_TARGETS,
         experiment={
             "model_abi_version": spec.abi_version,
             "seed": config.seed,
@@ -1024,7 +1025,37 @@ def main() -> None:
     p_tune.add_argument("--top-errors", type=int, default=20, help="How many FP/FN paths to show per policy level")
     p_tune.add_argument("--output", default=None, help="Optional JSON output path")
     p_tune.add_argument("--limit", type=int, default=0, help="Optional row cap after filters (0 = no cap)")
+    p_tune.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
+    p_tune.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
     _add_workers_arg(p_tune)
+
+    # false-positives
+    p_fp = subparsers.add_parser(
+        "false-positives",
+        help="Show false positives grouped by severity level",
+    )
+    p_fp.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
+    p_fp.add_argument("--model", default="out/model.json", help="Path to trained XGBoost model")
+    p_fp.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
+    p_fp.add_argument("--top-errors", type=int, default=50, help="How many false positives to show")
+    p_fp.add_argument("--output", default=None, help="Optional JSON output path")
+    p_fp.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
+    p_fp.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
+    _add_workers_arg(p_fp)
+
+    # false-negatives
+    p_fn = subparsers.add_parser(
+        "false-negatives",
+        help="Show false negatives grouped by severity level",
+    )
+    p_fn.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
+    p_fn.add_argument("--model", default="out/model.json", help="Path to trained XGBoost model")
+    p_fn.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
+    p_fn.add_argument("--top-errors", type=int, default=50, help="How many false negatives to show")
+    p_fn.add_argument("--output", default=None, help="Optional JSON output path")
+    p_fn.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
+    p_fn.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
+    _add_workers_arg(p_fn)
 
     # benchmark
     p_bench = subparsers.add_parser("benchmark", help="Benchmark extraction, training, and inference")
@@ -1174,12 +1205,15 @@ def main() -> None:
             all_labels = np.concatenate([cv_labels, arrays["test_labels"]])
         print(f"Loaded {len(cv_preds)} CV + {len(all_preds) - len(cv_preds)} test predictions")
         recommended = thresholds.compute_default_recommendations(all_preds, all_labels)
+        severity_levels = thresholds.compute_severity_levels(all_preds, all_labels)
         print(f"Recommended thresholds: {recommended}")
         # Update evaluation.json
         eval_path = Path(args.output) / "evaluation.json"
         if eval_path.exists():
             eval_data = json.load(open(eval_path))
             eval_data["recommended_thresholds"] = recommended
+            eval_data["severity_level_targets"] = thresholds.SEVERITY_LEVEL_TARGETS
+            eval_data["severity_levels"] = severity_levels
             with open(eval_path, "w") as f:
                 json.dump(eval_data, f, indent=2)
             print(f"Updated {eval_path}")
@@ -1214,6 +1248,30 @@ def main() -> None:
             output_path=Path(args.output) if args.output else None,
             limit=args.limit,
             n_workers=args.workers,
+            cache_path=Path(args.scores_cache) if args.scores_cache else None,
+            refresh_cache=args.refresh_cache,
+        )
+    elif args.command == "false-positives":
+        thresholds.show_false_positives(
+            db_path=_db_dsn(args.db),
+            model_path=Path(args.model),
+            spec_path=Path(args.spec),
+            top_errors=args.top_errors,
+            output_path=Path(args.output) if args.output else None,
+            n_workers=args.workers,
+            cache_path=Path(args.scores_cache) if args.scores_cache else None,
+            refresh_cache=args.refresh_cache,
+        )
+    elif args.command == "false-negatives":
+        thresholds.show_false_negatives(
+            db_path=_db_dsn(args.db),
+            model_path=Path(args.model),
+            spec_path=Path(args.spec),
+            top_errors=args.top_errors,
+            output_path=Path(args.output) if args.output else None,
+            n_workers=args.workers,
+            cache_path=Path(args.scores_cache) if args.scores_cache else None,
+            refresh_cache=args.refresh_cache,
         )
     elif args.command == "benchmark":
         benchmark.run_benchmark(

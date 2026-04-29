@@ -6,7 +6,7 @@ import logging
 from dataclasses import asdict, dataclass
 from itertools import islice
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 import numpy as np
 
@@ -39,15 +39,26 @@ PRECISION_RECOMMENDATIONS = [
 # trustworthy. Avoids picking a threshold based on 1-2 samples.
 MIN_FLAGGED_FOR_PRECISION = 50
 
-# Default deployment operating points.
-#
-# Each entry: (label, target false-positive rate among the benign/good set).
-# Pick the lowest threshold with FP <= floor(good_count * rate), which maximizes
-# TP rate while respecting the target false-positive rate in the scored good
-# corpus. At ~1M good files this is 10 suspicious FP and 1 hostile FP.
+# Deployment operating points, expressed as false positives per million good
+# files. Level 5 is the legacy default: hostile <=1/1M, suspicious <=10/1M.
+SEVERITY_LEVEL_TARGETS = [
+    {"level": 1, "hostile_per_million": 0.0, "suspicious_per_million": 0.0},
+    {"level": 2, "hostile_per_million": 0.0, "suspicious_per_million": 2.0},
+    {"level": 3, "hostile_per_million": 0.0, "suspicious_per_million": 4.0},
+    {"level": 4, "hostile_per_million": 0.0, "suspicious_per_million": 8.0},
+    {"level": 5, "hostile_per_million": 1.0, "suspicious_per_million": 10.0},
+    {"level": 6, "hostile_per_million": 2.0, "suspicious_per_million": 20.0},
+    {"level": 7, "hostile_per_million": 3.0, "suspicious_per_million": 30.0},
+    {"level": 8, "hostile_per_million": 4.0, "suspicious_per_million": 40.0},
+    {"level": 9, "hostile_per_million": 5.0, "suspicious_per_million": 50.0},
+]
+
+DEFAULT_SEVERITY_LEVEL = 5
+
+# Legacy aliases retained for existing litmus config consumers.
 DEFAULT_FP_RATE_RECOMMENDATIONS = [
-    ("suspicious", 1 / 100_000),
-    ("hostile", 1 / 1_000_000),
+    ("suspicious", SEVERITY_LEVEL_TARGETS[DEFAULT_SEVERITY_LEVEL - 1]["suspicious_per_million"] / 1_000_000),
+    ("hostile", SEVERITY_LEVEL_TARGETS[DEFAULT_SEVERITY_LEVEL - 1]["hostile_per_million"] / 1_000_000),
 ]
 
 # Legacy FP-per-million equivalent of the default rates.
@@ -158,6 +169,7 @@ def _select_threshold_at_fp_budget(
     recall_vals: np.ndarray,
     fpr_vals: np.ndarray,
     n_benign: int,
+    n_malware: int,
     *,
     max_fp: int,
 ) -> dict[str, float | int] | None:
@@ -166,7 +178,7 @@ def _select_threshold_at_fp_budget(
         return None
     index = int(np.where(valid)[0][-1])
     stats = _stats_dict_at_index(
-        thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, index,
+        thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, index,
     )
     stats["max_fp_budget"] = int(max_fp)
     return stats
@@ -176,7 +188,14 @@ def _fp_budget_for_rate(n_benign: int, rate: float) -> int:
     """Allowed benign false positives for a target per-good-file FP rate."""
     if n_benign <= 0:
         return 0
+    if rate <= 0:
+        return 0
     return max(1, int(np.floor(n_benign * rate)))
+
+
+def _fp_budget_for_per_million(n_benign: int, per_million: float) -> int:
+    """Allowed benign false positives for a target FP-per-million rate."""
+    return _fp_budget_for_rate(n_benign, per_million / 1_000_000)
 
 
 def _nearby_budgets(target: int) -> list[int]:
@@ -197,22 +216,31 @@ def _stats_dict_at_index(
     recall_vals: np.ndarray,
     fpr_vals: np.ndarray,
     n_benign: int,
+    n_malware: int,
     index: int,
 ) -> dict[str, float | int]:
     tp = int(tp_vals[index])
     fp = int(fp_vals[index])
+    tn = int(n_benign - fp)
+    fn = int(n_malware - tp)
     flagged = tp + fp
     precision = float(tp / flagged) if flagged > 0 else 1.0
+    tnr = float(tn / max(n_benign, 1))
     return {
         "threshold": float(thresholds[index]),
         "tp": tp,
         "fp": fp,
+        "tn": tn,
+        "fn": fn,
         "flagged": flagged,
         "recall": float(recall_vals[index]),
+        "true_positive_rate": float(recall_vals[index]),
+        "true_negative_rate": tnr,
         "precision": precision,
         "fpr": float(fpr_vals[index]),
         "fp_per_million": float(fpr_vals[index] * 1_000_000),
         "n_benign": int(n_benign),
+        "n_malware": int(n_malware),
     }
 
 
@@ -224,6 +252,7 @@ def _select_policy_level(
     recall_vals: np.ndarray,
     fpr_vals: np.ndarray,
     n_benign: int,
+    n_malware: int,
 ) -> tuple[dict[str, float | int] | None, str | None]:
     if len(thresholds) == 0:
         return None, "no predictions"
@@ -242,12 +271,13 @@ def _select_policy_level(
             warning = f"underpowered benign pool for {level.target:.0f} FP/1M target"
         else:
             warning = None
-        return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, index), warning
+        return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, index), warning
 
     if mode == "max_recall_at_fp_rate":
         budget = _fp_budget_for_rate(n_benign, level.target)
         row = _select_threshold_at_fp_budget(
             thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign,
+            n_malware,
             max_fp=budget,
         )
         if row is None:
@@ -260,7 +290,7 @@ def _select_policy_level(
         if not valid.any():
             return None, f"no threshold keeps recall >= {level.target:.2%}"
         index = int(np.where(valid)[0][0])
-        return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, index), None
+        return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, index), None
 
     if mode == "recall_floor_then_fpr":
         valid_recall = recall_vals >= level.target
@@ -277,14 +307,14 @@ def _select_policy_level(
                 chosen_index = int(np.where(valid_fpr)[0][0])
         else:
             warning = f"underpowered benign pool for aspirational {aspirational_fpm:.0f} FP/1M tightening"
-        return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, chosen_index), warning
+        return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, chosen_index), warning
 
     if mode == "min_precision":
         valid = (precision_vals >= level.target) & (flagged >= level.min_flags)
         if not valid.any():
             return None, f"no threshold reaches precision >= {level.target:.3f} with >= {level.min_flags} flags"
         index = int(np.where(valid)[0][-1])
-        return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, index), None
+        return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, index), None
 
     raise ValueError(f"unsupported policy mode: {mode}")
 
@@ -293,16 +323,16 @@ def evaluate_policies(
     probs: np.ndarray,
     y: np.ndarray,
 ) -> list[dict[str, Any]]:
-    thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, _nm, n_benign = (
+    thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, n_malware, n_benign = (
         _threshold_stats(probs, y)
     )
     results: list[dict[str, Any]] = []
     for spec in POLICY_SPECS:
         suspicious, suspicious_warning = _select_policy_level(
-            spec.suspicious, thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign,
+            spec.suspicious, thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware,
         )
         hostile, hostile_warning = _select_policy_level(
-            spec.hostile, thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign,
+            spec.hostile, thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware,
         )
         results.append({
             "name": spec.name,
@@ -325,7 +355,7 @@ def fp_budget_tables(
     hostile_budgets: list[int] | None = None,
     suspicious_budgets: list[int] | None = None,
 ) -> dict[str, list[dict[str, float | int]]]:
-    thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, _nm, n_benign = (
+    thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, n_malware, n_benign = (
         _threshold_stats(probs, y)
     )
     default_budgets = {
@@ -340,6 +370,7 @@ def fp_budget_tables(
         for budget in budgets:
             row = _select_threshold_at_fp_budget(
                 thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign,
+                n_malware,
                 max_fp=budget,
             )
             if row is not None:
@@ -350,6 +381,90 @@ def fp_budget_tables(
         "hostile": _rows(hostile_budgets),
         "suspicious": _rows(suspicious_budgets),
     }
+
+
+def compute_severity_levels(
+    probs: np.ndarray,
+    y: np.ndarray,
+) -> list[dict[str, Any]]:
+    """Compute severity-level thresholds from configured FP-per-million targets."""
+    thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, n_malware, n_benign = (
+        _threshold_stats(probs, y)
+    )
+    levels: list[dict[str, Any]] = []
+    for target in SEVERITY_LEVEL_TARGETS:
+        level = int(target["level"])
+        row: dict[str, Any] = {
+            "level": level,
+            "targets": {
+                "hostile_per_million": float(target["hostile_per_million"]),
+                "suspicious_per_million": float(target["suspicious_per_million"]),
+            },
+            "budgets": {},
+        }
+        for name in ("hostile", "suspicious"):
+            per_million = float(target[f"{name}_per_million"])
+            budget = _fp_budget_for_per_million(n_benign, per_million)
+            selected = _select_threshold_at_fp_budget(
+                thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware,
+                max_fp=budget,
+            )
+            row["budgets"][f"{name}_fp"] = budget
+            if selected is not None:
+                selected["target_fp_per_million"] = per_million
+            row[name] = selected
+        levels.append(row)
+    return levels
+
+
+def _severity_level_by_number(levels: list[dict[str, Any]], level_number: int) -> dict[str, Any] | None:
+    for row in levels:
+        if int(row.get("level", 0)) == level_number:
+            return row
+    return None
+
+
+def _first_matching_level(probability: float, levels: list[dict[str, Any]], name: str) -> int | None:
+    for row in levels:
+        metric = row.get(name)
+        if isinstance(metric, dict) and probability >= float(metric["threshold"]):
+            return int(row["level"])
+    return None
+
+
+def _row_for_sample(sample: ScoredSample, probability: float, label: int, levels: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "row_id": sample.row_id,
+        "sha256": sample.sha256,
+        "path": sample.path,
+        "score": sample.score,
+        "probability": float(probability),
+        "label": "bad" if int(label) == 1 else "good",
+        "suspicious_level": _first_matching_level(float(probability), levels, "suspicious"),
+        "hostile_level": _first_matching_level(float(probability), levels, "hostile"),
+    }
+
+
+def _print_severity_table(title: str, levels: list[dict[str, Any]], name: str) -> None:
+    print(f"{title:=^100}")
+    print(
+        f"{'Lvl':>3} {'Target/1M':>9} {'Budget':>7} {'Threshold':>10} "
+        f"{'Recall':>8} {'Prec':>8} {'TNR':>8} {'TP':>8} {'FP':>7} {'TN':>8} {'FN':>8}"
+    )
+    for row in levels:
+        metric = row.get(name)
+        target = float(row["targets"][f"{name}_per_million"])
+        budget = int(row["budgets"][f"{name}_fp"])
+        if not metric:
+            print(f"{int(row['level']):>3} {target:>9.1f} {budget:>7} {'—':>10} {'—':>8} {'—':>8} {'—':>8} {'—':>8} {'—':>7} {'—':>8} {'—':>8}")
+            continue
+        print(
+            f"{int(row['level']):>3} {target:>9.1f} {budget:>7} {float(metric['threshold']):>10.6f} "
+            f"{float(metric['recall']):>8.2%} {float(metric['precision']):>8.2%} "
+            f"{float(metric['true_negative_rate']):>8.2%} {int(metric['tp']):>8} "
+            f"{int(metric['fp']):>7} {int(metric['tn']):>8} {int(metric['fn']):>8}"
+        )
+    print()
 
 
 def _error_rows_for_threshold(
@@ -417,21 +532,60 @@ def _score_labeled_corpus(
     max_score: int | None = None,
     limit: int = 0,
     n_workers: int = 0,
+    cache_path: Path | None = None,
+    refresh_cache: bool = False,
+    include_samples: bool = True,
 ) -> tuple[list[ScoredSample], np.ndarray, np.ndarray]:
     """Score the full labeled corpus used for operational threshold tuning."""
-    spec = features.FeatureSpec.load(spec_path)
-    sample_stream = data.stream_labeled_samples_full(
-        db_path,
-        path_substr=path_substr,
-        min_score=min_score,
-        max_score=max_score,
-        limit=limit,
+    cacheable = (
+        cache_path is not None
+        and path_substr is None
+        and min_score is None
+        and max_score is None
+        and limit == 0
     )
+    if cacheable and not refresh_cache and cache_path.exists():
+        newest_input = max(model_path.stat().st_mtime, spec_path.stat().st_mtime)
+        if cache_path.stat().st_mtime >= newest_input:
+            log.info("loading threshold score cache from %s", cache_path)
+            arrays = np.load(cache_path, allow_pickle=False)
+            samples = []
+            if include_samples:
+                samples = [
+                    ScoredSample(
+                        row_id=int(row_id),
+                        sha256=str(sha256),
+                        path=str(path),
+                        score=int(score),
+                        label=int(label),
+                    )
+                    for row_id, sha256, path, score, label in zip(
+                        arrays["row_ids"],
+                        arrays["sha256"],
+                        arrays["paths"],
+                        arrays["scores"],
+                        arrays["labels"],
+                        strict=True,
+                    )
+                ]
+            return samples, arrays["probs"], arrays["labels"].astype(np.float32)
 
+    if cacheable:
+        log.info("building threshold score cache at %s", cache_path)
+    spec = features.FeatureSpec.load(spec_path)
+    model = load_model(model_path)
     samples: list[ScoredSample] = []
-    report_labels: list[tuple[dict[str, Any], int]] = []
-    for batch in _batched(sample_stream, 4096):
-        for sample in batch:
+    pred_batches: list[np.ndarray] = []
+    label_batches: list[np.ndarray] = []
+
+    def report_labels() -> Iterator[tuple[dict[str, Any], int]]:
+        for sample in data.stream_labeled_samples_full(
+            db_path,
+            path_substr=path_substr,
+            min_score=min_score,
+            max_score=max_score,
+            limit=limit,
+        ):
             samples.append(ScoredSample(
                 row_id=sample.row_id,
                 sha256=sample.sha256,
@@ -439,19 +593,38 @@ def _score_labeled_corpus(
                 score=sample.score,
                 label=sample.label,
             ))
-            report_labels.append((sample.report, sample.label))
+            yield sample.report, sample.label
 
-    if not report_labels:
+    for X_batch, y_batch in features.extract_stream_batches(
+        report_labels(),
+        spec,
+        n_workers=n_workers,
+    ):
+        X_input = features.standardize(X_batch, spec) if spec.standardized else X_batch
+        pred_batches.append(predict_proba(model, X_input).astype(np.float32))
+        label_batches.append(y_batch.astype(np.float32))
+
+    if not samples:
         raise ValueError("no samples matched the requested filters")
 
-    probs = _score_samples(
-        spec,
-        model_path,
-        samples=samples,
-        report_labels=report_labels,
-        n_workers=n_workers,
-    )
-    y = np.array([sample.label for sample in samples], dtype=np.float32)
+    probs = np.concatenate(pred_batches) if pred_batches else np.array([], dtype=np.float32)
+    y = np.concatenate(label_batches) if label_batches else np.array([], dtype=np.float32)
+    if len(probs) != len(samples):
+        raise ValueError(f"scored sample count mismatch: expected {len(samples)}, got {len(probs)}")
+    if cacheable:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        # Use uncompressed NPZ: this cache is meant to save wall-clock time,
+        # and deflate compression is slow and effectively single-threaded here.
+        np.savez(
+            cache_path,
+            row_ids=np.array([sample.row_id for sample in samples], dtype=np.int64),
+            sha256=np.array([sample.sha256 for sample in samples]),
+            paths=np.array([sample.path for sample in samples]),
+            scores=np.array([sample.score for sample in samples], dtype=np.int32),
+            labels=y.astype(np.int8),
+            probs=probs.astype(np.float32),
+        )
+        log.info("saved threshold score cache to %s", cache_path)
     return samples, probs, y
 
 
@@ -461,6 +634,8 @@ def compute_default_recommendations_for_corpus(
     model_path: Path,
     spec_path: Path,
     n_workers: int = 0,
+    cache_path: Path | None = None,
+    refresh_cache: bool = False,
 ) -> dict[str, float | None]:
     """Compute deploy thresholds by scoring the full labeled hopper corpus."""
     _samples, probs, y = _score_labeled_corpus(
@@ -468,6 +643,9 @@ def compute_default_recommendations_for_corpus(
         model_path=model_path,
         spec_path=spec_path,
         n_workers=n_workers,
+        cache_path=cache_path,
+        refresh_cache=refresh_cache,
+        include_samples=False,
     )
     return compute_default_recommendations(probs, y)
 
@@ -484,6 +662,8 @@ def tune_thresholds(
     output_path: Path | None = None,
     limit: int = 0,
     n_workers: int = 0,
+    cache_path: Path | None = None,
+    refresh_cache: bool = False,
 ) -> dict[str, Any]:
     """Score the full labeled corpus and report threshold policy candidates."""
     samples, probs, y = _score_labeled_corpus(
@@ -495,26 +675,31 @@ def tune_thresholds(
         max_score=max_score,
         limit=limit,
         n_workers=n_workers,
+        cache_path=cache_path,
+        refresh_cache=refresh_cache,
+        include_samples=top_errors > 0,
     )
     benign = int(np.sum(y == 0))
     malware = int(np.sum(y == 1))
     policies = evaluate_policies(probs, y)
     budgets = fp_budget_tables(probs, y)
+    severity_levels = compute_severity_levels(probs, y)
     for policy in policies:
         errors: dict[str, Any] = {}
-        for level_name in ("suspicious", "hostile"):
-            level = policy.get(level_name)
-            if not level or level.get("threshold") is None:
-                continue
-            fp_rows, fn_rows = _error_rows_for_threshold(
-                samples, probs, y, float(level["threshold"]), top_n=top_errors,
-            )
-            errors[level_name] = {
-                "false_positives": fp_rows,
-                "false_negatives": fn_rows,
-                "false_positive_count": int(np.sum((y == 0) & (probs >= float(level["threshold"])))),
-                "false_negative_count": int(np.sum((y == 1) & (probs < float(level["threshold"])))),
-            }
+        if top_errors > 0:
+            for level_name in ("suspicious", "hostile"):
+                level = policy.get(level_name)
+                if not level or level.get("threshold") is None:
+                    continue
+                fp_rows, fn_rows = _error_rows_for_threshold(
+                    samples, probs, y, float(level["threshold"]), top_n=top_errors,
+                )
+                errors[level_name] = {
+                    "false_positives": fp_rows,
+                    "false_negatives": fn_rows,
+                    "false_positive_count": int(np.sum((y == 0) & (probs >= float(level["threshold"])))),
+                    "false_negative_count": int(np.sum((y == 1) & (probs < float(level["threshold"])))),
+                }
         policy["errors"] = errors
 
     payload: dict[str, Any] = {
@@ -525,7 +710,7 @@ def tune_thresholds(
             "limit": limit,
         },
         "corpus": {
-            "samples": len(samples),
+            "samples": len(y),
             "malware": malware,
             "benign": benign,
         },
@@ -536,18 +721,23 @@ def tune_thresholds(
             }
             for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS
         },
+        "severity_level_targets": SEVERITY_LEVEL_TARGETS,
+        "severity_levels": severity_levels,
         "fp_budget_tables": budgets,
         "policies": policies,
     }
 
     print(f"\n{'TUNE THRESHOLDS':=^78}")
-    print(f"Corpus: {len(samples)} samples ({malware} malware, {benign} benign)")
+    print(f"Corpus: {len(y)} samples ({malware} malware, {benign} benign)")
     if path_substr:
         print(f"Filter: path contains {path_substr!r}")
     if min_score is not None or max_score is not None:
         print(f"Filter: score range [{min_score if min_score is not None else '-inf'}, {max_score if max_score is not None else 'inf'}]")
     print(f"Top errors per level: {top_errors}")
     print()
+    _print_severity_table("HOSTILE SEVERITY LEVELS", severity_levels, "hostile")
+    _print_severity_table("SUSPICIOUS SEVERITY LEVELS", severity_levels, "suspicious")
+
     print(f"{'Policy':<18} {'Level':<12} {'Threshold':>10} {'TP Rate':>8} {'Prec':>8} {'FP/1M':>10} {'TP':>7} {'FP':>7}")
     print(f"{'-'*78}")
     for policy in policies:
@@ -621,6 +811,159 @@ def tune_thresholds(
             import json
             json.dump(payload, f, indent=2)
         print(f"Saved tuning report to {output_path}")
+
+    return payload
+
+
+def show_false_positives(
+    db_path: Path | str,
+    *,
+    model_path: Path,
+    spec_path: Path,
+    top_errors: int = 50,
+    output_path: Path | None = None,
+    n_workers: int = 0,
+    cache_path: Path | None = None,
+    refresh_cache: bool = False,
+) -> dict[str, Any]:
+    """Print false positives grouped by first severity level reached."""
+    samples, probs, y = _score_labeled_corpus(
+        db_path,
+        model_path=model_path,
+        spec_path=spec_path,
+        n_workers=n_workers,
+        cache_path=cache_path,
+        refresh_cache=refresh_cache,
+    )
+    benign = int(np.sum(y == 0))
+    malware = int(np.sum(y == 1))
+    severity_levels = compute_severity_levels(probs, y)
+    rows = [
+        _row_for_sample(sample, float(prob), int(label), severity_levels)
+        for sample, prob, label in zip(samples, probs, y, strict=False)
+        if int(label) == 0 and (
+            _first_matching_level(float(prob), severity_levels, "suspicious") is not None
+            or _first_matching_level(float(prob), severity_levels, "hostile") is not None
+        )
+    ]
+    rows.sort(key=lambda row: float(row["probability"]), reverse=True)
+
+    payload: dict[str, Any] = {
+        "corpus": {
+            "samples": len(samples),
+            "malware": malware,
+            "benign": benign,
+        },
+        "severity_level_targets": SEVERITY_LEVEL_TARGETS,
+        "severity_levels": severity_levels,
+        "false_positives": rows[:top_errors],
+        "counts": {"suspicious": {}, "hostile": {}},
+    }
+
+    for name in ("suspicious", "hostile"):
+        for level in range(1, 10):
+            payload["counts"][name][str(level)] = sum(1 for row in rows if row[f"{name}_level"] == level)
+
+    print(f"\n{'FALSE POSITIVES BY SEVERITY LEVEL':=^78}")
+    print(f"Corpus: {len(samples)} samples ({malware} malware, {benign} good)")
+    print("First level counts:")
+    for name in ("hostile", "suspicious"):
+        counts = ", ".join(f"L{level}={payload['counts'][name][str(level)]}" for level in range(1, 10))
+        print(f"  {name}: {counts}")
+    if rows:
+        print("\n  top false positives:")
+        for row in rows[:top_errors]:
+            print(
+                f"    {row['probability']:.6f}  H={row['hostile_level'] or '-'} "
+                f"S={row['suspicious_level'] or '-'} score={row['score']:<4} "
+                f"{row['sha256'][:16]}  {row['path']}"
+            )
+    else:
+        print("\n  false positives: none")
+
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            import json
+            json.dump(payload, f, indent=2)
+        print(f"\nSaved false-positive report to {output_path}")
+
+    return payload
+
+
+def show_false_negatives(
+    db_path: Path | str,
+    *,
+    model_path: Path,
+    spec_path: Path,
+    top_errors: int = 50,
+    output_path: Path | None = None,
+    n_workers: int = 0,
+    cache_path: Path | None = None,
+    refresh_cache: bool = False,
+) -> dict[str, Any]:
+    """Print bad samples by first severity level reached, including uncaught rows."""
+    samples, probs, y = _score_labeled_corpus(
+        db_path,
+        model_path=model_path,
+        spec_path=spec_path,
+        n_workers=n_workers,
+        cache_path=cache_path,
+        refresh_cache=refresh_cache,
+    )
+    benign = int(np.sum(y == 0))
+    malware = int(np.sum(y == 1))
+    severity_levels = compute_severity_levels(probs, y)
+    rows = [
+        _row_for_sample(sample, float(prob), int(label), severity_levels)
+        for sample, prob, label in zip(samples, probs, y, strict=False)
+        if int(label) == 1
+    ]
+    rows.sort(key=lambda row: float(row["probability"]))
+    uncaught = [
+        row for row in rows
+        if row["suspicious_level"] is None and row["hostile_level"] is None
+    ]
+
+    payload: dict[str, Any] = {
+        "corpus": {
+            "samples": len(samples),
+            "malware": malware,
+            "benign": benign,
+        },
+        "severity_level_targets": SEVERITY_LEVEL_TARGETS,
+        "severity_levels": severity_levels,
+        "uncaught": uncaught[:top_errors],
+        "counts": {"suspicious": {}, "hostile": {}, "uncaught": len(uncaught)},
+    }
+
+    for name in ("suspicious", "hostile"):
+        for level in range(1, 10):
+            payload["counts"][name][str(level)] = sum(1 for row in rows if row[f"{name}_level"] == level)
+
+    print(f"\n{'FALSE NEGATIVES BY SEVERITY LEVEL':=^78}")
+    print(f"Corpus: {len(samples)} samples ({malware} malware, {benign} good)")
+    print("First caught level counts:")
+    for name in ("hostile", "suspicious"):
+        counts = ", ".join(f"L{level}={payload['counts'][name][str(level)]}" for level in range(1, 10))
+        print(f"  {name}: {counts}")
+    print(f"  uncaught by level 9: {len(uncaught)}")
+    if uncaught:
+        print("\n  lowest-probability uncaught bad samples:")
+        for row in uncaught[:top_errors]:
+            print(
+                f"    {row['probability']:.6f}  H=- S=- score={row['score']:<4} "
+                f"{row['sha256'][:16]}  {row['path']}"
+            )
+    else:
+        print("\n  false negatives at level 9: none")
+
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            import json
+            json.dump(payload, f, indent=2)
+        print(f"\nSaved false-negative report to {output_path}")
 
     return payload
 
@@ -853,30 +1196,26 @@ def compute_default_recommendations(
     probs: np.ndarray,
     y: np.ndarray,
 ) -> dict[str, float | None]:
-    """Compute deploy thresholds from target FP rates over the good corpus."""
-    thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, _nm, n_benign = (
-        _threshold_stats(probs, y)
-    )
-
-    result: dict[str, float | None] = {}
-    for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS:
-        budget = _fp_budget_for_rate(n_benign, rate)
-        row = _select_threshold_at_fp_budget(
-            thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign,
-            max_fp=budget,
-        )
-        if row is None:
-            result[level] = None
+    """Compute legacy deploy thresholds from severity level 5."""
+    levels = compute_severity_levels(probs, y)
+    default_level = _severity_level_by_number(levels, DEFAULT_SEVERITY_LEVEL)
+    result: dict[str, float | None] = {"suspicious": None, "hostile": None}
+    if default_level is None:
+        return result
+    for name in ("suspicious", "hostile"):
+        row = default_level.get(name)
+        if not row:
             continue
-        result[level] = float(row["threshold"])
+        result[name] = float(row["threshold"])
         log.info(
-            "%s: threshold=%.4f TP-rate=%.2f%% FP=%d/%d good files (target %.1e)",
-            level,
+            "%s level %d: threshold=%.4f TP-rate=%.2f%% FP=%d/%d good files (target %.1f/1M)",
+            name,
+            DEFAULT_SEVERITY_LEVEL,
             float(row["threshold"]),
             float(row["recall"]) * 100,
             int(row["fp"]),
-            n_benign,
-            rate,
+            int(row["n_benign"]),
+            float(row["target_fp_per_million"]),
         )
     return result
 
@@ -945,26 +1284,14 @@ def print_recommendations(
     thresholds, tp_vals, fp_vals, _correct_vals, recall_vals, fpr_vals, n, n_malware, n_benign = (
         _threshold_stats(probs, y)
     )
+    severity_levels = compute_severity_levels(probs, y)
 
     print(f"\n{title:=^70}")
     print(f"  {n} samples ({n_malware} malware, {n_benign} benign)")
-    print("  Lowest threshold (highest TP rate) meeting default good-file FP-rate targets")
-    print(f"  {'Level':<12} {'Threshold':>10} {'TP Rate':>8} {'FPR':>8} {'FP/1M':>8} {'TP':>8} {'FP':>8} {'Budget':>8}")
-    print(f"  {'-'*62}")
-
-    for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS:
-        budget = _fp_budget_for_rate(n_benign, rate)
-        valid = fp_vals <= budget
-        if valid.any():
-            # Last valid = lowest threshold = highest TP rate.
-            k = int(np.where(valid)[0][-1])
-            fp_per_million = fpr_vals[k] * 1_000_000
-            print(
-                f"  {level:<12} {thresholds[k]:>10.6f} {recall_vals[k]:>8.2%} "
-                f"{fpr_vals[k]:>8.4%} {fp_per_million:>8.0f} {tp_vals[k]:>8} {fp_vals[k]:>8} {budget:>8}"
-            )
-        else:
-            print(f"  {level:<12} {'—':>10} (no threshold achieves <= {budget} FP)")
+    print("  Severity thresholds: lowest threshold meeting each good-file FP-per-million target")
+    print()
+    _print_severity_table("HOSTILE SEVERITY LEVELS", severity_levels, "hostile")
+    _print_severity_table("SUSPICIOUS SEVERITY LEVELS", severity_levels, "suspicious")
 
     # Fixed reference thresholds — include the calibrated holdout threshold if provided.
     fixed_set: set[float] = {0.1, 0.25, 0.5, 0.6, 0.7, 0.8, 0.9, 0.98, 0.99, 0.995}

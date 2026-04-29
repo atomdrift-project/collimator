@@ -182,6 +182,8 @@ def save_evaluation(
     experiment: dict[str, object],
     output_path: Path,
     recommended_thresholds: dict[str, float | None] | None = None,
+    severity_levels: list[dict[str, object]] | None = None,
+    severity_level_targets: list[dict[str, object]] | None = None,
 ) -> None:
     """Save evaluation results as JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -190,6 +192,8 @@ def save_evaluation(
         "calibration": calibration,
         "optimal_threshold": optimal_threshold,
         "recommended_thresholds": recommended_thresholds,
+        "severity_level_targets": severity_level_targets,
+        "severity_levels": severity_levels,
         "confusion_matrix": confusion,
         "class_distribution": class_distribution,
         "split_summary": split_summary,
