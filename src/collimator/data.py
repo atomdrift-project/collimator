@@ -323,6 +323,45 @@ def stream_labeled_samples_full(
             )
 
 
+def stream_labeled_metadata_full(
+    db_path: Path | str,
+    *,
+    path_substr: str | None = None,
+    min_score: int | None = None,
+    max_score: int | None = None,
+    limit: int = 0,
+    max_id: int = 0,
+) -> Iterator[tuple[int, str, str, int, int]]:
+    """Yield labeled, non-skipped sample metadata without loading JSON reports."""
+    with _connect(db_path, repeatable_read=True) as conn:
+        params: list[Any] = []
+        placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
+        query = (
+            "SELECT id, sha256, path, label, score"
+            " FROM samples"
+            " WHERE label IN ('bad', 'good')"
+            " AND cleave_result IS NOT NULL"
+            " AND skip = ''"
+        )
+        if max_id > 0:
+            query += f" AND id <= {int(max_id)}"
+        if path_substr:
+            query += f" AND LOWER(path) LIKE {placeholder}"
+            params.append(f"%{path_substr.lower()}%")
+        if min_score is not None:
+            query += f" AND score >= {placeholder}"
+            params.append(int(min_score))
+        if max_score is not None:
+            query += f" AND score <= {placeholder}"
+            params.append(int(max_score))
+        query += " ORDER BY id"
+        if limit > 0:
+            query += f" LIMIT {int(limit)}"
+
+        for row_id, sha256, path, label, score in _execute(conn, query, params):
+            yield int(row_id), sha256, path or "", score or 0, _label_int(label)
+
+
 def load_samples(db_path: Path | str, limit: int = 0) -> list[Sample]:
     """Load all labeled samples from a hopper database."""
     log.info("loading samples from %s (limit=%d)", db_path, limit)
@@ -423,3 +462,40 @@ def stream_partitioned_metadata_grouped(
                 split_key,
                 score or 0,
             )
+
+
+def count_labeled_by_partition_full(
+    db_path: Path | str,
+    *,
+    max_id: int = 0,
+) -> dict[str, dict[str, int]]:
+    """Count all labeled, non-skipped rows by partition without score filtering.
+
+    Training intentionally focuses on rows at or above ``MIN_SAMPLE_SCORE``.
+    FP-per-million reporting, however, is a corpus-level good-file rate, so it
+    needs the full labeled good-file denominator, including low-score rows.
+    """
+    counts = {
+        "train": {"good": 0, "bad": 0, "total": 0},
+        "test": {"good": 0, "bad": 0, "total": 0},
+        "all": {"good": 0, "bad": 0, "total": 0},
+    }
+    with _connect(db_path, repeatable_read=True) as conn:
+        query = (
+            "SELECT id, sha256, label, canonical_sha256"
+            " FROM samples"
+            " WHERE label IN ('bad', 'good')"
+            " AND cleave_result IS NOT NULL"
+            " AND skip = ''"
+        )
+        if max_id > 0:
+            query += f" AND id <= {int(max_id)}"
+        for _row_id, sha256, label, canonical in _execute(conn, query):
+            split_key = canonical or sha256
+            part = "test" if is_test_sample(split_key) else "train"
+            name = "bad" if _label_int(label) == 1 else "good"
+            counts[part][name] += 1
+            counts[part]["total"] += 1
+            counts["all"][name] += 1
+            counts["all"]["total"] += 1
+    return counts

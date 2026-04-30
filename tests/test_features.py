@@ -1,6 +1,8 @@
 """Tests for capability-first feature extraction from cleave v3 AnalysisReport JSON."""
 
+import json
 import math
+import sqlite3
 
 import numpy as np
 
@@ -10,6 +12,7 @@ from collimator.features import (
     build_vocab,
     extract,
     extract_all,
+    extract_labeled_from_db_batches,
     feature_config_from_env,
     feature_group_indices,
     primary_file,
@@ -122,6 +125,43 @@ def test_build_vocab_presence() -> None:
     assert "maxcrit:objectives" in spec.feature_names
     assert "present:objectives/evasion/process" in spec.feature_names
     assert "maxcrit:objectives/evasion/process" in spec.feature_names
+
+
+def test_extract_labeled_from_db_batches_fetches_reports_in_workers(tmp_path) -> None:
+    report = _make_report(
+        findings=[{"i": "objectives/evasion/process", "l": _CRIT_MAP["hostile"], "c": 1.0}],
+    )
+    spec = build_vocab([report] * 35)
+    db_path = tmp_path / "samples.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "CREATE TABLE samples ("
+        "id INTEGER PRIMARY KEY, cleave_result TEXT, formula TEXT, elements TEXT, "
+        "score INTEGER, mtime TEXT)"
+    )
+    for row_id in range(1, 4):
+        conn.execute(
+            "INSERT INTO samples (id, cleave_result, formula, elements, score, mtime) "
+            "VALUES (?, ?, '', '', 10, '')",
+            (row_id, json.dumps(report)),
+        )
+    conn.commit()
+    conn.close()
+
+    batches = list(
+        extract_labeled_from_db_batches(
+            db_path,
+            [(1, 0), (2, 1), (3, 0)],
+            spec,
+            n_workers=1,
+            batch_size=2,
+        ),
+    )
+
+    assert [X.shape[0] for X, _y in batches] == [2, 1]
+    np.testing.assert_array_equal(batches[0][1], np.array([0, 1], dtype=np.float32))
+    np.testing.assert_array_equal(batches[1][1], np.array([0], dtype=np.float32))
+    assert all(X.nnz > 0 for X, _y in batches)
 
 
 def test_build_vocab_freq_filter() -> None:

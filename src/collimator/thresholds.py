@@ -6,7 +6,7 @@ import logging
 from dataclasses import asdict, dataclass
 from itertools import islice
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 import numpy as np
 
@@ -175,11 +175,14 @@ def _select_threshold_at_fp_budget(
 ) -> dict[str, float | int] | None:
     valid = fp_vals <= max_fp
     if not valid.any():
-        return None
-    index = int(np.where(valid)[0][-1])
-    stats = _stats_dict_at_index(
-        thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, index,
-    )
+        if max_fp < 0:
+            return None
+        stats = _empty_threshold_stats(thresholds, n_benign, n_malware)
+    else:
+        index = int(np.where(valid)[0][-1])
+        stats = _stats_dict_at_index(
+            thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, index,
+        )
     stats["max_fp_budget"] = int(max_fp)
     return stats
 
@@ -239,6 +242,32 @@ def _stats_dict_at_index(
         "precision": precision,
         "fpr": float(fpr_vals[index]),
         "fp_per_million": float(fpr_vals[index] * 1_000_000),
+        "n_benign": int(n_benign),
+        "n_malware": int(n_malware),
+    }
+
+
+def _empty_threshold_stats(
+    thresholds: np.ndarray,
+    n_benign: int,
+    n_malware: int,
+) -> dict[str, float | int]:
+    threshold = 1.0
+    if len(thresholds) > 0:
+        threshold = float(np.nextafter(float(thresholds[0]), np.inf))
+    return {
+        "threshold": threshold,
+        "tp": 0,
+        "fp": 0,
+        "tn": int(n_benign),
+        "fn": int(n_malware),
+        "flagged": 0,
+        "recall": 0.0,
+        "true_positive_rate": 0.0,
+        "true_negative_rate": 1.0,
+        "precision": 1.0,
+        "fpr": 0.0,
+        "fp_per_million": 0.0,
         "n_benign": int(n_benign),
         "n_malware": int(n_malware),
     }
@@ -322,9 +351,11 @@ def _select_policy_level(
 def evaluate_policies(
     probs: np.ndarray,
     y: np.ndarray,
+    *,
+    n_benign_denominator: int | None = None,
 ) -> list[dict[str, Any]]:
     thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, n_malware, n_benign = (
-        _threshold_stats(probs, y)
+        _threshold_stats(probs, y, n_benign_denominator=n_benign_denominator)
     )
     results: list[dict[str, Any]] = []
     for spec in POLICY_SPECS:
@@ -352,11 +383,12 @@ def fp_budget_tables(
     probs: np.ndarray,
     y: np.ndarray,
     *,
+    n_benign_denominator: int | None = None,
     hostile_budgets: list[int] | None = None,
     suspicious_budgets: list[int] | None = None,
 ) -> dict[str, list[dict[str, float | int]]]:
     thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, n_malware, n_benign = (
-        _threshold_stats(probs, y)
+        _threshold_stats(probs, y, n_benign_denominator=n_benign_denominator)
     )
     default_budgets = {
         level: _fp_budget_for_rate(n_benign, rate)
@@ -386,10 +418,12 @@ def fp_budget_tables(
 def compute_severity_levels(
     probs: np.ndarray,
     y: np.ndarray,
+    *,
+    n_benign_denominator: int | None = None,
 ) -> list[dict[str, Any]]:
     """Compute severity-level thresholds from configured FP-per-million targets."""
     thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, n_malware, n_benign = (
-        _threshold_stats(probs, y)
+        _threshold_stats(probs, y, n_benign_denominator=n_benign_denominator)
     )
     levels: list[dict[str, Any]] = []
     for target in SEVERITY_LEVEL_TARGETS:
@@ -632,38 +666,32 @@ def _score_labeled_corpus(
         log.info("building threshold score cache at %s", cache_path)
     spec = features.FeatureSpec.load(spec_path)
     model = load_model(model_path)
-    samples: list[ScoredSample] = []
-    pred_batches: list[np.ndarray] = []
-    label_batches: list[np.ndarray] = []
-
-    def report_labels() -> Iterator[tuple[dict[str, Any], int]]:
-        for sample in data.stream_labeled_samples_full(
+    samples = [
+        ScoredSample(row_id=row_id, sha256=sha256, path=path, score=score, label=label)
+        for row_id, sha256, path, score, label in data.stream_labeled_metadata_full(
             db_path,
             path_substr=path_substr,
             min_score=min_score,
             max_score=max_score,
             limit=limit,
-        ):
-            samples.append(ScoredSample(
-                row_id=sample.row_id,
-                sha256=sample.sha256,
-                path=sample.path,
-                score=sample.score,
-                label=sample.label,
-            ))
-            yield sample.report, sample.label
+        )
+    ]
+    if not samples:
+        raise ValueError("no samples matched the requested filters")
+    log.info("threshold scoring metadata: %d labeled rows", len(samples))
+    row_ids_labels = [(sample.row_id, sample.label) for sample in samples]
+    pred_batches: list[np.ndarray] = []
+    label_batches: list[np.ndarray] = []
 
-    for X_batch, y_batch in features.extract_stream_batches(
-        report_labels(),
+    for X_batch, y_batch in features.extract_labeled_from_db_batches(
+        db_path,
+        row_ids_labels,
         spec,
         n_workers=n_workers,
     ):
         X_input = features.standardize(X_batch, spec) if spec.standardized else X_batch
         pred_batches.append(predict_proba(model, X_input).astype(np.float32))
         label_batches.append(y_batch.astype(np.float32))
-
-    if not samples:
-        raise ValueError("no samples matched the requested filters")
 
     probs = np.concatenate(pred_batches) if pred_batches else np.array([], dtype=np.float32)
     y = np.concatenate(label_batches) if label_batches else np.array([], dtype=np.float32)
@@ -1298,6 +1326,8 @@ def show_thresholds(
 def _threshold_stats(
     probs: np.ndarray,
     y: np.ndarray,
+    *,
+    n_benign_denominator: int | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, int, int, int]:
     """Pre-compute per-threshold stats via a single sorted pass.
 
@@ -1309,11 +1339,14 @@ def _threshold_stats(
     """
     n = len(probs)
     n_malware = int((y == 1).sum())
-    n_benign = int((y == 0).sum())
+    observed_benign = int((y == 0).sum())
+    n_benign = observed_benign
+    if n_benign_denominator is not None:
+        n_benign = max(observed_benign, int(n_benign_denominator))
 
     if n == 0:
         empty = np.array([], dtype=np.float64)
-        return empty, empty, empty, empty, empty, empty, 0, 0, 0
+        return empty, empty, empty, empty, empty, empty, 0, 0, n_benign
 
     # Sort samples high-to-low by predicted probability.
     order = np.argsort(probs)[::-1]
@@ -1468,9 +1501,11 @@ def compute_recall_fpr_recommendations(
 def compute_default_recommendations(
     probs: np.ndarray,
     y: np.ndarray,
+    *,
+    n_benign_denominator: int | None = None,
 ) -> dict[str, float | None]:
     """Compute legacy deploy thresholds from severity level 5."""
-    levels = compute_severity_levels(probs, y)
+    levels = compute_severity_levels(probs, y, n_benign_denominator=n_benign_denominator)
     default_level = _severity_level_by_number(levels, DEFAULT_SEVERITY_LEVEL)
     result: dict[str, float | None] = {"suspicious": None, "hostile": None}
     if default_level is None:
@@ -1547,6 +1582,7 @@ def print_recommendations(
     title: str = "RECOMMENDED",
     *,
     highlight_threshold: float | None = None,
+    n_benign_denominator: int | None = None,
 ) -> None:
     """Print the recommended threshold table for a set of predictions.
 
@@ -1555,16 +1591,33 @@ def print_recommendations(
     with a ← so it's easy to find the operating point from training.
     """
     thresholds, tp_vals, fp_vals, _correct_vals, recall_vals, fpr_vals, n, n_malware, n_benign = (
-        _threshold_stats(probs, y)
+        _threshold_stats(probs, y, n_benign_denominator=n_benign_denominator)
     )
-    severity_levels = compute_severity_levels(probs, y)
+    observed_benign = int((y == 0).sum())
+    observed_severity_levels = compute_severity_levels(probs, y)
+    corpus_severity_levels = (
+        compute_severity_levels(probs, y, n_benign_denominator=n_benign_denominator)
+        if n_benign != observed_benign
+        else observed_severity_levels
+    )
 
     print(f"\n{title:=^70}")
-    print(f"  {n} samples ({n_malware} malware, {n_benign} benign)")
+    print(f"  {n} scored samples ({n_malware} malware, {observed_benign} benign)")
+    if n_benign != observed_benign:
+        ignored_benign = n_benign - observed_benign
+        print(
+            f"  FP/1M denominator: {n_benign} benign files "
+            f"(includes {ignored_benign} low-score ignored rows)"
+        )
     print("  Severity thresholds: lowest threshold meeting each good-file FP-per-million target")
     print()
-    _print_severity_table("HOSTILE SEVERITY LEVELS", severity_levels, "hostile")
-    _print_severity_table("SUSPICIOUS SEVERITY LEVELS", severity_levels, "suspicious")
+    if n_benign != observed_benign:
+        print("  Measured on scored rows only:")
+        _print_severity_table("HOSTILE SEVERITY LEVELS", observed_severity_levels, "hostile")
+        _print_severity_table("SUSPICIOUS SEVERITY LEVELS", observed_severity_levels, "suspicious")
+        print("  Measured with full good-file denominator:")
+    _print_severity_table("HOSTILE SEVERITY LEVELS", corpus_severity_levels, "hostile")
+    _print_severity_table("SUSPICIOUS SEVERITY LEVELS", corpus_severity_levels, "suspicious")
 
     # Fixed reference thresholds — include the calibrated holdout threshold if provided.
     fixed_set: set[float] = {0.1, 0.25, 0.5, 0.6, 0.7, 0.8, 0.9, 0.98, 0.99, 0.995}

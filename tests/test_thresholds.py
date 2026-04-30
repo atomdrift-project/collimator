@@ -38,6 +38,24 @@ def test_print_threshold_table_uses_called_subset_accuracy() -> None:
     assert benign_line is not None
 
 
+def test_print_recommendations_shows_scored_and_full_denominator_levels() -> None:
+    probs = np.array([0.99, 0.95, 0.80, 0.70], dtype=np.float32)
+    y = np.array([1, 1, 0, 0], dtype=np.float32)
+
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        thresholds.print_recommendations(
+            probs,
+            y,
+            n_benign_denominator=1_000_000,
+        )
+    out = buf.getvalue()
+
+    assert "Measured on scored rows only" in out
+    assert "Measured with full good-file denominator" in out
+    assert "FP/1M denominator: 1000000 benign files" in out
+
+
 def test_evaluate_policies_returns_named_candidates() -> None:
     probs = np.array([0.9999, 0.98, 0.75, 0.40, 0.05, 0.01], dtype=np.float32)
     y = np.array([1, 1, 1, 0, 0, 0], dtype=np.float32)
@@ -87,6 +105,34 @@ def test_severity_levels_derive_budgets_from_good_count() -> None:
     assert by_level[5]["hostile"]["fp"] <= 1
     assert by_level[5]["suspicious"]["fp"] <= 10
     assert "true_negative_rate" in by_level[5]["hostile"]
+
+
+def test_severity_levels_can_use_full_good_file_denominator() -> None:
+    y = np.array([1] * 5 + [0] * 10, dtype=np.float32)
+    probs = np.concatenate([
+        np.linspace(0.99, 0.90, 5, dtype=np.float32),
+        np.linspace(0.80, 0.10, 10, dtype=np.float32),
+    ])
+
+    levels = compute_severity_levels(probs, y, n_benign_denominator=1_000_000)
+    by_level = {row["level"]: row for row in levels}
+
+    assert by_level[5]["budgets"]["hostile_fp"] == 1
+    assert by_level[5]["budgets"]["suspicious_fp"] == 10
+    assert by_level[5]["hostile"]["n_benign"] == 1_000_000
+    assert by_level[5]["hostile"]["fp_per_million"] <= 1.0
+
+
+def test_severity_levels_report_empty_threshold_when_budget_is_too_tight() -> None:
+    y = np.array([0, 0, 1], dtype=np.float32)
+    probs = np.array([0.99, 0.99, 0.98], dtype=np.float32)
+
+    levels = compute_severity_levels(probs, y)
+    level_one = next(row for row in levels if row["level"] == 1)
+
+    assert level_one["hostile"]["fp"] == 0
+    assert level_one["hostile"]["tp"] == 0
+    assert level_one["hostile"]["threshold"] > 0.99
 
 
 def test_near_severity_level_doubles_distance_from_full_confidence() -> None:

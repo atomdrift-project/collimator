@@ -5,7 +5,11 @@ import sqlite3
 import tempfile
 from pathlib import Path
 
-from collimator.data import load_samples, stream_labeled_samples_full
+from collimator.data import (
+    count_labeled_by_partition_full,
+    load_samples,
+    stream_labeled_samples_full,
+)
 
 
 def _create_test_db(samples: list[tuple[str, str, str | None] | dict[str, str | int | None]]) -> Path:
@@ -143,3 +147,27 @@ def test_stream_labeled_samples_full_includes_low_score_and_applies_filters() ->
     samples = list(stream_labeled_samples_full(db, path_substr="harvest"))
     assert [sample.sha256 for sample in samples] == ["aaa", "bbb"]
     assert [sample.score for sample in samples] == [0, 42]
+
+
+def test_count_labeled_by_partition_full_includes_low_score_rows() -> None:
+    db = _create_test_db([
+        {"sha256": "00" * 32, "label": "good", "cleave_result": _minimal_report(), "score": 0},
+        {"sha256": "40" * 32, "label": "good", "cleave_result": _minimal_report(), "score": 10},
+        {"sha256": "50" * 32, "label": "bad", "cleave_result": _minimal_report(), "score": 1},
+        {"sha256": "60" * 32, "label": "unknown", "cleave_result": _minimal_report(), "score": 10},
+        {
+            "sha256": "70" * 32,
+            "label": "good",
+            "cleave_result": _minimal_report(),
+            "score": 10,
+            "skip": "y",
+        },
+    ])
+
+    counts = count_labeled_by_partition_full(db)
+
+    assert counts["all"]["good"] == 2
+    assert counts["all"]["bad"] == 1
+    assert counts["all"]["total"] == 3
+    assert counts["test"]["good"] == 1
+    assert counts["train"]["good"] == 1

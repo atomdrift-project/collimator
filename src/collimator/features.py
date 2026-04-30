@@ -3032,6 +3032,91 @@ def _extract_partitioned_db_batch_worker(
     return _extract_partitioned_batch_worker((train_offset, test_offset, batch, spec))
 
 
+def _extract_labeled_db_batch_worker(
+    args: tuple[int, Path | str, list[tuple[int, int]], FeatureSpec],
+) -> tuple[list[int], list[int], list[float], list[int]]:
+    """Fetch and extract one labeled batch from the DB."""
+    from . import data  # noqa: PLC0415 — deferred to avoid circular import in workers
+
+    offset, dsn, batch_ids, spec = args
+    ids = [rid for rid, _label in batch_ids]
+    reports_map = data.fetch_cleave_results(dsn, ids)
+    missing = set(ids) - set(reports_map)
+    if missing:
+        raise ValueError(f"missing cleave_result rows during extraction: {len(missing)}")
+    batch = [(reports_map[rid], label) for rid, label in batch_ids]
+    return _extract_batch_worker((offset, batch, spec))
+
+
+def extract_labeled_from_db_batches(
+    db_path: Path | str,
+    row_ids_labels: list[tuple[int, int]],
+    spec: FeatureSpec,
+    *,
+    n_workers: int = 0,
+    batch_size: int | None = None,
+) -> Iterator[tuple[sp.csr_matrix, np.ndarray]]:
+    """Yield feature batches for labeled DB row IDs.
+
+    Workers fetch raw JSON directly from the DB, avoiding a single parent
+    process parsing and pickling every report before feature extraction.
+    """
+    nw = resolve_worker_count(n_workers)
+    eff_batch_size = batch_size if batch_size is not None and batch_size > 0 else max(
+        _feature_batch_size(nw),
+        1024,
+    )
+    log.info(
+        "DB-backed feature extraction: %d rows, %d workers, batch_size=%d",
+        len(row_ids_labels),
+        nw,
+        eff_batch_size,
+    )
+    batch_args = (
+        (0, db_path, batch, spec)
+        for batch in _batched(row_ids_labels, eff_batch_size)
+    )
+
+    def _to_matrix(
+        result: tuple[list[int], list[int], list[float], list[int]],
+    ) -> tuple[sp.csr_matrix, np.ndarray]:
+        rows, cols, vals, labels = result
+        n = len(labels)
+        y = np.array(labels, dtype=np.float32)
+        X = sp.csr_matrix(
+            (
+                np.array(vals, dtype=np.float32),
+                (np.array(rows, dtype=np.int32), np.array(cols, dtype=np.int32)),
+            ),
+            shape=(n, spec.total_features),
+        )
+        log.info(
+            "extracted %d samples x %d features (nnz=%d, density=%.1f%%)",
+            n,
+            spec.total_features,
+            X.nnz,
+            100.0 * X.nnz / max(n * spec.total_features, 1),
+        )
+        return X, y
+
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            for result in _bounded_iter(
+                pool,
+                _extract_labeled_db_batch_worker,
+                batch_args,
+                max_inflight=nw,
+            ):
+                yield _to_matrix(result)
+        return
+
+    for args in batch_args:
+        yield _to_matrix(_extract_labeled_db_batch_worker(args))
+
+
 def _enumerate_partitioned_batches(
     items: Iterable[tuple[T, int, bool]],
     batch_size: int,

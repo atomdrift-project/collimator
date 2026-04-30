@@ -123,6 +123,10 @@ def cmd_train(args: argparse.Namespace) -> None:
     # hopper DB don't cause drift mid-run.
     pinned_max_id = data.snapshot_max_id(db_path)
     log.info("dataset snapshot: max_id=%d", pinned_max_id)
+    full_partition_counts = data.count_labeled_by_partition_full(
+        db_path,
+        max_id=pinned_max_id,
+    )
 
     # Partition samples into train/test using canonical_sha256.
     # Exploded archive members are included as regular rows (filtered by skip='').
@@ -178,9 +182,17 @@ def cmd_train(args: argparse.Namespace) -> None:
     # Fast in-run estimate from out-of-fold CV predictions. Run
     # `make thresholds-refresh` after training to compute deploy thresholds
     # against the full labeled good corpus, including low-score good rows.
-    recommended = thresholds.compute_default_recommendations(result.cv_predictions, result.cv_labels) \
+    recommended = thresholds.compute_default_recommendations(
+        result.cv_predictions,
+        result.cv_labels,
+        n_benign_denominator=full_partition_counts["train"]["good"],
+    ) \
         if len(result.cv_predictions) > 0 else {}
-    severity_levels = thresholds.compute_severity_levels(result.cv_predictions, result.cv_labels) \
+    severity_levels = thresholds.compute_severity_levels(
+        result.cv_predictions,
+        result.cv_labels,
+        n_benign_denominator=full_partition_counts["train"]["good"],
+    ) \
         if len(result.cv_predictions) > 0 else []
 
     export.save_evaluation(
@@ -315,6 +327,7 @@ def cmd_train(args: argparse.Namespace) -> None:
             test_probs, y_test,
             title="TEST SET OPERATING POINTS (held-out)",
             highlight_threshold=result.optimal_threshold,
+            n_benign_denominator=full_partition_counts["test"]["good"],
         )
     else:
         print("\nNo test samples — skipping operating-point table.")
@@ -328,6 +341,7 @@ def cmd_train(args: argparse.Namespace) -> None:
             all_probs, all_labels,
             title="FULL DB OPERATING POINTS (CV + held-out)",
             highlight_threshold=result.optimal_threshold,
+            n_benign_denominator=full_partition_counts["all"]["good"],
         )
 
     elapsed = time.time() - t0
