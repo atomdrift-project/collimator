@@ -362,6 +362,53 @@ def stream_labeled_metadata_full(
             yield int(row_id), sha256, path or "", score or 0, _label_int(label)
 
 
+def stream_labeled_metadata_full_with_size(
+    db_path: Path | str,
+    *,
+    path_substr: str | None = None,
+    min_score: int | None = None,
+    max_score: int | None = None,
+    limit: int = 0,
+    max_id: int = 0,
+) -> Iterator[tuple[int, str, str, int, int, int]]:
+    """Yield full-corpus metadata plus serialized cleave_result byte estimate."""
+    with _connect(db_path, repeatable_read=True) as conn:
+        params: list[Any] = []
+        placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
+        json_len_expr = "LENGTH(cleave_result)" if isinstance(conn, sqlite3.Connection) else "LENGTH(cleave_result::text)"
+        query = (
+            f"SELECT id, sha256, path, label, score, {json_len_expr}"
+            " FROM samples"
+            " WHERE label IN ('bad', 'good')"
+            " AND cleave_result IS NOT NULL"
+            " AND skip = ''"
+        )
+        if max_id > 0:
+            query += f" AND id <= {int(max_id)}"
+        if path_substr:
+            query += f" AND LOWER(path) LIKE {placeholder}"
+            params.append(f"%{path_substr.lower()}%")
+        if min_score is not None:
+            query += f" AND score >= {placeholder}"
+            params.append(int(min_score))
+        if max_score is not None:
+            query += f" AND score <= {placeholder}"
+            params.append(int(max_score))
+        query += " ORDER BY id"
+        if limit > 0:
+            query += f" LIMIT {int(limit)}"
+
+        for row_id, sha256, path, label, score, json_bytes in _execute(conn, query, params):
+            yield (
+                int(row_id),
+                sha256,
+                path or "",
+                score or 0,
+                _label_int(label),
+                int(json_bytes or 0),
+            )
+
+
 def load_samples(db_path: Path | str, limit: int = 0) -> list[Sample]:
     """Load all labeled samples from a hopper database."""
     log.info("loading samples from %s (limit=%d)", db_path, limit)
@@ -499,3 +546,33 @@ def count_labeled_by_partition_full(
             counts["all"][name] += 1
             counts["all"]["total"] += 1
     return counts
+
+
+def labeled_corpus_metadata_full(
+    db_path: Path | str,
+    *,
+    max_id: int = 0,
+) -> dict[str, int]:
+    """Return row counts for the full labeled threshold/FP corpus."""
+    with _connect(db_path, repeatable_read=True) as conn:
+        query = (
+            "SELECT"
+            " COUNT(*),"
+            " COALESCE(SUM(CASE WHEN label = 'bad' THEN 1 ELSE 0 END), 0),"
+            " COALESCE(SUM(CASE WHEN label = 'good' THEN 1 ELSE 0 END), 0),"
+            " COALESCE(MAX(id), 0)"
+            " FROM samples"
+            " WHERE label IN ('bad', 'good')"
+            " AND cleave_result IS NOT NULL"
+            " AND skip = ''"
+        )
+        if max_id > 0:
+            query += f" AND id <= {int(max_id)}"
+        for total, bad, good, row_max_id in _execute(conn, query):
+            return {
+                "samples": int(total or 0),
+                "malware": int(bad or 0),
+                "benign": int(good or 0),
+                "max_row_id": int(row_max_id or 0),
+            }
+    return {"samples": 0, "malware": 0, "benign": 0, "max_row_id": 0}

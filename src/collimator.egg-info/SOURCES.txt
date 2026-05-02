@@ -23,6 +23,7 @@ src/collimator.egg-info/entry_points.txt
 src/collimator.egg-info/requires.txt
 src/collimator.egg-info/top_level.txt
 tests/test_ablation.py
+tests/test_archive_error_samples.py
 tests/test_data.py
 tests/test_data_splits.py
 tests/test_demo.py

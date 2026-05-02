@@ -79,8 +79,8 @@ def test_default_recommendations_derive_budgets_from_good_count() -> None:
 
     recs = compute_default_recommendations(probs, y)
     budgets = fp_budget_tables(probs, y)
-    hostile_row = next(row for row in budgets["hostile"] if row["max_fp_budget"] == 1)
-    suspicious_row = next(row for row in budgets["suspicious"] if row["max_fp_budget"] == 10)
+    hostile_row = next(row for row in budgets["hostile"] if row["max_fp_budget"] == 5)
+    suspicious_row = next(row for row in budgets["suspicious"] if row["max_fp_budget"] == 48)
 
     assert recs["hostile"] == hostile_row["threshold"]
     assert recs["suspicious"] == suspicious_row["threshold"]
@@ -96,14 +96,16 @@ def test_severity_levels_derive_budgets_from_good_count() -> None:
     levels = compute_severity_levels(probs, y)
     by_level = {row["level"]: row for row in levels}
 
-    assert by_level[1]["budgets"]["hostile_fp"] == 0
-    assert by_level[1]["budgets"]["suspicious_fp"] == 0
-    assert by_level[5]["budgets"]["hostile_fp"] == 1
-    assert by_level[5]["budgets"]["suspicious_fp"] == 10
-    assert by_level[9]["budgets"]["hostile_fp"] == 5
-    assert by_level[9]["budgets"]["suspicious_fp"] == 50
-    assert by_level[5]["hostile"]["fp"] <= 1
-    assert by_level[5]["suspicious"]["fp"] <= 10
+    assert by_level[0]["budgets"]["hostile_fp"] == 0
+    assert by_level[0]["budgets"]["suspicious_fp"] == 8
+    assert by_level[1]["budgets"]["hostile_fp"] == 1
+    assert by_level[1]["budgets"]["suspicious_fp"] == 16
+    assert by_level[5]["budgets"]["hostile_fp"] == 5
+    assert by_level[5]["budgets"]["suspicious_fp"] == 48
+    assert by_level[9]["budgets"]["hostile_fp"] == 9
+    assert by_level[9]["budgets"]["suspicious_fp"] == 80
+    assert by_level[5]["hostile"]["fp"] <= 5
+    assert by_level[5]["suspicious"]["fp"] <= 48
     assert "true_negative_rate" in by_level[5]["hostile"]
 
 
@@ -117,10 +119,10 @@ def test_severity_levels_can_use_full_good_file_denominator() -> None:
     levels = compute_severity_levels(probs, y, n_benign_denominator=1_000_000)
     by_level = {row["level"]: row for row in levels}
 
-    assert by_level[5]["budgets"]["hostile_fp"] == 1
-    assert by_level[5]["budgets"]["suspicious_fp"] == 10
+    assert by_level[5]["budgets"]["hostile_fp"] == 5
+    assert by_level[5]["budgets"]["suspicious_fp"] == 48
     assert by_level[5]["hostile"]["n_benign"] == 1_000_000
-    assert by_level[5]["hostile"]["fp_per_million"] <= 1.0
+    assert by_level[5]["hostile"]["fp_per_million"] <= 5.0
 
 
 def test_severity_levels_report_empty_threshold_when_budget_is_too_tight() -> None:
@@ -128,11 +130,11 @@ def test_severity_levels_report_empty_threshold_when_budget_is_too_tight() -> No
     probs = np.array([0.99, 0.99, 0.98], dtype=np.float32)
 
     levels = compute_severity_levels(probs, y)
-    level_one = next(row for row in levels if row["level"] == 1)
+    level_zero = next(row for row in levels if row["level"] == 0)
 
-    assert level_one["hostile"]["fp"] == 0
-    assert level_one["hostile"]["tp"] == 0
-    assert level_one["hostile"]["threshold"] > 0.99
+    assert level_zero["hostile"]["fp"] == 0
+    assert level_zero["hostile"]["tp"] == 0
+    assert level_zero["hostile"]["threshold"] > 0.99
 
 
 def test_near_severity_level_doubles_distance_from_full_confidence() -> None:

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import time
 from dataclasses import asdict, dataclass
 from itertools import islice
 from pathlib import Path
@@ -40,25 +42,33 @@ PRECISION_RECOMMENDATIONS = [
 MIN_FLAGGED_FOR_PRECISION = 50
 
 # Deployment operating points, expressed as false positives per million good
-# files. Level 5 is the legacy default: hostile <=1/1M, suspicious <=10/1M.
+# files. Hostile policy is the primary signal; suspicious is a broader triage
+# band using (level + 1) * 8 FP/1M.
 SEVERITY_LEVEL_TARGETS = [
-    {"level": 1, "hostile_per_million": 0.0, "suspicious_per_million": 0.0},
-    {"level": 2, "hostile_per_million": 0.0, "suspicious_per_million": 2.0},
-    {"level": 3, "hostile_per_million": 0.0, "suspicious_per_million": 4.0},
-    {"level": 4, "hostile_per_million": 0.0, "suspicious_per_million": 8.0},
-    {"level": 5, "hostile_per_million": 1.0, "suspicious_per_million": 10.0},
-    {"level": 6, "hostile_per_million": 2.0, "suspicious_per_million": 20.0},
-    {"level": 7, "hostile_per_million": 3.0, "suspicious_per_million": 30.0},
-    {"level": 8, "hostile_per_million": 4.0, "suspicious_per_million": 40.0},
-    {"level": 9, "hostile_per_million": 5.0, "suspicious_per_million": 50.0},
+    {
+        "level": level,
+        "hostile_per_million": float(level),
+        "suspicious_per_million": float((level + 1) * 8),
+    }
+    for level in range(10)
 ]
 
 DEFAULT_SEVERITY_LEVEL = 5
 
+
+def _severity_target(level: int) -> dict[str, int | float]:
+    for target in SEVERITY_LEVEL_TARGETS:
+        if int(target["level"]) == level:
+            return target
+    raise ValueError(f"unknown severity level: {level}")
+
+
+DEFAULT_SEVERITY_TARGET = _severity_target(DEFAULT_SEVERITY_LEVEL)
+
 # Legacy aliases retained for existing litmus config consumers.
 DEFAULT_FP_RATE_RECOMMENDATIONS = [
-    ("suspicious", SEVERITY_LEVEL_TARGETS[DEFAULT_SEVERITY_LEVEL - 1]["suspicious_per_million"] / 1_000_000),
-    ("hostile", SEVERITY_LEVEL_TARGETS[DEFAULT_SEVERITY_LEVEL - 1]["hostile_per_million"] / 1_000_000),
+    ("suspicious", DEFAULT_SEVERITY_TARGET["suspicious_per_million"] / 1_000_000),
+    ("hostile", DEFAULT_SEVERITY_TARGET["hostile_per_million"] / 1_000_000),
 ]
 
 # Legacy FP-per-million equivalent of the default rates.
@@ -107,9 +117,9 @@ class PolicySpec:
 POLICY_SPECS = [
     PolicySpec(
         name="default_fp_rate",
-        description="Default deploy policy: suspicious <=1/100k good FP, hostile <=1/1M good FP",
-        suspicious=PolicyLevel("suspicious", "max_recall_at_fp_rate", 1 / 100_000),
-        hostile=PolicyLevel("hostile", "max_recall_at_fp_rate", 1 / 1_000_000),
+        description="Default deploy policy: suspicious <=48/1M good FP, hostile <=5/1M good FP",
+        suspicious=PolicyLevel("suspicious", "max_recall_at_fp_rate", 48 / 1_000_000),
+        hostile=PolicyLevel("hostile", "max_recall_at_fp_rate", 5 / 1_000_000),
     ),
     PolicySpec(
         name="ultra_low_fpr",
@@ -623,6 +633,7 @@ def _score_labeled_corpus(
     min_score: int | None = None,
     max_score: int | None = None,
     limit: int = 0,
+    max_id: int = 0,
     n_workers: int = 0,
     cache_path: Path | None = None,
     refresh_cache: bool = False,
@@ -641,64 +652,215 @@ def _score_labeled_corpus(
         if cache_path.stat().st_mtime >= newest_input:
             log.info("loading threshold score cache from %s", cache_path)
             arrays = np.load(cache_path, allow_pickle=False)
-            samples = []
-            if include_samples:
-                samples = [
-                    ScoredSample(
-                        row_id=int(row_id),
-                        sha256=str(sha256),
-                        path=str(path),
-                        score=int(score),
-                        label=int(label),
-                    )
-                    for row_id, sha256, path, score, label in zip(
-                        arrays["row_ids"],
-                        arrays["sha256"],
-                        arrays["paths"],
-                        arrays["scores"],
-                        arrays["labels"],
-                        strict=True,
-                    )
-                ]
-            return samples, arrays["probs"], arrays["labels"].astype(np.float32)
+            labels = arrays["labels"].astype(np.float32)
+            row_ids = arrays["row_ids"]
+            cache_samples = int(arrays["corpus_samples"][()]) if "corpus_samples" in arrays.files else int(len(labels))
+            cache_malware = int(arrays["corpus_malware"][()]) if "corpus_malware" in arrays.files else int(np.sum(labels == 1))
+            cache_benign = int(arrays["corpus_benign"][()]) if "corpus_benign" in arrays.files else int(np.sum(labels == 0))
+            cache_max_row_id = (
+                int(arrays["corpus_max_row_id"][()])
+                if "corpus_max_row_id" in arrays.files
+                else int(np.max(row_ids)) if len(row_ids) else 0
+            )
+            cache_requested_max_id = (
+                int(arrays["corpus_requested_max_id"][()])
+                if "corpus_requested_max_id" in arrays.files
+                else cache_max_row_id if max_id > 0 else 0
+            )
+            if max_id > 0 and cache_requested_max_id != max_id:
+                log.info(
+                    "threshold score cache was built for max_id=%d, requested max_id=%d; rebuilding",
+                    cache_requested_max_id,
+                    max_id,
+                )
+            elif max_id == 0 and cache_requested_max_id > 0:
+                log.info(
+                    "threshold score cache was built for pinned max_id=%d, requested live corpus; rebuilding",
+                    cache_requested_max_id,
+                )
+            else:
+                log.info(
+                    "threshold score cache corpus: %d rows (%d malware, %d benign), max_row_id=%d",
+                    cache_samples,
+                    cache_malware,
+                    cache_benign,
+                    cache_max_row_id,
+                )
+                try:
+                    current = data.labeled_corpus_metadata_full(db_path, max_id=max_id)
+                    if current["samples"] != cache_samples or current["max_row_id"] != cache_max_row_id:
+                        log.info(
+                            "current DB threshold corpus: %d rows (%+d vs cache), max_row_id=%d (%+d)",
+                            current["samples"],
+                            current["samples"] - cache_samples,
+                            current["max_row_id"],
+                            current["max_row_id"] - cache_max_row_id,
+                        )
+                except Exception as exc:  # pragma: no cover - diagnostic only
+                    log.warning("could not compare threshold score cache to current DB corpus: %s", exc)
+                samples = []
+                if include_samples:
+                    samples = [
+                        ScoredSample(
+                            row_id=int(row_id),
+                            sha256=str(sha256),
+                            path=str(path),
+                            score=int(score),
+                            label=int(label),
+                        )
+                        for row_id, sha256, path, score, label in zip(
+                            arrays["row_ids"],
+                            arrays["sha256"],
+                            arrays["paths"],
+                            arrays["scores"],
+                            arrays["labels"],
+                            strict=True,
+                        )
+                    ]
+                return samples, arrays["probs"], labels
 
     if cacheable:
         log.info("building threshold score cache at %s", cache_path)
     spec = features.FeatureSpec.load(spec_path)
     model = load_model(model_path)
-    samples = [
-        ScoredSample(row_id=row_id, sha256=sha256, path=path, score=score, label=label)
-        for row_id, sha256, path, score, label in data.stream_labeled_metadata_full(
+    size_aware_batches = os.getenv("COLLIMATOR_THRESHOLD_SIZE_AWARE_BATCHES", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    if size_aware_batches:
+        row_metadata = list(data.stream_labeled_metadata_full_with_size(
             db_path,
             path_substr=path_substr,
             min_score=min_score,
             max_score=max_score,
             limit=limit,
-        )
+            max_id=max_id,
+        ))
+    else:
+        row_metadata = [
+            (row_id, sha256, path, score, label)
+            for row_id, sha256, path, score, label in data.stream_labeled_metadata_full(
+                db_path,
+                path_substr=path_substr,
+                min_score=min_score,
+                max_score=max_score,
+                limit=limit,
+                max_id=max_id,
+            )
+        ]
+    if size_aware_batches:
+        log.info("threshold scoring uses size-aware batch packing")
+    samples = [
+        ScoredSample(row_id=row_id, sha256=sha256, path=path, score=score, label=label)
+        for row_id, sha256, path, score, label, *_json_bytes in row_metadata
     ]
     if not samples:
         raise ValueError("no samples matched the requested filters")
     log.info("threshold scoring metadata: %d labeled rows", len(samples))
-    row_ids_labels = [(sample.row_id, sample.label) for sample in samples]
+    scored_samples: list[ScoredSample] = []
     pred_batches: list[np.ndarray] = []
     label_batches: list[np.ndarray] = []
+    score_started = time.monotonic()
+    last_progress = score_started
+    last_rows_logged = 0
+    scored_rows = 0
+    stage_totals = {
+        "fetch_sec": 0.0,
+        "extract_sec": 0.0,
+        "matrix_sec": 0.0,
+        "predict_sec": 0.0,
+    }
+    slow_batches: list[dict[str, float | int]] = []
 
-    for X_batch, y_batch in features.extract_labeled_from_db_batches(
+    for metadata_batch, X_batch, y_batch, batch_stats in features.extract_labeled_metadata_from_db_batches_unordered(
         db_path,
-        row_ids_labels,
+        row_metadata,
         spec,
         n_workers=n_workers,
     ):
         X_input = features.standardize(X_batch, spec) if spec.standardized else X_batch
+        predict_started = time.monotonic()
         pred_batches.append(predict_proba(model, X_input).astype(np.float32))
+        predict_sec = time.monotonic() - predict_started
         label_batches.append(y_batch.astype(np.float32))
+        scored_samples.extend(
+            ScoredSample(
+                row_id=int(row[0]),
+                sha256=str(row[1]),
+                path=str(row[2]),
+                score=int(row[3]),
+                label=int(row[4]),
+            )
+            for row in metadata_batch
+        )
+        batch_stats = dict(batch_stats)
+        batch_stats["predict_sec"] = predict_sec
+        batch_stats["total_sec"] = (
+            float(batch_stats.get("fetch_sec", 0.0))
+            + float(batch_stats.get("extract_sec", 0.0))
+            + float(batch_stats.get("matrix_sec", 0.0))
+            + predict_sec
+        )
+        for key in stage_totals:
+            stage_totals[key] += float(batch_stats.get(key, 0.0))
+        slow_batches.append(batch_stats)
+        slow_batches.sort(key=lambda row: float(row.get("total_sec", 0.0)), reverse=True)
+        del slow_batches[5:]
+        scored_rows += len(y_batch)
+        now = time.monotonic()
+        if scored_rows == len(samples) or scored_rows - last_rows_logged >= 100_000 or now - last_progress >= 60.0:
+            elapsed = max(now - score_started, 1e-9)
+            log.info(
+                "threshold scoring progress: %d/%d rows (%.1f%%, %.0f rows/sec)",
+                scored_rows,
+                len(samples),
+                100.0 * scored_rows / len(samples),
+                scored_rows / elapsed,
+            )
+            last_progress = now
+            last_rows_logged = scored_rows
 
     probs = np.concatenate(pred_batches) if pred_batches else np.array([], dtype=np.float32)
     y = np.concatenate(label_batches) if label_batches else np.array([], dtype=np.float32)
-    if len(probs) != len(samples):
-        raise ValueError(f"scored sample count mismatch: expected {len(samples)}, got {len(probs)}")
+    elapsed = max(time.monotonic() - score_started, 1e-9)
+    log.info(
+        "threshold scoring complete: %d rows in %.1fs (%.0f rows/sec)",
+        len(y),
+        elapsed,
+        len(y) / elapsed,
+    )
+    log.info(
+        "threshold scoring stage totals: fetch=%.1fs extract=%.1fs matrix=%.1fs predict=%.1fs",
+        stage_totals["fetch_sec"],
+        stage_totals["extract_sec"],
+        stage_totals["matrix_sec"],
+        stage_totals["predict_sec"],
+    )
+    if slow_batches:
+        slow_summary = "; ".join(
+            (
+                f"{int(row.get('rows', 0))} rows id "
+                f"{int(row.get('min_row_id', 0))}-{int(row.get('max_row_id', 0))}: "
+                f"total={float(row.get('total_sec', 0.0)):.1f}s "
+                f"fetch={float(row.get('fetch_sec', 0.0)):.1f}s "
+                f"extract={float(row.get('extract_sec', 0.0)):.1f}s "
+                f"matrix={float(row.get('matrix_sec', 0.0)):.1f}s "
+                f"predict={float(row.get('predict_sec', 0.0)):.1f}s"
+            )
+            for row in slow_batches
+        )
+        log.info("slowest threshold scoring batches: %s", slow_summary)
+    expected_samples = len(samples)
+    if len(probs) != expected_samples:
+        raise ValueError(f"scored sample count mismatch: expected {expected_samples}, got {len(probs)}")
+    if len(scored_samples) != expected_samples:
+        raise ValueError(f"scored metadata count mismatch: expected {expected_samples}, got {len(scored_samples)}")
+    samples = scored_samples
     if cacheable:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
+        corpus_max_row_id = max((sample.row_id for sample in samples), default=0)
         # Use uncompressed NPZ: this cache is meant to save wall-clock time,
         # and deflate compression is slow and effectively single-threaded here.
         np.savez(
@@ -709,8 +871,18 @@ def _score_labeled_corpus(
             scores=np.array([sample.score for sample in samples], dtype=np.int32),
             labels=y.astype(np.int8),
             probs=probs.astype(np.float32),
+            corpus_samples=np.array(len(samples), dtype=np.int64),
+            corpus_malware=np.array(int(np.sum(y == 1)), dtype=np.int64),
+            corpus_benign=np.array(int(np.sum(y == 0)), dtype=np.int64),
+            corpus_max_row_id=np.array(corpus_max_row_id, dtype=np.int64),
+            corpus_requested_max_id=np.array(int(max_id), dtype=np.int64),
         )
-        log.info("saved threshold score cache to %s", cache_path)
+        log.info(
+            "saved threshold score cache to %s (%d rows, max_row_id=%d)",
+            cache_path,
+            len(samples),
+            corpus_max_row_id,
+        )
     return samples, probs, y
 
 
@@ -720,6 +892,7 @@ def compute_default_recommendations_for_corpus(
     model_path: Path,
     spec_path: Path,
     n_workers: int = 0,
+    max_id: int = 0,
     cache_path: Path | None = None,
     refresh_cache: bool = False,
 ) -> dict[str, float | None]:
@@ -729,6 +902,7 @@ def compute_default_recommendations_for_corpus(
         model_path=model_path,
         spec_path=spec_path,
         n_workers=n_workers,
+        max_id=max_id,
         cache_path=cache_path,
         refresh_cache=refresh_cache,
         include_samples=False,
@@ -747,6 +921,7 @@ def tune_thresholds(
     top_errors: int = 20,
     output_path: Path | None = None,
     limit: int = 0,
+    max_id: int = 0,
     n_workers: int = 0,
     cache_path: Path | None = None,
     refresh_cache: bool = False,
@@ -760,6 +935,7 @@ def tune_thresholds(
         min_score=min_score,
         max_score=max_score,
         limit=limit,
+        max_id=max_id,
         n_workers=n_workers,
         cache_path=cache_path,
         refresh_cache=refresh_cache,
@@ -794,6 +970,7 @@ def tune_thresholds(
             "min_score": min_score,
             "max_score": max_score,
             "limit": limit,
+            "max_id": max_id,
         },
         "corpus": {
             "samples": len(y),
@@ -909,6 +1086,7 @@ def show_false_positives(
     top_errors: int = 100,
     output_path: Path | None = None,
     n_workers: int = 0,
+    max_id: int = 0,
     cache_path: Path | None = None,
     refresh_cache: bool = False,
 ) -> dict[str, Any]:
@@ -918,6 +1096,7 @@ def show_false_positives(
         model_path=model_path,
         spec_path=spec_path,
         n_workers=n_workers,
+        max_id=max_id,
         cache_path=cache_path,
         refresh_cache=refresh_cache,
     )
@@ -998,6 +1177,7 @@ def show_near_false_positives(
     top_errors: int = 100,
     output_path: Path | None = None,
     n_workers: int = 0,
+    max_id: int = 0,
     cache_path: Path | None = None,
     refresh_cache: bool = False,
 ) -> dict[str, Any]:
@@ -1007,6 +1187,7 @@ def show_near_false_positives(
         model_path=model_path,
         spec_path=spec_path,
         n_workers=n_workers,
+        max_id=max_id,
         cache_path=cache_path,
         refresh_cache=refresh_cache,
     )
@@ -1105,6 +1286,7 @@ def show_false_negatives(
     top_errors: int = 100,
     output_path: Path | None = None,
     n_workers: int = 0,
+    max_id: int = 0,
     cache_path: Path | None = None,
     refresh_cache: bool = False,
 ) -> dict[str, Any]:
@@ -1114,6 +1296,7 @@ def show_false_negatives(
         model_path=model_path,
         spec_path=spec_path,
         n_workers=n_workers,
+        max_id=max_id,
         cache_path=cache_path,
         refresh_cache=refresh_cache,
     )
@@ -1183,6 +1366,7 @@ def show_near_false_negatives(
     top_errors: int = 100,
     output_path: Path | None = None,
     n_workers: int = 0,
+    max_id: int = 0,
     cache_path: Path | None = None,
     refresh_cache: bool = False,
 ) -> dict[str, Any]:
@@ -1192,6 +1376,7 @@ def show_near_false_negatives(
         model_path=model_path,
         spec_path=spec_path,
         n_workers=n_workers,
+        max_id=max_id,
         cache_path=cache_path,
         refresh_cache=refresh_cache,
     )

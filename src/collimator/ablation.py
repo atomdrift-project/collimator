@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import scipy.sparse as sp
 
-from . import data, features, train
+from . import data, experiment, features, train
 from .model import predict_proba
 
 
@@ -89,9 +89,13 @@ def run_ablation(
     early_stopping_rounds: int | None = None,
     beta: float | None = None,
     device: str | None = None,
+    learner: str = "litmus-xg",
+    model_name: str = "litmus-xg",
     n_folds: int | None = None,
     train_samples: int = 0,
     max_test_samples: int = 0,
+    cache_dir: Path | None = None,
+    max_id: int = 0,
     output_path: Path | None = None,
 ) -> list[dict[str, object]]:
     """Train baseline and leave-one-group-out ablations on the same dataset.
@@ -104,32 +108,50 @@ def run_ablation(
     If train_samples > 0, reservoir-samples the training data to that size
     (balanced malware/benign). If max_test_samples > 0, caps test data.
     """
-    pinned_max_id = data.snapshot_max_id(db_path)
-    _, train_ids_labels, test_ids_labels = data.partition_row_ids(
-        db_path,
-        min_malware_training_score=min_malware_training_score,
-        max_id=pinned_max_id,
+    pinned_max_id = int(max_id) if max_id > 0 else data.snapshot_max_id(db_path)
+    feature_cfg = features.feature_config_from_env()
+    corpus_hash = (
+        experiment._corpus_cache_key(  # noqa: SLF001
+            seed, train_samples, max_test_samples, min_malware_training_score, pinned_max_id,
+        )
+        if cache_dir
+        else ""
     )
+    matrix_hash = experiment._matrix_cache_key(corpus_hash, feature_cfg) if cache_dir else ""  # noqa: SLF001
+    cached_matrices = experiment._load_matrix_cache(cache_dir, matrix_hash) if cache_dir else None  # noqa: SLF001
+    if cached_matrices is not None:
+        spec, X_train, y_train, X_test, y_test, _train_file_types = cached_matrices
+        print(f"\nABLATION (cached matrices: {X_train.shape[0]} train, {X_test.shape[0]} test)")
+    else:
+        cached_corpus = experiment._load_corpus_cache(cache_dir, corpus_hash) if cache_dir else None  # noqa: SLF001
+        if cached_corpus is not None:
+            corpus, train_file_types = cached_corpus
+        else:
+            corpus = experiment.sample_partitioned_reports(
+                db_path,
+                train_samples=train_samples,
+                max_test_samples=max_test_samples,
+                seed=seed,
+                min_malware_training_score=min_malware_training_score,
+                max_id=pinned_max_id,
+            )
+            sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
+            train_file_types = experiment._load_primary_file_types(  # noqa: SLF001
+                db_path, [s.row_id for s in sorted_train],
+            )
+            if cache_dir:
+                experiment._save_corpus_cache(cache_dir, corpus_hash, corpus, train_file_types)  # noqa: SLF001
 
-    # Subsample if requested.
-    if train_samples > 0 and len(train_ids_labels) > train_samples:
-        rng = np.random.default_rng(seed)
-        mal = [(rid, l) for rid, l in train_ids_labels if l == 1]
-        ben = [(rid, l) for rid, l in train_ids_labels if l == 0]
-        n_mal = min(train_samples // 2, len(mal))
-        n_ben = min(train_samples - n_mal, len(ben))
-        mal_idx = rng.choice(len(mal), n_mal, replace=False)
-        ben_idx = rng.choice(len(ben), n_ben, replace=False)
-        train_ids_labels = [mal[i] for i in mal_idx] + [ben[i] for i in ben_idx]
-    if max_test_samples > 0 and len(test_ids_labels) > max_test_samples:
-        rng = np.random.default_rng(seed + 1)
-        idx = rng.choice(len(test_ids_labels), max_test_samples, replace=False)
-        test_ids_labels = [test_ids_labels[i] for i in idx]
-
-    spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=n_workers)
-    X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
-        db_path, train_ids_labels, test_ids_labels, spec, n_workers=n_workers,
-    )
+        train_ids_labels = [(s.row_id, s.label) for s in sorted(corpus.train_samples, key=lambda s: s.row_id)]
+        test_ids_labels = [(s.row_id, s.label) for s in sorted(corpus.test_samples, key=lambda s: s.row_id)]
+        spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=n_workers)
+        X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
+            db_path, train_ids_labels, test_ids_labels, spec, n_workers=n_workers,
+        )
+        if cache_dir:
+            experiment._save_matrix_cache(  # noqa: SLF001
+                cache_dir, matrix_hash, spec, X_train, y_train, X_test, y_test, train_file_types,
+            )
     group_indices = features.feature_group_indices(spec)
     if groups is not None:
         group_names = [group for group in groups if group_indices.get(group)]
@@ -143,7 +165,7 @@ def run_ablation(
 
     # Build a TrainConfig honoring the caller's overrides, defaulting to the
     # layered v16 baseline (same hyperparams as make train).
-    cfg_kwargs: dict[str, object] = {"seed": seed}
+    cfg_kwargs: dict[str, object] = {"seed": seed, "learner": learner}
     if device is not None:
         cfg_kwargs["device"] = device
     if n_estimators is not None:
@@ -184,6 +206,9 @@ def run_ablation(
         )
         rows.append({
             "ablation": label,
+            "model_name": model_name,
+            "learner": learner,
+            "device": device or "auto",
             "dropped_groups": dropped,
             "n_features": X.shape[1],
             "optimal_threshold": float(result.optimal_threshold),

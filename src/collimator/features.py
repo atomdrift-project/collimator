@@ -36,9 +36,10 @@ import math
 import multiprocessing as mp
 import os
 import subprocess
+import time
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass, field
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 from collections.abc import Iterable, Iterator
@@ -52,6 +53,7 @@ import scipy.stats as stats
 
 log = logging.getLogger(__name__)
 T = TypeVar("T")
+LabeledMetadata = tuple[int, str, str, int, int] | tuple[int, str, str, int, int, int]
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -172,7 +174,28 @@ EXPECTED_GHOSTS = {
     ],
 }
 
-FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "struct", "elements", "formula", "score", "bigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space")
+FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "format", "struct", "elements", "formula", "score", "bigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space")
+
+FORMAT_GROUPS: dict[str, frozenset[str]] = {
+    "script": frozenset({
+        "batch", "javascript", "lua", "perl", "php", "powershell", "python",
+        "ruby", "shell", "typescript", "vbscript",
+    }),
+    "native_binary": frozenset({"elf", "macho", "pe"}),
+    "archive_package": frozenset({
+        "7z", "apk", "cab", "deb", "egg", "gz", "jar", "msi", "rar", "rpm",
+        "tar", "tgz", "vsix", "war", "whl", "xpi", "xz", "zip", "zst",
+    }),
+    "document": frozenset({"doc", "docx", "html", "pdf", "ppt", "pptx", "rtf", "xls", "xlsx"}),
+    "source_code": frozenset({
+        "c", "cpp", "csharp", "go", "java", "kotlin", "makefile", "rust",
+        "scala", "swift",
+    }),
+    "config_data": frozenset({"ini", "json", "plist", "toml", "xml", "yaml", "yml"}),
+    "media": frozenset({"bmp", "gif", "jpg", "jpeg", "mp3", "mp4", "png", "svg", "webp"}),
+}
+
+_FORMAT_GROUP_ORDER = tuple(FORMAT_GROUPS)
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,6 +220,7 @@ class FeatureConfig:
     # If False, drops inter:{ft}*{element} and inter:{ft}*{skeleton} cross-products
     # (~163k mostly-useless features in v15). inter:{ft}*score is always kept.
     include_filetype_interactions: bool
+    include_format_hints: bool
     # Individual extreme-feature toggles (Exps 48, 49, 51, 54, 55, 56).
     # Each defaults to include_extreme_features for backwards compatibility.
     include_anachronistic_injection: bool
@@ -219,6 +243,7 @@ class FeatureConfig:
     # Experimental feature batch (2026-04-13): 10 new features, each
     # individually toggleable via COLLIMATOR_EXP_<N>=1 for screening.
     include_extended_metrics: bool   # all numeric ms.* metrics from vocab scan
+    include_ember_lite_features: bool # portable EMBER-style aggregates from ms.* metrics
     bigram_max: int                  # max bigram vocab size
     bigram_min_freq: int             # min frequency for bigram inclusion
     trigram_max: int                 # max trigram vocab size
@@ -329,6 +354,9 @@ def feature_config_from_env() -> FeatureConfig:
         include_soft_presence=include_soft_presence,
         include_blindfold=include_blindfold,
         include_filetype_interactions=include_filetype_interactions,
+        include_format_hints=os.getenv("COLLIMATOR_FORMAT_HINTS") in {
+            "1", "true", "yes", "on",
+        },
         include_silent_packer_signal=os.getenv("COLLIMATOR_SILENT_PACKER_SIGNAL") == "1",
         include_mtime_kurtosis=os.getenv("COLLIMATOR_MTIME_KURTOSIS") == "1",
         include_air_gap_signal=os.getenv("COLLIMATOR_AIR_GAP_SIGNAL") == "1",
@@ -345,6 +373,9 @@ def feature_config_from_env() -> FeatureConfig:
             "1", "true", "yes", "on",
         },
         include_extended_metrics=os.getenv("COLLIMATOR_EXTENDED_METRICS") in {
+            "1", "true", "yes", "on",
+        },
+        include_ember_lite_features=os.getenv("COLLIMATOR_EMBER_LITE_FEATURES") in {
             "1", "true", "yes", "on",
         },
         include_attack_features=os.getenv("COLLIMATOR_ATTACK_FEATURES") in {
@@ -710,6 +741,28 @@ def _build_feature_names(
                 "agg:mbc_behavior_count",        # distinct MBC B-codes
                 "agg:has_attack_and_objective",   # has T-codes AND objectives/* findings
             ])
+        if config.include_ember_lite_features:
+            feature_names.extend([
+                "agg:static_file_bytes_log",
+                "agg:static_import_count_log",
+                "agg:static_export_count_log",
+                "agg:static_dependency_count_log",
+                "agg:static_string_count_log",
+                "agg:static_wide_string_ratio",
+                "agg:static_max_string_length_log",
+                "agg:static_string_entropy_max",
+                "agg:static_text_lines_log",
+                "agg:static_function_count_log",
+                "agg:static_code_bytes_log",
+                "agg:static_code_to_data_ratio_max",
+                "agg:static_wx_units_log",
+                "agg:static_writable_unit_ratio",
+                "agg:static_executable_unit_ratio",
+                "agg:static_nonstandard_unit_names_log",
+                "agg:static_largest_unit_ratio_max",
+                "agg:static_resource_ratio_max",
+                "agg:static_signed_file_fraction",
+            ])
         if config.include_objective_trigrams:
             feature_names.extend([
                 "agg:objective_trigram_count",    # distinct 3-way objective path combos
@@ -766,6 +819,24 @@ def _build_feature_names(
     if "filetype" in config.enabled_groups:
         for ftype in filetype_vocab:
             feature_names.append(f"filetype:{ftype}")
+
+    # Group 6b: Portable format-group hints derived only from cleave file types.
+    if "format" in config.enabled_groups and config.include_format_hints:
+        for group in _FORMAT_GROUP_ORDER:
+            feature_names.extend([
+                f"format:{group}",
+                f"format:{group}_file_fraction",
+                f"format:{group}_inner_fraction",
+                f"format:{group}_suspicious_fraction",
+                f"format:{group}_hostile_fraction",
+            ])
+        feature_names.extend([
+            "format:group_count_log",
+            "format:mixed_script_binary",
+            "format:mixed_archive_script",
+            "format:mixed_archive_binary",
+            "format:unknown_file_fraction",
+        ])
 
     # Group 7: Structural / container context (7).
     if "struct" in config.enabled_groups:
@@ -1763,6 +1834,9 @@ def _apply_experimental_features(
         _assign(vec, lookup.get("agg:import_finding_ratio"),
                 math.log1p(total_imports) / math.log1p(finding_count))
 
+    if config.include_ember_lite_features:
+        _apply_ember_lite_features(files, ctx, vec)
+
     # ATT&CK / MBC features from 'a' and 'm' fields in findings.
     if config.include_attack_features:
         attack_techniques: set[str] = set()
@@ -1852,6 +1926,104 @@ def _apply_external_signal_features(
     _assign(vec, lookup.get("ext:has_yara_match"), 1.0 if summary.has_yara else 0.0)
 
 
+def _metric_number(metrics: dict[str, Any], group: str, field: str) -> float:
+    return _float((metrics.get(group) or {}).get(field))
+
+
+def _metric_bool(metrics: dict[str, Any], group: str, field: str) -> bool:
+    raw = (metrics.get(group) or {}).get(field)
+    if isinstance(raw, bool):
+        return raw
+    if isinstance(raw, (int, float)):
+        return raw != 0
+    if isinstance(raw, str):
+        return raw.strip().lower() in {"1", "true", "yes", "on"}
+    return False
+
+
+def _apply_ember_lite_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Portable EMBER-style aggregates using cleave metrics already in reports."""
+    lookup = ctx.absolute_lookup
+    analyzed_files = 0
+    total_file_bytes = 0.0
+    import_count = 0.0
+    export_count = 0.0
+    dependency_count = 0.0
+    string_count = 0.0
+    wide_string_count = 0.0
+    max_string_length = 0.0
+    max_string_entropy = 0.0
+    text_lines = 0.0
+    function_count = 0.0
+    code_bytes = 0.0
+    code_to_data_ratio = 0.0
+    wx_units = 0.0
+    writable_units = 0.0
+    executable_units = 0.0
+    structural_units = 0.0
+    nonstandard_unit_names = 0.0
+    largest_unit_ratio = 0.0
+    resource_ratio = 0.0
+    signed_files = 0
+
+    for file_entry in files:
+        metrics = file_entry.get("ms") or {}
+        if not metrics:
+            continue
+
+        analyzed_files += 1
+        binary = metrics.get("binary") or {}
+        total_file_bytes += _metric_number(metrics, "binary", "file_size") or _float(file_entry.get("sz", 0))
+        import_count += _metric_number(metrics, "binary", "import_count")
+        export_count += _metric_number(metrics, "binary", "export_count")
+        dependency_count += _metric_number(metrics, "binary", "dependency_count")
+        strings = _metric_number(metrics, "binary", "string_count")
+        string_count += strings
+        wide_string_count += _metric_number(metrics, "binary", "wide_string_count")
+        max_string_length = max(max_string_length, _metric_number(metrics, "binary", "max_string_length"))
+        max_string_entropy = max(max_string_entropy, _metric_number(metrics, "binary", "avg_string_entropy"))
+        text_lines += _metric_number(metrics, "text", "total_lines")
+        function_count += _metric_number(metrics, "binary", "function_count")
+        code_bytes += _metric_number(metrics, "binary", "code_size")
+        code_to_data_ratio = max(code_to_data_ratio, _metric_number(metrics, "binary", "code_to_data_ratio"))
+        wx_units += _metric_number(metrics, "binary", "wx_sections")
+        writable_units += _metric_number(metrics, "binary", "writable_sections")
+        executable_units += _metric_number(metrics, "binary", "executable_sections")
+        structural_units += _metric_number(metrics, "binary", "section_count")
+        nonstandard_unit_names += _metric_number(metrics, "binary", "nonstandard_section_name_count")
+        largest_unit_ratio = max(largest_unit_ratio, _metric_number(metrics, "binary", "largest_section_ratio"))
+        resource_ratio = max(resource_ratio, _metric_number(metrics, "binary", "rsrc_to_file_ratio"))
+        if _metric_bool(metrics, "binary", "has_signature") or bool(binary.get("signature_type")):
+            signed_files += 1
+
+    denom_files = max(analyzed_files, 1)
+    denom_units = max(structural_units, 1.0)
+    denom_strings = max(string_count, 1.0)
+    _assign(vec, lookup.get("agg:static_file_bytes_log"), math.log1p(total_file_bytes))
+    _assign(vec, lookup.get("agg:static_import_count_log"), math.log1p(import_count))
+    _assign(vec, lookup.get("agg:static_export_count_log"), math.log1p(export_count))
+    _assign(vec, lookup.get("agg:static_dependency_count_log"), math.log1p(dependency_count))
+    _assign(vec, lookup.get("agg:static_string_count_log"), math.log1p(string_count))
+    _assign(vec, lookup.get("agg:static_wide_string_ratio"), wide_string_count / denom_strings)
+    _assign(vec, lookup.get("agg:static_max_string_length_log"), math.log1p(max_string_length))
+    _assign(vec, lookup.get("agg:static_string_entropy_max"), max_string_entropy)
+    _assign(vec, lookup.get("agg:static_text_lines_log"), math.log1p(text_lines))
+    _assign(vec, lookup.get("agg:static_function_count_log"), math.log1p(function_count))
+    _assign(vec, lookup.get("agg:static_code_bytes_log"), math.log1p(code_bytes))
+    _assign(vec, lookup.get("agg:static_code_to_data_ratio_max"), code_to_data_ratio)
+    _assign(vec, lookup.get("agg:static_wx_units_log"), math.log1p(wx_units))
+    _assign(vec, lookup.get("agg:static_writable_unit_ratio"), writable_units / denom_units)
+    _assign(vec, lookup.get("agg:static_executable_unit_ratio"), executable_units / denom_units)
+    _assign(vec, lookup.get("agg:static_nonstandard_unit_names_log"), math.log1p(nonstandard_unit_names))
+    _assign(vec, lookup.get("agg:static_largest_unit_ratio_max"), largest_unit_ratio)
+    _assign(vec, lookup.get("agg:static_resource_ratio_max"), resource_ratio)
+    _assign(vec, lookup.get("agg:static_signed_file_fraction"), signed_files / denom_files)
+
+
 def _apply_metric_features(
     metrics: dict[str, Any],
     ctx: _ExtractContext,
@@ -1894,6 +2066,65 @@ def _apply_filetype_features(
         for file_entry in files:
             idx = ctx.ft_lookup.get(file_entry.get("type", ""))
             _assign(vec, idx, 1.0)
+
+
+def _format_groups_for_type(file_type: str) -> tuple[str, ...]:
+    """Return coarse portable format groups for a cleave-reported file type."""
+    normalized = str(file_type or "").strip().lower()
+    if not normalized:
+        return ()
+    return tuple(group for group in _FORMAT_GROUP_ORDER if normalized in FORMAT_GROUPS[group])
+
+
+def _apply_format_hint_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Format-group hints derived only from cleave file type fields."""
+    lookup = ctx.absolute_lookup
+    total_files = max(len(files), 1)
+    inner_files = 0
+    known_files = 0
+    group_file_counts = {group: 0 for group in _FORMAT_GROUP_ORDER}
+    group_inner_counts = {group: 0 for group in _FORMAT_GROUP_ORDER}
+    group_suspicious_counts = {group: 0 for group in _FORMAT_GROUP_ORDER}
+    group_hostile_counts = {group: 0 for group in _FORMAT_GROUP_ORDER}
+    present_groups: set[str] = set()
+
+    for file_entry in files:
+        groups = _format_groups_for_type(str(file_entry.get("type", "")))
+        is_inner = bool(file_entry.get("p")) or _float(file_entry.get("depth", file_entry.get("dp", 0))) > 0
+        if is_inner:
+            inner_files += 1
+        if groups:
+            known_files += 1
+        file_summary = _summarize_findings(file_entry.get("ts") or [])
+        for group in groups:
+            present_groups.add(group)
+            group_file_counts[group] += 1
+            if is_inner:
+                group_inner_counts[group] += 1
+            if file_summary.suspicious_finding_count > 0:
+                group_suspicious_counts[group] += 1
+            if file_summary.hostile_finding_count > 0:
+                group_hostile_counts[group] += 1
+
+    inner_denom = max(inner_files, 1)
+    for group in _FORMAT_GROUP_ORDER:
+        group_count = group_file_counts[group]
+        group_denom = max(group_count, 1)
+        _assign(vec, lookup.get(f"format:{group}"), 1.0 if group_count > 0 else 0.0)
+        _assign(vec, lookup.get(f"format:{group}_file_fraction"), group_count / total_files)
+        _assign(vec, lookup.get(f"format:{group}_inner_fraction"), group_inner_counts[group] / inner_denom)
+        _assign(vec, lookup.get(f"format:{group}_suspicious_fraction"), group_suspicious_counts[group] / group_denom)
+        _assign(vec, lookup.get(f"format:{group}_hostile_fraction"), group_hostile_counts[group] / group_denom)
+
+    _assign(vec, lookup.get("format:group_count_log"), math.log1p(len(present_groups)))
+    _assign(vec, lookup.get("format:mixed_script_binary"), 1.0 if {"script", "native_binary"} <= present_groups else 0.0)
+    _assign(vec, lookup.get("format:mixed_archive_script"), 1.0 if {"archive_package", "script"} <= present_groups else 0.0)
+    _assign(vec, lookup.get("format:mixed_archive_binary"), 1.0 if {"archive_package", "native_binary"} <= present_groups else 0.0)
+    _assign(vec, lookup.get("format:unknown_file_fraction"), (total_files - known_files) / total_files)
 
 
 def _apply_element_features(
@@ -2468,6 +2699,8 @@ def _extract_into(
         _apply_metric_features(metrics, ctx, vec)
     if "filetype" in config.enabled_groups:
         _apply_filetype_features(files, ctx, vec)
+    if "format" in config.enabled_groups and config.include_format_hints:
+        _apply_format_hint_features(files, ctx, vec)
     if "struct" in config.enabled_groups:
         _apply_structural_features(
             files,
@@ -2525,7 +2758,8 @@ def _extract_into(
             config.exp_confidence_skew, config.exp_finding_depth_var,
             config.exp_multifile_crit_spread, config.exp_metric_anomaly,
             config.exp_unsigned_import_density, config.exp_entropy_hostile,
-            config.exp_hostile_objective_div, config.exp_import_finding_ratio)):
+            config.exp_hostile_objective_div, config.exp_import_finding_ratio,
+            config.include_ember_lite_features)):
         _apply_experimental_features(report, summary, files, metrics, ctx, vec, score)
 
     # ATT&CK/MBC code n-grams: vocab-based features from T-codes and MBC B-codes.
@@ -2751,6 +2985,32 @@ def _batched(items: Iterable[T], batch_size: int) -> Iterable[list[T]]:
         yield batch
 
 
+def _weighted_metadata_batches(
+    items: list[LabeledMetadata],
+    *,
+    max_items: int,
+    max_weight: int,
+) -> Iterable[list[LabeledMetadata]]:
+    """Yield metadata batches capped by row count and estimated JSON bytes."""
+    if not items:
+        return
+    if max_weight <= 0 or not any(len(item) > 5 and int(item[5]) > 0 for item in items):
+        yield from _batched(items, max_items)
+        return
+    batch: list[LabeledMetadata] = []
+    weight = 0
+    for item in items:
+        item_weight = int(item[5]) if len(item) > 5 else 0
+        if batch and (len(batch) >= max_items or weight + item_weight > max_weight):
+            yield batch
+            batch = []
+            weight = 0
+        batch.append(item)
+        weight += item_weight
+    if batch:
+        yield batch
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -2840,7 +3100,7 @@ def extract_stream_batches(
              (np.array(rows, dtype=np.int32), np.array(cols, dtype=np.int32))),
             shape=(n, spec.total_features),
         )
-        log.info(
+        log.debug(
             "extracted %d samples x %d features (nnz=%d, density=%.1f%%)",
             n, spec.total_features, X.nnz,
             100.0 * X.nnz / max(n * spec.total_features, 1),
@@ -2909,7 +3169,7 @@ def extract_stream(
          (np.array(rows, dtype=np.int32), np.array(cols, dtype=np.int32))),
         shape=(n, spec.total_features),
     )
-    log.info(
+    log.debug(
         "extracted %d samples x %d features (nnz=%d, density=%.1f%%)",
         n, spec.total_features, X.nnz,
         100.0 * X.nnz / max(n * spec.total_features, 1),
@@ -2946,6 +3206,23 @@ def _bounded_iter(pool: ProcessPoolExecutor, fn, it: Iterable, *, max_inflight: 
             pending.append(pool.submit(fn, next(source)))
         except StopIteration:
             pass
+
+
+def _bounded_unordered_iter(pool: ProcessPoolExecutor, fn, it: Iterable, *, max_inflight: int) -> Iterator:
+    """Submit tasks with bounded concurrency, yielding results as they complete."""
+    pending = set()
+    source = iter(it)
+    for item in islice(source, max_inflight):
+        pending.add(pool.submit(fn, item))
+    while pending:
+        for future in as_completed(pending):
+            pending.remove(future)
+            yield future.result()
+            try:
+                pending.add(pool.submit(fn, next(source)))
+            except StopIteration:
+                pass
+            break
 
 
 def _extract_partitioned_batch_worker(
@@ -3048,6 +3325,44 @@ def _extract_labeled_db_batch_worker(
     return _extract_batch_worker((offset, batch, spec))
 
 
+def _extract_labeled_metadata_db_batch_worker(
+    args: tuple[Path | str, list[LabeledMetadata], FeatureSpec],
+) -> tuple[
+    list[LabeledMetadata],
+    list[int],
+    list[int],
+    list[float],
+    list[int],
+    dict[str, float | int],
+]:
+    """Fetch and extract one labeled metadata batch from the DB."""
+    from . import data  # noqa: PLC0415 — deferred to avoid circular import in workers
+
+    dsn, batch_meta, spec = args
+    ids = [int(row[0]) for row in batch_meta]
+    fetch_started = time.monotonic()
+    reports_map = data.fetch_cleave_results(dsn, ids)
+    fetch_sec = time.monotonic() - fetch_started
+    missing = set(ids) - set(reports_map)
+    if missing:
+        raise ValueError(f"missing cleave_result rows during extraction: {len(missing)}")
+    batch = [
+        (reports_map[int(row[0])], int(row[4]))
+        for row in batch_meta
+    ]
+    extract_started = time.monotonic()
+    rows, cols, vals, labels = _extract_batch_worker((0, batch, spec))
+    extract_sec = time.monotonic() - extract_started
+    stats: dict[str, float | int] = {
+        "rows": len(labels),
+        "fetch_sec": fetch_sec,
+        "extract_sec": extract_sec,
+        "min_row_id": min(ids) if ids else 0,
+        "max_row_id": max(ids) if ids else 0,
+    }
+    return batch_meta, rows, cols, vals, labels, stats
+
+
 def extract_labeled_from_db_batches(
     db_path: Path | str,
     row_ids_labels: list[tuple[int, int]],
@@ -3090,7 +3405,7 @@ def extract_labeled_from_db_batches(
             ),
             shape=(n, spec.total_features),
         )
-        log.info(
+        log.debug(
             "extracted %d samples x %d features (nnz=%d, density=%.1f%%)",
             n,
             spec.total_features,
@@ -3115,6 +3430,91 @@ def extract_labeled_from_db_batches(
 
     for args in batch_args:
         yield _to_matrix(_extract_labeled_db_batch_worker(args))
+
+
+def extract_labeled_metadata_from_db_batches_unordered(
+    db_path: Path | str,
+    row_metadata: list[LabeledMetadata],
+    spec: FeatureSpec,
+    *,
+    n_workers: int = 0,
+    batch_size: int | None = None,
+) -> Iterator[tuple[list[LabeledMetadata], sp.csr_matrix, np.ndarray, dict[str, float | int]]]:
+    """Yield DB-backed feature batches with metadata as workers complete.
+
+    This is intended for full-corpus threshold/FP cache construction, where
+    global row order is not meaningful as long as metadata, labels, and
+    predictions stay aligned within each yielded batch.
+    """
+    nw = resolve_worker_count(n_workers)
+    eff_batch_size = batch_size if batch_size is not None and batch_size > 0 else _feature_batch_size(nw)
+    max_batch_bytes = int(os.getenv("COLLIMATOR_THRESHOLD_BATCH_BYTES", str(16 * 1024 * 1024)))
+    sized = any(len(row) > 5 and int(row[5]) > 0 for row in row_metadata)
+    log.info(
+        "unordered DB-backed feature extraction: %d rows, %d workers, batch_size=%d%s",
+        len(row_metadata),
+        nw,
+        eff_batch_size,
+        f", max_batch_bytes={max_batch_bytes}" if sized else "",
+    )
+    batch_args = (
+        (db_path, batch, spec)
+        for batch in _weighted_metadata_batches(
+            row_metadata,
+            max_items=eff_batch_size,
+            max_weight=max_batch_bytes,
+        )
+    )
+
+    def _to_matrix(
+        result: tuple[
+            list[LabeledMetadata],
+            list[int],
+            list[int],
+            list[float],
+            list[int],
+            dict[str, float | int],
+        ],
+    ) -> tuple[list[LabeledMetadata], sp.csr_matrix, np.ndarray, dict[str, float | int]]:
+        metadata, rows, cols, vals, labels, stats = result
+        n = len(labels)
+        y = np.array(labels, dtype=np.float32)
+        matrix_started = time.monotonic()
+        X = sp.csr_matrix(
+            (
+                np.array(vals, dtype=np.float32),
+                (np.array(rows, dtype=np.int32), np.array(cols, dtype=np.int32)),
+            ),
+            shape=(n, spec.total_features),
+        )
+        stats = dict(stats)
+        stats["matrix_sec"] = time.monotonic() - matrix_started
+        stats["nnz"] = X.nnz
+        log.debug(
+            "extracted %d samples x %d features (nnz=%d, density=%.1f%%)",
+            n,
+            spec.total_features,
+            X.nnz,
+            100.0 * X.nnz / max(n * spec.total_features, 1),
+        )
+        return metadata, X, y, stats
+
+    if nw > 1:
+        with ProcessPoolExecutor(
+            max_workers=nw,
+            mp_context=mp.get_context("spawn"),
+        ) as pool:
+            for result in _bounded_unordered_iter(
+                pool,
+                _extract_labeled_metadata_db_batch_worker,
+                batch_args,
+                max_inflight=2 * nw,
+            ):
+                yield _to_matrix(result)
+        return
+
+    for args in batch_args:
+        yield _to_matrix(_extract_labeled_metadata_db_batch_worker(args))
 
 
 def _enumerate_partitioned_batches(
@@ -3659,3 +4059,36 @@ def feature_group_indices(spec: FeatureSpec) -> dict[str, list[int]]:
         group = name.split(":", 1)[0]
         groups.setdefault(group, []).append(i)
     return groups
+
+
+def drop_feature_prefixes(
+    X: sp.spmatrix,
+    spec: FeatureSpec,
+    prefixes: Iterable[str],
+) -> tuple[sp.csr_matrix, FeatureSpec]:
+    """Return a matrix/spec with feature-name prefixes removed.
+
+    Prefixes are matched against the part of a feature name before ``:``.
+    Vocabularies are intentionally retained so extraction with the pruned spec
+    remains compatible: dropped feature lookups simply do not resolve to an
+    output column.
+    """
+    drop_prefixes = {prefix.strip().rstrip(":") for prefix in prefixes if prefix.strip()}
+    if not drop_prefixes:
+        return X.tocsr(), spec
+    if X.shape[1] != spec.total_features:
+        raise ValueError(f"matrix has {X.shape[1]} columns but spec has {spec.total_features} features")
+    keep_indices = [
+        idx for idx, name in enumerate(spec.feature_names)
+        if name.split(":", 1)[0] not in drop_prefixes
+    ]
+    if len(keep_indices) == spec.total_features:
+        return X.tocsr(), spec
+    pruned_spec = replace(
+        spec,
+        feature_names=[spec.feature_names[idx] for idx in keep_indices],
+        total_features=len(keep_indices),
+        feature_means=None,
+        feature_stds=None,
+    )
+    return X[:, keep_indices].tocsr(), pruned_spec

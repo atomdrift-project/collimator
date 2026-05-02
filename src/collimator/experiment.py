@@ -377,30 +377,37 @@ def run_experiment(
     train_samples: int = 10_000,
     max_test_samples: int = 0,
     n_folds: int = 2,
+    device: str | None = None,
     n_estimators: int = 220,
     max_depth: int = 6,
     learning_rate: float = 0.03,
     early_stopping_rounds: int = 25,
     min_child_weight: int = 5,
+    min_child_samples: int | None = None,
+    num_leaves: int | None = None,
     colsample_bytree: float = 0.8,
     subsample: float = 0.8,
     gamma: float = 0.0,
     reg_alpha: float = 0.0,
     reg_lambda: float = 1.0,
     beta: float = 1.0,
+    learner: str = "litmus-xg",
+    model_name: str = "litmus-xg",
     threshold_mode: str = "fbeta",
     threshold_fpr_target: float | None = None,
     hard_negative_fraction: float = 0.0,
     hard_negative_weight: float = 1.0,
     benign_filetype_weights: dict[str, float] | None = None,
     total_limit: int = 0,
+    max_id: int = 0,
+    drop_feature_prefixes: list[str] | None = None,
     monotone_constraints: dict[str, int] | None = None,
     min_malware_training_score: int = 0,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     # Pin the dataset to a single max(id) snapshot so concurrent inserts to the
     # hopper DB don't cause drift between this run and any others.
-    pinned_max_id = data.snapshot_max_id(db_path)
+    pinned_max_id = int(max_id) if max_id > 0 else data.snapshot_max_id(db_path)
     log.info("dataset snapshot: max_id=%d", pinned_max_id)
 
     feature_cfg = features.feature_config_from_env()
@@ -499,6 +506,14 @@ def run_experiment(
                 X_test = X_test_lil.tocsr()
             else:
                 log.warning("clustering enabled but 'cluster:0' feature not found in spec")
+    if drop_feature_prefixes:
+        X_train, pruned_spec = features.drop_feature_prefixes(X_train, spec, drop_feature_prefixes)
+        X_test, _ = features.drop_feature_prefixes(X_test, spec, drop_feature_prefixes)
+        spec = pruned_spec
+        log.info(
+            "dropped feature prefixes for experiment: %s (%d features remain)",
+            drop_feature_prefixes, spec.total_features,
+        )
     # Build monotonic constraints for all behavior features.
     # We want to force the model to treat 'presence', 'criticality', and 'aggregate counts'
     # of findings as purely additive signals for malware.
@@ -523,13 +538,17 @@ def run_experiment(
         X_train,
         y_train,
         train.TrainConfig(
+            learner=learner,
             seed=seed,
+            device=device,
             n_folds=n_folds,
             n_estimators=n_estimators,
             max_depth=max_depth,
             learning_rate=learning_rate,
             early_stopping_rounds=early_stopping_rounds,
             min_child_weight=min_child_weight,
+            min_child_samples=min_child_samples,
+            num_leaves=num_leaves,
             colsample_bytree=colsample_bytree,
             subsample=subsample,
             gamma=gamma,
@@ -567,9 +586,13 @@ def run_experiment(
         print("\nNo external test rows available.")
 
     results = {
+        "model_name": model_name,
+        "learner": learner,
+        "device": device or "auto",
         "train_rows": int(X_train.shape[0]),
         "test_rows": int(X_test.shape[0]),
         "n_features": int(spec.total_features),
+        "drop_feature_prefixes": list(drop_feature_prefixes or []),
         "train_metrics": result.metrics,
         "sampled_test_metrics": sampled_test_metrics,
         "threshold": float(result.optimal_threshold),
@@ -580,6 +603,7 @@ def run_experiment(
     }
     if output_dir is not None:
         spec.save(output_dir / "feature_spec.json")
-        export.save_model(result.model, output_dir / "model.json")
+        model_filename = "model.txt" if learner == "azoth" else "model.json"
+        export.save_model(result.model, output_dir / model_filename)
         export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
     return results

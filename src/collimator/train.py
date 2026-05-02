@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import warnings
 from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 import scipy.sparse as sp
@@ -37,6 +38,7 @@ HOLDOUT_FRACTION = 0.10
 
 @dataclass
 class TrainConfig:
+    learner: str = "litmus-xg"
     seed: int = 42
     device: str | None = None
     holdout_fraction: float = HOLDOUT_FRACTION
@@ -46,6 +48,8 @@ class TrainConfig:
     learning_rate: float = 0.02
     early_stopping_rounds: int = 100
     min_child_weight: int = 5
+    min_child_samples: int | None = None
+    num_leaves: int | None = None
     colsample_bytree: float = 0.8
     subsample: float = 0.8
     gamma: float = 0.0
@@ -62,7 +66,7 @@ class TrainConfig:
 
 @dataclass
 class TrainResult:
-    model: xgb.XGBClassifier
+    model: Any
     metrics: dict[str, float]
     calibration: dict[str, object]
     optimal_threshold: float
@@ -210,7 +214,7 @@ def _select_threshold(
 
 
 def _compute_hard_negative_weights(
-    model: xgb.XGBClassifier,
+    model: Any,
     X_train: np.ndarray | sp.spmatrix,
     y_train: np.ndarray,
     *,
@@ -261,6 +265,37 @@ def _merge_sample_weights(
     if extra_weight is None:
         return base_weight
     return (base_weight * extra_weight).astype(np.float32, copy=False)
+
+
+def _fit_model(
+    model: Any,
+    X: np.ndarray | sp.spmatrix,
+    y: np.ndarray,
+    *,
+    sample_weight: np.ndarray | None = None,
+    eval_set: list[tuple[np.ndarray | sp.spmatrix, np.ndarray]] | None = None,
+    early_stopping_rounds: int | None = None,
+) -> None:
+    if model.__class__.__module__.startswith("lightgbm"):
+        callbacks = []
+        if eval_set and early_stopping_rounds:
+            import lightgbm as lgb  # noqa: PLC0415
+            callbacks.append(lgb.early_stopping(early_stopping_rounds, verbose=False))
+        model.fit(
+            X,
+            y,
+            sample_weight=sample_weight,
+            eval_set=eval_set,
+            callbacks=callbacks or None,
+        )
+        return
+    model.fit(
+        X,
+        y,
+        sample_weight=sample_weight,
+        eval_set=eval_set,
+        verbose=False,
+    )
 
 
 def _split_calibration_eval(
@@ -432,20 +467,24 @@ def train(
                 learning_rate=config.learning_rate,
                 early_stopping_rounds=config.early_stopping_rounds,
                 min_child_weight=config.min_child_weight,
+                min_child_samples=config.min_child_samples,
+                num_leaves=config.num_leaves,
                 colsample_bytree=config.colsample_bytree,
                 subsample=config.subsample,
                 gamma=config.gamma,
                 reg_alpha=config.reg_alpha,
                 reg_lambda=config.reg_lambda,
+                learner=config.learner,
             )
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=UserWarning, module="xgboost")
                 if config.hard_negative_fraction > 0.0 and config.hard_negative_weight > 1.0:
-                    fold_model.fit(
+                    _fit_model(
+                        fold_model,
                         X_tv[train_idx], y_tv[train_idx],
                         sample_weight=fold_base_weight,
                         eval_set=[(X_tv[val_idx], y_tv[val_idx])],
-                        verbose=False,
+                        early_stopping_rounds=config.early_stopping_rounds,
                     )
                     hard_negative_weight = _compute_hard_negative_weights(
                         fold_model,
@@ -465,25 +504,30 @@ def train(
                         learning_rate=config.learning_rate,
                         early_stopping_rounds=config.early_stopping_rounds,
                         min_child_weight=config.min_child_weight,
+                        min_child_samples=config.min_child_samples,
+                        num_leaves=config.num_leaves,
                         colsample_bytree=config.colsample_bytree,
                         subsample=config.subsample,
                         gamma=config.gamma,
                         reg_alpha=config.reg_alpha,
                         reg_lambda=config.reg_lambda,
                         monotone_constraints=config.monotone_constraints,
+                        learner=config.learner,
                     )
-                    fold_model.fit(
+                    _fit_model(
+                        fold_model,
                         X_tv[train_idx], y_tv[train_idx],
                         sample_weight=sample_weight,
                         eval_set=[(X_tv[val_idx], y_tv[val_idx])],
-                        verbose=False,
+                        early_stopping_rounds=config.early_stopping_rounds,
                     )
                 else:
-                    fold_model.fit(
+                    _fit_model(
+                        fold_model,
                         X_tv[train_idx], y_tv[train_idx],
                         sample_weight=fold_base_weight,
                         eval_set=[(X_tv[val_idx], y_tv[val_idx])],
-                        verbose=False,
+                        early_stopping_rounds=config.early_stopping_rounds,
                     )
 
             fold_preds = predict_proba(fold_model, X_tv[val_idx])
@@ -521,12 +565,15 @@ def train(
         learning_rate=config.learning_rate,
         early_stopping_rounds=config.early_stopping_rounds,
         min_child_weight=config.min_child_weight,
+        min_child_samples=config.min_child_samples,
+        num_leaves=config.num_leaves,
         colsample_bytree=config.colsample_bytree,
         subsample=config.subsample,
         gamma=config.gamma,
         reg_alpha=config.reg_alpha,
         reg_lambda=config.reg_lambda,
         monotone_constraints=config.monotone_constraints,
+        learner=config.learner,
         )
     final_base_weight = _compute_benign_filetype_weights(
         file_types_tv,
@@ -550,11 +597,12 @@ def train(
 
         # Use calibration split for early stopping and threshold selection.
         if config.hard_negative_fraction > 0.0 and config.hard_negative_weight > 1.0:
-            final_model.fit(
+            _fit_model(
+                final_model,
                 X_tv, y_tv,
                 sample_weight=final_base_weight,
                 eval_set=[(X_calib, y_calib)],
-                verbose=False,
+                early_stopping_rounds=config.early_stopping_rounds,
             )
             hard_negative_weight = _compute_hard_negative_weights(
                 final_model,
@@ -574,27 +622,34 @@ def train(
                 learning_rate=config.learning_rate,
                 early_stopping_rounds=config.early_stopping_rounds,
                 min_child_weight=config.min_child_weight,
+                min_child_samples=config.min_child_samples,
+                num_leaves=config.num_leaves,
                 colsample_bytree=config.colsample_bytree,
                 subsample=config.subsample,
                 gamma=config.gamma,
                 reg_alpha=config.reg_alpha,
                 reg_lambda=config.reg_lambda,
                 monotone_constraints=config.monotone_constraints,
+                learner=config.learner,
             )
-            final_model.fit(
+            _fit_model(
+                final_model,
                 X_tv, y_tv,
                 sample_weight=sample_weight,
                 eval_set=[(X_calib, y_calib)],
-                verbose=False,
+                early_stopping_rounds=config.early_stopping_rounds,
             )
         else:
-            final_model.fit(
+            _fit_model(
+                final_model,
                 X_tv, y_tv,
                 sample_weight=final_base_weight,
                 eval_set=[(X_calib, y_calib)],
-                verbose=False,
+                early_stopping_rounds=config.early_stopping_rounds,
             )
         best_iter = getattr(final_model, "best_iteration", None)
+        if best_iter is None:
+            best_iter = getattr(final_model, "best_iteration_", None)
         if best_iter is not None:
             log.info(
                 "final model: %d trees (early stopped at %d) on %s",
@@ -614,8 +669,9 @@ def train(
         }
     else:
         # No holdout — train without early stopping.
-        final_model.set_params(early_stopping_rounds=None)
-        final_model.fit(X_tv, y_tv, sample_weight=final_base_weight, verbose=False)
+        if hasattr(final_model, "set_params"):
+            final_model.set_params(early_stopping_rounds=None)
+        _fit_model(final_model, X_tv, y_tv, sample_weight=final_base_weight)
         log.info("final model: %d trees on %s", final_model.n_estimators, booster_device(final_model))
         split_summary = {
             "policy": "train_only",
@@ -698,7 +754,10 @@ def train(
     n_eval_benign = tn + fp
     n_eval_malware = tp + fn
 
-    n_actual_trees = (getattr(final_model, "best_iteration", None) or config.n_estimators - 1) + 1
+    best_iteration = getattr(final_model, "best_iteration", None)
+    if best_iteration is None:
+        best_iteration = getattr(final_model, "best_iteration_", None)
+    n_actual_trees = (best_iteration or config.n_estimators - 1) + 1
     imbalance = n_benign / max(n_malware, 1)
 
     print(f"\n{'=' * 54}")
@@ -707,8 +766,9 @@ def train(
     print(f"Dataset:  {len(y)} ({n_malware} malware, {n_benign} benign, {imbalance:.1f}:1)")
     print(f"Features: {n_features}")
     print(
-        f"Model:    {n_actual_trees}/{config.n_estimators} trees  "
+        f"Model:    {config.learner}  {n_actual_trees}/{config.n_estimators} trees  "
         f"depth={config.max_depth}  lr={config.learning_rate}  "
+        f"leaves={config.num_leaves or 'auto'}  min_child_samples={config.min_child_samples or 'auto'}  "
         f"β={config.beta}  seed={config.seed}"
     )
     holdout_label = "Holdout" if X_holdout is not None else f"CV (out-of-fold, n={len(eval_y)})"

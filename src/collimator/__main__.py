@@ -61,6 +61,12 @@ def _parse_filetype_weights(entries: list[str] | None) -> dict[str, float]:
     return weights
 
 
+def _parse_csv_list(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    return [part.strip().rstrip(":") for part in raw.split(",") if part.strip()]
+
+
 def _print_test_block(
     probs: np.ndarray,
     y: np.ndarray,
@@ -110,6 +116,8 @@ def cmd_train(args: argparse.Namespace) -> None:
     t0 = time.time()
     db_path = _db_dsn(args.db)
     out_dir = Path(args.output)
+    model_name = args.model_name
+    learner = args.learner or model_name
     out_dir.mkdir(parents=True, exist_ok=True)
     effective_workers = features.resolve_worker_count(args.workers)
     if args.workers <= 0:
@@ -154,14 +162,25 @@ def cmd_train(args: argparse.Namespace) -> None:
     if X.shape[0] < 10:
         print(f"ERROR: only {X.shape[0]} training samples, need at least 10")
         sys.exit(1)
+    drop_prefixes = _parse_csv_list(args.drop_feature_prefixes)
+    if drop_prefixes:
+        X, pruned_spec = features.drop_feature_prefixes(X, spec, drop_prefixes)
+        X_test, _ = features.drop_feature_prefixes(X_test, spec, drop_prefixes)
+        spec = pruned_spec
+        log.info("dropped feature prefixes for training: %s (%d features remain)", drop_prefixes, spec.total_features)
 
     # Train.
     config = train.TrainConfig(
+        learner=learner,
         seed=args.seed,
+        device=args.device,
+        **({"n_folds": args.n_folds} if args.n_folds is not None else {}),
         **({"n_estimators": args.n_estimators} if args.n_estimators is not None else {}),
         **({"max_depth": args.max_depth} if args.max_depth is not None else {}),
         **({"learning_rate": args.learning_rate} if args.learning_rate is not None else {}),
         **({"early_stopping_rounds": args.early_stopping_rounds} if args.early_stopping_rounds is not None else {}),
+        **({"min_child_samples": args.min_child_samples} if args.min_child_samples is not None else {}),
+        **({"num_leaves": args.num_leaves} if args.num_leaves is not None else {}),
         **({"beta": args.beta} if args.beta is not None else {}),
         threshold_mode=args.threshold_mode,
         threshold_fpr_target=args.threshold_fpr_target,
@@ -176,8 +195,9 @@ def cmd_train(args: argparse.Namespace) -> None:
 
     # Export.
     spec.save(out_dir / "feature_spec.json")
+    model_filename = "model.txt" if learner == "azoth" else "model.json"
     export.export_onnx(result.model, spec.total_features, out_dir / "model.onnx")
-    export.save_model(result.model, out_dir / "model.json")
+    export.save_model(result.model, out_dir / model_filename)
 
     # Fast in-run estimate from out-of-fold CV predictions. Run
     # `make thresholds-refresh` after training to compute deploy thresholds
@@ -208,7 +228,10 @@ def cmd_train(args: argparse.Namespace) -> None:
         recommended_thresholds=recommended if recommended else None,
         severity_levels=severity_levels if severity_levels else None,
         severity_level_targets=thresholds.SEVERITY_LEVEL_TARGETS,
+        model_name=model_name,
         experiment={
+            "model_name": model_name,
+            "learner": learner,
             "model_abi_version": spec.abi_version,
             "seed": config.seed,
             "feature_spec_version": spec.version,
@@ -216,6 +239,8 @@ def cmd_train(args: argparse.Namespace) -> None:
             "workers_effective": effective_workers,
             "git_sha": _git_sha(),
             "train_config": {
+                "learner": config.learner,
+                "drop_feature_prefixes": drop_prefixes,
                 "n_folds": config.n_folds,
                 "n_estimators": config.n_estimators,
                 "max_depth": config.max_depth,
@@ -223,6 +248,8 @@ def cmd_train(args: argparse.Namespace) -> None:
                 "holdout_fraction": config.holdout_fraction,
                 "early_stopping_rounds": config.early_stopping_rounds,
                 "min_child_weight": config.min_child_weight,
+                "min_child_samples": config.min_child_samples,
+                "num_leaves": config.num_leaves,
                 "colsample_bytree": config.colsample_bytree,
                 "subsample": config.subsample,
                 "gamma": config.gamma,
@@ -240,6 +267,8 @@ def cmd_train(args: argparse.Namespace) -> None:
         kind="train",
         payload={
             "db_path": str(db_path),
+            "model_name": model_name,
+            "learner": learner,
             "output_dir": str(out_dir),
             "metrics": result.metrics,
             "calibration": result.calibration,
@@ -547,6 +576,27 @@ def generate_fixtures(
 
     probs = predict_proba(model, X_std_sel)
 
+    n_feat = spec.total_features
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    cross_fixture = {
+        "n_features": n_feat,
+        "raw_features": X_raw_sel.tolist(),
+        "probabilities": probs.tolist(),
+    }
+    cross_path = out_dir / "cross_language_fixture.json"
+    with open(cross_path, "w") as f:
+        json.dump(cross_fixture, f)
+    print(f"  wrote {cross_path.name} ({n} samples)")
+
+    if not hasattr(model, "get_booster"):
+        ref_path = out_dir / "reference.json"
+        if ref_path.exists():
+            ref_path.unlink()
+        print("  skipped reference.json (xgboost-ars fixture only)")
+        return
+
     booster = model.get_booster()
 
     best_iteration = getattr(model, "best_iteration", None)
@@ -559,7 +609,6 @@ def generate_fixtures(
     )
 
     # --- Edge-case samples for xgboost-ars correctness ---
-    n_feat = spec.total_features
 
     # NaN samples: take real samples and knock out random subsets of features.
     # This exercises default_left routing in tree traversal and SHAP.
@@ -587,18 +636,6 @@ def generate_fixtures(
     ext_probs, ext_margins, ext_shap, _ = _predict_fixture_batch(
         booster, X_extreme, iteration_range,
     )
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    cross_fixture = {
-        "n_features": n_feat,
-        "raw_features": X_raw_sel.tolist(),
-        "probabilities": probs.tolist(),
-    }
-    cross_path = out_dir / "cross_language_fixture.json"
-    with open(cross_path, "w") as f:
-        json.dump(cross_fixture, f)
-    print(f"  wrote {cross_path.name} ({n} samples)")
 
     reference = {
         "n_features": n_feat,
@@ -846,24 +883,13 @@ def cmd_fixture(args: argparse.Namespace) -> None:
     spec = features.FeatureSpec.load(spec_path)
     model = load_model(model_path)
 
-    # Reservoir-sample n_samples from the stream to avoid loading all data.
-    n = args.n_samples
-    rng = np.random.default_rng(42)
-    reservoir: list[data.Sample] = []
-    for i, sample in enumerate(data.stream_samples(db_path)):
-        if i < n:
-            reservoir.append(sample)
-        else:
-            j = int(rng.integers(i + 1))
-            if j < n:
-                reservoir[j] = sample
-
-    if not reservoir:
+    fixture_reports = _gather_diverse_fixture_reports(db_path)
+    if not fixture_reports:
         print("No samples found")
         return
 
-    reports = [s.report for s in reservoir]
-    labels = [s.label for s in reservoir]
+    reports = fixture_reports[:args.n_samples]
+    labels = [0] * len(reports)
     X, _ = features.extract_all(reports, labels, spec)
 
     X_fix = X.toarray()
@@ -876,19 +902,38 @@ def cmd_fixture(args: argparse.Namespace) -> None:
         threshold = export.load_threshold(eval_path)
         log.info("using threshold %.3f from %s", threshold, eval_path)
 
+    recommended = None
+    tuning_path = Path(args.output) / "threshold_tuning.json"
+    if tuning_path.exists():
+        with open(tuning_path) as f:
+            tuning = json.load(f)
+        level5 = next(
+            (row for row in tuning.get("severity_levels", []) if row.get("level") == 5),
+            None,
+        )
+        if isinstance(level5, dict):
+            suspicious = level5.get("suspicious") or {}
+            hostile = level5.get("hostile") or {}
+            if suspicious.get("threshold") is not None and hostile.get("threshold") is not None:
+                recommended = {
+                    "suspicious": float(suspicious["threshold"]),
+                    "hostile": float(hostile["threshold"]),
+                }
+                threshold = recommended["hostile"]
+                log.info("using deployed thresholds from %s", tuning_path)
+
     generate_fixtures(
         model, spec, X_fix, X_fix_std,
         out_dir=Path(args.output),
-        n_samples=n,
+        n_samples=len(reports),
         optimal_threshold=threshold,
     )
 
     # Feature-extraction parity fixture for litmus — diverse samples.
-    recommended = None
-    if eval_path.exists():
+    if recommended is None and eval_path.exists():
         eval_data = export.load_evaluation(eval_path)
         recommended = eval_data.get("recommended_thresholds")
-    extraction_reports = _gather_diverse_fixture_reports(db_path)
+    extraction_reports = fixture_reports
     if extraction_reports:
         generate_extraction_fixture(
             extraction_reports, spec, out_dir=Path(args.output),
@@ -911,13 +956,25 @@ def main() -> None:
     p_train = subparsers.add_parser("train", help="Train model and export to ONNX")
     p_train.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_train.add_argument("--output", default="out", help="Output directory (default: out)")
+    p_train.add_argument("--model-name", default="litmus-xg", help="Logical target model name")
+    p_train.add_argument(
+        "--learner",
+        choices=["litmus-xg", "azoth"],
+        default=None,
+        help="Learner implementation (default: model name)",
+    )
     _add_workers_arg(p_train)
     _add_seed_arg(p_train)
+    p_train.add_argument("--n-folds", type=int, default=None, help="CV folds (default: TrainConfig default)")
+    p_train.add_argument("--device", default=None, help="Training device override (cpu, cuda, or gpu)")
     p_train.add_argument("--n-estimators", type=int, default=None, help="Max XGBoost trees (default: TrainConfig default)")
     p_train.add_argument("--max-depth", type=int, default=None, help="Tree depth limit (default: TrainConfig default)")
     p_train.add_argument("--learning-rate", type=float, default=None, help="XGBoost learning rate (default: TrainConfig default)")
     p_train.add_argument("--early-stopping-rounds", type=int, default=None, help="Early stopping patience (default: TrainConfig default)")
+    p_train.add_argument("--min-child-samples", type=int, default=None, help="LightGBM minimum samples per leaf")
+    p_train.add_argument("--num-leaves", type=int, default=None, help="LightGBM leaves per tree")
     p_train.add_argument("--beta", type=float, default=None, help="F-beta for threshold selection (default: TrainConfig default)")
+    p_train.add_argument("--drop-feature-prefixes", default="", help="Comma-separated feature prefixes to drop after extraction")
     p_train.add_argument("--threshold-mode", choices=["fbeta", "max_recall_at_fpr"], default="fbeta", help="Threshold selection strategy")
     p_train.add_argument("--threshold-fpr-target", type=float, default=None, help="Max FPR target when threshold-mode=max_recall_at_fpr")
     p_train.add_argument("--hard-negative-fraction", type=float, default=0.0, help="Fraction of benign train rows to upweight as hard negatives")
@@ -1039,6 +1096,7 @@ def main() -> None:
     p_tune.add_argument("--top-errors", type=int, default=20, help="How many FP/FN paths to show per policy level")
     p_tune.add_argument("--output", default=None, help="Optional JSON output path")
     p_tune.add_argument("--limit", type=int, default=0, help="Optional row cap after filters (0 = no cap)")
+    p_tune.add_argument("--max-id", type=int, default=0, help="Only include rows with id <= this value (0 = live corpus)")
     p_tune.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
     p_tune.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
     _add_workers_arg(p_tune)
@@ -1053,6 +1111,7 @@ def main() -> None:
     p_fp.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
     p_fp.add_argument("--top-errors", type=int, default=100, help="How many false positives to show")
     p_fp.add_argument("--output", default=None, help="Optional JSON output path")
+    p_fp.add_argument("--max-id", type=int, default=0, help="Only include rows with id <= this value (0 = live corpus)")
     p_fp.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
     p_fp.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
     _add_workers_arg(p_fp)
@@ -1069,6 +1128,7 @@ def main() -> None:
     p_near_fp.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
     p_near_fp.add_argument("--top-errors", type=int, default=100, help="How many near false positives to show")
     p_near_fp.add_argument("--output", default=None, help="Optional JSON output path")
+    p_near_fp.add_argument("--max-id", type=int, default=0, help="Only include rows with id <= this value (0 = live corpus)")
     p_near_fp.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
     p_near_fp.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
     _add_workers_arg(p_near_fp)
@@ -1083,6 +1143,7 @@ def main() -> None:
     p_fn.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
     p_fn.add_argument("--top-errors", type=int, default=100, help="How many false negatives to show")
     p_fn.add_argument("--output", default=None, help="Optional JSON output path")
+    p_fn.add_argument("--max-id", type=int, default=0, help="Only include rows with id <= this value (0 = live corpus)")
     p_fn.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
     p_fn.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
     _add_workers_arg(p_fn)
@@ -1099,6 +1160,7 @@ def main() -> None:
     p_near_fn.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
     p_near_fn.add_argument("--top-errors", type=int, default=100, help="How many near false negatives to show")
     p_near_fn.add_argument("--output", default=None, help="Optional JSON output path")
+    p_near_fn.add_argument("--max-id", type=int, default=0, help="Only include rows with id <= this value (0 = live corpus)")
     p_near_fn.add_argument("--scores-cache", default=None, help="Optional .npz cache for full-corpus scores")
     p_near_fn.add_argument("--refresh-cache", action="store_true", help="Rebuild --scores-cache even if it is current")
     _add_workers_arg(p_near_fn)
@@ -1117,12 +1179,20 @@ def main() -> None:
     )
     p_exp.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
     p_exp.add_argument("--output", default="out", help="Directory for experiment summaries (default: out)")
+    p_exp.add_argument("--model-name", default="litmus-xg", help="Logical target model name")
+    p_exp.add_argument(
+        "--learner",
+        choices=["litmus-xg", "azoth"],
+        default=None,
+        help="Learner implementation (default: model name)",
+    )
     p_exp.add_argument("--cache-dir", default=None, help="Directory for experiment data caches (corpus + matrices)")
     p_exp.add_argument(
         "--train-samples", type=int, default=10_000,
         help="Approximate sampled training rows (default: 10000)",
     )
     p_exp.add_argument("--n-folds", type=int, default=2, help="CV folds for the experiment")
+    p_exp.add_argument("--device", default=None, help="Training device override (cpu, cuda, or gpu)")
     p_exp.add_argument("--n-estimators", type=int, default=220, help="Max trees for the experiment")
     p_exp.add_argument("--max-depth", type=int, default=6, help="Tree depth for the experiment")
     p_exp.add_argument(
@@ -1137,6 +1207,8 @@ def main() -> None:
         help="Cap external test set via reservoir sampling (0 = full test bucket, default: 0)",
     )
     p_exp.add_argument("--min-child-weight", type=int, default=5, help="Minimum child weight")
+    p_exp.add_argument("--min-child-samples", type=int, default=None, help="LightGBM minimum samples per leaf")
+    p_exp.add_argument("--num-leaves", type=int, default=None, help="LightGBM leaves per tree")
     p_exp.add_argument("--colsample-bytree", type=float, default=0.8, help="Subsample ratio of columns")
     p_exp.add_argument("--subsample", type=float, default=0.8, help="Subsample ratio of training instances")
     p_exp.add_argument("--gamma", type=float, default=0.0, help="Minimum loss reduction to make a further partition")
@@ -1145,6 +1217,7 @@ def main() -> None:
     p_exp.add_argument("--beta", type=float, default=1.0, help="F-beta for threshold selection (default: 1.0)")
     p_exp.add_argument("--threshold-mode", choices=["fbeta", "max_recall_at_fpr"], default="fbeta", help="Threshold selection strategy")
     p_exp.add_argument("--threshold-fpr-target", type=float, default=None, help="Max FPR target when threshold-mode=max_recall_at_fpr")
+    p_exp.add_argument("--drop-feature-prefixes", default="", help="Comma-separated feature prefixes to drop after extraction")
     p_exp.add_argument("--hard-negative-fraction", type=float, default=0.0, help="Fraction of benign train rows to upweight as hard negatives")
     p_exp.add_argument("--hard-negative-weight", type=float, default=1.0, help="Sample weight applied to hard benign negatives")
     p_exp.add_argument(
@@ -1156,6 +1229,10 @@ def main() -> None:
     p_exp.add_argument(
         "--total-limit", type=int, default=0,
         help="Cap total records scanned from DB (oldest first, 0 = unlimited)",
+    )
+    p_exp.add_argument(
+        "--max-id", type=int, default=0,
+        help="Pin experiment corpus to rows with id <= max-id (0 = current snapshot)",
     )
     p_exp.add_argument(
         "--monotone-json",
@@ -1171,6 +1248,13 @@ def main() -> None:
     # ablation
     p_ablate = subparsers.add_parser("ablate", help="Run leave-one-group-out feature ablations")
     p_ablate.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
+    p_ablate.add_argument("--model-name", default="litmus-xg", help="Logical target model name")
+    p_ablate.add_argument(
+        "--learner",
+        choices=["litmus-xg", "azoth"],
+        default=None,
+        help="Learner implementation (default: model name)",
+    )
     p_ablate.add_argument(
         "--groups",
         nargs="*",
@@ -1178,11 +1262,13 @@ def main() -> None:
         help="Optional subset of feature prefixes to ablate",
     )
     p_ablate.add_argument("--output", default=None, help="Optional JSON output path")
+    p_ablate.add_argument("--cache-dir", default=None, help="Experiment-compatible corpus/matrix cache directory")
     p_ablate.add_argument("--n-estimators", type=int, default=None)
     p_ablate.add_argument("--max-depth", type=int, default=None)
     p_ablate.add_argument("--learning-rate", type=float, default=None)
     p_ablate.add_argument("--early-stopping-rounds", type=int, default=None)
     p_ablate.add_argument("--beta", type=float, default=None)
+    p_ablate.add_argument("--device", default=None, help="Training device override (cpu, cuda, or gpu)")
     p_ablate.add_argument("--n-folds", type=int, default=None)
     p_ablate.add_argument(
         "--min-malware-score", type=int, default=0,
@@ -1195,6 +1281,10 @@ def main() -> None:
     p_ablate.add_argument(
         "--max-test-samples", type=int, default=0,
         help="Cap test data to this size (0 = all)",
+    )
+    p_ablate.add_argument(
+        "--max-id", type=int, default=0,
+        help="Pin ablation corpus to rows with id <= max-id (0 = current snapshot)",
     )
     _add_workers_arg(p_ablate)
     _add_seed_arg(p_ablate)
@@ -1292,6 +1382,7 @@ def main() -> None:
             top_errors=args.top_errors,
             output_path=Path(args.output) if args.output else None,
             limit=args.limit,
+            max_id=args.max_id,
             n_workers=args.workers,
             cache_path=Path(args.scores_cache) if args.scores_cache else None,
             refresh_cache=args.refresh_cache,
@@ -1304,6 +1395,7 @@ def main() -> None:
             top_errors=args.top_errors,
             output_path=Path(args.output) if args.output else None,
             n_workers=args.workers,
+            max_id=args.max_id,
             cache_path=Path(args.scores_cache) if args.scores_cache else None,
             refresh_cache=args.refresh_cache,
         )
@@ -1315,6 +1407,7 @@ def main() -> None:
             top_errors=args.top_errors,
             output_path=Path(args.output) if args.output else None,
             n_workers=args.workers,
+            max_id=args.max_id,
             cache_path=Path(args.scores_cache) if args.scores_cache else None,
             refresh_cache=args.refresh_cache,
         )
@@ -1326,6 +1419,7 @@ def main() -> None:
             top_errors=args.top_errors,
             output_path=Path(args.output) if args.output else None,
             n_workers=args.workers,
+            max_id=args.max_id,
             cache_path=Path(args.scores_cache) if args.scores_cache else None,
             refresh_cache=args.refresh_cache,
         )
@@ -1337,6 +1431,7 @@ def main() -> None:
             top_errors=args.top_errors,
             output_path=Path(args.output) if args.output else None,
             n_workers=args.workers,
+            max_id=args.max_id,
             cache_path=Path(args.scores_cache) if args.scores_cache else None,
             refresh_cache=args.refresh_cache,
         )
@@ -1358,23 +1453,30 @@ def main() -> None:
             train_samples=args.train_samples,
             max_test_samples=args.max_test_samples,
             n_folds=args.n_folds,
+            device=args.device,
             n_estimators=args.n_estimators,
             max_depth=args.max_depth,
             learning_rate=args.learning_rate,
             early_stopping_rounds=args.early_stopping_rounds,
             min_child_weight=args.min_child_weight,
+            min_child_samples=args.min_child_samples,
+            num_leaves=args.num_leaves,
             colsample_bytree=args.colsample_bytree,
             subsample=args.subsample,
             gamma=args.gamma,
             reg_alpha=args.reg_alpha,
             reg_lambda=args.reg_lambda,
             beta=args.beta,
+            learner=args.learner or args.model_name,
+            model_name=args.model_name,
             threshold_mode=args.threshold_mode,
             threshold_fpr_target=args.threshold_fpr_target,
             hard_negative_fraction=args.hard_negative_fraction,
             hard_negative_weight=args.hard_negative_weight,
             benign_filetype_weights=_parse_filetype_weights(args.benign_filetype_weight),
             total_limit=args.total_limit,
+            max_id=args.max_id,
+            drop_feature_prefixes=_parse_csv_list(args.drop_feature_prefixes),
             monotone_constraints=json.loads(args.monotone_json) if args.monotone_json else None,
             min_malware_training_score=args.min_malware_score,
         )
@@ -1390,9 +1492,14 @@ def main() -> None:
             learning_rate=args.learning_rate,
             early_stopping_rounds=args.early_stopping_rounds,
             beta=args.beta,
+            device=args.device,
+            learner=args.learner or args.model_name,
+            model_name=args.model_name,
             n_folds=args.n_folds,
             train_samples=args.train_samples,
             max_test_samples=args.max_test_samples,
+            cache_dir=Path(args.cache_dir) if args.cache_dir else None,
+            max_id=args.max_id,
             output_path=Path(args.output) if args.output else None,
         )
         ablation.print_ablation(rows)

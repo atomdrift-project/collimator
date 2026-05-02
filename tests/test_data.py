@@ -7,7 +7,9 @@ from pathlib import Path
 
 from collimator.data import (
     count_labeled_by_partition_full,
+    labeled_corpus_metadata_full,
     load_samples,
+    stream_labeled_metadata_full_with_size,
     stream_labeled_samples_full,
 )
 
@@ -149,6 +151,25 @@ def test_stream_labeled_samples_full_includes_low_score_and_applies_filters() ->
     assert [sample.score for sample in samples] == [0, 42]
 
 
+def test_stream_labeled_metadata_full_with_size_includes_json_length() -> None:
+    low_report = _minimal_report()
+    high_report = json.dumps({"fs": [{"id": 0, "path": "/tmp/y", "dp": 0, "ts": ["x" * 100]}]})
+    db = _create_test_db([
+        {"sha256": "aaa", "label": "good", "cleave_result": low_report, "path": "/repo/harvest/low.py", "score": 0},
+        {"sha256": "bbb", "label": "bad", "cleave_result": high_report, "path": "/repo/harvest/high.py", "score": 42},
+        {"sha256": "ccc", "label": "good", "cleave_result": _minimal_report(), "path": "/repo/other/x.py", "score": 7, "skip": "y"},
+    ])
+
+    rows = list(stream_labeled_metadata_full_with_size(db, path_substr="harvest"))
+
+    assert [row[:5] for row in rows] == [
+        (1, "aaa", "/repo/harvest/low.py", 0, 0),
+        (2, "bbb", "/repo/harvest/high.py", 42, 1),
+    ]
+    assert rows[0][5] == len(low_report)
+    assert rows[1][5] == len(high_report)
+
+
 def test_count_labeled_by_partition_full_includes_low_score_rows() -> None:
     db = _create_test_db([
         {"sha256": "00" * 32, "label": "good", "cleave_result": _minimal_report(), "score": 0},
@@ -171,3 +192,20 @@ def test_count_labeled_by_partition_full_includes_low_score_rows() -> None:
     assert counts["all"]["total"] == 3
     assert counts["test"]["good"] == 1
     assert counts["train"]["good"] == 1
+
+
+def test_labeled_corpus_metadata_full_matches_threshold_corpus() -> None:
+    db = _create_test_db([
+        {"sha256": "aaa", "label": "good", "cleave_result": _minimal_report(), "score": 0},
+        {"sha256": "bbb", "label": "bad", "cleave_result": _minimal_report(), "score": 1},
+        {"sha256": "ccc", "label": "unknown", "cleave_result": _minimal_report(), "score": 10},
+        {"sha256": "ddd", "label": "good", "cleave_result": None, "score": 10},
+        {"sha256": "eee", "label": "good", "cleave_result": _minimal_report(), "score": 10, "skip": "y"},
+    ])
+
+    metadata = labeled_corpus_metadata_full(db)
+
+    assert metadata["samples"] == 2
+    assert metadata["malware"] == 1
+    assert metadata["benign"] == 1
+    assert metadata["max_row_id"] == 2

@@ -32,11 +32,13 @@ def test_save_evaluation_includes_split_summary_and_environment(tmp_path) -> Non
             "git_sha": None,
         },
         output_path=output,
+        model_name="litmus-xg",
     )
 
     data = json.loads(output.read_text())
     assert data["split_summary"]["policy"] == "train/calibration/evaluation"
     assert data["model_abi_version"] == 14
+    assert data["model_name"] == "litmus-xg"
     assert data["experiment"]["seed"] == 42
     assert data["experiment"]["model_abi_version"] == 14
     assert data["calibration"]["ece"] == 0.02

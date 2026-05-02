@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import json
 import logging
+import warnings
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import xgboost as xgb
@@ -23,6 +25,9 @@ _device_cache: str | None = None
 
 def booster_device(model: xgb.XGBClassifier) -> str:
     """Read the effective device from a fitted booster config."""
+    if model.__class__.__module__.startswith("lightgbm"):
+        params = getattr(model, "get_params", lambda: {})()
+        return str(params.get("device_type") or params.get("device") or "cpu")
     try:
         cfg = json.loads(model.get_booster().save_config())
         return str(cfg["learner"]["generic_param"].get("device", "cpu"))
@@ -63,14 +68,50 @@ def create_classifier(
     learning_rate: float = 0.02,
     early_stopping_rounds: int = 100,
     min_child_weight: int = 5,
+    min_child_samples: int | None = None,
+    num_leaves: int | None = None,
     colsample_bytree: float = 0.8,
     subsample: float = 0.8,
     gamma: float = 0.0,
     reg_alpha: float = 0.0,
     reg_lambda: float = 1.0,
     monotone_constraints: str | dict[str, int] | None = None,
-) -> xgb.XGBClassifier:
-    """Create an XGBoost classifier with defaults tuned for malware detection."""
+    learner: str = "litmus-xg",
+) -> Any:
+    """Create a classifier with defaults tuned for malware detection."""
+    if learner == "azoth":
+        try:
+            import lightgbm as lgb  # noqa: PLC0415
+        except ImportError as exc:
+            raise ImportError(
+                "azoth requires LightGBM; run `make venv` to install dependencies",
+            ) from exc
+        device_params: dict[str, object] = {}
+        if device and device not in {"cpu", "auto"}:
+            if device not in {"cuda", "gpu"}:
+                raise ValueError(f"unsupported azoth device: {device}")
+            device_params["device_type"] = device
+        return lgb.LGBMClassifier(
+            objective="binary",
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            learning_rate=learning_rate,
+            min_child_weight=min_child_weight,
+            **({"min_child_samples": min_child_samples} if min_child_samples is not None else {}),
+            **({"num_leaves": num_leaves} if num_leaves is not None else {}),
+            colsample_bytree=colsample_bytree,
+            subsample=subsample,
+            reg_alpha=reg_alpha,
+            reg_lambda=reg_lambda,
+            scale_pos_weight=n_benign / max(n_malware, 1),
+            random_state=random_state,
+            n_jobs=-1,
+            force_col_wise=True,
+            verbosity=-1,
+            **device_params,
+        )
+    if learner != "litmus-xg":
+        raise ValueError(f"unsupported learner: {learner}")
     if device is None:
         device = detect_device()
     return xgb.XGBClassifier(
@@ -94,15 +135,38 @@ def create_classifier(
     )
 
 
-def load_model(model_path: Path) -> xgb.XGBClassifier:
-    """Load an XGBoost model from native JSON format."""
+def load_model(model_path: Path) -> Any:
+    """Load a native XGBoost or LightGBM model."""
     model = xgb.XGBClassifier()
-    model.load_model(str(model_path))
-    return model
+    try:
+        model.load_model(str(model_path))
+        return model
+    except Exception as xgb_exc:
+        try:
+            import lightgbm as lgb  # noqa: PLC0415
+            return lgb.Booster(model_file=str(model_path))
+        except Exception:
+            raise xgb_exc
 
 
-def predict_proba(model: xgb.XGBClassifier, X: np.ndarray) -> np.ndarray:
+def predict_proba(model: Any, X: np.ndarray) -> np.ndarray:
     """Return malware probability for each sample."""
+    if model.__class__.__module__.startswith("lightgbm"):
+        if hasattr(model, "predict_proba"):
+            best_iteration = getattr(model, "best_iteration_", None)
+            kwargs = {"num_iteration": best_iteration} if best_iteration else {}
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message="X does not have valid feature names.*")
+                probs = model.predict_proba(X, **kwargs)[:, 1]
+        else:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message="X does not have valid feature names.*")
+                probs = model.predict(X)
+        probs = np.asarray(probs, dtype=np.float32)
+        if probs.ndim != 1:
+            raise ValueError(f"unexpected predict_proba output shape: {probs.shape}")
+        return probs
+
     # Use inplace_predict with the fitted best_iteration to preserve early
     # stopping semantics without triggering the sklearn wrapper's CPU/GPU
     # fallback warning on CPU-resident inputs.

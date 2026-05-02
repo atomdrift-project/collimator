@@ -23,6 +23,46 @@ def test_create_classifier_custom_params() -> None:
     assert model.get_params()["learning_rate"] == 0.1
 
 
+def test_create_classifier_azoth() -> None:
+    model = create_classifier(
+        n_benign=100,
+        n_malware=50,
+        learner="azoth",
+        max_depth=4,
+        n_estimators=50,
+        learning_rate=0.1,
+    )
+
+    assert model.__class__.__module__.startswith("lightgbm")
+    assert model.get_params()["objective"] == "binary"
+    assert model.get_params()["n_estimators"] == 50
+
+
+def test_create_classifier_azoth_leaf_params() -> None:
+    model = create_classifier(
+        n_benign=100,
+        n_malware=50,
+        learner="azoth",
+        num_leaves=64,
+        min_child_samples=100,
+    )
+
+    assert model.get_params()["num_leaves"] == 64
+    assert model.get_params()["min_child_samples"] == 100
+
+
+def test_create_classifier_azoth_cuda_device() -> None:
+    model = create_classifier(
+        n_benign=100,
+        n_malware=50,
+        learner="azoth",
+        device="cuda",
+        n_estimators=5,
+    )
+
+    assert model.get_params()["device_type"] == "cuda"
+
+
 def test_predict_proba_shape() -> None:
     model = create_classifier(n_benign=50, n_malware=50, n_estimators=10, device="cpu")
     rng = np.random.default_rng(42)

@@ -13,6 +13,7 @@ from collimator.features import (
     extract,
     extract_all,
     extract_labeled_from_db_batches,
+    extract_labeled_metadata_from_db_batches_unordered,
     feature_config_from_env,
     feature_group_indices,
     primary_file,
@@ -162,6 +163,94 @@ def test_extract_labeled_from_db_batches_fetches_reports_in_workers(tmp_path) ->
     np.testing.assert_array_equal(batches[0][1], np.array([0, 1], dtype=np.float32))
     np.testing.assert_array_equal(batches[1][1], np.array([0], dtype=np.float32))
     assert all(X.nnz > 0 for X, _y in batches)
+
+
+def test_extract_labeled_metadata_from_db_batches_unordered_keeps_metadata_aligned(tmp_path) -> None:
+    report = _make_report(
+        findings=[{"i": "objectives/evasion/process", "l": _CRIT_MAP["hostile"], "c": 1.0}],
+    )
+    spec = build_vocab([report] * 35)
+    db_path = tmp_path / "samples.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "CREATE TABLE samples ("
+        "id INTEGER PRIMARY KEY, cleave_result TEXT, formula TEXT, elements TEXT, "
+        "score INTEGER, mtime TEXT)"
+    )
+    for row_id in range(1, 4):
+        conn.execute(
+            "INSERT INTO samples (id, cleave_result, formula, elements, score, mtime) "
+            "VALUES (?, ?, '', '', 10, '')",
+            (row_id, json.dumps(report)),
+        )
+    conn.commit()
+    conn.close()
+
+    metadata = [
+        (1, "a" * 64, "/one", 10, 0),
+        (2, "b" * 64, "/two", 11, 1),
+        (3, "c" * 64, "/three", 12, 0),
+    ]
+    batches = list(
+        extract_labeled_metadata_from_db_batches_unordered(
+            db_path,
+            metadata,
+            spec,
+            n_workers=1,
+            batch_size=2,
+        ),
+    )
+
+    returned = [row for batch_meta, _X, _y, _stats in batches for row in batch_meta]
+    labels = [int(label) for _batch_meta, _X, y, _stats in batches for label in y]
+    assert returned == metadata
+    assert labels == [row[-1] for row in metadata]
+    assert all(X.nnz > 0 for _batch_meta, X, _y, _stats in batches)
+    assert all(stats["rows"] > 0 for _batch_meta, _X, _y, stats in batches)
+    assert all("fetch_sec" in stats for _batch_meta, _X, _y, stats in batches)
+
+
+def test_extract_labeled_metadata_from_db_batches_uses_size_aware_batches(tmp_path, monkeypatch) -> None:
+    report = _make_report(
+        findings=[{"i": "objectives/evasion/process", "l": _CRIT_MAP["hostile"], "c": 1.0}],
+    )
+    spec = build_vocab([report] * 35)
+    db_path = tmp_path / "samples.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "CREATE TABLE samples ("
+        "id INTEGER PRIMARY KEY, cleave_result TEXT, formula TEXT, elements TEXT, "
+        "score INTEGER, mtime TEXT)"
+    )
+    for row_id in range(1, 5):
+        conn.execute(
+            "INSERT INTO samples (id, cleave_result, formula, elements, score, mtime) "
+            "VALUES (?, ?, '', '', 10, '')",
+            (row_id, json.dumps(report)),
+        )
+    conn.commit()
+    conn.close()
+
+    monkeypatch.setenv("COLLIMATOR_THRESHOLD_BATCH_BYTES", "100")
+    metadata = [
+        (1, "a" * 64, "/one", 10, 0, 90),
+        (2, "b" * 64, "/two", 11, 1, 90),
+        (3, "c" * 64, "/three", 12, 0, 10),
+        (4, "d" * 64, "/four", 13, 1, 10),
+    ]
+    batches = list(
+        extract_labeled_metadata_from_db_batches_unordered(
+            db_path,
+            metadata,
+            spec,
+            n_workers=1,
+            batch_size=4,
+        ),
+    )
+
+    weights = [sum(int(row[5]) for row in batch_meta) for batch_meta, _X, _y, _stats in batches]
+    assert weights == [90, 100, 10]
+    assert all(weight <= 100 for weight in weights)
 
 
 def test_build_vocab_freq_filter() -> None:
@@ -321,6 +410,7 @@ def test_extract_third_party_signals() -> None:
 
 def test_build_vocab_can_disable_feature_groups(monkeypatch) -> None:
     monkeypatch.setenv("COLLIMATOR_DISABLE_FEATURE_GROUPS", "filetype,ext")
+    monkeypatch.delenv("COLLIMATOR_EMBER_LITE_FEATURES", raising=False)
     feature_config_from_env.cache_clear()
     try:
         reports = _reports_with_finding("objectives/evasion", "hostile", n=35)
@@ -601,6 +691,50 @@ def test_extract_uses_inner_files_from_archive(monkeypatch) -> None:
     assert vec[spec.feature_names.index("struct:inner_file_count_log")] == math.log1p(1)
 
 
+def test_extract_ember_lite_features(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_EMBER_LITE_FEATURES", "1")
+    feature_config_from_env.cache_clear()
+    metrics = {
+        "binary": {
+            "file_size": 4096.0,
+            "import_count": 10.0,
+            "export_count": 2.0,
+            "dependency_count": 3.0,
+            "string_count": 20.0,
+            "wide_string_count": 5.0,
+            "max_string_length": 100.0,
+            "avg_string_entropy": 4.25,
+            "function_count": 7.0,
+            "code_size": 1024.0,
+            "code_to_data_ratio": 1.5,
+            "wx_sections": 1.0,
+            "writable_sections": 2.0,
+            "executable_sections": 1.0,
+            "section_count": 4.0,
+            "nonstandard_section_name_count": 1.0,
+            "largest_section_ratio": 0.5,
+            "rsrc_to_file_ratio": 0.125,
+            "has_signature": True,
+        },
+        "text": {"total_lines": 12.0},
+    }
+    report = _make_report(metrics=metrics, file_type="elf", size=4096)
+    spec = build_vocab([report] * 35)
+    vec = extract(report, spec)
+
+    assert "agg:static_import_count_log" in spec.feature_names
+    assert vec[spec.feature_names.index("agg:static_file_bytes_log")] == math.log1p(4096.0)
+    assert vec[spec.feature_names.index("agg:static_import_count_log")] == math.log1p(10.0)
+    assert vec[spec.feature_names.index("agg:static_export_count_log")] == math.log1p(2.0)
+    assert vec[spec.feature_names.index("agg:static_wide_string_ratio")] == 0.25
+    assert vec[spec.feature_names.index("agg:static_text_lines_log")] == math.log1p(12.0)
+    assert vec[spec.feature_names.index("agg:static_function_count_log")] == math.log1p(7.0)
+    assert vec[spec.feature_names.index("agg:static_writable_unit_ratio")] == 0.5
+    assert vec[spec.feature_names.index("agg:static_signed_file_fraction")] == 1.0
+
+    feature_config_from_env.cache_clear()
+
+
 def test_extract_topk_file_risk_features() -> None:
     report = {
         "version": "3",
@@ -672,6 +806,87 @@ def test_extract_filetype_onehot(monkeypatch) -> None:
 
     assert vec[spec.feature_names.index("filetype:elf")] == 1.0
     assert vec[spec.feature_names.index("filetype:pe")] == 0.0
+    feature_config_from_env.cache_clear()
+
+
+def test_extract_format_hints_from_file_types(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_FORMAT_HINTS", "1")
+    feature_config_from_env.cache_clear()
+    report = {
+        "version": "3",
+        "fs": [
+            {
+                "id": 0,
+                "path": "/tmp/pkg.zip",
+                "depth": 0,
+                "type": "zip",
+                "sha256": "outer",
+                "sz": 1024,
+                "ts": [],
+                "is": [],
+                "ms": {},
+            },
+            {
+                "id": 1,
+                "path": "pkg.zip!!tool.ps1",
+                "depth": 1,
+                "type": "powershell",
+                "sha256": "script",
+                "sz": 100,
+                "ts": [{"i": "objectives/execution/process", "l": 4, "c": 1.0}],
+                "is": [],
+                "ms": {},
+            },
+            {
+                "id": 2,
+                "path": "pkg.zip!!helper.exe",
+                "depth": 1,
+                "type": "pe",
+                "sha256": "binary",
+                "sz": 100,
+                "ts": [{"i": "objectives/evasion/process", "l": 5, "c": 1.0}],
+                "is": [],
+                "ms": {},
+            },
+        ],
+    }
+    spec = build_vocab([report] * 35)
+    vec = extract(report, spec)
+
+    assert vec[spec.feature_names.index("format:archive_package")] == 1.0
+    assert vec[spec.feature_names.index("format:script")] == 1.0
+    assert vec[spec.feature_names.index("format:native_binary")] == 1.0
+    assert vec[spec.feature_names.index("format:mixed_archive_script")] == 1.0
+    assert vec[spec.feature_names.index("format:mixed_archive_binary")] == 1.0
+    assert vec[spec.feature_names.index("format:mixed_script_binary")] == 1.0
+    assert vec[spec.feature_names.index("format:script_inner_fraction")] == 0.5
+    assert vec[spec.feature_names.index("format:native_binary_hostile_fraction")] == 1.0
+    assert vec[spec.feature_names.index("format:script_suspicious_fraction")] == 1.0
+    feature_config_from_env.cache_clear()
+
+
+def test_format_hints_do_not_infer_from_extensions(monkeypatch) -> None:
+    monkeypatch.setenv("COLLIMATOR_FORMAT_HINTS", "1")
+    feature_config_from_env.cache_clear()
+    report = {
+        "version": "3",
+        "fs": [{
+            "id": 0,
+            "path": "/tmp/looks_like_python.py",
+            "depth": 0,
+            "type": "unknown",
+            "sha256": "abc",
+            "sz": 1024,
+            "ts": [],
+            "is": [],
+            "ms": {},
+        }],
+    }
+    spec = build_vocab([report] * 35)
+    vec = extract(report, spec)
+
+    assert vec[spec.feature_names.index("format:script")] == 0.0
+    assert vec[spec.feature_names.index("format:unknown_file_fraction")] == 1.0
     feature_config_from_env.cache_clear()
 
 

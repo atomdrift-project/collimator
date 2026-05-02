@@ -83,7 +83,7 @@ def predict_onnx_proba(session: object, X: np.ndarray) -> np.ndarray:
 
 
 def export_onnx(
-    model: xgb.XGBClassifier,
+    model: object,
     n_features: int,
     output_path: Path,
 ) -> None:
@@ -92,6 +92,9 @@ def export_onnx(
     The exported model outputs probabilities directly (class 1 probability).
     Requires onnxmltools to be installed.
     """
+    if model.__class__.__module__.startswith("lightgbm"):
+        log.info("skipping ONNX export for LightGBM model")
+        return
     try:
         from onnxmltools import convert_xgboost
         from onnxmltools.convert.common.data_types import FloatTensorType
@@ -120,7 +123,7 @@ def export_onnx(
 
 
 def validate_onnx(
-    model: xgb.XGBClassifier,
+    model: object,
     onnx_path: Path,
     n_features: int,
     X: np.ndarray | None = None,
@@ -128,6 +131,9 @@ def validate_onnx(
     tolerance: float = 1e-4,
 ) -> bool:
     """Verify ONNX model produces same outputs as XGBoost model."""
+    if model.__class__.__module__.startswith("lightgbm"):
+        log.info("skipping ONNX validation for LightGBM model")
+        return True
     try:
         import onnxruntime as ort
     except ImportError:
@@ -162,9 +168,13 @@ def validate_onnx(
     return True
 
 
-def save_model(model: xgb.XGBClassifier, output_path: Path) -> None:
-    """Save XGBoost model in native JSON format."""
+def save_model(model: object, output_path: Path) -> None:
+    """Save a model in its native format."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    if model.__class__.__module__.startswith("lightgbm"):
+        model.booster_.save_model(str(output_path))
+        log.info("saved LightGBM model to %s", output_path)
+        return
     model.save_model(str(output_path))
     log.info("saved XGBoost model to %s", output_path)
 
@@ -184,6 +194,7 @@ def save_evaluation(
     recommended_thresholds: dict[str, float | None] | None = None,
     severity_levels: list[dict[str, object]] | None = None,
     severity_level_targets: list[dict[str, object]] | None = None,
+    model_name: str | None = None,
 ) -> None:
     """Save evaluation results as JSON."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -200,6 +211,7 @@ def save_evaluation(
         "fold_metrics": fold_metrics,
         "n_features": n_features,
         "model_abi_version": model_abi_version,
+        "model_name": model_name,
         "experiment": experiment,
         "environment": {
             "python": platform.python_version(),

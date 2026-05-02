@@ -64,6 +64,27 @@ def test_train_reports_split_summary_and_brier() -> None:
     assert int(result.split_summary["evaluation_samples"]) > 0
 
 
+def test_train_supports_azoth() -> None:
+    rng = np.random.default_rng(7)
+    X = sp.csr_matrix(rng.normal(size=(80, 12)).astype(np.float32))
+    y = np.array([0] * 40 + [1] * 40, dtype=np.float32)
+
+    result = train(
+        X,
+        y,
+        TrainConfig(
+            learner="azoth",
+            n_estimators=8,
+            early_stopping_rounds=2,
+            n_folds=2,
+        ),
+    )
+
+    assert result.metrics["brier"] >= 0.0
+    assert result.model.__class__.__module__.startswith("lightgbm")
+    assert result.cv_predictions.shape == result.cv_labels.shape
+
+
 # Tests for _grouped_split_indices and groups= were removed — train.py no
 # longer supports grouped-holdout / grouped-CV; the canonical_sha256 partitioning
 # in data.py handles group leakage at the DB level instead.

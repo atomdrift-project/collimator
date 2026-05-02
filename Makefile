@@ -1,19 +1,79 @@
 SHELL := /bin/bash
-.PHONY: train evaluate explain inspect errors scan traits thresholds thresholds-refresh false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive benchmark build-splits experiment ablate demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
+.SHELLFLAGS := -o pipefail -c
+.PHONY: train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
 DB ?= postgres://hopper@localhost:5432/hopper
-OUT_DIR ?= out
+MODEL ?= azoth
+LEARNER ?= $(if $(filter azoth%,$(MODEL)),azoth,$(MODEL))
+OUT_ROOT ?= out/models
+OUT_DIR ?= $(if $(filter azoth,$(MODEL)),$(OUT_ROOT)/azoth/general,$(OUT_ROOT)/$(MODEL))
+MODEL_FILE ?= $(if $(filter azoth,$(LEARNER)),model.txt,model.json)
 LOG_DIR ?= $(OUT_DIR)/logs
 THRESHOLD_SCORES ?= $(OUT_DIR)/threshold_scores.npz
+THRESHOLD_MAX_ID ?=
+THRESHOLD_MAX_ID_ARG := $(if $(THRESHOLD_MAX_ID),--max-id $(THRESHOLD_MAX_ID),)
 TOP_ERRORS ?= 100
 THRESHOLD_TOP_ERRORS ?= 0
+FILETYPE_MATRIX_OUTPUT ?= $(OUT_DIR)/filetype_metrics.json
+FILETYPE_MATRIX_CSV ?= $(OUT_DIR)/filetype_metrics.csv
+FILETYPE_MATRIX_MIN_COUNT ?= 25
+ELF_BENCHMARK_OUTPUT ?= $(OUT_ROOT)/elf_model_benchmark.json
+ELF_BENCHMARK_GENERAL_DIR ?= $(OUT_ROOT)/azoth/general
+ELF_BENCHMARK_BINARY_DIR ?= $(OUT_ROOT)/azoth-binary-cpu
+ELF_BENCHMARK_ELF_DIR ?= $(OUT_ROOT)/azoth-elf-cpu
+ELF_BENCHMARK_FOLDS ?= 2
+ELF_BENCHMARK_ESTIMATORS ?= 400
+ELF_BENCHMARK_MAX_DEPTH ?= 12
+ELF_BENCHMARK_LEARNING_RATE ?= 0.05
+ELF_BENCHMARK_EARLY_STOPPING ?= 50
+ELF_BENCHMARK_NUM_LEAVES ?= 96
+ELF_BENCHMARK_MIN_CHILD_SAMPLES ?= 100
+AZOTH_ROOT ?= $(OUT_ROOT)/azoth
+AZOTH_SPECIALISTS_SUMMARY ?= $(AZOTH_ROOT)/specialists.json
+AZOTH_GENERAL_DIR ?= $(AZOTH_ROOT)/general
+AZOTH_GENERAL_SCORES ?= $(AZOTH_GENERAL_DIR)/threshold_scores.npz
+AZOTH_CONFIG ?= $(AZOTH_ROOT)/config.json
+AZOTH_SCORE_TABLE ?= $(AZOTH_ROOT)/score_table.npz
+AZOTH_DIAGNOSTICS ?= $(AZOTH_ROOT)/route_diagnostics.md
+AZOTH_DIAGNOSTICS_CSV ?= $(AZOTH_ROOT)/route_diagnostics.csv
+AZOTH_SLICE_METRICS ?= $(AZOTH_ROOT)/slice_metrics.md
+AZOTH_SLICE_METRICS_CSV ?= $(AZOTH_ROOT)/slice_metrics.csv
+AZOTH_ROUTE_POLICIES ?= $(AZOTH_ROOT)/route_policies.json
+AZOTH_ROUTE_POLICIES_CSV ?= $(AZOTH_ROOT)/route_policies.csv
+AZOTH_ROUTE_POLICIES_MD ?= $(AZOTH_ROOT)/route_policies.md
+AZOTH_GLOBAL_POLICY_METRICS ?= $(AZOTH_ROOT)/global_policy_metrics.json
+AZOTH_GLOBAL_POLICY_METRICS_MD ?= $(AZOTH_ROOT)/global_policy_metrics.md
+AZOTH_POLICY_OVERRIDE_ROUTE ?=
+AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/litmus/models/azoth
+ELF_ROUTE_OUTPUT_DIR ?= $(AZOTH_ROOT)/elf_route_optimization
+ELF_ROUTE_OUTPUT ?= $(AZOTH_ROOT)/elf_route_optimization.json
+ELF_ROUTE_TEACHER_DIR ?= $(AZOTH_ROOT)/filetypes/elf
+AZOTH_REFRESH_SCORES ?= 0
+AZOTH_REFRESH_SCORES_ARG := $(if $(filter 1 true yes,$(AZOTH_REFRESH_SCORES)),--refresh,)
+AZOTH_SPECIALIST_FOLDS ?= 0
+AZOTH_SPECIALIST_ESTIMATORS ?= 400
+AZOTH_SPECIALIST_MAX_DEPTH ?= 12
+AZOTH_SPECIALIST_LEARNING_RATE ?= 0.05
+AZOTH_SPECIALIST_EARLY_STOPPING ?= 50
+AZOTH_SPECIALIST_NUM_LEAVES ?= 96
+AZOTH_SPECIALIST_MIN_CHILD_SAMPLES ?= 100
+AZOTH_SPECIALIST_MIN_BAD ?= 50
+AZOTH_SPECIALIST_MIN_GOOD ?= 50
+AZOTH_SPECIALIST_ONLY ?=
+AZOTH_SPECIALIST_MASK_SPEC ?=
+AZOTH_SPECIALIST_SKIP_EXISTING ?= 1
+AZOTH_SPECIALIST_SKIP_EXISTING_ARG := $(if $(filter 1 true yes,$(AZOTH_SPECIALIST_SKIP_EXISTING)),--skip-existing,)
 SAMPLES_DIR ?= /data/samples
 FALSE_POSITIVES_ARCHIVE ?= /tmp/false-positives.tgz
 FALSE_NEGATIVES_ARCHIVE ?= /tmp/false-negatives.tgz
 NEAR_FALSE_POSITIVES_ARCHIVE ?= /tmp/near-false-positives.tgz
 NEAR_FALSE_NEGATIVES_ARCHIVE ?= /tmp/near-false-negatives.tgz
+FALSE_POSITIVES_TRIAGE_DIR ?= /tmp/false-positives
+NEAR_FALSE_POSITIVES_TRIAGE_DIR ?= /tmp/near-false-positives
+FALSE_POSITIVES_TRIAGE_JSON ?= /tmp/false-positives.json
+NEAR_FALSE_POSITIVES_TRIAGE_JSON ?= /tmp/near-false-positives.json
 SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
@@ -23,13 +83,28 @@ EXP_WORKERS ?= $(WORKERS)
 WORKERS_ARG := $(if $(WORKERS),--workers $(WORKERS),)
 EXP_WORKERS_ARG := $(if $(EXP_WORKERS),--workers $(EXP_WORKERS),)
 SEED ?= 42
+DEVICE ?=
+DROP_FEATURE_PREFIXES ?=
 EXP_TRAIN_SAMPLES ?= 120000
 EXP_MAX_TEST_SAMPLES ?= 30000
+EXP_MAX_ID ?=
 EXP_FOLDS ?= 2
 EXP_ESTIMATORS ?= 250
 EXP_MAX_DEPTH ?= 14
 EXP_LEARNING_RATE ?= 0.05
 EXP_EARLY_STOPPING ?= 100
+EXP_NUM_LEAVES ?= $(if $(filter azoth,$(LEARNER)),96,)
+EXP_MIN_CHILD_SAMPLES ?= $(if $(filter azoth,$(LEARNER)),100,)
+EXP_COLSAMPLE_BYTREE ?= 0.8
+EXP_SUBSAMPLE ?= 0.8
+EXP_GAMMA ?= 0.0
+EXP_REG_ALPHA ?= 0.0
+EXP_REG_LAMBDA ?= 1.0
+EXP_THRESHOLD_MODE ?= fbeta
+EXP_THRESHOLD_FPR_TARGET ?=
+EXP_HARD_NEGATIVE_FRACTION ?= 0.0
+EXP_HARD_NEGATIVE_WEIGHT ?= 1.0
+EXP_BENIGN_FILETYPE_WEIGHT ?=
 EXP_BETA ?= 1.25
 EXP_MIN_MALWARE_SCORE ?= 0
 # Ablation 2026-04-10: silent_packer (Exp 43) and mtime_kurtosis (Exp 44) were
@@ -49,6 +124,7 @@ EXP_HOSTILE_FINDING_DENSITY ?=
 EXP_HOSTILE_DEPTH_WEIGHT ?=
 # v16 default OFF: drops 163k inter:{ft}*{element/skeleton} features that contribute essentially nothing.
 EXP_FILETYPE_INTERACTIONS ?= 0
+EXP_FORMAT_HINTS ?= 0
 # Default-on toggles in features.py — overridable for ablations.
 EXP_BLINDFOLD ?= 1
 EXP_SCORE_WEIGHTED_TRAITS ?= 1
@@ -65,12 +141,15 @@ EXP_NGRAM_PATH_DEPTH ?= 0
 EXP_NGRAM_MIN_CRIT ?= 3
 EXP_TAXONOMY_FEATURES ?= 0
 EXP_EXTENDED_METRICS ?= 1
+EXP_EMBER_LITE_FEATURES ?= 0
 EXP_DISABLE_FEATURE_GROUPS ?= clusters
 # packaged_capability compute mode: zero | chars | tokens | paths | findings
 EXP_PACKAGED_CAPABILITY_MODE ?= paths
 # Experiment data cache directory. When set, corpus selections and extracted
 # matrices are cached to disk so repeated experiments skip expensive DB scans.
 EXP_CACHE_DIR ?= out/cache
+ABLATE_CACHE_DIR ?= $(EXP_CACHE_DIR)
+ABLATE_MAX_ID ?=
 TRAIN_MIN_MALWARE_SCORE ?= 0
 TRAIN_SILENT_PACKER_SIGNAL ?= 0
 TRAIN_MTIME_KURTOSIS ?= 0
@@ -83,6 +162,7 @@ TRAIN_EXTENSION_MISMATCH_SIGNAL ?=
 TRAIN_HOSTILE_FINDING_DENSITY ?=
 TRAIN_HOSTILE_DEPTH_WEIGHT ?=
 TRAIN_FILETYPE_INTERACTIONS ?= 0
+TRAIN_FORMAT_HINTS ?= 0
 TRAIN_BLINDFOLD ?= 1
 TRAIN_SCORE_WEIGHTED_TRAITS ?= 1
 TRAIN_SOFT_PRESENCE ?= 1
@@ -97,18 +177,26 @@ TRAIN_NGRAM_PATH_DEPTH ?= 0
 TRAIN_NGRAM_MIN_CRIT ?= 3
 TRAIN_DISABLE_FEATURE_GROUPS ?= clusters
 TRAIN_PACKAGED_CAPABILITY_MODE ?= paths
-TRAIN_ESTIMATORS ?= 2000
-TRAIN_MAX_DEPTH ?= 20
-TRAIN_LEARNING_RATE ?= 0.02
-TRAIN_EARLY_STOPPING ?= 100
+TRAIN_EMBER_LITE_FEATURES ?= 0
+TRAIN_FOLDS ?= $(if $(filter azoth,$(LEARNER)),2,5)
+TRAIN_ESTIMATORS ?= $(if $(filter azoth,$(LEARNER)),400,2000)
+TRAIN_MAX_DEPTH ?= $(if $(filter azoth,$(LEARNER)),12,20)
+TRAIN_LEARNING_RATE ?= $(if $(filter azoth,$(LEARNER)),0.05,0.02)
+TRAIN_EARLY_STOPPING ?= $(if $(filter azoth,$(LEARNER)),50,100)
+TRAIN_NUM_LEAVES ?= $(if $(filter azoth,$(LEARNER)),96,)
+TRAIN_MIN_CHILD_SAMPLES ?= $(if $(filter azoth,$(LEARNER)),100,)
 TRAIN_BETA ?= 1.25
 ALLOWED_FEATURES ?= src/collimator/allowed_features.json
 
 # Build optional train hyperparameter flags (only passed if set)
 _TRAIN_FLAGS := $(if $(TRAIN_ESTIMATORS),--n-estimators $(TRAIN_ESTIMATORS)) \
+                $(if $(TRAIN_FOLDS),--n-folds $(TRAIN_FOLDS)) \
                 $(if $(TRAIN_MAX_DEPTH),--max-depth $(TRAIN_MAX_DEPTH)) \
                 $(if $(TRAIN_LEARNING_RATE),--learning-rate $(TRAIN_LEARNING_RATE)) \
                 $(if $(TRAIN_EARLY_STOPPING),--early-stopping-rounds $(TRAIN_EARLY_STOPPING)) \
+                $(if $(TRAIN_NUM_LEAVES),--num-leaves $(TRAIN_NUM_LEAVES)) \
+                $(if $(TRAIN_MIN_CHILD_SAMPLES),--min-child-samples $(TRAIN_MIN_CHILD_SAMPLES)) \
+                $(if $(DEVICE),--device $(DEVICE)) \
                 $(if $(TRAIN_BETA),--beta $(TRAIN_BETA))
 
 # Validate DB is set for targets that need it
@@ -154,6 +242,7 @@ train: venv check-db-fresh
 	COLLIMATOR_HOSTILE_FINDING_DENSITY=$(TRAIN_HOSTILE_FINDING_DENSITY) \
 	COLLIMATOR_HOSTILE_DEPTH_WEIGHT=$(TRAIN_HOSTILE_DEPTH_WEIGHT) \
 	COLLIMATOR_FILETYPE_INTERACTIONS=$(TRAIN_FILETYPE_INTERACTIONS) \
+	COLLIMATOR_FORMAT_HINTS=$(TRAIN_FORMAT_HINTS) \
 	COLLIMATOR_BLINDFOLD=$(TRAIN_BLINDFOLD) \
 	COLLIMATOR_SCORE_WEIGHTED_TRAITS=$(TRAIN_SCORE_WEIGHTED_TRAITS) \
 	COLLIMATOR_SOFT_PRESENCE=$(TRAIN_SOFT_PRESENCE) \
@@ -168,12 +257,14 @@ train: venv check-db-fresh
 	COLLIMATOR_MIN_SAMPLE_SCORE=$(TRAIN_MIN_SAMPLE_SCORE) \
 	COLLIMATOR_NGRAM_PATH_DEPTH=$(TRAIN_NGRAM_PATH_DEPTH) \
 	COLLIMATOR_NGRAM_MIN_CRIT=$(TRAIN_NGRAM_MIN_CRIT) \
+	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
 	COLLIMATOR_EXTENDED_METRICS=1 \
+	COLLIMATOR_EMBER_LITE_FEATURES=$(TRAIN_EMBER_LITE_FEATURES) \
 	COLLIMATOR_ATTACK_FEATURES=1 \
 	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
 	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
 	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
-	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) $(WORKERS_ARG) --seed $(SEED) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
+	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --model-name $(MODEL) --learner $(LEARNER) $(WORKERS_ARG) --seed $(SEED) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) $(if $(DROP_FEATURE_PREFIXES),--drop-feature-prefixes $(DROP_FEATURE_PREFIXES),) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
 
 fixture: venv check-db
 	@# Regenerate extraction_fixture.json and cross_language_fixture.json
@@ -191,6 +282,7 @@ fixture: venv check-db
 	COLLIMATOR_HOSTILE_FINDING_DENSITY=$(TRAIN_HOSTILE_FINDING_DENSITY) \
 	COLLIMATOR_HOSTILE_DEPTH_WEIGHT=$(TRAIN_HOSTILE_DEPTH_WEIGHT) \
 	COLLIMATOR_FILETYPE_INTERACTIONS=$(TRAIN_FILETYPE_INTERACTIONS) \
+	COLLIMATOR_FORMAT_HINTS=$(TRAIN_FORMAT_HINTS) \
 	COLLIMATOR_BLINDFOLD=$(TRAIN_BLINDFOLD) \
 	COLLIMATOR_SCORE_WEIGHTED_TRAITS=$(TRAIN_SCORE_WEIGHTED_TRAITS) \
 	COLLIMATOR_SOFT_PRESENCE=$(TRAIN_SOFT_PRESENCE) \
@@ -202,79 +294,316 @@ fixture: venv check-db
 	COLLIMATOR_STRUCT_FILE_RISK_COVERAGE=$(TRAIN_STRUCT_FILE_RISK_COVERAGE) \
 	COLLIMATOR_DISABLE_FEATURE_GROUPS=$(TRAIN_DISABLE_FEATURE_GROUPS) \
 	COLLIMATOR_PACKAGED_CAPABILITY_MODE=$(TRAIN_PACKAGED_CAPABILITY_MODE) \
+	COLLIMATOR_MIN_SAMPLE_SCORE=$(TRAIN_MIN_SAMPLE_SCORE) \
+	COLLIMATOR_NGRAM_PATH_DEPTH=$(TRAIN_NGRAM_PATH_DEPTH) \
+	COLLIMATOR_NGRAM_MIN_CRIT=$(TRAIN_NGRAM_MIN_CRIT) \
+	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
+	COLLIMATOR_EXTENDED_METRICS=1 \
+	COLLIMATOR_EMBER_LITE_FEATURES=$(TRAIN_EMBER_LITE_FEATURES) \
+	COLLIMATOR_ATTACK_FEATURES=1 \
+	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
+	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
+	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
 	$(PYTHON) -m collimator fixture --db $(DB) --output $(OUT_DIR) \
-		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
+		$(if $(wildcard $(OUT_DIR)/$(MODEL_FILE)),--model $(OUT_DIR)/$(MODEL_FILE),) \
 		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
 
 explain: venv check-db
-	$(PYTHON) -m collimator explain --db $(DB) --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json --output $(OUT_DIR)
+	$(PYTHON) -m collimator explain --db $(DB) --model $(OUT_DIR)/$(MODEL_FILE) --spec $(OUT_DIR)/feature_spec.json --output $(OUT_DIR)
 
 inspect: venv check-db
 ifndef SAMPLE
 	$(error SAMPLE is required. Usage: make inspect DB=... SAMPLE=<sha256>)
 endif
-	$(PYTHON) -m collimator inspect --db $(DB) --sample $(SAMPLE) --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json
+	$(PYTHON) -m collimator inspect --db $(DB) --sample $(SAMPLE) --model $(OUT_DIR)/$(MODEL_FILE) --spec $(OUT_DIR)/feature_spec.json
 
 errors: venv check-db
-	$(PYTHON) -m collimator errors --db $(DB) --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json
+	$(PYTHON) -m collimator errors --db $(DB) --model $(OUT_DIR)/$(MODEL_FILE) --spec $(OUT_DIR)/feature_spec.json
 
 traits: venv check-db
 	$(PYTHON) -m collimator traits --db $(DB)
 
 thresholds: venv check-db
 	$(PYTHON) -u -m collimator tune-thresholds --db $(DB) \
-		--model $(OUT_DIR)/model.json \
+		--model $(OUT_DIR)/$(MODEL_FILE) \
 		--spec $(OUT_DIR)/feature_spec.json \
 		$(WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
 		--top-errors $(THRESHOLD_TOP_ERRORS) \
 		--output $(OUT_DIR)/threshold_tuning.json
 
 thresholds-refresh: venv check-db
 	$(PYTHON) -u -m collimator tune-thresholds --db $(DB) \
-		--model $(OUT_DIR)/model.json \
+		--model $(OUT_DIR)/$(MODEL_FILE) \
 		--spec $(OUT_DIR)/feature_spec.json \
 		$(WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
 		--refresh-cache \
 		--top-errors $(THRESHOLD_TOP_ERRORS) \
 		--output $(OUT_DIR)/threshold_tuning.json
 
+filetype-matrix: venv check-db
+	$(PYTHON) scripts/filetype_metric_matrix.py \
+		--db $(DB) \
+		--scores-cache $(THRESHOLD_SCORES) \
+		--thresholds $(OUT_DIR)/threshold_tuning.json \
+		--output $(FILETYPE_MATRIX_OUTPUT) \
+		--csv-output $(FILETYPE_MATRIX_CSV) \
+		--min-count $(FILETYPE_MATRIX_MIN_COUNT)
+
+elf-model-benchmark: venv check-db
+	COLLIMATOR_FILETYPE_INTERACTIONS=$(TRAIN_FILETYPE_INTERACTIONS) \
+	COLLIMATOR_FORMAT_HINTS=$(TRAIN_FORMAT_HINTS) \
+	COLLIMATOR_BLINDFOLD=$(TRAIN_BLINDFOLD) \
+	COLLIMATOR_SCORE_WEIGHTED_TRAITS=$(TRAIN_SCORE_WEIGHTED_TRAITS) \
+	COLLIMATOR_SOFT_PRESENCE=$(TRAIN_SOFT_PRESENCE) \
+	COLLIMATOR_REPETITION_PENALTY_FEATURES=$(TRAIN_REPETITION_PENALTY_FEATURES) \
+	COLLIMATOR_FILE_SEVERITY_DISTRIBUTION=$(TRAIN_FILE_SEVERITY_DISTRIBUTION) \
+	COLLIMATOR_HOSTILE_WEIGHTED_DENSITY=$(TRAIN_HOSTILE_WEIGHTED_DENSITY) \
+	COLLIMATOR_HOSTILE_ESCALATION_FEATURES=$(TRAIN_HOSTILE_ESCALATION_FEATURES) \
+	COLLIMATOR_SUSPICIOUS_BREADTH_DENSITY=$(TRAIN_SUSPICIOUS_BREADTH_DENSITY) \
+	COLLIMATOR_STRUCT_FILE_RISK_COVERAGE=$(TRAIN_STRUCT_FILE_RISK_COVERAGE) \
+	COLLIMATOR_DISABLE_FEATURE_GROUPS=$(TRAIN_DISABLE_FEATURE_GROUPS) \
+	COLLIMATOR_PACKAGED_CAPABILITY_MODE=$(TRAIN_PACKAGED_CAPABILITY_MODE) \
+	COLLIMATOR_MIN_SAMPLE_SCORE=$(TRAIN_MIN_SAMPLE_SCORE) \
+	COLLIMATOR_NGRAM_PATH_DEPTH=$(TRAIN_NGRAM_PATH_DEPTH) \
+	COLLIMATOR_NGRAM_MIN_CRIT=$(TRAIN_NGRAM_MIN_CRIT) \
+	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
+	COLLIMATOR_EXTENDED_METRICS=1 \
+	COLLIMATOR_EMBER_LITE_FEATURES=$(TRAIN_EMBER_LITE_FEATURES) \
+	COLLIMATOR_ATTACK_FEATURES=1 \
+	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
+	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
+	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
+	$(PYTHON) scripts/elf_model_benchmark.py \
+		--db $(DB) \
+		$(EXP_WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
+		--general-model $(ELF_BENCHMARK_GENERAL_DIR)/model.txt \
+		--general-spec $(ELF_BENCHMARK_GENERAL_DIR)/feature_spec.json \
+		--binary-output $(ELF_BENCHMARK_BINARY_DIR) \
+		--elf-output $(ELF_BENCHMARK_ELF_DIR) \
+		--output $(ELF_BENCHMARK_OUTPUT) \
+		--seed $(SEED) \
+		--n-folds $(ELF_BENCHMARK_FOLDS) \
+		--n-estimators $(ELF_BENCHMARK_ESTIMATORS) \
+		--max-depth $(ELF_BENCHMARK_MAX_DEPTH) \
+		--learning-rate $(ELF_BENCHMARK_LEARNING_RATE) \
+		--early-stopping-rounds $(ELF_BENCHMARK_EARLY_STOPPING) \
+		--num-leaves $(ELF_BENCHMARK_NUM_LEAVES) \
+		--min-child-samples $(ELF_BENCHMARK_MIN_CHILD_SAMPLES) \
+		$(if $(DEVICE),--device $(DEVICE),)
+
+elf-route-optimization: venv check-db
+	$(PYTHON) scripts/elf_ensemble_experiments.py \
+		--db $(DB) \
+		--general-scores $(AZOTH_GENERAL_SCORES) \
+		--general-spec $(AZOTH_GENERAL_DIR)/feature_spec.json \
+		--teacher-model $(ELF_ROUTE_TEACHER_DIR)/model.txt \
+		--teacher-spec $(ELF_ROUTE_TEACHER_DIR)/feature_spec.json \
+		--output-dir $(ELF_ROUTE_OUTPUT_DIR) \
+		--output $(ELF_ROUTE_OUTPUT) \
+		$(EXP_WORKERS_ARG) \
+		--seed $(SEED)
+
+azoth-specialists: venv check-db
+	COLLIMATOR_FILETYPE_INTERACTIONS=$(TRAIN_FILETYPE_INTERACTIONS) \
+	COLLIMATOR_FORMAT_HINTS=$(TRAIN_FORMAT_HINTS) \
+	COLLIMATOR_BLINDFOLD=$(TRAIN_BLINDFOLD) \
+	COLLIMATOR_SCORE_WEIGHTED_TRAITS=$(TRAIN_SCORE_WEIGHTED_TRAITS) \
+	COLLIMATOR_SOFT_PRESENCE=$(TRAIN_SOFT_PRESENCE) \
+	COLLIMATOR_REPETITION_PENALTY_FEATURES=$(TRAIN_REPETITION_PENALTY_FEATURES) \
+	COLLIMATOR_FILE_SEVERITY_DISTRIBUTION=$(TRAIN_FILE_SEVERITY_DISTRIBUTION) \
+	COLLIMATOR_HOSTILE_WEIGHTED_DENSITY=$(TRAIN_HOSTILE_WEIGHTED_DENSITY) \
+	COLLIMATOR_HOSTILE_ESCALATION_FEATURES=$(TRAIN_HOSTILE_ESCALATION_FEATURES) \
+	COLLIMATOR_SUSPICIOUS_BREADTH_DENSITY=$(TRAIN_SUSPICIOUS_BREADTH_DENSITY) \
+	COLLIMATOR_STRUCT_FILE_RISK_COVERAGE=$(TRAIN_STRUCT_FILE_RISK_COVERAGE) \
+	COLLIMATOR_DISABLE_FEATURE_GROUPS=$(TRAIN_DISABLE_FEATURE_GROUPS) \
+	COLLIMATOR_PACKAGED_CAPABILITY_MODE=$(TRAIN_PACKAGED_CAPABILITY_MODE) \
+	COLLIMATOR_MIN_SAMPLE_SCORE=$(TRAIN_MIN_SAMPLE_SCORE) \
+	COLLIMATOR_NGRAM_PATH_DEPTH=$(TRAIN_NGRAM_PATH_DEPTH) \
+	COLLIMATOR_NGRAM_MIN_CRIT=$(TRAIN_NGRAM_MIN_CRIT) \
+	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
+	COLLIMATOR_EXTENDED_METRICS=1 \
+	COLLIMATOR_EMBER_LITE_FEATURES=$(TRAIN_EMBER_LITE_FEATURES) \
+	COLLIMATOR_ATTACK_FEATURES=1 \
+	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
+	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
+	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
+	$(PYTHON) scripts/azoth_specialist_suite.py \
+		--db $(DB) \
+		$(EXP_WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
+		--output-root $(AZOTH_ROOT) \
+		--summary $(AZOTH_SPECIALISTS_SUMMARY) \
+		--general-dir $(AZOTH_GENERAL_DIR) \
+		--seed $(SEED) \
+		--n-folds $(AZOTH_SPECIALIST_FOLDS) \
+		--n-estimators $(AZOTH_SPECIALIST_ESTIMATORS) \
+		--max-depth $(AZOTH_SPECIALIST_MAX_DEPTH) \
+		--learning-rate $(AZOTH_SPECIALIST_LEARNING_RATE) \
+		--early-stopping-rounds $(AZOTH_SPECIALIST_EARLY_STOPPING) \
+		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
+		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
+		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
+		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
+		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
+		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
+		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
+		$(if $(DEVICE),--device $(DEVICE),)
+
+azoth-calibrate: venv check-db
+	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
+		--db $(DB) \
+		$(EXP_WORKERS_ARG) \
+		--azoth-root $(AZOTH_ROOT) \
+		--summary $(AZOTH_SPECIALISTS_SUMMARY) \
+		--general-scores $(AZOTH_GENERAL_SCORES) \
+		--output $(AZOTH_CONFIG) \
+		--score-table $(AZOTH_SCORE_TABLE) \
+		$(AZOTH_REFRESH_SCORES_ARG)
+
+azoth-diagnostics: venv
+	$(PYTHON) scripts/azoth_route_diagnostics.py \
+		--config $(AZOTH_CONFIG) \
+		--score-table $(AZOTH_SCORE_TABLE) \
+		--output $(AZOTH_DIAGNOSTICS) \
+		--csv $(AZOTH_DIAGNOSTICS_CSV) \
+		--slice-output $(AZOTH_SLICE_METRICS) \
+		--slice-csv $(AZOTH_SLICE_METRICS_CSV)
+
+azoth-policies: venv
+	$(PYTHON) scripts/azoth_route_policy_search.py \
+		$(if $(AZOTH_POLICY_OVERRIDE_ROUTE),--db $(DB),) \
+		--config $(AZOTH_CONFIG) \
+		--score-table $(AZOTH_SCORE_TABLE) \
+		--output $(AZOTH_ROUTE_POLICIES) \
+		--csv $(AZOTH_ROUTE_POLICIES_CSV) \
+		--markdown $(AZOTH_ROUTE_POLICIES_MD) \
+		$(foreach route,$(AZOTH_POLICY_OVERRIDE_ROUTE),--override-route $(route)) \
+		$(EXP_WORKERS_ARG)
+
+azoth-deploy: azoth-calibrate
+	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/general/model.txt || { echo "error: $(AZOTH_ROOT)/general/model.txt not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
+	$(PYTHON) scripts/azoth_route_diagnostics.py \
+		--config $(AZOTH_CONFIG) \
+		--score-table $(AZOTH_SCORE_TABLE) \
+		--output $(AZOTH_DIAGNOSTICS) \
+		--csv $(AZOTH_DIAGNOSTICS_CSV) \
+		--slice-output $(AZOTH_SLICE_METRICS) \
+		--slice-csv $(AZOTH_SLICE_METRICS_CSV)
+	$(PYTHON) scripts/azoth_route_policy_search.py \
+		$(if $(AZOTH_POLICY_OVERRIDE_ROUTE),--db $(DB),) \
+		--config $(AZOTH_CONFIG) \
+		--score-table $(AZOTH_SCORE_TABLE) \
+		--output $(AZOTH_ROUTE_POLICIES) \
+		--csv $(AZOTH_ROUTE_POLICIES_CSV) \
+		--markdown $(AZOTH_ROUTE_POLICIES_MD) \
+		$(foreach route,$(AZOTH_POLICY_OVERRIDE_ROUTE),--override-route $(route)) \
+		$(EXP_WORKERS_ARG)
+	$(PYTHON) scripts/azoth_policy_global_metrics.py \
+		--config $(AZOTH_CONFIG) \
+		--policy $(AZOTH_ROUTE_POLICIES) \
+		--score-table $(AZOTH_SCORE_TABLE) \
+		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
+		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
+		--fail-on-budget
+	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
+	$(eval _STAGE := $(shell mktemp -d))
+	cp "$(AZOTH_ROOT)/config.json" "$(_STAGE)/config.json"
+	cp "$(AZOTH_ROOT)/MODEL.md" "$(_STAGE)/MODEL.md"
+	cp "$(AZOTH_DIAGNOSTICS)" "$(_STAGE)/route_diagnostics.md"
+	cp "$(AZOTH_DIAGNOSTICS_CSV)" "$(_STAGE)/route_diagnostics.csv"
+	cp "$(AZOTH_SLICE_METRICS)" "$(_STAGE)/slice_metrics.md"
+	cp "$(AZOTH_SLICE_METRICS_CSV)" "$(_STAGE)/slice_metrics.csv"
+	cp "$(AZOTH_ROUTE_POLICIES)" "$(_STAGE)/route_policies.json"
+	cp "$(AZOTH_ROUTE_POLICIES_CSV)" "$(_STAGE)/route_policies.csv"
+	cp "$(AZOTH_ROUTE_POLICIES_MD)" "$(_STAGE)/route_policies.md"
+	cp "$(AZOTH_GLOBAL_POLICY_METRICS)" "$(_STAGE)/global_policy_metrics.json"
+	cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$(_STAGE)/global_policy_metrics.md"
+	cp "$(AZOTH_ROOT)/score_table.npz" "$(_STAGE)/score_table.npz"
+	cp "$(AZOTH_ROOT)/specialists.json" "$(_STAGE)/specialists.json"
+	cp -R "$(AZOTH_ROOT)/general" "$(_STAGE)/"
+	@test ! -d "$(AZOTH_ROOT)/filegroups" || { mkdir -p "$(_STAGE)/filegroups"; cp -R "$(AZOTH_ROOT)/filegroups/." "$(_STAGE)/filegroups/"; }
+	@test ! -d "$(AZOTH_ROOT)/filetypes" || { mkdir -p "$(_STAGE)/filetypes"; cp -R "$(AZOTH_ROOT)/filetypes/." "$(_STAGE)/filetypes/"; }
+	$(PYTHON) scripts/validate_azoth_bundle.py "$(_STAGE)" || { rm -rf $(_STAGE); exit 1; }
+	@echo "Running litmus deployed-ensemble compatibility checks against staged copy..."
+	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test scan_no_deadlock || { rm -rf $(_STAGE); exit 1; }
+	@mkdir -p "$(AZOTH_DEPLOY_DIR)"
+	@rm -rf "$(AZOTH_DEPLOY_DIR)/general" "$(AZOTH_DEPLOY_DIR)/filegroups" "$(AZOTH_DEPLOY_DIR)/filetypes"
+	@rm -f "$(AZOTH_DEPLOY_DIR)/model.json" "$(AZOTH_DEPLOY_DIR)/model.txt" "$(AZOTH_DEPLOY_DIR)/feature_spec.json" \
+	  "$(AZOTH_DEPLOY_DIR)/evaluation.json" "$(AZOTH_DEPLOY_DIR)/extraction_fixture.json" "$(AZOTH_DEPLOY_DIR)/config.json" \
+	  "$(AZOTH_DEPLOY_DIR)/shap_importance.json" "$(AZOTH_DEPLOY_DIR)/model.onnx" "$(AZOTH_DEPLOY_DIR)/MODEL.md" \
+	  "$(AZOTH_DEPLOY_DIR)/route_diagnostics.md" "$(AZOTH_DEPLOY_DIR)/route_diagnostics.csv" \
+	  "$(AZOTH_DEPLOY_DIR)/slice_metrics.md" "$(AZOTH_DEPLOY_DIR)/slice_metrics.csv" \
+	  "$(AZOTH_DEPLOY_DIR)/route_policies.json" "$(AZOTH_DEPLOY_DIR)/route_policies.csv" \
+	  "$(AZOTH_DEPLOY_DIR)/route_policies.md" \
+	  "$(AZOTH_DEPLOY_DIR)/global_policy_metrics.json" "$(AZOTH_DEPLOY_DIR)/global_policy_metrics.md" \
+	  "$(AZOTH_DEPLOY_DIR)/score_table.npz" "$(AZOTH_DEPLOY_DIR)/specialists.json"
+	cp "$(_STAGE)/config.json" "$(AZOTH_DEPLOY_DIR)/config.json"
+	cp "$(_STAGE)/MODEL.md" "$(AZOTH_DEPLOY_DIR)/MODEL.md"
+	cp "$(_STAGE)/route_diagnostics.md" "$(AZOTH_DEPLOY_DIR)/route_diagnostics.md"
+	cp "$(_STAGE)/route_diagnostics.csv" "$(AZOTH_DEPLOY_DIR)/route_diagnostics.csv"
+	cp "$(_STAGE)/slice_metrics.md" "$(AZOTH_DEPLOY_DIR)/slice_metrics.md"
+	cp "$(_STAGE)/slice_metrics.csv" "$(AZOTH_DEPLOY_DIR)/slice_metrics.csv"
+	cp "$(_STAGE)/route_policies.json" "$(AZOTH_DEPLOY_DIR)/route_policies.json"
+	cp "$(_STAGE)/route_policies.csv" "$(AZOTH_DEPLOY_DIR)/route_policies.csv"
+	cp "$(_STAGE)/route_policies.md" "$(AZOTH_DEPLOY_DIR)/route_policies.md"
+	cp "$(_STAGE)/global_policy_metrics.json" "$(AZOTH_DEPLOY_DIR)/global_policy_metrics.json"
+	cp "$(_STAGE)/global_policy_metrics.md" "$(AZOTH_DEPLOY_DIR)/global_policy_metrics.md"
+	cp "$(_STAGE)/score_table.npz" "$(AZOTH_DEPLOY_DIR)/score_table.npz"
+	cp "$(_STAGE)/specialists.json" "$(AZOTH_DEPLOY_DIR)/specialists.json"
+	cp -R "$(_STAGE)/general" "$(AZOTH_DEPLOY_DIR)/"
+	@test ! -d "$(_STAGE)/filegroups" || { mkdir -p "$(AZOTH_DEPLOY_DIR)/filegroups"; cp -R "$(_STAGE)/filegroups/." "$(AZOTH_DEPLOY_DIR)/filegroups/"; }
+	@test ! -d "$(_STAGE)/filetypes" || { mkdir -p "$(AZOTH_DEPLOY_DIR)/filetypes"; cp -R "$(_STAGE)/filetypes/." "$(AZOTH_DEPLOY_DIR)/filetypes/"; }
+	@rm -rf $(_STAGE)
+	@echo "Deployed azoth ensemble bundle to $(AZOTH_DEPLOY_DIR)"
+
 false-positives: venv check-db
 	$(PYTHON) -u -m collimator false-positives --db $(DB) \
-		--model $(OUT_DIR)/model.json \
+		--model $(OUT_DIR)/$(MODEL_FILE) \
 		--spec $(OUT_DIR)/feature_spec.json \
 		$(WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
 		--top-errors $(TOP_ERRORS) \
 		--output $(OUT_DIR)/false_positives.json
 
 near-false-positives: venv check-db
 	$(PYTHON) -u -m collimator near-false-positives --db $(DB) \
-		--model $(OUT_DIR)/model.json \
+		--model $(OUT_DIR)/$(MODEL_FILE) \
 		--spec $(OUT_DIR)/feature_spec.json \
 		$(WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
 		--top-errors $(TOP_ERRORS) \
 		--output $(OUT_DIR)/near_false_positives.json
 
 false-negatives: venv check-db
 	$(PYTHON) -u -m collimator false-negatives --db $(DB) \
-		--model $(OUT_DIR)/model.json \
+		--model $(OUT_DIR)/$(MODEL_FILE) \
 		--spec $(OUT_DIR)/feature_spec.json \
 		$(WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
 		--top-errors $(TOP_ERRORS) \
 		--output $(OUT_DIR)/false_negatives.json
 
 near-false-negatives: venv check-db
 	$(PYTHON) -u -m collimator near-false-negatives --db $(DB) \
-		--model $(OUT_DIR)/model.json \
+		--model $(OUT_DIR)/$(MODEL_FILE) \
 		--spec $(OUT_DIR)/feature_spec.json \
 		$(WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
 		--top-errors $(TOP_ERRORS) \
 		--output $(OUT_DIR)/near_false_negatives.json
@@ -311,9 +640,27 @@ near-false-negatives-archive: near-false-negatives
 		--kind near-false-negatives \
 		--top $(TOP_ERRORS)
 
+false-positives-triage: false-positives
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(OUT_DIR)/false_positives.json \
+		--output-dir $(FALSE_POSITIVES_TRIAGE_DIR) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-positives \
+		--top $(TOP_ERRORS)
+	$(CLEAVE) --format=json $(FALSE_POSITIVES_TRIAGE_DIR) > $(FALSE_POSITIVES_TRIAGE_JSON)
+
+near-false-positives-triage: near-false-positives
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(OUT_DIR)/near_false_positives.json \
+		--output-dir $(NEAR_FALSE_POSITIVES_TRIAGE_DIR) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind near-false-positives \
+		--top $(TOP_ERRORS)
+	$(CLEAVE) --format=json $(NEAR_FALSE_POSITIVES_TRIAGE_DIR) > $(NEAR_FALSE_POSITIVES_TRIAGE_JSON)
+
 benchmark: venv check-db
 	$(PYTHON) -m collimator benchmark --db $(DB) $(WORKERS_ARG) \
-		$(if $(wildcard $(OUT_DIR)/model.json),--model $(OUT_DIR)/model.json,) \
+		$(if $(wildcard $(OUT_DIR)/$(MODEL_FILE)),--model $(OUT_DIR)/$(MODEL_FILE),) \
 		$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
 
 build-splits: venv check-db
@@ -333,6 +680,7 @@ experiment: venv check-db
 	COLLIMATOR_HOSTILE_FINDING_DENSITY=$(EXP_HOSTILE_FINDING_DENSITY) \
 	COLLIMATOR_HOSTILE_DEPTH_WEIGHT=$(EXP_HOSTILE_DEPTH_WEIGHT) \
 	COLLIMATOR_FILETYPE_INTERACTIONS=$(EXP_FILETYPE_INTERACTIONS) \
+	COLLIMATOR_FORMAT_HINTS=$(EXP_FORMAT_HINTS) \
 	COLLIMATOR_BLINDFOLD=$(EXP_BLINDFOLD) \
 	COLLIMATOR_SCORE_WEIGHTED_TRAITS=$(EXP_SCORE_WEIGHTED_TRAITS) \
 	COLLIMATOR_SOFT_PRESENCE=$(EXP_SOFT_PRESENCE) \
@@ -349,14 +697,26 @@ experiment: venv check-db
 	COLLIMATOR_NGRAM_MIN_CRIT=$(EXP_NGRAM_MIN_CRIT) \
 	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
 	COLLIMATOR_EXTENDED_METRICS=$(EXP_EXTENDED_METRICS) \
+	COLLIMATOR_EMBER_LITE_FEATURES=$(EXP_EMBER_LITE_FEATURES) \
+	COLLIMATOR_ATTACK_FEATURES=1 \
 	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
 	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
-	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) $(EXP_WORKERS_ARG) --seed $(SEED) \
+	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(OUT_DIR) --model-name $(MODEL) --learner $(LEARNER) $(EXP_WORKERS_ARG) --seed $(SEED) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
+		$(if $(EXP_MAX_ID),--max-id $(EXP_MAX_ID),) \
 		--n-folds $(EXP_FOLDS) --n-estimators $(EXP_ESTIMATORS) --max-depth $(EXP_MAX_DEPTH) \
 		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING) \
+		$(if $(EXP_NUM_LEAVES),--num-leaves $(EXP_NUM_LEAVES),) \
+		$(if $(EXP_MIN_CHILD_SAMPLES),--min-child-samples $(EXP_MIN_CHILD_SAMPLES),) \
+		--colsample-bytree $(EXP_COLSAMPLE_BYTREE) --subsample $(EXP_SUBSAMPLE) \
+		--gamma $(EXP_GAMMA) --reg-alpha $(EXP_REG_ALPHA) --reg-lambda $(EXP_REG_LAMBDA) \
+		$(if $(DEVICE),--device $(DEVICE),) \
+		$(if $(DROP_FEATURE_PREFIXES),--drop-feature-prefixes $(DROP_FEATURE_PREFIXES),) \
 		--min-malware-score $(EXP_MIN_MALWARE_SCORE) \
-		--beta $(EXP_BETA) \
+		--beta $(EXP_BETA) --threshold-mode $(EXP_THRESHOLD_MODE) \
+		$(if $(EXP_THRESHOLD_FPR_TARGET),--threshold-fpr-target $(EXP_THRESHOLD_FPR_TARGET),) \
+		--hard-negative-fraction $(EXP_HARD_NEGATIVE_FRACTION) --hard-negative-weight $(EXP_HARD_NEGATIVE_WEIGHT) \
+		$(foreach w,$(EXP_BENIGN_FILETYPE_WEIGHT),--benign-filetype-weight $(w)) \
 		$(if $(EXP_CACHE_DIR),--cache-dir $(EXP_CACHE_DIR),) \
 		2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-experiment$(EXP_TAG).log"
 
@@ -375,6 +735,7 @@ ablate: venv check-db
 	COLLIMATOR_HOSTILE_FINDING_DENSITY=$(TRAIN_HOSTILE_FINDING_DENSITY) \
 	COLLIMATOR_HOSTILE_DEPTH_WEIGHT=$(TRAIN_HOSTILE_DEPTH_WEIGHT) \
 	COLLIMATOR_FILETYPE_INTERACTIONS=$(TRAIN_FILETYPE_INTERACTIONS) \
+	COLLIMATOR_FORMAT_HINTS=$(TRAIN_FORMAT_HINTS) \
 	COLLIMATOR_BLINDFOLD=$(TRAIN_BLINDFOLD) \
 	COLLIMATOR_SCORE_WEIGHTED_TRAITS=$(TRAIN_SCORE_WEIGHTED_TRAITS) \
 	COLLIMATOR_SOFT_PRESENCE=$(TRAIN_SOFT_PRESENCE) \
@@ -389,20 +750,29 @@ ablate: venv check-db
 	COLLIMATOR_MIN_SAMPLE_SCORE=$(TRAIN_MIN_SAMPLE_SCORE) \
 	COLLIMATOR_NGRAM_PATH_DEPTH=$(TRAIN_NGRAM_PATH_DEPTH) \
 	COLLIMATOR_NGRAM_MIN_CRIT=$(TRAIN_NGRAM_MIN_CRIT) \
+	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
 	COLLIMATOR_EXTENDED_METRICS=1 \
+	COLLIMATOR_EMBER_LITE_FEATURES=$(TRAIN_EMBER_LITE_FEATURES) \
 	COLLIMATOR_ATTACK_FEATURES=1 \
 	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
 	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
 	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
 	$(PYTHON) -m collimator ablate --db $(DB) $(WORKERS_ARG) --seed $(SEED) \
+		--model-name $(MODEL) --learner $(LEARNER) \
 		--n-estimators $(TRAIN_ESTIMATORS) --max-depth $(TRAIN_MAX_DEPTH) \
 		--learning-rate $(TRAIN_LEARNING_RATE) --early-stopping-rounds $(TRAIN_EARLY_STOPPING) \
+		$(if $(DEVICE),--device $(DEVICE),) \
 		--beta $(TRAIN_BETA) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) \
 		--n-folds $(or $(ABLATE_FOLDS),2) \
+		$(if $(ABLATE_CACHE_DIR),--cache-dir $(ABLATE_CACHE_DIR),) \
+		$(if $(ABLATE_MAX_ID),--max-id $(ABLATE_MAX_ID),) \
 		$(if $(ABLATE_SAMPLES),--train-samples $(ABLATE_SAMPLES),) \
 		$(if $(ABLATE_TEST_SAMPLES),--max-test-samples $(ABLATE_TEST_SAMPLES),) \
 		$(if $(ABLATE_GROUPS),--groups $(ABLATE_GROUPS),) \
-		$(if $(ABLATE_OUTPUT),--output $(ABLATE_OUTPUT),)
+		$(if $(ABLATE_OUTPUT),--output $(ABLATE_OUTPUT),) \
+		2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-ablation$(EXP_TAG).log"
+
+ablation: ablate
 
 demo-db: venv
 	$(PYTHON) -m collimator demo-db --output $(DEMO_DB) --seed $(SEED)
@@ -411,7 +781,7 @@ scan: venv
 ifndef FILE
 	$(error FILE is required. Usage: make scan FILE=/path/to/binary)
 endif
-	$(PYTHON) -m collimator scan $(FILE) --model $(OUT_DIR)/model.json --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE) $(if $(DB),--db $(DB),)
+	$(PYTHON) -m collimator scan $(FILE) --model $(OUT_DIR)/$(MODEL_FILE) --spec $(OUT_DIR)/feature_spec.json --cleave $(CLEAVE) $(if $(DB),--db $(DB),)
 
 test: venv
 	$(VENV_DIR)/bin/pip install pytest
@@ -422,33 +792,63 @@ lint: venv
 	$(VENV_DIR)/bin/ruff check src/ tests/
 	$(VENV_DIR)/bin/mypy src/collimator/
 
-MODEL_VERSION ?= $(shell $(PYTHON) -c "from collimator.features import FeatureSpec; print(FeatureSpec().version)")
-MODELS_DIR ?= ../litmus-models/scan-v$(MODEL_VERSION)
+XDG_DATA_HOME ?= $(HOME)/.local/share
+# Model bundle directory. Azoth is the default model family; other explicit
+# MODEL values deploy to same-named sibling bundles unless BUNDLE is set.
+BUNDLE ?= $(if $(filter azoth,$(LEARNER)),azoth,$(MODEL))
+MODELS_DIR ?= $(XDG_DATA_HOME)/litmus/models/$(BUNDLE)
 XGBOOST_ARS_DIR ?= ../xgboost-ars
+LIGHTGBM_ARS_DIR ?= ../lightgbm-ars
 
 LITMUS_DIR ?= ../litmus
 
-deploy: verify-xgboost-ars verify-litmus
-	@# Stage to a temp dir first — only promote to MODELS_DIR after all
-	@# post-deploy checks pass. This prevents partial/broken deploys.
+# verify-xgboost-ars is only meaningful when shipping an XGBoost booster.
+# For azoth (LightGBM) models we skip it; lightgbm-ars's own parity
+# tests live in its repo and verify-litmus exercises the integrated path.
+_DEPLOY_PREREQS := verify-xgboost-ars verify-litmus
+
+ifeq ($(LEARNER),azoth)
+deploy: azoth-deploy
+else
+deploy: $(_DEPLOY_PREREQS)
+	@# Stage to a temp dir first — every staged file passes the
+	@# compatibility tests before we touch anything in MODELS_DIR.
 	$(eval _STAGE := $(shell mktemp -d))
-	cp $(OUT_DIR)/model.json $(_STAGE)/model.json
-	cp $(OUT_DIR)/model.onnx $(_STAGE)/model.onnx
+	cp $(OUT_DIR)/$(MODEL_FILE) $(_STAGE)/$(MODEL_FILE)
 	cp $(OUT_DIR)/feature_spec.json $(_STAGE)/feature_spec.json
-	cp $(OUT_DIR)/evaluation.json $(_STAGE)/evaluation.json
 	@test -f $(OUT_DIR)/extraction_fixture.json || { rm -rf $(_STAGE); echo "error: extraction_fixture.json not found"; exit 1; }
 	cp $(OUT_DIR)/extraction_fixture.json $(_STAGE)/extraction_fixture.json
+	@# Optional artifacts: explain.rs reads shap_importance.json if
+	@# present (and degrades silently otherwise); model.onnx is for
+	@# non-litmus downstream consumers and litmus itself never reads it.
+	@test ! -f $(OUT_DIR)/evaluation.json || cp $(OUT_DIR)/evaluation.json $(_STAGE)/evaluation.json
+	@test ! -f $(OUT_DIR)/shap_importance.json || cp $(OUT_DIR)/shap_importance.json $(_STAGE)/shap_importance.json
+	@test ! -f $(OUT_DIR)/model.onnx || cp $(OUT_DIR)/model.onnx $(_STAGE)/model.onnx
+	@test ! -f $(OUT_DIR)/README.md || cp $(OUT_DIR)/README.md $(_STAGE)/README.md
+	@test ! -f $(OUT_DIR)/MODEL.md || cp $(OUT_DIR)/MODEL.md $(_STAGE)/MODEL.md
 	@$(PYTHON) scripts/build_litmus_config.py --threshold-tuning $(OUT_DIR)/threshold_tuning.json --output $(_STAGE)/config.json || { rm -rf $(_STAGE); exit 1; }
 	@echo "Running litmus deployed-model compatibility checks against staged copy..."
 	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test feature_spec || { rm -rf $(_STAGE); exit 1; }
 	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test extraction_parity || { rm -rf $(_STAGE); exit 1; }
-	@# All checks passed — promote atomically.
+	@# Promote into MODELS_DIR without swapping the directory wholesale, so
+	@# `.git/` and unrelated repo files survive. Remove stale model-layout
+	@# artifacts first: litmus treats a leftover general/ directory as an
+	@# ensemble bundle and would ignore the freshly deployed single bundle.
 	@mkdir -p $(MODELS_DIR)
-	rm -rf $(MODELS_DIR).old 2>/dev/null; mv $(MODELS_DIR) $(MODELS_DIR).old 2>/dev/null || true
-	mv $(_STAGE) $(MODELS_DIR)
-	rm -rf $(MODELS_DIR).old 2>/dev/null || true
+	@rm -rf "$(MODELS_DIR)/general" "$(MODELS_DIR)/filegroups" "$(MODELS_DIR)/filetypes"
+	@rm -f "$(MODELS_DIR)/model.json" "$(MODELS_DIR)/model.txt" "$(MODELS_DIR)/feature_spec.json" \
+	  "$(MODELS_DIR)/evaluation.json" "$(MODELS_DIR)/extraction_fixture.json" "$(MODELS_DIR)/config.json" \
+	  "$(MODELS_DIR)/shap_importance.json" "$(MODELS_DIR)/model.onnx" "$(MODELS_DIR)/README.md" \
+	  "$(MODELS_DIR)/MODEL.md"
+	@for f in $(MODEL_FILE) feature_spec.json evaluation.json extraction_fixture.json config.json shap_importance.json model.onnx README.md MODEL.md; do \
+	  if [ -f "$(_STAGE)/$$f" ]; then \
+	    cp "$(_STAGE)/$$f" "$(MODELS_DIR)/$$f"; \
+	  fi; \
+	done
+	@rm -rf $(_STAGE)
 	@echo "litmus: all deploy checks passed"
-	@echo "Deployed to $(MODELS_DIR)"
+	@echo "Deployed to $(MODELS_DIR) (commit and push manually if you want to publish)."
+endif
 
 .PHONY: verify-xgboost-ars
 verify-xgboost-ars:
@@ -462,6 +862,7 @@ verify-xgboost-ars:
 verify-litmus:
 	@test -d $(LITMUS_DIR) || { echo "error: $(LITMUS_DIR) does not exist"; exit 1; }
 	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make train first"; exit 1; }
+	@test ! -f $(OUT_DIR)/threshold_tuning.json || $(PYTHON) scripts/build_litmus_config.py --threshold-tuning $(OUT_DIR)/threshold_tuning.json --output $(OUT_DIR)/config.json
 	@echo "Running litmus feature-extraction parity tests..."
 	@mkdir -p $(LITMUS_DIR)/tests/fixtures
 	cp $(OUT_DIR)/extraction_fixture.json $(LITMUS_DIR)/tests/fixtures/extraction_fixture.json
@@ -486,6 +887,9 @@ help:
 	@echo "  traits             Dump all unique traits seen in DB"
 	@echo "  thresholds         Tune severity thresholds on the full corpus"
 	@echo "  thresholds-refresh Rebuild cached threshold scores, then tune thresholds"
+	@echo "  azoth-diagnostics  Report routed ensemble marginal value by model route"
+	@echo "  azoth-policies     Search best calibrated route policy per filetype"
+	@echo "  elf-route-optimization Test ELF route OR/replacement/acquittal experiments"
 	@echo "  false-positives    Show false positives grouped by severity level"
 	@echo "  false-negatives    Show false negatives grouped by severity level"
 	@echo "  near-false-positives Show benign rows newly flagged by twice-looser level 9"
@@ -502,10 +906,14 @@ help:
 	@echo ""
 	@echo "Options:"
 	@echo "  DB=url             Hopper database DSN"
-	@echo "  OUT_DIR=path       Output directory (default: out)"
+	@echo "  MODEL=name         Model artifact namespace (default: litmus-xg; e.g. azoth)"
+	@echo "  LEARNER=name       Learner implementation (default: inferred from MODEL)"
+	@echo "  DROP_FEATURE_PREFIXES=a,b  Drop feature prefixes for train/experiment candidates"
+	@echo "  OUT_DIR=path       Output directory (default: out/models/<target-model>)"
+	@echo "  DEVICE=name        Training device override (e.g. cuda for azoth)"
 	@echo "  WORKERS=n          Parallel extraction workers (default: auto = physical cores)"
 	@echo "  EXP_TRAIN_SAMPLES=n   Experiment train rows (default: 120000)"
 	@echo "  EXP_MAX_TEST_SAMPLES=n  Cap test set via reservoir (0=full, default: 30000)"
 	@echo "  EXP_FOLDS=n           Experiment CV folds (default: 2)"
 	@echo "  EXP_ESTIMATORS=n      Experiment max trees (default: 1000)"
-	@echo "  MODELS_DIR=path    Deployment target (default: ../litmus-models/scan-v<version>)"
+	@echo "  MODELS_DIR=path    Deployment target (default: ../litmus-models/<target-model>)"
