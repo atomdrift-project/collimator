@@ -138,6 +138,23 @@ def _crit_category_tokens(sample_paths: dict[str, int]) -> list[str]:
             path_max_crit[key] = max_ord
     return sorted(f"{_CRIT_PREFIX.get(crit, 'n')}:{key}" for key, crit in path_max_crit.items())
 
+
+def _tiered_bigram_tokens(
+    sample_paths: dict[str, int],
+    *,
+    depth: int,
+    min_crit: int,
+) -> list[str]:
+    """Generate severity-prefixed report-level path tokens for tiered bigrams."""
+    token_max_crit: dict[str, int] = {}
+    for path, max_ord in sample_paths.items():
+        if max_ord < min_crit:
+            continue
+        key = _truncate_path(path, depth)
+        if max_ord > token_max_crit.get(key, 0):
+            token_max_crit[key] = max_ord
+    return sorted(f"{_CRIT_PREFIX.get(crit, 'n')}:{path}" for path, crit in token_max_crit.items())
+
 LOGIC_GAPS = {
     # Behavior Category -> (List of imports that imply it, List of trait paths that represent it)
     "network": (
@@ -174,7 +191,7 @@ EXPECTED_GHOSTS = {
     ],
 }
 
-FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "format", "struct", "elements", "formula", "score", "bigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space")
+FEATURE_GROUPS = ("present", "maxcrit", "agg", "ext", "metrics", "filetype", "format", "struct", "elements", "formula", "score", "bigrams", "tiered_bigrams", "ghosts", "skeletons", "rares", "trigrams", "logic_gaps", "signature_synergy", "clusters", "intent_gaps", "neg_space")
 
 FORMAT_GROUPS: dict[str, frozenset[str]] = {
     "script": frozenset({
@@ -263,6 +280,15 @@ class FeatureConfig:
     # Builds bigram/trigram vocabs from T-codes and MBC B-codes
     # discovered in training data.
     include_attack_code_ngrams: bool
+    # Report-level severity-prefixed trait bigrams from notable+ paths.
+    # This is intentionally separate from generic per-file bigrams so it can
+    # be ablated independently. Default production setting is depth=3,
+    # min_crit=3, matching the scripts-pool sweep winner.
+    include_tiered_crit_bigrams: bool
+    tiered_bigram_path_depth: int
+    tiered_bigram_min_crit: int
+    tiered_bigram_max: int
+    tiered_bigram_min_freq: int
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
     exp_confidence_skew: bool        # 3: finding confidence distribution skew
@@ -399,6 +425,13 @@ def feature_config_from_env() -> FeatureConfig:
         include_attack_code_ngrams=os.getenv("COLLIMATOR_ATTACK_CODE_NGRAMS") in {
             "1", "true", "yes", "on",
         },
+        include_tiered_crit_bigrams=os.getenv("COLLIMATOR_TIERED_CRIT_BIGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        tiered_bigram_path_depth=int(os.getenv("COLLIMATOR_TIERED_BIGRAM_PATH_DEPTH", "3")),
+        tiered_bigram_min_crit=int(os.getenv("COLLIMATOR_TIERED_BIGRAM_MIN_CRIT", "3")),
+        tiered_bigram_max=int(os.getenv("COLLIMATOR_TIERED_BIGRAM_MAX", "5000")),
+        tiered_bigram_min_freq=int(os.getenv("COLLIMATOR_TIERED_BIGRAM_MIN_FREQ", "5")),
         bigram_max=int(os.getenv("COLLIMATOR_BIGRAM_MAX", "5000")),
         bigram_min_freq=int(os.getenv("COLLIMATOR_BIGRAM_MIN_FREQ", "1000")),
         trigram_max=int(os.getenv("COLLIMATOR_TRIGRAM_MAX", "500")),
@@ -486,6 +519,7 @@ class FeatureSpec:
     attack_trigram_vocab: list[str] = field(default_factory=list)
     mbc_bigram_vocab: list[str] = field(default_factory=list)
     mbc_trigram_vocab: list[str] = field(default_factory=list)
+    tiered_bigram_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
     total_features: int = 0
     feature_means: list[float] | None = None
@@ -515,6 +549,7 @@ class FeatureSpec:
             "attack_trigram_vocab": self.attack_trigram_vocab,
             "mbc_bigram_vocab": self.mbc_bigram_vocab,
             "mbc_trigram_vocab": self.mbc_trigram_vocab,
+            "tiered_bigram_vocab": self.tiered_bigram_vocab,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -558,6 +593,7 @@ class FeatureSpec:
             attack_trigram_vocab=data.get("attack_trigram_vocab", []),
             mbc_bigram_vocab=data.get("mbc_bigram_vocab", []),
             mbc_trigram_vocab=data.get("mbc_trigram_vocab", []),
+            tiered_bigram_vocab=data.get("tiered_bigram_vocab", []),
             feature_names=data["feature_names"],
             total_features=data["total_features"],
             feature_means=data.get("feature_means"),
@@ -605,6 +641,7 @@ def _build_feature_names(
     attack_trigram_vocab: list[str] | None = None,
     mbc_bigram_vocab: list[str] | None = None,
     mbc_trigram_vocab: list[str] | None = None,
+    tiered_bigram_vocab: list[str] | None = None,
 ) -> list[str]:
     """Generate the full ordered list of feature names for a given vocabulary."""
     config = feature_config_from_env()
@@ -889,6 +926,11 @@ def _build_feature_names(
         for bigram in bigram_vocab:
             feature_names.append(f"bigrams:{bigram}")
 
+    # Group 11b: Report-level severity-prefixed trait bigrams.
+    if "tiered_bigrams" in config.enabled_groups and config.include_tiered_crit_bigrams:
+        for bigram in (tiered_bigram_vocab or []):
+            feature_names.append(f"tierbi:{bigram}")
+
     # Group 12: Ghosts (absence of expected benign behavior).
     if "ghosts" in config.enabled_groups:
         for ghost in ghost_vocab:
@@ -1073,7 +1115,8 @@ class _ExtractContext:
 
     __slots__ = (
         "presence_lookup", "maxcrit_lookup", "ft_lookup", "n_ft",
-        "element_lookup", "element_interaction_lookup", "n_el", "bigram_lookup", "n_bi",
+        "element_lookup", "element_interaction_lookup", "n_el",
+        "bigram_lookup", "n_bi", "tiered_bigram_lookup", "n_tier_bi",
         "ghost_vocab", "ghost_lookup", "n_gh",
         "skeleton_lookup", "skeleton_interaction_lookup", "n_sk",
         "rare_element_lookup", "n_re",
@@ -1121,6 +1164,7 @@ class _ExtractContext:
                 self.score_interaction_lookup[ft] = idx
 
         self.bigram_lookup: dict[str, int] = {}
+        self.tiered_bigram_lookup: dict[str, int] = {}
         self.synergy_lookup: dict[str, int] = {}
         for bi in spec.bigram_vocab:
             if (idx := name_to_idx.get(f"bigrams:{bi}")) is not None:
@@ -1128,6 +1172,10 @@ class _ExtractContext:
             if (idx := name_to_idx.get(f"unsigned_bigram:{bi}")) is not None:
                 self.synergy_lookup[bi] = idx
         self.n_bi = len(spec.bigram_vocab)
+        for bi in spec.tiered_bigram_vocab:
+            if (idx := name_to_idx.get(f"tierbi:{bi}")) is not None:
+                self.tiered_bigram_lookup[bi] = idx
+        self.n_tier_bi = len(spec.tiered_bigram_vocab)
 
         self.ghost_vocab = spec.ghost_vocab
         self.ghost_lookup: dict[str, int] = {}
@@ -2479,6 +2527,26 @@ def _apply_bigram_features(
                     _assign(vec, ctx.bigram_lookup.get(bigram), 1.0)
 
 
+def _apply_tiered_bigram_features(
+    summary: "_FindingSummary",
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Report-level severity-prefixed notable+ trait bigrams."""
+    config = feature_config_from_env()
+    tokens = _tiered_bigram_tokens(
+        summary.sample_paths,
+        depth=config.tiered_bigram_path_depth,
+        min_crit=config.tiered_bigram_min_crit,
+    )
+    if len(tokens) > 512:
+        log.warning("too many tiered bigram tokens (%d); skipping sample", len(tokens))
+        return
+    for i, t1 in enumerate(tokens):
+        for t2 in tokens[i + 1:]:
+            _assign(vec, ctx.tiered_bigram_lookup.get(f"{t1} + {t2}"), 1.0)
+
+
 def _apply_ghost_features(
     sample_paths: dict[str, int],
     ctx: _ExtractContext,
@@ -2722,6 +2790,12 @@ def _extract_into(
 
     if "bigrams" in config.enabled_groups:
         _apply_bigram_features(report, ctx, vec, summary=summary)
+
+    if (
+        "tiered_bigrams" in config.enabled_groups
+        and config.include_tiered_crit_bigrams
+    ):
+        _apply_tiered_bigram_features(summary, ctx, vec)
 
     if "ghosts" in config.enabled_groups:
         _apply_ghost_features(summary.sample_paths, ctx, vec)
@@ -3533,7 +3607,7 @@ def _enumerate_partitioned_batches(
 
 def _vocab_labeled_db_batch_worker(
     args: tuple[Path | str, list[tuple[int, int]]],
-) -> tuple[dict[str, int], list[str], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
+) -> tuple[dict[str, int], list[str], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
     """Fetch and count paths for a batch of IDs with labels."""
     from . import data  # noqa: PLC0415
 
@@ -3552,6 +3626,7 @@ def _vocab_labeled_db_batch_worker(
     malware_elements: dict[str, int] = {}
     trigram_counts: dict[str, int] = {}
     benign_trigrams: dict[str, int] = {}
+    tiered_bigram_counts: dict[str, int] = {}
 
     benign_ids = {rid for rid, label in ids_labels if label == 0}
 
@@ -3623,10 +3698,25 @@ def _vocab_labeled_db_batch_worker(
                 else:
                     malware_presence[path] = malware_presence.get(path, 0) + 1
 
+        config = feature_config_from_env()
+        if config.include_tiered_crit_bigrams:
+            tokens = _tiered_bigram_tokens(
+                sample_paths,
+                depth=config.tiered_bigram_path_depth,
+                min_crit=config.tiered_bigram_min_crit,
+            )
+            if len(tokens) <= 512:
+                for i, t1 in enumerate(tokens):
+                    for t2 in tokens[i + 1:]:
+                        if len(tiered_bigram_counts) < 100000:
+                            bigram = f"{t1} + {t2}"
+                            tiered_bigram_counts[bigram] = tiered_bigram_counts.get(bigram, 0) + 1
+
     return (
         presence_counts, filetypes, element_counts, bigram_counts,
         benign_presence, malware_presence, skeleton_counts,
-        benign_elements, malware_elements, trigram_counts, benign_trigrams
+        benign_elements, malware_elements, trigram_counts, benign_trigrams,
+        tiered_bigram_counts,
     )
 
 
@@ -3666,6 +3756,7 @@ def build_vocab_from_db(
         m_els: dict[str, int],
         tri_counts: dict[str, int],
         b_tris: dict[str, int],
+        tier_bi_counts: dict[str, int],
     ) -> None:
         for k, v in counts.items():
             presence_counts[k] = presence_counts.get(k, 0) + v
@@ -3688,6 +3779,8 @@ def build_vocab_from_db(
             trigram_counts[k] = trigram_counts.get(k, 0) + v
         for k, v in b_tris.items():
             benign_trigrams[k] = benign_trigrams.get(k, 0) + v
+        for k, v in tier_bi_counts.items():
+            tiered_bigram_counts[k] = tiered_bigram_counts.get(k, 0) + v
 
     batch_args = ((db_path, batch) for batch in _batched(row_ids_labels, batch_size))
 
@@ -3722,6 +3815,13 @@ def build_vocab_from_db(
         reverse=True,
     )[:config.trigram_max]
     trigram_vocab = sorted(k for k, c in malware_only_trigrams)
+    tiered_bigram_vocab: list[str] = []
+    if config.include_tiered_crit_bigrams:
+        tiered_bigram_vocab = sorted(
+            k for k, c in sorted(tiered_bigram_counts.items(), key=lambda x: -x[1])[:config.tiered_bigram_max]
+            if c >= config.tiered_bigram_min_freq
+        )
+        log.info("tiered crit bigrams: %d vocab entries", len(tiered_bigram_vocab))
 
     # Rare Elements: highly specific to malware (e.g. 0% benign, >= 5 malware samples).
     rare_element_vocab = sorted([
@@ -3925,6 +4025,7 @@ def build_vocab_from_db(
         ghost_vocab, skeleton_vocab, rare_element_vocab, trigram_vocab,
         metric_vocab, crit_unigram_vocab, crit_bigram_vocab, crit_trigram_vocab,
         attack_bigram_vocab, attack_trigram_vocab, mbc_bigram_vocab, mbc_trigram_vocab,
+        tiered_bigram_vocab,
     )
 
     spec = FeatureSpec(
@@ -3944,6 +4045,7 @@ def build_vocab_from_db(
         attack_trigram_vocab=attack_trigram_vocab,
         mbc_bigram_vocab=mbc_bigram_vocab,
         mbc_trigram_vocab=mbc_trigram_vocab,
+        tiered_bigram_vocab=tiered_bigram_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
     )
