@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import logging
 import math
+import os
 import shutil
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -394,6 +396,60 @@ def _parse_mask_specs(values: list[str]) -> dict[str, Path]:
     return out
 
 
+def _parse_feature_envs(values: list[str]) -> dict[str, dict[str, str]]:
+    out: dict[str, dict[str, str]] = {}
+    for value in values:
+        try:
+            route, assignment = value.split(":", 1)
+            key, raw = assignment.split("=", 1)
+        except ValueError as exc:
+            raise ValueError(
+                f"invalid --feature-env {value!r}; expected name:ENV_VAR=value",
+            ) from exc
+        route = route.strip()
+        key = key.strip()
+        if not route or not key:
+            raise ValueError(f"invalid --feature-env {value!r}; route and ENV_VAR are required")
+        out.setdefault(route, {})[key] = raw
+    return out
+
+
+def _parse_hard_negative_routes(values: list[str]) -> dict[str, tuple[float, float]]:
+    out: dict[str, tuple[float, float]] = {}
+    for value in values:
+        if "=" not in value:
+            raise ValueError(f"invalid --hard-negative-route {value!r}; expected name=fraction,weight")
+        name, raw = value.split("=", 1)
+        parts = [part.strip() for part in raw.split(",")]
+        if len(parts) != 2:
+            raise ValueError(f"invalid --hard-negative-route {value!r}; expected name=fraction,weight")
+        fraction = float(parts[0])
+        weight = float(parts[1])
+        if fraction < 0.0 or weight < 1.0:
+            raise ValueError(f"invalid --hard-negative-route {value!r}; fraction >= 0 and weight >= 1 required")
+        out[name.strip()] = (fraction, weight)
+    return out
+
+
+@contextlib.contextmanager
+def _temporary_feature_env(overrides: dict[str, str]):
+    if not overrides:
+        yield
+        return
+    previous = {key: os.environ.get(key) for key in overrides}
+    try:
+        os.environ.update(overrides)
+        features.feature_config_from_env.cache_clear()
+        yield
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+        features.feature_config_from_env.cache_clear()
+
+
 def _allowed_mask_from_spec(
     general_spec: features.FeatureSpec,
     mask_spec_path: Path | None,
@@ -436,6 +492,7 @@ def _train_one(
     general_spec_path: Path,
     general_spec: features.FeatureSpec,
     mask_spec_path: Path | None,
+    feature_env: dict[str, str],
     config: train.TrainConfig,
     workers: int,
     max_id: int,
@@ -453,26 +510,38 @@ def _train_one(
     if not train_ids_labels or not benchmark_ids_labels:
         raise ValueError(f"{name}: no train or benchmark rows")
 
-    LOG.info(
-        "%s: extracting train and benchmark features with general spec (%d features)",
-        name,
-        general_spec.total_features,
-    )
-    x_train, y_train, x_bench, y_bench = features.extract_partitioned_from_db(
-        db_path,
-        train_ids_labels,
-        benchmark_ids_labels,
-        general_spec,
-        n_workers=workers,
-    )
-    allowed_mask, mask_metadata = _allowed_mask_from_spec(general_spec, mask_spec_path)
+    spec = general_spec
+    spec_path = general_spec_path
+    feature_spec_policy = "general_shared"
+    feature_env_metadata: dict[str, Any] | None = None
+    with _temporary_feature_env(feature_env):
+        if feature_env:
+            LOG.info("%s: building route-specific feature spec with %d env overrides", name, len(feature_env))
+            spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=workers)
+            spec_path = output_dir / "feature_spec.json"
+            feature_spec_policy = "route_specific"
+            feature_env_metadata = dict(sorted(feature_env.items()))
+        LOG.info(
+            "%s: extracting train and benchmark features with %s spec (%d features)",
+            name,
+            feature_spec_policy,
+            spec.total_features,
+        )
+        x_train, y_train, x_bench, y_bench = features.extract_partitioned_from_db(
+            db_path,
+            train_ids_labels,
+            benchmark_ids_labels,
+            spec,
+            n_workers=workers,
+        )
+    allowed_mask, mask_metadata = _allowed_mask_from_spec(spec, mask_spec_path)
     if mask_metadata is not None:
         LOG.info(
             "%s: applying feature mask from %s (%d/%d general features, %d missing)",
             name,
             mask_spec_path,
             mask_metadata["allowed_features"],
-            general_spec.total_features,
+            spec.total_features,
             mask_metadata["missing_features"],
         )
         x_train = _mask_sparse_columns(x_train, allowed_mask)
@@ -482,11 +551,14 @@ def _train_one(
         x_train,
         y_train,
         config,
-        feature_names=general_spec.feature_names,
+        feature_names=spec.feature_names,
         sample_file_types=_file_types(train_rows, test=False),
     )
     output_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(general_spec_path, output_dir / "feature_spec.json")
+    if feature_env:
+        spec.save(output_dir / "feature_spec.json")
+    else:
+        shutil.copy2(spec_path, output_dir / "feature_spec.json")
     export.save_model(result.model, output_dir / "model.txt")
     probs = model.predict_proba(result.model, x_bench)
     payload = {
@@ -502,11 +574,12 @@ def _train_one(
         "benchmark_rows": int(len(y_bench)),
         "benchmark_malware": int(np.sum(y_bench == 1)),
         "benchmark_benign": int(np.sum(y_bench == 0)),
-        "n_features": int(general_spec.total_features),
+        "n_features": int(spec.total_features),
         "feature_spec_policy": (
-            "general_shared_masked" if mask_metadata is not None else "general_shared"
+            f"{feature_spec_policy}_masked" if mask_metadata is not None else feature_spec_policy
         ),
         "feature_mask": mask_metadata,
+        "feature_env": feature_env_metadata,
         "train_metrics": result.metrics,
         "metrics": _classification_metrics(y_bench, probs),
         "levels": _level_table(y_bench, probs),
@@ -606,13 +679,32 @@ def main() -> int:
     parser.add_argument("--early-stopping-rounds", type=int, default=50)
     parser.add_argument("--num-leaves", type=int, default=96)
     parser.add_argument("--min-child-samples", type=int, default=100)
+    parser.add_argument("--hard-negative-fraction", type=float, default=0.0)
+    parser.add_argument("--hard-negative-weight", type=float, default=1.0)
+    parser.add_argument(
+        "--hard-negative-route",
+        action="append",
+        default=[],
+        help="Per-route hard-negative override, format name=fraction,weight; repeatable",
+    )
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--min-bad", type=int, default=50)
     parser.add_argument("--min-good", type=int, default=50)
     parser.add_argument("--only", action="append", default=[])
     parser.add_argument("--mask-spec", action="append", default=[])
+    parser.add_argument(
+        "--feature-env",
+        action="append",
+        default=[],
+        help="Route-specific feature env override, format name:ENV_VAR=value; repeatable",
+    )
     parser.add_argument("--skip-existing", action="store_true")
-    parser.add_argument("--no-filegroup-score-filter", action="store_true")
+    parser.add_argument(
+        "--filegroup-score-filter",
+        action="store_true",
+        help="Train filegroup specialists on score-filtered rows instead of the full labeled route corpus.",
+    )
+    parser.add_argument("--no-filegroup-score-filter", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()
 
@@ -625,6 +717,8 @@ def main() -> int:
     general_spec_path = args.general_dir / "feature_spec.json"
     general_spec = features.FeatureSpec.load(general_spec_path)
     mask_specs = _parse_mask_specs(args.mask_spec)
+    feature_envs = _parse_feature_envs(args.feature_env)
+    hard_negative_routes = _parse_hard_negative_routes(args.hard_negative_route)
 
     config = train.TrainConfig(
         learner="azoth",
@@ -637,6 +731,8 @@ def main() -> int:
         early_stopping_rounds=args.early_stopping_rounds,
         num_leaves=args.num_leaves,
         min_child_samples=args.min_child_samples,
+        hard_negative_fraction=args.hard_negative_fraction,
+        hard_negative_weight=args.hard_negative_weight,
         beta=1.25,
     )
     args.output_root.mkdir(parents=True, exist_ok=True)
@@ -654,6 +750,21 @@ def main() -> int:
                 results.append(json.load(f))
             continue
         try:
+            route_config = config
+            hard_negative_override = hard_negative_routes.get(str(target["name"]))
+            if hard_negative_override is not None:
+                fraction, weight = hard_negative_override
+                LOG.info(
+                    "%s: using route hard-negative override fraction=%.4f weight=%.2f",
+                    target["name"],
+                    fraction,
+                    weight,
+                )
+                route_config = replace(
+                    config,
+                    hard_negative_fraction=fraction,
+                    hard_negative_weight=weight,
+                )
             results.append(
                 _train_one(
                     db_path=args.db,
@@ -664,10 +775,13 @@ def main() -> int:
                     general_spec_path=general_spec_path,
                     general_spec=general_spec,
                     mask_spec_path=mask_specs.get(str(target["name"])),
-                    config=config,
+                    feature_env=feature_envs.get(str(target["name"]), {}),
+                    config=route_config,
                     workers=args.workers,
                     max_id=args.max_id,
-                    filegroup_score_filter=not args.no_filegroup_score_filter,
+                    filegroup_score_filter=(
+                        args.filegroup_score_filter and not args.no_filegroup_score_filter
+                    ),
                 ),
             )
         except Exception:

@@ -907,13 +907,17 @@ def cmd_fixture(args: argparse.Namespace) -> None:
     if tuning_path.exists():
         with open(tuning_path) as f:
             tuning = json.load(f)
-        level5 = next(
-            (row for row in tuning.get("severity_levels", []) if row.get("level") == 5),
+        default_level = next(
+            (
+                row
+                for row in tuning.get("severity_levels", [])
+                if row.get("level") == thresholds.DEFAULT_SEVERITY_LEVEL
+            ),
             None,
         )
-        if isinstance(level5, dict):
-            suspicious = level5.get("suspicious") or {}
-            hostile = level5.get("hostile") or {}
+        if isinstance(default_level, dict):
+            suspicious = default_level.get("suspicious") or {}
+            hostile = default_level.get("hostile") or {}
             if suspicious.get("threshold") is not None and hostile.get("threshold") is not None:
                 recommended = {
                     "suspicious": float(suspicious["threshold"]),
@@ -1188,10 +1192,24 @@ def main() -> None:
     )
     p_exp.add_argument("--cache-dir", default=None, help="Directory for experiment data caches (corpus + matrices)")
     p_exp.add_argument(
+        "--refresh-cache-snapshot",
+        action="store_true",
+        help="Refresh the cached experiment max-id snapshot used for cache keys",
+    )
+    p_exp.add_argument("--experiment-idea", default="adhoc", help="Human-readable idea name for grouping related experiments")
+    p_exp.add_argument("--route", default="general", help="Experiment route, e.g. general, filegroups/scripts, filetypes/pe")
+    p_exp.add_argument("--rerun-existing", action="store_true", help="Run even if the canonical experiment key already exists")
+    p_exp.add_argument(
         "--train-samples", type=int, default=10_000,
         help="Approximate sampled training rows (default: 10000)",
     )
     p_exp.add_argument("--n-folds", type=int, default=2, help="CV folds for the experiment")
+    p_exp.add_argument(
+        "--holdout-fraction",
+        type=float,
+        default=0.0,
+        help="Training holdout fraction for fast non-CV experiments",
+    )
     p_exp.add_argument("--device", default=None, help="Training device override (cpu, cuda, or gpu)")
     p_exp.add_argument("--n-estimators", type=int, default=220, help="Max trees for the experiment")
     p_exp.add_argument("--max-depth", type=int, default=6, help="Tree depth for the experiment")
@@ -1453,6 +1471,7 @@ def main() -> None:
             train_samples=args.train_samples,
             max_test_samples=args.max_test_samples,
             n_folds=args.n_folds,
+            holdout_fraction=args.holdout_fraction,
             device=args.device,
             n_estimators=args.n_estimators,
             max_depth=args.max_depth,
@@ -1479,6 +1498,10 @@ def main() -> None:
             drop_feature_prefixes=_parse_csv_list(args.drop_feature_prefixes),
             monotone_constraints=json.loads(args.monotone_json) if args.monotone_json else None,
             min_malware_training_score=args.min_malware_score,
+            refresh_cache_snapshot=args.refresh_cache_snapshot,
+            experiment_idea=args.experiment_idea,
+            route=args.route,
+            rerun_existing=args.rerun_existing,
         )
     elif args.command == "ablate":
         rows = ablation.run_ablation(

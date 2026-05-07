@@ -486,6 +486,7 @@ def stream_partitioned_metadata_grouped(
     db_path: Path | str,
     limit: int = 0,
     max_id: int = 0,
+    file_types: tuple[str, ...] | None = None,
 ) -> Iterator[tuple[int, int, bool, str, int]]:
     """Yield (row_id, label, is_test, canonical_sha256, score) without loading raw JSON.
 
@@ -494,13 +495,28 @@ def stream_partitioned_metadata_grouped(
     concurrent inserts don't cause drift.
     """
     query = _METADATA_QUERY
+    params: list[Any] = []
+    filters: list[str] = []
     if max_id > 0:
-        # Inject id cap before ORDER BY. _METADATA_QUERY ends with ORDER BY id.
-        query = query.replace(" ORDER BY id", f" AND id <= {int(max_id)} ORDER BY id")
+        filters.append("id <= %s" if _is_pg(db_path) else "id <= ?")
+        params.append(int(max_id))
+    if file_types:
+        normalized = tuple(sorted({str(ft) for ft in file_types if str(ft)}))
+        if normalized:
+            if _is_pg(db_path):
+                filters.append("file_type = ANY(%s)")
+                params.append(list(normalized))
+            else:
+                placeholders = ",".join("?" for _ in normalized)
+                filters.append(f"file_type IN ({placeholders})")
+                params.extend(normalized)
+    if filters:
+        # Inject extra filters before ORDER BY. _METADATA_QUERY ends with ORDER BY id.
+        query = query.replace(" ORDER BY id", f" AND {' AND '.join(filters)} ORDER BY id")
     if limit > 0:
         query += f" LIMIT {limit}"
     with _connect(db_path, repeatable_read=True) as conn:
-        for row_id, sha256, label, canonical, score in _execute(conn, query):
+        for row_id, sha256, label, canonical, score in _execute(conn, query, params):
             split_key = canonical or sha256
             yield (
                 int(row_id),

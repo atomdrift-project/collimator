@@ -40,6 +40,25 @@ def _int(value: Any) -> str:
     return "-" if value is None else str(int(value))
 
 
+def _short_hash(value: Any) -> str:
+    if not value:
+        return "-"
+    return str(value)[:12]
+
+
+def _route_summary(config: dict[str, Any]) -> str:
+    counts = {"general": 0, "filegroup": 0, "filetype": 0}
+    for model in config.get("models", []):
+        kind = model.get("kind")
+        if kind in counts:
+            counts[kind] += 1
+    return (
+        f"{counts['general']} general, "
+        f"{counts['filegroup']} filegroup, "
+        f"{counts['filetype']} filetype"
+    )
+
+
 def _level_table(levels: list[dict[str, Any]]) -> str:
     lines = [
         "| L | H target/1M | H recall | H FP/1M | H threshold | "
@@ -116,18 +135,26 @@ def _global_policy_table(root: Path) -> str:
         return ""
     with open(path) as f:
         data = json.load(f)
+    total = data.get("rows") or 0
     lines = [
-        "| L | H recall | H FP/1M | S recall | S FP/1M |",
-        "| ---: | ---: | ---: | ---: | ---: |",
+        "| L | H target/1M | H accuracy | H recall | H FP/1M | S target/1M | S accuracy | S recall | S FP/1M |",
+        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
-    for level_no in (0, 5, 9):
+    for level_no in range(10):
         level = next(item for item in data["levels"] if int(item["level"]) == level_no)
         h = level["hostile"]
         s = level["suspicious"]
+        h_accuracy = None
+        s_accuracy = None
+        if total:
+            h_accuracy = ((h.get("tp") or 0) + (h.get("tn") or 0)) / total
+            s_accuracy = ((s.get("tp") or 0) + (s.get("tn") or 0)) / total
         lines.append(
             "| "
-            f"{level_no} | {_pct(h.get('recall'))} | {_num(h.get('fp_per_million'), 2)} | "
-            f"{_pct(s.get('recall'))} | {_num(s.get('fp_per_million'), 2)} |"
+            f"{level_no} | {_num(h.get('target_per_million'), 1)} | "
+            f"{_pct(h_accuracy)} | {_pct(h.get('recall'))} | {_num(h.get('fp_per_million'), 2)} | "
+            f"{_num(s.get('target_per_million'), 1)} | "
+            f"{_pct(s_accuracy)} | {_pct(s.get('recall'))} | {_num(s.get('fp_per_million'), 2)} |"
         )
     return "\n".join(lines)
 
@@ -158,6 +185,7 @@ def _feature_summary() -> str:
         "cleave trait taxonomy",
         "element tokens",
         "extended file metrics",
+        "format-group hints",
         "hopper score",
         "hostile density/escalation",
         "packaged capability mode=paths",
@@ -300,30 +328,51 @@ def _write_bundle(root: Path) -> None:
     with open(root / "config.json") as f:
         config = json.load(f)
     general_config = _general_train_config(root)
+    general_eval = _general_evaluation(root)
+    eval_metrics = general_eval.get("metrics") or {}
+    calibration = general_eval.get("calibration") or {}
+    search = config.get("search") or {}
     lines = [
-        "# Azoth Bundle",
+        "# Azoth Model Card",
         "",
-        "Routed ensemble of the general model plus eligible filegroup and filetype specialists.",
+        "Azoth is a routed malware detector for broad file scanning. It optimizes for very low false positives first, then maximizes recall within that budget.",
         "",
-        "- Inputs: one cleave report vectorized with the shared general feature spec.",
+        "## Model",
+        "",
+        "- Task: binary malware classification over cleave reports.",
+        "- Inputs: one cleave report per file; routes use the general or route-specific feature spec shipped with the bundle.",
         "- Feature families:",
         _feature_summary(),
-        f"- Base technique: {_model_algo(general_config)}",
-        "- Decision rule: route-level OR ensemble calibrated against the full score-cache corpus.",
-        "- Runtime route: score `az`, plus `az/<filegroup>` and `az/<filetype>` when calibrated.",
-        "- At level L, a file is flagged when any routed score crosses its stored threshold.",
-        "- Threshold search maximizes `TP(union)` subject to `FP(union) <= floor(benign * target_L / 1e6)`.",
-        "- A specialist is kept only when it adds marginal true positives without breaking that union FP cap.",
-        f"- Calibration snapshot: `{config.get('calibration_snapshot_id')}`.",
-        f"- Calibration rows: {_int(config.get('rows'))} "
-        f"({_int(config.get('malware'))} malware, {_int(config.get('benign'))} benign).",
-        f"- Models: {len(config.get('models', []))} routes.",
+        f"- Algorithm: {_model_algo(general_config)}",
+        f"- Ensemble: {_route_summary(config)} routes; runtime names are `az`, `az/<filegroup>`, and `az/<filetype>`.",
+        "- Decision: a file is flagged when any calibrated route crosses the stored threshold for the chosen level.",
+        "- Threshold search: maximize union true positives subject to `FP(union) <= floor(benign * target/1M / 1e6)`.",
         "",
-        "## Effective Global Policy",
+        "## Measurement",
+        "",
+        f"- Full corpus: {_int(config.get('rows'))} rows "
+        f"({_int(config.get('malware'))} malware, {_int(config.get('benign'))} benign).",
+        "- Caveat: the general model is trained/evaluated on harder hopper-score-filtered cases; public numbers below use the full corpus, including low-score rows.",
+        f"- Hard-pool holdout: accuracy={_pct(eval_metrics.get('accuracy'))}, F1={_num(eval_metrics.get('f1'), 4)}, "
+        f"AUC={_num(eval_metrics.get('roc_auc'), 4)}, AP={_num(eval_metrics.get('avg_precision'), 4)}.",
+        f"- Calibration quality on hard-pool holdout: Brier={_num(eval_metrics.get('brier'), 4)}, "
+        f"ECE={_num(calibration.get('ece'), 4)}.",
+        "- Default operating point: L3 hostile; suspicious is a higher-recall companion signal.",
+        "",
+        "## Full-Corpus Policy",
         "",
         _global_policy_table(root),
         "",
-        _level_table(config["levels"]),
+        "## Reproducibility",
+        "",
+        f"- Snapshot: `{config.get('calibration_snapshot_id')}`; score table `{_short_hash(config.get('score_table_hash'))}`; model set `{_short_hash(config.get('model_set_hash'))}`.",
+        f"- Search: `{search.get('method', '-')}`; objective `{search.get('objective', '-')}`.",
+        "",
+        "## Limits",
+        "",
+        "- Metrics reflect the labeled corpus and its filetype mix; shifts in either can change real-world results.",
+        "- The full-corpus recall includes low-score malware that looks weak before ML scoring. This lowers the published recall, but it is the number users should expect when scanning broad, mostly benign corpora.",
+        "- The hard-pool holdout shows how well the classifier separates harder cases; the full-corpus table shows the end-to-end tradeoff users care about: detection at a fixed false-positive budget.",
     ]
     _write(root / "MODEL.md", "\n".join(lines))
 

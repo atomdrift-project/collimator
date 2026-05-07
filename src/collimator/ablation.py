@@ -110,14 +110,22 @@ def run_ablation(
     """
     pinned_max_id = int(max_id) if max_id > 0 else data.snapshot_max_id(db_path)
     feature_cfg = features.feature_config_from_env()
+    feature_env = experiment._collimator_env()  # noqa: SLF001
     corpus_hash = (
         experiment._corpus_cache_key(  # noqa: SLF001
-            seed, train_samples, max_test_samples, min_malware_training_score, pinned_max_id,
+            seed,
+            train_samples,
+            max_test_samples,
+            min_malware_training_score,
+            pinned_max_id,
+            "general",
+            (),
+            0,
         )
         if cache_dir
         else ""
     )
-    matrix_hash = experiment._matrix_cache_key(corpus_hash, feature_cfg) if cache_dir else ""  # noqa: SLF001
+    matrix_hash = experiment._matrix_cache_key(corpus_hash, feature_cfg, feature_env) if cache_dir else ""  # noqa: SLF001
     cached_matrices = experiment._load_matrix_cache(cache_dir, matrix_hash) if cache_dir else None  # noqa: SLF001
     if cached_matrices is not None:
         spec, X_train, y_train, X_test, y_test, _train_file_types = cached_matrices

@@ -14,7 +14,12 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 
-from azoth_calibrate_ensemble import _budget, _candidate_thresholds, _hit_mask
+from azoth_calibrate_ensemble import (
+    _budget,
+    _count_masked_bits,
+    _prepare_calibration,
+    _union_bits,
+)
 from collimator import features, model
 
 
@@ -41,12 +46,14 @@ def _route_arrays(score_table: np.lib.npyio.NpzFile) -> dict[str, dict[str, Any]
     scores = score_table["scores"]
     out: dict[str, dict[str, Any]] = {}
     for idx, name in enumerate(names):
-        probs = scores[idx]
+        dense_probs = scores[idx].astype(np.float32, copy=False)
+        probs = dense_probs
         present = ~np.isnan(probs)
         out[name] = {
             "kind": kinds[idx],
             "indices": np.flatnonzero(present).astype(np.int64),
             "probs": probs[present].astype(np.float32),
+            "dense_probs": dense_probs,
         }
     return out
 
@@ -59,6 +66,12 @@ def _dense_route_probs(
     route = routes.get(route_name)
     if route is None:
         return None
+    dense_probs = route.get("dense_probs")
+    if dense_probs is not None:
+        out = dense_probs[global_indices].astype(np.float32, copy=False)
+        if np.all(np.isnan(out)):
+            return None
+        return out
     local_by_global = {int(idx): pos for pos, idx in enumerate(route["indices"])}
     out = np.full(len(global_indices), np.nan, dtype=np.float32)
     for pos, global_idx in enumerate(global_indices):
@@ -114,6 +127,50 @@ def _metrics(
     }
 
 
+def _metrics_from_bits(
+    labels: np.ndarray,
+    hit_bits: np.ndarray,
+    *,
+    target_per_million: float,
+    total_benign: int,
+    thresholds: dict[str, float],
+    policy: str,
+    primary: str | None,
+    allowed_routes: tuple[str, ...],
+) -> dict[str, Any]:
+    benign_bits = np.packbits(labels == 0)
+    malware_bits = np.packbits(labels == 1)
+    tp = _count_masked_bits(hit_bits, malware_bits)
+    fp = _count_masked_bits(hit_bits, benign_bits)
+    n_malware = int(np.sum(labels == 1))
+    n_benign = int(np.sum(labels == 0))
+    tn = n_benign - fp
+    fn = n_malware - tp
+    precision = tp / max(tp + fp, 1)
+    recall = tp / n_malware if n_malware else math.nan
+    fpr = fp / n_benign if n_benign else math.nan
+    f1 = 2 * precision * recall / max(precision + recall, 1e-12) if n_malware else math.nan
+    accuracy = (tp + tn) / max(tp + fp + tn + fn, 1)
+    return {
+        "policy": policy,
+        "primary": primary,
+        "allowed_routes": list(allowed_routes),
+        "target_per_million": float(target_per_million),
+        "thresholds": thresholds,
+        "tp": tp,
+        "fp": fp,
+        "tn": tn,
+        "fn": fn,
+        "recall": recall,
+        "precision": precision,
+        "f1": f1,
+        "accuracy": accuracy,
+        "fpr": fpr,
+        "fp_per_million": fp * 1_000_000.0 / n_benign if n_benign else math.nan,
+        "global_fp_per_million": fp * 1_000_000.0 / total_benign if total_benign else math.nan,
+    }
+
+
 def _calibrate_policy(
     labels: np.ndarray,
     route_probs: dict[str, np.ndarray],
@@ -123,6 +180,7 @@ def _calibrate_policy(
     allowed_routes: tuple[str, ...],
     target_per_million: float,
     total_benign: int,
+    prepared_cache: dict[tuple[tuple[str, ...], int], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     present_routes = tuple(
         route for route in allowed_routes if route in route_probs and not np.all(np.isnan(route_probs[route]))
@@ -141,84 +199,83 @@ def _calibrate_policy(
     if primary not in present_routes:
         primary = present_routes[0] if primary is not None else None
 
-    n_rows = len(labels)
     n_benign = int(np.sum(labels == 0))
     max_fp = _budget(n_benign, target_per_million)
-    route_indices: dict[str, np.ndarray] = {}
-    route_values: dict[str, np.ndarray] = {}
-    for route_name in present_routes:
-        valid = ~np.isnan(route_probs[route_name])
-        route_indices[route_name] = np.flatnonzero(valid).astype(np.int64)
-        route_values[route_name] = route_probs[route_name][valid].astype(np.float32)
-    candidates = {
-        route_name: _candidate_thresholds(
-            labels,
-            route_indices[route_name],
-            route_values[route_name],
-            max_fp=max_fp,
-        )
-        for route_name in present_routes
-    }
+    cache_key = (present_routes, max_fp)
+    prepared = prepared_cache.get(cache_key) if prepared_cache is not None else None
+    if prepared is None:
+        route_scores = []
+        for route_name in present_routes:
+            valid = ~np.isnan(route_probs[route_name])
+            route_scores.append(
+                {
+                    "name": route_name,
+                    "indices": np.flatnonzero(valid).astype(np.int64),
+                    "probs": route_probs[route_name][valid].astype(np.float32),
+                },
+            )
+        prepared = _prepare_calibration(labels, route_scores, max_fp=max_fp)
+        if prepared_cache is not None:
+            prepared_cache[cache_key] = prepared
+    candidates = prepared["candidates"]
+    empty_bits = prepared["empty_bits"]
+    benign_bits = prepared["benign_bits"]
+    malware_bits = prepared["malware_bits"]
 
     selected: dict[str, float | None] = {route_name: None for route_name in present_routes}
-    selected_hits = {
-        route_name: np.zeros(n_rows, dtype=bool)
-        for route_name in present_routes
-    }
+    active: dict[str, dict[str, Any]] = {}
     if primary is not None:
         best_primary = max(candidates[primary], key=lambda item: int(item["tp"] or 0))
         if best_primary["threshold"] is not None:
             selected[primary] = float(best_primary["threshold"])
-            selected_hits[primary] = _hit_mask(
-                n_rows,
-                route_indices[primary],
-                route_values[primary],
-                selected[primary],
-            )
+            active[primary] = best_primary
 
-    hit_counts = np.zeros(n_rows, dtype=np.uint16)
-    for hit in selected_hits.values():
-        hit_counts += hit
-    benign = labels == 0
-    malware = labels == 1
-    current_fp = int(np.sum((hit_counts > 0) & benign))
-    current_tp = int(np.sum((hit_counts > 0) & malware))
+    current_bits = _union_bits(active, empty_bits=empty_bits)
+    current_fp = _count_masked_bits(current_bits, benign_bits)
+    current_tp = _count_masked_bits(current_bits, malware_bits)
     while True:
-        best: tuple[int, int, str, float | None, np.ndarray, np.ndarray] | None = None
+        best: tuple[int, int, str, float | None, dict[str, Any], np.ndarray, int, int] | None = None
         for route_name in present_routes:
-            old_hit = selected_hits[route_name]
             for candidate in candidates[route_name]:
                 threshold = candidate["threshold"]
-                new_hit = _hit_mask(
-                    n_rows,
-                    route_indices[route_name],
-                    route_values[route_name],
-                    None if threshold is None else float(threshold),
+                proposed_bits = _union_bits(
+                    active,
+                    empty_bits=empty_bits,
+                    replace_name=route_name,
+                    replacement=candidate,
                 )
-                proposed_counts = hit_counts - old_hit + new_hit
-                proposed_hit = proposed_counts > 0
-                fp = int(np.sum(proposed_hit & benign))
+                fp = _count_masked_bits(proposed_bits, benign_bits)
                 if fp > max_fp:
                     continue
-                tp = int(np.sum(proposed_hit & malware))
+                tp = _count_masked_bits(proposed_bits, malware_bits)
                 inc_tp = tp - current_tp
                 inc_fp = fp - current_fp
                 if inc_tp <= 0:
                     continue
-                key = (inc_tp, -max(inc_fp, 0), route_name, threshold, new_hit, proposed_counts)
+                key = (
+                    inc_tp,
+                    -max(inc_fp, 0),
+                    route_name,
+                    None if threshold is None else float(threshold),
+                    candidate,
+                    proposed_bits,
+                    tp,
+                    fp,
+                )
                 if best is None or key[:2] > best[:2]:
                     best = key
         if best is None:
             break
-        _inc_tp, _neg_inc_fp, route_name, threshold, new_hit, hit_counts = best
-        selected[route_name] = None if threshold is None else float(threshold)
-        selected_hits[route_name] = new_hit
-        current_fp = int(np.sum((hit_counts > 0) & benign))
-        current_tp = int(np.sum((hit_counts > 0) & malware))
+        _inc_tp, _neg_inc_fp, route_name, threshold, candidate, current_bits, current_tp, current_fp = best
+        selected[route_name] = threshold
+        if threshold is None:
+            active.pop(route_name, None)
+        else:
+            active[route_name] = candidate
 
-    return _metrics(
+    return _metrics_from_bits(
         labels,
-        hit_counts > 0,
+        current_bits,
         target_per_million=target_per_million,
         total_benign=total_benign,
         thresholds={k: v for k, v in selected.items() if v is not None},
@@ -453,7 +510,7 @@ def _parse_override(values: list[str]) -> dict[str, Path]:
     return out
 
 
-def _apply_filetype_overrides(
+def _apply_route_overrides(
     *,
     db_path: str | None,
     score_table: np.lib.npyio.NpzFile,
@@ -468,11 +525,18 @@ def _apply_filetype_overrides(
         raise SystemExit("--db is required when --override-route is used")
     labels = score_table["labels"].astype(np.int8)
     file_types = np.asarray([str(value) for value in score_table["file_types"]])
+    file_groups = np.asarray([str(value) for value in score_table["file_groups"]])
     for route_name, route_dir in overrides.items():
-        if not route_name.startswith("filetypes/"):
-            raise SystemExit(f"{route_name}: only filetype overrides are supported")
-        file_type = route_name.split("/", 1)[1]
-        indices = np.flatnonzero(file_types == file_type).astype(np.int64)
+        if route_name.startswith("filetypes/"):
+            kind = "filetype"
+            route_value = route_name.split("/", 1)[1]
+            indices = np.flatnonzero(file_types == route_value).astype(np.int64)
+        elif route_name.startswith("filegroups/"):
+            kind = "filegroup"
+            route_value = route_name.split("/", 1)[1]
+            indices = np.flatnonzero(file_groups == route_value).astype(np.int64)
+        else:
+            raise SystemExit(f"{route_name}: expected filetypes/<name> or filegroups/<name>")
         if len(indices) == 0:
             raise SystemExit(f"{route_name}: no rows in score table")
         row_ids = score_table["row_ids"][indices].astype(np.int64)
@@ -493,7 +557,7 @@ def _apply_filetype_overrides(
         )
         probs = model.predict_proba(clf, x_matrix).astype(np.float32)
         routes[route_name] = {
-            "kind": "filetype",
+            "kind": kind,
             "indices": indices,
             "probs": probs,
             "override_dir": str(route_dir),
@@ -520,7 +584,7 @@ def main() -> int:
     file_types = np.asarray([str(value) for value in score_table["file_types"]])
     filetype_to_group = {str(k): str(v) for k, v in config.get("filetype_to_group", {}).items()}
     routes = _route_arrays(score_table)
-    _apply_filetype_overrides(
+    _apply_route_overrides(
         db_path=args.db,
         score_table=score_table,
         routes=routes,
@@ -550,6 +614,7 @@ def main() -> int:
             for route_name in route_names
             if (dense := _dense_route_probs(routes, route_name, indices)) is not None
         }
+        prepared_cache: dict[tuple[tuple[str, ...], int], dict[str, Any]] = {}
         levels: list[dict[str, Any]] = []
         for target in config["levels"]:
             level_no = int(target["level"])
@@ -567,6 +632,7 @@ def main() -> int:
                             allowed_routes=allowed,
                             target_per_million=target_per_million,
                             total_benign=total_benign,
+                            prepared_cache=prepared_cache,
                         )
                         for policy, primary, allowed in _policy_candidates(
                             general="general",

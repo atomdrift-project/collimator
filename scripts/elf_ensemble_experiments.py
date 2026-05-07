@@ -562,6 +562,7 @@ def main() -> int:
     parser.add_argument("--general-spec", type=Path, required=True)
     parser.add_argument("--teacher-model", type=Path, required=True)
     parser.add_argument("--teacher-spec", type=Path, required=True)
+    parser.add_argument("--file-type", default="elf")
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -600,23 +601,25 @@ def main() -> int:
     general_probs = cache["probs"].astype(np.float32)
     max_id = int(cache["corpus_requested_max_id"]) or int(cache["corpus_max_row_id"])
     row_index = {int(row_id): idx for idx, row_id in enumerate(row_ids)}
-    elf_rows_all = _fetch_rows(args.db, file_types=("elf",), max_id=max_id, min_score=None)
+    route_types = tuple(part.strip() for part in str(args.file_type).split(",") if part.strip())
+    route_label = "+".join(route_types)
+    elf_rows_all = _fetch_rows(args.db, file_types=route_types, max_id=max_id, min_score=None)
     elf_rows = [
         (row_id, label)
         for row_id, label, _is_test, _ft in elf_rows_all
         if row_id in row_index
     ]
     elf_indices = np.asarray([row_index[row_id] for row_id, _label in elf_rows], dtype=np.int64)
-    LOG.info("ELF calibration rows: %d", len(elf_indices))
+    LOG.info("%s calibration rows: %d", route_label.upper(), len(elf_indices))
 
     train_rows_all = _fetch_rows(
         args.db,
-        file_types=("elf",),
+        file_types=route_types,
         max_id=max_id,
         min_score=data.MIN_SAMPLE_SCORE,
     )
     train_rows = _ids_labels(train_rows_all, test=False)
-    LOG.info("ELF train rows: %d", len(train_rows))
+    LOG.info("%s train rows: %d", route_label.upper(), len(train_rows))
 
     x_train, y_train = _matrix(args.db, train_rows, general_spec, args.workers)
     x_elf, y_elf = _matrix(args.db, elf_rows, general_spec, args.workers)
@@ -740,6 +743,8 @@ def main() -> int:
         "rows": int(len(labels)),
         "malware": int(np.sum(labels == 1)),
         "benign": int(np.sum(labels == 0)),
+        "file_type": route_label,
+        "route_rows": int(len(elf_indices)),
         "elf_rows": int(len(elf_indices)),
         "experiments": experiments,
     }
@@ -759,8 +764,8 @@ def main() -> int:
         if local:
             best_policy = max(local.items(), key=lambda item: (item[1]["recall"], -item[1]["fp"]))
             print(
-                f"{exp['name']} elf-local {best_policy[0]}: "
-                f"L5 hostile {best_policy[1]['recall']:.2%} @ {best_policy[1]['fp']} ELF FP "
+                f"{exp['name']} {route_label}-local {best_policy[0]}: "
+                f"L5 hostile {best_policy[1]['recall']:.2%} @ {best_policy[1]['fp']} {route_label} FP "
                 f"(F1 {best_policy[1]['f1']:.2%}, acc {best_policy[1]['accuracy']:.2%})",
             )
     return 0

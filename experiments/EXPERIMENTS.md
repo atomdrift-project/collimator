@@ -1020,3 +1020,298 @@ Large-scale verdict:
   precision, but too much recall loss for a net worse F1/Brier outcome.
 - For now, `hostile_escalation` remains the better default. `pe=2.0` is still useful as a
   precision-specialized branch if we later want a stricter hostile policy for specific alert tiers.
+
+---
+
+## 2026-05-05 Azoth Fast Experiment Calibration
+
+Goal: make `make experiment` useful again for azoth-era iteration, then size the default
+screening profile around a 9-10 minute uncached target.
+
+Implementation outcomes:
+- `make experiment` now writes to `out/experiments/azoth`, not the deployable
+  `out/models/azoth/general` directory.
+- Experiment matrices are cached under `out/cache/experiment/azoth`.
+- Cached experiments pin `snapshot_max_id` so constant Postgres ingestion does not invalidate
+  the cache between runs. Use `EXP_REFRESH_CACHE_SNAPSHOT=1` to intentionally refresh.
+- Default profile after timing:
+  - `EXP_TRAIN_SAMPLES=400000`
+  - `EXP_MAX_TEST_SAMPLES=100000`
+  - `EXP_FOLDS=0`
+  - `EXP_HOLDOUT_FRACTION=0.12`
+  - `EXP_ESTIMATORS=350`
+  - `EXP_MAX_DEPTH=12`
+  - `EXP_NUM_LEAVES=96`
+
+Sizing runs:
+
+| Profile | Rows | Features | Elapsed | External precision | External recall | External F1 | Verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| smoke cached | 40k / 10k | 13,264 | 23.8s | 0.9813 | 0.9888 | 0.9851 | useful for plumbing only |
+| uncached `180k/40k/220` | 180k / 40k | 26,168 | 5m01s | 0.9916 | 0.9887 | 0.9902 | too small for default |
+| uncached `300k/80k/300` | 300k / 80k | 30,203 | 7m33s | 0.9895 | 0.9926 | 0.9911 | close but still under target |
+
+Verdict: use `400k/100k/350` as the default azoth screening profile. It is large enough
+to give a stronger signal, while cached hyperparameter-only runs remain fast.
+
+---
+
+## 2026-05-05 Azoth Global Experiment Batch 1
+
+Goal: screen the first global knobs on the same cached snapshot before moving to filetype or
+filegroup specialists. Snapshot: `518146200`. Corpus: `400000` train rows and `95781`
+external test rows (`50000` malware, `45781` benign). Baseline artifact:
+`out/experiments/azoth/runs/2026-05-05T11-37-35-experiment.json`.
+
+| Variant | Artifact | Elapsed | Features | Precision | Recall | F1 | AUC | Outcome |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| baseline `400k/100k/350` | `2026-05-05T11-37-35-experiment.json` | 3m25s cached | 33,161 | 0.992261 | 0.992420 | 0.992341 | 0.999556 | reference |
+| hard negatives `0.01,12` | `2026-05-05T11-25-19-experiment.json` | 12m25s uncached + double train | 33,161 | 0.995743 | 0.987180 | 0.991443 | 0.999561 | reject globally; precision branch only |
+| hard negatives `0.02,8` | `2026-05-05T11-33-01-experiment.json` | 7m35s cached + double train | 33,161 | 0.996304 | 0.986700 | 0.991479 | 0.999584 | reject globally; strongest precision shift |
+| tiered crit trigrams | `2026-05-05T11-50-10-experiment.json` | 12m29s uncached | 38,161 | 0.992832 | 0.991700 | 0.992266 | 0.999533 | neutral/slightly worse globally |
+| no hostile weighted density | `2026-05-05T11-59-07-experiment.json` | 8m50s uncached | 33,159 | 0.991790 | 0.992940 | **0.992364** | 0.999547 | tiny F1/recall win; retest |
+| no hostile escalation | `2026-05-05T12-07-58-experiment.json` | 8m38s uncached | 33,156 | 0.993048 | 0.991320 | 0.992183 | 0.999548 | reject globally |
+
+Notes:
+- Hard-negative experiments train twice: one provisional model to identify hard benign
+  negatives, then the final weighted model. They should use a smaller profile when sweeping.
+- Hard negatives are not a global default win. They may still be useful for `filetypes/pe`,
+  `filetypes/macho`, or other high-FP specialist routes.
+- Tiered criticality trigrams are not a global win, but they remain plausible for
+  `filegroups/scripts`, `filetypes/javascript`, and `filetypes/python`.
+- Disabling hostile weighted density is the only global signal worth retesting. The gain is
+  tiny, so do not promote without confirmation.
+
+Planned next batch:
+1. `EXP_HOSTILE_WEIGHTED_DENSITY=0 EXP_HOSTILE_ESCALATION_FEATURES=0`
+2. `EXP_HOSTILE_WEIGHTED_DENSITY=0 EXP_TIERED_CRIT_TRIGRAMS=1`
+3. `EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_CRIT=4`
+4. `EXP_NGRAM_PATH_DEPTH=3`
+5. `EXP_NGRAM_PATH_DEPTH=4`
+6. `EXP_EMBER_LITE_FEATURES=1`
+7. `EXP_TAXONOMY_FEATURES=1`
+8. `EXP_FORMAT_HINTS=1`
+9. `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=16`
+10. `EXP_MIN_MALWARE_SCORE=3`
+
+---
+
+## 2026-05-05 Azoth Global Experiment Batch 2
+
+Goal: continue global feature screens on snapshot `518146200` using the `400k/100k/350`
+profile. Baseline remains `2026-05-05T11-37-35-experiment.json`:
+precision `0.992261`, recall `0.992420`, F1 `0.992341`, AUC `0.999556`.
+
+| Variant | Artifact | Elapsed | Features | Precision | Recall | F1 | AUC | Outcome |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| no hostile weighted density + no hostile escalation | `2026-05-05T12-28-05-experiment.json` | 8m52s | 33,154 | 0.991454 | **0.993100** | 0.992276 | 0.999543 | reject globally; recall gain but F1 below baseline and below no-HWD alone |
+| no hostile weighted density + tiered crit trigrams | `2026-05-05T12-40-26-experiment.json` | 11m46s | 38,159 | 0.991237 | **0.993160** | 0.992198 | 0.999550 | reject globally; recall gain costs too much precision |
+| tiered crit trigrams, suspicious+ only | `2026-05-05T12-56-47-experiment.json` | 9m55s | 38,161 | 0.991215 | 0.992940 | 0.992077 | 0.999534 | reject globally; filtering trigrams to suspicious+ did not recover precision |
+
+---
+
+## 2026-05-05 Azoth Scripted Global Tranche 1
+
+Goal: test the new content-addressed experiment workflow with a small scripted
+serial tranche. Runner: `scripts/run_azoth_global_tranche.sh`. Snapshot:
+`518146200`. Profile: `400k` train / `95,781` external test, `350` trees,
+`64` workers. Baseline remains `2026-05-05T11-37-35-experiment.json`:
+precision `0.992261`, recall `0.992420`, F1 `0.992341`, AUC `0.999556`,
+Brier `0.006397`.
+
+| Variant | Keyed artifact | Elapsed | Features | Precision | Recall | F1 | AUC | Brier | Outcome |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| n-gram path depth `3` | `2bf4f16175176527.json` | 8m02s | 33,161 | 0.992003 | 0.992380 | 0.992191 | 0.999552 | 0.006420 | reject globally; essentially baseline shape but slightly worse |
+| n-gram path depth `4` | `7a4a31e0e3f0ded6.json` | 8m32s | 33,161 | **0.993935** | 0.989760 | 0.991843 | 0.999543 | 0.006482 | reject globally; precision shift costs too much recall |
+| EMBER-lite features | `94300056def2694d.json` | 9m18s | 33,180 | 0.991489 | 0.992520 | 0.992004 | 0.999542 | 0.006459 | reject globally; 19 extra features did not help |
+| taxonomy features | `efbf5eb4116692e6.json` | 9m49s | 33,165 | 0.991336 | **0.993120** | 0.992227 | 0.999554 | 0.006418 | reject globally; recall gain is too small for precision loss |
+
+Workflow notes:
+- The script ran the four experiments serially without manual intervention.
+- Each run wrote a stable keyed artifact under `out/experiments/azoth/runs`.
+- No duplicate skip occurred because all four effective configs were new.
+- Rerunning the same script immediately skipped all four experiments by key and
+  printed the previous metrics, as intended.
+- Runtime landed in the intended 8-10 minute window for full-profile uncached
+  feature variants.
+
+Verdict:
+- Do not promote any of these globally.
+- Path-depth truncation is low priority for the general model.
+- EMBER-lite and taxonomy features may still be worth trying on targeted
+  specialists, but they are not global defaults.
+
+---
+
+## 2026-05-05 Azoth Scripted Global Tranche 2
+
+Goal: test five next global ideas from the dedupe-reviewed backlog. Runner:
+`scripts/run_azoth_global_tranche.sh`. Snapshot: `518146200`. Profile: `400k`
+train / `95,781` external test, `350` trees, `64` workers. Baseline:
+`2026-05-05T11-37-35-experiment.json`, precision `0.992261`, recall
+`0.992420`, F1 `0.992341`, AUC `0.999556`, Brier `0.006397`.
+
+| Variant | Keyed artifact | Elapsed | Features | Precision | Recall | F1 | AUC | Brier | Outcome |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| hard negatives `0.005,16` | `3e8a410004a8e85a.json` | 7m12s | 33,161 | **0.994159** | 0.990500 | 0.992326 | 0.999543 | 0.006952 | reject globally; precision shift with worse recall/Brier |
+| malware-only min score `3` | `23f14d57839611c3.json` | 8m48s | 33,161 | 0.992261 | 0.992420 | 0.992341 | 0.999556 | 0.006397 | invalid/redundant; global pool already filters all labels at score >=3 |
+| raw n-grams, all criticalities | `ee3f09e2b7f44cd3.json` | 17m21s | 33,161 | **0.992719** | 0.992560 | **0.992639** | **0.999615** | **0.005999** | promote to confirmation; first clear global win in this tranche |
+| raw n-grams, suspicious+ | `83d431c458cca1d6.json` | 7m47s | 23,781 | 0.991516 | **0.993360** | 0.992437 | 0.999563 | 0.006369 | maybe compact recall branch; not better than all-criticality |
+| metric min freq `2%` | `992c7bd53847852e.json` | 3m49s | 33,161 | 0.992261 | 0.992420 | 0.992341 | 0.999556 | 0.006397 | invalid; env-only metric knob reused baseline matrix before cache-key fix |
+
+Notes:
+- `EXP_MIN_MALWARE_SCORE=3` does not test what its name suggests when the
+  global pool already has `COLLIMATOR_MIN_SAMPLE_SCORE=3`. A meaningful score
+  filter experiment should change `EXP_MIN_SAMPLE_SCORE`, or use a malware-only
+  threshold higher than the global floor.
+- `COLLIMATOR_METRIC_MIN_FREQ_PCT` is read inside feature construction but was
+  not represented in `FeatureConfig`, so the matrix cache reused the baseline
+  matrix. The experiment matrix cache key now includes the full `COLLIMATOR_*`
+  feature environment to prevent this class of false result.
+- Filetype specialist training already used the full labeled route corpus.
+  Filegroup specialist training now defaults to the same policy; use
+  `AZOTH_FILEGROUP_SCORE_FILTER=1` only for an explicit filtered-route test.
+
+Verdict:
+- Confirm `raw_ngram_all_crit` on a refreshed snapshot or alternate seed before
+  promoting globally.
+- Keep `raw_ngram_suspicious_plus` as a possible compact/recall-skewed branch,
+  but it is not the best global candidate.
+
+---
+
+## 2026-05-05 Azoth Confirmation And Backlog Tranche
+
+Goal: confirm `raw_ngram_all_crit`, rerun the invalid metric-frequency screen
+after the cache-key fix, and finish the remaining global backlog. Runner:
+`scripts/run_azoth_global_tranche.sh`. Snapshot: `518146200`.
+
+Seed-43 confirmation:
+
+| Variant | Keyed artifact | Elapsed | Features | Precision | Recall | F1 | AUC | Brier | Outcome |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| seed-43 baseline | `043e02b690e0ee6d.json` | 9m09s | 33,083 | 0.990840 | **0.993020** | 0.991929 | 0.999560 | 0.006469 | paired reference |
+| raw n-grams, all criticalities, seed 43 | `ca980b01a8de2b8a.json` | 17m40s | 33,083 | **0.992479** | 0.992380 | **0.992430** | **0.999617** | **0.006029** | confirmed; promote to full-train validation |
+
+Backlog screens against the seed-42 baseline
+`2026-05-05T11-37-35-experiment.json`: precision `0.992261`, recall
+`0.992420`, F1 `0.992341`, AUC `0.999556`, Brier `0.006397`.
+
+| Variant | Keyed artifact | Elapsed | Features | Precision | Recall | F1 | AUC | Brier | Outcome |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| metric min freq `2%` | `c14e0c0800d19f98.json` | 9m16s | 33,178 | 0.991395 | **0.993120** | 0.992257 | 0.999564 | 0.006366 | reject globally; recall/Brier shift but F1 lower |
+| metric min freq `10%` | `cebd897ccc15499c.json` | 8m55s | 33,148 | 0.991847 | 0.992660 | 0.992253 | 0.999562 | 0.006386 | reject globally |
+| top 3 risky files | `dda53a07343d6478.json` | 8m28s | 33,161 | **0.992655** | 0.992020 | 0.992338 | 0.999556 | 0.006433 | effectively flat; do not promote |
+| packaged capability `findings` | `52a2662fcff571ce.json` | 8m44s | 33,161 | 0.992635 | 0.991940 | 0.992287 | 0.999552 | 0.006390 | reject; keep `paths` default |
+| confidence-weighted n-grams | `68beb27718c01109.json` | 9m45s | 33,161 | **0.993880** | 0.990680 | 0.992278 | 0.999547 | 0.006395 | precision branch only; reject globally |
+| objective trigrams | `3518dc0ef49f3d0d.json` | 9m02s | 33,163 | 0.992336 | 0.991780 | 0.992058 | 0.999542 | 0.006485 | reject globally |
+
+Verdict:
+- `raw_ngram_all_crit` confirmed on an alternate seed. It improves F1, AUC, and
+  Brier against the paired seed-43 baseline, and previously won on seed 42.
+- The runtime cost is real: matrix extraction becomes denser and the screen took
+  ~17 minutes instead of ~8-10. This is acceptable only if full-train validation
+  and route calibration hold.
+- No other backlog screen beats the global baseline strongly enough to combine
+  or promote.
+
+Full train validation:
+
+```sh
+make train WORKERS=64 TRAIN_NGRAM_MIN_CRIT=0
+```
+
+Result artifact: `out/models/azoth/general/runs/2026-05-05T16-51-39-train.json`.
+Snapshot: `518146200`. Runtime: `36m47s`. Dataset: `766,825` scored samples
+(`447,258` malware / `319,567` benign). Features: `45,160`.
+
+| Split | AUC | Avg Precision | F1 | Precision | Recall | Brier |
+|---|---:|---:|---:|---:|---:|---:|
+| CV mean | 0.9996 | - | 0.9936 | 0.9947 | 0.9925 | - |
+| holdout | 0.9996 | 0.9997 | 0.9939 | 0.9940 | 0.9938 | 0.0055 |
+| test | 0.9997 | 0.9997 | 0.9940 | 0.9940 | 0.9941 | 0.0054 |
+
+Full-corpus calibration using the full good-file denominator:
+- Hostile L5: `68.13%` recall at `10` FP over `2,096,185` good files.
+- Hostile L9: `77.32%` recall at `14` FP over `2,096,185` good files.
+- Suspicious L5: `91.40%` recall at `100` FP over `2,096,185` good files.
+
+Promotion:
+- `EXP_NGRAM_MIN_CRIT` and `TRAIN_NGRAM_MIN_CRIT` now default to `0`.
+
+---
+
+## 2026-05-05 Azoth Raw-All Follow-Up Tranche
+
+Goal: before retraining all specialists, run another cheap global tranche against
+the promoted raw-all n-gram baseline. Runner: `scripts/run_azoth_global_tranche.sh`.
+Snapshot: `518146200`. Anchor: `raw_all_default`, precision `0.992719`, recall
+`0.992560`, F1 `0.992639`, AUC `0.999615`, Brier `0.005999`.
+
+| Variant | Keyed artifact | Elapsed | Features | Precision | Recall | F1 | AUC | Brier | Outcome |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| raw-all default | `2fef93a6c9518ebf.json` | 16m54s | 33,161 | 0.992719 | 0.992560 | 0.992639 | 0.999615 | 0.005999 | anchor |
+| leaves `64` | `3bc94b4e7df983c8.json` | 3m32s | 33,161 | 0.991594 | 0.993220 | 0.992406 | 0.999578 | 0.006325 | reject |
+| leaves `160` | `fe29466ecb0cef5e.json` | 4m30s | 33,161 | **0.994975** | 0.989960 | 0.992461 | **0.999638** | **0.005841** | precision branch only; F1 loss |
+| min child samples `50` | `d82fe18de93c8620.json` | 3m53s | 33,161 | 0.991557 | **0.993500** | 0.992527 | 0.999617 | 0.005956 | recall/Brier branch; F1 loss |
+| min child samples `200` | `120bac7fc7885c5e.json` | 3m54s | 33,161 | 0.991734 | 0.993420 | 0.992576 | 0.999609 | 0.006050 | reject |
+| lr `0.03`, `600` trees | `2634f61bd5b26014.json` | 7m46s | 33,161 | 0.992131 | 0.993480 | **0.992805** | 0.999623 | 0.005933 | best global candidate from tranche |
+| regularized precision | `7cb3e227534530a0.json` | 4m44s | 33,161 | 0.991338 | 0.993360 | 0.992348 | 0.999587 | 0.006180 | reject |
+| bigram cap `10000` | `77e4189290e7326b.json` | 17m55s | 43,161 | 0.991932 | 0.993380 | 0.992655 | 0.999624 | 0.005987 | tiny F1 win, too costly alone |
+| bigram min freq `500` | `e28ec9a06167d919.json` | 17m05s | 33,161 | 0.991893 | 0.993460 | 0.992676 | 0.999610 | 0.005977 | small win; possible lower-density feature candidate |
+| trigram cap `1000` | `4d01cec8beda9b7c.json` | 17m44s | 33,661 | 0.991871 | 0.993240 | 0.992555 | 0.999604 | 0.006063 | reject |
+| confidence-weighted n-grams | `da389cee82c318ed.json` | 17m50s | 33,161 | 0.993369 | 0.991760 | 0.992564 | 0.999607 | 0.006064 | precision branch only; F1 loss |
+
+Verdict:
+- Best overall screen result is `raw_all_lr03_600`: +0.000166 F1 and better
+  Brier than the raw-all anchor, at the cost of 600 trees.
+- `raw_all_bigram_minfreq500` is the only feature-side candidate worth a
+  follow-up. It gives a smaller F1/Brier improvement with the same feature count
+  and lower matrix density than raw-all default.
+- Do not full-retrain specialists yet. Next cheap confirmation should test:
+  `raw_all_lr03_600` on seed 43, `raw_all_bigram_minfreq500` on seed 43, and the
+  combination `lr=0.03/600 + bigram_min_freq=500`.
+
+---
+
+## 2026-05-05 Azoth Raw-All Learning-Rate Confirmation Tranche
+
+Goal: run another cheap tranche before retraining the full specialist ensemble.
+The previous raw-all follow-up found a weak seed-42 win for slower learning
+(`lr=0.03`, `600` trees) and a small feature-side candidate
+(`COLLIMATOR_BIGRAM_MIN_FREQ=500`). Runner:
+`scripts/run_azoth_global_tranche.sh`. Snapshot: `518146200`.
+
+Anchors:
+- Seed 42 raw-all default: `2fef93a6c9518ebf.json`, F1 `0.992639`, AUC
+  `0.999615`, Brier `0.005999`.
+- Seed 43 raw-all default: `ca980b01a8de2b8a.json`, F1 `0.992430`, AUC
+  `0.999617`, Brier `0.006029`.
+
+| Variant | Keyed artifact | Seed | Elapsed | Features | Precision | Recall | F1 | AUC | Brier | Outcome |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| lr `0.03`, `600` trees | `661adb72543ba34f.json` | 43 | 7m14s | 33,083 | 0.993050 | 0.991560 | 0.992304 | 0.999611 | 0.006024 | reject; seed-42 win did not confirm |
+| bigram min freq `500` | `46a22028281915b1.json` | 43 | 17m06s | 33,083 | 0.991535 | 0.993340 | 0.992437 | 0.999607 | 0.006079 | effectively flat; worse Brier |
+| lr `0.03`/`600` + bigram min freq `500` | `7f20a8f718377685.json` | 42 | 6m19s | 33,161 | 0.991893 | 0.993440 | 0.992666 | 0.999626 | 0.005909 | small seed-42 win, weaker than other branches |
+| lr `0.03`/`600` + bigram min freq `500` | `c9ab5dd627c1b421.json` | 43 | 6m48s | 33,083 | 0.991240 | 0.993540 | 0.992389 | 0.999615 | 0.006050 | reject; did not confirm |
+| lr `0.03`/`600`, min child `50` | `83c33ad97e7cc1a6.json` | 42 | 7m25s | 33,161 | 0.993216 | 0.992560 | 0.992888 | 0.999627 | 0.005879 | candidate; confirm seed 43 |
+| lr `0.03`/`600`, min child `50` | `46026e91dc974897.json` | 43 | 7m06s | 33,083 | 0.992244 | 0.992760 | 0.992502 | 0.999619 | 0.005974 | small confirmed win, but weaker than leaves160 |
+| lr `0.03`/`600`, leaves `160` | `e99057ee254ad0f9.json` | 42 | 8m35s | 33,161 | 0.992507 | 0.993420 | 0.992963 | 0.999644 | 0.005753 | best seed-42 result |
+| lr `0.03`/`600`, leaves `160` | `a77cb874f6f0a16f.json` | 43 | 7m35s | 33,083 | 0.993177 | 0.992720 | 0.992948 | 0.999634 | 0.005816 | best confirmed result |
+| lr `0.04`, `500` trees | `ca0b5267486c2f96.json` | 42 | 5m38s | 33,161 | 0.992980 | 0.992960 | 0.992970 | 0.999646 | 0.005793 | strong seed 42; confirm seed 43 |
+| lr `0.04`, `500` trees | `325aed4e736e918f.json` | 43 | 5m33s | 33,083 | 0.993943 | 0.991160 | 0.992550 | 0.999639 | 0.005849 | precision skew; lower F1 than leaves160 |
+| lr `0.025`, `700` trees | `877d13049b82d0ba.json` | 42 | 9m03s | 33,161 | 0.993451 | 0.992020 | 0.992735 | 0.999616 | 0.005943 | reject |
+| lr `0.03`/`600`, min child `50`, bigram min freq `500` | `b9c03f1cfa6c2764.json` | 42 | 6m06s | 33,161 | 0.992642 | 0.992920 | 0.992781 | 0.999625 | 0.005946 | reject; no additive gain |
+
+Verdict:
+- `lr=0.03`, `600` trees, `num_leaves=160`, `min_child_samples=100` is the
+  best confirmed global candidate. It improves both seeds and gives the largest
+  Brier improvement in the tranche.
+- `lr=0.04`, `500` trees is faster and has similar seed-42 quality, but seed 43
+  shifts toward precision and loses recall/F1. Keep it as a speed branch, not a
+  default.
+- `COLLIMATOR_BIGRAM_MIN_FREQ=500` did not confirm. Do not promote.
+- Next validation step: run a full `make train` with
+  `TRAIN_LEARNING_RATE=0.03 TRAIN_ESTIMATORS=600 TRAIN_EARLY_STOPPING=60
+  TRAIN_NUM_LEAVES=160`, then compare full-corpus hostile operating points
+  before retraining specialists.

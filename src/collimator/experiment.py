@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
+import time
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,12 +39,67 @@ from .model import predict_proba
 #   expensive full-table metadata scan (≈1m45s for 10K) is done once.
 #
 # Level 2 — Extracted matrices (matrix_<hash>.npz + spec):
-#   Keyed by corpus hash + FeatureConfig (env-driven).  Saves X_train, y_train,
-#   X_test, y_test, FeatureSpec.  When only XGBoost hyperparams change, the
-#   entire data pipeline is skipped.
+#   Keyed by corpus hash + FeatureConfig + COLLIMATOR_* feature env.  Saves
+#   X_train, y_train, X_test, y_test, FeatureSpec.  When only model
+#   hyperparameters change, the entire data pipeline is skipped.
 #
 # When n-gram config changes, level 2 misses but level 1 still hits — saving
 # the metadata scan while re-running vocab + extraction.
+
+
+EXPERIMENT_FILEGROUPS: dict[str, tuple[str, ...]] = {
+    "scripts": (
+        "batch",
+        "javascript",
+        "lua",
+        "perl",
+        "php",
+        "powershell",
+        "python",
+        "ruby",
+        "shell",
+        "typescript",
+        "vbscript",
+    ),
+    "native": ("elf", "macho", "pe"),
+    "portable": ("dex", "jar", "java_class", "pyc", "wasm"),
+    "archive": (
+        "7z",
+        "apk",
+        "cab",
+        "deb",
+        "egg",
+        "gz",
+        "msi",
+        "rar",
+        "rpm",
+        "tar",
+        "tar.gz",
+        "tgz",
+        "vsix",
+        "war",
+        "whl",
+        "xpi",
+        "xz",
+        "zip",
+        "zst",
+    ),
+    "documents": ("doc", "docx", "html", "ole", "pdf", "ppt", "pptx", "rtf", "xls", "xlsx"),
+    "source": (
+        "c",
+        "cpp",
+        "csharp",
+        "go",
+        "java",
+        "kotlin",
+        "makefile",
+        "rust",
+        "scala",
+        "swift",
+    ),
+    "config": ("ini", "json", "package.json", "plist", "toml", "xml", "yaml", "yml"),
+    "media": ("bmp", "gif", "jpg", "jpeg", "mp3", "mp4", "png", "svg", "webp"),
+}
 
 
 def _corpus_cache_key(
@@ -51,6 +108,9 @@ def _corpus_cache_key(
     max_test_samples: int,
     min_malware_training_score: int,
     max_id: int,
+    route: str,
+    route_file_types: tuple[str, ...],
+    total_limit: int,
 ) -> str:
     """Deterministic hash for the row-selection parameters."""
     blob = json.dumps({
@@ -60,18 +120,101 @@ def _corpus_cache_key(
         "min_malware_training_score": min_malware_training_score,
         "max_id": max_id,
         "min_sample_score": data.MIN_SAMPLE_SCORE,
+        "route": route,
+        "route_file_types": sorted(route_file_types),
+        "total_limit": total_limit,
     }, sort_keys=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
-def _matrix_cache_key(corpus_hash: str, feature_cfg: features.FeatureConfig) -> str:
+def _route_file_types(route: str) -> tuple[str, ...]:
+    """Return the file types covered by an experiment route."""
+    normalized = str(route or "general").strip().lower()
+    if normalized in {"", "general"}:
+        return ()
+    if normalized.startswith("filetypes/"):
+        name = normalized.split("/", 1)[1].strip()
+        if not name:
+            raise ValueError(f"invalid experiment route: {route!r}")
+        return (name,)
+    if normalized.startswith("filegroups/"):
+        name = normalized.split("/", 1)[1].strip()
+        try:
+            return EXPERIMENT_FILEGROUPS[name]
+        except KeyError as exc:
+            known = ", ".join(sorted(EXPERIMENT_FILEGROUPS))
+            raise ValueError(f"unknown experiment filegroup {name!r}; known groups: {known}") from exc
+    raise ValueError(
+        f"invalid experiment route {route!r}; expected general, filetypes/<name>, or filegroups/<name>",
+    )
+
+
+def _matrix_cache_key(
+    corpus_hash: str,
+    feature_cfg: features.FeatureConfig,
+    feature_env: dict[str, str],
+) -> str:
     """Deterministic hash for corpus + feature configuration."""
-    # FeatureConfig is a frozen dataclass so we can iterate its fields.
-    cfg_dict = {f.name: getattr(feature_cfg, f.name) for f in feature_cfg.__dataclass_fields__.values()}
-    # frozenset isn't JSON-serializable; convert to sorted list.
-    cfg_dict["enabled_groups"] = sorted(cfg_dict["enabled_groups"])
-    blob = json.dumps({"corpus": corpus_hash, "feature_config": cfg_dict}, sort_keys=True, default=str)
+    cfg_dict = _feature_config_dict(feature_cfg)
+    blob = json.dumps(
+        {
+            "corpus": corpus_hash,
+            "feature_config": cfg_dict,
+            "feature_env": feature_env,
+        },
+        sort_keys=True,
+        default=str,
+    )
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
+
+
+def _feature_config_dict(feature_cfg: features.FeatureConfig) -> dict[str, object]:
+    """Return JSON-friendly feature config for summaries and cache keys."""
+    cfg_dict = {f.name: getattr(feature_cfg, f.name) for f in feature_cfg.__dataclass_fields__.values()}
+    cfg_dict["enabled_groups"] = sorted(cfg_dict["enabled_groups"])
+    return cfg_dict
+
+
+def _experiment_key(spec: dict[str, object]) -> str:
+    blob = json.dumps(spec, sort_keys=True, default=str, separators=(",", ":"))
+    return hashlib.sha256(blob.encode()).hexdigest()[:16]
+
+
+def _collimator_env() -> dict[str, str]:
+    prefixes = (
+        "COLLIMATOR_",
+    )
+    return {
+        key: value
+        for key, value in sorted(os.environ.items())
+        if key.startswith(prefixes) and key not in {"COLLIMATOR_EXPERIMENT_TAG"}
+    }
+
+
+def _cached_snapshot_max_id(
+    db_path: Path | str,
+    cache_dir: Path | None,
+    requested_max_id: int,
+    *,
+    refresh: bool = False,
+) -> int:
+    """Pin cached experiments to one DB snapshot until explicitly refreshed."""
+    if requested_max_id > 0 or cache_dir is None:
+        return int(requested_max_id) if requested_max_id > 0 else data.snapshot_max_id(db_path)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    path = cache_dir / "snapshot_max_id.txt"
+    if not refresh and path.exists():
+        try:
+            value = int(path.read_text().strip())
+            if value > 0:
+                log.info("using cached experiment snapshot: max_id=%d", value)
+                return value
+        except ValueError:
+            log.warning("ignoring invalid cached experiment snapshot: %s", path)
+    value = data.snapshot_max_id(db_path)
+    path.write_text(f"{value}\n")
+    log.info("pinned experiment snapshot: max_id=%d (%s)", value, path)
+    return value
 
 
 def _save_corpus_cache(
@@ -136,8 +279,8 @@ def _save_matrix_cache(
 ) -> None:
     cache_dir.mkdir(parents=True, exist_ok=True)
     npz_path = cache_dir / f"matrix_{matrix_hash}.npz"
-    sp.save_npz(str(cache_dir / f"matrix_{matrix_hash}_Xtrain.npz"), X_train)
-    sp.save_npz(str(cache_dir / f"matrix_{matrix_hash}_Xtest.npz"), X_test)
+    sp.save_npz(str(cache_dir / f"matrix_{matrix_hash}_Xtrain.npz"), X_train, compressed=False)
+    sp.save_npz(str(cache_dir / f"matrix_{matrix_hash}_Xtest.npz"), X_test, compressed=False)
     np.savez_compressed(
         str(npz_path),
         y_train=y_train,
@@ -219,6 +362,7 @@ def sample_partitioned_reports(
     total_limit: int = 0,
     min_malware_training_score: int = 0,
     max_id: int = 0,
+    route_file_types: tuple[str, ...] = (),
 ) -> ExperimentCorpus:
     """Reservoir-sample train rows and optionally cap the external test bucket.
 
@@ -249,7 +393,12 @@ def sample_partitioned_reports(
         (True, 0): 0,
     }
 
-    for row_id, label, is_test, group_id, score in data.stream_partitioned_metadata_grouped(db_path, limit=total_limit, max_id=max_id):
+    for row_id, label, is_test, group_id, score in data.stream_partitioned_metadata_grouped(
+        db_path,
+        limit=total_limit,
+        max_id=max_id,
+        file_types=route_file_types or None,
+    ):
         sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id, score=score)
         key = (is_test, label)
         
@@ -298,7 +447,7 @@ def _print_dataset_summary(corpus: ExperimentCorpus) -> None:
         f"({train_malware} malware, {len(corpus.train_samples) - train_malware} benign)"
     )
     print(
-        f"Full external test: {len(corpus.test_samples)} "
+        f"External test: {len(corpus.test_samples)} "
         f"({test_malware} malware, {len(corpus.test_samples) - test_malware} benign)"
     )
 
@@ -309,7 +458,7 @@ def _print_test_metrics(
     threshold: float,
 ) -> None:
     y_pred = (y_prob >= threshold).astype(int)
-    print(f"\n{'FULL EXTERNAL TEST':=^60}")
+    print(f"\n{'EXTERNAL TEST':=^60}")
     print(f"  Threshold: {threshold:.3f}")
     print(f"  Precision: {precision_score(y_true, y_pred, zero_division=0):.4f}")
     print(f"  Recall:    {recall_score(y_true, y_pred, zero_division=0):.4f}")
@@ -377,6 +526,7 @@ def run_experiment(
     train_samples: int = 10_000,
     max_test_samples: int = 0,
     n_folds: int = 2,
+    holdout_fraction: float = 0.0,
     device: str | None = None,
     n_estimators: int = 220,
     max_depth: int = 6,
@@ -403,20 +553,107 @@ def run_experiment(
     drop_feature_prefixes: list[str] | None = None,
     monotone_constraints: dict[str, int] | None = None,
     min_malware_training_score: int = 0,
+    refresh_cache_snapshot: bool = False,
+    experiment_idea: str = "adhoc",
+    route: str = "general",
+    rerun_existing: bool = False,
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
+    started = time.perf_counter()
     # Pin the dataset to a single max(id) snapshot so concurrent inserts to the
     # hopper DB don't cause drift between this run and any others.
-    pinned_max_id = int(max_id) if max_id > 0 else data.snapshot_max_id(db_path)
+    pinned_max_id = _cached_snapshot_max_id(
+        db_path,
+        cache_dir,
+        int(max_id),
+        refresh=refresh_cache_snapshot,
+    )
     log.info("dataset snapshot: max_id=%d", pinned_max_id)
 
     feature_cfg = features.feature_config_from_env()
+    feature_env = _collimator_env()
+    route_file_types = _route_file_types(route)
+    train_config = {
+        "n_folds": int(n_folds),
+        "holdout_fraction": float(holdout_fraction),
+        "device": device,
+        "n_estimators": int(n_estimators),
+        "max_depth": int(max_depth),
+        "learning_rate": float(learning_rate),
+        "early_stopping_rounds": int(early_stopping_rounds),
+        "min_child_weight": int(min_child_weight),
+        "min_child_samples": min_child_samples,
+        "num_leaves": num_leaves,
+        "colsample_bytree": float(colsample_bytree),
+        "subsample": float(subsample),
+        "gamma": float(gamma),
+        "reg_alpha": float(reg_alpha),
+        "reg_lambda": float(reg_lambda),
+        "beta": float(beta),
+        "threshold_mode": threshold_mode,
+        "threshold_fpr_target": threshold_fpr_target,
+        "hard_negative_fraction": float(hard_negative_fraction),
+        "hard_negative_weight": float(hard_negative_weight),
+        "benign_filetype_weights": benign_filetype_weights or {},
+    }
+    experiment_spec: dict[str, object] = {
+        "route": route,
+        "route_file_types": list(route_file_types),
+        "snapshot_max_id": int(pinned_max_id),
+        "seed": int(seed),
+        "train_samples": int(train_samples),
+        "max_test_samples": int(max_test_samples),
+        "total_limit": int(total_limit),
+        "learner": learner,
+        "model_name": model_name,
+        "feature_config": _feature_config_dict(feature_cfg),
+        "feature_env": feature_env,
+        "train_config": train_config,
+        "filters": {
+            "min_sample_score": data.MIN_SAMPLE_SCORE,
+            "min_malware_training_score": int(min_malware_training_score),
+            "drop_feature_prefixes": list(drop_feature_prefixes or []),
+            "monotone_constraints": monotone_constraints or {},
+        },
+    }
+    exp_key = _experiment_key(experiment_spec)
+    keyed_result_path = output_dir / "runs" / f"{exp_key}.json" if output_dir is not None else None
+    if keyed_result_path is not None and keyed_result_path.exists() and not rerun_existing:
+        with open(keyed_result_path) as f:
+            existing = json.load(f)
+        payload = existing.get("experiment", existing)
+        metrics = payload.get("sampled_test_metrics") or {}
+        print(
+            f"experiment already exists: {exp_key} "
+            f"(route={payload.get('route', route)} idea={payload.get('idea', experiment_idea)})"
+        )
+        if metrics:
+            print(
+                "  previous metrics: "
+                f"F1={float(metrics.get('f1', 0.0)):.6f} "
+                f"P={float(metrics.get('precision', 0.0)):.6f} "
+                f"R={float(metrics.get('recall', 0.0)):.6f} "
+                f"AUC={float(metrics.get('roc_auc', 0.0)):.6f}"
+            )
+        print("  set EXP_RERUN=1 or --rerun-existing to force a replicate")
+        return payload
 
     # --- Cache level 2: full matrices (corpus + feature config match) --------
-    corpus_hash = _corpus_cache_key(
-        seed, train_samples, max_test_samples, min_malware_training_score, pinned_max_id,
-    ) if cache_dir else ""
-    matrix_hash = _matrix_cache_key(corpus_hash, feature_cfg) if cache_dir else ""
+    corpus_hash = (
+        _corpus_cache_key(
+            seed,
+            train_samples,
+            max_test_samples,
+            min_malware_training_score,
+            pinned_max_id,
+            route,
+            route_file_types,
+            total_limit,
+        )
+        if cache_dir
+        else ""
+    )
+    matrix_hash = _matrix_cache_key(corpus_hash, feature_cfg, feature_env) if cache_dir else ""
 
     cached_matrices = _load_matrix_cache(cache_dir, matrix_hash) if cache_dir else None
     if cached_matrices is not None:
@@ -436,6 +673,7 @@ def run_experiment(
                 total_limit=total_limit,
                 min_malware_training_score=min_malware_training_score,
                 max_id=pinned_max_id,
+                route_file_types=route_file_types,
             )
             sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
             train_file_types = _load_primary_file_types(db_path, [s.row_id for s in sorted_train])
@@ -561,7 +799,7 @@ def run_experiment(
             hard_negative_weight=hard_negative_weight,
             benign_filetype_weights=benign_filetype_weights or {},
             monotone_constraints=tuple(constraints),
-            holdout_fraction=0.0,  # use all samples; CV predictions drive threshold
+            holdout_fraction=holdout_fraction,
         ),
         feature_names=spec.feature_names,
         sample_file_types=train_file_types,
@@ -587,12 +825,20 @@ def run_experiment(
 
     results = {
         "model_name": model_name,
+        "experiment_key": exp_key,
+        "idea": experiment_idea,
+        "route": route,
+        "experiment_spec": experiment_spec,
+        "experiment_tag": os.getenv("COLLIMATOR_EXPERIMENT_TAG", ""),
         "learner": learner,
         "device": device or "auto",
         "train_rows": int(X_train.shape[0]),
         "test_rows": int(X_test.shape[0]),
         "n_features": int(spec.total_features),
         "drop_feature_prefixes": list(drop_feature_prefixes or []),
+        "feature_config": _feature_config_dict(feature_cfg),
+        "feature_env": feature_env,
+        "train_config": train_config,
         "train_metrics": result.metrics,
         "sampled_test_metrics": sampled_test_metrics,
         "threshold": float(result.optimal_threshold),
@@ -600,10 +846,17 @@ def run_experiment(
         "db_path": str(db_path),
         "seed": int(seed),
         "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "elapsed_seconds": float(time.perf_counter() - started),
+        "snapshot_max_id": int(pinned_max_id),
     }
     if output_dir is not None:
         spec.save(output_dir / "feature_spec.json")
         model_filename = "model.txt" if learner == "azoth" else "model.json"
         export.save_model(result.model, output_dir / model_filename)
         export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
+        if keyed_result_path is not None:
+            keyed_result_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(keyed_result_path, "w") as f:
+                json.dump(results, f, indent=2)
+            log.info("saved keyed experiment summary to %s", keyed_result_path)
     return results

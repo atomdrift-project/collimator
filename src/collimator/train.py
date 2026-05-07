@@ -430,9 +430,14 @@ def train(
     # --- Cross-validation ---
     n_tv_malware = int(np.sum(y_tv == 1))
     n_tv_benign = int(np.sum(y_tv == 0))
-    n_folds = min(config.n_folds, n_tv_malware, n_tv_benign)
+    if config.n_folds < 2:
+        log.info("cross-validation disabled")
+        n_folds = 0
+    else:
+        n_folds = min(config.n_folds, n_tv_malware, n_tv_benign)
     if n_folds < 2:
-        log.warning("not enough samples for CV, training on all data")
+        if config.n_folds >= 2:
+            log.warning("not enough samples for CV, training on all data")
         n_folds = 0
 
     fold_metrics_list: list[dict[str, float]] = []

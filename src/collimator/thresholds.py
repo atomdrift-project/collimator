@@ -53,7 +53,7 @@ SEVERITY_LEVEL_TARGETS = [
     for level in range(10)
 ]
 
-DEFAULT_SEVERITY_LEVEL = 5
+DEFAULT_SEVERITY_LEVEL = 3
 
 
 def _severity_target(level: int) -> dict[str, int | float]:
@@ -117,9 +117,21 @@ class PolicySpec:
 POLICY_SPECS = [
     PolicySpec(
         name="default_fp_rate",
-        description="Default deploy policy: suspicious <=48/1M good FP, hostile <=5/1M good FP",
-        suspicious=PolicyLevel("suspicious", "max_recall_at_fp_rate", 48 / 1_000_000),
-        hostile=PolicyLevel("hostile", "max_recall_at_fp_rate", 5 / 1_000_000),
+        description=(
+            "Default deploy policy: suspicious "
+            f"<={DEFAULT_SEVERITY_TARGET['suspicious_per_million']:.0f}/1M good FP, "
+            f"hostile <={DEFAULT_SEVERITY_TARGET['hostile_per_million']:.0f}/1M good FP"
+        ),
+        suspicious=PolicyLevel(
+            "suspicious",
+            "max_recall_at_fp_rate",
+            DEFAULT_SEVERITY_TARGET["suspicious_per_million"] / 1_000_000,
+        ),
+        hostile=PolicyLevel(
+            "hostile",
+            "max_recall_at_fp_rate",
+            DEFAULT_SEVERITY_TARGET["hostile_per_million"] / 1_000_000,
+        ),
     ),
     PolicySpec(
         name="ultra_low_fpr",
@@ -1689,7 +1701,7 @@ def compute_default_recommendations(
     *,
     n_benign_denominator: int | None = None,
 ) -> dict[str, float | None]:
-    """Compute legacy deploy thresholds from severity level 5."""
+    """Compute legacy deploy thresholds from the default severity level."""
     levels = compute_severity_levels(probs, y, n_benign_denominator=n_benign_denominator)
     default_level = _severity_level_by_number(levels, DEFAULT_SEVERITY_LEVEL)
     result: dict[str, float | None] = {"suspicious": None, "hostile": None}

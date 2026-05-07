@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from collimator.thresholds import DEFAULT_SEVERITY_LEVEL, DEFAULT_SEVERITY_TARGET
+
 
 def _load_json(path: Path) -> dict[str, Any]:
     with path.open() as f:
@@ -42,23 +44,41 @@ def main() -> None:
             "run `make thresholds-refresh`"
         )
 
-    level5 = next((row for row in levels if row.get("level") == 5), None)
-    if not isinstance(level5, dict):
-        raise SystemExit("error: threshold report does not contain severity level 5")
+    default_level = next(
+        (row for row in levels if row.get("level") == DEFAULT_SEVERITY_LEVEL), None
+    )
+    if not isinstance(default_level, dict):
+        raise SystemExit(
+            f"error: threshold report does not contain severity level {DEFAULT_SEVERITY_LEVEL}"
+        )
+    for name, expected in (
+        ("hostile", DEFAULT_SEVERITY_TARGET["hostile_per_million"]),
+        ("suspicious", DEFAULT_SEVERITY_TARGET["suspicious_per_million"]),
+    ):
+        metric = default_level.get(name)
+        actual = metric.get("target_fp_per_million") if isinstance(metric, dict) else None
+        if actual is None or abs(float(actual) - float(expected)) > 1e-9:
+            raise SystemExit(
+                f"error: threshold report has stale severity level {DEFAULT_SEVERITY_LEVEL} "
+                f"{name} target {actual!r}; expected {expected:.0f}/1M. "
+                "Run `make thresholds-refresh` before `make deploy`."
+            )
 
     config: dict[str, Any] = {
         "severity_level_targets": targets,
         "severity_levels": levels,
     }
     for name in ("suspicious", "hostile"):
-        metric = level5.get(name)
+        metric = default_level.get(name)
         if not isinstance(metric, dict) or metric.get("threshold") is None:
-            raise SystemExit(f"error: severity level 5 is missing {name} threshold")
+            raise SystemExit(
+                f"error: severity level {DEFAULT_SEVERITY_LEVEL} is missing {name} threshold"
+            )
         config[name] = float(metric["threshold"])
 
     if config["suspicious"] >= config["hostile"]:
         raise SystemExit(
-            "error: full-corpus level 5 thresholds do not create a suspicious band "
+            f"error: full-corpus level {DEFAULT_SEVERITY_LEVEL} thresholds do not create a suspicious band "
             f"(suspicious={config['suspicious']:.6f}, hostile={config['hostile']:.6f}); "
             "run `make thresholds-refresh` against the full good corpus"
         )
