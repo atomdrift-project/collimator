@@ -1,5 +1,55 @@
 """Extract fixed-size numeric feature vectors from cleave v3 AnalysisReport JSON.
 
+This module is intentionally one file. The ~30 ``_apply_*`` per-family
+extractors share a layer of local helpers (``_crit_category_tokens``,
+``_tiered_bigram_tokens``, ``_metric_kv_tokens``, ``_file_risk_stats``,
+``_summarize_findings``, etc.) that aren't exposed elsewhere; splitting
+them across modules forces those helpers to be either re-implemented or
+exposed as cross-module API, neither of which improves clarity. The layout
+below is the navigation key — sections are stable enough that line ranges
+are accurate at the time of a release commit.
+
+Section map (line ranges approximate):
+
+  ── Configuration & spec ─────────────────────────────────
+   ~120    _crit_category_tokens, _tiered_bigram_tokens
+   ~219    FeatureConfig dataclass
+   ~318    feature_config_from_env (env-driven knob loader)
+   ~492    Report normalization helpers (file_symbols, metric_kv, ...)
+   ~687    FeatureSpec (vocabulary + feature-name list)
+   ~812    allowed_features
+   ~829    _build_feature_names (the feature ordering decision)
+
+  ── Vocabulary building ──────────────────────────────────
+   ~1262   build_vocab (in-memory reports)
+   ~3257   _vocab_*_worker (multiprocess workers)
+   ~4098   build_vocab_from_db (DB-driven streaming)
+
+  ── Per-family extractors (the _apply_* layer) ──────────
+   ~1487   Summarization helpers (_summarize_findings, _file_risk_stats)
+   ~1749   _apply_presence_features through _apply_aggregate_features
+   ~2005   _apply_experimental_features
+   ~2204   _apply_external_signal_features
+   ~2234   _apply_ember_lite_features
+   ~2317   _apply_metric_features
+   ~2349+  _apply_{symbol,kv,text_encoding,filetype,format_hint,element,
+                    formula,score,structural,neg_space,bigram,tiered_bigram,
+                    tiered_trigram,ghost,skeleton,rare_element,trigram,
+                    logic_gap,signature_synergy,intent_gap,cluster}_features
+
+  ── Top-level extract drivers ────────────────────────────
+   ~3053   _extract_into (the master applier — calls every _apply_*)
+   ~3257-3955  Worker pool batch wrappers + extract / extract_all /
+              extract_stream / extract_partitioned / extract_labeled paths
+
+  ── Output utilities ─────────────────────────────────────
+   ~4570   standardize, feature_group_indices, drop_feature_prefixes
+
+The historical commentary below describes the model's first design
+intuition — kept because the current feature surface still embodies it.
+
+
+
 v15: Capability-first features plus hostile-escalation signals.
 
 The ML pipeline exists because cleave's criticality judgments are imperfect.

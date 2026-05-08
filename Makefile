@@ -118,7 +118,7 @@ SEED ?= 42
 DEVICE ?=
 DROP_FEATURE_PREFIXES ?=
 # Default azoth screening profile: a probe-sized run for bulk iteration.
-# Confirm winners with a different seed, an explicit larger sample, or make train.
+# Confirm winners with a different seed, an explicit larger sample, or make azoth-train.
 EXP_TRAIN_SAMPLES ?= 150000
 EXP_MAX_TEST_SAMPLES ?= 40000
 EXP_MAX_ID ?=
@@ -234,7 +234,7 @@ ALLOWED_FEATURES ?= src/collimator/allowed_features.json
 # Validate DB is set for targets that need it
 check-db:
 ifndef DB
-	$(error DB is required. Usage: make train DB=postgres://hopper@localhost/hopper)
+	$(error DB is required. Usage: make azoth-train DB=postgres://hopper@localhost/hopper)
 endif
 
 # Fail if the newest sample is older than 24 hours (replication may be broken)
@@ -860,7 +860,7 @@ endif
 .PHONY: verify-xgboost-ars
 verify-xgboost-ars:
 	@test -d $(XGBOOST_ARS_DIR) || { echo "error: $(XGBOOST_ARS_DIR) does not exist"; exit 1; }
-	@test -f $(OUT_DIR)/reference.json || { echo "error: $(OUT_DIR)/reference.json not found — run make train first"; exit 1; }
+	@test -f $(OUT_DIR)/reference.json || { echo "error: $(OUT_DIR)/reference.json not found — run make azoth-train first"; exit 1; }
 	@echo "Running xgboost-ars tests..."
 	cd $(XGBOOST_ARS_DIR) && XGBOOST_ARS_REFERENCE_JSON=$(abspath $(OUT_DIR)/reference.json) cargo test --release
 	@echo "xgboost-ars: all tests passed"
@@ -868,7 +868,7 @@ verify-xgboost-ars:
 .PHONY: verify-litmus
 verify-litmus:
 	@test -d $(LITMUS_DIR) || { echo "error: $(LITMUS_DIR) does not exist"; exit 1; }
-	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make train first"; exit 1; }
+	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make azoth-train first"; exit 1; }
 	@test ! -f $(OUT_DIR)/threshold_tuning.json || $(PYTHON) scripts/build_litmus_config.py --threshold-tuning $(OUT_DIR)/threshold_tuning.json --output $(OUT_DIR)/config.json
 	@echo "Running litmus feature-extraction parity tests..."
 	@mkdir -p $(LITMUS_DIR)/tests/fixtures

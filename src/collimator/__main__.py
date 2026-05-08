@@ -111,278 +111,6 @@ def _print_test_block(
     print(f"{'=' * 54}")
 
 
-def cmd_train(args: argparse.Namespace) -> None:
-    """Train a model and export to ONNX."""
-    t0 = time.time()
-    db_path = _db_dsn(args.db)
-    out_dir = Path(args.output)
-    model_name = args.model_name
-    learner = args.learner or model_name
-    out_dir.mkdir(parents=True, exist_ok=True)
-    effective_workers = features.resolve_worker_count(args.workers)
-    if args.workers <= 0:
-        log.info("auto workers: using %d worker processes", effective_workers)
-    else:
-        log.info("using %d worker processes", effective_workers)
-    log.info("xgboost requested device: auto")
-    log.info("xgboost effective device probe: %s", detect_device())
-
-    # Pin the dataset to a single max(id) snapshot so concurrent inserts to the
-    # hopper DB don't cause drift mid-run.
-    pinned_max_id = data.snapshot_max_id(db_path)
-    log.info("dataset snapshot: max_id=%d", pinned_max_id)
-    full_partition_counts = data.count_labeled_by_partition_full(
-        db_path,
-        max_id=pinned_max_id,
-    )
-
-    # Partition samples into train/test using canonical_sha256.
-    # Exploded archive members are included as regular rows (filtered by skip='').
-    train_row_ids, train_ids_labels, test_ids_labels = data.partition_row_ids(
-        db_path,
-        min_malware_training_score=args.min_malware_score,
-        max_id=pinned_max_id,
-    )
-
-    log.info("pass 1: building vocabulary from %s", db_path)
-    spec = features.build_vocab_from_db(
-        db_path,
-        train_ids_labels,
-        n_workers=args.workers,
-    )
-
-    log.info("pass 2: extracting training and test features")
-    X, y, X_test, y_test = features.extract_partitioned_from_db(
-        db_path,
-        train_ids_labels,
-        test_ids_labels,
-        spec,
-        n_workers=args.workers,
-    )
-    if X.shape[0] < 10:
-        print(f"ERROR: only {X.shape[0]} training samples, need at least 10")
-        sys.exit(1)
-    drop_prefixes = _parse_csv_list(args.drop_feature_prefixes)
-    if drop_prefixes:
-        X, pruned_spec = features.drop_feature_prefixes(X, spec, drop_prefixes)
-        X_test, _ = features.drop_feature_prefixes(X_test, spec, drop_prefixes)
-        spec = pruned_spec
-        log.info("dropped feature prefixes for training: %s (%d features remain)", drop_prefixes, spec.total_features)
-
-    # Train.
-    config = train.TrainConfig(
-        learner=learner,
-        seed=args.seed,
-        device=args.device,
-        **({"n_folds": args.n_folds} if args.n_folds is not None else {}),
-        **({"n_estimators": args.n_estimators} if args.n_estimators is not None else {}),
-        **({"max_depth": args.max_depth} if args.max_depth is not None else {}),
-        **({"learning_rate": args.learning_rate} if args.learning_rate is not None else {}),
-        **({"early_stopping_rounds": args.early_stopping_rounds} if args.early_stopping_rounds is not None else {}),
-        **({"min_child_samples": args.min_child_samples} if args.min_child_samples is not None else {}),
-        **({"num_leaves": args.num_leaves} if args.num_leaves is not None else {}),
-        **({"beta": args.beta} if args.beta is not None else {}),
-        threshold_mode=args.threshold_mode,
-        threshold_fpr_target=args.threshold_fpr_target,
-        hard_negative_fraction=args.hard_negative_fraction,
-        hard_negative_weight=args.hard_negative_weight,
-    )
-    result = train.train(X, y, config, feature_names=spec.feature_names)
-
-    # Attach standardization params to spec before saving.
-    spec.feature_means = result.feature_means
-    spec.feature_stds = result.feature_stds
-
-    # Export.
-    spec.save(out_dir / "feature_spec.json")
-    model_filename = "model.txt" if learner == "azoth" else "model.json"
-    export.export_onnx(result.model, spec.total_features, out_dir / "model.onnx")
-    export.save_model(result.model, out_dir / model_filename)
-
-    # Fast in-run estimate from out-of-fold CV predictions. Run
-    # `make thresholds-refresh` after training to compute deploy thresholds
-    # against the full labeled good corpus, including low-score good rows.
-    recommended = thresholds.compute_default_recommendations(
-        result.cv_predictions,
-        result.cv_labels,
-        n_benign_denominator=full_partition_counts["train"]["good"],
-    ) \
-        if len(result.cv_predictions) > 0 else {}
-    severity_levels = thresholds.compute_severity_levels(
-        result.cv_predictions,
-        result.cv_labels,
-        n_benign_denominator=full_partition_counts["train"]["good"],
-    ) \
-        if len(result.cv_predictions) > 0 else []
-
-    export.save_evaluation(
-        metrics=result.metrics,
-        calibration=result.calibration,
-        optimal_threshold=result.optimal_threshold,
-        confusion=result.confusion,
-        class_distribution=result.class_distribution,
-        split_summary=result.split_summary,
-        fold_metrics=result.fold_metrics,
-        n_features=spec.total_features,
-        model_abi_version=spec.abi_version,
-        recommended_thresholds=recommended if recommended else None,
-        severity_levels=severity_levels if severity_levels else None,
-        severity_level_targets=thresholds.SEVERITY_LEVEL_TARGETS,
-        model_name=model_name,
-        experiment={
-            "model_name": model_name,
-            "learner": learner,
-            "model_abi_version": spec.abi_version,
-            "seed": config.seed,
-            "feature_spec_version": spec.version,
-            "workers_requested": args.workers,
-            "workers_effective": effective_workers,
-            "git_sha": _git_sha(),
-            "train_config": {
-                "learner": config.learner,
-                "drop_feature_prefixes": drop_prefixes,
-                "n_folds": config.n_folds,
-                "n_estimators": config.n_estimators,
-                "max_depth": config.max_depth,
-                "learning_rate": config.learning_rate,
-                "holdout_fraction": config.holdout_fraction,
-                "early_stopping_rounds": config.early_stopping_rounds,
-                "min_child_weight": config.min_child_weight,
-                "min_child_samples": config.min_child_samples,
-                "num_leaves": config.num_leaves,
-                "colsample_bytree": config.colsample_bytree,
-                "subsample": config.subsample,
-                "gamma": config.gamma,
-                "reg_alpha": config.reg_alpha,
-                "reg_lambda": config.reg_lambda,
-                "threshold_mode": config.threshold_mode,
-                "threshold_fpr_target": config.threshold_fpr_target,
-                "hard_negative_fraction": config.hard_negative_fraction,
-                "hard_negative_weight": config.hard_negative_weight,
-            },
-        },
-        output_path=out_dir / "evaluation.json",
-    )
-    export.save_run_summary(
-        kind="train",
-        payload={
-            "db_path": str(db_path),
-            "model_name": model_name,
-            "learner": learner,
-            "output_dir": str(out_dir),
-            "metrics": result.metrics,
-            "calibration": result.calibration,
-            "optimal_threshold": result.optimal_threshold,
-            "confusion_matrix": result.confusion,
-            "class_distribution": result.class_distribution,
-            "split_summary": result.split_summary,
-            "fold_metrics": result.fold_metrics,
-            "n_features": spec.total_features,
-            "seed": config.seed,
-            "feature_spec_version": spec.version,
-            "workers_requested": args.workers,
-            "workers_effective": effective_workers,
-            "git_sha": _git_sha(),
-        },
-        output_dir=out_dir,
-    )
-
-    # Post-training steps only need small dense subsets — avoid densifying
-    # the full sparse matrix to keep memory low.
-    rng = np.random.default_rng(42)
-
-    def _dense_subset(n: int) -> np.ndarray:
-        idx = rng.choice(X.shape[0], min(n, X.shape[0]), replace=False)
-        return X[idx].toarray()
-
-    # Test set metrics at the calibrated threshold — print immediately after
-    # the holdout block so both are visible together for experiment comparison.
-    test_probs: np.ndarray | None = None
-    if X_test.shape[0] > 0:
-        from .model import predict_proba
-        test_probs_raw = predict_proba(result.model, X_test)
-        # Apply the same isotonic calibrator used for the holdout evaluation.
-        if result.isotonic_calibrator is not None:
-            test_probs = result.isotonic_calibrator.predict(test_probs_raw)
-        else:
-            test_probs = test_probs_raw
-        _print_test_block(test_probs, y_test, result.optimal_threshold)
-
-    # Save CV predictions + test predictions for threshold recomputation
-    # without retraining. ~2MB compressed for 180K samples.
-    if len(result.cv_predictions) > 0:
-        cv_data = {"cv_predictions": result.cv_predictions, "cv_labels": result.cv_labels}
-        if test_probs is not None:
-            cv_data["test_predictions"] = test_probs
-            cv_data["test_labels"] = y_test
-        np.savez_compressed(out_dir / "cv_predictions.npz", **cv_data)
-        log.info("saved CV predictions to %s", out_dir / "cv_predictions.npz")
-
-    # Validate ONNX (100 samples).
-    if not export.validate_onnx(
-        result.model, out_dir / "model.onnx", spec.total_features,
-        X=_dense_subset(100),
-    ):
-        print("WARNING: ONNX validation failed")
-        sys.exit(1)
-
-    # SHAP analysis (200 samples).
-    explain.compute_shap_importance(
-        result.model, _dense_subset(200), spec,
-        output_path=out_dir / "shap_importance.json",
-    )
-
-    # Cross-language test fixtures (50 samples).
-    fix_idx = rng.choice(X.shape[0], min(50, X.shape[0]), replace=False)
-    fix_idx.sort()
-    X_fix = X[fix_idx].toarray()
-    generate_fixtures(result.model, spec, X_fix, X_fix, out_dir,
-                      optimal_threshold=result.optimal_threshold)
-
-    # Feature-extraction parity fixture: diverse samples covering all
-    # file types, score ranges, multi-file archives, and label classes.
-    extraction_reports = _gather_diverse_fixture_reports(db_path)
-    if extraction_reports:
-        generate_extraction_fixture(
-            extraction_reports, spec, out_dir,
-            n_samples=len(extraction_reports),
-            model=result.model, optimal_threshold=result.optimal_threshold,
-            recommended_thresholds=recommended,
-        )
-
-    # Operating-point table on the test set (skip the large accuracy tables).
-    if test_probs is not None:
-        thresholds.print_recommendations(
-            test_probs, y_test,
-            title="TEST SET OPERATING POINTS (held-out)",
-            highlight_threshold=result.optimal_threshold,
-            n_benign_denominator=full_partition_counts["test"]["good"],
-        )
-    else:
-        print("\nNo test samples — skipping operating-point table.")
-
-    # Combined CV + test operating points: honest predictions over the full DB
-    # for higher-confidence FPR measurement (especially for tight FPR targets).
-    if test_probs is not None and len(result.cv_predictions) > 0:
-        all_probs = np.concatenate([result.cv_predictions, test_probs])
-        all_labels = np.concatenate([result.cv_labels, y_test])
-        thresholds.print_recommendations(
-            all_probs, all_labels,
-            title="FULL DB OPERATING POINTS (CV + held-out)",
-            highlight_threshold=result.optimal_threshold,
-            n_benign_denominator=full_partition_counts["all"]["good"],
-        )
-
-    elapsed = time.time() - t0
-    mins, secs = divmod(int(elapsed), 60)
-
-    print(f"\nOutput files in {out_dir}/:")
-    for f in sorted(out_dir.iterdir()):
-        if f.is_file():
-            print(f"  {f.name}")
-    print(f"\nTotal time: {mins}m {secs:02d}s")
-
-
 def cmd_evaluate(args: argparse.Namespace) -> None:
     """Evaluate an existing model against a database."""
     db_path = _db_dsn(args.db)
@@ -956,38 +684,6 @@ def main() -> None:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # train
-    p_train = subparsers.add_parser("train", help="Train model and export to ONNX")
-    p_train.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
-    p_train.add_argument("--output", default="out", help="Output directory (default: out)")
-    p_train.add_argument("--model-name", default="litmus-xg", help="Logical target model name")
-    p_train.add_argument(
-        "--learner",
-        choices=["litmus-xg", "azoth"],
-        default=None,
-        help="Learner implementation (default: model name)",
-    )
-    _add_workers_arg(p_train)
-    _add_seed_arg(p_train)
-    p_train.add_argument("--n-folds", type=int, default=None, help="CV folds (default: TrainConfig default)")
-    p_train.add_argument("--device", default=None, help="Training device override (cpu, cuda, or gpu)")
-    p_train.add_argument("--n-estimators", type=int, default=None, help="Max XGBoost trees (default: TrainConfig default)")
-    p_train.add_argument("--max-depth", type=int, default=None, help="Tree depth limit (default: TrainConfig default)")
-    p_train.add_argument("--learning-rate", type=float, default=None, help="XGBoost learning rate (default: TrainConfig default)")
-    p_train.add_argument("--early-stopping-rounds", type=int, default=None, help="Early stopping patience (default: TrainConfig default)")
-    p_train.add_argument("--min-child-samples", type=int, default=None, help="LightGBM minimum samples per leaf")
-    p_train.add_argument("--num-leaves", type=int, default=None, help="LightGBM leaves per tree")
-    p_train.add_argument("--beta", type=float, default=None, help="F-beta for threshold selection (default: TrainConfig default)")
-    p_train.add_argument("--drop-feature-prefixes", default="", help="Comma-separated feature prefixes to drop after extraction")
-    p_train.add_argument("--threshold-mode", choices=["fbeta", "max_recall_at_fpr"], default="fbeta", help="Threshold selection strategy")
-    p_train.add_argument("--threshold-fpr-target", type=float, default=None, help="Max FPR target when threshold-mode=max_recall_at_fpr")
-    p_train.add_argument("--hard-negative-fraction", type=float, default=0.0, help="Fraction of benign train rows to upweight as hard negatives")
-    p_train.add_argument("--hard-negative-weight", type=float, default=1.0, help="Sample weight applied to hard benign negatives")
-    p_train.add_argument(
-        "--min-malware-score", type=int, default=0,
-        help="Ignore malware samples with score below this threshold during training",
-    )
-
     # evaluate
     p_eval = subparsers.add_parser("evaluate", help="Evaluate existing model")
     p_eval.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
@@ -1028,12 +724,6 @@ def main() -> None:
     p_scan.add_argument("--cleave", default="cleave", help="Path to cleave binary")
     p_scan.add_argument("--db", default=None, help="Background DB for SHAP context (optional)")
 
-    # rethreshold
-    p_rethresh = subparsers.add_parser(
-        "rethreshold", help="Recompute suspicious/hostile thresholds from saved CV predictions",
-    )
-    p_rethresh.add_argument("--output", default="out", help="Directory with cv_predictions.npz")
-
     # fixture
     p_fixture = subparsers.add_parser(
         "fixture", help="Generate cross-language test fixtures for xgboost-ars",
@@ -1070,21 +760,6 @@ def main() -> None:
         help="Minimum number of samples containing a trait to include it",
     )
     p_traits.add_argument("--output", default=None, help="Optional JSON output path")
-
-    # thresholds
-    p_thresh = subparsers.add_parser(
-        "thresholds", help="Show accuracy at various confidence thresholds",
-    )
-    p_thresh.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
-    p_thresh.add_argument(
-        "--model", default=None,
-        help="Path to trained XGBoost model (.json) to reuse instead of retraining",
-    )
-    p_thresh.add_argument(
-        "--spec", default=None,
-        help="Path to feature_spec.json to reuse instead of rebuilding vocab",
-    )
-    _add_workers_arg(p_thresh)
 
     # tune-thresholds
     p_tune = subparsers.add_parser(
@@ -1355,9 +1030,7 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.command == "train":
-        cmd_train(args)
-    elif args.command == "evaluate":
+    if args.command == "evaluate":
         cmd_evaluate(args)
     elif args.command == "explain":
         cmd_explain(args)
@@ -1382,34 +1055,6 @@ def main() -> None:
             spec_path=Path(args.spec),
             cleave_bin=args.cleave,
         )
-    elif args.command == "rethreshold":
-        cv_path = Path(args.output) / "cv_predictions.npz"
-        if not cv_path.exists():
-            print(f"error: {cv_path} not found — run make azoth-train first")
-            sys.exit(1)
-        arrays = np.load(str(cv_path))
-        cv_preds = arrays["cv_predictions"]
-        cv_labels = arrays["cv_labels"]
-        all_preds = cv_preds
-        all_labels = cv_labels
-        if "test_predictions" in arrays:
-            all_preds = np.concatenate([cv_preds, arrays["test_predictions"]])
-            all_labels = np.concatenate([cv_labels, arrays["test_labels"]])
-        print(f"Loaded {len(cv_preds)} CV + {len(all_preds) - len(cv_preds)} test predictions")
-        recommended = thresholds.compute_default_recommendations(all_preds, all_labels)
-        severity_levels = thresholds.compute_severity_levels(all_preds, all_labels)
-        print(f"Recommended thresholds: {recommended}")
-        # Update evaluation.json
-        eval_path = Path(args.output) / "evaluation.json"
-        if eval_path.exists():
-            eval_data = json.load(open(eval_path))
-            eval_data["recommended_thresholds"] = recommended
-            eval_data["severity_level_targets"] = thresholds.SEVERITY_LEVEL_TARGETS
-            eval_data["severity_levels"] = severity_levels
-            with open(eval_path, "w") as f:
-                json.dump(eval_data, f, indent=2)
-            print(f"Updated {eval_path}")
-        thresholds.print_recommendations(all_preds, all_labels, title="FULL DB")
     elif args.command == "fixture":
         cmd_fixture(args)
     elif args.command == "traits":
@@ -1420,13 +1065,6 @@ def main() -> None:
             sort_by=args.sort,
             top_n=args.top,
             output_path=Path(args.output) if args.output else None,
-        )
-    elif args.command == "thresholds":
-        thresholds.show_thresholds(
-            db_path=_db_dsn(args.db),
-            model_path=Path(args.model) if args.model else None,
-            spec_path=Path(args.spec) if args.spec else None,
-            n_workers=args.workers,
         )
     elif args.command == "tune-thresholds":
         thresholds.tune_thresholds(
