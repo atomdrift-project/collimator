@@ -20,7 +20,7 @@ from azoth_calibrate_ensemble import (
     _prepare_calibration,
     _union_bits,
 )
-from collimator import features, model
+from collimator import bundle, features, model
 
 
 def _json_clean(value: Any) -> Any:
@@ -544,18 +544,20 @@ def _apply_route_overrides(
         spec_path = route_dir / "feature_spec.json"
         if not spec_path.exists():
             spec_path = fallback_spec
-        model_path = route_dir / "model.txt"
-        if not model_path.exists():
-            raise SystemExit(f"{route_name}: {model_path} not found")
+        if not bundle.has_model(route_dir):
+            raise SystemExit(f"{route_name}: no model file found in {route_dir}")
         spec = features.FeatureSpec.load(spec_path)
-        clf = model.load_model(model_path)
+        # Multi-seed bundles get averaged inside the Ensemble; legacy bundles
+        # are length-1 ensembles whose predict_proba is byte-identical to the
+        # pre-item-A path.
+        clf = bundle.Ensemble.load_bundle(route_dir)
         batches = list(features.extract_labeled_from_db_batches(db_path, rows, spec, n_workers=workers))
         x_matrix = (
             sp.vstack([batch[0] for batch in batches], format="csr")
             if batches
             else sp.csr_matrix((0, spec.total_features), dtype=np.float32)
         )
-        probs = model.predict_proba(clf, x_matrix).astype(np.float32)
+        probs = clf.predict_proba(x_matrix).astype(np.float32)
         routes[route_name] = {
             "kind": kind,
             "indices": indices,

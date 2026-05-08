@@ -5,8 +5,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+# scripts/ isn't on sys.path by default when invoked as a CLI; add the
+# package root so `from collimator.bundle import ...` works without an editable
+# install during ad-hoc validation.
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+from collimator import bundle  # noqa: E402  — late import after sys.path patch
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -30,7 +40,7 @@ def _route_path(root: Path, route: str) -> Path:
 
 def _route_exists(root: Path, route: str) -> bool:
     route_dir = _route_path(root, route)
-    return (route_dir / "model.txt").is_file() and (route_dir / "feature_spec.json").is_file()
+    return bundle.has_model(route_dir) and (route_dir / "feature_spec.json").is_file()
 
 
 def _policy_routes(policy: dict[str, Any]) -> set[str]:
@@ -63,7 +73,7 @@ def validate(root: Path) -> list[str]:
         errors.append(f"{policy_path}: unsupported schema {policy.get('schema')!r}")
 
     if not _route_exists(root, "general"):
-        errors.append("general route is missing model.txt or feature_spec.json")
+        errors.append("general route is missing model file or feature_spec.json")
 
     configured_routes = {str(item.get("route")) for item in config.get("models", [])}
     configured_routes.discard("None")
@@ -72,7 +82,7 @@ def validate(root: Path) -> list[str]:
 
     for route in sorted(configured_routes | policy_routes):
         if not _route_exists(root, route):
-            errors.append(f"{route}: referenced but missing model.txt or feature_spec.json")
+            errors.append(f"{route}: referenced but missing model file or feature_spec.json")
 
     for route_name, route in policy.get("routes", {}).items():
         filetype = str(route.get("filetype", ""))

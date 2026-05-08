@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 
-from collimator import data, features, model, thresholds
+from collimator import bundle, data, features, model, thresholds
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: E402
@@ -39,6 +39,29 @@ def _file_sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def _route_artifact_paths(output_dir: Path) -> list[Path]:
+    """All artifact files that fingerprint a route's training output.
+
+    For multi-seed bundles this is every ``models/seed_*.{txt,json}`` plus
+    ``feature_spec.json``; for legacy single-model bundles it's
+    ``model.{txt,json}`` plus ``feature_spec.json``. Returned in deterministic
+    order so the hash is stable across runs.
+    """
+    spec = output_dir / "feature_spec.json"
+    paths: list[Path] = []
+    try:
+        paths.extend(bundle.model_files(output_dir))
+    except ValueError:
+        # Ambiguous layouts get fingerprinted as legacy so a re-run will
+        # propagate the broken state into the cache key and force re-derivation.
+        for legacy in (output_dir / "model.txt", output_dir / "model.json"):
+            if legacy.is_file():
+                paths.append(legacy)
+    if spec.is_file():
+        paths.append(spec)
+    return paths
+
+
 def _hash_model_set(general_scores: Path, routes: list[dict[str, Any]]) -> str:
     h = hashlib.sha256()
     h.update(str(general_scores).encode())
@@ -46,19 +69,16 @@ def _hash_model_set(general_scores: Path, routes: list[dict[str, Any]]) -> str:
     for route in sorted(routes, key=lambda item: item["name"]):
         h.update(str(route["name"]).encode())
         output_dir = Path(route.get("output_dir", ""))
-        for filename in ("model.txt", "feature_spec.json"):
-            path = output_dir / filename
-            if path.exists():
-                h.update(filename.encode())
-                h.update(_file_sha256(path).encode())
+        for path in _route_artifact_paths(output_dir):
+            h.update(path.name.encode())
+            h.update(_file_sha256(path).encode())
     return h.hexdigest()
 
 
 def _hash_route_artifacts(output_dir: Path) -> str:
     h = hashlib.sha256()
-    for filename in ("model.txt", "feature_spec.json"):
-        path = output_dir / filename
-        h.update(filename.encode())
+    for path in _route_artifact_paths(output_dir):
+        h.update(path.name.encode())
         h.update(_file_sha256(path).encode())
     return h.hexdigest()
 
@@ -182,8 +202,12 @@ def _route_artifacts_newer_than(path: Path, output_dir: Path) -> bool:
         cache_mtime = path.stat().st_mtime
     except FileNotFoundError:
         return True
-    for filename in ("model.txt", "feature_spec.json"):
-        artifact = output_dir / filename
+    artifacts = _route_artifact_paths(output_dir)
+    if not artifacts:
+        # No model on disk at all; treat as fresher to force re-derivation
+        # rather than silently trusting a stale cache.
+        return True
+    for artifact in artifacts:
         try:
             if artifact.stat().st_mtime > cache_mtime:
                 return True
@@ -322,7 +346,10 @@ def _score_route(
     spec_path = output_dir / "feature_spec.json"
     spec_hash = _file_sha256(spec_path)
     spec = features.FeatureSpec.load(spec_path)
-    clf = model.load_model(output_dir / "model.txt")
+    # ``Ensemble`` averages across all members of a multi-seed bundle; for the
+    # legacy single-model layout it's a length-1 ensemble whose ``predict_proba``
+    # is byte-equivalent to the pre-item-A path.
+    clf = bundle.Ensemble.load_bundle(output_dir)
     load_s = time.perf_counter() - t0
     row_ids = np.asarray([row_id for row_id, _label in rows], dtype=np.int64)
     rows_hash = _hash_ints(row_ids)
@@ -358,7 +385,7 @@ def _score_route(
         extract_s = 0.0
         matrix_s = 0.0
     t0 = time.perf_counter()
-    probs = model.predict_proba(clf, x_matrix)
+    probs = clf.predict_proba(x_matrix)
     predict_s = time.perf_counter() - t0
     t0 = time.perf_counter()
     indices = np.asarray([row_index[row_id] for row_id, _label in rows], dtype=np.int64)
@@ -684,7 +711,7 @@ def _load_routes(summary_path: Path) -> list[dict[str, Any]]:
         )
         route_dir = root / route
         normalized = {**item, "route": route}
-        if (route_dir / "model.txt").exists() and (route_dir / "feature_spec.json").exists():
+        if bundle.has_model(route_dir) and (route_dir / "feature_spec.json").exists():
             normalized["output_dir"] = str(route_dir)
         routes.append(normalized)
     return routes
@@ -696,6 +723,94 @@ def _filetype_to_group() -> dict[str, str]:
         for file_type in file_types:
             out[file_type] = group
     return out
+
+
+def _fit_and_persist_isotonic_calibrator(
+    route_scores: list[dict[str, Any]],
+    labels: np.ndarray,
+    azoth_root: Path,
+) -> None:
+    """For each route, fit isotonic regression on (raw probability, label) and
+    write the calibrator's breakpoints to ``<route_slot>/calibrator.json``.
+
+    Litmus loads this file at score time and applies the calibration before
+    emitting the file's probability — so the deployed score is on the same
+    [0, 1] probability scale the per-route specialist was empirically observed
+    to produce on the calibration corpus.
+
+    Why this matters: raw LightGBM/XGBoost output is a logit-derived probability
+    that's miscalibrated by training-set prior, sample weights, and class
+    imbalance.  Two specialists with the same ROC AUC can have wildly different
+    score distributions; one outputs scores tightly clustered near 0.5, the
+    other spreads them across [0, 1].  Without per-route calibration, the
+    routing layer's "max across routes" picks routes by their score spread,
+    not by their actual confidence.
+
+    Output schema (``calibrator.json``)::
+
+        {
+          "schema": "azoth.calibrator.isotonic.v1",
+          "x": [...],                # ascending, raw probabilities at breakpoints
+          "y": [...],                # monotone-non-decreasing calibrated probs
+          "out_of_bounds": "clip",   # x < x[0] -> y[0]; x > x[-1] -> y[-1]
+          "n_train": int,            # rows used to fit
+          "fit_log": str             # human-readable diagnostic
+        }
+
+    Litmus interpolates linearly between breakpoints; clip semantics handle
+    the tails.
+
+    The calibrator is fit on the *full* calibration corpus we have labels
+    for — this maximizes the data the calibrator sees.  Honest holdout
+    evaluation lives in ``compute_routed_metrics.py`` (5-fold CV); the
+    bundle ships the strongest calibrator we can train.
+    """
+    from sklearn.isotonic import IsotonicRegression  # noqa: PLC0415
+
+    calibrators_written = 0
+    for entry in route_scores:
+        name = entry["name"]
+        probs = entry["probs"]
+        indices = entry["indices"]
+        if probs is None or len(probs) == 0:
+            continue
+        # Pull the labels of just this route's scored rows (entry["indices"]
+        # are positions into the global score-table label array).
+        route_labels = labels[indices]
+        valid = ~np.isnan(probs)
+        if int(valid.sum()) < 50:
+            LOG.info("calibrator: skipping %s (only %d valid rows)", name, int(valid.sum()))
+            continue
+        x = probs[valid].astype(np.float64)
+        y = route_labels[valid].astype(np.float64)
+        if y.sum() == 0 or (y == 0).sum() == 0:
+            LOG.info("calibrator: skipping %s (single-class fold)", name)
+            continue
+        iso = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0)
+        iso.fit(x, y)
+        # IsotonicRegression exposes its piecewise-constant fit as
+        # X_thresholds_/y_thresholds_; persist those directly.
+        x_thr = iso.X_thresholds_.astype(float).tolist()
+        y_thr = iso.y_thresholds_.astype(float).tolist()
+        slot_dir = azoth_root / name
+        slot_dir.mkdir(parents=True, exist_ok=True)
+        cal_path = slot_dir / "calibrator.json"
+        cal = {
+            "schema": "azoth.calibrator.isotonic.v1",
+            "x": x_thr,
+            "y": y_thr,
+            "out_of_bounds": "clip",
+            "n_train": int(valid.sum()),
+            "fit_log": (
+                f"isotonic regression on {int(valid.sum())} rows "
+                f"({int(y.sum())} malware, {int((y == 0).sum())} benign); "
+                f"breakpoints: {len(x_thr)}"
+            ),
+        }
+        with open(cal_path, "w") as f:
+            json.dump(cal, f, indent=2)
+        calibrators_written += 1
+    LOG.info("wrote %d per-route isotonic calibrators", calibrators_written)
 
 
 def _write_score_table(
@@ -813,6 +928,11 @@ def main() -> int:
         file_groups=file_groups,
         route_scores=route_scores,
     )
+    # Per-route isotonic calibrators (azoth.calibrator.isotonic.v1).  Litmus
+    # loads these next to model.txt at runtime and applies before emitting the
+    # per-route probability — closes the gap between reported AUC (post-
+    # calibration) and deployed AUC.
+    _fit_and_persist_isotonic_calibrator(route_scores, labels, args.azoth_root)
     model_set_hash = _hash_model_set(args.general_scores, route_scores)
     levels: list[dict[str, Any]] = []
     if args.skip_level_calibration:

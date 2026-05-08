@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 import os
 import time
 from datetime import datetime
@@ -111,6 +112,7 @@ def _corpus_cache_key(
     route: str,
     route_file_types: tuple[str, ...],
     total_limit: int,
+    test_natural_prevalence: bool = False,
 ) -> str:
     """Deterministic hash for the row-selection parameters."""
     blob = json.dumps({
@@ -123,6 +125,7 @@ def _corpus_cache_key(
         "route": route,
         "route_file_types": sorted(route_file_types),
         "total_limit": total_limit,
+        "test_natural_prevalence": bool(test_natural_prevalence),
     }, sort_keys=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
@@ -363,15 +366,20 @@ def sample_partitioned_reports(
     min_malware_training_score: int = 0,
     max_id: int = 0,
     route_file_types: tuple[str, ...] = (),
+    test_natural_prevalence: bool = False,
 ) -> ExperimentCorpus:
     """Reservoir-sample train rows and optionally cap the external test bucket.
 
-    If train_samples > 0, we reservoir-sample train rows to that target, 
+    If train_samples > 0, we reservoir-sample train rows to that target,
     balancing malware/benign 50/50.
     If train_samples == 0, we take ALL non-test rows from the stream (natural distribution).
 
-    If max_test_samples > 0, we reservoir-sample test rows to that target,
-    balancing malware/benign 50/50.
+    If max_test_samples > 0, we reservoir-sample test rows to that target.
+    Default behavior balances malware/benign 50/50 (preserves F1/AUC semantics).
+    Setting ``test_natural_prevalence=True`` removes the per-class cap so the
+    test set carries the route's true class ratio — important for resolving
+    recall@k FP/M, since the metric needs as many benigns as the holdout can
+    provide (route benign counts dominate the FP/M denominator).
     If max_test_samples == 0, we take ALL test rows from the stream (natural distribution).
     """
     rng = np.random.default_rng(seed)
@@ -379,13 +387,20 @@ def sample_partitioned_reports(
     train_malware_target = max(train_samples // 2, 1) if train_samples > 1 else train_samples
     train_benign_target = max(train_samples - train_malware_target, 0)
 
-    test_malware_target = max(max_test_samples // 2, 1) if max_test_samples > 1 else max_test_samples
-    test_benign_target = max(max_test_samples - test_malware_target, 0) if max_test_samples > 0 else 0
+    if test_natural_prevalence:
+        # Single pooled cap; class ratio falls out of the natural stream order
+        # (which preserves SHA256-bucket determinism).
+        test_total_target = max_test_samples
+    else:
+        test_malware_target = max(max_test_samples // 2, 1) if max_test_samples > 1 else max_test_samples
+        test_benign_target = max(max_test_samples - test_malware_target, 0) if max_test_samples > 0 else 0
 
     train_malware: list[ExperimentSample] = []
     train_benign: list[ExperimentSample] = []
     test_malware: list[ExperimentSample] = []
     test_benign: list[ExperimentSample] = []
+    test_pool: list[ExperimentSample] = []  # only used when test_natural_prevalence=True
+    test_seen = 0  # only used when test_natural_prevalence=True
     seen = {
         (False, 1): 0,
         (False, 0): 0,
@@ -401,7 +416,7 @@ def sample_partitioned_reports(
     ):
         sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id, score=score)
         key = (is_test, label)
-        
+
         if not is_test:
             # Heuristic pruning: skip malware with very low scores during training.
             if label == 1 and score < min_malware_training_score:
@@ -419,7 +434,10 @@ def sample_partitioned_reports(
                     train_benign.append(sample)
                 seen[key] += 1
         else:
-            if max_test_samples > 0:
+            if test_natural_prevalence and max_test_samples > 0:
+                # Single pooled reservoir across both classes — natural prevalence.
+                test_seen = _reservoir_update(test_pool, sample, test_total_target, test_seen, rng)
+            elif max_test_samples > 0:
                 if label == 1:
                     seen[key] = _reservoir_update(test_malware, sample, test_malware_target, seen[key], rng)
                 else:
@@ -430,6 +448,15 @@ def sample_partitioned_reports(
                 else:
                     test_benign.append(sample)
                 seen[key] += 1
+
+    if test_natural_prevalence and max_test_samples > 0:
+        # Split the pooled samples back into class buckets so downstream code
+        # (which still concatenates benigns then malware) works unchanged.
+        for s in test_pool:
+            if s.label == 1:
+                test_malware.append(s)
+            else:
+                test_benign.append(s)
 
     return ExperimentCorpus(
         train_samples=train_benign + train_malware,
@@ -467,6 +494,82 @@ def _print_test_metrics(
         print(f"  ROC AUC:   {roc_auc_score(y_true, y_prob):.4f}")
         print(f"  Avg Prec:  {average_precision_score(y_true, y_prob):.4f}")
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
+        rec_fp = _recall_at_fp_per_million(y_true, y_prob)
+        print(
+            f"  Recall@FP/M: 0={rec_fp['recall_at_fp_per_million_0']:.4f} "
+            f"1={rec_fp['recall_at_fp_per_million_1']:.4f} "
+            f"3={rec_fp['recall_at_fp_per_million_3']:.4f} "
+            f"5={rec_fp['recall_at_fp_per_million_5']:.4f} "
+            f"9={rec_fp['recall_at_fp_per_million_9']:.4f} "
+            f"(n_benign={rec_fp['n_benign_holdout']}, "
+            f"min_resolvable={rec_fp['min_observable_fp_per_million']:.1f}/M)"
+        )
+
+
+# k values reported by `_recall_at_fp_per_million`.  Recall@3 FP/M is the
+# operating point the deployed Azoth bundle ships at, so it's the autocollie
+# gate's primary axis.  0/1/5/9 frame the curve around it: 0 is the strict
+# zero-FP point, 9 the upper edge of the deployed band.
+RECALL_AT_FP_PER_MILLION_KS: tuple[float, ...] = (0.0, 1.0, 3.0, 5.0, 9.0)
+
+
+def _recall_at_fp_per_million(
+    y_true: np.ndarray, y_prob: np.ndarray,
+) -> dict[str, float | int]:
+    """Recall on malware at thresholds where benign FP rate equals k per million.
+
+    For each ``k`` in :data:`RECALL_AT_FP_PER_MILLION_KS` we compute the FP
+    budget ``floor(n_benign * k / 1e6)`` and return the recall at the lowest
+    threshold whose cumulative benign FPs do not exceed that budget.  When
+    ``n_benign`` is small enough that ``k FP/M`` rounds to zero allowed FPs
+    (typical for narrow routes), the metric collapses to recall@0 — the
+    truthful answer at that holdout size.  Callers can read
+    ``n_benign_holdout`` to detect this saturation case.
+    """
+    n_benign = int(np.sum(y_true == 0))
+    n_malware = int(np.sum(y_true == 1))
+    # `min_observable_fp_per_million` is 1e6 / n_benign — the smallest non-zero
+    # FPR resolvable with this holdout (one false positive over the benign pool).
+    # Below this floor, recall@k collapses to recall@0 because there's no integer
+    # FP budget to spend.  Reporting the floor lets downstream gates pick the
+    # smallest meaningful k for the route instead of optimizing a metric the
+    # holdout can't actually distinguish.
+    min_observable = (1_000_000.0 / n_benign) if n_benign > 0 else float("inf")
+    out: dict[str, float | int] = {
+        "n_benign_holdout": n_benign,
+        "n_malware_holdout": n_malware,
+        "min_observable_fp_per_million": min_observable,
+    }
+    if n_benign == 0 or n_malware == 0:
+        for k in RECALL_AT_FP_PER_MILLION_KS:
+            out[f"recall_at_fp_per_million_{int(k)}"] = 0.0
+            out[f"threshold_at_fp_per_million_{int(k)}"] = 1.0
+        return out
+
+    order = np.argsort(y_prob, kind="stable")[::-1]
+    sorted_probs = y_prob[order]
+    sorted_y = y_true[order]
+    cum_fp = np.cumsum(sorted_y == 0)
+    cum_tp = np.cumsum(sorted_y == 1)
+    # Collapse to threshold breakpoints so equal-probability rows don't get
+    # split between sides of a threshold.
+    change_mask = np.concatenate([np.diff(sorted_probs) != 0, [True]])
+    cuts = np.where(change_mask)[0]
+    thresholds = sorted_probs[cuts]
+    fp_at_cut = cum_fp[cuts]
+    tp_at_cut = cum_tp[cuts]
+    for k in RECALL_AT_FP_PER_MILLION_KS:
+        budget = int(np.floor(n_benign * k / 1_000_000.0))
+        valid = fp_at_cut <= budget
+        suffix = f"fp_per_million_{int(k)}"
+        if valid.any():
+            idx = int(np.where(valid)[0][-1])
+            out[f"recall_at_{suffix}"] = float(tp_at_cut[idx] / n_malware)
+            out[f"threshold_at_{suffix}"] = float(thresholds[idx])
+        else:
+            out[f"recall_at_{suffix}"] = 0.0
+            out[f"threshold_at_{suffix}"] = float(np.nextafter(float(sorted_probs[0]), np.inf))
+    return out
 
 
 def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndarray:
@@ -548,6 +651,12 @@ def run_experiment(
     hard_negative_fraction: float = 0.0,
     hard_negative_weight: float = 1.0,
     benign_filetype_weights: dict[str, float] | None = None,
+    scale_pos_weight_mult: float = 1.0,
+    boosting_type: str = "gbdt",
+    extra_trees: bool = False,
+    seed_search_k: int = 1,
+    save_all_seeds: bool = False,
+    test_natural_prevalence: bool = False,
     total_limit: int = 0,
     max_id: int = 0,
     drop_feature_prefixes: list[str] | None = None,
@@ -595,14 +704,25 @@ def run_experiment(
         "hard_negative_fraction": float(hard_negative_fraction),
         "hard_negative_weight": float(hard_negative_weight),
         "benign_filetype_weights": benign_filetype_weights or {},
+        "scale_pos_weight_mult": float(scale_pos_weight_mult),
+        "boosting_type": str(boosting_type),
+        "extra_trees": bool(extra_trees),
     }
     experiment_spec: dict[str, object] = {
         "route": route,
         "route_file_types": list(route_file_types),
         "snapshot_max_id": int(pinned_max_id),
         "seed": int(seed),
+        "seed_search_k": max(int(seed_search_k), 1),
+        # save_all_seeds participates in the experiment_key so toggling between
+        # picking-best (legacy) and averaged-ensemble (item A) deploy modes
+        # produces distinct cached runs — they share training compute but
+        # differ in shipped artifact and reported metrics, so reusing one for
+        # the other would mask the contract change.
+        "save_all_seeds": bool(save_all_seeds) and max(int(seed_search_k), 1) > 1,
         "train_samples": int(train_samples),
         "max_test_samples": int(max_test_samples),
+        "test_natural_prevalence": bool(test_natural_prevalence),
         "total_limit": int(total_limit),
         "learner": learner,
         "model_name": model_name,
@@ -649,6 +769,7 @@ def run_experiment(
             route,
             route_file_types,
             total_limit,
+            test_natural_prevalence=test_natural_prevalence,
         )
         if cache_dir
         else ""
@@ -674,6 +795,7 @@ def run_experiment(
                 min_malware_training_score=min_malware_training_score,
                 max_id=pinned_max_id,
                 route_file_types=route_file_types,
+                test_natural_prevalence=test_natural_prevalence,
             )
             sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
             train_file_types = _load_primary_file_types(db_path, [s.row_id for s in sorted_train])
@@ -772,56 +894,170 @@ def run_experiment(
         elif name.startswith("gap:"):
             constraints[i] = 1
 
-    result = train.train(
-        X_train,
-        y_train,
-        train.TrainConfig(
-            learner=learner,
-            seed=seed,
-            device=device,
-            n_folds=n_folds,
-            n_estimators=n_estimators,
-            max_depth=max_depth,
-            learning_rate=learning_rate,
-            early_stopping_rounds=early_stopping_rounds,
-            min_child_weight=min_child_weight,
-            min_child_samples=min_child_samples,
-            num_leaves=num_leaves,
-            colsample_bytree=colsample_bytree,
-            subsample=subsample,
-            gamma=gamma,
-            reg_alpha=reg_alpha,
-            reg_lambda=reg_lambda,
-            beta=beta,
-            threshold_mode=threshold_mode,
-            threshold_fpr_target=threshold_fpr_target,
-            hard_negative_fraction=hard_negative_fraction,
-            hard_negative_weight=hard_negative_weight,
-            benign_filetype_weights=benign_filetype_weights or {},
-            monotone_constraints=tuple(constraints),
-            holdout_fraction=holdout_fraction,
-        ),
-        feature_names=spec.feature_names,
-        sample_file_types=train_file_types,
-    )
-
+    # Best-of-K seed search: train K models with seeds [seed, seed+1, ..., seed+K-1],
+    # ship the one with highest holdout recall@3 FP/M (deployed operating point) with
+    # F1 fallback when recall@3 is unresolvable on tiny holdouts.  K=1 (default) is
+    # the single-fit current behavior.  Corpus + matrix are reused across attempts
+    # — only the model fit varies — so wall clock is K × model_fit, not K × full_pipeline.
+    seed_search_k = max(int(seed_search_k), 1)
+    seed_search_results: list[dict[str, float | int]] = []
+    result = None
     sampled_test_metrics: dict[str, float] = {}
-    if X_test.shape[0] > 0:
-        probs = predict_proba(result.model, X_test)
-        _print_test_metrics(y_test, probs, result.optimal_threshold)
-        y_pred = (probs >= result.optimal_threshold).astype(int)
-        sampled_test_metrics = {
+    winning_seed = int(seed)
+    winning_idx = 0
+    best_score = -math.inf
+    # When `save_all_seeds=True` and seed_search_k>1, we deploy the *averaged*
+    # ensemble across all K seeds rather than the best single seed. We keep
+    # every trained model and its test-time probabilities here so we can both
+    # (a) recompute sampled_test_metrics on the averaged scores below, and
+    # (b) write each member to the multi-seed bundle layout.
+    all_attempt_models: list[Any] = []
+    all_attempt_seeds: list[int] = []
+    all_attempt_probs: list[np.ndarray] = []
+
+    for k_idx in range(seed_search_k):
+        attempt_seed = int(seed) + k_idx
+        if seed_search_k > 1:
+            log.info("seed-search attempt %d/%d (seed=%d)", k_idx + 1, seed_search_k, attempt_seed)
+        attempt_started = time.perf_counter()
+        attempt_result = train.train(
+            X_train,
+            y_train,
+            train.TrainConfig(
+                learner=learner,
+                seed=attempt_seed,
+                device=device,
+                n_folds=n_folds,
+                n_estimators=n_estimators,
+                max_depth=max_depth,
+                learning_rate=learning_rate,
+                early_stopping_rounds=early_stopping_rounds,
+                min_child_weight=min_child_weight,
+                min_child_samples=min_child_samples,
+                num_leaves=num_leaves,
+                colsample_bytree=colsample_bytree,
+                subsample=subsample,
+                gamma=gamma,
+                reg_alpha=reg_alpha,
+                reg_lambda=reg_lambda,
+                beta=beta,
+                threshold_mode=threshold_mode,
+                threshold_fpr_target=threshold_fpr_target,
+                hard_negative_fraction=hard_negative_fraction,
+                hard_negative_weight=hard_negative_weight,
+                benign_filetype_weights=benign_filetype_weights or {},
+                scale_pos_weight_mult=scale_pos_weight_mult,
+                boosting_type=boosting_type,
+                extra_trees=extra_trees,
+                monotone_constraints=tuple(constraints),
+                holdout_fraction=holdout_fraction,
+            ),
+            feature_names=spec.feature_names,
+            sample_file_types=train_file_types,
+        )
+
+        attempt_metrics: dict[str, float] = {}
+        attempt_probs: np.ndarray | None = None
+        if X_test.shape[0] > 0:
+            attempt_probs = predict_proba(attempt_result.model, X_test)
+            if k_idx == 0:
+                _print_test_metrics(y_test, attempt_probs, attempt_result.optimal_threshold)
+            y_pred = (attempt_probs >= attempt_result.optimal_threshold).astype(int)
+            attempt_metrics = {
+                "precision": float(precision_score(y_test, y_pred, zero_division=0)),
+                "recall": float(recall_score(y_test, y_pred, zero_division=0)),
+                "f1": float(f1_score(y_test, y_pred, zero_division=0)),
+                "roc_auc": float(roc_auc_score(y_test, attempt_probs)) if len(np.unique(y_test)) > 1 else 0.0,
+                "avg_precision": (
+                    float(average_precision_score(y_test, attempt_probs)) if len(np.unique(y_test)) > 1 else 0.0
+                ),
+                "brier": float(brier_score_loss(y_test, attempt_probs)) if len(np.unique(y_test)) > 1 else 0.0,
+            }
+            attempt_metrics.update(_recall_at_fp_per_million(y_test, attempt_probs))
+        elif k_idx == 0:
+            print("\nNo external test rows available.")
+        all_attempt_models.append(attempt_result.model)
+        all_attempt_seeds.append(int(attempt_seed))
+        if attempt_probs is not None:
+            all_attempt_probs.append(attempt_probs)
+
+        # Winner score: prefer recall@3 FP/M (deployed operating point); fall back
+        # to F1 when the holdout is too small to resolve recall@3 (then it equals
+        # recall@0 across all attempts and F1 becomes the only signal).
+        attempt_score = float(attempt_metrics.get("recall_at_fp_per_million_3",
+                              attempt_metrics.get("f1", 0.0)))
+        seed_search_results.append({
+            "seed": attempt_seed,
+            "f1": float(attempt_metrics.get("f1", 0.0)),
+            "roc_auc": float(attempt_metrics.get("roc_auc", 0.0)),
+            "avg_precision": float(attempt_metrics.get("avg_precision", 0.0)),
+            "recall_at_fp_per_million_3": float(attempt_metrics.get("recall_at_fp_per_million_3", 0.0)),
+            "wall_s": float(time.perf_counter() - attempt_started),
+        })
+        if seed_search_k > 1:
+            log.info(
+                "seed-search attempt %d/%d done: F1=%.4f AUC=%.4f recall@3FPM=%.4f (%.1fs)",
+                k_idx + 1, seed_search_k,
+                attempt_metrics.get("f1", 0.0), attempt_metrics.get("roc_auc", 0.0),
+                attempt_metrics.get("recall_at_fp_per_million_3", 0.0),
+                seed_search_results[-1]["wall_s"],
+            )
+
+        if attempt_score > best_score:
+            best_score = attempt_score
+            result = attempt_result
+            sampled_test_metrics = attempt_metrics
+            winning_seed = attempt_seed
+            winning_idx = k_idx
+
+    if seed_search_k > 1:
+        log.info(
+            "seed-search winner: attempt %d/%d (seed=%d, score=%.4f)",
+            winning_idx + 1, seed_search_k, winning_seed, best_score,
+        )
+
+    # Multi-seed averaging (item A): when save_all_seeds=True with K>1, the
+    # deployed bundle ships every member, and at predict time litmus averages
+    # their probabilities. The reported sampled_test_metrics should reflect
+    # *that* averaged ensemble — not the best single seed — so the metric
+    # autocollie compares against the baseline matches what the runtime
+    # actually emits.
+    deploy_averaged = bool(save_all_seeds) and len(all_attempt_models) > 1 \
+        and len(all_attempt_probs) == len(all_attempt_models)
+    averaged_test_metrics: dict[str, float] | None = None
+    if deploy_averaged:
+        ensemble_probs = np.zeros(X_test.shape[0], dtype=np.float64)
+        for p in all_attempt_probs:
+            ensemble_probs += p.astype(np.float64)
+        ensemble_probs = (ensemble_probs / float(len(all_attempt_probs))).astype(np.float32)
+        # Use the seed-search winner's threshold for classification metrics —
+        # all members were trained against the same matrix and use the same
+        # operating-point logic, so the threshold is comparable across seeds.
+        thr = float(result.optimal_threshold)
+        y_pred = (ensemble_probs >= thr).astype(int)
+        averaged_test_metrics = {
             "precision": float(precision_score(y_test, y_pred, zero_division=0)),
             "recall": float(recall_score(y_test, y_pred, zero_division=0)),
             "f1": float(f1_score(y_test, y_pred, zero_division=0)),
-            "roc_auc": float(roc_auc_score(y_test, probs)) if len(np.unique(y_test)) > 1 else 0.0,
+            "roc_auc": float(roc_auc_score(y_test, ensemble_probs)) if len(np.unique(y_test)) > 1 else 0.0,
             "avg_precision": (
-                float(average_precision_score(y_test, probs)) if len(np.unique(y_test)) > 1 else 0.0
+                float(average_precision_score(y_test, ensemble_probs))
+                if len(np.unique(y_test)) > 1 else 0.0
             ),
-            "brier": float(brier_score_loss(y_test, probs)) if len(np.unique(y_test)) > 1 else 0.0,
+            "brier": (
+                float(brier_score_loss(y_test, ensemble_probs))
+                if len(np.unique(y_test)) > 1 else 0.0
+            ),
         }
-    else:
-        print("\nNo external test rows available.")
+        averaged_test_metrics.update(_recall_at_fp_per_million(y_test, ensemble_probs))
+        sampled_test_metrics = averaged_test_metrics
+        log.info(
+            "seed-search averaged ensemble (K=%d): F1=%.4f AUC=%.4f recall@3FPM=%.4f",
+            len(all_attempt_models),
+            averaged_test_metrics.get("f1", 0.0),
+            averaged_test_metrics.get("roc_auc", 0.0),
+            averaged_test_metrics.get("recall_at_fp_per_million_3", 0.0),
+        )
 
     results = {
         "model_name": model_name,
@@ -844,19 +1080,67 @@ def run_experiment(
         "threshold": float(result.optimal_threshold),
         "split_summary": result.split_summary,
         "db_path": str(db_path),
-        "seed": int(seed),
+        # `seed` is the seed of the SHIPPED model (the seed-search winner). The
+        # operator-supplied seed is in experiment_spec.seed.  When seed_search_k=1
+        # they're identical.
+        "seed": int(winning_seed),
+        "seed_search_k": seed_search_k,
+        "seed_search_winner_index": winning_idx,
+        "seed_search_results": seed_search_results,
+        "save_all_seeds": bool(deploy_averaged),
+        "n_seed_models_shipped": len(all_attempt_models) if deploy_averaged else 1,
         "timestamp": datetime.now().isoformat(timespec="seconds"),
         "elapsed_seconds": float(time.perf_counter() - started),
         "snapshot_max_id": int(pinned_max_id),
     }
     if output_dir is not None:
         spec.save(output_dir / "feature_spec.json")
-        model_filename = "model.txt" if learner == "azoth" else "model.json"
-        export.save_model(result.model, output_dir / model_filename)
+        ext = "txt" if learner == "azoth" else "json"
+        model_filename = f"model.{ext}"
+        if deploy_averaged:
+            # Multi-seed bundle: write models/seed_<S>.{txt,json} for every
+            # member and remove any stale top-level model artifact so the
+            # bundle layout stays unambiguous.
+            for legacy in (output_dir / "model.txt", output_dir / "model.json"):
+                if legacy.is_file():
+                    legacy.unlink()
+            shared_models_dir = output_dir / "models"
+            shared_models_dir.mkdir(parents=True, exist_ok=True)
+            for s, m in zip(all_attempt_seeds, all_attempt_models, strict=True):
+                export.save_model(m, shared_models_dir / f"seed_{s}.{ext}")
+        else:
+            export.save_model(result.model, output_dir / model_filename)
         export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
         if keyed_result_path is not None:
             keyed_result_path.parent.mkdir(parents=True, exist_ok=True)
             with open(keyed_result_path, "w") as f:
                 json.dump(results, f, indent=2)
             log.info("saved keyed experiment summary to %s", keyed_result_path)
+            # Also save spec + model under per-key paths so downstream consumers
+            # (notably autocollie's candidate-bundle staging) can pick them up
+            # by experiment_key without racing against the shared
+            # `output_dir / feature_spec.json` and `model.txt` files, which get
+            # overwritten by the next `make experiment` invocation.  Without
+            # this, when full-train hits the AlreadyExists short-circuit and
+            # skips re-extraction, staging would copy whatever spec the most
+            # recent unrelated experiment happened to leave behind.
+            keyed_spec_path = keyed_result_path.with_name(f"{exp_key}_feature_spec.json")
+            spec.save(keyed_spec_path)
+            if deploy_averaged:
+                # Multi-seed keyed layout: <key>_models/seed_<S>.{txt,json}.
+                # autocollie's stageCandidateBundle prefers this directory
+                # over the legacy single keyed file when present.
+                keyed_models_dir = keyed_result_path.with_name(f"{exp_key}_models")
+                keyed_models_dir.mkdir(parents=True, exist_ok=True)
+                for s, m in zip(all_attempt_seeds, all_attempt_models, strict=True):
+                    export.save_model(m, keyed_models_dir / f"seed_{s}.{ext}")
+                log.info(
+                    "saved keyed feature_spec and %d-seed ensemble to %s, %s",
+                    len(all_attempt_models), keyed_spec_path, keyed_models_dir,
+                )
+            else:
+                keyed_model_path = keyed_result_path.with_name(f"{exp_key}_{model_filename}")
+                export.save_model(result.model, keyed_model_path)
+                log.info("saved keyed feature_spec and model to %s, %s",
+                         keyed_spec_path, keyed_model_path)
     return results

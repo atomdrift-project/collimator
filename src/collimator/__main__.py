@@ -1245,6 +1245,45 @@ def main() -> None:
         help="Upweight benign training rows for a file type, format filetype=weight; repeatable",
     )
     p_exp.add_argument(
+        "--scale-pos-weight-mult", type=float, default=1.0,
+        help="Multiplier on auto-computed n_benign/n_malware scale_pos_weight. "
+             "<1.0 down-weights positives at training time → fewer FPs at low FPR "
+             "(better recall@k FP/M for the deployed operating point). 1.0 = balanced.",
+    )
+    p_exp.add_argument(
+        "--boosting-type", choices=["gbdt", "dart", "goss"], default="gbdt",
+        help="LightGBM boosting algorithm (azoth learner only). dart adds dropout "
+             "for regularized tail behavior; goss uses gradient-based one-side sampling.",
+    )
+    p_exp.add_argument(
+        "--extra-trees", action="store_true",
+        help="LightGBM extra_trees: random splits instead of greedy. "
+             "Often improves generalization at the tail (low-FPR region).",
+    )
+    p_exp.add_argument(
+        "--seed-search-k", type=int, default=1,
+        help="Best-of-K seed search: train K models with seeds [seed, seed+1, ..., "
+             "seed+K-1], ship the one with highest holdout recall@3 FP/M (F1 fallback "
+             "for unresolvable holdouts). Reuses corpus + matrix cache across attempts. "
+             "K=1 (default) = single fit. K=3-5 reduces seed variance for low-FPR work.",
+    )
+    p_exp.add_argument(
+        "--save-all-seeds", action="store_true",
+        help="With --seed-search-k>1, ship the AVERAGED ensemble across all K trained "
+             "models instead of picking the single best seed. Bundle layout becomes "
+             "models/seed_<S>.txt; litmus loads them all and averages predictions at "
+             "inference, reducing seed-driven variance by ~K. Reported metrics reflect "
+             "the averaged ensemble. No-op when --seed-search-k=1.",
+    )
+    p_exp.add_argument(
+        "--test-natural-prevalence", action="store_true",
+        help="Use natural class prevalence in the test holdout instead of forcing "
+             "50/50 balance. Gives more benigns into the holdout (recall@k FP/M "
+             "needs benigns; 50/50 wastes benign capacity). Changes F1/AUC/AP "
+             "semantics — they reflect natural prevalence, not balanced. Pair with "
+             "a higher --max-test-samples to actually grow the benign pool.",
+    )
+    p_exp.add_argument(
         "--total-limit", type=int, default=0,
         help="Cap total records scanned from DB (oldest first, 0 = unlimited)",
     )
@@ -1493,6 +1532,12 @@ def main() -> None:
             hard_negative_fraction=args.hard_negative_fraction,
             hard_negative_weight=args.hard_negative_weight,
             benign_filetype_weights=_parse_filetype_weights(args.benign_filetype_weight),
+            scale_pos_weight_mult=args.scale_pos_weight_mult,
+            boosting_type=args.boosting_type,
+            extra_trees=args.extra_trees,
+            seed_search_k=args.seed_search_k,
+            save_all_seeds=args.save_all_seeds,
+            test_natural_prevalence=args.test_natural_prevalence,
             total_limit=args.total_limit,
             max_id=args.max_id,
             drop_feature_prefixes=_parse_csv_list(args.drop_feature_prefixes),

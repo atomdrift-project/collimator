@@ -1,6 +1,12 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -o pipefail -c
-.PHONY: train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
+
+# `_comma` lets us pass a literal comma into $(subst) where the function-call
+# syntax would otherwise interpret it as an argument separator. Used to convert
+# autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
+# space-separated form make's $(foreach) expects.
+_comma := ,
+.PHONY: train azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -67,10 +73,26 @@ AZOTH_SPECIALIST_NUM_LEAVES ?= 96
 AZOTH_SPECIALIST_MIN_CHILD_SAMPLES ?= 100
 AZOTH_SPECIALIST_MIN_BAD ?= 50
 AZOTH_SPECIALIST_MIN_GOOD ?= 50
+# Multi-seed averaging (item A): K extra seeds trained against the same matrix.
+# Default 2 → 3 trained seeds, averaged at predict time. Reduces seed-driven
+# prediction variance by ~3× at 3× training cost; matrix extraction (the
+# slow part) is shared across seeds. K=2 is the sweet spot — most independent
+# variance is captured in the first 3 samples; K>2 hits diminishing returns
+# because tree boosters share enough hyperparam-driven structure that the
+# noise terms don't actually decorrelate to zero. Setting K=0 reverts to the
+# legacy single-model layout (model.txt) — useful for debugging, since
+# averaged bundles smear blame across members when something regresses.
+AZOTH_SPECIALIST_N_SEED_EXTRAS ?= 2
 AZOTH_SPECIALIST_ONLY ?=
 AZOTH_SPECIALIST_MASK_SPEC ?=
-AZOTH_SPECIALIST_HARD_NEGATIVE_ROUTE ?= pe=0.01,12.0
+AZOTH_SPECIALIST_TRAIN_OVERRIDE ?= pe:hard_negative_fraction=0.01 pe:hard_negative_weight=12.0
 AZOTH_SPECIALIST_FEATURE_ENV ?= native:COLLIMATOR_FORMAT_HINTS=1 native:COLLIMATOR_TAXONOMY_FEATURES=1 native:COLLIMATOR_EMBER_LITE_FEATURES=1
+# Where autocollie-driven experiments write run JSONs. Pointing the suite at
+# this dir lets it auto-pick each route's highest-F1 historical experiment
+# and replay its train_config + feature_env, so `make azoth-specialist-suite`
+# uses autocollie's wins by default. Unset to revert to pure CLI/Makefile
+# defaults (legacy behavior, autocollie discoveries are dropped on the floor).
+AZOTH_AUTOCOLLIE_RUNS_DIR ?= out/experiments/azoth/runs
 AZOTH_SPECIALIST_SKIP_EXISTING ?= 1
 AZOTH_SPECIALIST_SKIP_EXISTING_ARG := $(if $(filter 1 true yes,$(AZOTH_SPECIALIST_SKIP_EXISTING)),--skip-existing,)
 AZOTH_FILEGROUP_SCORE_FILTER ?= 0
@@ -126,6 +148,15 @@ EXP_HARD_NEGATIVE_FRACTION ?= 0.0
 EXP_HARD_NEGATIVE_WEIGHT ?= 1.0
 EXP_BENIGN_FILETYPE_WEIGHT ?=
 EXP_MONOTONE_JSON ?=
+EXP_SCALE_POS_WEIGHT_MULT ?= 1.0
+EXP_BOOSTING_TYPE ?= gbdt
+EXP_EXTRA_TREES ?= 0
+EXP_SEED_SEARCH_K ?= 1
+# When EXP_SEED_SEARCH_K>1, set EXP_SAVE_ALL_SEEDS=1 to deploy the averaged
+# ensemble (item A) instead of picking-best. Bundle layout becomes
+# models/seed_<S>.txt; litmus averages at predict time.
+EXP_SAVE_ALL_SEEDS ?= 0
+EXP_TEST_NATURAL_PREVALENCE ?= 0
 EXP_BETA ?= 1.25
 EXP_MIN_MALWARE_SCORE ?= 0
 # Ablation 2026-04-10: silent_packer (Exp 43) and mtime_kurtosis (Exp 44) were
@@ -317,6 +348,35 @@ train: venv check-db-fresh
 	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=0.01 \
 	$(PYTHON) -u -m collimator train --db $(DB) --output $(OUT_DIR) --model-name $(MODEL) --learner $(LEARNER) $(WORKERS_ARG) --seed $(SEED) --min-malware-score $(TRAIN_MIN_MALWARE_SCORE) $(if $(DROP_FEATURE_PREFIXES),--drop-feature-prefixes $(DROP_FEATURE_PREFIXES),) $(_TRAIN_FLAGS) 2>&1 | tee "$(LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-train.log"
 
+# azoth-train: the full top-level "give me the latest best deployed model"
+# entry point.
+#
+#   1. Replay autocollie's highest-F1 historical run for the general route
+#      (with multi-seed averaging on, so the resulting bundle is variance-
+#      reduced). Configuration comes from out/experiments/azoth/runs/, so
+#      every autocollie discovery flows in automatically.
+#   2. Re-train every filegroup + filetype specialist using the same
+#      autocollie-best-per-route mechanism (via the suite's
+#      --autocollie-best-runs-dir hookup, on by default). Specialists also
+#      get K=3 multi-seed averaging.
+#   3. Calibrate + diagnostics + policy search + global FP/M check + bundle
+#      validate + litmus parity, and copy the validated bundle to the live
+#      deploy directory. Top-level docs (README.md, ENSEMBLE_MODEL.md,
+#      GENERALIST_MODEL.md, route_diagnostics.md, etc.) get regenerated with
+#      the new numbers.
+#
+# Always retrains from scratch on current DB state — the DB-snapshot pin
+# protects against drift but there's no model-cache shortcut. Run any time
+# you want the deployed bundle refreshed.
+azoth-train: venv check-db
+	$(PYTHON) scripts/azoth_train_best.py \
+		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--route general \
+		--set DB=$(DB) \
+		$(if $(WORKERS),--set EXP_WORKERS=$(WORKERS),)
+	$(MAKE) azoth-specialists
+	$(MAKE) azoth-deploy
+
 fixture: venv check-db
 	@# Regenerate extraction_fixture.json and cross_language_fixture.json
 	@# using the SAME feature toggles as make train, so env-gated features
@@ -507,12 +567,14 @@ azoth-specialists: venv check-db
 		--early-stopping-rounds $(AZOTH_SPECIALIST_EARLY_STOPPING) \
 		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
 		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
+		--n-seed-extras $(AZOTH_SPECIALIST_N_SEED_EXTRAS) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
 		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
 		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
-		$(foreach route,$(AZOTH_SPECIALIST_HARD_NEGATIVE_ROUTE),--hard-negative-route $(route)) \
+		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
 		$(foreach env,$(AZOTH_SPECIALIST_FEATURE_ENV),--feature-env $(env)) \
+		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
 		$(if $(DEVICE),--device $(DEVICE),)
@@ -586,6 +648,7 @@ azoth-validate: azoth-calibrate
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget
+	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	@_STAGE=$$(mktemp -d) && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
@@ -630,6 +693,7 @@ azoth-deploy: azoth-calibrate
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget
+	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	$(eval _STAGE := $(shell mktemp -d))
 	$(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$(_STAGE)"
@@ -642,7 +706,7 @@ azoth-deploy: azoth-calibrate
 	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test scan_no_deadlock || { rm -rf $(_STAGE); exit 1; }
 	$(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$(_STAGE)" --required-model az/native --required-model az/elf || { rm -rf $(_STAGE); exit 1; }
 	@mkdir -p "$(AZOTH_DEPLOY_DIR)"
-	@find "$(AZOTH_DEPLOY_DIR)" -mindepth 1 -maxdepth 1 ! -name .git ! -name .gitignore ! -name LICENSE ! -name TRAINING.md -exec rm -rf {} +
+	@find "$(AZOTH_DEPLOY_DIR)" -mindepth 1 -maxdepth 1 ! -name .git ! -name .gitignore ! -name LICENSE ! -name README.md ! -name TRAINING.md -exec rm -rf {} +
 	@rm -f "$(AZOTH_DEPLOY_DIR)/model.json" "$(AZOTH_DEPLOY_DIR)/model.txt" "$(AZOTH_DEPLOY_DIR)/feature_spec.json" \
 	  "$(AZOTH_DEPLOY_DIR)/evaluation.json" "$(AZOTH_DEPLOY_DIR)/extraction_fixture.json" "$(AZOTH_DEPLOY_DIR)/config.json" \
 	  "$(AZOTH_DEPLOY_DIR)/shap_importance.json" "$(AZOTH_DEPLOY_DIR)/model.onnx" "$(AZOTH_DEPLOY_DIR)/MODEL.md" \
@@ -837,7 +901,13 @@ experiment: venv check-db
 		--beta $(EXP_BETA) --threshold-mode $(EXP_THRESHOLD_MODE) \
 		$(if $(EXP_THRESHOLD_FPR_TARGET),--threshold-fpr-target $(EXP_THRESHOLD_FPR_TARGET),) \
 		--hard-negative-fraction $(EXP_HARD_NEGATIVE_FRACTION) --hard-negative-weight $(EXP_HARD_NEGATIVE_WEIGHT) \
-		$(foreach w,$(EXP_BENIGN_FILETYPE_WEIGHT),--benign-filetype-weight $(w)) \
+		--scale-pos-weight-mult $(EXP_SCALE_POS_WEIGHT_MULT) \
+		--boosting-type $(EXP_BOOSTING_TYPE) \
+		$(if $(filter 1 true yes,$(EXP_EXTRA_TREES)),--extra-trees,) \
+		--seed-search-k $(EXP_SEED_SEARCH_K) \
+		$(if $(filter 1 true yes,$(EXP_SAVE_ALL_SEEDS)),--save-all-seeds,) \
+		$(if $(filter 1 true yes,$(EXP_TEST_NATURAL_PREVALENCE)),--test-natural-prevalence,) \
+		$(foreach w,$(subst $(_comma), ,$(EXP_BENIGN_FILETYPE_WEIGHT)),--benign-filetype-weight $(w)) \
 		$(if $(EXP_CACHE_DIR),--cache-dir $(EXP_CACHE_DIR),) \
 		2>&1 | tee "$(EXP_LOG_DIR)/$$(date +%Y-%m-%dT%H-%M-%S)-experiment$(EXP_TAG).log"
 
@@ -994,12 +1064,56 @@ verify-litmus:
 
 AUTOCOLLIE_DIR ?= ../autocollie
 AUTOCOLLIE_BIN := $(AUTOCOLLIE_DIR)/bin/autocollie
-EXPERIMENTS ?= 5
+EXPERIMENTS ?= 8
+# Autocollie defaults to the hopper-host Postgres so it doesn't compete with
+# the local replica while it's syncing. Override with DB= to point elsewhere.
+AUTOCOLLIE_DB ?= postgres://hopper@hopper:5432/hopper
 # ROUTES is comma-separated, e.g. ROUTES=filetypes/javascript,filegroups/scripts
 # ROUTE (singular) is accepted as a convenience.
 ROUTES ?= $(ROUTE)
 
-.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-confirm autocollie-promote
+.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-confirm autocollie-promote azoth-augment-small-routes
+
+# azoth-augment-small-routes — post-hoc threshold re-search for routes whose
+# default-level policy is `no_policy` because their own benign pool is too
+# small to estimate FP rate at L3 (3/M).  Loads each such specialist, scores
+# its filegroup peers' benigns, and re-runs the threshold search against the
+# augmented pool.  Optional --use-credible-bound applies Beta-Binomial
+# smoothing for routes with very small pools.
+#
+# Costs real inference time (default ~100k benigns × N routes); not in the
+# default azoth-deploy chain.  Run after a fresh azoth-validate to recover
+# deployable thresholds on small-corpus routes.
+#
+# Usage:
+#   make azoth-augment-small-routes
+#   make azoth-augment-small-routes ONLY_ROUTE=filetypes/macho
+#   make azoth-augment-small-routes USE_CREDIBLE_BOUND=1
+ONLY_ROUTE ?=
+USE_CREDIBLE_BOUND ?=
+MAX_POOL_BENIGNS ?= 100000
+azoth-augment-small-routes: venv check-db
+	$(PYTHON) scripts/azoth_augment_small_route_policies.py \
+		--azoth-root $(AZOTH_ROOT) \
+		--db $(DB) \
+		--max-pool-benigns $(MAX_POOL_BENIGNS) \
+		--workers $(or $(WORKERS),32) \
+		$(if $(filter 1 true yes,$(USE_CREDIBLE_BOUND)),--use-credible-bound,) \
+		$(if $(ONLY_ROUTE),--only-routes $(ONLY_ROUTE),)
+	$(PYTHON) scripts/azoth_policy_global_metrics.py \
+		--config $(AZOTH_CONFIG) \
+		--policy $(AZOTH_ROUTE_POLICIES) \
+		--score-table $(AZOTH_SCORE_TABLE) \
+		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
+		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
+		--fail-on-budget
+	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB)
+	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
+
+# Autocollie targets all default DB to AUTOCOLLIE_DB (hopper-host). User can
+# still override with `make autocollie DB=...`; command-line vars beat
+# target-specific assignments in GNU make.
+autocollie autocollie-screen autocollie-confirm autocollie-promote autocollie-loop autocollie-dryrun: DB = $(AUTOCOLLIE_DB)
 
 autocollie-build:
 	@test -d $(AUTOCOLLIE_DIR) || { echo "error: $(AUTOCOLLIE_DIR) does not exist"; exit 1; }
@@ -1021,7 +1135,7 @@ autocollie-screen: venv check-db autocollie-build
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--routes $(ROUTES) \
 		--experiments $(EXPERIMENTS) \
-		--make-args "EXP_WORKERS=$(or $(WORKERS),64)"
+		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # Confirm a screening winner by re-running with a different seed.
 # Usage: make autocollie-confirm KEY=<16-hex experiment_key> [SEED=43]
@@ -1033,7 +1147,7 @@ autocollie-confirm: venv check-db autocollie-build
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--key $(KEY) \
 		--seed $(CONFIRM_SEED) \
-		--make-args "EXP_WORKERS=$(or $(WORKERS),64)"
+		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # Promote a winner: confirm (different seed) -> full-train (inflated profile)
 # -> compare. On pass, writes a report telling the user to run `make azoth-deploy`.
@@ -1046,8 +1160,8 @@ autocollie-promote: venv check-db autocollie-build
 		--key $(KEY) \
 		--seed $(CONFIRM_SEED) \
 		--screen-timeout 30m \
-		--promote-timeout 90m \
-		--make-args "EXP_WORKERS=$(or $(WORKERS),64)"
+		--promote-timeout 180m \
+		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # The full hands-off ladder: screen N specs per route -> if any winner beats
 # the route's historical best, automatically promote it (confirm + full-train
@@ -1057,24 +1171,38 @@ autocollie-promote: venv check-db autocollie-build
 #        make autocollie ROUTES=filetypes/                       (overnight)
 #        make autocollie ROUTES=filetypes/python PASSES=0        (loop until Ctrl-C)
 PASSES ?= 1
+AUTO_ROUTES ?=
+SHUFFLE_ROUTES ?=
 autocollie: venv check-db autocollie-build
-	@test -n "$(ROUTES)" || { echo "error: set ROUTES=route1,route2 (or ROUTES=filetypes/)"; exit 1; }
+	@test -n "$(ROUTES)$(AUTO_ROUTES)$(SHUFFLE_ROUTES)" || { echo "error: set ROUTES=route1,route2 (or AUTO_ROUTES=N for top-N weakest, or SHUFFLE_ROUTES=1 for random walk over every known route)"; exit 1; }
 	$(AUTOCOLLIE_BIN) auto \
 		--collimator $(CURDIR) \
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
-		--routes $(ROUTES) \
+		$(if $(ROUTES),--routes $(ROUTES),) \
+		$(if $(AUTO_ROUTES),--auto-routes $(AUTO_ROUTES),) \
+		$(if $(filter 1 true yes,$(SHUFFLE_ROUTES)),--shuffle-routes,) \
 		--experiments $(EXPERIMENTS) \
 		--passes $(PASSES) \
 		--seed $(CONFIRM_SEED) \
 		--screen-timeout 30m \
-		--promote-timeout 90m \
-		--make-args "EXP_WORKERS=$(or $(WORKERS),32)"
+		--promote-timeout 180m \
+		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # autocollie-loop is the same target with PASSES=0 — loops the screen+promote
 # ladder over the route list until Ctrl-C. Pi sessions persist per route so
 # the LLM accumulates context across passes (seeing more prior runs each
 # cycle, naturally avoiding re-proposals).
-# Usage: make autocollie-loop ROUTES=filetypes/python EXPERIMENTS=10
+#
+# Three ways to use it:
+#   make autocollie-loop ROUTES=filetypes/python EXPERIMENTS=10
+#     — fixed route list, loops indefinitely (same order each pass)
+#   make autocollie-loop AUTO_ROUTES=3 EXPERIMENTS=5
+#     — picks the 3 weakest routes each pass by recall@3 headroom
+#       (self-balancing — concentrates on routes with most to gain)
+#   make autocollie-loop SHUFFLE_ROUTES=1 EXPERIMENTS=10
+#     — walks every known route (general + all filegroups + all filetypes)
+#       in random order, re-shuffling each pass. Try 10 things per route, then
+#       move on. Best for "throw a bunch of stuff at the wall overnight."
 autocollie-loop: PASSES=0
 autocollie-loop: autocollie
 
@@ -1140,6 +1268,9 @@ help:
 	@echo "                       Trailing slash expands a prefix from prior runs:"
 	@echo "                       ROUTES=filetypes/   -> all filetypes/* ever run"
 	@echo "                       ROUTES=filegroups/  -> all filegroups/*"
-	@echo "  EXPERIMENTS=n        Specs requested per autocollie cycle (default: 5)"
+	@echo "  EXPERIMENTS=n        Specs requested per autocollie cycle (default: 8)"
 	@echo "  PASSES=n             Times to loop the autocollie route list (0=until Ctrl-C)"
+	@echo "  EXP_ESTIMATORS_DEFAULT=n  Floor for screen/confirm/promote estimators (default: 250)"
+	@echo "  AZOTH_SPECIALIST_TRAIN_OVERRIDE='route:field=value ...'"
+	@echo "                       Per-route specialist TrainConfig overrides"
 	@echo "  MODELS_DIR=path    Deployment target (default: ../litmus-models/<target-model>)"

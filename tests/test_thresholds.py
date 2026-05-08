@@ -257,3 +257,102 @@ def test_error_rows_for_threshold_collapses_archive_members_to_outer_paths() -> 
     ]
     assert np.isclose(fn_rows[0]["probability"], 0.80)
     assert np.isclose(fn_rows[1]["probability"], 0.70)
+
+
+def test_credible_bound_fp_rate_zero_fps_small_n() -> None:
+    """0 FPs out of 100 benigns: empirical FPR is 0, but with so few samples
+    we can't claim the true rate is below ~3% at 95% confidence."""
+    from collimator.thresholds import credible_bound_fp_rate
+
+    upper = credible_bound_fp_rate(0, 100, side="upper", confidence=0.95)
+    assert 0.025 < upper < 0.035, f"unexpected upper bound: {upper}"
+
+
+def test_credible_bound_fp_rate_zero_fps_large_n_meets_3fpm() -> None:
+    """0 FPs out of 1M benigns: 95% upper bound is ~3 FP/M.  This is the N
+    threshold beyond which the L3 (3 FP/M) target becomes deploy-confident."""
+    from collimator.thresholds import credible_bound_fp_rate
+
+    upper = credible_bound_fp_rate(0, 1_000_000, side="upper", confidence=0.95)
+    assert 2.5e-6 < upper < 3.5e-6, f"unexpected upper bound: {upper}"
+
+
+def test_credible_bound_fp_rate_msi_like_corpus_too_small_for_l3() -> None:
+    """msi-style: 18 benigns total.  Even 0 FPs has a 95% upper bound around
+    15% — decisively above any L3 (3 FP/M) target.  This test documents the
+    fundamental small-corpus limit."""
+    from collimator.thresholds import credible_bound_fp_rate
+
+    upper = credible_bound_fp_rate(0, 18, side="upper", confidence=0.95)
+    assert upper > 0.10, (
+        f"expected upper bound > 10% for n=18 (truly tiny corpus); got {upper}"
+    )
+
+
+def test_credible_bound_fp_rate_monotone_in_fp_count() -> None:
+    """For fixed n_benign, more empirical FPs ⇒ higher posterior upper bound."""
+    from collimator.thresholds import credible_bound_fp_rate
+
+    n_benign = 1000
+    bounds = [
+        credible_bound_fp_rate(k, n_benign, side="upper", confidence=0.95)
+        for k in (0, 1, 5, 10, 50)
+    ]
+    for prev, curr in zip(bounds, bounds[1:]):
+        assert curr > prev, f"non-monotone: {bounds}"
+
+
+def test_credible_bound_fp_rate_lower_below_upper() -> None:
+    """Lower credible bound must be below upper bound for nontrivial counts."""
+    from collimator.thresholds import credible_bound_fp_rate
+
+    lower = credible_bound_fp_rate(5, 1000, side="lower", confidence=0.95)
+    upper = credible_bound_fp_rate(5, 1000, side="upper", confidence=0.95)
+    assert 0 <= lower < upper, f"expected 0 <= lower < upper, got {lower}, {upper}"
+
+
+def test_select_threshold_at_credible_bound_strictly_stricter_than_empirical() -> None:
+    """The credible-bound threshold should be ≥ the empirical threshold for
+    the same target FP/M when N is small — i.e. we deploy a tighter (=larger)
+    threshold when sample size is sparse, because we can't confirm the
+    empirical FPR is reliable."""
+    import numpy as np
+
+    from collimator.thresholds import (
+        _select_threshold_at_fp_budget,
+        _fp_budget_for_per_million,
+        select_threshold_at_credible_bound,
+    )
+
+    # Synthetic: 200 benigns; if we set threshold low enough to admit 1 FP,
+    # empirical FPR is 0.5%, comfortably above 3 FP/M target — but the
+    # smoothed estimator should still detect the budget violation.
+    n_benign = 200
+    n_malware = 50
+    # Threshold→stats arrays in descending threshold order — what
+    # _select_threshold_at_fp_budget expects.
+    thresholds = np.linspace(0.99, 0.50, 50)
+    fp_vals = np.arange(50, dtype=np.int32)  # 0, 1, 2, ... FPs as threshold drops
+    tp_vals = np.linspace(0, n_malware, 50).astype(np.int32)
+    recall_vals = tp_vals / n_malware
+    fpr_vals = fp_vals / n_benign
+
+    target_per_million = 3.0
+    max_fp = _fp_budget_for_per_million(n_benign, target_per_million)
+    empirical = _select_threshold_at_fp_budget(
+        thresholds, tp_vals, fp_vals, recall_vals, fpr_vals,
+        n_benign, n_malware, max_fp=max_fp,
+    )
+    smoothed = select_threshold_at_credible_bound(
+        thresholds, tp_vals, fp_vals, recall_vals, fpr_vals,
+        n_benign, n_malware, max_fp_per_million=target_per_million,
+    )
+    assert empirical is not None and smoothed is not None
+    # smoothed threshold should be >= empirical (stricter or equal).
+    assert smoothed["threshold"] >= empirical["threshold"], (
+        f"smoothed threshold {smoothed['threshold']} below empirical "
+        f"{empirical['threshold']} — smoothing should never relax the bound"
+    )
+    # And smoothed must annotate its credible bound for auditability.
+    assert "credible_bound_fp_rate" in smoothed
+    assert "credible_bound_confidence" in smoothed

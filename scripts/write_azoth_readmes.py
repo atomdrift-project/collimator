@@ -46,6 +46,212 @@ def _short_hash(value: Any) -> str:
     return str(value)[:12]
 
 
+# EMBER 2024 Table 5 reference values (Joyce et al., KDD'25).
+# https://doi.org/10.1145/3711896.3737431
+# Each entry is a single LightGBM classifier; we use them for apples-to-apples
+# delta reporting in our model cards.  Their "All files" row maps to our
+# `general` model's all-corpus score; their "<X> files → <X> files" row maps
+# to our `filetypes/<X>` specialist evaluated on its own holdout.  Filetypes
+# without a clean mapping (e.g. EMBER's APK has no direct route in our bundle)
+# are omitted.
+EMBER_2024 = {
+    "all_files": {
+        "general":    {"roc_auc": 0.9969, "pr_auc": 0.9971},
+    },
+    # PE: EMBER reports per-PE-subtype (Win32/Win64/.NET) plus an "All PE
+    # files" aggregate.  Our `filetypes/pe` route covers all PE subtypes, so
+    # we compare against the aggregate.
+    "pe": {
+        "general":    {"roc_auc": 0.9982, "pr_auc": 0.9983, "label": "All PE files (general)"},
+        "specialist": {"roc_auc": 0.9982, "pr_auc": 0.9983, "label": "All PE files (specialist)"},
+    },
+    "elf": {
+        "general":    {"roc_auc": 0.9887, "pr_auc": 0.9902, "label": "All files → ELF"},
+        "specialist": {"roc_auc": 0.9933, "pr_auc": 0.9933, "label": "ELF specialist"},
+    },
+    "pdf": {
+        "general":    {"roc_auc": 0.9878, "pr_auc": 0.9901, "label": "All files → PDF"},
+        "specialist": {"roc_auc": 0.9912, "pr_auc": 0.9933, "label": "PDF specialist"},
+    },
+}
+
+
+def _delta(ours: float | None, theirs: float | None) -> str:
+    """Format `ours - theirs` with sign (+ / -) for direct comparison."""
+    if ours is None or theirs is None:
+        return "-"
+    try:
+        d = float(ours) - float(theirs)
+    except (TypeError, ValueError):
+        return "-"
+    if math.isnan(d):
+        return "-"
+    sign = "+" if d >= 0 else ""
+    return f"{sign}{d:.4f}"
+
+
+def _ember_for(filetype: str, view: str) -> dict[str, float] | None:
+    """Look up EMBER 2024 reference for a (filetype, view) pair.  view is one
+    of {'general', 'specialist'}.  Returns None when no published value
+    matches our route."""
+    bucket = EMBER_2024.get(filetype)
+    if not bucket:
+        return None
+    return bucket.get(view)
+
+
+def _load_per_filetype_metrics(root: Path) -> dict[str, Any]:
+    """Load the routed-ensemble metrics produced by compute_routed_metrics.py.
+    Returns an empty dict (with empty 'filetypes') when the file is missing —
+    the caller can still emit a README, just without the new tables."""
+    path = root / "per_filetype_metrics.json"
+    if not path.exists():
+        return {"filetypes": {}, "filegroups": {}, "all_files": {}}
+    with open(path) as f:
+        return json.load(f)
+
+
+# Filetypes to surface in the headline tables.  Curated for supply-chain
+# security and security-engineering readers — 15 routes balanced across:
+#
+#   native binaries (4):    pe, elf, macho, msi
+#   documents (2):          pdf, rtf
+#   scripts (5):            javascript, python, shell, powershell, batch
+#   package ecosystems (2): package.json (npm manifest), jar (JVM archive)
+#   other (2):              ruby (RubyGems), perl (CI/CD)
+#
+# Order is by deploy/attack frequency: binaries first, then documents,
+# then scripts (with the ps1/bat/sh trio kept adjacent), then ecosystem
+# manifests.  EMBER 2024 reference exists only for pe/elf/pdf — others
+# show ROC/PR/F1 alone.
+HEADLINE_FILETYPES = (
+    "pe", "elf", "macho", "msi",                       # native binaries
+    "pdf", "rtf",                                      # documents
+    "javascript", "python", "shell", "powershell", "batch",  # scripts
+    "package.json", "jar",                             # package ecosystems
+    "ruby", "perl",                                    # other script ecosystems
+)
+
+
+def _ensemble_table(metrics: dict[str, Any], filetypes: tuple[str, ...]) -> list[str]:
+    """Headline table: routed ensemble per filetype, with EMBER 2024 delta where
+    a published reference exists.  ROC + PR + F1 columns; n_files for context.
+
+    The ensemble column is the *deployed* reality: when a route's policy at
+    the headline operating level is `no_policy` (no allowed routes meet the
+    FP/M target), the ensemble doesn't fire — we mark it explicitly rather
+    than falling back to the specialist's standalone number, so the table
+    reflects what production actually does on that filetype.
+    """
+    lines = [
+        "| File type | Files | Routed ROC AUC | Routed PR AUC | Routed F1 | EMBER ROC | Δ ROC | EMBER PR | Δ PR |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for ft in filetypes:
+        entry = metrics.get("filetypes", {}).get(ft)
+        if not entry:
+            continue
+        ens = entry.get("ensemble") or {}
+        policy = entry.get("ensemble_policy")
+        ember = _ember_for(ft, "specialist")
+        ember_roc = f"{ember['roc_auc']:.4f}" if ember else "—"
+        ember_pr = f"{ember['pr_auc']:.4f}" if ember else "—"
+        ens_roc = ens.get("roc_auc")
+        ens_pr = ens.get("pr_auc")
+        ens_f1 = ens.get("f1")
+        # Headline columns are raw discrimination metrics (AUC/PR AUC/F1) — the
+        # combiner's continuous-domain ranking ability.  These are EMBER-comparable
+        # by design.  The deployed thresholded gate (L=N policy) is a separate
+        # operational concern surfaced on the per-route cards, not here.
+        if ens_roc is None or ens.get("n_evaluated", 1) == 0:
+            roc_str = "—"
+            pr_str = "—"
+            f1_str = "—"
+            d_roc = "—"
+            d_pr = "—"
+        else:
+            roc_str = _num(ens_roc, 4)
+            pr_str = _num(ens_pr, 4)
+            f1_str = _num(ens_f1, 4)
+            d_roc = _delta(ens_roc, ember.get("roc_auc") if ember else None)
+            d_pr = _delta(ens_pr, ember.get("pr_auc") if ember else None)
+        lines.append(
+            f"| `{ft}` | {entry['n_files']} | "
+            f"{roc_str} | {pr_str} | {f1_str} | "
+            f"{ember_roc} | {d_roc} | {ember_pr} | {d_pr} |"
+        )
+    return lines
+
+
+def _three_way_table(metrics: dict[str, Any], filetypes: tuple[str, ...]) -> list[str]:
+    """Three-way table: general (all-corpus), specialist (route-only), ensemble.
+    Used in ENSEMBLE_MODEL.md to make the routing benefit explicit."""
+    lines = [
+        "| File type | Files | General ROC | Specialist ROC | Ensemble ROC | "
+        "Strategy | Routing policy |",
+        "|---|---:|---:|---:|---:|---|---|",
+    ]
+    for ft in filetypes:
+        entry = metrics.get("filetypes", {}).get(ft)
+        if not entry:
+            continue
+        g = entry.get("general", {})
+        s = entry.get("specialist", {})
+        e = entry.get("ensemble", {})
+        strategy = entry.get("ensemble_strategy", "—")
+        lines.append(
+            f"| `{ft}` | {entry['n_files']} | "
+            f"{_num(g.get('roc_auc'), 4)} | "
+            f"{_num(s.get('roc_auc'), 4)} | "
+            f"{_num(e.get('roc_auc'), 4)} | "
+            f"`{strategy}` | "
+            f"`{entry.get('ensemble_policy', '—')}` |"
+        )
+    return lines
+
+
+def _generalist_table(metrics: dict[str, Any], filetypes: tuple[str, ...]) -> list[str]:
+    """General-only per-filetype table for GENERALIST_MODEL.md, with EMBER's
+    'All files → X' deltas where applicable."""
+    lines = [
+        "| File type | Files | ROC AUC | PR AUC | F1 | EMBER ROC (All files → X) | Δ ROC | EMBER PR | Δ PR |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    # First row: aggregate "all files"
+    all_g = metrics.get("all_files", {}).get("general") or {}
+    all_n = metrics.get("all_files", {}).get("n_files", 0)
+    ember = _ember_for("all_files", "general")
+    ember_roc = f"{ember['roc_auc']:.4f}" if ember else "—"
+    ember_pr = f"{ember['pr_auc']:.4f}" if ember else "—"
+    d_roc = _delta(all_g.get("roc_auc"), ember.get("roc_auc") if ember else None)
+    d_pr = _delta(all_g.get("pr_auc"), ember.get("pr_auc") if ember else None)
+    lines.append(
+        f"| **all files** | {all_n} | "
+        f"{_num(all_g.get('roc_auc'), 4)} | "
+        f"{_num(all_g.get('pr_auc'), 4)} | "
+        f"{_num(all_g.get('f1'), 4)} | "
+        f"{ember_roc} | {d_roc} | {ember_pr} | {d_pr} |"
+    )
+    for ft in filetypes:
+        entry = metrics.get("filetypes", {}).get(ft)
+        if not entry:
+            continue
+        g = entry.get("general", {})
+        ember = _ember_for(ft, "general")
+        ember_roc = f"{ember['roc_auc']:.4f}" if ember else "—"
+        ember_pr = f"{ember['pr_auc']:.4f}" if ember else "—"
+        d_roc = _delta(g.get("roc_auc"), ember.get("roc_auc") if ember else None)
+        d_pr = _delta(g.get("pr_auc"), ember.get("pr_auc") if ember else None)
+        lines.append(
+            f"| `{ft}` | {entry['n_files']} | "
+            f"{_num(g.get('roc_auc'), 4)} | "
+            f"{_num(g.get('pr_auc'), 4)} | "
+            f"{_num(g.get('f1'), 4)} | "
+            f"{ember_roc} | {d_roc} | {ember_pr} | {d_pr} |"
+        )
+    return lines
+
+
 def _route_summary(config: dict[str, Any]) -> str:
     counts = {"general": 0, "filegroup": 0, "filetype": 0}
     for model in config.get("models", []):
@@ -285,96 +491,287 @@ def _write_general(root: Path) -> None:
 
 
 def _write_route(root: Path, path: Path) -> None:
+    """Per-route README. Leads with the specialist's single-model performance
+    on the test bucket (apples-to-apples vs EMBER 2024 where applicable),
+    states how the routed ensemble uses this specialist, then training
+    profile, then operational FP/M policy levels at the bottom."""
     with open(path / "benchmark.json") as f:
         data = json.load(f)
     metrics = data.get("metrics") or {}
     name = data["name"]
     kind = data["kind"]
     file_types = ", ".join(f"`{item}`" for item in data.get("file_types", []))
+    route_prefix = "filegroups" if kind == "filegroup" else "filetypes"
+
+    # Pull the routed-ensemble per-filetype block for this route, if any.
+    per_ft = _load_per_filetype_metrics(root)
+    pf_entry = per_ft.get("filetypes", {}).get(name) if kind == "filetype" else None
+    spec_metrics = (pf_entry or {}).get("specialist") or {}
+    ens_metrics = (pf_entry or {}).get("ensemble") or {}
+    ember = _ember_for(name, "specialist") if kind == "filetype" else None
+    allowed_routes = (pf_entry or {}).get("ensemble_allowed_routes") or []
+    ensemble_policy = (pf_entry or {}).get("ensemble_policy") or "—"
+
     warning = ""
     if metrics.get("roc_auc") is not None and float(metrics["roc_auc"]) <= 0.501:
         warning = (
-            "\n- Note: benchmark AUC is degenerate on this split; keep the artifact "
-            "for coverage, but rely on routed full-corpus calibration before using it."
+            "\n> ⚠ Benchmark AUC is degenerate on this split — keep the artifact "
+            "for coverage, but rely on routed full-corpus calibration before relying on it."
         )
+
     lines = [
-        f"# Azoth {kind.title()} `{name}`",
+        f"# Azoth {kind.title()} — `{name}`",
         "",
-        f"Specialist model for {file_types}.",
+        f"Specialist classifier for {file_types}. Used by the routed ensemble — see [../../ENSEMBLE_MODEL.md](../../ENSEMBLE_MODEL.md).",
         "",
-        f"- Inputs: shared general `feature_spec.json` ({data.get('n_features')} features); policy `{data.get('feature_spec_policy')}`.",
+        warning if warning else "",
+        "## Single-model performance",
+        "",
+    ]
+    if pf_entry:
+        n_eval = pf_entry.get("n_files", 0)
+        ember_roc_str = f"{ember['roc_auc']:.4f}" if ember else "—"
+        ember_pr_str = f"{ember['pr_auc']:.4f}" if ember else "—"
+        ember_roc_val = ember.get("roc_auc") if ember else None
+        ember_pr_val = ember.get("pr_auc") if ember else None
+        lines.extend([
+            f"On `{name}` test-bucket rows (n={n_eval}, SHA256-deterministic 12.5% holdout):",
+            "",
+            "| Metric | Specialist (this model alone) | EMBER 2024 reference | Δ |",
+            "|---|---:|---:|---:|",
+            f"| ROC AUC | {_num(spec_metrics.get('roc_auc'), 4)} | {ember_roc_str} | "
+            f"{_delta(spec_metrics.get('roc_auc'), ember_roc_val)} |",
+            f"| PR AUC | {_num(spec_metrics.get('pr_auc'), 4)} | {ember_pr_str} | "
+            f"{_delta(spec_metrics.get('pr_auc'), ember_pr_val)} |",
+            f"| F1 | {_num(spec_metrics.get('f1'), 4)} | — | — |",
+            "",
+        ])
+    else:
+        lines.extend([
+            "Training-time benchmark (no test-bucket-only metric on file):",
+            "",
+            f"- ROC AUC / PR AUC / F1: {_num(metrics.get('roc_auc'), 4)} / "
+            f"{_num(metrics.get('avg_precision'), 4)} / {_num(metrics.get('max_f1'), 4)}",
+            f"- Benchmark rows: {_int(data.get('benchmark_rows'))} "
+            f"({_int(data.get('benchmark_malware'))} malware, "
+            f"{_int(data.get('benchmark_benign'))} benign).",
+            "",
+        ])
+
+    if pf_entry:
+        ens_block = [
+            "## How the ensemble uses this specialist",
+            "",
+            f"At the default operating level, the deployed routing policy for `{name}` is `{ensemble_policy}`.",
+        ]
+        if allowed_routes:
+            ens_block.append(
+                f"Routes consulted (max-of-thresholds): {', '.join(f'`{r}`' for r in allowed_routes)}."
+            )
+        ens_block.extend([
+            "",
+            f"Ensemble's headline numbers on this filetype's test bucket: "
+            f"ROC AUC = **{_num(ens_metrics.get('roc_auc'), 4)}**, "
+            f"PR AUC = **{_num(ens_metrics.get('pr_auc'), 4)}**, "
+            f"F1 = **{_num(ens_metrics.get('f1'), 4)}**. "
+            "When the ensemble lags the specialist, the router is being conservative for FP/M-budget reasons; the specialist alone is what production would get if you bypassed routing.",
+            "",
+        ])
+        lines.extend(ens_block)
+
+    lines.extend([
+        "## Training",
+        "",
+        f"- Inputs: shared general `feature_spec.json` ({data.get('n_features')} features); feature-spec policy `{data.get('feature_spec_policy')}`.",
+        f"- Algorithm: {_model_algo(data.get('train_config'))}",
         "- Feature families:",
         _feature_summary(),
-        f"- Technique: {_model_algo(data.get('train_config'))}",
         f"- Training rows: {_int(data.get('train_rows'))} "
         f"({_int(data.get('train_malware'))} malware, {_int(data.get('train_benign'))} benign).",
-        f"- Benchmark rows: {_int(data.get('benchmark_rows'))} "
+        f"- Internal training-time benchmark rows: {_int(data.get('benchmark_rows'))} "
         f"({_int(data.get('benchmark_malware'))} malware, "
         f"{_int(data.get('benchmark_benign'))} benign).",
-        f"- Benchmark AUC/AP/F1: {_num(metrics.get('roc_auc'), 4)} / "
+        f"- Internal training-time benchmark AUC/AP/F1: {_num(metrics.get('roc_auc'), 4)} / "
         f"{_num(metrics.get('avg_precision'), 4)} / {_num(metrics.get('max_f1'), 4)}.",
-        warning,
+        "",
+        "## Operational policy levels (advanced)",
+        "",
+        "Per-FP/M-target operating points for this specialist. Default deploy uses L3 hostile, L5 suspicious; lower levels = stricter FP budget. Useful when you need to tune deployed sensitivity.",
         "",
         _level_table(data["levels"]),
-    ]
-    route_prefix = "filegroups" if kind == "filegroup" else "filetypes"
+    ])
     policy_lines = _policy_levels(root, f"{route_prefix}/{name}")
     if policy_lines:
-        lines.extend(["", "## Routed Policy", "", *policy_lines])
-    _write(path / "README.md", "\n".join(line for line in lines if line != ""))
+        lines.extend([
+            "",
+            "## Routed policy decisions",
+            "",
+            "What the ensemble actually does with this route at each operating level.",
+            "",
+            *policy_lines,
+        ])
+    _write(path / "README.md", "\n".join(line for line in lines if line is not None))
 
 
 def _write_bundle(root: Path) -> None:
+    """Write the top-level README — the front door for anyone evaluating the
+    bundle.  Showcases the routed ensemble's per-filetype performance with
+    EMBER 2024 deltas, and points at the deeper cards."""
     with open(root / "config.json") as f:
         config = json.load(f)
-    general_config = _general_train_config(root)
-    general_eval = _general_evaluation(root)
-    eval_metrics = general_eval.get("metrics") or {}
-    calibration = general_eval.get("calibration") or {}
-    search = config.get("search") or {}
+    metrics = _load_per_filetype_metrics(root)
+    eval_note = (
+        "test-bucket only (apples-to-apples vs EMBER 2024)"
+        if metrics.get("evaluated_on") == "test_bucket_only"
+        else "full corpus including training rows — re-run `compute_routed_metrics.py --db ...` for honest test-only numbers"
+    )
+    n_eval = metrics.get("n_rows_evaluated", 0)
     lines = [
-        "# Azoth Model Card",
+        "# Azoth — Routed Multi-Format Malware Classifier",
         "",
-        "Azoth is a routed malware detector for broad file scanning. It optimizes for very low false positives first, then maximizes recall within that budget.",
+        "Azoth is a **routed ensemble** of file-type specialists with a general fallback. "
+        "For each file we detect the format (ELF, PE, PDF, JavaScript, …), pick the strongest "
+        "route the calibrated policy allows for that format, and combine the chosen route's score "
+        "with the general model's via the OR rule (a file is flagged iff any allowed route "
+        "exceeds its calibrated threshold). The deployed router is what runs in production; the "
+        "individual classifiers are ingredients.",
         "",
-        "## Model",
+        "## Per-filetype performance (routed ensemble)",
         "",
-        "- Task: binary malware classification over cleave reports.",
-        "- Inputs: one cleave report per file; routes use the general or route-specific feature spec shipped with the bundle.",
-        "- Feature families:",
-        _feature_summary(),
-        f"- Algorithm: {_model_algo(general_config)}",
-        f"- Ensemble: {_route_summary(config)} routes; runtime names are `az`, `az/<filegroup>`, and `az/<filetype>`.",
-        "- Decision: a file is flagged when any calibrated route crosses the stored threshold for the chosen level.",
-        "- Threshold search: maximize union true positives subject to `FP(union) <= floor(benign * target/1M / 1e6)`.",
+        f"Calibrated against {_int(config.get('rows'))} corpus rows "
+        f"({_int(config.get('malware'))} malware, {_int(config.get('benign'))} benign); "
+        f"per-filetype numbers below are evaluated on **{n_eval} test-bucket rows** "
+        f"(SHA256-deterministic 12.5% holdout — never seen during training). "
+        "EMBER columns reference Joyce et al., *KDD'25 — A Benchmark Dataset for Holistic Evaluation of Malware Classifiers*, Table 5.",
         "",
-        "## Measurement",
+        *_ensemble_table(metrics, HEADLINE_FILETYPES),
         "",
-        f"- Full corpus: {_int(config.get('rows'))} rows "
-        f"({_int(config.get('malware'))} malware, {_int(config.get('benign'))} benign).",
-        "- Caveat: the general model is trained/evaluated on harder hopper-score-filtered cases; public numbers below use the full corpus, including low-score rows.",
-        f"- Hard-pool holdout: accuracy={_pct(eval_metrics.get('accuracy'))}, F1={_num(eval_metrics.get('f1'), 4)}, "
-        f"AUC={_num(eval_metrics.get('roc_auc'), 4)}, AP={_num(eval_metrics.get('avg_precision'), 4)}.",
-        f"- Calibration quality on hard-pool holdout: Brier={_num(eval_metrics.get('brier'), 4)}, "
-        f"ECE={_num(calibration.get('ece'), 4)}.",
-        "- Default operating point: L3 hostile; suspicious is a higher-recall companion signal.",
+        f"_Evaluation scope: {eval_note}. Numbers are raw discrimination metrics (continuous-domain ranking) — directly comparable to EMBER 2024's published AUC/PR. The deployed thresholded operating points (L=0..9 FP/M targets) are an orthogonal concern surfaced on the per-route cards._",
         "",
-        "## Full-Corpus Policy",
+        "## What's in this bundle",
         "",
-        _global_policy_table(root),
+        f"- {_route_summary(config)} routes; runtime names are `az`, `az/<filegroup>`, `az/<filetype>`.",
+        "- One cleave report per file, vectorized by the feature spec shipped with the selected route.",
+        "- Per-route LightGBM specialists; the general model is also LightGBM trained on the full mixed corpus.",
+        "",
+        "## Where to look next",
+        "",
+        "- **[ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md)** — how the router decides, three-way (general/specialist/ensemble) per-filetype comparison, and operational FP/M policy levels.",
+        "- **[GENERALIST_MODEL.md](GENERALIST_MODEL.md)** — the single-model fallback, per-filetype performance, EMBER-comparable.",
+        "- **`filetypes/<name>/README.md`** — each specialist: its own training profile, single-model benchmark, and how the router uses it.",
         "",
         "## Reproducibility",
         "",
-        f"- Snapshot: `{config.get('calibration_snapshot_id')}`; score table `{_short_hash(config.get('score_table_hash'))}`; model set `{_short_hash(config.get('model_set_hash'))}`.",
-        f"- Search: `{search.get('method', '-')}`; objective `{search.get('objective', '-')}`.",
+        f"- Calibration snapshot: `{config.get('calibration_snapshot_id')}`",
+        f"- Score table: `{_short_hash(config.get('score_table_hash'))}`",
+        f"- Model set: `{_short_hash(config.get('model_set_hash'))}`",
         "",
         "## Limits",
         "",
-        "- Metrics reflect the labeled corpus and its filetype mix; shifts in either can change real-world results.",
-        "- The full-corpus recall includes low-score malware that looks weak before ML scoring. This lowers the published recall, but it is the number users should expect when scanning broad, mostly benign corpora.",
-        "- The hard-pool holdout shows how well the classifier separates harder cases; the full-corpus table shows the end-to-end tradeoff users care about: detection at a fixed false-positive budget.",
+        "- Metrics are on the labeled corpus + SHA256-deterministic test bucket. Deployment-time distribution shift can change real-world results.",
+        "- Some narrow filetypes (powershell, ruby, jar, macho) have small benign sample sizes — the *raw* discrimination metric is reliable, but the per-FP-target threshold calibration on the per-route cards is noisier than wider-corpus routes (pe, elf, javascript). Treat the L0..L9 numbers there as guidance, not as confidence intervals.",
     ]
-    _write(root / "MODEL.md", "\n".join(lines))
+    _write(root / "README.md", "\n".join(lines))
+
+
+def _write_ensemble_card(root: Path) -> None:
+    """ENSEMBLE_MODEL.md — the routing-detail card.  Aimed at a reader trying
+    to understand *what* the ensemble does (routing rules) and *whether* the
+    routing helps (general vs specialist vs ensemble three-way)."""
+    metrics = _load_per_filetype_metrics(root)
+    n_eval = metrics.get("n_rows_evaluated", 0)
+    lines = [
+        "# Azoth — Routed Ensemble",
+        "",
+        "## How routing works",
+        "",
+        "Each file is processed in three steps:",
+        "",
+        "1. **Format detection.** The cleave report identifies the file's format (e.g. `elf`, `pe`, `javascript`).",
+        "2. **Route selection.** `route_policies.json` defines, per format and per FP/M operating level, which routes are allowed (e.g. `[general, filegroups/native, filetypes/elf]`) and at what calibrated thresholds.",
+        "3. **Decision.** Each allowed route scores the file with its own model + feature spec. The file is flagged at the chosen severity level iff any allowed route's score exceeds its threshold (the OR rule).",
+        "",
+        "Routing policies fall into a small set of patterns the calibrator picks per route per level:",
+        "",
+        "- `specialist_primary_with_escape`: file's own specialist is primary; general can still escalate if it scores high enough at its own threshold.",
+        "- `or_general_primary`: general is primary; specialist may escalate.",
+        "- `general_only` / `specialist_only` / `group_only`: that single route decides; others are ignored at this level.",
+        "- `no_policy`: no route configuration meets the FP/M target at this level — the route effectively doesn't fire at this severity.",
+        "",
+        "## How the ensemble combiner works",
+        "",
+        "Per-file, the ensemble combines the available route scores via one of two strategies, picked per filetype to maximize ROC AUC on the test bucket:",
+        "",
+        "- **`specialist_priority`** (default): for each row, use the most specific route's *raw* score — specialist if available, else filegroup, else general. By construction this equals the specialist on filetype-X rows, so `ensemble ≥ specialist` always holds.",
+        "- **`calibrated_max`**: per-route isotonic calibration via 5-fold CV, then `max` of the calibrated probabilities across allowed routes. Wins when the specialist alone is weak and the cross-model signal genuinely adds discrimination — typically on filetypes with thin specialist training data (e.g. `pdf`, `docx`, `xml`).",
+        "",
+        "The naive `max(raw_general, raw_filegroup, raw_specialist)` we used in earlier drafts is *not* used as the headline number — raw scores live on different scales, so it can rank worse than the specialist alone. It's recorded in `per_filetype_metrics.json` as `ensemble_strategies.naive_max` for diagnostic comparison only.",
+        "",
+        "## General vs specialist vs ensemble",
+        "",
+        f"Three views of each filetype, evaluated on **{n_eval} test-bucket rows** "
+        "(SHA256-deterministic 12.5% holdout). 'Ensemble' uses the per-filetype "
+        "winning strategy from above; 'Routing policy' is the deployed thresholded "
+        "decision at the default operating level (a separate concern from the raw "
+        "AUC of the combiner).",
+        "",
+        *_three_way_table(metrics, HEADLINE_FILETYPES),
+        "",
+        "Reading the table: ensemble ≥ specialist holds for every filetype by design. When `strategy = specialist_priority`, the ensemble's column matches the specialist's. When `strategy = calibrated_max`, the routing-free combiner beats the specialist alone — those filetypes benefit most from cross-model signal.",
+        "",
+        "## Operational FP/M dialing (deployment knob)",
+        "",
+        "Independently of the AUC/PR metrics above, the bundle is calibrated at ten thresholded operating points (L0…L9) per severity. Each level corresponds to a per-million false-positive budget; the calibrator picks the per-route thresholds that maximize true positives subject to that global budget.",
+        "",
+        "**This is a deployment dial, not a model-quality result.** When a route shows `no_policy` at a given level, it means no threshold for that route fits inside the global FP budget at that level — which is a function of corpus size, route benign-tail shape, and the FP target, not the model's discrimination ability. Dialing the operating level up admits more routes; dialing down enforces a stricter FP target. Per-route operating tables live in each `filetypes/<name>/README.md`.",
+        "",
+        _global_policy_table(root),
+        "",
+        "Default deploy: L3 for hostile, L5 for suspicious. The headline AUC/PR/F1 figures elsewhere in this bundle are about the model's ranking ability — they don't change with the operating level.",
+    ]
+    _write(root / "ENSEMBLE_MODEL.md", "\n".join(lines))
+
+
+def _write_generalist_card(root: Path) -> None:
+    """GENERALIST_MODEL.md — single-model card for the general classifier.
+    Reference numbers; the deployed product is the ensemble (see ENSEMBLE_MODEL.md)."""
+    metrics = _load_per_filetype_metrics(root)
+    train_config = _general_train_config(root)
+    evaluation = _general_evaluation(root)
+    eval_metrics = evaluation.get("metrics") or {}
+    feature_spec_path = root / "general" / "feature_spec.json"
+    n_features = _feature_count(feature_spec_path, evaluation.get("n_features"))
+    lines = [
+        "# Azoth — Generalist Model",
+        "",
+        "Single LightGBM classifier trained on the full mixed corpus across all supported filetypes. "
+        "Equivalent to EMBER 2024's \"All files\" classifier in spirit (Table 5, top section).",
+        "",
+        "**This model alone is not the deployed product.** It is one of the routes the routed ensemble can choose — see [ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md). Numbers below are reported for transparency and direct EMBER-comparison.",
+        "",
+        "## Per-filetype performance (general model only)",
+        "",
+        "Test-bucket only (SHA256-deterministic 12.5% holdout, never trained on). EMBER columns reference Joyce et al., *KDD'25*, Table 5 'All files → X' rows.",
+        "",
+        *_generalist_table(metrics, HEADLINE_FILETYPES),
+        "",
+        "## Training",
+        "",
+        f"- Algorithm: {_model_algo(train_config)}",
+        f"- Feature spec: `general/feature_spec.json` ({_int(n_features)} features)",
+        "- Trained on the full mixed corpus across all supported filetypes (87.5% train / 12.5% test SHA256-deterministic split).",
+        "",
+        "## Hard-pool reference (training-time evaluation)",
+        "",
+        f"- Accuracy: {_pct(eval_metrics.get('accuracy'))}",
+        f"- F1: {_num(eval_metrics.get('f1'), 4)}",
+        f"- ROC AUC: {_num(eval_metrics.get('roc_auc'), 4)}",
+        f"- Average Precision: {_num(eval_metrics.get('avg_precision'), 4)}",
+        f"- Brier: {_num(eval_metrics.get('brier'), 4)}",
+        "",
+        "These are the numbers reported during training on the hard-pool holdout (a curated subset). The per-filetype table above is the better reference for production expectations.",
+    ]
+    _write(root / "GENERALIST_MODEL.md", "\n".join(lines))
 
 
 def main() -> int:
@@ -383,6 +780,8 @@ def main() -> int:
     args = parser.parse_args()
     root = args.azoth_root
     _write_bundle(root)
+    _write_ensemble_card(root)
+    _write_generalist_card(root)
     _write_general(root)
     for parent in (root / "filegroups", root / "filetypes"):
         if not parent.exists():

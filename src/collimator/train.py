@@ -62,6 +62,15 @@ class TrainConfig:
     hard_negative_fraction: float = 0.0
     hard_negative_weight: float = 1.0
     benign_filetype_weights: dict[str, float] = field(default_factory=dict)
+    # Multiplier applied to the auto-computed n_benign/n_malware scale_pos_weight.
+    # 1.0 = current behavior (fully balanced).  <1.0 down-weights positives at
+    # training time, biasing toward fewer false positives at low FPR — what we
+    # want when optimizing recall@k FP/M for the deployed operating point.
+    scale_pos_weight_mult: float = 1.0
+    # LightGBM-only: gbdt | dart | goss.  Ignored by the XGBoost learner.
+    boosting_type: str = "gbdt"
+    # LightGBM-only: random splits instead of greedy.  Ignored by XGBoost.
+    extra_trees: bool = False
 
 
 @dataclass
@@ -480,6 +489,9 @@ def train(
                 reg_alpha=config.reg_alpha,
                 reg_lambda=config.reg_lambda,
                 learner=config.learner,
+                scale_pos_weight_mult=config.scale_pos_weight_mult,
+                boosting_type=config.boosting_type,
+                extra_trees=config.extra_trees,
             )
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=UserWarning, module="xgboost")
@@ -518,6 +530,9 @@ def train(
                         reg_lambda=config.reg_lambda,
                         monotone_constraints=config.monotone_constraints,
                         learner=config.learner,
+                        scale_pos_weight_mult=config.scale_pos_weight_mult,
+                        boosting_type=config.boosting_type,
+                        extra_trees=config.extra_trees,
                     )
                     _fit_model(
                         fold_model,
@@ -579,6 +594,9 @@ def train(
         reg_lambda=config.reg_lambda,
         monotone_constraints=config.monotone_constraints,
         learner=config.learner,
+        scale_pos_weight_mult=config.scale_pos_weight_mult,
+        boosting_type=config.boosting_type,
+        extra_trees=config.extra_trees,
         )
     final_base_weight = _compute_benign_filetype_weights(
         file_types_tv,
@@ -636,6 +654,9 @@ def train(
                 reg_lambda=config.reg_lambda,
                 monotone_constraints=config.monotone_constraints,
                 learner=config.learner,
+                scale_pos_weight_mult=config.scale_pos_weight_mult,
+                boosting_type=config.boosting_type,
+                extra_trees=config.extra_trees,
             )
             _fit_model(
                 final_model,

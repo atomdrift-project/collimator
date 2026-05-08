@@ -223,6 +223,132 @@ def _fp_budget_for_per_million(n_benign: int, per_million: float) -> int:
     return _fp_budget_for_rate(n_benign, per_million / 1_000_000)
 
 
+# Beta-Binomial smoothing for FP-rate estimates on small benign pools.
+# Default prior is uniform: alpha=beta=1 — i.e. Beta(1+k, 1+N-k) on a count of
+# k FPs in N trials.  At small N, the posterior MAP nudges the empirical
+# estimate toward 0.5 (regularization strength matters less for our use case;
+# the upper-credible-bound is what changes deploy behavior).  Heavier priors
+# (alpha+beta > 2) would pull harder; we keep the prior uninformative so the
+# correction kicks in only when N truly hurts.
+_DEFAULT_BETA_PRIOR_ALPHA = 1.0
+_DEFAULT_BETA_PRIOR_BETA = 1.0
+
+
+def credible_bound_fp_rate(
+    n_fp: int,
+    n_benign: int,
+    *,
+    alpha_prior: float = _DEFAULT_BETA_PRIOR_ALPHA,
+    beta_prior: float = _DEFAULT_BETA_PRIOR_BETA,
+    side: str = "upper",
+    confidence: float = 0.95,
+) -> float:
+    """Beta-Binomial credible bound on the FP rate.
+
+    Given ``n_fp`` empirical false positives observed over ``n_benign`` benign
+    files, returns the upper or lower bound of a one-sided credible interval
+    on the true FP rate.  At large N the bound converges to the empirical
+    estimate; at small N (where the empirical is noisy) the upper bound is
+    materially higher than the empirical, which is exactly what we want when
+    deploying conservatively against a 3 FP/M target with sparse data.
+
+    The math: posterior is Beta(alpha_prior + n_fp, beta_prior + n_benign - n_fp).
+    Upper bound is the (confidence)-quantile; lower bound is (1-confidence).
+
+    Examples:
+
+      credible_bound_fp_rate(0, 100, side="upper", confidence=0.95)
+      # ≈ 0.029  — empirical 0.0, but with only 100 benigns we can't claim
+      # the FPR is below ~3% with 95% confidence.
+
+      credible_bound_fp_rate(0, 1_000_000, side="upper", confidence=0.95)
+      # ≈ 3.0e-6 — at 1M benigns, the upper bound is finally tight enough
+      # to deploy at 3 FP/M.
+
+    No SciPy: we use ``np.random.default_rng().beta`` only as a fallback
+    test path; the analytic Beta inverse-CDF is in ``scipy.stats`` but
+    importing it pulls in the world.  Compute the bound by Newton on the
+    regularized incomplete beta function via ``np`` (fallback) or via a
+    short numerical recipe.  In practice ``scipy.stats.beta.ppf`` is the
+    one-line option and we already import scipy elsewhere in the repo.
+    """
+    if n_benign < 0 or n_fp < 0 or n_fp > n_benign:
+        raise ValueError(f"invalid inputs: n_fp={n_fp}, n_benign={n_benign}")
+    if n_benign == 0:
+        # No data at all — the prior alone is the posterior; return the
+        # prior's upper/lower bound.  Conservative caller should treat this
+        # as "no information; do not deploy."
+        from scipy.stats import beta as _beta  # noqa: PLC0415
+        q = confidence if side == "upper" else 1.0 - confidence
+        return float(_beta.ppf(q, alpha_prior, beta_prior))
+    from scipy.stats import beta as _beta  # noqa: PLC0415
+    a = alpha_prior + n_fp
+    b = beta_prior + (n_benign - n_fp)
+    q = confidence if side == "upper" else 1.0 - confidence
+    return float(_beta.ppf(q, a, b))
+
+
+def select_threshold_at_credible_bound(
+    thresholds: np.ndarray,
+    tp_vals: np.ndarray,
+    fp_vals: np.ndarray,
+    recall_vals: np.ndarray,
+    fpr_vals: np.ndarray,
+    n_benign: int,
+    n_malware: int,
+    *,
+    max_fp_per_million: float,
+    confidence: float = 0.95,
+    alpha_prior: float = _DEFAULT_BETA_PRIOR_ALPHA,
+    beta_prior: float = _DEFAULT_BETA_PRIOR_BETA,
+) -> dict[str, float | int] | None:
+    """Pick the threshold whose *upper credible bound* on FP rate is at or
+    below the target — strictly more conservative than the empirical
+    threshold-at-FP-budget when N is small, identical when N is large.
+
+    This is the deploy-time complement to ``_select_threshold_at_fp_budget``:
+    use this when you'd rather deploy a tighter threshold than risk that the
+    empirical FP rate underestimates the true rate due to sparse benigns.
+
+    Returns the same stats dict shape as the empirical helper, plus
+    ``credible_bound_fp_rate`` and ``credible_bound_confidence`` fields so
+    callers can audit how much smoothing happened.
+    """
+    if n_benign <= 0 or len(thresholds) == 0:
+        return None
+    target_rate = max_fp_per_million / 1_000_000.0
+    # Compute upper credible bound of FP rate at every threshold's empirical
+    # FP count.  The bound is monotone in n_fp for fixed n_benign (more FPs
+    # → higher bound), so the strictest threshold whose bound clears the
+    # target is just the largest fp_val that still satisfies the bound.
+    valid = np.zeros(len(fp_vals), dtype=bool)
+    bounds = np.zeros(len(fp_vals), dtype=np.float64)
+    for i, fp in enumerate(fp_vals):
+        bound = credible_bound_fp_rate(
+            int(fp), n_benign,
+            alpha_prior=alpha_prior, beta_prior=beta_prior,
+            side="upper", confidence=confidence,
+        )
+        bounds[i] = bound
+        valid[i] = bound <= target_rate
+    if not valid.any():
+        # Even fp=0 doesn't bound below target — the corpus is too small for
+        # this target rate.  Caller should treat as "do not deploy at this L."
+        stats = _empty_threshold_stats(thresholds, n_benign, n_malware)
+        stats["max_fp_budget"] = 0
+        stats["credible_bound_fp_rate"] = float(bounds[0]) if bounds.size else 0.0
+        stats["credible_bound_confidence"] = float(confidence)
+        return stats
+    index = int(np.where(valid)[0][-1])
+    stats = _stats_dict_at_index(
+        thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, index,
+    )
+    stats["credible_bound_fp_rate"] = float(bounds[index])
+    stats["credible_bound_confidence"] = float(confidence)
+    stats["max_fp_budget"] = int(fp_vals[index])
+    return stats
+
+
 def _nearby_budgets(target: int) -> list[int]:
     """Small readable budget window around the selected operating point."""
     values = {0, 1, target}

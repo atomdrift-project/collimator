@@ -10,7 +10,7 @@ import logging
 import math
 import os
 import shutil
-from dataclasses import asdict, replace
+from dataclasses import asdict, fields, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -25,7 +25,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from collimator import data, export, features, model, train
+from collimator import bundle, data, export, features, model, train
 
 LOG = logging.getLogger("azoth_specialist_suite")
 
@@ -414,21 +414,204 @@ def _parse_feature_envs(values: list[str]) -> dict[str, dict[str, str]]:
     return out
 
 
-def _parse_hard_negative_routes(values: list[str]) -> dict[str, tuple[float, float]]:
-    out: dict[str, tuple[float, float]] = {}
+def _train_config_field_names() -> set[str]:
+    return {field.name for field in fields(train.TrainConfig)} - {"learner"}
+
+
+def _route_key_for_target(target: dict[str, Any]) -> str:
+    """Canonical route key as recorded in autocollie run JSONs."""
+    name = str(target["name"])
+    if target["kind"] == "filegroup":
+        return f"filegroups/{name}"
+    return f"filetypes/{name}"
+
+
+def _load_autocollie_best_per_route(
+    runs_dir: Path,
+    targets: list[dict[str, Any]],
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, str]]]:
+    """Scan ``runs_dir/*.json`` for each target's highest-F1 historical run and
+    return its train_config + feature_env as per-route override dicts.
+
+    This is how autocollie's discovered wins flow into ``make
+    azoth-specialist-suite`` retrains: instead of every retrain reverting to
+    the Makefile's hardcoded defaults (which predate autocollie), the suite
+    picks each route's deployed-best-quality-of-fit experiment and replays
+    its config.
+
+    Selection rule: highest f1 in ``sampled_test_metrics``.  When multiple
+    runs tie, the most recent timestamp wins (replay-stable across re-runs).
+    Save-all-seeds (item-A averaged) runs are preferred over single-seed
+    when they exist for a route, since those are the legitimate multi-seed
+    baselines and produce honest comparisons.
+
+    Routes with no historical runs in ``runs_dir`` get empty overrides and
+    fall through to the suite's CLI defaults — same as before.
+
+    Returns ``(train_overrides_by_route, feature_envs_by_route)``.  Both maps
+    are keyed by the canonical route name (e.g. ``filetypes/perl``).
+    """
+    if not runs_dir.is_dir():
+        LOG.info("autocollie-best: %s is not a directory; skipping", runs_dir)
+        return {}, {}
+
+    targeted_routes = {_route_key_for_target(t) for t in targets}
+    # Track best per route as (f1, save_all_seeds, timestamp, run_dict).
+    best: dict[str, tuple[float, bool, str, dict[str, Any]]] = {}
+    for path in runs_dir.glob("*.json"):
+        # Skip the *_feature_spec.json sidecars and the multi-seed dirs.
+        if path.name.endswith("_feature_spec.json"):
+            continue
+        try:
+            with open(path) as f:
+                run = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            continue
+        route = run.get("route")
+        if route not in targeted_routes:
+            continue
+        metrics = run.get("sampled_test_metrics") or {}
+        f1 = metrics.get("f1")
+        if not isinstance(f1, (int, float)):
+            continue
+        save_all = bool(run.get("save_all_seeds"))
+        timestamp = str(run.get("timestamp") or "")
+        # Tuple ordering: f1 first (max), then save_all_seeds (prefer True),
+        # then timestamp (prefer newer).  Python tuple comparison is stable
+        # so this gives a total ordering.
+        candidate = (float(f1), save_all, timestamp, run)
+        prev = best.get(route)
+        if prev is None or candidate[:3] > prev[:3]:
+            best[route] = candidate
+
+    valid_train_fields = _train_config_field_names()
+    train_overrides: dict[str, dict[str, Any]] = {}
+    feature_envs: dict[str, dict[str, str]] = {}
+    for route, (f1, save_all, _ts, run) in best.items():
+        train_cfg = run.get("train_config") or {}
+        # Filter to TrainConfig fields the suite knows about; drop unknown
+        # keys silently rather than raising — tolerates schema drift.
+        cfg_overrides = {
+            k: v for k, v in train_cfg.items()
+            if k in valid_train_fields and v is not None
+        }
+        if cfg_overrides:
+            train_overrides[route] = cfg_overrides
+
+        env = run.get("feature_env") or {}
+        # feature_env in run JSONs is already namespaced (COLLIMATOR_*).
+        env_overrides = {str(k): str(v) for k, v in env.items() if str(k).startswith("COLLIMATOR_")}
+        if env_overrides:
+            feature_envs[route] = env_overrides
+
+        LOG.info(
+            "autocollie-best: %s -> key=%s f1=%.4f save_all=%s overrides=%d env=%d",
+            route, run.get("experiment_key", "?"), f1, save_all,
+            len(cfg_overrides), len(env_overrides),
+        )
+
+    return train_overrides, feature_envs
+
+
+def _merge_route_overrides(
+    cli: dict[str, dict[str, Any]],
+    auto: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Combine autocollie-best per-route overrides with CLI per-route overrides.
+
+    CLI wins on collisions (operator intent overrides auto-discovery).  Both
+    inputs use the canonical route-key form (``filegroups/X`` /
+    ``filetypes/Y``); the resulting map gets re-keyed for the suite's
+    ``_target_override_keys`` lookup, which checks both the bare-name form
+    and the prefixed form.  We emit only the prefixed form here; the bare
+    name is left for the operator's manual override (no auto-population).
+    """
+    merged: dict[str, dict[str, Any]] = {}
+    for route, fields_dict in auto.items():
+        merged[route] = dict(fields_dict)
+    for route, fields_dict in cli.items():
+        merged.setdefault(route, {}).update(fields_dict)
+    return merged
+
+
+def _coerce_train_override(field_name: str, raw: str) -> Any:
+    if raw.lower() in {"none", "null"}:
+        return None
+    int_fields = {
+        "seed",
+        "n_folds",
+        "n_estimators",
+        "max_depth",
+        "early_stopping_rounds",
+        "min_child_weight",
+        "min_child_samples",
+        "num_leaves",
+    }
+    float_fields = {
+        "holdout_fraction",
+        "learning_rate",
+        "colsample_bytree",
+        "subsample",
+        "gamma",
+        "reg_alpha",
+        "reg_lambda",
+        "beta",
+        "threshold_fpr_target",
+        "hard_negative_fraction",
+        "hard_negative_weight",
+    }
+    json_fields = {"monotone_constraints", "benign_filetype_weights"}
+    if field_name in int_fields:
+        return int(raw)
+    if field_name in float_fields:
+        return float(raw)
+    if field_name in json_fields:
+        return json.loads(raw)
+    return raw
+
+
+def _parse_train_overrides(values: list[str]) -> dict[str, dict[str, Any]]:
+    valid_fields = _train_config_field_names()
+    out: dict[str, dict[str, Any]] = {}
     for value in values:
-        if "=" not in value:
-            raise ValueError(f"invalid --hard-negative-route {value!r}; expected name=fraction,weight")
-        name, raw = value.split("=", 1)
-        parts = [part.strip() for part in raw.split(",")]
-        if len(parts) != 2:
-            raise ValueError(f"invalid --hard-negative-route {value!r}; expected name=fraction,weight")
-        fraction = float(parts[0])
-        weight = float(parts[1])
-        if fraction < 0.0 or weight < 1.0:
-            raise ValueError(f"invalid --hard-negative-route {value!r}; fraction >= 0 and weight >= 1 required")
-        out[name.strip()] = (fraction, weight)
+        try:
+            route, assignment = value.split(":", 1)
+            key, raw = assignment.split("=", 1)
+        except ValueError as exc:
+            raise ValueError(
+                f"invalid --train-override {value!r}; expected route:train_config_field=value",
+            ) from exc
+        route = route.strip()
+        key = key.strip()
+        if not route or not key:
+            raise ValueError(f"invalid --train-override {value!r}; route and field are required")
+        if key not in valid_fields:
+            raise ValueError(
+                f"invalid --train-override {value!r}; {key!r} is not a TrainConfig field",
+            )
+        out.setdefault(route, {})[key] = _coerce_train_override(key, raw)
     return out
+
+
+def _target_override_keys(target: dict[str, Any]) -> tuple[str, ...]:
+    name = str(target["name"])
+    if target["kind"] == "filegroup":
+        return name, f"filegroups/{name}"
+    return name, f"filetypes/{name}"
+
+
+def _route_train_config(
+    base_config: train.TrainConfig,
+    target: dict[str, Any],
+    train_overrides: dict[str, dict[str, Any]],
+) -> train.TrainConfig:
+    overrides: dict[str, Any] = {}
+    for key in _target_override_keys(target):
+        overrides.update(train_overrides.get(key, {}))
+    if not overrides:
+        return base_config
+    LOG.info("%s: using route train overrides %s", target["name"], dict(sorted(overrides.items())))
+    return replace(base_config, **overrides)
 
 
 @contextlib.contextmanager
@@ -497,6 +680,7 @@ def _train_one(
     workers: int,
     max_id: int,
     filegroup_score_filter: bool,
+    n_seed_extras: int = 0,
 ) -> dict[str, Any]:
     train_rows = _fetch_rows(
         db_path,
@@ -546,27 +730,73 @@ def _train_one(
         )
         x_train = _mask_sparse_columns(x_train, allowed_mask)
         x_bench = _mask_sparse_columns(x_bench, allowed_mask)
-    LOG.info("%s: training", name)
+    sample_file_types = _file_types(train_rows, test=False)
+    LOG.info("%s: training (seed=%d)", name, config.seed)
     result = train.train(
         x_train,
         y_train,
         config,
         feature_names=spec.feature_names,
-        sample_file_types=_file_types(train_rows, test=False),
+        sample_file_types=sample_file_types,
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     if feature_env:
         spec.save(output_dir / "feature_spec.json")
     else:
         shutil.copy2(spec_path, output_dir / "feature_spec.json")
-    export.save_model(result.model, output_dir / "model.txt")
-    probs = model.predict_proba(result.model, x_bench)
+
+    # Multi-seed (item A): with --n-seed-extras=K, train K additional models
+    # against the SAME extracted matrix (cheap — extraction was the slow part)
+    # using seeds [base+1, base+K]. All K+1 ship under models/seed_<S>.txt and
+    # litmus averages their predictions at inference time. Variance reduction
+    # by ~(K+1) without the bias trade-offs of within-model bagging.
+    extra_models: list[Any] = []
+    if n_seed_extras > 0:
+        # Clean any stale top-level model artifact from a previous K=0 run so
+        # the bundle layout stays unambiguous.
+        for legacy in (output_dir / "model.txt", output_dir / "model.json"):
+            if legacy.is_file():
+                legacy.unlink()
+        primary_path = bundle.write_seed_model_path(output_dir, config.seed, "txt")
+        export.save_model(result.model, primary_path)
+        for offset in range(1, n_seed_extras + 1):
+            extra_seed = int(config.seed) + offset
+            LOG.info("%s: training seed extra %d/%d (seed=%d)",
+                     name, offset, n_seed_extras, extra_seed)
+            extra_result = train.train(
+                x_train,
+                y_train,
+                replace(config, seed=extra_seed),
+                feature_names=spec.feature_names,
+                sample_file_types=sample_file_types,
+            )
+            extra_path = bundle.write_seed_model_path(output_dir, extra_seed, "txt")
+            export.save_model(extra_result.model, extra_path)
+            extra_models.append(extra_result.model)
+    else:
+        export.save_model(result.model, output_dir / "model.txt")
+
+    # Benchmark probabilities use the same averaging the deployed runtime will,
+    # so reported metrics match what litmus emits.
+    if extra_models:
+        probs = model.predict_proba(result.model, x_bench).astype(np.float64)
+        for extra in extra_models:
+            probs += model.predict_proba(extra, x_bench).astype(np.float64)
+        probs = (probs / float(1 + len(extra_models))).astype(np.float32)
+    else:
+        probs = model.predict_proba(result.model, x_bench)
+    # `model_path` reflects the layout actually written: legacy single-model
+    # (model.txt) for K=0, primary multi-seed file (models/seed_<base>.txt)
+    # for K>=1. Downstream consumers that need every seed should use
+    # ``collimator.bundle.model_files``.
+    primary_model = bundle.primary_model_file(output_dir)
     payload = {
         "name": name,
         "kind": kind,
         "file_types": list(file_types),
         "output_dir": str(output_dir),
-        "model_path": str(output_dir / "model.txt"),
+        "model_path": str(primary_model),
+        "n_seed_models": 1 + len(extra_models),
         "spec_path": str(output_dir / "feature_spec.json"),
         "train_rows": int(len(y_train)),
         "train_malware": int(np.sum(y_train == 1)),
@@ -682,12 +912,24 @@ def main() -> int:
     parser.add_argument("--hard-negative-fraction", type=float, default=0.0)
     parser.add_argument("--hard-negative-weight", type=float, default=1.0)
     parser.add_argument(
-        "--hard-negative-route",
+        "--train-override",
         action="append",
         default=[],
-        help="Per-route hard-negative override, format name=fraction,weight; repeatable",
+        help="Per-route TrainConfig override, format route:field=value; repeatable",
     )
     parser.add_argument("--device", default="cpu")
+    parser.add_argument(
+        "--n-seed-extras",
+        type=int,
+        default=0,
+        help=(
+            "Train this many additional seeds per route against the same "
+            "extracted matrix. K=0 (default) preserves the legacy single-model "
+            "layout (one model.txt per route). K>=1 switches to the multi-seed "
+            "layout (models/seed_<S>.txt) so litmus averages predictions across "
+            "K+1 trained ensembles, reducing seed-driven variance by ~K+1."
+        ),
+    )
     parser.add_argument("--min-bad", type=int, default=50)
     parser.add_argument("--min-good", type=int, default=50)
     parser.add_argument("--only", action="append", default=[])
@@ -697,6 +939,20 @@ def main() -> int:
         action="append",
         default=[],
         help="Route-specific feature env override, format name:ENV_VAR=value; repeatable",
+    )
+    parser.add_argument(
+        "--autocollie-best-runs-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Optional directory of autocollie experiment run JSONs (typically "
+            "out/experiments/azoth/runs). When set, the suite picks each "
+            "route's highest-F1 historical run and applies its train_config + "
+            "feature_env as automatic per-route overrides. Without this flag, "
+            "every retrain reverts to Makefile defaults — autocollie's wins are "
+            "lost. Explicit --train-override / --feature-env still take "
+            "precedence over auto-discovered values."
+        ),
     )
     parser.add_argument("--skip-existing", action="store_true")
     parser.add_argument(
@@ -718,7 +974,28 @@ def main() -> int:
     general_spec = features.FeatureSpec.load(general_spec_path)
     mask_specs = _parse_mask_specs(args.mask_spec)
     feature_envs = _parse_feature_envs(args.feature_env)
-    hard_negative_routes = _parse_hard_negative_routes(args.hard_negative_route)
+    train_overrides = _parse_train_overrides(args.train_override)
+
+    # Resolve targets early so we can scope the autocollie-best scan to
+    # routes we'll actually train.
+    targets = _targets(args)
+
+    if args.autocollie_best_runs_dir is not None:
+        auto_train, auto_env = _load_autocollie_best_per_route(
+            args.autocollie_best_runs_dir, targets
+        )
+        # Operator overrides (CLI --train-override / --feature-env) win on
+        # collisions, so the merge order is auto-first then CLI on top.
+        train_overrides = _merge_route_overrides(train_overrides, auto_train)
+        feature_envs = _merge_route_overrides(feature_envs, auto_env)
+        if auto_train or auto_env:
+            LOG.info(
+                "autocollie-best: applied overrides for %d routes (train) / %d routes (feature_env)",
+                len(auto_train), len(auto_env),
+            )
+        else:
+            LOG.info("autocollie-best: no historical runs found in %s for any target route",
+                     args.autocollie_best_runs_dir)
 
     config = train.TrainConfig(
         learner="azoth",
@@ -739,7 +1016,6 @@ def main() -> int:
     results: list[dict[str, Any]] = [
         _publish_general(args.general_dir, args.output_root / "general"),
     ]
-    targets = _targets(args)
     LOG.info("training %d specialists", len(targets))
     for target in targets:
         kind_dir = "filegroups" if target["kind"] == "filegroup" else "filetypes"
@@ -750,21 +1026,7 @@ def main() -> int:
                 results.append(json.load(f))
             continue
         try:
-            route_config = config
-            hard_negative_override = hard_negative_routes.get(str(target["name"]))
-            if hard_negative_override is not None:
-                fraction, weight = hard_negative_override
-                LOG.info(
-                    "%s: using route hard-negative override fraction=%.4f weight=%.2f",
-                    target["name"],
-                    fraction,
-                    weight,
-                )
-                route_config = replace(
-                    config,
-                    hard_negative_fraction=fraction,
-                    hard_negative_weight=weight,
-                )
+            route_config = _route_train_config(config, target, train_overrides)
             results.append(
                 _train_one(
                     db_path=args.db,
@@ -782,6 +1044,7 @@ def main() -> int:
                     filegroup_score_filter=(
                         args.filegroup_score_filter and not args.no_filegroup_score_filter
                     ),
+                    n_seed_extras=args.n_seed_extras,
                 ),
             )
         except Exception:

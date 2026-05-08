@@ -77,8 +77,28 @@ def create_classifier(
     reg_lambda: float = 1.0,
     monotone_constraints: str | dict[str, int] | None = None,
     learner: str = "litmus-xg",
+    scale_pos_weight_mult: float = 1.0,
+    boosting_type: str = "gbdt",
+    extra_trees: bool = False,
 ) -> Any:
-    """Create a classifier with defaults tuned for malware detection."""
+    """Create a classifier with defaults tuned for malware detection.
+
+    ``scale_pos_weight_mult`` multiplies the auto-computed n_benign/n_malware
+    ratio used for class balancing.  Values <1.0 down-weight positives at
+    training time, biasing the score distribution toward fewer false positives
+    at low FPR thresholds (the operating point Azoth ships at).  Values >1.0
+    over-weight positives — useful only when training data is so imbalanced
+    that the auto ratio still under-represents malware.
+
+    ``boosting_type`` (LightGBM only) chooses the boosting algorithm: ``gbdt``
+    (default), ``dart`` (drop-out for regularized tail behavior), or ``goss``
+    (gradient-based one-side sampling).  Ignored for the XGBoost learner.
+
+    ``extra_trees`` (LightGBM only) enables random splits instead of greedy
+    splits.  Adds ensemble noise that often improves generalization at the tail.
+    """
+    base_spw = n_benign / max(n_malware, 1)
+    spw = base_spw * max(scale_pos_weight_mult, 0.0)
     if learner == "azoth":
         try:
             import lightgbm as lgb  # noqa: PLC0415
@@ -93,6 +113,8 @@ def create_classifier(
             device_params["device_type"] = device
         return lgb.LGBMClassifier(
             objective="binary",
+            boosting_type=boosting_type,
+            extra_trees=bool(extra_trees),
             n_estimators=n_estimators,
             max_depth=max_depth,
             learning_rate=learning_rate,
@@ -103,7 +125,7 @@ def create_classifier(
             subsample=subsample,
             reg_alpha=reg_alpha,
             reg_lambda=reg_lambda,
-            scale_pos_weight=n_benign / max(n_malware, 1),
+            scale_pos_weight=spw,
             random_state=random_state,
             n_jobs=-1,
             force_col_wise=True,
@@ -127,7 +149,7 @@ def create_classifier(
         reg_alpha=reg_alpha,
         reg_lambda=reg_lambda,
         monotone_constraints=monotone_constraints,
-        scale_pos_weight=n_benign / max(n_malware, 1),
+        scale_pos_weight=spw,
         tree_method="hist",
         device=device,
         random_state=random_state,
