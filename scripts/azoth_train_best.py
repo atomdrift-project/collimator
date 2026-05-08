@@ -198,6 +198,16 @@ def main() -> int:
         action="store_true",
         help="Print the make experiment command without executing it.",
     )
+    parser.add_argument(
+        "--exec",
+        nargs=argparse.REMAINDER,
+        default=None,
+        help="Instead of invoking `make experiment`, run an arbitrary command "
+             "with the resolved env vars in its environment. Use to give other "
+             "tools (fixture generators, ad-hoc scripts) the same feature/env "
+             "settings the deployed model was trained with. Example: "
+             "azoth_train_best.py --exec python -m collimator fixture --db $DB",
+    )
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()
 
@@ -232,6 +242,18 @@ def main() -> int:
         for k in sorted(env):
             print(f"{k}={env[k]}")
         return 0
+
+    if args.exec:
+        # Pass-through mode: run an arbitrary command with the resolved env
+        # *added to the parent environment*. Used by `make fixture` etc. so
+        # downstream Python sees COLLIMATOR_* exactly as if the deployed
+        # model's training had set them.
+        child_env = os.environ.copy()
+        child_env.update(env)
+        LOG.info("exec: %s", " ".join(shlex.quote(p) for p in args.exec))
+        if args.dry_run:
+            return 0
+        return subprocess.run(args.exec, env=child_env, check=False).returncode
 
     cmd = ["make", "experiment"] + [f"{k}={v}" for k, v in sorted(env.items())]
     LOG.info("invoking: %s", " ".join(shlex.quote(p) for p in cmd))

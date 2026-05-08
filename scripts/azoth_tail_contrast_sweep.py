@@ -15,7 +15,7 @@ from typing import Any
 
 import numpy as np
 
-from collimator import data, features, thresholds
+from collimator import bundle, data, features, thresholds
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from azoth_specialist_suite import _eligible_filetypes, _fetch_rows, _ids_labels  # noqa: E402
@@ -180,7 +180,7 @@ def main() -> int:
         filetype = str(target["name"])
         output_dir = args.output_root / "filetypes" / filetype
         LOG.info("[%d/%d] %s: starting tail_contrast", pos, len(targets), filetype)
-        if args.skip_existing and (output_dir / "model.txt").exists() and filetype in existing_results:
+        if args.skip_existing and bundle.has_model(output_dir) and filetype in existing_results:
             LOG.info("%s: using existing result", filetype)
             results.append(existing_results[filetype])
             continue

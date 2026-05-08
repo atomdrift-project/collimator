@@ -1,271 +1,102 @@
 # collimator
 
-`collimator` is a compact, streaming-first malware-classification pipeline built around XGBoost.
-It reads labeled samples from a [hopper](https://codeberg.org/atomdrift/hopper) database (PostgreSQL or SQLite), extracts sparse numeric features from cleave reports, trains a calibrated classifier, and exports both XGBoost and ONNX artifacts for downstream inference.
+A routed-ensemble malware classifier with autonomous experiment search. Reads
+labeled samples from [hopper](https://codeberg.org/atomdrift/hopper), trains a
+general model plus per-filegroup and per-filetype specialists, calibrates each
+route's score distribution with isotonic regression, computes per-FP/M
+operating points, and ships a deployable bundle that
+[litmus](https://codeberg.org/atomdrift/litmus) loads at scan time.
 
-Part of the broader toolchain:
+Part of the toolchain: `cleave → hopper → collimator → litmus`
 
-`cleave -> hopper -> collimator -> litmus`
+## What's in the box
 
-## Goals
+- **Routed ensemble.** A general LightGBM model plus filegroup/filetype
+  specialists. The router picks per-file based on cleave's format detection;
+  the deployed combiner averages member scores or stacks them, whichever wins
+  per filetype on the test bucket.
+- **Multi-seed averaging.** Each route ships K=3 trained seeds against the
+  same matrix; predictions get averaged, reducing seed-driven variance by ~K
+  while leaving bias unchanged. ([Why?](experiments/EXPERIMENTS.md))
+- **Per-route isotonic calibration.** The deployed `calibrator.json` maps
+  each route's raw probability to its empirically-observed malware rate, so
+  scores reported at scan time mean what the [0,1] interval should mean.
+- **Per-FP/M operating points.** L0–L9 severity levels, each a globally-
+  jointly-optimized set of per-route thresholds that fits inside a target
+  FP/M budget. The deployed bundle ships every level.
+- **Autonomous search.** [`autocollie`](https://codeberg.org/atomdrift/autocollie)
+  drives a screen → confirm → promote ladder against `make experiment`,
+  proposes config changes via an LLM-guided agent, and produces validated
+  candidate bundles ready to deploy. Wins flow back into `make azoth-train`
+  by default — there's no separate "consume autocollie's wins" step.
 
-This repo is intentionally optimized for four things at once:
+## The five commands you'd actually run
 
-- Scientific rigor: threshold tuning is separated from final evaluation, and evaluation artifacts record how the model was trained and scored.
-- Performance: the default path is sparse, batched, and streaming-oriented.
-- Maintainability: core logic is split across small modules with explicit contracts.
-- Clarity: the full pipeline is short enough to read end-to-end.
+```fish
+# 1. Train + deploy: replays the highest-F1 historical config for every route,
+#    with multi-seed averaging on, then calibrates and pushes to the live
+#    deployment. Use any time you want the deployed bundle refreshed.
+make azoth-train DB=postgres://hopper@localhost:5432/hopper
 
-## Architecture
+# 2. Run one experiment: ad-hoc training with explicit knobs. Same path
+#    autocollie uses; results land in out/experiments/azoth/runs/<key>.json.
+make experiment EXP_ROUTE=filetypes/python EXP_IDEA=adhoc \
+                EXP_FORMAT_HINTS=1 EXP_NUM_LEAVES=128 \
+                DB=postgres://hopper@localhost:5432/hopper
 
-The core pipeline is:
+# 3. Autonomous search: spawn an LLM-driven loop that proposes specs,
+#    screens them, confirms winners, and produces deploy-ready candidates.
+make autocollie-loop SHUFFLE_ROUTES=1 EXPERIMENTS=10 \
+                     AUTOCOLLIE_DB=postgres://hopper@localhost:5432/hopper
 
-1. Load labeled samples from `hopper`.
-2. Build a feature vocabulary from training samples only.
-3. Extract sparse features for train/test streams.
-4. Train XGBoost on raw sparse features.
-5. Split holdout into calibration and evaluation subsets when feasible.
-6. Choose an operating threshold on calibration.
-7. Report threshold-free and thresholded metrics on evaluation.
-8. Export:
-   `model.json`, `model.onnx`, `feature_spec.json`, `evaluation.json`
+# 4. Deploy a candidate explicitly (autocollie produces these but does not
+#    auto-deploy by default — operator inspects the candidate first).
+make azoth-deploy AZOTH_ROOT=out/models/azoth-candidate-<route>-<key>
 
-### Modules
-
-- [`data.py`](/srv/home/t/collimator/src/collimator/data.py): streaming access to labeled samples and deterministic test-bucket assignment
-- [`features.py`](/srv/home/t/collimator/src/collimator/features.py): sparse feature extraction and feature-group definitions
-- [`train.py`](/srv/home/t/collimator/src/collimator/train.py): model fitting, calibration/evaluation split, metrics
-- [`model.py`](/srv/home/t/collimator/src/collimator/model.py): XGBoost creation, device detection, probability inference
-- [`export.py`](/srv/home/t/collimator/src/collimator/export.py): ONNX export, ONNX/XGBoost parity, evaluation artifact helpers
-- [`thresholds.py`](/srv/home/t/collimator/src/collimator/thresholds.py): operating-point analysis
-- [`ablation.py`](/srv/home/t/collimator/src/collimator/ablation.py): leave-one-group-out feature ablations
-- [`benchmark.py`](/srv/home/t/collimator/src/collimator/benchmark.py): throughput benchmarking
-
-## Scientific Contract
-
-Out of the box, the pipeline is designed to be methodologically defensible:
-
-- The deterministic test bucket is excluded from training.
-- Within training, a holdout split is created when the dataset is large enough.
-- That holdout is further split into:
-  calibration: choose the decision threshold
-  evaluation: report final thresholded metrics
-- Threshold-free metrics are also reported:
-  `ROC AUC`, `Average Precision`, `Brier`
-
-The saved [`evaluation.json`](/srv/home/t/collimator/out/evaluation.json) artifact includes:
-
-- metrics
-- calibration summary:
-  `ECE` plus reliability-bin summaries
-- chosen threshold
-- split summary
-- environment metadata
-- experiment metadata:
-  seed, feature-spec version, worker count, git SHA, train config
-
-## Features
-
-The model uses a fixed sparse feature layout derived from cleave `AnalysisReport` JSON:
-
-- `present:*`: binary path presence
-- `maxcrit:*`: maximum criticality per path
-- `agg:*`: path breadth and concentration summaries
-- `ext:*`: third-party and well-known signal summaries
-- `metrics:*`: curated numeric report metrics
-- `filetype:*`: file-type one-hot features
-- `struct:*`: simple structural anomaly features
-
-Feature groups are explicit so they can be benchmarked and ablated.
-
-## Quick Start
-
-### Virtualenv
-
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
+# 5. Scan a file with the deployed bundle (this is litmus's job, not
+#    collimator's, but it's the end of the pipeline).
+litmus scan path/to/file
 ```
 
-### Synthetic demo database
+## Key paths
 
-Generate a small self-contained SQLite database that matches the `hopper` schema:
+| Path | What's there |
+|------|-------------|
+| `src/collimator/` | Core pipeline (data, features, train, model, calibration). |
+| `src/collimator/bundle.py` | Single source of truth for bundle layout (single-model vs multi-seed). |
+| `scripts/azoth_train_best.py` | Replays the highest-F1 historical run for any route, with multi-seed on. |
+| `scripts/azoth_specialist_suite.py` | Trains every filegroup/filetype specialist; auto-loads autocollie's per-route best. |
+| `scripts/azoth_calibrate_ensemble.py` | Per-route isotonic calibration + L0–L9 operating-point search. |
+| `out/experiments/azoth/runs/` | Every experiment's run JSON, keyed by `experiment_key`. |
+| `out/models/azoth/` | Source bundle (general + filegroups + filetypes). |
+| `out/models/azoth-candidate-*/` | Validated candidate bundles awaiting deploy. |
+| `experiments/` | Historical experiment writeups (paper trail). |
 
-```bash
-python -m collimator demo-db --output out/demo.db
-```
+## Documentation
 
-Or via `make`:
+- **[experiments/EXPERIMENTS.md](experiments/EXPERIMENTS.md)** — overview of
+  experiment methodology, what each tranche tested, and what survived.
+- **`out/models/azoth/MODEL.md`** (regenerated by `make azoth-deploy`) —
+  per-deploy model card with global recall, F1, AUC, and per-filetype tables.
+- **`out/models/azoth/ENSEMBLE_MODEL.md`** — routing-policy detail card.
+- **`CONTRIBUTING.md`** — how to set up a development environment, run tests,
+  and propose a feature experiment.
 
-```bash
-make demo-db
-```
+## Scientific contract
 
-### Train
-
-```bash
-python -m collimator train --db postgres://hopper@localhost/hopper --output out
-```
-
-Or via `make`:
-
-```bash
-make train DB=postgres://hopper@localhost/hopper
-```
-
-This writes:
-
-- `out/model.json`
-- `out/model.onnx`
-- `out/feature_spec.json`
-- `out/evaluation.json`
-- `out/shap_importance.json`
-
-## Core Workflows
-
-### Train and export
-
-```bash
-python -m collimator train --db postgres://hopper@localhost/hopper --output out --seed 42
-```
-
-Demo run:
-
-```bash
-python -m collimator train --db out/demo.db --output out
-```
-
-### Evaluate an exported ONNX model
-
-```bash
-python -m collimator evaluate --db postgres://hopper@localhost/hopper --model out/model.onnx --spec out/feature_spec.json
-```
-
-### Analyze operating thresholds
-
-```bash
-python -m collimator thresholds --db postgres://hopper@localhost/hopper --model out/model.json --spec out/feature_spec.json
-```
-
-### Tune suspicious/hostile thresholds on the full corpus
-
-```bash
-python -m collimator tune-thresholds --db postgres://hopper@localhost/hopper --model out/model.json --spec out/feature_spec.json --workers 16
-```
-
-### Run feature-group ablations
-
-```bash
-python -m collimator ablate --db postgres://hopper@localhost/hopper
-```
-
-Optional subset:
-
-```bash
-python -m collimator ablate --db postgres://hopper@localhost/hopper --groups present metrics struct
-```
-
-Save JSON:
-
-```bash
-python -m collimator ablate --db postgres://hopper@localhost/hopper --output out/ablation.json
-```
-
-### Benchmark throughput
-
-```bash
-python -m collimator benchmark --db postgres://hopper@localhost/hopper
-```
-
-Reuse an existing model/spec:
-
-```bash
-python -m collimator benchmark --db postgres://hopper@localhost/hopper --model out/model.json --spec out/feature_spec.json
-```
-
-Save JSON:
-
-```bash
-python -m collimator benchmark --db postgres://hopper@localhost/hopper --output out/benchmark.json
-```
-
-## Interpreting Outputs
-
-### `evaluation.json`
-
-This is the main experiment record. Use it to answer:
-
-- What split policy was used?
-- What threshold was chosen?
-- What seed and config produced this model?
-- What threshold-free metrics did the model achieve?
-- How well calibrated are the predicted probabilities?
-
-### `thresholds`
-
-This command prints two things:
-
-- called-set accuracy tables for hostile/benign decisions
-- recommendation tables based on recall/FPR constraints
-
-The held-out test recommendations are the honest operating-point reference.
-The full-corpus recommendation table is operationally useful, but it includes training data.
-
-### `ablate`
-
-Each ablation drops one named feature group and retrains the model.
-Use this to answer:
-
-- Which feature families matter most?
-- Which groups improve ranking metrics vs thresholded metrics?
-- Which groups can be removed without much loss?
-
-### `benchmark`
-
-The benchmark command reports:
-
-- vocab-build time
-- extraction throughput
-- training time
-- inference throughput
-- feature count and test-set size
-
-It is intentionally simple: the goal is comparability across runs, not a full profiling framework.
-
-## Make Targets
-
-```bash
-make train      DB=...                 Train model and export artifacts
-make evaluate   DB=...                 Evaluate exported ONNX model
-make explain    DB=...                 SHAP feature importance analysis
-make inspect    DB=... SAMPLE=<sha>    Inspect one sample
-make errors     DB=...                 Show top false positives/negatives
-make traits     DB=...                 Trait-level prevalence diagnostics
-make thresholds DB=...                 Tune suspicious/hostile thresholds on the full corpus
-make benchmark  DB=...                 Benchmark extraction/training/inference
-make ablate     DB=...                 Run feature-group ablations
-make demo-db                           Create a small synthetic demo database
-make scan       FILE=...               Score a live file via cleave + model
-make test                              Run tests
-make lint                              Run ruff + mypy
-```
-
-## Notes on Performance
-
-- Sparse features are used throughout training.
-- Large-corpus evaluation paths are batched.
-- Feature extraction defaults to a conservative auto worker count.
-- Use `--workers 1` to force single-process execution or `--workers N` to pin parallelism.
-- GPU detection reports the device XGBoost can actually use, not just the requested device.
-
-## Notes on Reproducibility
-
-- Training seed is explicit.
-- Evaluation artifacts persist experiment metadata.
-- Optional dependency groups are declared in [`pyproject.toml`](/srv/home/t/collimator/pyproject.toml).
-- The full test suite should pass in a clean venv created from [`requirements.txt`](/srv/home/t/collimator/requirements.txt).
+- The SHA256-deterministic 12.5% test bucket is held out from every training
+  call, including autocollie's screens.
+- Reported metrics on each run come from the test bucket. Calibration of
+  operating-point thresholds uses the test bucket; the calibrator itself is
+  fit on the same data (no held-out calibration set yet — see
+  [experiments/EXPERIMENTS.md](experiments/EXPERIMENTS.md) for the
+  honest-vs-deployed gap).
+- Multi-seed bundles report metrics from the *averaged ensemble*, matching
+  what litmus emits for the same files at scan time.
+- Confirm-gate verdicts compare averaged-ensemble F1 against the prior
+  deployed F1 within tolerance; per-seed regressions are noted but don't
+  fail the candidate.
 
 ## License
 
-Apache-2.0
+Apache 2.0 — see [LICENSE](LICENSE).

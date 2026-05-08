@@ -171,8 +171,9 @@ def run_ablation(
             group for group, indices in group_indices.items() if indices
         ]
 
-    # Build a TrainConfig honoring the caller's overrides, defaulting to the
-    # layered v16 baseline (same hyperparams as make train).
+    # Build a TrainConfig honoring the caller's overrides, defaulting to
+    # train.TrainConfig defaults. For comparable numbers across runs, pass
+    # explicit overrides matching the deployed model's hyperparameters.
     cfg_kwargs: dict[str, object] = {"seed": seed, "learner": learner}
     if device is not None:
         cfg_kwargs["device"] = device

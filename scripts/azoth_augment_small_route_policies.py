@@ -63,7 +63,7 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 
-from collimator import data, features, model, thresholds
+from collimator import bundle, data, features, model, thresholds
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: E402
@@ -159,24 +159,27 @@ def _score_pool_with_route(
     rows: list[tuple[int, int]],
     *,
     feature_spec_path: Path,
-    model_path: Path,
+    bundle_dir: Path,
     workers: int,
 ) -> np.ndarray:
     """Featurize and score a row pool with a route's specialist.  Returns a
-    1-D array of probabilities aligned to ``rows``."""
+    1-D array of probabilities aligned to ``rows``.  Loads the route as an
+    Ensemble so multi-seed bundles get averaged at predict time, matching
+    what litmus emits for the same files."""
     if not rows:
         return np.array([], dtype=np.float32)
     spec = features.FeatureSpec.load(feature_spec_path)
-    clf = model.load_model(model_path)
-    LOG.info("featurizing %d rows through %s (%d features)…",
-             len(rows), feature_spec_path.parent.name, spec.total_features)
+    clf = bundle.Ensemble.load_bundle(bundle_dir)
+    LOG.info("featurizing %d rows through %s (%d features, %d seed%s)…",
+             len(rows), feature_spec_path.parent.name, spec.total_features,
+             clf.n_members, "s" if clf.n_members != 1 else "")
     batches = list(features.extract_labeled_from_db_batches(
         db_path, rows, spec, n_workers=workers,
     ))
     if not batches:
         return np.array([], dtype=np.float32)
     x = sp.vstack([b[0] for b in batches], format="csr")
-    return model.predict_proba(clf, x).astype(np.float32)
+    return clf.predict_proba(x).astype(np.float32)
 
 
 def _augment_route(
@@ -230,9 +233,8 @@ def _augment_route(
     # 3. Resolve specialist artifacts.
     slot = azoth_root / route_name
     spec_path = slot / "feature_spec.json"
-    model_path = slot / "model.txt"
-    if not spec_path.exists() or not model_path.exists():
-        LOG.warning("%s: missing %s or %s; skipping", route_name, spec_path, model_path)
+    if not spec_path.exists() or not bundle.has_model(slot):
+        LOG.warning("%s: missing %s or no model file; skipping", route_name, spec_path)
         stats["still_no_policy"] = no_policy
         return stats
 
@@ -246,7 +248,7 @@ def _augment_route(
     )
     pool_scores = _score_pool_with_route(
         db_path, pool_rows,
-        feature_spec_path=spec_path, model_path=model_path,
+        feature_spec_path=spec_path, bundle_dir=slot,
         workers=workers,
     )
     stats["pool_benigns"] = len(pool_rows)
@@ -396,7 +398,7 @@ def main() -> int:
     # Identify candidates: routes with small own-benign counts AND any no_policy
     # level AND actual specialist artifacts on disk.  Skip large routes
     # (own benigns ≥ threshold) — they don't need help.  Skip empty slots
-    # (no model.txt) — those are placeholder routes from older calibration
+    # (no trained model) — those are placeholder routes from older calibration
     # and there's nothing to score the augmented pool with.
     candidates: list[tuple[str, dict[str, Any]]] = []
     skipped_no_artifacts = 0
@@ -410,7 +412,7 @@ def main() -> int:
             continue
         # Specialist artifacts must exist on disk.
         slot = args.azoth_root / route_name
-        if not (slot / "model.txt").exists() or not (slot / "feature_spec.json").exists():
+        if not bundle.has_model(slot) or not (slot / "feature_spec.json").exists():
             skipped_no_artifacts += 1
             continue
         # Has any no_policy level?
@@ -422,7 +424,7 @@ def main() -> int:
         if any_no_policy:
             candidates.append((route_name, route_info))
     if skipped_no_artifacts:
-        LOG.info("skipped %d routes with no model.txt / feature_spec.json", skipped_no_artifacts)
+        LOG.info("skipped %d routes with no model file / feature_spec.json", skipped_no_artifacts)
     if args.only_routes:
         wanted = set(args.only_routes)
         candidates = [c for c in candidates if c[0] in wanted]

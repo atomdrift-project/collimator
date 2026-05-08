@@ -1385,7 +1385,7 @@ def main() -> None:
     elif args.command == "rethreshold":
         cv_path = Path(args.output) / "cv_predictions.npz"
         if not cv_path.exists():
-            print(f"error: {cv_path} not found — run make train first")
+            print(f"error: {cv_path} not found — run make azoth-train first")
             sys.exit(1)
         arrays = np.load(str(cv_path))
         cv_preds = arrays["cv_predictions"]

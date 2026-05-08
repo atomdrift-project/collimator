@@ -6,8 +6,16 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Any
+
+# scripts/ isn't on sys.path; reach src/ for `collimator.bundle`.
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+from collimator import bundle  # noqa: E402  — late import after sys.path patch
 
 
 def _pct(value: Any) -> str:
@@ -417,7 +425,13 @@ def _general_train_config(root: Path) -> dict[str, Any] | None:
     config = experiment.get("train_config")
     if isinstance(config, dict):
         return config
-    return _lightgbm_model_config(root / "general" / "model.txt")
+    # Fallback: parse the LightGBM dump for its embedded config block.
+    # For multi-seed bundles, any seed's config is identical (same
+    # hyperparameters); pick the deterministic primary.
+    try:
+        return _lightgbm_model_config(bundle.primary_model_file(root / "general"))
+    except FileNotFoundError:
+        return None
 
 
 def _lightgbm_model_config(path: Path) -> dict[str, Any] | None:
