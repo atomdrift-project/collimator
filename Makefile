@@ -115,11 +115,14 @@ EXP_WORKERS ?= $(WORKERS)
 WORKERS_ARG := $(if $(WORKERS),--workers $(WORKERS),)
 EXP_WORKERS_ARG := $(if $(EXP_WORKERS),--workers $(EXP_WORKERS),)
 SEED ?= 42
-# LightGBM training device. Default to cuda — the installed lightgbm wheel
-# was built with CUDA support, and the workstation has a beefy NVIDIA GPU.
-# Override with DEVICE=cpu if the GPU isn't available, or DEVICE= (empty)
-# to let LightGBM auto-detect (which today means CPU).
-DEVICE ?= cuda
+# Training device. `auto` runs the pick_device() heuristic in
+# src/collimator/model.py: it picks CUDA only when the workload is dense
+# and large enough to benefit (LightGBM's CUDA path produces garbage on
+# sparse high-dim inputs — constant-prediction models, SIGFPE in fit).
+# Today every collimator route is sparse + narrow-N, so this resolves to
+# CPU in practice. Override with DEVICE=cuda to force-test the GPU path
+# or DEVICE=cpu to skip the heuristic.
+DEVICE ?= auto
 DROP_FEATURE_PREFIXES ?=
 # Default azoth screening profile: a probe-sized run for bulk iteration.
 # Confirm winners with a different seed, an explicit larger sample, or make azoth-full-train.
@@ -315,6 +318,14 @@ azoth-fast-train: venv check-db
 
 # _azoth-train: shared body for the two named targets above.  Not a public
 # entry point — pick azoth-full-train or azoth-fast-train explicitly.
+#
+# Three steps:
+#   1. Train general at deploy fidelity (writes to out/experiments/azoth/).
+#   2. Promote the freshly-trained general into the source bundle slot
+#      (out/models/azoth/general/) so azoth-deploy actually picks it up —
+#      `make experiment` writes to a different location than azoth-deploy
+#      reads from, and without this step the deploy ships a stale general.
+#   3. Retrain every specialist (force, ignore --skip-existing) and deploy.
 _azoth-train: venv check-db
 	$(PYTHON) scripts/azoth_train_best.py \
 		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
@@ -324,7 +335,25 @@ _azoth-train: venv check-db
 		--set EXP_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES) \
 		--set EXP_ESTIMATORS=$(DEPLOY_ESTIMATORS) \
 		$(if $(WORKERS),--set EXP_WORKERS=$(WORKERS),)
-	$(MAKE) azoth-specialists
+	@# Promote the freshly-trained general into the source bundle slot.
+	@# `make experiment` wrote to out/experiments/azoth/{models/,model.txt,
+	@# feature_spec.json}; copy whichever layout it used into the deployed
+	@# location, replacing whatever was there. Atomic-ish: the per-file
+	@# `cp` and `rm -rf` are sequenced so an interrupted run leaves the
+	@# slot in a clean (older) state rather than half-overwritten.
+	@mkdir -p $(AZOTH_GENERAL_DIR)
+	@if [ -d out/experiments/azoth/models ]; then \
+		rm -rf $(AZOTH_GENERAL_DIR)/models $(AZOTH_GENERAL_DIR)/model.txt $(AZOTH_GENERAL_DIR)/model.json; \
+		cp -a out/experiments/azoth/models $(AZOTH_GENERAL_DIR)/models; \
+	elif [ -f out/experiments/azoth/model.txt ]; then \
+		rm -rf $(AZOTH_GENERAL_DIR)/models $(AZOTH_GENERAL_DIR)/model.txt; \
+		cp -a out/experiments/azoth/model.txt $(AZOTH_GENERAL_DIR)/model.txt; \
+	else \
+		echo "error: azoth_train_best did not produce a general model in out/experiments/azoth/"; \
+		exit 1; \
+	fi
+	cp -a out/experiments/azoth/feature_spec.json $(AZOTH_GENERAL_DIR)/feature_spec.json
+	$(MAKE) azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0
 	$(MAKE) azoth-deploy
 
 # fixture: regenerate extraction_fixture.json + cross_language_fixture.json
@@ -591,17 +620,15 @@ azoth-deploy: azoth-calibrate
 	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test scan_no_deadlock || { rm -rf $(_STAGE); exit 1; }
 	$(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$(_STAGE)" --required-model az/native --required-model az/elf || { rm -rf $(_STAGE); exit 1; }
 	@mkdir -p "$(AZOTH_DEPLOY_DIR)"
-	@find "$(AZOTH_DEPLOY_DIR)" -mindepth 1 -maxdepth 1 ! -name .git ! -name .gitignore ! -name LICENSE ! -name README.md ! -name TRAINING.md -exec rm -rf {} +
-	@rm -f "$(AZOTH_DEPLOY_DIR)/model.json" "$(AZOTH_DEPLOY_DIR)/model.txt" "$(AZOTH_DEPLOY_DIR)/feature_spec.json" \
-	  "$(AZOTH_DEPLOY_DIR)/evaluation.json" "$(AZOTH_DEPLOY_DIR)/extraction_fixture.json" "$(AZOTH_DEPLOY_DIR)/config.json" \
-	  "$(AZOTH_DEPLOY_DIR)/shap_importance.json" "$(AZOTH_DEPLOY_DIR)/model.onnx" "$(AZOTH_DEPLOY_DIR)/MODEL.md" \
-	  "$(AZOTH_DEPLOY_DIR)/route_diagnostics.md" "$(AZOTH_DEPLOY_DIR)/route_diagnostics.csv" \
-	  "$(AZOTH_DEPLOY_DIR)/slice_metrics.md" "$(AZOTH_DEPLOY_DIR)/slice_metrics.csv" \
-	  "$(AZOTH_DEPLOY_DIR)/route_policies.json" "$(AZOTH_DEPLOY_DIR)/route_policies.csv" \
-	  "$(AZOTH_DEPLOY_DIR)/route_policies.md" \
-	  "$(AZOTH_DEPLOY_DIR)/global_policy_metrics.json" "$(AZOTH_DEPLOY_DIR)/global_policy_metrics.md" \
-	  "$(AZOTH_DEPLOY_DIR)/score_table.npz" "$(AZOTH_DEPLOY_DIR)/specialists.json"
-	cp -R "$(_STAGE)/." "$(AZOTH_DEPLOY_DIR)/"
+	@# Mirror staged bundle into deploy dir, deleting anything in the deploy
+	@# tree that isn't in the staged copy. Per-route slot contents (e.g. an
+	@# old `models/` dir from a prior multi-seed deploy) get cleaned even
+	@# when the new bundle ships a single-seed `model.txt` for that route.
+	@# `--exclude` preserves repo-management files in the deploy dir.
+	rsync -a --delete \
+	  --exclude=.git --exclude=.gitignore \
+	  --exclude=LICENSE --exclude=README.md --exclude=TRAINING.md \
+	  "$(_STAGE)/" "$(AZOTH_DEPLOY_DIR)/"
 	@rm -rf $(_STAGE)
 	@echo "Deployed azoth ensemble bundle to $(AZOTH_DEPLOY_DIR)"
 
