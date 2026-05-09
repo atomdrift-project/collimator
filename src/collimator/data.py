@@ -15,7 +15,9 @@ from __future__ import annotations
 import json
 import os
 import logging
+import random
 import sqlite3
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -64,6 +66,44 @@ def _is_pg(dsn: Path | str) -> bool:
     return s.startswith(("postgres://", "postgresql://"))
 
 
+# Connection-establishment retry: exponential backoff with jitter, capped at
+# ~2 minutes total so a long-running training cycle doesn't hang forever on
+# a permanently-down database. Only applies to the initial connect — once a
+# connection is open, mid-stream failures still propagate to the caller
+# (long streaming queries can't resume without losing iterator position).
+_DB_CONNECT_MAX_ATTEMPTS = 6
+_DB_CONNECT_BASE_DELAY_S = 1.0
+_DB_CONNECT_MAX_DELAY_S = 30.0
+
+
+def _retry_pg_connect(dsn: str, **connect_kwargs):
+    """Open a psycopg connection with exponential backoff + jitter on transient
+    errors. Raises the last error after ``_DB_CONNECT_MAX_ATTEMPTS``."""
+    import psycopg  # noqa: PLC0415
+
+    last_err: Exception | None = None
+    for attempt in range(1, _DB_CONNECT_MAX_ATTEMPTS + 1):
+        try:
+            return psycopg.connect(dsn, **connect_kwargs)
+        except psycopg.OperationalError as e:
+            last_err = e
+            if attempt == _DB_CONNECT_MAX_ATTEMPTS:
+                break
+            # Exponential backoff capped at _DB_CONNECT_MAX_DELAY_S, with
+            # full jitter (Decorrelated Jitter is ideal but full-jitter is
+            # simpler and good enough for a single client retrying).
+            base = min(_DB_CONNECT_BASE_DELAY_S * (2 ** (attempt - 1)),
+                       _DB_CONNECT_MAX_DELAY_S)
+            delay = random.uniform(0, base)
+            log.warning(
+                "psycopg connect failed (attempt %d/%d): %s — retrying in %.1fs",
+                attempt, _DB_CONNECT_MAX_ATTEMPTS, e, delay,
+            )
+            time.sleep(delay)
+    assert last_err is not None  # for type checker; loop guarantees this
+    raise last_err
+
+
 @contextmanager
 def _connect(dsn: Path | str, *, repeatable_read: bool = False):
     """Open a read-only connection to the hopper database.
@@ -74,20 +114,30 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
     (new samples, label changes) from altering the row set mid-scan.
     SQLite read-only connections are already snapshot-isolated, so the
     flag is a no-op there.
+
+    Connection establishment is retried with exponential backoff for
+    transient PostgreSQL errors (OperationalError: server unreachable,
+    connection refused, etc.). Once a connection is open, mid-stream
+    failures propagate to the caller — they're rare but recovery would
+    require resumable iteration, which we don't have today. The cycle
+    will fail visibly with the row position in the log if that happens.
     """
     if _is_pg(dsn):
         try:
-            import psycopg  # noqa: PLC0415
+            import psycopg  # noqa: PLC0415, F401
         except ImportError as exc:
             raise ImportError(
                 "psycopg is required for PostgreSQL: pip install psycopg[binary]",
             ) from exc
-        with psycopg.connect(
+        conn = _retry_pg_connect(
             str(dsn),
             autocommit=False,
             options="-c default_transaction_isolation=repeatable\\ read" if repeatable_read else "",
-        ) as conn:
+        )
+        try:
             yield conn
+        finally:
+            conn.close()
     else:
         db_path = Path(str(dsn))
         if not db_path.exists():

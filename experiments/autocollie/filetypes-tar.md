@@ -64,3 +64,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260509T004232-filetypes-tar` — 2026-05-09T00:42:32Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005018-filetypes-tar` — 2026-05-09T00:50:18Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005628-filetypes-tar` — 2026-05-09T00:56:28Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010426-filetypes-tar` — 2026-05-09T01:04:26Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011658-filetypes-tar` — 2026-05-09T01:16:58Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011916-filetypes-tar` — 2026-05-09T01:19:16Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

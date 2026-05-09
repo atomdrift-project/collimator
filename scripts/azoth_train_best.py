@@ -58,7 +58,7 @@ _TRAIN_CONFIG_TO_EXP_ENV: dict[str, str] = {
     "num_leaves":             "EXP_NUM_LEAVES",
     "min_child_samples":      "EXP_MIN_CHILD_SAMPLES",
     "min_child_weight":       "EXP_MIN_CHILD_WEIGHT",
-    "early_stopping_rounds":  "EXP_EARLY_STOPPING_ROUNDS",
+    "early_stopping_rounds":  "EXP_EARLY_STOPPING",
     "holdout_fraction":       "EXP_HOLDOUT_FRACTION",
     "subsample":              "EXP_SUBSAMPLE",
     "colsample_bytree":       "EXP_COLSAMPLE_BYTREE",
@@ -142,7 +142,7 @@ def _resolve_env(run: dict[str, Any], extra: dict[str, str]) -> dict[str, str]:
         env["SEED"] = _format_env_value(run["seed"])
     spec = run.get("experiment_spec") or {}
     for src_key, env_name in (
-        ("train_samples", "EXP_SAMPLES"),
+        ("train_samples", "EXP_TRAIN_SAMPLES"),
         ("max_test_samples", "EXP_MAX_TEST_SAMPLES"),
         ("seed_search_k", "EXP_SEED_SEARCH_K"),
     ):

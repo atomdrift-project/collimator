@@ -33,3 +33,39 @@ Rejected before run:
 - `js_no_presence_seed_search3` — features.attack_code_ngrams: unknown knob (not in allowlist); features.attack_features: unknown knob (not in allowlist); features.crit_category_ngrams: unknown knob (not in allowlist)
 - `js_no_presence_scalepos05_fpr3` — features.attack_code_ngrams: unknown knob (not in allowlist); features.attack_features: unknown knob (not in allowlist); features.crit_category_ngrams: unknown knob (not in allowlist)
 
+## Cycle `20260509T004152-filetypes-javascript` — 2026-05-09T00:41:52Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T004832-filetypes-javascript` — 2026-05-09T00:48:32Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005451-filetypes-javascript` — 2026-05-09T00:54:51Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010945-filetypes-javascript` — 2026-05-09T01:09:45Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011054-filetypes-javascript` — 2026-05-09T01:10:54Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T012329-filetypes-javascript` — 2026-05-09T01:23:29Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

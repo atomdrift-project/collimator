@@ -807,8 +807,10 @@ def _fit_and_persist_isotonic_calibrator(
                 f"breakpoints: {len(x_thr)}"
             ),
         }
-        with open(cal_path, "w") as f:
-            json.dump(cal, f, indent=2)
+        # Atomic write: litmus reads calibrator.json on every load and a
+        # partially-written file would NaN-poison every prediction for the
+        # affected route until the next deploy.
+        bundle.atomic_write_json(cal_path, cal)
         calibrators_written += 1
     LOG.info("wrote %d per-route isotonic calibrators", calibrators_written)
 
@@ -1041,9 +1043,8 @@ def main() -> int:
         ],
         "levels": levels,
     }
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    with open(args.output, "w") as f:
-        json.dump(payload, f, indent=2)
+    # Atomic write: config.json is consumed by litmus, validate, deploy, etc.
+    bundle.atomic_write_json(args.output, payload)
     print(f"wrote {args.output}")
     return 0
 

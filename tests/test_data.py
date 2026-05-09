@@ -209,3 +209,67 @@ def test_labeled_corpus_metadata_full_matches_threshold_corpus() -> None:
     assert metadata["malware"] == 1
     assert metadata["benign"] == 1
     assert metadata["max_row_id"] == 2
+
+
+def test_retry_pg_connect_succeeds_after_transient_failure(monkeypatch) -> None:
+    """A transient OperationalError on the first attempt must be retried, and
+    the eventual successful connect must be returned without raising."""
+    import sys as _sys  # noqa: PLC0415
+    from collimator import data as data_mod  # noqa: PLC0415
+
+    # Provide a minimal stand-in for psycopg so the test doesn't need a real DB.
+    class FakeOpError(Exception):
+        pass
+
+    class FakePsycopg:
+        OperationalError = FakeOpError
+
+        def __init__(self):
+            self.attempts = 0
+
+        def connect(self, *_args, **_kwargs):
+            self.attempts += 1
+            if self.attempts == 1:
+                raise FakeOpError("server briefly unreachable")
+            return object()
+
+    fake = FakePsycopg()
+    monkeypatch.setitem(_sys.modules, "psycopg", fake)
+    # Compress backoff so the test doesn't actually sleep.
+    monkeypatch.setattr(data_mod, "_DB_CONNECT_BASE_DELAY_S", 0.001)
+    monkeypatch.setattr(data_mod, "_DB_CONNECT_MAX_DELAY_S", 0.001)
+
+    conn = data_mod._retry_pg_connect("postgres://x/y")
+    assert conn is not None
+    assert fake.attempts == 2, "first call must be retried after transient OperationalError"
+
+
+def test_retry_pg_connect_gives_up_after_max_attempts(monkeypatch) -> None:
+    """A persistent failure raises the last error after exhausting attempts —
+    we don't want to silently hang on a permanently-down DB."""
+    import sys as _sys  # noqa: PLC0415
+    import pytest  # noqa: PLC0415
+    from collimator import data as data_mod  # noqa: PLC0415
+
+    class FakeOpError(Exception):
+        pass
+
+    class FakePsycopg:
+        OperationalError = FakeOpError
+
+        def __init__(self):
+            self.attempts = 0
+
+        def connect(self, *_args, **_kwargs):
+            self.attempts += 1
+            raise FakeOpError(f"down (attempt {self.attempts})")
+
+    fake = FakePsycopg()
+    monkeypatch.setitem(_sys.modules, "psycopg", fake)
+    monkeypatch.setattr(data_mod, "_DB_CONNECT_BASE_DELAY_S", 0.001)
+    monkeypatch.setattr(data_mod, "_DB_CONNECT_MAX_DELAY_S", 0.001)
+    monkeypatch.setattr(data_mod, "_DB_CONNECT_MAX_ATTEMPTS", 3)
+
+    with pytest.raises(FakeOpError, match="down"):
+        data_mod._retry_pg_connect("postgres://x/y")
+    assert fake.attempts == 3, "must give up after _DB_CONNECT_MAX_ATTEMPTS"

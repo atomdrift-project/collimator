@@ -64,3 +64,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260509T004408-filetypes-plist` — 2026-05-09T00:44:08Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005313-filetypes-plist` — 2026-05-09T00:53:13Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005908-filetypes-plist` — 2026-05-09T00:59:08Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010603-filetypes-plist` — 2026-05-09T01:06:03Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011449-filetypes-plist` — 2026-05-09T01:14:49Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T012031-filetypes-plist` — 2026-05-09T01:20:31Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T012507-filetypes-plist` — 2026-05-09T01:25:07Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

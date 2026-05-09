@@ -669,10 +669,10 @@ def main() -> int:
         "routes": route_payload,
     }
     _apply_global_budget_selection(payload, config)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
     payload = _json_clean(payload)
-    with open(args.output, "w") as f:
-        json.dump(payload, f, indent=2, allow_nan=False)
+    # route_policies.json is loaded by litmus; a partial write would crash
+    # bundle load. Atomic temp+rename guards against process kill.
+    bundle.atomic_write_json(args.output, payload)
     csv_rows = _csv_rows(payload)
     _write_csv(args.csv, csv_rows)
     _write_markdown(args.markdown, payload)

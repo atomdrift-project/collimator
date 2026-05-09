@@ -6,10 +6,18 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+
+# scripts/ isn't on sys.path; reach src/ for `collimator.bundle`.
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
+from collimator import bundle  # noqa: E402
 
 
 def _json_clean(value: Any) -> Any:
@@ -196,10 +204,8 @@ def main() -> int:
         "benign": int(np.sum(labels == 0)),
         "levels": levels,
     }
-    args.output.parent.mkdir(parents=True, exist_ok=True)
     payload = _json_clean(payload)
-    with open(args.output, "w") as f:
-        json.dump(payload, f, indent=2, allow_nan=False)
+    bundle.atomic_write_json(args.output, payload)
     _write_markdown(args.markdown, payload)
     print(f"wrote {args.output}")
     print(f"wrote {args.markdown}")

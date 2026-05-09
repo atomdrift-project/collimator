@@ -25,7 +25,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from . import data, export, features, train
+from . import bundle, data, export, features, train
 from .model import predict_proba
 
 
@@ -241,8 +241,7 @@ def _save_corpus_cache(
             for s, ft in zip(sorted_train, train_file_types)
         ],
     }
-    with open(path, "w") as f:
-        json.dump(obj, f)
+    bundle.atomic_write_json(path, obj, indent=None)
     log.info("cached corpus selections: %s", path)
 
 
@@ -1025,15 +1024,39 @@ def run_experiment(
     deploy_averaged = bool(save_all_seeds) and len(all_attempt_models) > 1 \
         and len(all_attempt_probs) == len(all_attempt_models)
     averaged_test_metrics: dict[str, float] | None = None
+    averaged_threshold: float | None = None
     if deploy_averaged:
         ensemble_probs = np.zeros(X_test.shape[0], dtype=np.float64)
         for p in all_attempt_probs:
             ensemble_probs += p.astype(np.float64)
         ensemble_probs = (ensemble_probs / float(len(all_attempt_probs))).astype(np.float32)
-        # Use the seed-search winner's threshold for classification metrics —
-        # all members were trained against the same matrix and use the same
-        # operating-point logic, so the threshold is comparable across seeds.
-        thr = float(result.optimal_threshold)
+        # Re-pick the threshold on the AVERAGED probabilities. Reusing the
+        # winning single-seed threshold is wrong: averaging compresses the
+        # variance of the score distribution (~K reduction), so the same
+        # numeric cutoff falls at a materially different quantile of the
+        # averaged distribution. Reported precision/recall/F1 must
+        # correspond to a threshold the deployment would actually use, and
+        # litmus's runtime calibration will refit against the averaged
+        # scores anyway — so pick the same way the trainer would have.
+        try:
+            averaged_threshold = float(train._select_threshold(
+                y_test.astype(int),
+                ensemble_probs,
+                mode=threshold_mode,
+                beta=float(beta),
+                max_fpr=threshold_fpr_target,
+            ))
+        except (ValueError, IndexError) as exc:
+            # Degenerate test set (single class, all-zero probs, etc.) —
+            # fall back to the winner's threshold and surface the reason
+            # rather than silently shipping a 0.5 default.
+            log.warning(
+                "averaged-ensemble threshold selection failed (%s); "
+                "falling back to winner's threshold %.4f",
+                exc, float(result.optimal_threshold),
+            )
+            averaged_threshold = float(result.optimal_threshold)
+        thr = averaged_threshold
         y_pred = (ensemble_probs >= thr).astype(int)
         averaged_test_metrics = {
             "precision": float(precision_score(y_test, y_pred, zero_division=0)),
@@ -1048,15 +1071,18 @@ def run_experiment(
                 float(brier_score_loss(y_test, ensemble_probs))
                 if len(np.unique(y_test)) > 1 else 0.0
             ),
+            "threshold": thr,
         }
         averaged_test_metrics.update(_recall_at_fp_per_million(y_test, ensemble_probs))
         sampled_test_metrics = averaged_test_metrics
         log.info(
-            "seed-search averaged ensemble (K=%d): F1=%.4f AUC=%.4f recall@3FPM=%.4f",
+            "seed-search averaged ensemble (K=%d): "
+            "F1=%.4f AUC=%.4f recall@3FPM=%.4f threshold=%.4f (re-picked on averaged probs)",
             len(all_attempt_models),
             averaged_test_metrics.get("f1", 0.0),
             averaged_test_metrics.get("roc_auc", 0.0),
             averaged_test_metrics.get("recall_at_fp_per_million_3", 0.0),
+            averaged_threshold or float("nan"),
         )
 
     results = {
@@ -1077,7 +1103,14 @@ def run_experiment(
         "train_config": train_config,
         "train_metrics": result.metrics,
         "sampled_test_metrics": sampled_test_metrics,
-        "threshold": float(result.optimal_threshold),
+        # When deploy_averaged, this is the threshold re-picked on the
+        # AVERAGED ensemble's probabilities (matches what the deployment
+        # would actually classify at). Otherwise it's the single trained
+        # model's optimal threshold.
+        "threshold": (
+            averaged_threshold if (deploy_averaged and averaged_threshold is not None)
+            else float(result.optimal_threshold)
+        ),
         "split_summary": result.split_summary,
         "db_path": str(db_path),
         # `seed` is the seed of the SHIPPED model (the seed-search winner). The
@@ -1098,23 +1131,33 @@ def run_experiment(
         ext = "txt" if learner == "azoth" else "json"
         model_filename = f"model.{ext}"
         if deploy_averaged:
-            # Multi-seed bundle: write models/seed_<S>.{txt,json} for every
-            # member and remove any stale top-level model artifact so the
-            # bundle layout stays unambiguous.
-            for legacy in (output_dir / "model.txt", output_dir / "model.json"):
-                if legacy.is_file():
-                    legacy.unlink()
+            # Multi-seed bundle: write every member to a `.tmp` sibling
+            # first, then rename atomically. Crash safety: a kill mid-write
+            # leaves at most one stray `.tmp` (which `model_files()` skips
+            # because it filters by extension). The legacy single-model
+            # artifact is unlinked LAST — only after every new seed file
+            # is durable on disk — so we never end up with a bundle that
+            # has no models at all.
             shared_models_dir = output_dir / "models"
             shared_models_dir.mkdir(parents=True, exist_ok=True)
             for s, m in zip(all_attempt_seeds, all_attempt_models, strict=True):
-                export.save_model(m, shared_models_dir / f"seed_{s}.{ext}")
+                final_path = shared_models_dir / f"seed_{s}.{ext}"
+                tmp_path = shared_models_dir / f".seed_{s}.{ext}.tmp"
+                export.save_model(m, tmp_path)
+                os.replace(tmp_path, final_path)
+            for legacy in (output_dir / "model.txt", output_dir / "model.json"):
+                if legacy.is_file():
+                    legacy.unlink()
         else:
             export.save_model(result.model, output_dir / model_filename)
         export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
         if keyed_result_path is not None:
-            keyed_result_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(keyed_result_path, "w") as f:
-                json.dump(results, f, indent=2)
+            # Atomic write: autocollie reads this as the source of truth for
+            # the experiment's metrics and replays its env via
+            # azoth_train_best.py.  A truncated keyed JSON would fail JSON
+            # parse and silently exclude the run from historical-best
+            # selection.
+            bundle.atomic_write_json(keyed_result_path, results)
             log.info("saved keyed experiment summary to %s", keyed_result_path)
             # Also save spec + model under per-key paths so downstream consumers
             # (notably autocollie's candidate-bundle staging) can pick them up
@@ -1129,11 +1172,17 @@ def run_experiment(
             if deploy_averaged:
                 # Multi-seed keyed layout: <key>_models/seed_<S>.{txt,json}.
                 # autocollie's stageCandidateBundle prefers this directory
-                # over the legacy single keyed file when present.
+                # over the legacy single keyed file when present.  Same
+                # tmp-rename pattern as the shared write above so a kill
+                # mid-loop never leaves a partial seed file in the keyed
+                # dir for staging to pick up.
                 keyed_models_dir = keyed_result_path.with_name(f"{exp_key}_models")
                 keyed_models_dir.mkdir(parents=True, exist_ok=True)
                 for s, m in zip(all_attempt_seeds, all_attempt_models, strict=True):
-                    export.save_model(m, keyed_models_dir / f"seed_{s}.{ext}")
+                    final_path = keyed_models_dir / f"seed_{s}.{ext}"
+                    tmp_path = keyed_models_dir / f".seed_{s}.{ext}.tmp"
+                    export.save_model(m, tmp_path)
+                    os.replace(tmp_path, final_path)
                 log.info(
                     "saved keyed feature_spec and %d-seed ensemble to %s, %s",
                     len(all_attempt_models), keyed_spec_path, keyed_models_dir,

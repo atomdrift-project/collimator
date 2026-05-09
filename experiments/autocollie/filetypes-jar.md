@@ -34,3 +34,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260509T004253-filetypes-jar` — 2026-05-09T00:42:53Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T004853-filetypes-jar` — 2026-05-09T00:48:53Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005845-filetypes-jar` — 2026-05-09T00:58:45Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010746-filetypes-jar` — 2026-05-09T01:07:46Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011442-filetypes-jar` — 2026-05-09T01:14:42Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011732-filetypes-jar` — 2026-05-09T01:17:32Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T012514-filetypes-jar` — 2026-05-09T01:25:14Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

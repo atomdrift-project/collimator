@@ -25,6 +25,9 @@ to the pre-item-A predict path on every input.
 
 from __future__ import annotations
 
+import json
+import os
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -125,6 +128,38 @@ def write_seed_model_path(bundle_dir: Path, seed: int, ext: str) -> Path:
     multi_dir = bundle_dir / "models"
     multi_dir.mkdir(parents=True, exist_ok=True)
     return multi_dir / f"{_SEED_PREFIX}{int(seed)}.{ext}"
+
+
+def atomic_write_json(path: Path, payload: Any, *, indent: int | None = 2) -> None:
+    """Write ``payload`` as JSON to ``path`` atomically.
+
+    Writes to a sibling temp file, fsyncs, then ``os.replace``s into place —
+    so a partially-written file never appears at ``path``. Critical for files
+    litmus or downstream pipeline steps load on every scan / cycle:
+    ``calibrator.json``, ``config.json``, ``route_policies.json``, etc.
+    A plain ``open(path, "w"); json.dump(...)`` truncates the destination at
+    open time and a process kill mid-write leaves the truncated file
+    persisted; the next reader gets corrupt JSON.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent),
+    )
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(payload, f, indent=indent)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    except Exception:
+        # Best-effort cleanup; the partial temp file shouldn't leak even if
+        # the write or replace fails.  The destination is unaffected because
+        # os.replace was the would-be commit point.
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 class Ensemble:

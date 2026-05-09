@@ -34,3 +34,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260509T004711-filetypes-rtf` — 2026-05-09T00:47:11Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005238-filetypes-rtf` — 2026-05-09T00:52:38Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005512-filetypes-rtf` — 2026-05-09T00:55:12Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010534-filetypes-rtf` — 2026-05-09T01:05:34Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011457-filetypes-rtf` — 2026-05-09T01:14:57Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T012336-filetypes-rtf` — 2026-05-09T01:23:36Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

@@ -141,6 +141,7 @@ EXP_LEARNING_RATE ?= 0.05
 EXP_EARLY_STOPPING ?= 25
 EXP_NUM_LEAVES ?= $(if $(filter azoth,$(LEARNER)),96,)
 EXP_MIN_CHILD_SAMPLES ?= $(if $(filter azoth,$(LEARNER)),100,)
+EXP_MIN_CHILD_WEIGHT ?=
 EXP_COLSAMPLE_BYTREE ?= 0.8
 EXP_SUBSAMPLE ?= 0.8
 EXP_GAMMA ?= 0.0
@@ -319,7 +320,7 @@ _azoth-train: venv check-db
 		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
 		--route general \
 		--set DB=$(DB) \
-		--set EXP_SAMPLES=$(DEPLOY_TRAIN_SAMPLES) \
+		--set EXP_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES) \
 		--set EXP_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES) \
 		--set EXP_ESTIMATORS=$(DEPLOY_ESTIMATORS) \
 		$(if $(WORKERS),--set EXP_WORKERS=$(WORKERS),)
@@ -776,6 +777,7 @@ experiment: venv check-db
 		--learning-rate $(EXP_LEARNING_RATE) --early-stopping-rounds $(EXP_EARLY_STOPPING) \
 		$(if $(EXP_NUM_LEAVES),--num-leaves $(EXP_NUM_LEAVES),) \
 		$(if $(EXP_MIN_CHILD_SAMPLES),--min-child-samples $(EXP_MIN_CHILD_SAMPLES),) \
+		$(if $(EXP_MIN_CHILD_WEIGHT),--min-child-weight $(EXP_MIN_CHILD_WEIGHT),) \
 		--colsample-bytree $(EXP_COLSAMPLE_BYTREE) --subsample $(EXP_SUBSAMPLE) \
 		--gamma $(EXP_GAMMA) --reg-alpha $(EXP_REG_ALPHA) --reg-lambda $(EXP_REG_LAMBDA) \
 		$(if $(DEVICE),--device $(DEVICE),) \

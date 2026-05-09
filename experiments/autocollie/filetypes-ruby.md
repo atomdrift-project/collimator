@@ -33,3 +33,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260509T004554-filetypes-ruby` — 2026-05-09T00:45:54Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005039-filetypes-ruby` — 2026-05-09T00:50:39Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005838-filetypes-ruby` — 2026-05-09T00:58:38Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010433-filetypes-ruby` — 2026-05-09T01:04:33Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011134-filetypes-ruby` — 2026-05-09T01:11:34Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011841-filetypes-ruby` — 2026-05-09T01:18:41Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T012431-filetypes-ruby` — 2026-05-09T01:24:31Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

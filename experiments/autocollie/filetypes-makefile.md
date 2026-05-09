@@ -34,3 +34,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260509T004622-filetypes-makefile` — 2026-05-09T00:46:22Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005216-filetypes-makefile` — 2026-05-09T00:52:16Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010130-filetypes-makefile` — 2026-05-09T01:01:30Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010358-filetypes-makefile` — 2026-05-09T01:03:58Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011142-filetypes-makefile` — 2026-05-09T01:11:42Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011752-filetypes-makefile` — 2026-05-09T01:17:52Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

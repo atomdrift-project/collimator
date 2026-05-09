@@ -30,3 +30,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260509T004300-filegroups-portable` — 2026-05-09T00:43:00Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005245-filegroups-portable` — 2026-05-09T00:52:45Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T005933-filegroups-portable` — 2026-05-09T00:59:33Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T010413-filegroups-portable` — 2026-05-09T01:04:13Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011101-filegroups-portable` — 2026-05-09T01:11:01Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T011806-filegroups-portable` — 2026-05-09T01:18:06Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

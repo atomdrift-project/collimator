@@ -752,13 +752,18 @@ def _train_one(
     # by ~(K+1) without the bias trade-offs of within-model bagging.
     extra_models: list[Any] = []
     if n_seed_extras > 0:
-        # Clean any stale top-level model artifact from a previous K=0 run so
-        # the bundle layout stays unambiguous.
-        for legacy in (output_dir / "model.txt", output_dir / "model.json"):
-            if legacy.is_file():
-                legacy.unlink()
-        primary_path = bundle.write_seed_model_path(output_dir, config.seed, "txt")
-        export.save_model(result.model, primary_path)
+        # Atomic write per seed: train, write to a `.tmp` sibling, then
+        # rename in place. A kill mid-loop leaves at most one stray `.tmp`
+        # which `bundle.model_files()` skips because it filters by the
+        # canonical extension. The legacy single-model artifact is unlinked
+        # LAST — only after every new seed file is durable on disk — so
+        # an interrupted run never produces a bundle with zero models.
+        def _save_seed_atomic(seed: int, model_obj: Any) -> None:
+            final_path = bundle.write_seed_model_path(output_dir, seed, "txt")
+            tmp_path = final_path.with_name(f".{final_path.name}.tmp")
+            export.save_model(model_obj, tmp_path)
+            os.replace(tmp_path, final_path)
+        _save_seed_atomic(int(config.seed), result.model)
         for offset in range(1, n_seed_extras + 1):
             extra_seed = int(config.seed) + offset
             LOG.info("%s: training seed extra %d/%d (seed=%d)",
@@ -770,9 +775,11 @@ def _train_one(
                 feature_names=spec.feature_names,
                 sample_file_types=sample_file_types,
             )
-            extra_path = bundle.write_seed_model_path(output_dir, extra_seed, "txt")
-            export.save_model(extra_result.model, extra_path)
+            _save_seed_atomic(extra_seed, extra_result.model)
             extra_models.append(extra_result.model)
+        for legacy in (output_dir / "model.txt", output_dir / "model.json"):
+            if legacy.is_file():
+                legacy.unlink()
     else:
         export.save_model(result.model, output_dir / "model.txt")
 
