@@ -24,7 +24,7 @@ from sklearn.metrics import (
 from sklearn.isotonic import IsotonicRegression
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
-from .model import booster_device, create_classifier, predict_proba
+from .model import _shape_args, booster_device, create_classifier, predict_proba
 
 log = logging.getLogger(__name__)
 
@@ -475,6 +475,7 @@ def train(
                 n_benign=int(np.sum(y_tv[train_idx] == 0)),
                 n_malware=int(np.sum(y_tv[train_idx] == 1)),
                 device=config.device,
+                **_shape_args(X_tv[train_idx]),
                 random_state=config.seed,
                 n_estimators=config.n_estimators,
                 max_depth=config.max_depth,
@@ -515,6 +516,7 @@ def train(
                         n_benign=int(np.sum(y_tv[train_idx] == 0)),
                         n_malware=int(np.sum(y_tv[train_idx] == 1)),
                         device=config.device,
+                        **_shape_args(X_tv[train_idx]),
                         random_state=config.seed,
                         n_estimators=config.n_estimators,
                         max_depth=config.max_depth,
@@ -579,6 +581,7 @@ def train(
         n_benign=n_tv_benign,
         n_malware=n_tv_malware,
         device=config.device,
+        **_shape_args(X_tv),
         random_state=config.seed,
         n_estimators=config.n_estimators,
         max_depth=config.max_depth,
@@ -639,6 +642,7 @@ def train(
                 n_benign=n_tv_benign,
                 n_malware=n_tv_malware,
                 device=config.device,
+                **_shape_args(X_tv),
                 random_state=config.seed,
                 n_estimators=config.n_estimators,
                 max_depth=config.max_depth,

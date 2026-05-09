@@ -24,10 +24,6 @@ from .model import load_model, predict_proba
 log = logging.getLogger(__name__)
 
 
-def _predict(model: object, vec: np.ndarray) -> float:
-    return float(predict_proba(model, vec.reshape(1, -1))[0])
-
-
 def _score_report(
     model: object,
     spec: FeatureSpec,
@@ -36,7 +32,8 @@ def _score_report(
     """Extract features for one report and return raw vec, model vec, probability."""
     vec_raw = extract(report, spec)
     vec = standardize(vec_raw, spec) if spec.standardized else vec_raw
-    return vec_raw, vec, _predict(model, vec)
+    prob = float(predict_proba(model, vec.reshape(1, -1))[0])
+    return vec_raw, vec, prob
 
 def _print_feature_vector(vec: np.ndarray, spec: FeatureSpec, top_n: int = 30) -> None:
     """Print the non-zero features, sorted by absolute value."""

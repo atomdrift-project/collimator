@@ -1023,66 +1023,55 @@ def run_experiment(
     # actually emits.
     deploy_averaged = bool(save_all_seeds) and len(all_attempt_models) > 1 \
         and len(all_attempt_probs) == len(all_attempt_models)
-    averaged_test_metrics: dict[str, float] | None = None
     averaged_threshold: float | None = None
     if deploy_averaged:
-        ensemble_probs = np.zeros(X_test.shape[0], dtype=np.float64)
-        for p in all_attempt_probs:
-            ensemble_probs += p.astype(np.float64)
-        ensemble_probs = (ensemble_probs / float(len(all_attempt_probs))).astype(np.float32)
+        # Mean of K seed probabilities, in f64 for summation stability then
+        # cast back to f32 (matches what litmus emits on the same files).
+        ensemble_probs = (
+            np.mean([p.astype(np.float64) for p in all_attempt_probs], axis=0)
+            .astype(np.float32)
+        )
         # Re-pick the threshold on the AVERAGED probabilities. Reusing the
         # winning single-seed threshold is wrong: averaging compresses the
         # variance of the score distribution (~K reduction), so the same
-        # numeric cutoff falls at a materially different quantile of the
-        # averaged distribution. Reported precision/recall/F1 must
-        # correspond to a threshold the deployment would actually use, and
-        # litmus's runtime calibration will refit against the averaged
-        # scores anyway — so pick the same way the trainer would have.
+        # numeric cutoff falls at a materially different quantile. The
+        # deployed score-to-class mapping must correspond to a threshold
+        # the trainer would actually pick on the averaged distribution.
         try:
             averaged_threshold = float(train._select_threshold(
-                y_test.astype(int),
-                ensemble_probs,
-                mode=threshold_mode,
-                beta=float(beta),
-                max_fpr=threshold_fpr_target,
+                y_test.astype(int), ensemble_probs,
+                mode=threshold_mode, beta=float(beta), max_fpr=threshold_fpr_target,
             ))
         except (ValueError, IndexError) as exc:
             # Degenerate test set (single class, all-zero probs, etc.) —
             # fall back to the winner's threshold and surface the reason
             # rather than silently shipping a 0.5 default.
+            averaged_threshold = float(result.optimal_threshold)
             log.warning(
                 "averaged-ensemble threshold selection failed (%s); "
                 "falling back to winner's threshold %.4f",
-                exc, float(result.optimal_threshold),
+                exc, averaged_threshold,
             )
-            averaged_threshold = float(result.optimal_threshold)
-        thr = averaged_threshold
-        y_pred = (ensemble_probs >= thr).astype(int)
-        averaged_test_metrics = {
+        y_pred = (ensemble_probs >= averaged_threshold).astype(int)
+        multi_class = len(np.unique(y_test)) > 1
+        sampled_test_metrics = {
             "precision": float(precision_score(y_test, y_pred, zero_division=0)),
             "recall": float(recall_score(y_test, y_pred, zero_division=0)),
             "f1": float(f1_score(y_test, y_pred, zero_division=0)),
-            "roc_auc": float(roc_auc_score(y_test, ensemble_probs)) if len(np.unique(y_test)) > 1 else 0.0,
-            "avg_precision": (
-                float(average_precision_score(y_test, ensemble_probs))
-                if len(np.unique(y_test)) > 1 else 0.0
-            ),
-            "brier": (
-                float(brier_score_loss(y_test, ensemble_probs))
-                if len(np.unique(y_test)) > 1 else 0.0
-            ),
-            "threshold": thr,
+            "roc_auc": float(roc_auc_score(y_test, ensemble_probs)) if multi_class else 0.0,
+            "avg_precision": float(average_precision_score(y_test, ensemble_probs)) if multi_class else 0.0,
+            "brier": float(brier_score_loss(y_test, ensemble_probs)) if multi_class else 0.0,
+            "threshold": averaged_threshold,
+            **_recall_at_fp_per_million(y_test, ensemble_probs),
         }
-        averaged_test_metrics.update(_recall_at_fp_per_million(y_test, ensemble_probs))
-        sampled_test_metrics = averaged_test_metrics
         log.info(
             "seed-search averaged ensemble (K=%d): "
             "F1=%.4f AUC=%.4f recall@3FPM=%.4f threshold=%.4f (re-picked on averaged probs)",
             len(all_attempt_models),
-            averaged_test_metrics.get("f1", 0.0),
-            averaged_test_metrics.get("roc_auc", 0.0),
-            averaged_test_metrics.get("recall_at_fp_per_million_3", 0.0),
-            averaged_threshold or float("nan"),
+            sampled_test_metrics["f1"],
+            sampled_test_metrics["roc_auc"],
+            sampled_test_metrics.get("recall_at_fp_per_million_3", 0.0),
+            averaged_threshold,
         )
 
     results = {

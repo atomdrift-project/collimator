@@ -593,11 +593,7 @@ def _nan_safe_tolist(arr: np.ndarray) -> list:
     deserializer to interpret.
     """
     import math
-
-    def _convert(x: float) -> float | str:
-        return "NaN" if math.isnan(x) else float(x)
-
-    return [[_convert(v) for v in row] for row in arr]
+    return [["NaN" if math.isnan(v) else float(v) for v in row] for row in arr]
 
 
 def cmd_fixture(args: argparse.Namespace) -> None:

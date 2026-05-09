@@ -57,11 +57,58 @@ def detect_device() -> str:
     return _device_cache
 
 
+def pick_device(
+    n_rows: int | None = None,
+    n_features: int | None = None,
+    nnz: int | None = None,
+) -> str:
+    """Pick CUDA vs CPU based on the training-set shape.
+
+    LightGBM's CUDA path — and to a lesser extent XGBoost's — only accelerates
+    dense, large-N data. Sparse high-dim inputs trigger numeric instability on
+    GPU (constant-prediction models, SIGFPE inside fit). Bias toward CPU and
+    only opt into CUDA when the workload looks GPU-friendly.
+    """
+    if not detect_device().startswith("cuda"):
+        return "cpu"
+    if n_rows is None or n_features is None:
+        return "cpu"
+    cells = n_rows * n_features
+    density = (nnz / cells) if nnz is not None and cells else 1.0
+    if density < 0.05:
+        log.info("device=cpu (sparse: %.3f%% density)", density * 100)
+        return "cpu"
+    if n_rows < 50_000:
+        log.info("device=cpu (small: %d rows)", n_rows)
+        return "cpu"
+    if n_features > 20_000:
+        log.info("device=cpu (wide: %d features)", n_features)
+        return "cpu"
+    if cells < 10_000_000:
+        log.info("device=cpu (light: %d cells)", cells)
+        return "cpu"
+    log.info(
+        "device=cuda (rows=%d feats=%d density=%.3f%%)",
+        n_rows, n_features, density * 100,
+    )
+    return "cuda"
+
+
+def _shape_args(X: Any) -> dict[str, int | None]:
+    """Extract pick_device kwargs from a feature matrix (sparse or dense)."""
+    n_rows, n_features = X.shape
+    nnz = int(X.nnz) if hasattr(X, "nnz") else None
+    return {"n_rows": int(n_rows), "n_features": int(n_features), "nnz": nnz}
+
+
 def create_classifier(
     n_benign: int,
     n_malware: int,
     *,
     device: str | None = None,
+    n_rows: int | None = None,
+    n_features: int | None = None,
+    nnz: int | None = None,
     random_state: int = 42,
     n_estimators: int = 600,
     max_depth: int = 10,
@@ -99,6 +146,8 @@ def create_classifier(
     """
     base_spw = n_benign / max(n_malware, 1)
     spw = base_spw * max(scale_pos_weight_mult, 0.0)
+    if device == "auto":
+        device = pick_device(n_rows, n_features, nnz)
     if learner == "azoth":
         try:
             import lightgbm as lgb  # noqa: PLC0415
