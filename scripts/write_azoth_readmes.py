@@ -558,6 +558,7 @@ def _write_route(root: Path, path: Path) -> None:
             f"| PR AUC | {_num(spec_metrics.get('pr_auc'), 4)} | {ember_pr_str} | "
             f"{_delta(spec_metrics.get('pr_auc'), ember_pr_val)} |",
             f"| F1 | {_num(spec_metrics.get('f1'), 4)} | — | — |",
+            f"| Brier (calibration) | {_num(spec_metrics.get('brier'), 4)} | — | — |",
             "",
         ])
     else:

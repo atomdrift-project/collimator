@@ -27,16 +27,24 @@ Part of the toolchain: `cleave → hopper → collimator → litmus`
 - **Autonomous search.** [`autocollie`](https://codeberg.org/atomdrift/autocollie)
   drives a screen → confirm → promote ladder against `make experiment`,
   proposes config changes via an LLM-guided agent, and produces validated
-  candidate bundles ready to deploy. Wins flow back into `make azoth-train`
-  by default — there's no separate "consume autocollie's wins" step.
+  candidate bundles ready to deploy. Wins flow back into `make azoth-full-train`
+  / `make azoth-fast-train` by default — there's no separate "consume
+  autocollie's wins" step.
 
 ## The five commands you'd actually run
 
 ```fish
-# 1. Train + deploy: replays the highest-F1 historical config for every route,
-#    with multi-seed averaging on, then calibrates and pushes to the live
-#    deployment. Use any time you want the deployed bundle refreshed.
-make azoth-train DB=postgres://hopper@localhost:5432/hopper
+# 1. Train + deploy. Two fidelities:
+#
+#    azoth-full-train: full labeled corpus (~2M rows), ~7-8h end-to-end at K=3
+#    seeds. Use for deploy-bound retrains; preserves the benign tail that
+#    determines L3 (default operating point) threshold quality.
+#
+#    azoth-fast-train: 600k 50/50-balanced sample, ~5h. Same fidelity
+#    autocollie's auto-promote uses. Use for fast iteration.
+make azoth-full-train DB=postgres://hopper@localhost:5432/hopper
+# or
+make azoth-fast-train DB=postgres://hopper@localhost:5432/hopper
 
 # 2. Run one experiment: ad-hoc training with explicit knobs. Same path
 #    autocollie uses; results land in out/experiments/azoth/runs/<key>.json.

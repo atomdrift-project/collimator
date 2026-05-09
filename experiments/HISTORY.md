@@ -29,7 +29,7 @@ The deployed routed-ensemble emerged from four overlapping waves:
    calibration, per-FP/M operating points, multi-seed averaging, stacked
    combiners.
 4. **Autonomous search** (2026-05). Autocollie drives the screen → confirm →
-   promote ladder; per-route discoveries feed back into `make azoth-train`.
+   promote ladder; per-route discoveries feed back into `make azoth-full-train`.
 
 ## Tranche index
 

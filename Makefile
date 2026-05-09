@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
+.PHONY: azoth-full-train azoth-fast-train _azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -115,10 +115,14 @@ EXP_WORKERS ?= $(WORKERS)
 WORKERS_ARG := $(if $(WORKERS),--workers $(WORKERS),)
 EXP_WORKERS_ARG := $(if $(EXP_WORKERS),--workers $(EXP_WORKERS),)
 SEED ?= 42
-DEVICE ?=
+# LightGBM training device. Default to cuda — the installed lightgbm wheel
+# was built with CUDA support, and the workstation has a beefy NVIDIA GPU.
+# Override with DEVICE=cpu if the GPU isn't available, or DEVICE= (empty)
+# to let LightGBM auto-detect (which today means CPU).
+DEVICE ?= cuda
 DROP_FEATURE_PREFIXES ?=
 # Default azoth screening profile: a probe-sized run for bulk iteration.
-# Confirm winners with a different seed, an explicit larger sample, or make azoth-train.
+# Confirm winners with a different seed, an explicit larger sample, or make azoth-full-train.
 EXP_TRAIN_SAMPLES ?= 150000
 EXP_MAX_TEST_SAMPLES ?= 40000
 EXP_MAX_ID ?=
@@ -204,6 +208,12 @@ EXP_CONFIDENCE_WEIGHTED_NGRAMS ?= 0
 EXP_OBJECTIVE_TRIGRAMS ?= 0
 EXP_SUSPICIOUS_TRIGRAMS ?= 0
 EXP_ATTACK_NGRAMS ?= 0
+# Previously hardcoded to 1 in the experiment recipe; now toggleable so
+# autocollie can ablate them. Defaults preserve historical behavior.
+EXP_ATTACK_FEATURES ?= 1
+EXP_ATTACK_CODE_NGRAMS ?= 1
+EXP_CRIT_CATEGORY_NGRAMS ?= 1
+EXP_TIERED_CRIT_BIGRAMS ?= 1
 EXP_TIERED_BIGRAM_PATH_DEPTH ?= 3
 EXP_TIERED_BIGRAM_MIN_CRIT ?= 3
 EXP_TIERED_BIGRAM_MAX ?= 5000
@@ -234,7 +244,7 @@ ALLOWED_FEATURES ?= src/collimator/allowed_features.json
 # Validate DB is set for targets that need it
 check-db:
 ifndef DB
-	$(error DB is required. Usage: make azoth-train DB=postgres://hopper@localhost/hopper)
+	$(error DB is required. Usage: make azoth-full-train DB=postgres://hopper@localhost/hopper)
 endif
 
 # Fail if the newest sample is older than 24 hours (replication may be broken)
@@ -260,31 +270,58 @@ $(VENV_DIR)/.deps.stamp: requirements.txt pyproject.toml | $(VENV_DIR)/bin/pytho
 	$(VENV_DIR)/bin/pip install -e .
 	touch $(VENV_DIR)/.deps.stamp
 
-# azoth-train: the full top-level "give me the latest best deployed model"
-# entry point.
+# azoth-{full,fast}-train: the two top-level "give me the latest best deployed
+# model" entry points.  Both run the same chain — replay autocollie's
+# highest-F1 historical run for general → retrain every specialist with
+# autocollie's per-route best → calibrate + deploy — but at different
+# fidelities.  Pick one explicitly; there is no `make azoth-train` shortcut
+# because the speed/quality trade-off is real and worth being conscious of.
 #
-#   1. Replay autocollie's highest-F1 historical run for the general route
-#      (with multi-seed averaging on, so the resulting bundle is variance-
-#      reduced). Configuration comes from out/experiments/azoth/runs/, so
-#      every autocollie discovery flows in automatically.
-#   2. Re-train every filegroup + filetype specialist using the same
-#      autocollie-best-per-route mechanism (via the suite's
-#      --autocollie-best-runs-dir hookup, on by default). Specialists also
-#      get K=3 multi-seed averaging.
-#   3. Calibrate + diagnostics + policy search + global FP/M check + bundle
-#      validate + litmus parity, and copy the validated bundle to the live
-#      deploy directory. Top-level docs (README.md, ENSEMBLE_MODEL.md,
-#      GENERALIST_MODEL.md, route_diagnostics.md, etc.) get regenerated with
-#      the new numbers.
+#   make azoth-full-train  — train on the full labeled corpus (~2M rows in
+#     natural distribution).  ~7-8 hours end-to-end at K=3 seeds.  Use this
+#     for deploy-bound retrains: the natural distribution preserves the
+#     benign tail that 50/50 sampling discards, which is what determines
+#     L3 (≤3 FP/M, the default operating point) threshold quality.
 #
-# Always retrains from scratch on current DB state — the DB-snapshot pin
-# protects against drift but there's no model-cache shortcut. Run any time
-# you want the deployed bundle refreshed.
-azoth-train: venv check-db
+#   make azoth-fast-train  — train on a 600k 50/50-balanced sample.  ~5 hours
+#     end-to-end at K=3 seeds.  Same fidelity autocollie's promote step uses
+#     internally, so this matches what an autocollie auto-promote would have
+#     produced.  Use for fast iteration; the candidate is still deployable.
+#
+# Both:
+#   * Always retrain from scratch on current DB state (snapshot-pinned, no
+#     model cache).
+#   * K=3 multi-seed averaging.
+#   * Run azoth-specialists + azoth-deploy on completion.
+#   * Override individual knobs via DEPLOY_ESTIMATORS, DEPLOY_TRAIN_SAMPLES,
+#     DEPLOY_MAX_TEST_SAMPLES if you need a custom profile.
+
+DEPLOY_ESTIMATORS               ?= 400
+DEPLOY_TRAIN_SAMPLES_FULL       ?= 0
+DEPLOY_MAX_TEST_SAMPLES_FULL    ?= 0
+DEPLOY_TRAIN_SAMPLES_FAST       ?= 600000
+DEPLOY_MAX_TEST_SAMPLES_FAST    ?= 80000
+
+azoth-full-train: venv check-db
+	$(MAKE) _azoth-train \
+		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
+		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
+
+azoth-fast-train: venv check-db
+	$(MAKE) _azoth-train \
+		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FAST) \
+		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FAST)
+
+# _azoth-train: shared body for the two named targets above.  Not a public
+# entry point — pick azoth-full-train or azoth-fast-train explicitly.
+_azoth-train: venv check-db
 	$(PYTHON) scripts/azoth_train_best.py \
 		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
 		--route general \
 		--set DB=$(DB) \
+		--set EXP_SAMPLES=$(DEPLOY_TRAIN_SAMPLES) \
+		--set EXP_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES) \
+		--set EXP_ESTIMATORS=$(DEPLOY_ESTIMATORS) \
 		$(if $(WORKERS),--set EXP_WORKERS=$(WORKERS),)
 	$(MAKE) azoth-specialists
 	$(MAKE) azoth-deploy
@@ -703,13 +740,13 @@ experiment: venv check-db
 	COLLIMATOR_BIGRAM_MIN_FREQ=$(EXP_BIGRAM_MIN_FREQ) \
 	COLLIMATOR_TRIGRAM_MAX=$(EXP_TRIGRAM_MAX) \
 	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=$(EXP_TRIGRAM_MAX_BENIGN_FRAC) \
-	COLLIMATOR_ATTACK_FEATURES=1 \
+	COLLIMATOR_ATTACK_FEATURES=$(EXP_ATTACK_FEATURES) \
 	COLLIMATOR_CONFIDENCE_WEIGHTED_NGRAMS=$(EXP_CONFIDENCE_WEIGHTED_NGRAMS) \
 	COLLIMATOR_OBJECTIVE_TRIGRAMS=$(EXP_OBJECTIVE_TRIGRAMS) \
 	COLLIMATOR_SUSPICIOUS_TRIGRAMS=$(EXP_SUSPICIOUS_TRIGRAMS) \
 	COLLIMATOR_ATTACK_NGRAMS=$(EXP_ATTACK_NGRAMS) \
-	COLLIMATOR_CRIT_CATEGORY_NGRAMS=1 \
-	COLLIMATOR_TIERED_CRIT_BIGRAMS=1 \
+	COLLIMATOR_CRIT_CATEGORY_NGRAMS=$(EXP_CRIT_CATEGORY_NGRAMS) \
+	COLLIMATOR_TIERED_CRIT_BIGRAMS=$(EXP_TIERED_CRIT_BIGRAMS) \
 	COLLIMATOR_TIERED_BIGRAM_PATH_DEPTH=$(EXP_TIERED_BIGRAM_PATH_DEPTH) \
 	COLLIMATOR_TIERED_BIGRAM_MIN_CRIT=$(EXP_TIERED_BIGRAM_MIN_CRIT) \
 	COLLIMATOR_TIERED_BIGRAM_MAX=$(EXP_TIERED_BIGRAM_MAX) \
@@ -727,7 +764,7 @@ experiment: venv check-db
 	COLLIMATOR_KV_MIN_FREQ=$(EXP_KV_MIN_FREQ) \
 	COLLIMATOR_KV_SHAPE_FEATURES=$(EXP_KV_SHAPE_FEATURES) \
 	COLLIMATOR_TEXT_ENCODING_FEATURES=$(EXP_TEXT_ENCODING_FEATURES) \
-	COLLIMATOR_ATTACK_CODE_NGRAMS=1 \
+	COLLIMATOR_ATTACK_CODE_NGRAMS=$(EXP_ATTACK_CODE_NGRAMS) \
 	COLLIMATOR_EXPERIMENT_TAG=$(EXP_TAG) \
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(EXP_OUT_DIR) --model-name $(MODEL) --learner $(LEARNER) $(EXP_WORKERS_ARG) --seed $(SEED) \
 		--experiment-idea $(EXP_IDEA) --route $(EXP_ROUTE) $(EXP_RERUN_ARG) \
@@ -860,7 +897,7 @@ endif
 .PHONY: verify-xgboost-ars
 verify-xgboost-ars:
 	@test -d $(XGBOOST_ARS_DIR) || { echo "error: $(XGBOOST_ARS_DIR) does not exist"; exit 1; }
-	@test -f $(OUT_DIR)/reference.json || { echo "error: $(OUT_DIR)/reference.json not found — run make azoth-train first"; exit 1; }
+	@test -f $(OUT_DIR)/reference.json || { echo "error: $(OUT_DIR)/reference.json not found — run make azoth-fast-train first"; exit 1; }
 	@echo "Running xgboost-ars tests..."
 	cd $(XGBOOST_ARS_DIR) && XGBOOST_ARS_REFERENCE_JSON=$(abspath $(OUT_DIR)/reference.json) cargo test --release
 	@echo "xgboost-ars: all tests passed"
@@ -868,7 +905,7 @@ verify-xgboost-ars:
 .PHONY: verify-litmus
 verify-litmus:
 	@test -d $(LITMUS_DIR) || { echo "error: $(LITMUS_DIR) does not exist"; exit 1; }
-	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make azoth-train first"; exit 1; }
+	@test -f $(OUT_DIR)/extraction_fixture.json || { echo "error: $(OUT_DIR)/extraction_fixture.json not found — run make azoth-fast-train first"; exit 1; }
 	@test ! -f $(OUT_DIR)/threshold_tuning.json || $(PYTHON) scripts/build_litmus_config.py --threshold-tuning $(OUT_DIR)/threshold_tuning.json --output $(OUT_DIR)/config.json
 	@echo "Running litmus feature-extraction parity tests..."
 	@mkdir -p $(LITMUS_DIR)/tests/fixtures

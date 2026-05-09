@@ -21,7 +21,7 @@ demo DB:
 
 ```fish
 make demo-db
-make azoth-train DB=sqlite:///$(pwd)/out/demo.db WORKERS=4
+make azoth-fast-train DB=sqlite:///$(pwd)/out/demo.db WORKERS=4
 ```
 
 For real workloads, point at a PostgreSQL `hopper` DSN.
@@ -72,7 +72,7 @@ issues against each repo with linked context.
 - For changes to `src/collimator/bundle.py`, `experiment.py`,
   `train.py`, or anything in the deploy chain: at minimum a unit test
   pinning the new behavior; bonus for a smoke test that exercises the
-  full `make azoth-train` flow against the demo DB.
+  full `make azoth-fast-train` flow against the demo DB.
 - For changes to the litmus runtime contract (bundle layout, calibrator
   schema, route policy schema): an accompanying PR to litmus that updates
   its loader, **and** confirmation that `make azoth-deploy` runs to
@@ -88,7 +88,7 @@ issues against each repo with linked context.
 | "How does the routing decision get made?" | `out/models/azoth/ENSEMBLE_MODEL.md`, then `litmus/src/model.rs::predict_for`. |
 | "Where does the calibrator come from?" | `scripts/azoth_calibrate_ensemble.py::_fit_and_persist_isotonic_calibrator`. Loaded by `litmus/src/model.rs::IsotonicCalibrator`. |
 | "How does autocollie know what to try next?" | `../autocollie/skill.md` (the LLM's instruction manual) and the run JSONs under `out/experiments/azoth/runs/`. |
-| "Why three different specialist training paths?" | There aren't, anymore — it's `make azoth-train`. Anything else is internal to that target's chain. |
+| "Why three different specialist training paths?" | There aren't, anymore — it's `make azoth-{full,fast}-train`. Anything else is internal to that target's chain. |
 | "How do I add a new feature family?" | `src/collimator/features.py` for the extractor, `autocollie/knobs.json` for the toggle. Existing families are good templates. |
 
 ## Coding style
