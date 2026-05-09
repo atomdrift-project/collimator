@@ -154,3 +154,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012752-filetypes-macho` — 2026-05-09T01:27:52Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013533-filetypes-macho` — 2026-05-09T01:35:33Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014433-filetypes-macho` — 2026-05-09T01:44:33Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T040845-filetypes-macho` — 2026-05-09T04:08:45Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `48c06238bdf27957` | macho_train_leaves128_reg2 | ok | 0.2995 | 0.5000 | — | 0.0000 | 18 | [log](out/autocollie/runs/2026-05-09T04-10-30_20260509T040845-filetypes-macho_macho_train_leaves128_reg2.log) |
+| `f58061648871a143` | macho_train_shallow_heavy_reg | ok | 0.2995 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-10-49_20260509T040845-filetypes-macho_macho_train_shallow_heavy_reg.log) |
+| `38687330f58a50ce` | macho_l3_rescue_pos_weight_025 | ok | 0.0000 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-10-51_20260509T040845-filetypes-macho_macho_l3_rescue_pos_weight_025.log) |
+| `1fadb32ea6d67fbf` | macho_dart_dropout_boosting | ok | 0.2995 | 0.5000 | — | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-09T04-10-53_20260509T040845-filetypes-macho_macho_dart_dropout_boosting.log) |
+| `a127c2d5bedbda39` | macho_ablate_score_group | ok | 0.2995 | 0.5000 | — | 0.0000 | 18 | [log](out/autocollie/runs/2026-05-09T04-10-59_20260509T040845-filetypes-macho_macho_ablate_score_group.log) |
+| `be7125fbfe294093` | macho_add_symbol_vocab | ok | 0.2995 | 0.5000 | — | 0.0000 | 21 | [log](out/autocollie/runs/2026-05-09T04-11-18_20260509T040845-filetypes-macho_macho_add_symbol_vocab.log) |
+| `0ac37347f7eaa982` | macho_threshold_fpr3e6_sweep | ok | 0.0000 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-11-39_20260509T040845-filetypes-macho_macho_threshold_fpr3e6_sweep.log) |
+| `f2d8d85136aac347` | macho_natural_prev_large_test | ok | 0.2995 | 0.5000 | — | 0.0000 | 19 | [log](out/autocollie/runs/2026-05-09T04-11-41_20260509T040845-filetypes-macho_macho_natural_prev_large_test.log) |
+| `7bacb664cd5c5e6b` | macho_extra_trees_anti_baseline | ok | 0.2995 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-12-00_20260509T040845-filetypes-macho_macho_extra_trees_anti_baseline.log) |
+| `d252942048f9af13` | macho_hard_neg_small_frac_high_wt | ok | 0.2995 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T04-12-03_20260509T040845-filetypes-macho_macho_hard_neg_small_frac_high_wt.log) |
+
+<details><summary>Spec details</summary>
+
+- **`macho_train_leaves128_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — training-only sweep: increase leaves to 128 with moderate L2 regularization
+- **`macho_train_shallow_heavy_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=8 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=3` — training-only sweep: shallow trees with strong regularization for better tail generalization
+- **`macho_l3_rescue_pos_weight_025`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — mandatory L3 rescue: aggressive positive down-weighting with max_recall_at_fpr to find deployable threshold
+- **`macho_dart_dropout_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128` — dart boosting with dropout regularization for improved low-FPR tail behavior
+- **`macho_ablate_score_group`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc` — feature ablation: disable score group to test if score features add value for macho
+- **`macho_add_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=3000` — feature addition: enable symbol vocabulary features for macho binary analysis
+- **`macho_threshold_fpr3e6_sweep`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — threshold-mode flip: optimize directly at L3 hostile operating point with 3e-6 FPR target
+- **`macho_natural_prev_large_test`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=100000 EXP_TEST_NATURAL_PREVALENCE=1` — profile shift: natural prevalence test set with larger benign pool to improve FP/M resolution
+- **`macho_extra_trees_anti_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.08 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=0.5` — deliberate anti-baseline: extra trees with light regularization opposite to current heavy-reg trend
+- **`macho_hard_neg_small_frac_high_wt`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5` — hard-negative mining: small fraction with high weight for tail discrimination without corpus collapse
+
+</details>
+

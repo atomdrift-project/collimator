@@ -94,3 +94,21 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012947-filetypes-elf` — 2026-05-09T01:29:47Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013512-filetypes-elf` — 2026-05-09T01:35:12Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014313-filetypes-elf` — 2026-05-09T01:43:13Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

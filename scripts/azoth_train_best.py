@@ -171,12 +171,6 @@ def _parse_extra(values: list[str]) -> dict[str, str]:
     return out
 
 
-def _idea_for(run: dict[str, Any]) -> str:
-    """Replays should be tagged so they're distinguishable from the original run."""
-    base = run.get("idea") or "best"
-    return f"{base}_replay"
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs-dir", type=Path, default=Path("out/experiments/azoth/runs"))
@@ -231,7 +225,8 @@ def main() -> int:
 
     extra = _parse_extra(args.set)
     extra.setdefault("EXP_ROUTE", args.route)
-    extra.setdefault("EXP_IDEA", _idea_for(run))
+    # Tag the replay so it's distinguishable in run JSONs from the original.
+    extra.setdefault("EXP_IDEA", f"{run.get('idea') or 'best'}_replay")
     # Multi-seed averaging on by default for replays — that's the whole point
     # of running this rather than a single-seed retrain.
     extra.setdefault("EXP_SEED_SEARCH_K", "3")

@@ -66,3 +66,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012920-filegroups-portable` — 2026-05-09T01:29:20Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013116-filegroups-portable` — 2026-05-09T01:31:16Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014057-filegroups-portable` — 2026-05-09T01:40:57Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T090146-filegroups-portable` — 2026-05-09T09:01:46Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `e47d9b077093484d` | l3_deploy_scale_pos_025_max_recall | ok | 0.0000 | 0.5000 | — | 0.0000 | 21 | [log](out/autocollie/runs/2026-05-09T09-27-29_20260509T090146-filegroups-portable_l3_deploy_scale_pos_025_max_recall.log) |
+| `c9f476e1785d2424` | dart_leaves128_reg2_training_sweep | ok | 0.5739 | 0.5000 | — | 0.0000 | 21 | [log](out/autocollie/runs/2026-05-09T09-27-50_20260509T090146-filegroups-portable_dart_leaves128_reg2_training_sweep.log) |
+| `418425d27451d324` | scale_pos_05_max_recall_threshold | ok | 0.0000 | 0.5000 | — | 0.0000 | 8 | [log](out/autocollie/runs/2026-05-09T09-28-11_20260509T090146-filegroups-portable_scale_pos_05_max_recall_threshold.log) |
+| `38ae6929b8b4fb9f` | add_extreme_features_from_html | ok | 0.5739 | 0.5000 | — | 0.0000 | 21 | [log](out/autocollie/runs/2026-05-09T09-28-20_20260509T090146-filegroups-portable_add_extreme_features_from_html.log) |
+| `bd917cef2dbff187` | ablate_blindfold_feature | ok | 0.5739 | 0.5000 | — | 0.0000 | 34 | [log](out/autocollie/runs/2026-05-09T09-28-41_20260509T090146-filegroups-portable_ablate_blindfold_feature.log) |
+| `c0e35a8e68f27af3` | dart_max_recall_threshold_flip | ok | 0.0000 | 0.5000 | — | 0.0000 | 21 | [log](out/autocollie/runs/2026-05-09T09-29-14_20260509T090146-filegroups-portable_dart_max_recall_threshold_flip.log) |
+| `045bc09c85e66a35` | port_python_bytecode_disable_score | ok | 0.5739 | 0.5000 | — | 0.0000 | 34 | [log](out/autocollie/runs/2026-05-09T09-29-35_20260509T090146-filegroups-portable_port_python_bytecode_disable_score.log) |
+| `dbebd9801f8ae38f` | natural_prevalence_large_test | ok | 0.0000 | 0.5000 | — | 0.0000 | 23 | [log](out/autocollie/runs/2026-05-09T09-30-10_20260509T090146-filegroups-portable_natural_prevalence_large_test.log) |
+| `c845ce0123547f42` | anti_baseline_gbdt_extra_trees | ok | 0.5739 | 0.5000 | — | 0.0000 | 8 | [log](out/autocollie/runs/2026-05-09T09-30-33_20260509T090146-filegroups-portable_anti_baseline_gbdt_extra_trees.log) |
+| `` | goss_boosting_hard_negatives | fail | — | — | — | — | 10 | [log](out/autocollie/runs/2026-05-09T09-30-41_20260509T090146-filegroups-portable_goss_boosting_hard_negatives.log) |
+
+<details><summary>Spec details</summary>
+
+- **`l3_deploy_scale_pos_025_max_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — mandatory L3 deployability attempt with aggressive positive downweighting and deployed FPR target
+- **`dart_leaves128_reg2_training_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only sweep around dart best with deeper trees and stronger L2 regularization
+- **`scale_pos_05_max_recall_threshold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — moderate positive downweighting with threshold optimized at deployed FPR operating point
+- **`add_extreme_features_from_html`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — port extreme_features from html sister route which achieved perfect F1 and AUC
+- **`ablate_blindfold_feature`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — remove blindfold dropout features to test if they contribute meaningfully to this route
+- **`dart_max_recall_threshold_flip`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — same dart config as best F1 run but threshold tuned at deployed L3 hostile FPR target
+- **`port_python_bytecode_disable_score`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — port from python-bytecode sister route which achieved 1.0 recall@3FPM by also disabling the score feature group
+- **`natural_prevalence_large_test`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — natural prevalence with large test set to improve FP/M resolution on this L3-unresolvable route
+- **`anti_baseline_gbdt_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=gbdt EXP_CRIT_CATEGORY_NGRAMS=1 …` — anti-baseline: switch from dart to gbdt with extra_trees random splits for diversification
+- **`goss_boosting_hard_negatives`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=goss EXP_CRIT_CATEGORY_NGRAMS=1 …` — wildcard: goss boosting with hard negative mining to improve tail behavior on small corpus
+
+</details>
+

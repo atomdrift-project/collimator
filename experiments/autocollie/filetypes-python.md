@@ -38,3 +38,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012649-filetypes-python` — 2026-05-09T01:26:49Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013607-filetypes-python` — 2026-05-09T01:36:07Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014300-filetypes-python` — 2026-05-09T01:43:00Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T093053-filetypes-python` — 2026-05-09T09:30:53Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `81d4d3431721295a` | py_train_leaves128_reg2 | ok | 0.6657 | 0.5000 | — | 0.0000 | 27 | [log](out/autocollie/runs/2026-05-09T09-38-45_20260509T093053-filetypes-python_py_train_leaves128_reg2.log) |
+| `71a323a9cad2ec85` | py_train_extra_trees | ok | 0.6657 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-39-12_20260509T093053-filetypes-python_py_train_extra_trees.log) |
+| `fe447f6ab9369329` | py_train_scalepos_05 | ok | 0.6657 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-39-15_20260509T093053-filetypes-python_py_train_scalepos_05.log) |
+| `742f48c486d67503` | py_train_threshold_fpr3e6 | ok | 0.0000 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-39-18_20260509T093053-filetypes-python_py_train_threshold_fpr3e6.log) |
+| `5d55292e3a3bd49a` | py_profile_natural_prev | ok | 0.6657 | 0.5000 | — | 0.0000 | 24 | [log](out/autocollie/runs/2026-05-09T09-39-20_20260509T093053-filetypes-python_py_profile_natural_prev.log) |
+| `908ae07cc504f1d8` | py_feat_kv_objective_trigrams | ok | 0.6657 | 0.5000 | — | 0.0000 | 26 | [log](out/autocollie/runs/2026-05-09T09-39-45_20260509T093053-filetypes-python_py_feat_kv_objective_trigrams.log) |
+| `71a323a9cad2ec85` | py_feat_perl_style_minimal | dup | 0.6657 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T09-40-10_20260509T093053-filetypes-python_py_feat_perl_style_minimal.log) |
+| `bcced61c04636ccb` | py_train_hardneg_hsn10 | ok | 0.6657 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T09-40-11_20260509T093053-filetypes-python_py_train_hardneg_hsn10.log) |
+| `c6c8ea281036a87c` | py_train_dart_leaves128 | ok | 0.6657 | 0.5000 | — | 0.0000 | 5 | [log](out/autocollie/runs/2026-05-09T09-40-15_20260509T093053-filetypes-python_py_train_dart_leaves128.log) |
+| `9e24347777c36be3` | py_antibase_reenable_clusters | ok | 0.6657 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-40-21_20260509T093053-filetypes-python_py_antibase_reenable_clusters.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: larger leaves + stronger L2 regularization around best config
+- **`py_train_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: extra_trees for ensemble diversification at tail (perl confirmed this)
+- **`py_train_scalepos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: down-weight positives to reduce FPs at deployed operating point
+- **`py_train_threshold_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: optimize threshold exactly at deployed L3 hostile operating point
+- **`py_profile_natural_prev`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — profile shift: natural prevalence test set with larger benign pool to resolve recall@3 FP/M
+- **`py_feat_kv_objective_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — feature addition: kv_vocab + objective_trigrams (matches second-best run pattern)
+- **`py_feat_perl_style_minimal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — feature ablation: disable kv/symbols/textenc like perl route for simpler model
+- **`py_train_hardneg_hsn10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: hard negative second pass with weight 10 (hardtail pattern from best run)
+- **`py_train_dart_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — sister route port: dart boosting + leaves128 (ruby/ole pattern)
+- **`py_antibase_reenable_clusters`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — anti-baseline: re-enable clusters group that all recent runs disable
+
+</details>
+

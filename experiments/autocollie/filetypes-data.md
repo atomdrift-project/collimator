@@ -38,3 +38,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012643-filetypes-data` — 2026-05-09T01:26:43Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013109-filetypes-data` — 2026-05-09T01:31:09Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013822-filetypes-data` — 2026-05-09T01:38:22Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T094025-filetypes-data` — 2026-05-09T09:40:25Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `8763387fa083696c` | data_train_leaves128_reg2 | ok | 0.7288 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-41-55_20260509T094025-filetypes-data_data_train_leaves128_reg2.log) |
+| `32f69f03756bd61f` | data_train_lr003_mcs200 | ok | 0.7288 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T09-41-58_20260509T094025-filetypes-data_data_train_lr003_mcs200.log) |
+| `179fbeb0f1669f9f` | data_scalepos05 | ok | 0.7288 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T09-42-00_20260509T094025-filetypes-data_data_scalepos05.log) |
+| `fa24d6e17750e41c` | data_threshold_maxrecall_3ep6 | ok | 0.0000 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T09-42-01_20260509T094025-filetypes-data_data_threshold_maxrecall_3ep6.log) |
+| `012b2b8a64cb30f7` | data_natural_prev_200k | ok | 0.7288 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-42-02_20260509T094025-filetypes-data_data_natural_prev_200k.log) |
+| `97d50d0f1928feb5` | data_add_kv_vocab | ok | 0.7288 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-42-05_20260509T094025-filetypes-data_data_add_kv_vocab.log) |
+| `c943f95c6059c9dd` | data_abl_extreme_features | ok | 0.7288 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-42-08_20260509T094025-filetypes-data_data_abl_extreme_features.log) |
+| `da86a772eafeffd4` | data_port_gz_bigrams | ok | 0.7288 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T09-42-10_20260509T094025-filetypes-data_data_port_gz_bigrams.log) |
+| `0679737c23de09fc` | data_dart_boosting | ok | 0.7288 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T09-42-12_20260509T094025-filetypes-data_data_dart_boosting.log) |
+| `da86a772eafeffd4` | data_reenable_clusters | dup | 0.7288 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T09-42-14_20260509T094025-filetypes-data_data_reenable_clusters.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_train_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — training-only sweep: deeper trees + stronger L2 reg inspired by ruby route win
+- **`data_train_lr003_mcs200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — training-only sweep: lower LR + larger leaf samples for smoother generalization
+- **`data_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — low-FPR targeted: down-weight positives 2x to reduce FP tail, ported from gz success
+- **`data_threshold_maxrecall_3ep6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — threshold-mode flip: optimize directly at deployed L3 hostile operating point
+- **`data_natural_prev_200k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — profile shift: natural prevalence + larger test set to resolve recall@k FP/M metric
+- **`data_add_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — feature addition: enable kv_vocab family not currently used by best run
+- **`data_abl_extreme_features`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=0` — feature ablation: remove extreme_features to test if it contributes signal
+- **`data_port_gz_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — port from gz sister route: bigram_max=5000 + bigram_min_freq=1000 config
+- **`data_dart_boosting`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 …` — boosting type change: dart dropout regularization for better tail behavior
+- **`data_reenable_clusters`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1` — anti-baseline: re-enable clusters group that current best disables
+
+</details>
+

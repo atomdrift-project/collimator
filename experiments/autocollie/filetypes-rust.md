@@ -84,3 +84,15 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013708-filetypes-rust` — 2026-05-09T01:37:08Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014138-filetypes-rust` — 2026-05-09T01:41:38Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

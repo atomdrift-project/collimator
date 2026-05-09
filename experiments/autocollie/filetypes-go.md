@@ -118,3 +118,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012601-filetypes-go` — 2026-05-09T01:26:01Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013438-filetypes-go` — 2026-05-09T01:34:38Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014403-filetypes-go` — 2026-05-09T01:44:03Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T021755-filetypes-go` — 2026-05-09T02:17:55Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `110b17acd47a14f2` | go_hardneg_replicate_best | ok | 0.2353 | 0.5000 | — | 0.0000 | 8 | [log](out/autocollie/runs/2026-05-09T02-24-52_20260509T021755-filetypes-go_go_hardneg_replicate_best.log) |
+| `cc57b31253d521cc` | go_leaves128_reg2_mc200 | ok | 0.2353 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T02-24-59_20260509T021755-filetypes-go_go_leaves128_reg2_mc200.log) |
+| `80c36ebe81a52db1` | go_l3_scalepos025_mandatory | ok | 0.0000 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T02-25-03_20260509T021755-filetypes-go_go_l3_scalepos025_mandatory.log) |
+| `20490c546b6109e7` | go_noblindfold_ablation | ok | 0.2353 | 0.5000 | — | 0.0000 | 8 | [log](out/autocollie/runs/2026-05-09T02-25-08_20260509T021755-filetypes-go_go_noblindfold_ablation.log) |
+| `dc7665c38d18365b` | go_add_hostile_finding_density | ok | 0.2353 | 0.5000 | — | 0.0000 | 7 | [log](out/autocollie/runs/2026-05-09T02-25-15_20260509T021755-filetypes-go_go_add_hostile_finding_density.log) |
+| `d0b0c9c6e7402ac0` | go_threshold_maxrecall_fpr3 | ok | 0.0000 | 0.1383 | — | 0.0000 | 8 | [log](out/autocollie/runs/2026-05-09T02-25-23_20260509T021755-filetypes-go_go_threshold_maxrecall_fpr3.log) |
+| `2251a9cc74e4b816` | go_extra_trees_antibase | ok | 0.2353 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T02-25-31_20260509T021755-filetypes-go_go_extra_trees_antibase.log) |
+| `` | go_dart_boosting_sister_port | fail | — | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-09T02-25-35_20260509T021755-filetypes-go_go_dart_boosting_sister_port.log) |
+| `42ca056752635912` | go_seed1234_train200k | ok | 0.2353 | 0.5000 | — | 0.0000 | 13 | [log](out/autocollie/runs/2026-05-09T02-55-35_20260509T021755-filetypes-go_go_seed1234_train200k.log) |
+| `e2002f5a19b7bc8f` | go_colsample07_subsample08 | ok | 0.2353 | 0.5000 | — | 0.0000 | 7 | [log](out/autocollie/runs/2026-05-09T02-55-49_20260509T021755-filetypes-go_go_colsample07_subsample08.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_hardneg_replicate_best`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — replicate best run hard_negative settings frac=0.3 weight=8 as training-only sweep
+- **`go_leaves128_reg2_mc200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — larger tree capacity with stronger regularization: leaves=128, reg_lambda=2.0, min_child=200
+- **`go_l3_scalepos025_mandatory`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — mandatory L3 slot: aggressive positive downweight to find deployable threshold on unresolvable holdout
+- **`go_noblindfold_ablation`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 …` — feature ablation: remove blindfold dropout to test if it adds noise on this small corpus
+- **`go_add_hostile_finding_density`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — feature addition: enable hostile_finding_density for more granular hostile signal
+- **`go_threshold_maxrecall_fpr3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — threshold-mode flip: optimize exactly at deployed L3 operating point instead of F-beta optimum
+- **`go_extra_trees_antibase`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — anti-baseline: extra_trees random splits with no hard negatives, opposite of current best strategy
+- **`go_dart_boosting_sister_port`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart …` — sister route port: dart dropout boosting for improved tail behavior paired with hard negatives
+- **`go_seed1234_train200k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — profile shift: different seed and larger training set to test whether hard neg win generalizes
+- **`go_colsample07_subsample08`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.7 …` — wildcard: aggressive column and row subsampling to force model to find robust signals
+
+</details>
+

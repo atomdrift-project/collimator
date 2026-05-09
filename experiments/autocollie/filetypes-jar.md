@@ -76,3 +76,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013431-filetypes-jar` — 2026-05-09T01:34:31Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014418-filetypes-jar` — 2026-05-09T01:44:18Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014527-filetypes-jar` — 2026-05-09T01:45:27Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T030638-filetypes-jar` — 2026-05-09T03:06:38Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `10d23952e3790961` | jar_dart_leaves128_reg1 | ok | 0.8031 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-12-20_20260509T030638-filetypes-jar_jar_dart_leaves128_reg1.log) |
+| `af9258455f155a76` | jar_dart_extratrees | ok | 0.8031 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-12-23_20260509T030638-filetypes-jar_jar_dart_extratrees.log) |
+| `df21327e0956181b` | jar_l3_scalepos025 | ok | 0.0000 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-12-27_20260509T030638-filetypes-jar_jar_l3_scalepos025.log) |
+| `2d3454d49eb2493b` | jar_ablate_blindfold | ok | 0.8031 | 0.5000 | — | 0.0000 | 15 | [log](out/autocollie/runs/2026-05-09T03-12-30_20260509T030638-filetypes-jar_jar_ablate_blindfold.log) |
+| `9d997848311c28a4` | jar_add_extreme_metrics | ok | 0.8031 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-12-45_20260509T030638-filetypes-jar_jar_add_extreme_metrics.log) |
+| `cdeaa5321b68d216` | jar_threshold_maxrecall | ok | 0.0000 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-12-48_20260509T030638-filetypes-jar_jar_threshold_maxrecall.log) |
+| `9d997848311c28a4` | jar_port_pkginfo | dup | 0.8031 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T03-12-51_20260509T030638-filetypes-jar_jar_port_pkginfo.log) |
+| `353501b8185d3508` | jar_anti_score_dart | ok | 0.8031 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-12-52_20260509T030638-filetypes-jar_jar_anti_score_dart.log) |
+| `d0327f9dea245645` | jar_seed1234 | ok | 0.8031 | 0.5000 | — | 0.0000 | 15 | [log](out/autocollie/runs/2026-05-09T03-12-54_20260509T030638-filetypes-jar_jar_seed1234.log) |
+| `745bb3a1c6f37693` | jar_hardneg_dart | ok | 0.8031 | 0.5000 | — | 0.0000 | 5 | [log](out/autocollie/runs/2026-05-09T03-13-10_20260509T030638-filetypes-jar_jar_hardneg_dart.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jar_dart_leaves128_reg1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only: increase leaves to 128 and lower reg_lambda to 1.0 around dart best
+- **`jar_dart_extratrees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only: dart with extra_trees for random split diversification at the tail
+- **`jar_l3_scalepos025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — mandatory L3 slot: aggressive positive weight reduction with max_recall_at_fpr to find deployable threshold
+- **`jar_ablate_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — feature ablation: remove blindfold dropout to test if it contributes on this small corpus
+- **`jar_add_extreme_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — feature addition: add extended_metrics and extreme_features proven on pkg-info and pdf sister routes
+- **`jar_threshold_maxrecall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — threshold-mode flip: optimize at deployed L3 operating point without changing class weights
+- **`jar_port_pkginfo`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 …` — sister route port: pkg-info config with extended_metrics and extreme_features, fewer disabled groups
+- **`jar_anti_score_dart`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — anti-baseline: re-enable score features with dart boosting and higher regularization to test if combo works
+- **`jar_seed1234`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — profile shift: different seed to check if dart win generalizes across corpus sampling
+- **`jar_hardneg_dart`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — wildcard: hard negative mining with dart to improve tail separation on small holdout
+
+</details>
+

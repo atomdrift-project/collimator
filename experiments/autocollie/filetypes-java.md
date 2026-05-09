@@ -44,3 +44,15 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013151-filetypes-java` — 2026-05-09T01:31:51Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013842-filetypes-java` — 2026-05-09T01:38:42Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

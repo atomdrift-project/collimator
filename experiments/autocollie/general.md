@@ -38,3 +38,27 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013035-general` — 2026-05-09T01:30:35Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013205-general` — 2026-05-09T01:32:05Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013808-general` — 2026-05-09T01:38:08Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014616-general` — 2026-05-09T01:46:16Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

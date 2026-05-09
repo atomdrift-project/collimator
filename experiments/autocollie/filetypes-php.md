@@ -68,3 +68,57 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012826-filetypes-php` — 2026-05-09T01:28:26Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013600-filetypes-php` — 2026-05-09T01:36:00Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014024-filetypes-php` — 2026-05-09T01:40:24Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014602-filetypes-php` — 2026-05-09T01:46:02Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T031818-filetypes-php` — 2026-05-09T03:18:18Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `0fb907c5a3655d24` | php_training_dart_boosting | ok | 0.4993 | 0.5000 | — | 0.0000 | 33 | [log](out/autocollie/runs/2026-05-09T03-22-48_20260509T031818-filetypes-php_php_training_dart_boosting.log) |
+| `a4e7a79f406a0b33` | php_training_extra_trees_reg | ok | 0.4993 | 0.5000 | — | 0.0000 | 13 | [log](out/autocollie/runs/2026-05-09T03-23-21_20260509T031818-filetypes-php_php_training_extra_trees_reg.log) |
+| `c87274d56ba3fac7` | php_l3_scale_pos_025_threshold | ok | 0.0000 | 0.5000 | — | 0.0000 | 13 | [log](out/autocollie/runs/2026-05-09T03-23-34_20260509T031818-filetypes-php_php_l3_scale_pos_025_threshold.log) |
+| `da2a287ee9a94b95` | php_ablate_clusters | ok | 0.4993 | 0.5000 | — | 0.0000 | 13 | [log](out/autocollie/runs/2026-05-09T03-23-47_20260509T031818-filetypes-php_php_ablate_clusters.log) |
+| `b914dc18d9884890` | php_add_entropy_repetition | ok | 0.4993 | 0.5000 | — | 0.0000 | 21 | [log](out/autocollie/runs/2026-05-09T03-24-00_20260509T031818-filetypes-php_php_add_entropy_repetition.log) |
+| `33d3d45758a6babc` | php_profile_natural_prevalence | ok | 0.4993 | 0.5000 | — | 0.0000 | 20 | [log](out/autocollie/runs/2026-05-09T03-24-21_20260509T031818-filetypes-php_php_profile_natural_prevalence.log) |
+| `24be65509b8e5cba` | php_training_hard_negatives | ok | 0.4993 | 0.5000 | — | 0.0000 | 25 | [log](out/autocollie/runs/2026-05-09T03-24-41_20260509T031818-filetypes-php_php_training_hard_negatives.log) |
+| `6f3d33ee81c5e1e1` | php_training_subsample_reg | ok | 0.4993 | 0.5000 | — | 0.0000 | 13 | [log](out/autocollie/runs/2026-05-09T03-25-06_20260509T031818-filetypes-php_php_training_subsample_reg.log) |
+| `da2a287ee9a94b95` | php_antibaseline_minimal_features | dup | 0.4993 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T03-25-19_20260509T031818-filetypes-php_php_antibaseline_minimal_features.log) |
+| `d67c05786ba3f654` | php_training_capacity_leaves128 | ok | 0.4993 | 0.5000 | — | 0.0000 | 13 | [log](out/autocollie/runs/2026-05-09T03-25-20_20260509T031818-filetypes-php_php_training_capacity_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_training_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — test dart dropout regularization for tail behavior on saturated holdout
+- **`php_training_extra_trees_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_REG_LAMBDA=2` — extra trees with L2 regularization for ensemble diversification
+- **`php_l3_scale_pos_025_threshold`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — aggressive positive down-weighting with deployed FPR target to find working L3 threshold
+- **`php_ablate_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — ablate clusters group to test if simpler model matches baseline F1=1.0
+- **`php_add_entropy_repetition`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_REPETITION_PENALTY_FEATURES=1` — add entropy spike and repetition penalty features inspired by applescript route
+- **`php_profile_natural_prevalence`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=200000 EXP_TEST_NATURAL_PREVALENCE=1` — use natural prevalence test set with larger budget to improve FP/M resolution
+- **`php_training_hard_negatives`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10` — upweight hard negatives to sharpen decision boundary on small corpus
+- **`php_training_subsample_reg`** `EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_REG_LAMBDA=1.5 EXP_SUBSAMPLE=0.8` — stochastic regularization via row and column subsampling with L2 penalty
+- **`php_antibaseline_minimal_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — disable clusters kv symbols textenc like tar route to test minimal feature set
+- **`php_training_capacity_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128` — higher leaves with lower LR for more capacity on small route
+
+</details>
+

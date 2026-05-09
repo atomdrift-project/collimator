@@ -68,3 +68,57 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012656-filetypes-objc` — 2026-05-09T01:26:56Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013614-filetypes-objc` — 2026-05-09T01:36:14Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014348-filetypes-objc` — 2026-05-09T01:43:48Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014534-filetypes-objc` — 2026-05-09T01:45:34Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T025557-filetypes-objc` — 2026-05-09T02:55:57Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `8b49a702d9956ec6` | objc_l3_scale_pos_025_threshold_fpr3 | ok | 0.0000 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T02-58-39_20260509T025557-filetypes-objc_objc_l3_scale_pos_025_threshold_fpr3.log) |
+| `b75c404c5da17d53` | objc_small_model_high_reg | ok | 0.6667 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T02-58-41_20260509T025557-filetypes-objc_objc_small_model_high_reg.log) |
+| `40ba6f1d3531a9cb` | objc_dart_regularization | ok | 0.6667 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T02-58-43_20260509T025557-filetypes-objc_objc_dart_regularization.log) |
+| `4fa1aa9ad6856eff` | objc_textenc_symbol_vocab | ok | 0.6667 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T02-58-44_20260509T025557-filetypes-objc_objc_textenc_symbol_vocab.log) |
+| `f4398735c00e80ff` | objc_ablate_clusters | ok | 0.6667 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T02-58-48_20260509T025557-filetypes-objc_objc_ablate_clusters.log) |
+| `c8c510aa589d32b0` | objc_port_zst_ember_extended | ok | 0.6667 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T02-58-49_20260509T025557-filetypes-objc_objc_port_zst_ember_extended.log) |
+| `32ff9b768afe1ff3` | objc_seed123_more_train | ok | 0.6667 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T02-58-52_20260509T025557-filetypes-objc_objc_seed123_more_train.log) |
+| `c8c23120248ee90d` | objc_extra_trees_subsample | ok | 0.6667 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T02-58-54_20260509T025557-filetypes-objc_objc_extra_trees_subsample.log) |
+| `83e8aa92ab675e6a` | objc_anti_baseline_no_attack_with_hostile | ok | 0.6667 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T02-58-56_20260509T025557-filetypes-objc_objc_anti_baseline_no_attack_with_hostile.log) |
+| `a3830c281ddb2f69` | objc_natural_prevalence_large_test | ok | 0.6667 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T02-58-59_20260509T025557-filetypes-objc_objc_natural_prevalence_large_test.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_l3_scale_pos_025_threshold_fpr3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — mandatory L3 slot: down-weight positives aggressively to find a deployable threshold at 3 FP/M
+- **`objc_small_model_high_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.02 EXP_MAX_DEPTH=6 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=32 EXP_REG_LAMBDA=3` — tiny corpus benefits from aggressive regularization and small tree capacity to avoid overfitting
+- **`objc_dart_regularization`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=64` — dart boosting adds dropout regularization that may help on tiny overfit-prone corpus
+- **`objc_textenc_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TEXT_ENCODING_FEATURES=1` — objc source files have rich symbol names and text encoding signals not yet exploited
+- **`objc_ablate_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — sister routes (zst, pdf, html, rust) all disable clusters with 1.0 F1 — test if clusters are dead weight here
+- **`objc_port_zst_ember_extended`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1` — port zst winning config: ember_lite + extended_metrics + disable clusters
+- **`objc_seed123_more_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_TRAIN_SAMPLES=50000` — profile shift: different seed and slightly reduced train_samples to test generalization on small corpus
+- **`objc_extra_trees_subsample`** `EXP_COLSAMPLE_BYTREE=0.6 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_NUM_LEAVES=48 EXP_SUBSAMPLE=0.6` — extra_trees with aggressive subsampling adds ensemble diversity for tiny-data generalization
+- **`objc_anti_baseline_no_attack_with_hostile`** `EXP_ATTACK_FEATURES=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HOSTILE_FINDING_DENSITY=1` — anti-baseline: remove attack_features (on in all recent runs) and add hostile_finding_density instead
+- **`objc_natural_prevalence_large_test`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=100000 EXP_TEST_NATURAL_PREVALENCE=1` — use natural prevalence with larger test set to improve FP/M resolution on this L3-unresolvable route
+
+</details>
+

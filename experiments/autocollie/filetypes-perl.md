@@ -68,3 +68,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012934-filetypes-perl` — 2026-05-09T01:29:34Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013506-filetypes-perl` — 2026-05-09T01:35:06Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014117-filetypes-perl` — 2026-05-09T01:41:17Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T064627-filetypes-perl` — 2026-05-09T06:46:27Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `0646efb9490f0229` | l3_scale_pos_025_threshold_fpr | ok | 0.0000 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T06-51-50_20260509T064627-filetypes-perl_l3_scale_pos_025_threshold_fpr.log) |
+| `1902bc57ae52d6d0` | training_leaves128_lr003 | ok | 0.1560 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T06-51-53_20260509T064627-filetypes-perl_training_leaves128_lr003.log) |
+| `` | training_dart_boosting | fail | — | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-09T06-51-57_20260509T064627-filetypes-perl_training_dart_boosting.log) |
+| `2c11b9b807afcd92` | feature_ablation_remove_blindfold | ok | 0.1560 | 0.5000 | — | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-09T07-21-57_20260509T064627-filetypes-perl_feature_ablation_remove_blindfold.log) |
+| `06cadc4fde3e5c9f` | feature_add_kv_vocab | ok | 0.1560 | 0.5000 | — | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-09T07-22-03_20260509T064627-filetypes-perl_feature_add_kv_vocab.log) |
+| `5a2611a74180801c` | sister_port_zst_ember_extended | ok | 0.1560 | 0.5000 | — | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-09T07-22-10_20260509T064627-filetypes-perl_sister_port_zst_ember_extended.log) |
+| `70391a38e1035612` | profile_seed777_more_train | ok | 0.1560 | 0.5000 | — | 0.0000 | 7 | [log](out/autocollie/runs/2026-05-09T07-22-16_20260509T064627-filetypes-perl_profile_seed777_more_train.log) |
+| `95f9c47750c83bc2` | antibaseline_gbdt_no_extra_trees | ok | 0.1560 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T07-22-23_20260509T064627-filetypes-perl_antibaseline_gbdt_no_extra_trees.log) |
+| `aa2242fb4e50b7a9` | threshold_max_recall_fpr_no_scale | ok | 0.0000 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T07-22-27_20260509T064627-filetypes-perl_threshold_max_recall_fpr_no_scale.log) |
+| `397a378a93131190` | training_hard_neg_reg_lambda | ok | 0.1560 | 0.5000 | — | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-09T07-22-30_20260509T064627-filetypes-perl_training_hard_neg_reg_lambda.log) |
+
+<details><summary>Spec details</summary>
+
+- **`l3_scale_pos_025_threshold_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — mandatory L3 deployability slot: aggressively down-weight positives to find a working threshold at 3 FP/M
+- **`training_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only sweep: larger leaves with lower LR for finer-grained splits on tiny corpus
+- **`training_dart_boosting`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only: dart dropout regularization may improve tail behavior on small holdout
+- **`feature_ablation_remove_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — feature ablation: drop blindfold dropout to see if it's pulling weight on this tiny route
+- **`feature_add_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc,kv …` — feature addition: re-enable kv_vocab (disabled in current best) to test if key-value patterns help perl
+- **`sister_port_zst_ember_extended`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — port from zst sister route: add ember_lite and extended_metrics feature families
+- **`profile_seed777_more_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — profile shift: different seed and more training samples to test generalization beyond current corpus
+- **`antibaseline_gbdt_no_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — anti-baseline: remove extra_trees entirely, use default gbdt to test if random splits were masking overfit
+- **`threshold_max_recall_fpr_no_scale`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — threshold-mode flip: optimize at deployed FPR target without changing class weights
+- **`training_hard_neg_reg_lambda`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: hard negatives with L2 regularization to tighten decision boundary on small corpus
+
+</details>
+

@@ -38,3 +38,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012759-filetypes-c` — 2026-05-09T01:27:59Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013218-filetypes-c` — 2026-05-09T01:32:18Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014131-filetypes-c` — 2026-05-09T01:41:31Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T051640-filetypes-c` — 2026-05-09T05:16:40Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `3f5b934bbcd13ade` | c_train_sweep_leaves128 | ok | 0.5424 | 0.5000 | — | 0.0000 | 22 | [log](out/autocollie/runs/2026-05-09T05-36-03_20260509T051640-filetypes-c_c_train_sweep_leaves128.log) |
+| `9b35a25bd6dc095d` | c_train_sweep_extra_trees | ok | 0.5424 | 0.5000 | — | 0.0000 | 9 | [log](out/autocollie/runs/2026-05-09T05-36-25_20260509T051640-filetypes-c_c_train_sweep_extra_trees.log) |
+| `fa43cbbe9078dd60` | c_lowfpr_scalepos05_threshold | ok | 0.0000 | 0.5000 | — | 0.0000 | 9 | [log](out/autocollie/runs/2026-05-09T05-36-34_20260509T051640-filetypes-c_c_lowfpr_scalepos05_threshold.log) |
+| `6c691091e9a2cd86` | c_restore_symbol_vocab | ok | 0.5424 | 0.5000 | — | 0.0000 | 19 | [log](out/autocollie/runs/2026-05-09T05-36-42_20260509T051640-filetypes-c_c_restore_symbol_vocab.log) |
+| `108cd69624ad2aeb` | c_restore_kv_vocab_trigrams | ok | 0.5424 | 0.5000 | — | 0.0000 | 18 | [log](out/autocollie/runs/2026-05-09T05-37-01_20260509T051640-filetypes-c_c_restore_kv_vocab_trigrams.log) |
+| `cc66888f52418d1d` | c_natural_prevalence_resolve_recall3 | ok | 0.0000 | 0.5000 | — | 0.0000 | 19 | [log](out/autocollie/runs/2026-05-09T05-37-19_20260509T051640-filetypes-c_c_natural_prevalence_resolve_recall3.log) |
+| `fafb6f7258e55608` | c_dart_boosting_regularized | ok | 0.5424 | 0.5000 | — | 0.0000 | 21 | [log](out/autocollie/runs/2026-05-09T05-37-38_20260509T051640-filetypes-c_c_dart_boosting_regularized.log) |
+| `67ac293a94c40f11` | c_antibaseline_reenable_score_clusters | ok | 0.5424 | 0.5000 | — | 0.0000 | 9 | [log](out/autocollie/runs/2026-05-09T05-37-59_20260509T051640-filetypes-c_c_antibaseline_reenable_score_clusters.log) |
+| `a35d87f4ba622b0c` | c_hardneg_fraction3_weight12 | ok | 0.5424 | 0.5000 | — | 0.0000 | 16 | [log](out/autocollie/runs/2026-05-09T05-38-08_20260509T051640-filetypes-c_c_hardneg_fraction3_weight12.log) |
+| `ffc1f36dfa4e3120` | c_seed_search_best_of3 | ok | 0.5424 | 0.5000 | — | 0.0000 | 24 | [log](out/autocollie/runs/2026-05-09T05-38-24_20260509T051640-filetypes-c_c_seed_search_best_of3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_train_sweep_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only sweep around hardtail_kv: larger leaves with moderate regularization
+- **`c_train_sweep_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only sweep: extra_trees for ensemble noise improving tail generalization
+- **`c_lowfpr_scalepos05_threshold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — down-weight positives to reduce FPs at deployed operating point with recall-optimized threshold
+- **`c_restore_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — re-add symbol_vocab features used by the best-ever run c_symbol_static_kv at F1=0.9968
+- **`c_restore_kv_vocab_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — re-add kv_vocab and objective_trigrams used by best-ever runs to recover F1 gap
+- **`c_natural_prevalence_resolve_recall3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — use natural prevalence with large test set to make recall@3 FP/M resolvable on holdout
+- **`c_dart_boosting_regularized`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — dart boosting with dropout regularization for improved tail behavior at low FPR
+- **`c_antibaseline_reenable_score_clusters`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — anti-baseline: re-enable score and clusters groups that recent runs disabled to test if they help
+- **`c_hardneg_fraction3_weight12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — hard negative mining with moderate weight to sharpen decision boundary on C source
+- **`c_seed_search_best_of3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — seed search k=3 on promising leaves128 config to reduce seed-driven variance in recall@3
+
+</details>
+

@@ -62,3 +62,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013008-filetypes-zip` — 2026-05-09T01:30:08Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013458-filetypes-zip` — 2026-05-09T01:34:58Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014010-filetypes-zip` — 2026-05-09T01:40:10Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T055421-filetypes-zip` — 2026-05-09T05:54:21Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `268a1c4d8ea4defe` | zip_train_leaves128 | ok | 0.9706 | 0.5000 | — | 0.0000 | 60 | [log](out/autocollie/runs/2026-05-09T05-59-38_20260509T055421-filetypes-zip_zip_train_leaves128.log) |
+| `50740320dfd7c58d` | zip_train_lr008_lowreg | ok | 0.9706 | 0.5000 | — | 0.0000 | 60 | [log](out/autocollie/runs/2026-05-09T06-00-37_20260509T055421-filetypes-zip_zip_train_lr008_lowreg.log) |
+| `c15f15fe61fbb277` | zip_scalepos025_l3_target | ok | 0.0000 | 0.5000 | — | 0.0000 | 60 | [log](out/autocollie/runs/2026-05-09T06-01-37_20260509T055421-filetypes-zip_zip_scalepos025_l3_target.log) |
+| `157a6079ac98fe35` | zip_ablate_ember_lite | ok | 0.9706 | 0.5000 | — | 0.0000 | 60 | [log](out/autocollie/runs/2026-05-09T06-02-37_20260509T055421-filetypes-zip_zip_ablate_ember_lite.log) |
+| `ea0c9cb5c3353a9e` | zip_add_kv_vocab | ok | 0.9706 | 0.5000 | — | 0.0000 | 346 | [log](out/autocollie/runs/2026-05-09T06-03-37_20260509T055421-filetypes-zip_zip_add_kv_vocab.log) |
+| `b617e76db08bed55` | zip_threshold_mode_flip | ok | 0.0000 | 0.5000 | — | 0.0000 | 60 | [log](out/autocollie/runs/2026-05-09T06-09-22_20260509T055421-filetypes-zip_zip_threshold_mode_flip.log) |
+| `09c60846ea28f6f4` | zip_extra_trees_perl_port | ok | 0.9706 | 0.5000 | — | 0.0000 | 60 | [log](out/autocollie/runs/2026-05-09T06-10-22_20260509T055421-filetypes-zip_zip_extra_trees_perl_port.log) |
+| `06492e737344c2e5` | zip_profile_seed1337_200k | ok | 0.9706 | 0.5000 | — | 0.0000 | 317 | [log](out/autocollie/runs/2026-05-09T06-11-22_20260509T055421-filetypes-zip_zip_profile_seed1337_200k.log) |
+| `ffb442d602839be3` | zip_antibase_reenable_textenc | ok | 0.9706 | 0.5000 | — | 0.0000 | 60 | [log](out/autocollie/runs/2026-05-09T06-16-39_20260509T055421-filetypes-zip_zip_antibase_reenable_textenc.log) |
+| `ffb442d602839be3` | zip_add_extreme_metrics | dup | 0.9706 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T06-17-39_20260509T055421-filetypes-zip_zip_add_extreme_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zip_train_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — increase tree capacity for better malware separation
+- **`zip_train_lr008_lowreg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — higher LR with lighter L2 regularization for faster convergence
+- **`zip_scalepos025_l3_target`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — aggressive positive down-weighting to find deployable L3 threshold on L3-unresolvable holdout
+- **`zip_ablate_ember_lite`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — remove ember_lite to test if it is actually pulling weight
+- **`zip_add_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc,kv …` — re-enable kv_vocab with moderate size to capture zip metadata patterns
+- **`zip_threshold_mode_flip`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — optimize threshold at deployed L3 operating point instead of F-beta optimum
+- **`zip_extra_trees_perl_port`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — port extra_trees from perl route which achieved perfect recall
+- **`zip_profile_seed1337_200k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — different seed and larger training set to test generalization beyond current corpus
+- **`zip_antibase_reenable_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — anti-baseline: re-enable textenc which current best disables to test if it helps zip
+- **`zip_add_extreme_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — add extended_metrics and extreme_features from pkg-info route which scored perfect F1
+
+</details>
+

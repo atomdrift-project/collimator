@@ -100,3 +100,41 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012717-filetypes-tar` — 2026-05-09T01:27:17Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013553-filetypes-tar` — 2026-05-09T01:35:53Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014219-filetypes-tar` — 2026-05-09T01:42:19Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014555-filetypes-tar` — 2026-05-09T01:45:55Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T080031-filetypes-tar` — 2026-05-09T08:00:31Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `` | tar_hardneg_leaves128_reg2 | fail | — | — | — | — | 5 | [log](out/autocollie/runs/2026-05-09T08-02-43_20260509T080031-filetypes-tar_tar_hardneg_leaves128_reg2.log) |
+| `` | tar_gamma3_mcs200_lr003 | fail | — | — | — | — | 5 | [log](out/autocollie/runs/2026-05-09T08-02-49_20260509T080031-filetypes-tar_tar_gamma3_mcs200_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_hardneg_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only sweep: bump leaves and L2 reg around hard-neg baseline
+- **`tar_gamma3_mcs200_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only sweep: higher gamma + larger min_child_samples for stronger regularization
+
+</details>
+

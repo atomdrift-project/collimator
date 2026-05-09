@@ -68,3 +68,27 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012629-filetypes-groovy` — 2026-05-09T01:26:29Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013627-filetypes-groovy` — 2026-05-09T01:36:27Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014044-filetypes-groovy` — 2026-05-09T01:40:44Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014512-filetypes-groovy` — 2026-05-09T01:45:12Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

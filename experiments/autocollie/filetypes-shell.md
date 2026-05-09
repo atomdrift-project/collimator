@@ -68,3 +68,21 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012738-filetypes-shell` — 2026-05-09T01:27:38Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013701-filetypes-shell` — 2026-05-09T01:37:01Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013815-filetypes-shell` — 2026-05-09T01:38:15Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

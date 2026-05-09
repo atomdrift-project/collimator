@@ -92,3 +92,21 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012622-filegroups-source` — 2026-05-09T01:26:22Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013424-filegroups-source` — 2026-05-09T01:34:24Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014411-filegroups-source` — 2026-05-09T01:44:11Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

@@ -68,3 +68,52 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012846-filetypes-html` — 2026-05-09T01:28:46Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013728-filetypes-html` — 2026-05-09T01:37:28Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013923-filetypes-html` — 2026-05-09T01:39:23Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T080254-filetypes-html` — 2026-05-09T08:02:54Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `a23e049b9b21e09e` | html_best_leaves128_reg2 | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T08-21-29_20260509T080254-filetypes-html_html_best_leaves128_reg2.log) |
+| `c482a5652ba28d38` | html_best_dart_boosting | ok | — | — | — | — | 2 | [log](out/autocollie/runs/2026-05-09T08-21-32_20260509T080254-filetypes-html_html_best_dart_boosting.log) |
+| `9f23d7cd3f1e691a` | html_low_fpr_scalepos05 | ok | — | — | — | — | 2 | [log](out/autocollie/runs/2026-05-09T08-21-34_20260509T080254-filetypes-html_html_low_fpr_scalepos05.log) |
+| `b681a723245364e1` | html_threshold_max_recall_fpr3 | ok | — | — | — | — | 2 | [log](out/autocollie/runs/2026-05-09T08-21-36_20260509T080254-filetypes-html_html_threshold_max_recall_fpr3.log) |
+| `6effca30dc956eb9` | html_add_textenc_symbols | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T08-21-38_20260509T080254-filetypes-html_html_add_textenc_symbols.log) |
+| `82dca8957c0676eb` | html_natural_prevalence_resolution | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T08-21-42_20260509T080254-filetypes-html_html_natural_prevalence_resolution.log) |
+| `5c25864134b9eff1` | html_port_ruby_leaves128_reg2 | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T08-21-44_20260509T080254-filetypes-html_html_port_ruby_leaves128_reg2.log) |
+| `419417c905e21b60` | html_extra_trees_hardneg | ok | — | — | — | — | 2 | [log](out/autocollie/runs/2026-05-09T08-21-47_20260509T080254-filetypes-html_html_extra_trees_hardneg.log) |
+
+Rejected before run:
+
+- `html_ablate_extreme_metrics` — features.disable_groups: "extreme" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+- `html_antibase_reenable_clusters` — features.disable_groups: "extended_metrics" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+
+<details><summary>Spec details</summary>
+
+- **`html_best_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — training-only sweep: increase leaves to 128 and raise L2 reg around the F1=1.0 best run
+- **`html_best_dart_boosting`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 …` — training-only sweep: switch to dart boosting for dropout-style regularization at the tail
+- **`html_low_fpr_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — down-weight positives to reduce FPs at deployed L3 operating point
+- **`html_threshold_max_recall_fpr3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — optimize threshold exactly at deployed L3 hostile operating point (3 FP/M)
+- **`html_add_textenc_symbols`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — feature addition: enable text_encoding and symbol_vocab for HTML text content signals
+- **`html_natural_prevalence_resolution`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — profile shift: use natural prevalence with larger test set to resolve recall@3 FP/M
+- **`html_port_ruby_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — port ruby best config: leaves128, reg_lambda=2, attack_ngrams, bigram tuning
+- **`html_extra_trees_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTRA_TREES=1 …` — wildcard: extra_trees for random splits plus mild hard-negative mining
+
+</details>
+

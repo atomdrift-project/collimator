@@ -75,3 +75,45 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013232-filetypes-ruby` — 2026-05-09T01:32:32Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014017-filetypes-ruby` — 2026-05-09T01:40:17Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T053849-filetypes-ruby` — 2026-05-09T05:38:49Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `32d13d1fe377ecf1` | ruby_train_leaves128_extra_trees | ok | 0.0614 | 0.5000 | — | 0.0000 | 7 | [log](out/autocollie/runs/2026-05-09T05-53-07_20260509T053849-filetypes-ruby_ruby_train_leaves128_extra_trees.log) |
+| `ae43306fcffd111a` | ruby_train_hardneg_hsn10 | ok | 0.0614 | 0.5000 | — | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-09T05-53-14_20260509T053849-filetypes-ruby_ruby_train_hardneg_hsn10.log) |
+| `303a584261e3d50c` | ruby_l3_scalepos_025_maxrecall | ok | 0.0000 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T05-53-21_20260509T053849-filetypes-ruby_ruby_l3_scalepos_025_maxrecall.log) |
+| `e2080aaeb79691e5` | ruby_train_dart_dropout_reg | ok | 0.0614 | 0.5000 | — | 0.0000 | 15 | [log](out/autocollie/runs/2026-05-09T05-53-25_20260509T053849-filetypes-ruby_ruby_train_dart_dropout_reg.log) |
+| `b1274a3b700db36c` | ruby_feat_ablate_soft_presence | ok | 0.0614 | 0.5000 | — | 0.0000 | 7 | [log](out/autocollie/runs/2026-05-09T05-53-40_20260509T053849-filetypes-ruby_ruby_feat_ablate_soft_presence.log) |
+| `2158c2e18fc846a8` | ruby_feat_add_textenc_entropy | ok | 0.0614 | 0.5000 | — | 0.0000 | 7 | [log](out/autocollie/runs/2026-05-09T05-53-47_20260509T053849-filetypes-ruby_ruby_feat_add_textenc_entropy.log) |
+| `ba5ad793ba067da2` | ruby_port_html_precision_reg | ok | 0.0614 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T05-53-54_20260509T053849-filetypes-ruby_ruby_port_html_precision_reg.log) |
+| `80d0fdea6080a4ed` | ruby_train_maxrecall_fpr3e6_baseline | ok | 0.0000 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T05-53-58_20260509T053849-filetypes-ruby_ruby_train_maxrecall_fpr3e6_baseline.log) |
+| `f7db550568f033f2` | ruby_antibase_no_attack_ngrams | ok | 0.0614 | 0.5000 | — | 0.0000 | 8 | [log](out/autocollie/runs/2026-05-09T05-54-03_20260509T053849-filetypes-ruby_ruby_antibase_no_attack_ngrams.log) |
+| `6eb12db857b47d97` | ruby_profile_seed77_samples80k | ok | 0.0614 | 0.5000 | — | 0.0000 | 9 | [log](out/autocollie/runs/2026-05-09T05-54-10_20260509T053849-filetypes-ruby_ruby_profile_seed77_samples80k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_train_leaves128_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only sweep: keep extra_trees from best recent, increase capacity with num_leaves=128 and mild L2 reg
+- **`ruby_train_hardneg_hsn10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only: port hard-negative strategy from best historical ruby_script_scoreless_hsn10 (F1=0.9231)
+- **`ruby_l3_scalepos_025_maxrecall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — mandatory L3 slot: aggressive positive down-weight to find deployable threshold on this unresolvable corpus
+- **`ruby_train_dart_dropout_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart …` — training-only: dart boosting adds dropout-style regularization, may improve tail behavior on tiny corpus
+- **`ruby_feat_ablate_soft_presence`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — feature ablation: remove soft_presence, inspired by ruby_script_no_presence (F1=0.8571)
+- **`ruby_feat_add_textenc_entropy`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CODE_ENTROPY_SPIKE=1 …` — feature addition: add text_encoding and code_entropy_spike not used in recent best
+- **`ruby_port_html_precision_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — port precision regularization from HTML's F1=1.0 run: gamma + reg_alpha + reg_lambda for tighter splits
+- **`ruby_train_maxrecall_fpr3e6_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — threshold-mode flip: optimize at deployed L3 operating point without changing scale_pos_weight
+- **`ruby_antibase_no_attack_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — anti-baseline: remove attack_ngrams used by recent best, add score_weighted_traits instead
+- **`ruby_profile_seed77_samples80k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — profile shift: different seed and reduced train_samples to test generalization on this tiny corpus
+
+</details>
+

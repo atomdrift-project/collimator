@@ -70,3 +70,21 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012927-filetypes-pptx` — 2026-05-09T01:29:27Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013418-filetypes-pptx` — 2026-05-09T01:34:18Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014144-filetypes-pptx` — 2026-05-09T01:41:44Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

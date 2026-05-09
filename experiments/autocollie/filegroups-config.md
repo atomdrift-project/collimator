@@ -68,3 +68,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012954-filegroups-config` — 2026-05-09T01:29:54Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013239-filegroups-config` — 2026-05-09T01:32:39Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014233-filegroups-config` — 2026-05-09T01:42:33Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T040627-filegroups-config` — 2026-05-09T04:06:27Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `412db0a82de6d3c1` | config_leaves128_reg2_train | ok | 0.8133 | 0.5000 | — | 0.0000 | 11 | [log](out/autocollie/runs/2026-05-09T04-07-52_20260509T040627-filegroups-config_config_leaves128_reg2_train.log) |
+| `8249e889108fdf21` | config_slow_lr_larger_leaves | ok | 0.8133 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-08-02_20260509T040627-filegroups-config_config_slow_lr_larger_leaves.log) |
+| `6be9ea049547eb5f` | config_l3_rescue_posweight025 | ok | 0.0000 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-08-04_20260509T040627-filegroups-config_config_l3_rescue_posweight025.log) |
+| `c0ebc38d31b249ae` | config_dart_boosting_reg15 | ok | 0.8133 | 0.5000 | — | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-09T04-08-07_20260509T040627-filegroups-config_config_dart_boosting_reg15.log) |
+| `34a3237d5555a8de` | config_ablate_clusters | ok | 0.8133 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-08-13_20260509T040627-filegroups-config_config_ablate_clusters.log) |
+| `5119ad772637f405` | config_add_text_encoding | ok | 0.8133 | 0.5000 | — | 0.0000 | 10 | [log](out/autocollie/runs/2026-05-09T04-08-15_20260509T040627-filegroups-config_config_add_text_encoding.log) |
+| `ed0894aa4c3cbe08` | config_threshold_flip_fpr3e6 | ok | 0.0000 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-08-25_20260509T040627-filegroups-config_config_threshold_flip_fpr3e6.log) |
+| `f4b47f047a79d744` | config_profile_seed1234_bigger | ok | 0.8133 | 0.5000 | — | 0.0000 | 13 | [log](out/autocollie/runs/2026-05-09T04-08-27_20260509T040627-filegroups-config_config_profile_seed1234_bigger.log) |
+| `2bd25c26b274077c` | config_antibase_extra_trees_shallow | ok | 0.8133 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T04-08-40_20260509T040627-filegroups-config_config_antibase_extra_trees_shallow.log) |
+| `34a3237d5555a8de` | config_sister_port_html_extreme | dup | 0.8133 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T04-08-43_20260509T040627-filegroups-config_config_sister_port_html_extreme.log) |
+
+<details><summary>Spec details</summary>
+
+- **`config_leaves128_reg2_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — training-only sweep: more leaves with stronger L2 regularization for capacity+stability tradeoff
+- **`config_slow_lr_larger_leaves`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64` — training-only sweep: slower learning with larger min_child_samples for smoother splits
+- **`config_l3_rescue_posweight025`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — mandatory L3 rescue: aggressive positive downweighting with deployed FPR target to find a working threshold
+- **`config_dart_boosting_reg15`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_REG_LAMBDA=1.5` — training-only: DART dropout-style regularization for improved tail behavior at low FPR
+- **`config_ablate_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — feature ablation: disable clusters group which HTML and rust routes found dispensable
+- **`config_add_text_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_TEXT_ENCODING_FEATURES=1` — feature addition: enable text_encoding family which may capture config file encoding patterns
+- **`config_threshold_flip_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — threshold-mode flip: optimize exactly at deployed L3 operating point without changing class weights
+- **`config_profile_seed1234_bigger`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_TRAIN_SAMPLES=200000` — profile shift: new seed with larger training set to test generalization beyond current corpus
+- **`config_antibase_extra_trees_shallow`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_MAX_DEPTH=6 EXP_NUM_LEAVES=32` — anti-baseline: extra_trees with shallow trees — opposite of deep greedy boosting that has been working
+- **`config_sister_port_html_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1` — sister route port: disable clusters + add extended_metrics and extreme_features from HTML specialist
+
+</details>
+

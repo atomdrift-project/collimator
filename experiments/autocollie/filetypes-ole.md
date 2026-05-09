@@ -92,3 +92,21 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012941-filetypes-ole` — 2026-05-09T01:29:41Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013755-filetypes-ole` — 2026-05-09T01:37:55Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014239-filetypes-ole` — 2026-05-09T01:42:39Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

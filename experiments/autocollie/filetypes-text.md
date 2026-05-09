@@ -38,3 +38,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012724-filetypes-text` — 2026-05-09T01:27:24Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013403-filetypes-text` — 2026-05-09T01:34:03Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014151-filetypes-text` — 2026-05-09T01:41:51Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T031315-filetypes-text` — 2026-05-09T03:13:15Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `58ac63e917713e3c` | text_train_deeper_trees | ok | 0.4444 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-17-50_20260509T031315-filetypes-text_text_train_deeper_trees.log) |
+| `dd9d6b922b4cd5f7` | text_train_dart_extra_trees | ok | 0.4444 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-17-54_20260509T031315-filetypes-text_text_train_dart_extra_trees.log) |
+| `c7726bf70fb7ad2d` | text_lowfpr_scale_pos_025 | ok | 0.0000 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T03-17-56_20260509T031315-filetypes-text_text_lowfpr_scale_pos_025.log) |
+| `c1730cfd8a866a7c` | text_add_textenc_extended_metrics | ok | 0.4444 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-17-58_20260509T031315-filetypes-text_text_add_textenc_extended_metrics.log) |
+| `ee2707c63b54a2db` | text_add_trigrams_rare_bigrams | ok | 0.4444 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-18-01_20260509T031315-filetypes-text_text_add_trigrams_rare_bigrams.log) |
+| `6340c2efc48875af` | text_port_pkginfo_scoreless_extreme | ok | 0.4444 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-18-04_20260509T031315-filetypes-text_text_port_pkginfo_scoreless_extreme.log) |
+| `b23f497e0c5e0915` | text_antibase_reenable_present_maxcrit_score | ok | 0.4444 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T03-18-07_20260509T031315-filetypes-text_text_antibase_reenable_present_maxcrit_score.log) |
+| `cae123f861a971ad` | text_profile_malware_score3_larger | ok | 0.4444 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T03-18-10_20260509T031315-filetypes-text_text_profile_malware_score3_larger.log) |
+| `db310a98ff9a5b5a` | text_train_hardneg_fraction03_w10 | ok | 0.4444 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T03-18-14_20260509T031315-filetypes-text_text_train_hardneg_fraction03_w10.log) |
+| `207fbf66f03b2f51` | text_train_max_capacity_slow_lr | ok | 0.4444 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T03-18-15_20260509T031315-filetypes-text_text_train_max_capacity_slow_lr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`text_train_deeper_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — deeper trees with slower learning to capture more complex text patterns
+- **`text_train_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — dart dropout regularization plus extra trees for tail generalization
+- **`text_lowfpr_scale_pos_025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — aggressive positive down-weighting to reduce FPs at deployed L3 operating point
+- **`text_add_textenc_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — text_encoding and extended_metrics features plausibly informative for text files
+- **`text_add_trigrams_rare_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — trigram pools and lower bigram min_freq to capture rarer text patterns
+- **`text_port_pkginfo_scoreless_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — port pkg-info winning config: scoreless with extended_metrics and extreme_features
+- **`text_antibase_reenable_present_maxcrit_score`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — re-enable present, maxcrit, score groups that best run disables to test if they help
+- **`text_profile_malware_score3_larger`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — filter to confident malware and increase training data to improve signal quality
+- **`text_train_hardneg_fraction03_w10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — moderate hard negative fraction with high weight to sharpen decision boundary
+- **`text_train_max_capacity_slow_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — maximum tree capacity with very slow learning for complex text signal extraction
+
+</details>
+

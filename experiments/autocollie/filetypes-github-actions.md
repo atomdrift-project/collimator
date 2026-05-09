@@ -38,3 +38,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012833-filetypes-github-actions` — 2026-05-09T01:28:33Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013321-filetypes-github-actions` — 2026-05-09T01:33:21Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014124-filetypes-github-actions` — 2026-05-09T01:41:24Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T072237-filetypes-github-actions` — 2026-05-09T07:22:37Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `d83f4ea2d55a8612` | ga_port_xml_textenc_kv_bigrams | ok | 0.0177 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T07-59-57_20260509T072237-filetypes-github-actions_ga_port_xml_textenc_kv_bigrams.log) |
+| `bc25ab9cb144dd5d` | ga_port_zst_ember_lite | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-01_20260509T072237-filetypes-github-actions_ga_port_zst_ember_lite.log) |
+| `6a72244e2dc9b676` | ga_full_text_kv_symbols_bigrams | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-04_20260509T072237-filetypes-github-actions_ga_full_text_kv_symbols_bigrams.log) |
+| `1c11937196e12e09` | ga_kv_heavy_large_vocab | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-07_20260509T072237-filetypes-github-actions_ga_kv_heavy_large_vocab.log) |
+| `6c1a1f7738f15cc6` | ga_port_perl_bigrams_extra_trees | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-10_20260509T072237-filetypes-github-actions_ga_port_perl_bigrams_extra_trees.log) |
+| `4ed8c6d031e2ea82` | ga_hostile_density_features | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-14_20260509T072237-filetypes-github-actions_ga_hostile_density_features.log) |
+| `5f90b5f6ac27d052` | ga_format_hints_interactions | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-17_20260509T072237-filetypes-github-actions_ga_format_hints_interactions.log) |
+| `8758703e064507fe` | ga_port_python_bytecode_bigrams | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-20_20260509T072237-filetypes-github-actions_ga_port_python_bytecode_bigrams.log) |
+| `bb01e4e4923d29da` | ga_tiered_crit_trigrams | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-23_20260509T072237-filetypes-github-actions_ga_tiered_crit_trigrams.log) |
+| `548ebc8e51a3bd08` | ga_confidence_ngrams_path_depth | ok | 0.0177 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-00-26_20260509T072237-filetypes-github-actions_ga_confidence_ngrams_path_depth.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ga_port_xml_textenc_kv_bigrams`** `EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128 …` — port XML route: add text_encoding, kv_vocab, attack_ngrams, bigrams for YAML content analysis
+- **`ga_port_zst_ember_lite`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EMBER_LITE_FEATURES=1 EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128` — port zst route: add ember_lite feature family for structural binary-like analysis
+- **`ga_full_text_kv_symbols_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 …` — comprehensive text features: kv_vocab, text_encoding, symbol_vocab, bigrams, trigrams
+- **`ga_kv_heavy_large_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_MIN_FREQ=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_DEPTH=10 EXP_NUM_LEAVES=96` — large KV vocab to capture YAML key-value structural patterns
+- **`ga_port_perl_bigrams_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128` — port perl route: bigram features with extra_trees for tail generalization
+- **`ga_hostile_density_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HOSTILE_DEPTH_WEIGHT=1 EXP_HOSTILE_ESCALATION_FEATURES=1 EXP_HOSTILE_FINDING_DENSITY=1 EXP_HOSTILE_WEIGHTED_DENSITY=1 EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128` — add hostile finding density and weighted density for threat signal
+- **`ga_format_hints_interactions`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENSION_MISMATCH_SIGNAL=1 EXP_FILETYPE_INTERACTIONS=1 EXP_FORMAT_HINTS=1 EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128` — add format_hints and filetype_interactions for structural filetype signals
+- **`ga_port_python_bytecode_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128` — port python-bytecode: bigram features with score and clusters groups disabled
+- **`ga_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=100` — add tiered critical trigrams for severity-weighted pattern detection
+- **`ga_confidence_ngrams_path_depth`** `EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_DEPTH=12 EXP_NGRAM_MIN_CRIT=0 EXP_NGRAM_PATH_DEPTH=8 EXP_NUM_LEAVES=128` — confidence-weighted ngrams with deeper path depth for YAML nesting structure
+
+</details>
+

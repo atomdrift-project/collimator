@@ -74,3 +74,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013641-filegroups-documents` — 2026-05-09T01:36:41Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014440-filegroups-documents` — 2026-05-09T01:44:40Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014623-filegroups-documents` — 2026-05-09T01:46:23Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T085359-filegroups-documents` — 2026-05-09T08:53:59Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `dbc6916490ac99e1` | docs_train_leaves128_reg2 | ok | 0.9825 | 0.5000 | — | 0.0000 | 19 | [log](out/autocollie/runs/2026-05-09T08-59-11_20260509T085359-filegroups-documents_docs_train_leaves128_reg2.log) |
+| `41250c1551e88922` | docs_train_dart_reg2 | ok | 0.9825 | 0.5000 | — | 0.0000 | 18 | [log](out/autocollie/runs/2026-05-09T08-59-29_20260509T085359-filegroups-documents_docs_train_dart_reg2.log) |
+| `90c8a7b62b292cc8` | docs_scalepos025_fpr3e6 | ok | 0.0000 | 0.5000 | — | 0.0000 | 8 | [log](out/autocollie/runs/2026-05-09T08-59-47_20260509T085359-filegroups-documents_docs_scalepos025_fpr3e6.log) |
+| `159e9b331e981d25` | docs_port_pdf_textenc | ok | 0.9825 | 0.5000 | — | 0.0000 | 20 | [log](out/autocollie/runs/2026-05-09T08-59-55_20260509T085359-filegroups-documents_docs_port_pdf_textenc.log) |
+| `d99cf49e2da625a4` | docs_port_ole_scoreless | ok | 0.9825 | 0.5000 | — | 0.0000 | 19 | [log](out/autocollie/runs/2026-05-09T09-00-14_20260509T085359-filegroups-documents_docs_port_ole_scoreless.log) |
+| `f58eb1ec9d569875` | docs_add_textenc_kv | ok | 0.9825 | 0.5000 | — | 0.0000 | 19 | [log](out/autocollie/runs/2026-05-09T09-00-33_20260509T085359-filegroups-documents_docs_add_textenc_kv.log) |
+| `b937084cb076a4f8` | docs_ablate_blindfold | ok | 0.9825 | 0.5000 | — | 0.0000 | 18 | [log](out/autocollie/runs/2026-05-09T09-00-52_20260509T085359-filegroups-documents_docs_ablate_blindfold.log) |
+| `3b7c9a68186e7979` | docs_threshold_fpr3e6_train | ok | 0.0000 | 0.5000 | — | 0.0000 | 7 | [log](out/autocollie/runs/2026-05-09T09-01-10_20260509T085359-filegroups-documents_docs_threshold_fpr3e6_train.log) |
+| `a662e99ac68d930a` | docs_profile_seed77_larger_test | ok | 0.9825 | 0.5000 | — | 0.0000 | 19 | [log](out/autocollie/runs/2026-05-09T09-01-18_20260509T085359-filegroups-documents_docs_profile_seed77_larger_test.log) |
+| `` | docs_antibaseline_goss_highlr | fail | — | — | — | — | 9 | [log](out/autocollie/runs/2026-05-09T09-01-36_20260509T085359-filegroups-documents_docs_antibaseline_goss_highlr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docs_train_leaves128_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — training sweep: deeper trees with L2 regularization per ruby sister-route success
+- **`docs_train_dart_reg2`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2` — training sweep: dart boosting with regularization for tail stability
+- **`docs_scalepos025_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — mandatory L3 slot: aggressive positive down-weighting with deployed FPR target
+- **`docs_port_pdf_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1` — port PDF winner: text_encoding + extended_metrics + extreme_features, disable clusters
+- **`docs_port_ole_scoreless`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_MAX_DEPTH=12 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — port OLE winner: disable score and clusters groups with leaves128 reg2
+- **`docs_add_textenc_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_TEXT_ENCODING_FEATURES=1` — feature addition: text_encoding + kv_vocab from all-time best documents run
+- **`docs_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — feature ablation: remove blindfold dropout to test if it contributes signal
+- **`docs_threshold_fpr3e6_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — threshold mode flip: optimize at deployed L3 hostile operating point
+- **`docs_profile_seed77_larger_test`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=100000` — profile shift: different seed with larger test set for better FP/M resolution
+- **`docs_antibaseline_goss_highlr`** `EXP_BOOSTING_TYPE=goss EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.15 EXP_MAX_DEPTH=8 EXP_NUM_LEAVES=64` — anti-baseline: goss boosting with high LR and shallow trees opposite to extra_trees pattern
+
+</details>
+

@@ -128,3 +128,35 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012710-filetypes-package.json` — 2026-05-09T01:27:10Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013335-filetypes-package.json` — 2026-05-09T01:33:35Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014104-filetypes-package.json` — 2026-05-09T01:41:04Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T025904-filetypes-package.json` — 2026-05-09T02:59:04Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `` | pkg_json_training_deeper_trees | fail | — | — | — | — | 7 | [log](out/autocollie/runs/2026-05-09T03-03-37_20260509T025904-filetypes-package.json_pkg_json_training_deeper_trees.log) |
+| `` | pkg_json_training_hard_neg_mod | fail | — | — | — | — | 10 | [log](out/autocollie/runs/2026-05-09T03-03-44_20260509T025904-filetypes-package.json_pkg_json_training_hard_neg_mod.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_training_deeper_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — deeper trees with slower learning to capture more nuanced patterns
+- **`pkg_json_training_hard_neg_mod`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — moderate hard negative weighting to sharpen decision boundary
+
+</details>
+

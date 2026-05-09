@@ -44,3 +44,15 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013411-filegroups-native` — 2026-05-09T01:34:11Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014306-filegroups-native` — 2026-05-09T01:43:06Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

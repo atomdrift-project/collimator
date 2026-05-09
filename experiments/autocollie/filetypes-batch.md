@@ -124,3 +124,15 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013647-filetypes-batch` — 2026-05-09T01:36:47Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013801-filetypes-batch` — 2026-05-09T01:38:01Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

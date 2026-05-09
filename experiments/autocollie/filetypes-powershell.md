@@ -38,3 +38,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013042-filetypes-powershell` — 2026-05-09T01:30:42Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013246-filetypes-powershell` — 2026-05-09T01:32:46Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014341-filetypes-powershell` — 2026-05-09T01:43:41Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T030354-filetypes-powershell` — 2026-05-09T03:03:54Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `7aeb09f2ae046a54` | ps_kv_obj_leaves128_lr003 | ok | 0.6480 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T03-06-07_20260509T030354-filetypes-powershell_ps_kv_obj_leaves128_lr003.log) |
+| `445ac9b72babd8e3` | ps_kv_obj_hardneg15_w12 | ok | 0.6480 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T03-06-11_20260509T030354-filetypes-powershell_ps_kv_obj_hardneg15_w12.log) |
+| `138d51cb46b3ab16` | ps_kv_obj_scalepos05 | ok | 0.6480 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T03-06-13_20260509T030354-filetypes-powershell_ps_kv_obj_scalepos05.log) |
+| `af6c7881131d9e49` | ps_kv_obj_natural_prev_recall3 | ok | 0.0000 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T03-06-14_20260509T030354-filetypes-powershell_ps_kv_obj_natural_prev_recall3.log) |
+| `15ab61966395d1f7` | ps_kv_obj_textenc_add | ok | 0.6480 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T03-06-18_20260509T030354-filetypes-powershell_ps_kv_obj_textenc_add.log) |
+| `5a5d614818e8e65a` | ps_kv_obj_threshold_fpr3 | ok | 0.0000 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T03-06-22_20260509T030354-filetypes-powershell_ps_kv_obj_threshold_fpr3.log) |
+| `0484e592bd51bf68` | ps_kv_obj_no_extreme | ok | 0.6480 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T03-06-23_20260509T030354-filetypes-powershell_ps_kv_obj_no_extreme.log) |
+| `d2a42819fc61f76e` | ps_port_python_bigrams | ok | 0.6480 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T03-06-27_20260509T030354-filetypes-powershell_ps_port_python_bigrams.log) |
+| `90c0e222a2f75b6b` | ps_kv_obj_extra_trees | ok | 0.6480 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T03-06-31_20260509T030354-filetypes-powershell_ps_kv_obj_extra_trees.log) |
+| `d6f257c14dce77c9` | ps_kv_obj_dart_boosting | ok | 0.6480 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T03-06-33_20260509T030354-filetypes-powershell_ps_kv_obj_dart_boosting.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ps_kv_obj_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1` — training-only sweep around best kv_objective config with deeper trees and lower LR
+- **`ps_kv_obj_hardneg15_w12`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_OBJECTIVE_TRIGRAMS=1` — training-only hard-negative upweighting to sharpen the decision boundary near malware
+- **`ps_kv_obj_scalepos05`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SCALE_POS_WEIGHT_MULT=0.5` — down-weight positives to suppress FPs at the deployed 3 FP/M operating point
+- **`ps_kv_obj_natural_prev_recall3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=200000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEST_NATURAL_PREVALENCE=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — natural prevalence test set with larger benign pool to finally resolve recall@3 FP/M
+- **`ps_kv_obj_textenc_add`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1` — add text_encoding features — powershell scripts are text-heavy and encoding signals may help
+- **`ps_kv_obj_threshold_fpr3`** `EXP_BETA=1.5 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — threshold-mode flip to optimize exactly at the deployed L3 hostile 3 FP/M operating point
+- **`ps_kv_obj_no_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTREME_FEATURES=0 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1` — ablate extreme_features from best config to test if they carry signal or just noise
+- **`ps_port_python_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128` — port python-bytecode winning config: bigram_max=5000, bigram_min_freq=1000, disable score+clusters
+- **`ps_kv_obj_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.04 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1` — training-only extra_trees for random-split diversification to improve tail generalization
+- **`ps_kv_obj_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.04 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1` — training-only dart boosting for dropout regularization to improve low-FPR tail behavior
+
+</details>
+

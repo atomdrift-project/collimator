@@ -68,3 +68,21 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013001-filetypes-pkg-info` — 2026-05-09T01:30:01Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013721-filetypes-pkg-info` — 2026-05-09T01:37:21Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013849-filetypes-pkg-info` — 2026-05-09T01:38:49Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

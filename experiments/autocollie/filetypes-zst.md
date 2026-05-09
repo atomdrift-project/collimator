@@ -38,3 +38,27 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012900-filetypes-zst` — 2026-05-09T01:29:00Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013526-filetypes-zst` — 2026-05-09T01:35:26Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013943-filetypes-zst` — 2026-05-09T01:39:43Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014712-filetypes-zst` — 2026-05-09T01:47:12Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

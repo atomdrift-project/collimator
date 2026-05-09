@@ -38,3 +38,57 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012805-filetypes-deb` — 2026-05-09T01:28:05Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013253-filetypes-deb` — 2026-05-09T01:32:53Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014212-filetypes-deb` — 2026-05-09T01:42:12Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014652-filetypes-deb` — 2026-05-09T01:46:52Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T094217-filetypes-deb` — 2026-05-09T09:42:17Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `5b8c8864769ec979` | deb_port_xml_kv_textenc | ok | 0.0000 | 0.0000 | — | 0.0000 | 224 | [log](out/autocollie/runs/2026-05-09T09-47-26_20260509T094217-filetypes-deb_deb_port_xml_kv_textenc.log) |
+| `71a228a8bc7965a5` | deb_port_gz_scale_pos_bigrams | ok | 0.0000 | 0.0000 | — | 0.0000 | 197 | [log](out/autocollie/runs/2026-05-09T09-51-09_20260509T094217-filetypes-deb_deb_port_gz_scale_pos_bigrams.log) |
+| `a5068874a215ad25` | deb_hostile_density_features | ok | 0.0000 | 0.0000 | — | 0.0000 | 197 | [log](out/autocollie/runs/2026-05-09T09-54-26_20260509T094217-filetypes-deb_deb_hostile_density_features.log) |
+| `44d10f821729cdf1` | deb_text_script_entropy | ok | 0.0000 | 0.0000 | — | 0.0000 | 182 | [log](out/autocollie/runs/2026-05-09T09-57-44_20260509T094217-filetypes-deb_deb_text_script_entropy.log) |
+| `68c4f1b5b1c1718b` | deb_full_features_no_disable | ok | 0.0000 | 0.0000 | — | 0.0000 | 16 | [log](out/autocollie/runs/2026-05-09T10-00-46_20260509T094217-filetypes-deb_deb_full_features_no_disable.log) |
+| `460f2badfaa4746f` | deb_symbol_anachronistic_metadata | ok | 0.0000 | 0.0000 | — | 0.0000 | 233 | [log](out/autocollie/runs/2026-05-09T10-01-02_20260509T094217-filetypes-deb_deb_symbol_anachronistic_metadata.log) |
+| `51a599efd956979e` | deb_profile_bigger_seed | ok | 0.0000 | 0.0000 | — | 0.0000 | 199 | [log](out/autocollie/runs/2026-05-09T10-04-54_20260509T094217-filetypes-deb_deb_profile_bigger_seed.log) |
+| `79eb54aa2b0fe45c` | deb_min_malware_score_focus | ok | 0.0000 | 0.0000 | — | 0.0000 | 200 | [log](out/autocollie/runs/2026-05-09T10-08-13_20260509T094217-filetypes-deb_deb_min_malware_score_focus.log) |
+| `66685a3228d62638` | deb_natural_prevalence_large_test | ok | 0.0000 | 0.0000 | — | 0.0000 | 199 | [log](out/autocollie/runs/2026-05-09T10-11-34_20260509T094217-filetypes-deb_deb_natural_prevalence_large_test.log) |
+| `c8ba1919ec9fcade` | deb_ember_taxonomy_packaged | ok | 0.0000 | 0.0000 | — | 0.0000 | 198 | [log](out/autocollie/runs/2026-05-09T10-14-53_20260509T094217-filetypes-deb_deb_ember_taxonomy_packaged.log) |
+
+<details><summary>Spec details</summary>
+
+- **`deb_port_xml_kv_textenc`** `EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_TEXT_ENCODING_FEATURES=1` — port xml winning config: kv_vocab + text_encoding + attack_ngrams + bigram params for DEB control file structure
+- **`deb_port_gz_scale_pos_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.5` — port gz winning config with bigram params and scale_pos_weight_mult to suppress FP tail
+- **`deb_hostile_density_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HOSTILE_DEPTH_WEIGHT=1 EXP_HOSTILE_ESCALATION_FEATURES=1 EXP_HOSTILE_FINDING_DENSITY=1 EXP_HOSTILE_WEIGHTED_DENSITY=1 EXP_SUSPICIOUS_BREADTH_DENSITY=1` — add hostile density + escalation features that may capture DEB-specific malicious patterns
+- **`deb_text_script_entropy`** `EXP_ATTACK_NGRAMS=1 EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NGRAM_PATH_DEPTH=4 EXP_REPETITION_PENALTY_FEATURES=1 EXP_TEXT_ENCODING_FEATURES=1` — text_encoding + code_entropy_spike + repetition_penalty for DEB control files and install scripts
+- **`deb_full_features_no_disable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — remove all disabled groups to test if present/maxcrit/score carry signal for DEB
+- **`deb_symbol_anachronistic_metadata`** `EXP_ANACHRONISTIC_INJECTION=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENSION_MISMATCH_SIGNAL=1 EXP_FOREIGN_BINARY_SIGNAL=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000` — symbol_vocab + anachronistic_injection + foreign_binary for DEB metadata and embedded binary analysis
+- **`deb_profile_bigger_seed`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_TRAIN_SAMPLES=300000` — larger training set with different seed to test if signal exists in more data
+- **`deb_min_malware_score_focus`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MIN_MALWARE_SCORE=5` — focus training on high-severity malware only to see if clear signal emerges from confident positives
+- **`deb_natural_prevalence_large_test`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=200000 EXP_TEST_NATURAL_PREVALENCE=1` — natural prevalence with large test set to improve recall@k FP/M resolution on this route
+- **`deb_ember_taxonomy_packaged`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EMBER_LITE_FEATURES=1 EXP_PACKAGED_CAPABILITY_MODE=findings EXP_STRUCT_FILE_RISK_COVERAGE=1 EXP_TAXONOMY_FEATURES=1` — ember_lite + taxonomy + packaged_capability findings mode for structural DEB feature extraction
+
+</details>
+

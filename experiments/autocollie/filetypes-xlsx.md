@@ -74,3 +74,45 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013225-filetypes-xlsx` — 2026-05-09T01:32:25Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014158-filetypes-xlsx` — 2026-05-09T01:41:58Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T061741-filetypes-xlsx` — 2026-05-09T06:17:41Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `b5d3db7d236df014` | xlsx_train_reg_lambda3_leaves64 | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T06-45-59_20260509T061741-filetypes-xlsx_xlsx_train_reg_lambda3_leaves64.log) |
+| `32a204ddfaafe89b` | xlsx_train_hardneg_fraction03 | ok | — | — | — | — | 2 | [log](out/autocollie/runs/2026-05-09T06-46-03_20260509T061741-filetypes-xlsx_xlsx_train_hardneg_fraction03.log) |
+| `3dc6b268fd300ffa` | xlsx_lowfpr_scalepos025_recallfpr | ok | — | — | — | — | 2 | [log](out/autocollie/runs/2026-05-09T06-46-05_20260509T061741-filetypes-xlsx_xlsx_lowfpr_scalepos025_recallfpr.log) |
+| `36e706efd297a892` | xlsx_threshold_max_recall_at_fpr | ok | — | — | — | — | 2 | [log](out/autocollie/runs/2026-05-09T06-46-07_20260509T061741-filetypes-xlsx_xlsx_threshold_max_recall_at_fpr.log) |
+| `30006761da2e21b9` | xlsx_ablate_extreme_features | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T06-46-09_20260509T061741-filetypes-xlsx_xlsx_ablate_extreme_features.log) |
+| `e089281aa2ca9b0e` | xlsx_add_kv_vocab_back | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T06-46-13_20260509T061741-filetypes-xlsx_xlsx_add_kv_vocab_back.log) |
+| `af46e36ef2b8b5d9` | xlsx_port_from_ole_sister | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T06-46-16_20260509T061741-filetypes-xlsx_xlsx_port_from_ole_sister.log) |
+| `1073d89b12a68766` | xlsx_profile_natural_prevalence_resolution | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T06-46-19_20260509T061741-filetypes-xlsx_xlsx_profile_natural_prevalence_resolution.log) |
+| `a806b2a8fb9ec010` | xlsx_antibaseline_reenable_bigrams_trigrams | ok | — | — | — | — | 3 | [log](out/autocollie/runs/2026-05-09T06-46-22_20260509T061741-filetypes-xlsx_xlsx_antibaseline_reenable_bigrams_trigrams.log) |
+| `1a037096ad015154` | xlsx_dart_boosting_dropout_reg | ok | — | — | — | — | 2 | [log](out/autocollie/runs/2026-05-09T06-46-25_20260509T061741-filetypes-xlsx_xlsx_dart_boosting_dropout_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_train_reg_lambda3_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv,textenc,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — training-only sweep: tighter regularization and fewer leaves around best config
+- **`xlsx_train_hardneg_fraction03`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv,textenc,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — training-only sweep: hard negative upweighting to sharpen decision boundary
+- **`xlsx_lowfpr_scalepos025_recallfpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv,textenc,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — aggressive positive down-weighting paired with deployed FPR target to improve recall@3
+- **`xlsx_threshold_max_recall_at_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv,textenc,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — threshold-mode flip only: optimize at deployed L3 operating point without other changes
+- **`xlsx_ablate_extreme_features`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv,textenc,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=0 …` — feature ablation: remove extreme_features to test if it contributes meaningfully
+- **`xlsx_add_kv_vocab_back`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,textenc,kv,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — feature addition: re-enable kv_vocab which was disabled in best config to test its value
+- **`xlsx_port_from_ole_sister`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — port OLE best config: lighter disable set with bigrams, both are OLE container formats
+- **`xlsx_profile_natural_prevalence_resolution`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv,textenc,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — profile shift: natural prevalence test set with larger benign pool to resolve recall@3 FP/M
+- **`xlsx_antibaseline_reenable_bigrams_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,score,clusters,kv,textenc,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — anti-baseline: re-enable bigrams and trigrams that best config disables to test if they help
+- **`xlsx_dart_boosting_dropout_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv,textenc,symbols EXP_EXTENDED_METRICS=1 …` — training-only: DART boosting for dropout-style regularization to improve tail behavior
+
+</details>
+

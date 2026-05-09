@@ -69,3 +69,41 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012745-filetypes-javascript` — 2026-05-09T01:27:45Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013349-filetypes-javascript` — 2026-05-09T01:33:49Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013836-filetypes-javascript` — 2026-05-09T01:38:36Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014456-filetypes-javascript` — 2026-05-09T01:44:56Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T032534-filetypes-javascript` — 2026-05-09T03:25:34Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `` | js_no_presence_leaves160_lr03 | fail | — | — | — | — | 65 | [log](out/autocollie/runs/2026-05-09T04-05-11_20260509T032534-filetypes-javascript_js_no_presence_leaves160_lr03.log) |
+| `` | js_no_presence_reg3_gamma05 | fail | — | — | — | — | 12 | [log](out/autocollie/runs/2026-05-09T04-06-16_20260509T032534-filetypes-javascript_js_no_presence_reg3_gamma05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_no_presence_leaves160_lr03`** `EXP_AIR_GAP_SIGNAL=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=14 EXP_NUM_LEAVES=160` — deeper trees with slower learning for better tail generalization
+- **`js_no_presence_reg3_gamma05`** `EXP_AIR_GAP_SIGNAL=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_GAMMA=0.5 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=3` — stronger L2 regularization and split gain threshold to reduce overfitting
+
+</details>
+

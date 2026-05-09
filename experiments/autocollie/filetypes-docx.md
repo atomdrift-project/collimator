@@ -94,3 +94,27 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012819-filetypes-docx` — 2026-05-09T01:28:19Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013211-filetypes-docx` — 2026-05-09T01:32:11Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014226-filetypes-docx` — 2026-05-09T01:42:26Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014658-filetypes-docx` — 2026-05-09T01:46:58Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

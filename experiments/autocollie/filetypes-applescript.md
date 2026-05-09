@@ -64,3 +64,21 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012703-filetypes-applescript` — 2026-05-09T01:27:03Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013540-filetypes-applescript` — 2026-05-09T01:35:40Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014037-filetypes-applescript` — 2026-05-09T01:40:37Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

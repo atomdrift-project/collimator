@@ -68,3 +68,27 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012840-filegroups-archive` — 2026-05-09T01:28:40Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013452-filegroups-archive` — 2026-05-09T01:34:52Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013856-filegroups-archive` — 2026-05-09T01:38:56Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014609-filegroups-archive` — 2026-05-09T01:46:09Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

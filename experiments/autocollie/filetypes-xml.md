@@ -66,3 +66,47 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012907-filetypes-xml` — 2026-05-09T01:29:07Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013634-filetypes-xml` — 2026-05-09T01:36:34Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014356-filetypes-xml` — 2026-05-09T01:43:56Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T050225-filetypes-xml` — 2026-05-09T05:02:25Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `9e5fc9324ea492b3` | xml_train_leaves64_lr003 | ok | 0.0617 | 0.5000 | — | 0.0000 | 5 | [log](out/autocollie/runs/2026-05-09T05-08-49_20260509T050225-filetypes-xml_xml_train_leaves64_lr003.log) |
+| `ba985bf10f64d742` | xml_train_reg3_mcs200 | ok | 0.0617 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-08-55_20260509T050225-filetypes-xml_xml_train_reg3_mcs200.log) |
+| `634b5650158c5eb5` | xml_l3_spw025_fpr3e6 | ok | 0.0000 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-08-58_20260509T050225-filetypes-xml_xml_l3_spw025_fpr3e6.log) |
+| `38fed3077fbdcbaa` | xml_ablate_blindfold | ok | 0.0617 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T05-09-01_20260509T050225-filetypes-xml_xml_ablate_blindfold.log) |
+| `a056721aa9efe305` | xml_port_ole_disable_score_clusters | ok | 0.0617 | 0.5000 | — | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-09T05-09-05_20260509T050225-filetypes-xml_xml_port_ole_disable_score_clusters.log) |
+| `e963cb9ad3e629b4` | xml_profile_natural_prev_100k | ok | 0.0617 | 0.5000 | — | 0.0000 | 9 | [log](out/autocollie/runs/2026-05-09T05-09-11_20260509T050225-filetypes-xml_xml_profile_natural_prev_100k.log) |
+| `10e070268ddfa6a3` | xml_threshold_fpr3e6 | ok | 0.0000 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-09-21_20260509T050225-filetypes-xml_xml_threshold_fpr3e6.log) |
+| `1f562e5eb0221f90` | xml_extra_trees_diversify | ok | 0.0617 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-09-24_20260509T050225-filetypes-xml_xml_extra_trees_diversify.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xml_train_leaves64_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=64` — smaller trees and lower LR for tiny dataset generalization
+- **`xml_train_reg3_mcs200`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=3` — stronger L2 regularization and larger min_child_samples to prevent overfitting on 5-malware holdout
+- **`xml_l3_spw025_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — mandatory L3 slot: aggressive positive down-weight with deployed FPR target
+- **`xml_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — remove blindfold features to test if they contribute on XML
+- **`xml_port_ole_disable_score_clusters`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — port OLE winner: disable score and clusters groups with leaves128 reg2
+- **`xml_profile_natural_prev_100k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=100000 EXP_TEST_NATURAL_PREVALENCE=1` — natural prevalence test set with larger benign pool for better FP/M resolution
+- **`xml_threshold_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — optimize threshold at deployed L3 operating point without changing model weights
+- **`xml_extra_trees_diversify`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1` — extra trees random splits from perl route for tail generalization on tiny dataset
+
+</details>
+

@@ -72,3 +72,45 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013445-filetypes-vbs` — 2026-05-09T01:34:45Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014253-filetypes-vbs` — 2026-05-09T01:42:53Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T084815-filetypes-vbs` — 2026-05-09T08:48:15Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `d9750de6ea017217` | vbs_extra_trees_leaves128 | ok | 0.7456 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T08-50-39_20260509T084815-filetypes-vbs_vbs_extra_trees_leaves128.log) |
+| `3ea3c95518dea175` | vbs_dart_leaves128_reg2 | ok | 0.7456 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-50-43_20260509T084815-filetypes-vbs_vbs_dart_leaves128_reg2.log) |
+| `7fc981e9757745ed` | vbs_l3_calibration_scale_pos_025 | ok | 0.0000 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-50-45_20260509T084815-filetypes-vbs_vbs_l3_calibration_scale_pos_025.log) |
+| `02360eb537f3dd97` | vbs_ablation_no_attack_ngrams | ok | 0.7456 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T08-50-47_20260509T084815-filetypes-vbs_vbs_ablation_no_attack_ngrams.log) |
+| `cb1f23ef26d75bde` | vbs_add_kv_vocab | ok | 0.7456 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T08-50-48_20260509T084815-filetypes-vbs_vbs_add_kv_vocab.log) |
+| `1416dc82be694834` | vbs_hardneg_fraction01_weight8 | ok | 0.7456 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-50-52_20260509T084815-filetypes-vbs_vbs_hardneg_fraction01_weight8.log) |
+| `02360eb537f3dd97` | vbs_disable_clusters_port | dup | 0.7456 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T08-50-54_20260509T084815-filetypes-vbs_vbs_disable_clusters_port.log) |
+| `3c77f21370b77317` | vbs_antibase_gbdt_shallow | ok | 0.7456 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T08-50-55_20260509T084815-filetypes-vbs_vbs_antibase_gbdt_shallow.log) |
+| `3bc127b4b684f6ef` | vbs_seed77_train200k | ok | 0.7456 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T08-50-56_20260509T084815-filetypes-vbs_vbs_seed77_train200k.log) |
+| `` | vbs_goss_extreme_features | fail | — | — | — | — | 1 | [log](out/autocollie/runs/2026-05-09T08-51-00_20260509T084815-filetypes-vbs_vbs_goss_extreme_features.log) |
+
+<details><summary>Spec details</summary>
+
+- **`vbs_extra_trees_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — training sweep around best: keep extra_trees+reg2, bump leaves to 128 for more capacity
+- **`vbs_dart_leaves128_reg2`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — training sweep: dart boosting with dropout regularization for improved tail behavior
+- **`vbs_l3_calibration_scale_pos_025`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — mandatory L3 slot: aggressive positive down-weighting to find deployable threshold at 3 FP/M
+- **`vbs_ablation_no_attack_ngrams`** `EXP_ATTACK_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — feature ablation: remove attack_ngrams to test if they contribute on VBS
+- **`vbs_add_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — feature addition: enable kv_vocab to capture key-value patterns in VBS scripts
+- **`vbs_hardneg_fraction01_weight8`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2` — training sweep: hard negative mining with moderate weight for better decision boundary
+- **`vbs_disable_clusters_port`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — port from sister routes: disable clusters group (yielded perfect F1 on rust/tar/ole)
+- **`vbs_antibase_gbdt_shallow`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.1 EXP_MAX_DEPTH=6 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=0` — anti-baseline: remove extra_trees, standard gbdt with shallow trees and no L2 reg
+- **`vbs_seed77_train200k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_TRAIN_SAMPLES=200000` — profile shift: different seed and larger training set to test generalization of wins
+- **`vbs_goss_extreme_features`** `EXP_BOOSTING_TYPE=goss EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTREME_FEATURES=1 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1` — wildcard: goss boosting paired with extreme tail features for diverse exploration
+
+</details>
+

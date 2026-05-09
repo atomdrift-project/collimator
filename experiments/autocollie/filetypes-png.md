@@ -38,3 +38,51 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012854-filetypes-png` — 2026-05-09T01:28:54Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013137-filetypes-png` — 2026-05-09T01:31:37Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013910-filetypes-png` — 2026-05-09T01:39:10Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T085103-filetypes-png` — 2026-05-09T08:51:03Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `54fdd72a69a5baa0` | png_train_leaves128_lr003_kv_textenc | ok | 0.9302 | 0.5000 | — | 0.0000 | 5 | [log](out/autocollie/runs/2026-05-09T08-53-26_20260509T085103-filetypes-png_png_train_leaves128_lr003_kv_textenc.log) |
+| `ff266e314aa77964` | png_train_dart_boosting_kv_textenc | ok | 0.9302 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-53-31_20260509T085103-filetypes-png_png_train_dart_boosting_kv_textenc.log) |
+| `48163744f9369aad` | png_train_scale_pos_05_kv_textenc | ok | 0.9302 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T08-53-34_20260509T085103-filetypes-png_png_train_scale_pos_05_kv_textenc.log) |
+| `9a8e9bfd6a78dce0` | png_train_threshold_max_recall_3e6 | ok | 0.0000 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T08-53-35_20260509T085103-filetypes-png_png_train_threshold_max_recall_3e6.log) |
+| `8aa1848f0e4fd80f` | png_natural_prev_resolve_recall3 | ok | 0.9302 | 0.5000 | — | 0.0000 | 5 | [log](out/autocollie/runs/2026-05-09T08-53-37_20260509T085103-filetypes-png_png_natural_prev_resolve_recall3.log) |
+| `eea9807d6b0e243a` | png_feat_add_hostile_density_ngram_depth | ok | 0.9302 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T08-53-41_20260509T085103-filetypes-png_png_feat_add_hostile_density_ngram_depth.log) |
+| `01c4aba7dfc71075` | png_feat_abl_no_blindfold | ok | 0.9302 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-53-45_20260509T085103-filetypes-png_png_feat_abl_no_blindfold.log) |
+| `1218829e4625d2ee` | png_port_xml_attack_ngrams_leaves128 | ok | 0.9302 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T08-53-49_20260509T085103-filetypes-png_png_port_xml_attack_ngrams_leaves128.log) |
+| `7b0a6073bc51c33c` | png_train_extra_trees_reg_alpha | ok | 0.9302 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T08-53-53_20260509T085103-filetypes-png_png_train_extra_trees_reg_alpha.log) |
+| `d068a1a953d779c9` | png_antibase_reenable_score_clusters | ok | 0.9302 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-53-54_20260509T085103-filetypes-png_png_antibase_reenable_score_clusters.log) |
+
+<details><summary>Spec details</summary>
+
+- **`png_train_leaves128_lr003_kv_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — training-only sweep: more leaves + lower LR with kv_vocab and text_encoding matching best run
+- **`png_train_dart_boosting_kv_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — DART boosting for dropout regularization to improve tail behavior at low FPR
+- **`png_train_scale_pos_05_kv_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — down-weight positives to reduce FPs at deployed L3 operating point
+- **`png_train_threshold_max_recall_3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — optimize threshold directly at deployed L3 hostile FPR target of 3 per million
+- **`png_natural_prev_resolve_recall3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — use natural prevalence with larger test set to resolve recall@3 FP/M metric
+- **`png_feat_add_hostile_density_ngram_depth`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — add hostile finding density and deeper ngram paths to capture PNG chunk structure
+- **`png_feat_abl_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — ablate blindfold dropout features to test if they contribute or just add noise
+- **`png_port_xml_attack_ngrams_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — port XML sister route winning config with attack_ngrams and leaves128
+- **`png_train_extra_trees_reg_alpha`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — extra_trees with L1 regularization for ensemble diversification at the tail
+- **`png_antibase_reenable_score_clusters`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — anti-baseline: re-enable score and clusters groups to test if they were wrongly disabled
+
+</details>
+

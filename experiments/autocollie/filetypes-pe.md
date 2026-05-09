@@ -96,3 +96,27 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012615-filetypes-pe` — 2026-05-09T01:26:15Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013341-filetypes-pe` — 2026-05-09T01:33:41Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014051-filetypes-pe` — 2026-05-09T01:40:51Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014519-filetypes-pe` — 2026-05-09T01:45:19Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+

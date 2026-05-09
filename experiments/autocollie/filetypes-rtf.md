@@ -70,3 +70,53 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T013015-filetypes-rtf` — 2026-05-09T01:30:15Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013123-filetypes-rtf` — 2026-05-09T01:31:23Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014111-filetypes-rtf` — 2026-05-09T01:41:11Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014548-filetypes-rtf` — 2026-05-09T01:45:48Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T083815-filetypes-rtf` — 2026-05-09T08:38:15Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `f141d4fc3998ea31` | rtf_l3_scale_pos_025 | ok | 0.0000 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T08-47-55_20260509T083815-filetypes-rtf_rtf_l3_scale_pos_025.log) |
+| `234591dddb9850a9` | rtf_training_leaves128_reg2 | ok | 0.9167 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-47-58_20260509T083815-filetypes-rtf_rtf_training_leaves128_reg2.log) |
+| `f4a7981de2011c27` | rtf_dart_boosting | ok | 0.9167 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-48-00_20260509T083815-filetypes-rtf_rtf_dart_boosting.log) |
+| `36f8a1def965376d` | rtf_ole_port_disable_score_clusters | ok | 0.9167 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-48-02_20260509T083815-filetypes-rtf_rtf_ole_port_disable_score_clusters.log) |
+| `205c1fd16c6870a8` | rtf_add_kv_textenc | ok | 0.9167 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-48-04_20260509T083815-filetypes-rtf_rtf_add_kv_textenc.log) |
+| `6c74c7e5796488e4` | rtf_profile_seed123_min_score2 | ok | 0.9167 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-48-06_20260509T083815-filetypes-rtf_rtf_profile_seed123_min_score2.log) |
+| `547a06e51e1b5f70` | rtf_anti_goss_extra_trees | ok | 0.9167 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-48-09_20260509T083815-filetypes-rtf_rtf_anti_goss_extra_trees.log) |
+| `2bd68e77268c7dfb` | rtf_ablate_bigrams | ok | 0.9167 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T08-48-11_20260509T083815-filetypes-rtf_rtf_ablate_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rtf_l3_scale_pos_025`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — mandatory L3 slot: aggressive positive downweight to find deployable threshold on unresolvable holdout
+- **`rtf_training_leaves128_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — training sweep: deeper trees with stronger L2 regularization and lower LR
+- **`rtf_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — training sweep: dart boosting for dropout-style tail regularization
+- **`rtf_ole_port_disable_score_clusters`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc` — port OLE winner config: disable score and clusters groups that may confuse RTF on tiny holdout
+- **`rtf_add_kv_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_TEXT_ENCODING_FEATURES=1` — feature addition: kv vocab and text encoding to capture RTF document structure signals
+- **`rtf_profile_seed123_min_score2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MIN_SAMPLE_SCORE=2 EXP_TRAIN_SAMPLES=80000` — profile shift: fresh seed with score floor to focus training on higher-severity samples
+- **`rtf_anti_goss_extra_trees`** `EXP_BOOSTING_TYPE=goss EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1` — anti-baseline: goss boosting with extra trees — opposite of recent dart/gbdt approaches
+- **`rtf_ablate_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=bigrams,clusters,kv,symbols,textenc` — feature ablation: remove bigrams entirely to test if they add noise on this tiny corpus
+
+</details>
+

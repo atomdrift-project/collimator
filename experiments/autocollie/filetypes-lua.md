@@ -38,3 +38,57 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260509T012636-filetypes-lua` — 2026-05-09T01:26:36Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T013314-filetypes-lua` — 2026-05-09T01:33:14Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014327-filetypes-lua` — 2026-05-09T01:43:27Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T014705-filetypes-lua` — 2026-05-09T01:47:05Z
+
+Rejected before run:
+
+- `—` — idea is required; at least one of profile/features/training must be set
+
+## Cycle `20260509T050928-filetypes-lua` — 2026-05-09T05:09:28Z
+
+| spec key | idea | status | f1 | auc | ap | recall@3FPM | wall_s | log |
+|----------|------|--------|----|-----|----|-------------|--------|-----|
+| `0808b296281f5ca7` | lua_threshold_max_recall_fpr | ok | 0.0000 | 0.5000 | — | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-09T05-16-14_20260509T050928-filetypes-lua_lua_threshold_max_recall_fpr.log) |
+| `e631568fbb5a13af` | lua_scale_pos_05 | ok | 0.0800 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T05-16-18_20260509T050928-filetypes-lua_lua_scale_pos_05.log) |
+| `a1361329bf9bad15` | lua_leaves128_reg2 | ok | 0.0800 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T05-16-19_20260509T050928-filetypes-lua_lua_leaves128_reg2.log) |
+| `9e803de395ab2ac9` | lua_dart_boosting | ok | 0.0800 | 0.5000 | — | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-09T05-16-20_20260509T050928-filetypes-lua_lua_dart_boosting.log) |
+| `c7a564657d5630de` | lua_text_encoding | ok | 0.0800 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-16-22_20260509T050928-filetypes-lua_lua_text_encoding.log) |
+| `a686ee1a252f8c63` | lua_kv_vocab_5k | ok | 0.0800 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-16-24_20260509T050928-filetypes-lua_lua_kv_vocab_5k.log) |
+| `d498398f9a283a33` | lua_ruby_port_bigrams | ok | 0.0800 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-16-27_20260509T050928-filetypes-lua_lua_ruby_port_bigrams.log) |
+| `ffd9e741ba41edac` | lua_anti_baseline_present | ok | 0.0800 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-16-30_20260509T050928-filetypes-lua_lua_anti_baseline_present.log) |
+| `dfff1c654118149b` | lua_no_extended_extreme | ok | 0.0800 | 0.5000 | — | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-09T05-16-33_20260509T050928-filetypes-lua_lua_no_extended_extreme.log) |
+| `550a03d1c5e44f6b` | lua_extra_trees_lr003 | ok | 0.0800 | 0.5000 | — | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-09T05-16-36_20260509T050928-filetypes-lua_lua_extra_trees_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`lua_threshold_max_recall_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — optimize threshold at deployed L3 3e-6 FPR operating point instead of fbeta
+- **`lua_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — downweight positives to reduce FPs at low FPR operating point
+- **`lua_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — port ruby winning config: more leaves with stronger L2 regularization
+- **`lua_dart_boosting`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 …` — dart dropout regularization may improve tail behavior for this stuck route
+- **`lua_text_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — add text_encoding features which helped PDF route reach perfect scores
+- **`lua_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — add KV vocabulary features with moderate vocab size for Lua script analysis
+- **`lua_ruby_port_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — port ruby winning config: bigram_max 5000, bigram_min_freq 1000, attack_ngrams
+- **`lua_anti_baseline_present`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=maxcrit,score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — re-enable present features group that best run disables to test if it helps
+- **`lua_no_extended_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=0 EXP_EXTREME_FEATURES=0 …` — ablate extended_metrics and extreme_features to test if they add value
+- **`lua_extra_trees_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_EXTENDED_METRICS=1 …` — extra_trees random splits with lower LR for tail generalization
+
+</details>
+
