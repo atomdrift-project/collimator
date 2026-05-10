@@ -168,12 +168,17 @@ def test_stream_labeled_metadata_full_with_size_includes_json_length() -> None:
     ]
     assert rows[0][5] == len(low_report)
     assert rows[1][5] == len(high_report)
+    # canonical_sha256 is the trailing element (defaults to sha256 in the demo
+    # rows since we didn't populate canonical separately).
+    assert rows[0][6] == "aaa"
+    assert rows[1][6] == "bbb"
 
 
 def test_count_labeled_by_partition_full_includes_low_score_rows() -> None:
+    # SHA256 last bytes: 00=test, 30=dev, 50=bad train, 60=unknown filtered, 70=skip filtered.
     db = _create_test_db([
         {"sha256": "00" * 32, "label": "good", "cleave_result": _minimal_report(), "score": 0},
-        {"sha256": "40" * 32, "label": "good", "cleave_result": _minimal_report(), "score": 10},
+        {"sha256": "30" * 32, "label": "good", "cleave_result": _minimal_report(), "score": 10},
         {"sha256": "50" * 32, "label": "bad", "cleave_result": _minimal_report(), "score": 1},
         {"sha256": "60" * 32, "label": "unknown", "cleave_result": _minimal_report(), "score": 10},
         {
@@ -190,8 +195,12 @@ def test_count_labeled_by_partition_full_includes_low_score_rows() -> None:
     assert counts["all"]["good"] == 2
     assert counts["all"]["bad"] == 1
     assert counts["all"]["total"] == 3
+    # 00 -> test partition (byte=0 < 32)
     assert counts["test"]["good"] == 1
-    assert counts["train"]["good"] == 1
+    # 30 -> dev partition (32 <= byte=48 < 64)
+    assert counts["dev"]["good"] == 1
+    # 50 -> train partition (byte=80 >= 64)
+    assert counts["train"]["bad"] == 1
 
 
 def test_labeled_corpus_metadata_full_matches_threshold_corpus() -> None:

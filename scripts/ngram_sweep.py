@@ -77,11 +77,16 @@ def fetch_and_cache(db_path: str, max_id: int) -> dict[int, dict]:
             cache = pickle.load(f)
         log.info("loaded %d existing rows in %.1fs", len(cache), time.time() - t0)
 
-    # Get all trainable IDs.
-    _, train_ids_labels, test_ids_labels = data.partition_row_ids(
+    # Get all trainable IDs. ngram_sweep is a one-off feature search; it
+    # caches scored predictions for every labeled row, so it pulls dev too.
+    _, train_ids_labels, dev_ids_labels, test_ids_labels = data.partition_row_ids(
         db_path, min_malware_training_score=0, max_id=max_id,
     )
-    all_ids = [rid for rid, _ in train_ids_labels] + [rid for rid, _ in test_ids_labels]
+    all_ids = (
+        [rid for rid, _ in train_ids_labels]
+        + [rid for rid, _ in dev_ids_labels]
+        + [rid for rid, _ in test_ids_labels]
+    )
 
     if old_max_id > 0:
         # Only fetch IDs we don't have yet.
@@ -297,10 +302,12 @@ def main():
     # Fetch (or incrementally update cache).
     cache = fetch_and_cache(args.db, max_id)
 
-    # Partition.
-    _, train_ids_labels, test_ids_labels = data.partition_row_ids(
+    # Partition. ngram_sweep evaluates against the dev partition (the held-
+    # out selection slice); the locked test partition is not touched.
+    _, train_ids_labels, dev_ids_labels, _test_ids_labels = data.partition_row_ids(
         args.db, min_malware_training_score=9, max_id=max_id,
     )
+    test_ids_labels = dev_ids_labels  # script's "test" pool is dev under new methodology
 
     # Subsample train for fast iteration.
     rng = np.random.default_rng(args.seed)

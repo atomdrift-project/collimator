@@ -28,8 +28,9 @@ def run_benchmark(
     print("\nBENCHMARK")
     print("=" * 60)
 
-    # Partition samples into train/test.
-    train_row_ids, train_ids_labels, test_ids_labels = data.partition_row_ids(db_path)
+    # Partition samples into train/dev/test. Benchmark only needs train and
+    # test rows (timing-only; calibration isn't measured), so dev is unused.
+    train_row_ids, train_ids_labels, _dev_ids_labels, test_ids_labels = data.partition_row_ids(db_path)
 
     t0 = time.perf_counter()
     if model_path is not None and spec_path is not None and model_path.exists() and spec_path.exists():

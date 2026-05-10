@@ -43,6 +43,34 @@ def _route_exists(root: Path, route: str) -> bool:
     return bundle.has_model(route_dir) and (route_dir / "feature_spec.json").is_file()
 
 
+def _ensemble_feature_count_errors(root: Path, route: str) -> list[str]:
+    """Catch the failure mode where a multi-seed bundle has members with
+    different feature counts — e.g. a stale `seed_<S>.txt` from a prior run
+    that used a different feature spec lingers next to fresh seeds. The
+    runtime detects this when loading the model, but only after the entire
+    deploy pipeline has run; checking it here saves ~11 hours.
+    """
+    route_dir = _route_path(root, route)
+    files = bundle.model_files(route_dir)
+    if len(files) < 2:
+        return []
+    counts: dict[Path, int] = {}
+    for path in files:
+        if path.suffix != ".txt":
+            continue
+        with open(path) as f:
+            for line in f:
+                if line.startswith("max_feature_idx="):
+                    counts[path] = int(line.split("=", 1)[1].strip()) + 1
+                    break
+                if line.startswith("Tree="):
+                    break
+    if len(set(counts.values())) <= 1:
+        return []
+    detail = ", ".join(f"{p.name}={n}" for p, n in sorted(counts.items()))
+    return [f"{route}: ensemble members disagree on feature count ({detail})"]
+
+
 def _policy_routes(policy: dict[str, Any]) -> set[str]:
     routes: set[str] = set()
     for route_name, route in policy.get("routes", {}).items():
@@ -83,6 +111,8 @@ def validate(root: Path) -> list[str]:
     for route in sorted(configured_routes | policy_routes):
         if not _route_exists(root, route):
             errors.append(f"{route}: referenced but missing model file or feature_spec.json")
+        else:
+            errors.extend(_ensemble_feature_count_errors(root, route))
 
     for route_name, route in policy.get("routes", {}).items():
         filetype = str(route.get("filetype", ""))

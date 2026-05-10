@@ -344,8 +344,17 @@ def _policy_levels(root: Path, route_name: str) -> list[str]:
 
 
 def _global_policy_table(root: Path) -> str:
-    path = root / "global_policy_metrics.json"
-    if not path.exists():
+    # Prefer test_metrics.json (honest evaluation on the locked test
+    # partition) over global_policy_metrics.json (which after the dev/test
+    # methodology is dev-derived). Fall back to dev metrics if test
+    # evaluation hasn't been run on this bundle yet.
+    test_path = root / "test_metrics.json"
+    dev_path = root / "global_policy_metrics.json"
+    if test_path.exists():
+        path = test_path
+    elif dev_path.exists():
+        path = dev_path
+    else:
         return ""
     with open(path) as f:
         data = json.load(f)
@@ -549,7 +558,7 @@ def _write_route(root: Path, path: Path) -> None:
         ember_roc_val = ember.get("roc_auc") if ember else None
         ember_pr_val = ember.get("pr_auc") if ember else None
         lines.extend([
-            f"On `{name}` test-bucket rows (n={n_eval}, SHA256-deterministic 12.5% holdout):",
+            f"On `{name}` test-partition rows (n={n_eval}, SHA256-deterministic 12.5% locked holdout):",
             "",
             "| Metric | Specialist (this model alone) | EMBER 2024 reference | Δ |",
             "|---|---:|---:|---:|",
@@ -636,7 +645,7 @@ def _write_bundle(root: Path) -> None:
         config = json.load(f)
     metrics = _load_per_filetype_metrics(root)
     eval_note = (
-        "test-bucket only (apples-to-apples vs EMBER 2024)"
+        "test-partition only (apples-to-apples vs EMBER 2024 — locked holdout, never seen in training or calibration)"
         if metrics.get("evaluated_on") == "test_bucket_only"
         else "full corpus including training rows — re-run `compute_routed_metrics.py --db ...` for honest test-only numbers"
     )
@@ -653,10 +662,10 @@ def _write_bundle(root: Path) -> None:
         "",
         "## Per-filetype performance (routed ensemble)",
         "",
-        f"Calibrated against {_int(config.get('rows'))} corpus rows "
+        f"Calibrated against {_int(config.get('rows'))} dev-partition rows "
         f"({_int(config.get('malware'))} malware, {_int(config.get('benign'))} benign); "
-        f"per-filetype numbers below are evaluated on **{n_eval} test-bucket rows** "
-        f"(SHA256-deterministic 12.5% holdout — never seen during training). "
+        f"per-filetype numbers below are evaluated on **{n_eval} test-partition rows** "
+        f"(SHA256-deterministic 12.5% locked holdout — never seen during training or calibration). "
         "EMBER columns reference Joyce et al., *KDD'25 — A Benchmark Dataset for Holistic Evaluation of Malware Classifiers*, Table 5.",
         "",
         *_ensemble_table(metrics, HEADLINE_FILETYPES),
@@ -683,8 +692,27 @@ def _write_bundle(root: Path) -> None:
         "",
         "## Limits",
         "",
-        "- Metrics are on the labeled corpus + SHA256-deterministic test bucket. Deployment-time distribution shift can change real-world results.",
+        "- Metrics are on the labeled corpus's dev (calibration) and test (locked headline) partitions. Deployment-time distribution shift can change real-world results.",
         "- Some narrow filetypes (powershell, ruby, jar, macho) have small benign sample sizes — the *raw* discrimination metric is reliable, but the per-FP-target threshold calibration on the per-route cards is noisier than wider-corpus routes (pe, elf, javascript). Treat the L0..L9 numbers there as guidance, not as confidence intervals.",
+        "- Strict-FP/M operating points (L0–L3) are precision-floored by the dev/test partition sizes (~286k rows each, ~150k benign): a single FP moves the FP/M estimate by ~6. Reported numbers at those levels carry wider implicit CIs than the figure suggests.",
+        "- The split is content-deduplicated by `canonical_sha256` (archives and their inner files always co-locate) but not family- or campaign-aware. Same actor / same packer can produce different content hashes that land on opposite sides of the split. Family-aware splitting is on the methodological roadmap; until then, generalization to truly unseen campaigns may be over-stated.",
+        "",
+        "## Dataset credits",
+        "",
+        "Training samples were sourced from the following malware corpora. This project wouldn't have gone anywhere without their service and support:",
+        "",
+        "- [MalwareBazaar](https://bazaar.abuse.ch/)",
+        "- [VirusShare](https://virusshare.com/)",
+        "- [Backstabber's Knife Collection](https://dasfreak.github.io/Backstabbers-Knife-Collection/)",
+        "- [DataDog malicious-software-packages-dataset](https://github.com/DataDog/malicious-software-packages-dataset)",
+        "- [VX Underground](https://vx-underground.org/)",
+        "- [PyPI MalRegistry](https://github.com/lxyeternal/pypi_malregistry)",
+        "- [Linux Malware Samples](https://github.com/MalwareSamples/Linux-Malware-Samples)",
+        "- [Tim (Wadhwa-)Brown's Linux Malware Repo](https://github.com/timb-machine/linux-malware)",
+        "- [Javascript Malware Collection](https://github.com/HynekPetrak/javascript-malware-collection)",
+        "- [ObjectiveSee macOS Malware Collection](https://github.com/objective-see/Malware)",
+        "- [Practical Security Analytics LLC PE Malware ML Dataset](https://practicalsecurityanalytics.com/pe-malware-machine-learning-dataset/)",
+        "- [Ultimate RAT Collection](https://github.com/Cryakl/Ultimate-RAT-Collection)",
     ]
     _write(root / "README.md", "\n".join(lines))
 
@@ -724,11 +752,11 @@ def _write_ensemble_card(root: Path) -> None:
         "",
         "## General vs specialist vs ensemble",
         "",
-        f"Three views of each filetype, evaluated on **{n_eval} test-bucket rows** "
-        "(SHA256-deterministic 12.5% holdout). 'Ensemble' uses the per-filetype "
-        "winning strategy from above; 'Routing policy' is the deployed thresholded "
-        "decision at the default operating level (a separate concern from the raw "
-        "AUC of the combiner).",
+        f"Three views of each filetype, evaluated on **{n_eval} test-partition rows** "
+        "(SHA256-deterministic 12.5% locked holdout — never seen during training or "
+        "calibration). 'Ensemble' uses the per-filetype winning strategy from above; "
+        "'Routing policy' is the deployed thresholded decision at the default "
+        "operating level (a separate concern from the raw AUC of the combiner).",
         "",
         *_three_way_table(metrics, HEADLINE_FILETYPES),
         "",
@@ -766,7 +794,7 @@ def _write_generalist_card(root: Path) -> None:
         "",
         "## Per-filetype performance (general model only)",
         "",
-        "Test-bucket only (SHA256-deterministic 12.5% holdout, never trained on). EMBER columns reference Joyce et al., *KDD'25*, Table 5 'All files → X' rows.",
+        "Test-partition only (SHA256-deterministic 12.5% locked holdout, never trained on or calibrated against). EMBER columns reference Joyce et al., *KDD'25*, Table 5 'All files → X' rows.",
         "",
         *_generalist_table(metrics, HEADLINE_FILETYPES),
         "",
@@ -774,7 +802,11 @@ def _write_generalist_card(root: Path) -> None:
         "",
         f"- Algorithm: {_model_algo(train_config)}",
         f"- Feature spec: `general/feature_spec.json` ({_int(n_features)} features)",
-        "- Trained on the full mixed corpus across all supported filetypes (87.5% train / 12.5% test SHA256-deterministic split).",
+        "- Trained on the full mixed corpus across all supported filetypes "
+        "(75% train / 12.5% dev / 12.5% test, SHA256-deterministic split). "
+        "Calibrators and L0..L9 thresholds are fit on dev; the metrics in this "
+        "card are reported on the locked test partition (never seen during "
+        "training or calibration).",
         "",
         "## Hard-pool reference (training-time evaluation)",
         "",

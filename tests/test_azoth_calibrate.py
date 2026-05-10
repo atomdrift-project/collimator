@@ -94,3 +94,61 @@ def test_calibrator_skips_single_class_route(tmp_path: Path) -> None:
     }
     _mod._fit_and_persist_isotonic_calibrator([entry], labels, azoth_root)  # type: ignore[attr-defined]
     assert not (azoth_root / "filetypes/benign_only" / "calibrator.json").exists()
+
+
+def test_evaluate_thresholds_at_level_applies_without_search() -> None:
+    """_evaluate_thresholds_at_level should apply pre-fit thresholds and
+    compute tp/fp without running coordinate descent. Used for fit-on-dev,
+    evaluate-on-test scoring."""
+    rng = np.random.default_rng(13)
+    n = 1000
+    labels = rng.integers(0, 2, size=n).astype(np.int8)
+    # Two routes both scoring on the same rows; route A is more accurate.
+    probs_a = np.clip(0.05 + 0.85 * labels + rng.normal(0, 0.05, size=n), 0.0, 1.0).astype(np.float32)
+    probs_b = np.clip(0.10 + 0.50 * labels + rng.normal(0, 0.20, size=n), 0.0, 1.0).astype(np.float32)
+    indices = np.arange(n, dtype=np.int64)
+    route_scores = [
+        {"name": "general", "kind": "general", "indices": indices, "probs": probs_a},
+        {"name": "filetypes/x", "kind": "filetype", "indices": indices, "probs": probs_b},
+    ]
+    # Apply thresholds chosen on a hypothetical dev set: a tight one (fewer FPs)
+    # and a loose one. Regardless of FP target, the function should compute
+    # the union OR exactly without rebudgeting.
+    result = _mod._evaluate_thresholds_at_level(  # type: ignore[attr-defined]
+        labels, route_scores,
+        thresholds_for_level={"general": 0.7, "filetypes/x": 0.6},
+        target_per_million=3.0,
+    )
+    # Sanity: thresholds were preserved, tp/fp align with applied OR rule.
+    assert result["thresholds"] == {"general": 0.7, "filetypes/x": 0.6}
+    n_malware = int(np.sum(labels == 1))
+    n_benign = int(np.sum(labels == 0))
+    union_hit = (probs_a >= 0.7) | (probs_b >= 0.6)
+    expected_tp = int(np.sum(union_hit & (labels == 1)))
+    expected_fp = int(np.sum(union_hit & (labels == 0)))
+    assert result["tp"] == expected_tp
+    assert result["fp"] == expected_fp
+    assert result["tn"] == n_benign - expected_fp
+    assert result["fn"] == n_malware - expected_tp
+    # Diagnostics carry the threshold for each named route.
+    assert result["diagnostics"]["general"]["selected_threshold"] == 0.7
+    assert result["diagnostics"]["filetypes/x"]["selected_threshold"] == 0.6
+
+
+def test_evaluate_thresholds_at_level_skips_missing_route() -> None:
+    """A threshold for a route not present in route_scores is silently ignored
+    (the bundle's specialist may be missing in this calibration run)."""
+    rng = np.random.default_rng(17)
+    n = 200
+    labels = rng.integers(0, 2, size=n).astype(np.int8)
+    probs = np.clip(0.5 + 0.4 * labels + rng.normal(0, 0.1, size=n), 0.0, 1.0).astype(np.float32)
+    indices = np.arange(n, dtype=np.int64)
+    route_scores = [{"name": "general", "kind": "general", "indices": indices, "probs": probs}]
+    # filetypes/missing isn't in route_scores; should not crash.
+    result = _mod._evaluate_thresholds_at_level(  # type: ignore[attr-defined]
+        labels, route_scores,
+        thresholds_for_level={"general": 0.5, "filetypes/missing": 0.3},
+        target_per_million=3.0,
+    )
+    assert "general" in result["thresholds"]
+    assert "filetypes/missing" not in result["thresholds"]

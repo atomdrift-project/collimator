@@ -407,12 +407,19 @@ def sample_partitioned_reports(
         (True, 0): 0,
     }
 
-    for row_id, label, is_test, group_id, score in data.stream_partitioned_metadata_grouped(
+    for row_id, label, partition, group_id, score in data.stream_partitioned_metadata_grouped(
         db_path,
         limit=total_limit,
         max_id=max_id,
         file_types=route_file_types or None,
     ):
+        # Locked test partition is reserved for final headline evaluation
+        # (azoth-deploy / calibration). Screen experiments operate on
+        # train + dev only — dev fills the historical "is_test" eval-slice
+        # role for autocollie's selection.
+        if partition == "test":
+            continue
+        is_test = partition == "dev"
         sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id, score=score)
         key = (is_test, label)
 
@@ -1129,6 +1136,19 @@ def run_experiment(
             # has no models at all.
             shared_models_dir = output_dir / "models"
             shared_models_dir.mkdir(parents=True, exist_ok=True)
+            # Prune stale seed files from prior runs that used a different K
+            # (or different seed list). Otherwise an orphaned seed_<S>.{ext}
+            # gets promoted into the deployed bundle and triggers the
+            # mismatched-feature-count check at runtime — caught only by
+            # litmus 11 hours into a deploy.
+            current_seeds = {int(s) for s in all_attempt_seeds}
+            for stale in shared_models_dir.glob(f"seed_*.{ext}"):
+                try:
+                    stale_seed = int(stale.stem.removeprefix("seed_"))
+                except ValueError:
+                    continue
+                if stale_seed not in current_seeds:
+                    stale.unlink()
             for s, m in zip(all_attempt_seeds, all_attempt_models, strict=True):
                 final_path = shared_models_dir / f"seed_{s}.{ext}"
                 tmp_path = shared_models_dir / f".seed_{s}.{ext}.tmp"

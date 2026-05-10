@@ -696,6 +696,72 @@ def _calibrate_one(
     }
 
 
+def _evaluate_thresholds_at_level(
+    labels: np.ndarray,
+    route_scores: list[dict[str, Any]],
+    *,
+    thresholds_for_level: dict[str, float],
+    target_per_million: float,
+) -> dict[str, Any]:
+    """Apply already-chosen thresholds to (possibly different) labels+scores.
+
+    Mirrors _calibrate_one's return shape but does no fitting or search.
+    Use for "fit on dev, evaluate on test" scoring: thresholds come from a
+    prior dev run; labels and probs come from the test partition.
+
+    Routes named in thresholds_for_level but missing from route_scores are
+    skipped (they were deployed but their model isn't present in this
+    invocation, e.g. a specialist whose feature spec wasn't built).
+    """
+    n_rows = len(labels)
+    benign_bits = np.packbits(labels == 0)
+    malware_bits = np.packbits(labels == 1)
+    n_benign = int(np.sum(labels == 0))
+    n_malware = int(np.sum(labels == 1))
+    by_name = {route["name"]: route for route in route_scores}
+    selected: dict[str, float | None] = {route["name"]: None for route in route_scores}
+    union = np.zeros_like(benign_bits)
+    diagnostics: dict[str, Any] = {}
+    for name, threshold in thresholds_for_level.items():
+        route = by_name.get(name)
+        if route is None or threshold is None:
+            continue
+        selected[name] = float(threshold)
+        hit = _hit_mask(n_rows, route["indices"], route["probs"], float(threshold))
+        union = np.bitwise_or(union, np.packbits(hit))
+        # Per-route standalone counts (no union across routes).
+        standalone_tp = _count_masked_bits(np.packbits(hit), malware_bits)
+        standalone_fp = _count_masked_bits(np.packbits(hit), benign_bits)
+        diagnostics[name] = {
+            "kind": route.get("kind"),
+            "rows": int(len(route["indices"])),
+            "selected": True,
+            "selected_threshold": float(threshold),
+            "standalone": {
+                "threshold": float(threshold),
+                "tp": int(standalone_tp),
+                "fp": int(standalone_fp),
+            },
+            "best_marginal": {"threshold": float(threshold), "inc_tp": 0, "inc_fp": 0,
+                              "tp": int(standalone_tp), "fp": int(standalone_fp)},
+        }
+    tp = _count_masked_bits(union, malware_bits)
+    fp = _count_masked_bits(union, benign_bits)
+    return {
+        "target_per_million": float(target_per_million),
+        "budget": _budget(n_benign, target_per_million),
+        "thresholds": {n: t for n, t in selected.items() if t is not None},
+        "diagnostics": diagnostics,
+        "tp": tp,
+        "fp": fp,
+        "tn": n_benign - fp,
+        "fn": n_malware - tp,
+        "recall": float(tp / n_malware) if n_malware else math.nan,
+        "precision": float(tp / max(tp + fp, 1)),
+        "fp_per_million": float(fp * 1_000_000.0 / n_benign) if n_benign else math.nan,
+    }
+
+
 def _load_routes(summary_path: Path) -> list[dict[str, Any]]:
     with open(summary_path) as f:
         summary = json.load(f)
@@ -874,6 +940,33 @@ def main() -> int:
         default=Path("out/cache/azoth-route-features"),
         help="Shared cache for extracted route feature matrices; use 'none' to disable",
     )
+    parser.add_argument(
+        "--partition",
+        choices=("dev", "test", "all"),
+        default="dev",
+        help=(
+            "Which partition to fit calibrators and report metrics on. 'dev' "
+            "(default) is the held-out selection slice — calibrators and L0..L9 "
+            "thresholds are fit honestly here. 'test' applies the existing bundle "
+            "to the locked test slice for headline reporting (use with "
+            "--apply-thresholds-from to skip fitting). 'all' is the legacy leaky-"
+            "corpus behavior, retained for sanity-check comparisons only."
+        ),
+    )
+    parser.add_argument(
+        "--apply-thresholds-from",
+        type=Path,
+        default=None,
+        help=(
+            "Path to a config.json from a prior calibration run (typically the "
+            "dev-fit one). When set, this invocation skips isotonic fitting and "
+            "threshold search; it loads the per-level thresholds and applies "
+            "them to the rows in --partition, writing a metrics-only artifact at "
+            "{azoth_root}/{partition}_metrics.{json,md}. Standard config.json / "
+            "score_table / route policies are NOT overwritten — those came from "
+            "the dev fit and stay deployed."
+        ),
+    )
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()
 
@@ -889,6 +982,31 @@ def main() -> int:
     max_id = int(general_cache["corpus_requested_max_id"])
     if max_id <= 0:
         max_id = int(general_cache["corpus_max_row_id"])
+
+    # Partition filter. Caches built before the dev/test/train methodology
+    # (no canonical_shas array) cannot be filtered safely; require legacy mode.
+    if args.partition != "all":
+        if "canonical_shas" not in general_cache.files:
+            raise SystemExit(
+                "general_scores cache lacks canonical_shas; rebuild it (e.g. via "
+                "make thresholds-refresh) before calibrating with --partition="
+                f"{args.partition}",
+            )
+        canonical_shas = general_cache["canonical_shas"]
+        keep = np.array(
+            [data.partition_of(str(c)) == args.partition for c in canonical_shas],
+            dtype=bool,
+        )
+        n_keep = int(np.sum(keep))
+        if n_keep == 0:
+            raise SystemExit(f"no rows in partition '{args.partition}'")
+        LOG.info(
+            "partition '%s' filter retained %d of %d rows (%.1f%%)",
+            args.partition, n_keep, len(row_ids), 100.0 * n_keep / max(len(row_ids), 1),
+        )
+        row_ids = row_ids[keep]
+        labels = labels[keep]
+        general_probs = general_probs[keep]
     row_index = {int(row_id): idx for idx, row_id in enumerate(row_ids)}
 
     file_types_by_row = _fetch_file_types(args.db, row_ids)
@@ -921,6 +1039,52 @@ def main() -> int:
                 feature_cache_dir=feature_cache_dir,
             ),
         )
+
+    # Eval-only short-circuit: load thresholds from a prior dev-fit config,
+    # apply them to this partition's rows, and write metrics-only output.
+    # The deployed score_table.npz, isotonic calibrators, and config.json
+    # all came from the dev run and stay on disk untouched.
+    if args.apply_thresholds_from is not None:
+        prior = json.loads(Path(args.apply_thresholds_from).read_text())
+        prior_levels = prior.get("levels", [])
+        if not prior_levels:
+            raise SystemExit(
+                f"--apply-thresholds-from {args.apply_thresholds_from} has no "
+                "levels; was the dev calibration completed?",
+            )
+        eval_levels: list[dict[str, Any]] = []
+        for prior_level in prior_levels:
+            level_id = int(prior_level["level"])
+            hostile = _evaluate_thresholds_at_level(
+                labels, route_scores,
+                thresholds_for_level=prior_level["hostile"].get("thresholds", {}),
+                target_per_million=float(prior_level["hostile"]["target_per_million"]),
+            )
+            suspicious = _evaluate_thresholds_at_level(
+                labels, route_scores,
+                thresholds_for_level=prior_level["suspicious"].get("thresholds", {}),
+                target_per_million=float(prior_level["suspicious"]["target_per_million"]),
+            )
+            LOG.info(
+                "L%d on %s: hostile recall=%.2f%% fp=%d (FP/M=%.2f); suspicious recall=%.2f%% fp=%d (FP/M=%.2f)",
+                level_id, args.partition,
+                hostile["recall"] * 100, hostile["fp"], hostile["fp_per_million"],
+                suspicious["recall"] * 100, suspicious["fp"], suspicious["fp_per_million"],
+            )
+            eval_levels.append({"level": level_id, "hostile": hostile, "suspicious": suspicious})
+        metrics_path = args.azoth_root / f"{args.partition}_metrics.json"
+        bundle.atomic_write_json(metrics_path, {
+            "schema": "azoth.evaluation.v1",
+            "timestamp": datetime.now(UTC).isoformat(),
+            "applied_from": str(args.apply_thresholds_from),
+            "partition": args.partition,
+            "rows": int(len(labels)),
+            "malware": int(np.sum(labels == 1)),
+            "benign": int(np.sum(labels == 0)),
+            "levels": eval_levels,
+        })
+        print(f"wrote {metrics_path}")
+        return 0
 
     score_table_hash = _write_score_table(
         args.score_table,

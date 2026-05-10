@@ -55,3 +55,35 @@ New `m` field in findings. MBC IDs describe malware behavior.
 - G1: MBC ID presence (multi-hot)
 - G2: MBC behavior category count
 Hypothesis: MBC captures implementation-level behavior patterns.
+
+## Methodological roadmap
+
+### Family-aware split audit
+The current train/dev/test partition keys on `canonical_sha256` last byte
+(`src/collimator/data.py`). Archive-level duplication is prevented (an
+archive and its inner files share `canonical_sha256`), but
+**campaign/family-level correlation is not**: same actor, same packer,
+same dropper produces different content hashes that can land on opposite
+sides of the split. Reported metrics may therefore be optimistic against
+truly held-out malware.
+
+Reliable family labels do not exist in hopper yet. The plan once test
+data regeneration lands is to treat the `Sample.formula` field as an
+informal content-cluster hash and:
+
+1. For each test sample, count near-duplicates in train by formula match.
+   Report the distribution.
+2. If the leakage rate is non-trivial, switch to a formula-stratified
+   partition (group by formula, assign each formula group to one
+   partition) instead of byte-level hashing.
+
+Until this is feasible, document the limitation explicitly in any paper
+or model card: "metrics reflect content-deduplicated splitting only;
+campaign-level generalization is not measured."
+
+### Temporal evaluation
+Filesystem `mtime` is when the file was packed/written, not when the
+sample entered the corpus, so it isn't usable for temporal split. Once
+hopper logs an ingest timestamp on insert and enough months have
+accumulated, time-blocked evaluation (train ≤ T1, dev T1–T2, test > T2)
+becomes feasible and should be reported alongside random-split metrics.

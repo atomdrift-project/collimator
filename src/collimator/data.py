@@ -1,13 +1,24 @@
 """Load labeled samples from a hopper database (SQLite or PostgreSQL).
 
-Train/test splitting is deterministic and archive-aware: each sample's
+Splitting is deterministic and archive-aware: each sample's
 canonical_sha256 (the lexicographic minimum SHA256 across the sample
 itself and all embedded files, pre-computed by hopper) is used as the
 split key.  This ensures archives sharing an inner file always land in
 the same partition, preventing data leakage.
 
-  test set:  int(canonical_sha256[-2:], 16) < TEST_BUCKET_MAX   (12.5%)
-  train set: everything else                                     (87.5%)
+Three-way partition by canonical_sha256 last byte:
+
+  test:  byte < TEST_BUCKET_MAX                       (12.5%)
+  dev:   TEST_BUCKET_MAX <= byte < DEV_BUCKET_MAX     (12.5%)
+  train: byte >= DEV_BUCKET_MAX                       (75%)
+
+- Train rows fit models.
+- Dev rows fit calibrators and search L0..L9 thresholds; autocollie
+  screens candidates against dev.
+- Test rows produce headline metrics. Touched once per submission.
+
+See METHODOLOGY.md for why each partition is disjoint and what limits
+this still doesn't address (family-level correlation, temporal drift).
 """
 
 from __future__ import annotations
@@ -26,10 +37,11 @@ from typing import Any
 
 log = logging.getLogger(__name__)
 
-# Samples whose canonical_sha256 last byte falls in [0, TEST_BUCKET_MAX)
-# are reserved for threshold evaluation and excluded from training.
-# 32/256 = 12.5%.
+# canonical_sha256 last-byte ranges. test < TEST_BUCKET_MAX, dev in
+# [TEST_BUCKET_MAX, DEV_BUCKET_MAX), train >= DEV_BUCKET_MAX.
+# 32/256 = 12.5% (test), 32/256 = 12.5% (dev), 192/256 = 75% (train).
 TEST_BUCKET_MAX = 32
+DEV_BUCKET_MAX = 64
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,8 +60,24 @@ class Sample:
 
 
 def is_test_sample(canonical_sha256: str) -> bool:
-    """Deterministic test-set assignment based on canonical_sha256 last byte."""
+    """True if the row belongs to the locked test partition."""
     return int(canonical_sha256[-2:], 16) < TEST_BUCKET_MAX
+
+
+def is_dev_sample(canonical_sha256: str) -> bool:
+    """True if the row belongs to the dev partition (selection + calibration)."""
+    last = int(canonical_sha256[-2:], 16)
+    return TEST_BUCKET_MAX <= last < DEV_BUCKET_MAX
+
+
+def partition_of(canonical_sha256: str) -> str:
+    """Return 'train', 'dev', or 'test' for a given canonical hash."""
+    last = int(canonical_sha256[-2:], 16)
+    if last < TEST_BUCKET_MAX:
+        return "test"
+    if last < DEV_BUCKET_MAX:
+        return "dev"
+    return "train"
 
 
 def _label_int(label: str) -> int:
@@ -270,20 +298,34 @@ def stream_samples(
     db_path: Path | str,
     *,
     exclude_test: bool = False,
+    exclude_eval: bool = False,
     only_test: bool = False,
+    only_dev: bool = False,
     limit: int = 0,
 ) -> Iterator[Sample]:
-    """Yield labeled samples from a hopper database (SQLite or PostgreSQL)."""
+    """Yield labeled samples from a hopper database.
+
+    Filter flags (mutually exclusive families):
+      exclude_test=True   drop test rows; keep dev + train.
+      exclude_eval=True   drop test AND dev rows; training-only.
+      only_test=True      yield test rows only.
+      only_dev=True       yield dev rows only.
+    Default yields every labeled row.
+    """
     query = _TRAINABLE_QUERY
     if limit > 0:
         query += f" LIMIT {limit}"
     with _connect(db_path, repeatable_read=True) as conn:
         for row_id, sha256, path, label, canonical, cleave_result, formula, elements, score, mtime, cluster_id in _execute(conn, query):
             split_key = canonical or sha256
-            is_test = is_test_sample(split_key)
-            if exclude_test and is_test:
+            partition = partition_of(split_key)
+            if exclude_test and partition == "test":
                 continue
-            if only_test and not is_test:
+            if exclude_eval and partition in ("test", "dev"):
+                continue
+            if only_test and partition != "test":
+                continue
+            if only_dev and partition != "dev":
                 continue
             raw = _cleave_json(cleave_result)
             if raw is None:
@@ -381,13 +423,21 @@ def stream_labeled_metadata_full(
     max_score: int | None = None,
     limit: int = 0,
     max_id: int = 0,
-) -> Iterator[tuple[int, str, str, int, int]]:
-    """Yield labeled, non-skipped sample metadata without loading JSON reports."""
+    partition: str | None = None,
+) -> Iterator[tuple[int, str, str, int, int, str]]:
+    """Yield labeled, non-skipped sample metadata without loading JSON reports.
+
+    Yielded tuple: ``(row_id, sha256, path, score, label, canonical_sha256)``.
+
+    If ``partition`` is set ("train", "dev", or "test"), only rows in that
+    partition are yielded. Filtering happens in Python after the row is
+    fetched (canonical_sha256 isn't indexed for byte-range queries in hopper).
+    """
     with _connect(db_path, repeatable_read=True) as conn:
         params: list[Any] = []
         placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
         query = (
-            "SELECT id, sha256, path, label, score"
+            "SELECT id, sha256, path, label, score, canonical_sha256"
             " FROM samples"
             " WHERE label IN ('bad', 'good')"
             " AND cleave_result IS NOT NULL"
@@ -408,8 +458,11 @@ def stream_labeled_metadata_full(
         if limit > 0:
             query += f" LIMIT {int(limit)}"
 
-        for row_id, sha256, path, label, score in _execute(conn, query, params):
-            yield int(row_id), sha256, path or "", score or 0, _label_int(label)
+        for row_id, sha256, path, label, score, canonical in _execute(conn, query, params):
+            split_key = canonical or sha256
+            if partition is not None and partition_of(split_key) != partition:
+                continue
+            yield int(row_id), sha256, path or "", score or 0, _label_int(label), split_key
 
 
 def stream_labeled_metadata_full_with_size(
@@ -420,14 +473,20 @@ def stream_labeled_metadata_full_with_size(
     max_score: int | None = None,
     limit: int = 0,
     max_id: int = 0,
-) -> Iterator[tuple[int, str, str, int, int, int]]:
-    """Yield full-corpus metadata plus serialized cleave_result byte estimate."""
+    partition: str | None = None,
+) -> Iterator[tuple[int, str, str, int, int, int, str]]:
+    """Yield full-corpus metadata plus serialized cleave_result byte estimate.
+
+    Yielded tuple: ``(row_id, sha256, path, score, label, json_bytes, canonical_sha256)``.
+
+    If ``partition`` is set, only rows from that partition are yielded.
+    """
     with _connect(db_path, repeatable_read=True) as conn:
         params: list[Any] = []
         placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
         json_len_expr = "LENGTH(cleave_result)" if isinstance(conn, sqlite3.Connection) else "LENGTH(cleave_result::text)"
         query = (
-            f"SELECT id, sha256, path, label, score, {json_len_expr}"
+            f"SELECT id, sha256, path, label, score, {json_len_expr}, canonical_sha256"
             " FROM samples"
             " WHERE label IN ('bad', 'good')"
             " AND cleave_result IS NOT NULL"
@@ -448,7 +507,10 @@ def stream_labeled_metadata_full_with_size(
         if limit > 0:
             query += f" LIMIT {int(limit)}"
 
-        for row_id, sha256, path, label, score, json_bytes in _execute(conn, query, params):
+        for row_id, sha256, path, label, score, json_bytes, canonical in _execute(conn, query, params):
+            split_key = canonical or sha256
+            if partition is not None and partition_of(split_key) != partition:
+                continue
             yield (
                 int(row_id),
                 sha256,
@@ -456,6 +518,7 @@ def stream_labeled_metadata_full_with_size(
                 score or 0,
                 _label_int(label),
                 int(json_bytes or 0),
+                split_key,
             )
 
 
@@ -476,11 +539,17 @@ def stream_reports(
     db_path: Path | str,
     *,
     exclude_test: bool = False,
+    exclude_eval: bool = False,
     only_test: bool = False,
+    only_dev: bool = False,
 ) -> Iterator[tuple[dict[str, Any], int]]:
-    """Yield (report, label) pairs."""
+    """Yield (report, label) pairs. See stream_samples for filter semantics."""
     for sample in stream_samples(
-        db_path, exclude_test=exclude_test, only_test=only_test,
+        db_path,
+        exclude_test=exclude_test,
+        exclude_eval=exclude_eval,
+        only_test=only_test,
+        only_dev=only_dev,
     ):
         yield sample.report, sample.label
 
@@ -489,25 +558,31 @@ def partition_row_ids(
     db_path: Path | str,
     min_malware_training_score: int = 0,
     max_id: int = 0,
-) -> tuple[list[int], list[tuple[int, int]], list[tuple[int, int]]]:
-    """Partition samples into train/test by canonical_sha256.
+) -> tuple[list[int], list[tuple[int, int]], list[tuple[int, int]], list[tuple[int, int]]]:
+    """Partition samples into train/dev/test by canonical_sha256.
 
-    Returns (train_row_ids, train_ids_labels, test_ids_labels).
+    Returns (train_row_ids, train_ids_labels, dev_ids_labels, test_ids_labels).
     Pass ``max_id`` from ``snapshot_max_id`` to pin the dataset.
+
+    train_row_ids feed model fitting; dev rows feed calibration and threshold
+    search; test rows produce headline metrics. Disjoint by construction.
     """
     train_row_ids: list[int] = []
     train_ids_labels: list[tuple[int, int]] = []
+    dev_ids_labels: list[tuple[int, int]] = []
     test_ids_labels: list[tuple[int, int]] = []
-    for row_id, label, is_test, _canonical, score in stream_partitioned_metadata_grouped(db_path, max_id=max_id):
-        if is_test:
+    for row_id, label, partition, _canonical, score in stream_partitioned_metadata_grouped(db_path, max_id=max_id):
+        if partition == "test":
             test_ids_labels.append((row_id, label))
+        elif partition == "dev":
+            dev_ids_labels.append((row_id, label))
         else:
             # Heuristic pruning: ignore low-score malware during training.
             if label == 1 and score < min_malware_training_score:
                 continue
             train_row_ids.append(row_id)
             train_ids_labels.append((row_id, label))
-    return train_row_ids, train_ids_labels, test_ids_labels
+    return train_row_ids, train_ids_labels, dev_ids_labels, test_ids_labels
 
 
 def lookup_sample(
@@ -537,11 +612,12 @@ def stream_partitioned_metadata_grouped(
     limit: int = 0,
     max_id: int = 0,
     file_types: tuple[str, ...] | None = None,
-) -> Iterator[tuple[int, int, bool, str, int]]:
-    """Yield (row_id, label, is_test, canonical_sha256, score) without loading raw JSON.
+) -> Iterator[tuple[int, int, str, str, int]]:
+    """Yield (row_id, label, partition, canonical_sha256, score) without loading raw JSON.
 
-    If ``max_id`` > 0, only rows with ``id <= max_id`` are returned. Use this with
-    a value from ``snapshot_max_id`` to pin the dataset for a single run, so that
+    ``partition`` is one of "train", "dev", "test". If ``max_id`` > 0, only
+    rows with ``id <= max_id`` are returned. Use this with a value from
+    ``snapshot_max_id`` to pin the dataset for a single run, so that
     concurrent inserts don't cause drift.
     """
     query = _METADATA_QUERY
@@ -571,7 +647,7 @@ def stream_partitioned_metadata_grouped(
             yield (
                 int(row_id),
                 _label_int(label),
-                is_test_sample(split_key),
+                partition_of(split_key),
                 split_key,
                 score or 0,
             )
@@ -584,12 +660,14 @@ def count_labeled_by_partition_full(
 ) -> dict[str, dict[str, int]]:
     """Count all labeled, non-skipped rows by partition without score filtering.
 
-    Training intentionally focuses on rows at or above ``MIN_SAMPLE_SCORE``.
-    FP-per-million reporting, however, is a corpus-level good-file rate, so it
+    Returns counts under keys "train", "dev", "test", "all". Training
+    intentionally focuses on rows at or above ``MIN_SAMPLE_SCORE``. FP-per-
+    million reporting, however, is a corpus-level good-file rate, so it
     needs the full labeled good-file denominator, including low-score rows.
     """
     counts = {
         "train": {"good": 0, "bad": 0, "total": 0},
+        "dev": {"good": 0, "bad": 0, "total": 0},
         "test": {"good": 0, "bad": 0, "total": 0},
         "all": {"good": 0, "bad": 0, "total": 0},
     }
@@ -605,7 +683,7 @@ def count_labeled_by_partition_full(
             query += f" AND id <= {int(max_id)}"
         for _row_id, sha256, label, canonical in _execute(conn, query):
             split_key = canonical or sha256
-            part = "test" if is_test_sample(split_key) else "train"
+            part = partition_of(split_key)
             name = "bad" if _label_int(label) == 1 else "good"
             counts[part][name] += 1
             counts[part]["total"] += 1

@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train _azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture
+.PHONY: azoth-full-train azoth-fast-train _azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -410,6 +410,18 @@ thresholds-refresh: venv check-db
 		--top-errors $(THRESHOLD_TOP_ERRORS) \
 		--output $(OUT_DIR)/threshold_tuning.json
 
+# repin: drop the pinned snapshot_max_id so the next experiment-style
+# invocation re-queries the live max(id). Chain it before the target you
+# actually want to run, e.g.:
+#
+#   make repin azoth-full-train DB=...
+#
+# Make builds command-line goals left-to-right by default, so `repin` runs
+# first, then the next target rebuilds the pin from the current DB.
+repin:
+	@rm -f $(EXP_CACHE_DIR)/snapshot_max_id.txt
+	@echo "cleared snapshot pin: $(EXP_CACHE_DIR)/snapshot_max_id.txt (next invocation will re-query max(id))"
+
 filetype-matrix: venv check-db
 	$(PYTHON) scripts/filetype_metric_matrix.py \
 		--db $(DB) \
@@ -502,9 +514,24 @@ azoth-calibrate: venv check-db
 		--general-scores $(AZOTH_GENERAL_SCORES) \
 		--output $(AZOTH_CONFIG) \
 		--score-table $(AZOTH_SCORE_TABLE) \
+		--partition dev \
 		$(AZOTH_REFRESH_SCORES_ARG) \
 		$(AZOTH_SKIP_LEVEL_CALIBRATION_ARG) \
 		$(foreach route,$(AZOTH_REFRESH_ROUTE),--refresh-route $(route)) \
+		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
+	@# Honest test-bucket evaluation: same dev-fit thresholds applied to
+	@# the locked test partition. Output goes to $(AZOTH_ROOT)/test_metrics.json
+	@# alongside (not overwriting) the deployed config.json.
+	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
+		--db $(DB) \
+		$(EXP_WORKERS_ARG) \
+		--azoth-root $(AZOTH_ROOT) \
+		--summary $(AZOTH_SPECIALISTS_SUMMARY) \
+		--general-scores $(AZOTH_GENERAL_SCORES) \
+		--output $(AZOTH_CONFIG) \
+		--score-table $(AZOTH_SCORE_TABLE) \
+		--partition test \
+		--apply-thresholds-from $(AZOTH_CONFIG) \
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 
 azoth-diagnostics: venv
@@ -537,7 +564,7 @@ azoth-validate: azoth-calibrate
 	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
-	@test -f $(AZOTH_ROOT)/general/model.txt || { echo "error: $(AZOTH_ROOT)/general/model.txt not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/general/model.txt || ls $(AZOTH_ROOT)/general/models/seed_*.txt >/dev/null 2>&1 || { echo "error: $(AZOTH_ROOT)/general missing model.txt or models/seed_*.txt"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
 	$(PYTHON) scripts/azoth_route_diagnostics.py \
 		--config $(AZOTH_CONFIG) \
@@ -582,7 +609,7 @@ azoth-deploy: azoth-calibrate
 	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
-	@test -f $(AZOTH_ROOT)/general/model.txt || { echo "error: $(AZOTH_ROOT)/general/model.txt not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/general/model.txt || ls $(AZOTH_ROOT)/general/models/seed_*.txt >/dev/null 2>&1 || { echo "error: $(AZOTH_ROOT)/general missing model.txt or models/seed_*.txt"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
 	$(PYTHON) scripts/azoth_route_diagnostics.py \
 		--config $(AZOTH_CONFIG) \

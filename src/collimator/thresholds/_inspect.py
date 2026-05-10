@@ -129,8 +129,14 @@ def _score_labeled_corpus(
         if cache_path.stat().st_mtime >= newest_input:
             log.info("loading threshold score cache from %s", cache_path)
             arrays = np.load(cache_path, allow_pickle=False)
-            labels = arrays["labels"].astype(np.float32)
-            row_ids = arrays["row_ids"]
+            # Caches without canonical_shas predate the dev/test/train
+            # methodology and can't support partition-aware filtering;
+            # fall through to rebuild.
+            if "canonical_shas" not in arrays.files:
+                log.info("threshold score cache lacks canonical_shas; rebuilding for partition-aware calibration")
+            else:
+                labels = arrays["labels"].astype(np.float32)
+                row_ids = arrays["row_ids"]
             cache_samples = int(arrays["corpus_samples"][()]) if "corpus_samples" in arrays.files else int(len(labels))
             cache_malware = int(arrays["corpus_malware"][()]) if "corpus_malware" in arrays.files else int(np.sum(labels == 1))
             cache_benign = int(arrays["corpus_benign"][()]) if "corpus_benign" in arrays.files else int(np.sum(labels == 0))
@@ -184,13 +190,15 @@ def _score_labeled_corpus(
                             path=str(path),
                             score=int(score),
                             label=int(label),
+                            canonical_sha256=str(canonical),
                         )
-                        for row_id, sha256, path, score, label in zip(
+                        for row_id, sha256, path, score, label, canonical in zip(
                             arrays["row_ids"],
                             arrays["sha256"],
                             arrays["paths"],
                             arrays["scores"],
                             arrays["labels"],
+                            arrays["canonical_shas"],
                             strict=True,
                         )
                     ]
@@ -216,22 +224,30 @@ def _score_labeled_corpus(
             max_id=max_id,
         ))
     else:
-        row_metadata = [
-            (row_id, sha256, path, score, label)
-            for row_id, sha256, path, score, label in data.stream_labeled_metadata_full(
-                db_path,
-                path_substr=path_substr,
-                min_score=min_score,
-                max_score=max_score,
-                limit=limit,
-                max_id=max_id,
-            )
-        ]
+        row_metadata = list(data.stream_labeled_metadata_full(
+            db_path,
+            path_substr=path_substr,
+            min_score=min_score,
+            max_score=max_score,
+            limit=limit,
+            max_id=max_id,
+        ))
     if size_aware_batches:
         log.info("threshold scoring uses size-aware batch packing")
+    # Tuple shape:
+    #   stream_labeled_metadata_full      -> (row_id, sha256, path, score, label, canonical)
+    #   ..._with_size                     -> (row_id, sha256, path, score, label, json_bytes, canonical)
+    # In both cases, canonical_sha256 is the LAST element.
     samples = [
-        ScoredSample(row_id=row_id, sha256=sha256, path=path, score=score, label=label)
-        for row_id, sha256, path, score, label, *_json_bytes in row_metadata
+        ScoredSample(
+            row_id=row[0],
+            sha256=row[1],
+            path=row[2],
+            score=row[3],
+            label=row[4],
+            canonical_sha256=row[-1],
+        )
+        for row in row_metadata
     ]
     if not samples:
         raise ValueError("no samples matched the requested filters")
@@ -348,6 +364,7 @@ def _score_labeled_corpus(
             scores=np.array([sample.score for sample in samples], dtype=np.int32),
             labels=y.astype(np.int8),
             probs=probs.astype(np.float32),
+            canonical_shas=np.array([sample.canonical_sha256 or sample.sha256 for sample in samples]),
             corpus_samples=np.array(len(samples), dtype=np.int64),
             corpus_malware=np.array(int(np.sum(y == 1)), dtype=np.int64),
             corpus_benign=np.array(int(np.sum(y == 0)), dtype=np.int64),

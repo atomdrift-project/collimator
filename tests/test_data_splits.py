@@ -1,11 +1,13 @@
-"""Tests for deterministic train/test splitting via canonical_sha256.
+"""Tests for deterministic three-way splitting via canonical_sha256.
 
-The split rule is simple and reproducible:
+Split rule:
 
-    is_test = int(canonical_sha256[-2:], 16) < TEST_BUCKET_MAX   (32/256 = 12.5%)
+    test:  byte < TEST_BUCKET_MAX                       (12.5%)
+    dev:   TEST_BUCKET_MAX <= byte < DEV_BUCKET_MAX     (12.5%)
+    train: byte >= DEV_BUCKET_MAX                       (75%)
 
 canonical_sha256 is the lexicographic minimum SHA256 across a sample and
-all its embedded files (pre-computed by hopper).  This ensures archives
+all its embedded files (pre-computed by hopper). This ensures archives
 sharing an inner file always land in the same partition.
 """
 
@@ -14,7 +16,14 @@ from __future__ import annotations
 import json
 import sqlite3
 
-from collimator.data import TEST_BUCKET_MAX, is_test_sample, stream_partitioned_metadata_grouped
+from collimator.data import (
+    DEV_BUCKET_MAX,
+    TEST_BUCKET_MAX,
+    is_dev_sample,
+    is_test_sample,
+    partition_of,
+    stream_partitioned_metadata_grouped,
+)
 from collimator.demo import create_demo_db
 
 
@@ -109,12 +118,39 @@ def test_test_bucket_approximately_12_percent() -> None:
     assert TEST_BUCKET_MAX / 256 == 0.125
 
 
+def test_dev_bucket_approximately_12_percent() -> None:
+    """~12.5% of SHA256 space falls in the dev bucket."""
+    assert DEV_BUCKET_MAX == 64
+    assert (DEV_BUCKET_MAX - TEST_BUCKET_MAX) / 256 == 0.125
+
+
+def test_partitions_are_disjoint() -> None:
+    """Every byte falls in exactly one of test/dev/train."""
+    for last_byte in range(256):
+        sha = "ff" * 31 + f"{last_byte:02x}"
+        partition = partition_of(sha)
+        assert partition in ("train", "dev", "test")
+        # Boolean predicates agree with partition_of.
+        assert is_test_sample(sha) == (partition == "test")
+        assert is_dev_sample(sha) == (partition == "dev")
+
+
+def test_partition_of_boundaries() -> None:
+    """Boundary bytes route to expected partitions."""
+    assert partition_of("ff" * 31 + "00") == "test"
+    assert partition_of("ff" * 31 + "1f") == "test"
+    assert partition_of("ff" * 31 + "20") == "dev"
+    assert partition_of("ff" * 31 + "3f") == "dev"
+    assert partition_of("ff" * 31 + "40") == "train"
+    assert partition_of("ff" * 32) == "train"
+
+
 def test_canonical_sha256_determines_partition(tmp_path) -> None:
     """Samples sharing a canonical_sha256 must land in the same partition.
 
     Two archives with different outer SHA256s but the same canonical_sha256
     (because they share an embedded file that is the lex-min) get identical
-    is_test assignments.
+    partition assignments.
     """
     db_path = tmp_path / "samples.db"
     # canonical = min(outer, embedded...).  Both samples share embedded "11"*32
@@ -137,22 +173,22 @@ def test_canonical_sha256_determines_partition(tmp_path) -> None:
 
     rows = list(stream_partitioned_metadata_grouped(db_path))
     assert len(rows) == 2
-    # Both must have the same is_test since they share canonical_sha256.
+    # Both must end up in the same partition since they share canonical_sha256.
     assert rows[0][2] == rows[1][2]
 
 
 def test_partitioned_metadata_labels(tmp_path) -> None:
-    """stream_partitioned_metadata_grouped yields correct labels and is_test flags."""
+    """stream_partitioned_metadata_grouped yields correct labels and partition tags."""
     db_path = tmp_path / "test.db"
     create_demo_db(db_path, n_benign=20, n_malware=20, seed=42)
 
     rows = list(stream_partitioned_metadata_grouped(db_path))
     assert len(rows) == 40
 
-    # Every row should have (row_id, label, is_test, canonical_sha256, score).
-    for row_id, label, is_test, canonical, score in rows:
+    # Every row should have (row_id, label, partition, canonical_sha256, score).
+    for row_id, label, partition, canonical, score in rows:
         assert isinstance(row_id, int)
         assert label in (0, 1)
-        assert isinstance(is_test, bool)
+        assert partition in ("train", "dev", "test")
         assert isinstance(canonical, str)
         assert isinstance(score, int)

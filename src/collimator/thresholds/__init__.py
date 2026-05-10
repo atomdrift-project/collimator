@@ -129,6 +129,7 @@ class ScoredSample:
     path: str
     score: int
     label: int
+    canonical_sha256: str = ""  # for partition_of() lookup at consumption time
 
 
 def _batched(items, batch_size: int):

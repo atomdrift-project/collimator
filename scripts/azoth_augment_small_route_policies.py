@@ -130,16 +130,18 @@ def _fetch_family_benigns(
     """Fetch test-bucket benigns of the given filetypes from hopper.  Returns
     (row_id, label=0) tuples capped at ``max_pool_benigns`` via reservoir
     sampling so the augmented pool stays bounded even on big filegroups."""
-    # Reuse data.stream_partitioned_metadata_grouped: it streams test/train
-    # partitioned rows and lets us filter to test-bucket benigns only.
+    # Reuse data.stream_partitioned_metadata_grouped: it streams partitioned
+    # rows. We sample dev-partition benigns to augment policy search (test
+    # remains locked for headline reporting; dev is the held-out slice the
+    # policy is allowed to inspect).
     benigns: list[tuple[int, int]] = []
     seen = 0
-    for row_id, label, is_test, _group_id, _score in data.stream_partitioned_metadata_grouped(
+    for row_id, label, partition, _group_id, _score in data.stream_partitioned_metadata_grouped(
         db_path,
         max_id=max_id,
         file_types=tuple(family_filetypes),
     ):
-        if not is_test or label != 0:
+        if partition != "dev" or label != 0:
             continue
         seen += 1
         if len(benigns) < max_pool_benigns:
