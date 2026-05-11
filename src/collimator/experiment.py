@@ -407,6 +407,27 @@ def sample_partitioned_reports(
         (True, 0): 0,
     }
 
+    # Optional OOF fold exclusion. When EXP_OOF_FOLD_EXCLUDE is set to "0"
+    # or "1", drop rows whose canonical-hash-derived oof_fold matches the
+    # value. Used for k=2 out-of-fold training: a single training run that
+    # excludes one of the two halves of train+dev becomes one of the two
+    # fold models; the held-out half then gets OOF predictions from this
+    # model for downstream calibration. Test partition is excluded as
+    # always; OOF fold logic only affects train+dev rows.
+    oof_exclude_str = os.getenv("EXP_OOF_FOLD_EXCLUDE", "").strip()
+    oof_exclude: int | None = None
+    if oof_exclude_str:
+        try:
+            value = int(oof_exclude_str)
+        except ValueError:
+            log.warning("ignoring invalid EXP_OOF_FOLD_EXCLUDE=%r (need 0 or 1)", oof_exclude_str)
+        else:
+            if value in (0, 1):
+                oof_exclude = value
+                log.info("OOF k=2: excluding fold %d from training", value)
+            else:
+                log.warning("ignoring EXP_OOF_FOLD_EXCLUDE=%d (need 0 or 1)", value)
+
     for row_id, label, partition, group_id, score in data.stream_partitioned_metadata_grouped(
         db_path,
         limit=total_limit,
@@ -418,6 +439,8 @@ def sample_partitioned_reports(
         # train + dev only — dev fills the historical "is_test" eval-slice
         # role for autocollie's selection.
         if partition == "test":
+            continue
+        if oof_exclude is not None and data.oof_fold_of(group_id) == oof_exclude:
             continue
         is_test = partition == "dev"
         sample = ExperimentSample(row_id=row_id, label=label, is_test=is_test, group_id=group_id, score=score)

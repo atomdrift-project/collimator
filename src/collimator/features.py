@@ -3478,13 +3478,19 @@ def _weighted_metadata_batches(
     """Yield metadata batches capped by row count and estimated JSON bytes."""
     if not items:
         return
-    if max_weight <= 0 or not any(len(item) > 5 and int(item[5]) > 0 for item in items):
+    # Same shape detection as in extract_labeled_metadata_from_db_batches_unordered:
+    # row[5] is json_bytes (int) on the with_size variant, canonical_sha256
+    # (str) on the regular variant. isinstance gates the integer path.
+    if max_weight <= 0 or not any(
+        len(item) > 5 and isinstance(item[5], int) and item[5] > 0
+        for item in items
+    ):
         yield from _batched(items, max_items)
         return
     batch: list[LabeledMetadata] = []
     weight = 0
     for item in items:
-        item_weight = int(item[5]) if len(item) > 5 else 0
+        item_weight = int(item[5]) if len(item) > 5 and isinstance(item[5], int) else 0
         if batch and (len(batch) >= max_items or weight + item_weight > max_weight):
             yield batch
             batch = []
@@ -3933,7 +3939,14 @@ def extract_labeled_metadata_from_db_batches_unordered(
     nw = resolve_worker_count(n_workers)
     eff_batch_size = batch_size if batch_size is not None and batch_size > 0 else _feature_batch_size(nw)
     max_batch_bytes = int(os.getenv("COLLIMATOR_THRESHOLD_BATCH_BYTES", str(16 * 1024 * 1024)))
-    sized = any(len(row) > 5 and int(row[5]) > 0 for row in row_metadata)
+    # Size-aware batching is enabled iff a row carries an int json_bytes
+    # at index 5. Tuple shapes:
+    #   stream_labeled_metadata_full           -> 6-tuple, row[5] is canonical_sha256 (str)
+    #   stream_labeled_metadata_full_with_size -> 7-tuple, row[5] is json_bytes (int), row[6] is canonical_sha256
+    sized = any(
+        len(row) > 5 and isinstance(row[5], int) and row[5] > 0
+        for row in row_metadata
+    )
     log.info(
         "unordered DB-backed feature extraction: %d rows, %d workers, batch_size=%d%s",
         len(row_metadata),

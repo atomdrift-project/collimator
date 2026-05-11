@@ -24,8 +24,13 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
+import sys
 from pathlib import Path
 from typing import Any
+
+# Make sibling scripts importable (e.g., azoth_calibrate_ensemble for GPD tail).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import numpy as np
 from sklearn.isotonic import IsotonicRegression
@@ -47,15 +52,71 @@ LOG = logging.getLogger("compute_routed_metrics")
 DEFAULT_LEVEL = 5
 
 
-def _metrics(labels: np.ndarray, scores: np.ndarray) -> dict[str, float]:
+def _recall_at_fpr_per_million(
+    labels: np.ndarray, scores: np.ndarray, target_per_million: float,
+) -> float:
+    """Recall achieved at the threshold that produces ``target_per_million``
+    benign hits per million on this set.
+
+    Operationally: the threshold is the (1 − q×10⁻⁶) quantile of benign
+    scores; recall is the fraction of malware ranked above it. Headline
+    deployment metric for security engineers — "if I budget q FP per
+    million benigns, what fraction of malware do I catch?" Bypasses the
+    F1 / PR-AUC summarization to give a single operating-point number.
+
+    When the benign sample is too small to resolve q empirically
+    (``n_benign × q × 10⁻⁶ < 1``), the threshold is recovered from a
+    GPD tail fit on the upper benign scores — same observation-based
+    extrapolation the L-tier thresholds use. Returns NaN only when the
+    GPD fit also fails or the route has no malware/benign rows.
+    """
+    benign_mask = labels == 0
+    malware_mask = labels == 1
+    n_benign = int(np.sum(benign_mask))
+    n_malware = int(np.sum(malware_mask))
+    if n_benign == 0 or n_malware == 0:
+        return float("nan")
+    p_target = target_per_million / 1_000_000.0
+    if p_target <= 0:
+        return float("nan")
+    benign_scores = scores[benign_mask].astype(np.float64)
+    if n_benign * p_target >= 1.0:
+        sorted_benign = np.sort(benign_scores)
+        n_allowed = int(np.floor(n_benign * p_target))
+        threshold = float(sorted_benign[n_benign - n_allowed - 1])
+    else:
+        # Below empirical floor — extrapolate via GPD on the upper tail.
+        # Same helper the calibrate path uses for strict L tiers.
+        try:
+            from azoth_calibrate_ensemble import _gpd_tail_threshold  # noqa: PLC0415
+        except ImportError:
+            return float("nan")
+        gpd = _gpd_tail_threshold(benign_scores, target_per_million)
+        if gpd is None:
+            return float("nan")
+        threshold = float(gpd[0])
+    hits = int(np.sum(scores[malware_mask] >= threshold))
+    return float(hits / n_malware)
+
+
+def _metrics(
+    labels: np.ndarray, scores: np.ndarray, *, with_ci: bool = True,
+) -> dict[str, float]:
     """ROC AUC, PR AUC (= average precision), F1 (at F1-optimum threshold),
-    and F1 at threshold=0.5 for cross-comparison stability.
+    F1 at threshold=0.5 for cross-comparison stability, and recall@3FP/M
+    (the headline deployment metric: how many malware does this route catch
+    at a budget of 3 false positives per million benigns).
 
     NaN scores are dropped from both arrays before scoring — they correspond
     to routes that didn't evaluate the row (e.g., a filegroup specialist on a
     file outside its group). The deployed runtime would have fallen back to
     general for such files; the per-route metric here is just "how the
     specialist did on the rows it actually saw."
+
+    When ``with_ci`` is True, attaches 95% bootstrap CIs as
+    ``<metric>_ci_low`` / ``<metric>_ci_high`` for ROC AUC, PR AUC, F1, and
+    recall@3FP/M. Skipped automatically on degenerate inputs (single-class
+    or n<50) where bootstrap doesn't produce stable estimates.
     """
     valid = ~np.isnan(scores)
     if valid.sum() < scores.size:
@@ -65,6 +126,7 @@ def _metrics(labels: np.ndarray, scores: np.ndarray) -> dict[str, float]:
     n_neg = int((labels == 0).sum())
     if n_pos == 0 or n_neg == 0:
         return {"roc_auc": 0.0, "pr_auc": 0.0, "f1": 0.0, "f1_at_05": 0.0,
+                "recall_at_3fp_per_million": float("nan"),
                 "n_evaluated": int(labels.size)}
     roc = float(roc_auc_score(labels, scores))
     ap = float(average_precision_score(labels, scores))
@@ -76,8 +138,48 @@ def _metrics(labels: np.ndarray, scores: np.ndarray) -> dict[str, float]:
         f1_curve = np.where(denom > 0, 2 * precision * recall / denom, 0.0)
     best_f1 = float(np.max(f1_curve)) if f1_curve.size else 0.0
     f1_05 = float(f1_score(labels, (scores >= 0.5).astype(np.int8), zero_division=0))
-    return {"roc_auc": roc, "pr_auc": ap, "f1": best_f1, "f1_at_05": f1_05,
-            "n_evaluated": int(labels.size)}
+    recall_3fpm = _recall_at_fpr_per_million(labels, scores, 3.0)
+    out = {"roc_auc": roc, "pr_auc": ap, "f1": best_f1, "f1_at_05": f1_05,
+           "recall_at_3fp_per_million": recall_3fpm,
+           "n_evaluated": int(labels.size)}
+    if with_ci and labels.size >= 50 and n_pos >= 5 and n_neg >= 5:
+        from collimator.stats import bootstrap_metric  # noqa: PLC0415
+        ci = bootstrap_metric(
+            labels, scores,
+            lambda y, s: float(roc_auc_score(y, s)) if len(np.unique(y)) > 1 else float("nan"),
+            n_resamples=200, seed=42, stratify=labels,
+        )
+        out["roc_auc_ci_low"], out["roc_auc_ci_high"] = ci["low"], ci["high"]
+        ci = bootstrap_metric(
+            labels, scores,
+            lambda y, s: float(average_precision_score(y, s)) if len(np.unique(y)) > 1 else float("nan"),
+            n_resamples=200, seed=42, stratify=labels,
+        )
+        out["pr_auc_ci_low"], out["pr_auc_ci_high"] = ci["low"], ci["high"]
+
+        def _f1_metric(y, s):
+            if len(np.unique(y)) <= 1:
+                return float("nan")
+            p, r, _ = precision_recall_curve(y, s)
+            d = p + r
+            with np.errstate(divide="ignore", invalid="ignore"):
+                fc = np.where(d > 0, 2 * p * r / d, 0.0)
+            return float(np.max(fc)) if fc.size else 0.0
+
+        ci = bootstrap_metric(labels, scores, _f1_metric, n_resamples=200, seed=42, stratify=labels)
+        out["f1_ci_low"], out["f1_ci_high"] = ci["low"], ci["high"]
+
+        def _recall_3fpm(y, s):
+            return _recall_at_fpr_per_million(y, s, 3.0)
+
+        if not math.isnan(recall_3fpm):
+            ci = bootstrap_metric(
+                labels, scores, _recall_3fpm,
+                n_resamples=200, seed=42, stratify=labels,
+            )
+            out["recall_at_3fp_per_million_ci_low"] = ci["low"]
+            out["recall_at_3fp_per_million_ci_high"] = ci["high"]
+    return out
 
 
 def _route_idx(route_names: np.ndarray) -> dict[str, int]:

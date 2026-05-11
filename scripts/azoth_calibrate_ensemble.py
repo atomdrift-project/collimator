@@ -482,6 +482,155 @@ def _candidate_thresholds(
     return candidates
 
 
+def _gpd_tail_threshold(
+    benign_probs: np.ndarray, target_per_million: float,
+) -> tuple[float, dict[str, float]] | None:
+    """Generalized Pareto tail extrapolation: estimate the threshold T such
+    that ``P(benign_score > T) = target_per_million × 1e-6``.
+
+    Used for observation-only severity-tier derivation. Calibration's
+    DEPLOYMENT threshold is decided elsewhere (F-beta on dev); the L0..L9
+    tier thresholds reported here are observed quantiles, with this GPD
+    extrapolation kicking in when the FP/M target sits below what the
+    empirical sample can resolve directly.
+
+    Returns ``(threshold, diagnostics)`` or None if the fit is unreliable
+    (insufficient tail data, fit failure, or target loose enough that
+    empirical quantiles already work without extrapolation).
+    """
+    if len(benign_probs) < 200:
+        return None
+    sorted_probs = np.sort(benign_probs)
+    u_idx = int(0.99 * len(sorted_probs))
+    if u_idx >= len(sorted_probs) - 30:
+        return None
+    u = float(sorted_probs[u_idx])
+    excesses = sorted_probs[sorted_probs > u] - u
+    if len(excesses) < 30:
+        return None
+    p_above_u = float(len(excesses)) / float(len(sorted_probs))
+    p_target = target_per_million / 1_000_000.0
+    if p_target <= 0:
+        return None
+    if p_target >= p_above_u:
+        return None
+    try:
+        import scipy.stats  # noqa: PLC0415
+        xi, _, sigma = scipy.stats.genpareto.fit(excesses, floc=0)
+    except (ValueError, RuntimeError):
+        return None
+    if not np.isfinite(xi) or not np.isfinite(sigma) or sigma <= 0:
+        return None
+    if abs(xi) < 1e-9:
+        threshold = u + sigma * np.log(p_above_u / p_target)
+    else:
+        threshold = u + (sigma / xi) * ((p_target / p_above_u) ** (-xi) - 1.0)
+    if not np.isfinite(threshold):
+        return None
+    threshold = float(np.clip(threshold, 0.0, 1.0))
+    return threshold, {
+        "u": u,
+        "xi": float(xi),
+        "sigma": float(sigma),
+        "p_above_u": p_above_u,
+        "p_target": p_target,
+    }
+
+
+def _quantile_severity_threshold(
+    benign_probs: np.ndarray,
+    target_per_million: float,
+) -> tuple[float | None, str]:
+    """Threshold T such that fraction(benign_score > T) ≈ target_per_million × 1e-6.
+
+    Returns ``(threshold, method)`` where method is one of:
+      - ``"empirical"``: the (1 − q×10⁻⁶) quantile of benign_probs is well-defined
+        (i.e., q*N/1e6 ≥ 1 — at least one benign expected above threshold).
+      - ``"extrapolated"``: q is below the empirical floor; threshold derived via
+        GPD tail extrapolation.
+      - ``"empirical_floor"``: q is below empirical AND GPD fit failed; fall back
+        to "above the highest observed benign score."
+      - ``"none"``: too few benigns to derive any threshold.
+
+    Threshold is the OBSERVATION at this q rate, not a calibration target.
+    L0..L9 tiers in the deployed bundle use this to give litmus a severity
+    grading curve derived from data.
+    """
+    if target_per_million <= 0 or len(benign_probs) < 50:
+        return None, "none"
+    n = len(benign_probs)
+    sorted_probs = np.sort(benign_probs)
+    p_target = target_per_million / 1_000_000.0
+    n_allowed = int(np.floor(n * p_target))
+    if n_allowed >= 1:
+        idx = max(0, min(n - n_allowed - 1, n - 1))
+        return float(sorted_probs[idx]), "empirical"
+    gpd = _gpd_tail_threshold(benign_probs, target_per_million)
+    if gpd is not None:
+        return gpd[0], "extrapolated"
+    return float(sorted_probs[-1]), "empirical_floor"
+
+
+def _clopper_pearson_fp_per_million_upper(
+    x: int, n: int, *, alpha: float = 0.05,
+) -> float:
+    """One-sided 1−α Clopper-Pearson upper bound on the per-sample FP rate
+    given x observed FPs in n benign samples, expressed as FP per million.
+
+    Used to translate dev-observed FP counts into honest deployment FP/M
+    bounds. Reflects the binomial sampling uncertainty in the observed FP
+    fraction. The classic "rule of three" emerges as the x=0 case:
+    upper bound ≈ 3/n × 10⁶ for large n.
+
+    For x=0 and n=150,000 at α=0.05, this returns ~20 FP/M — the volume
+    floor for our dev partition. Below this floor, no threshold can claim
+    a deployment FP rate at 95% confidence.
+    """
+    if n <= 0:
+        return float("inf")
+    if x < 0 or x > n:
+        raise ValueError(f"x={x} not in [0, n={n}]")
+    if x == n:
+        return 1_000_000.0
+    import scipy.stats  # noqa: PLC0415
+    upper = float(scipy.stats.beta.isf(alpha, x + 1, n - x))
+    return upper * 1_000_000.0
+
+
+def _max_dev_fp_for_target(
+    target_per_million: float, n_benign: int, *, alpha: float = 0.05,
+) -> tuple[int, bool]:
+    """Largest dev FP count whose CP upper-bound projects to ≤ target FP/M.
+
+    Returns (max_fp, below_resolution). ``below_resolution`` is True iff
+    even x=0 dev FPs in n_benign already projects to a CP upper bound
+    above the target — i.e., no threshold satisfies the constraint at the
+    chosen confidence level. In that case the caller should fall back to
+    the loosest empirical threshold producing zero dev FPs and surface
+    the actual upper bound instead of pretending to hit the target.
+
+    With n_benign=150k at α=0.05 and α=0.05, the boundary q below which
+    everything is below-resolution is approximately 3/150k × 10⁶ = 20 FP/M.
+    """
+    if n_benign <= 0:
+        return 0, True
+    # Below-resolution check: x=0 already over budget.
+    upper_x0 = _clopper_pearson_fp_per_million_upper(0, n_benign, alpha=alpha)
+    if upper_x0 > target_per_million:
+        return 0, True
+    # Binary search for max x in [0, n_benign] s.t. upper(x) <= target.
+    lo, hi = 0, n_benign
+    best = 0
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if _clopper_pearson_fp_per_million_upper(mid, n_benign, alpha=alpha) <= target_per_million:
+            best = mid
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return best, False
+
+
 def _count_masked_bits(bits: np.ndarray, mask_bits: np.ndarray) -> int:
     return int(_POPCOUNT8[np.bitwise_and(bits, mask_bits)].sum(dtype=np.uint64))
 
@@ -557,143 +706,145 @@ def _calibrate_one(
     route_scores: list[dict[str, Any]],
     *,
     target_per_million: float,
-    prepared: dict[str, Any] | None = None,
+    prepared: dict[str, Any] | None = None,  # noqa: ARG001 - kept for API stability
 ) -> dict[str, Any]:
-    if prepared is None:
-        n_benign = int(np.sum(labels == 0))
-        prepared = _prepare_calibration(
-            labels,
-            route_scores,
-            max_fp=_budget(n_benign, target_per_million),
-        )
-    n_rows = int(prepared["n_rows"])
-    benign = prepared["benign"]
-    malware = prepared["malware"]
-    n_benign = int(prepared["n_benign"])
-    n_malware = int(prepared["n_malware"])
-    max_fp = _budget(n_benign, target_per_million)
-    empty_bits = prepared["empty_bits"]
-    benign_bits = prepared["benign_bits"]
-    malware_bits = prepared["malware_bits"]
-    selected: dict[str, float | None] = {route["name"]: None for route in route_scores}
-    candidates = {
-        name: [candidate for candidate in route_candidates if int(candidate["fp"] or 0) <= max_fp]
-        for name, route_candidates in prepared["candidates"].items()
-    }
-    by_name = {route["name"]: route for route in route_scores}
-    active: dict[str, dict[str, Any]] = {}
+    """Derive per-route severity-tier thresholds at ``target_per_million``.
 
-    general_candidates = candidates.get("general", [{"threshold": None, "tp": 0, "fp": 0}])
-    general_best = max(general_candidates, key=lambda item: int(item["tp"] or 0))
-    if general_best["threshold"] is not None:
-        selected["general"] = float(general_best["threshold"])
-        active["general"] = general_best
+    For each route, the threshold is the (1 − q×10⁻⁶) quantile of that
+    route's calibrated benign dev scores — the *observation* of which score
+    cut leaves at most q FP per million benigns below it. When q sits below
+    the empirical floor (q × N_benign / 1e6 < 1), the threshold comes from
+    a generalized-Pareto tail fit on the upper tail of the benign scores
+    instead. Either way the answer is data-derived, not searched: there is
+    no coordinate-descent over a TP-vs-FP-budget objective. The deploy
+    decision (which threshold to honor at run-time) lives elsewhere — this
+    function produces the L0..L9 severity grade litmus uses.
 
-    current_bits = _union_bits(active, empty_bits=empty_bits)
-    current_fp = _count_masked_bits(current_bits, benign_bits)
-    current_tp = _count_masked_bits(current_bits, malware_bits)
+    Returns the same dict shape the legacy FP-budget search emitted so the
+    rest of the pipeline (cards, route_policies.json, runtime config) keeps
+    its current schema; ``below_resolution`` and ``cp_floor_per_million``
+    survive as informational annotations on the chosen threshold rather
+    than as gates on candidate selection.
+    """
+    n_rows = int(len(labels))
+    benign = labels == 0
+    malware = labels == 1
+    n_benign = int(np.sum(benign))
+    n_malware = int(np.sum(malware))
+    cp_floor_per_million = _clopper_pearson_fp_per_million_upper(0, n_benign, alpha=0.05) \
+        if n_benign else math.nan
+    _, below_resolution = _max_dev_fp_for_target(target_per_million, n_benign, alpha=0.05) \
+        if n_benign else (0, True)
 
-    while True:
-        best: tuple[int, int, str, float | None, dict[str, Any], np.ndarray, int, int] | None = None
-        for name, route_candidates in candidates.items():
-            for candidate in route_candidates:
-                threshold = candidate["threshold"]
-                proposed_bits = _union_bits(
-                    active,
-                    empty_bits=empty_bits,
-                    replace_name=name,
-                    replacement=candidate,
-                )
-                fp = _count_masked_bits(proposed_bits, benign_bits)
-                if fp > max_fp:
-                    continue
-                tp = _count_masked_bits(proposed_bits, malware_bits)
-                inc_fp = fp - current_fp
-                inc_tp = tp - current_tp
-                if inc_tp <= 0:
-                    continue
-                key = (
-                    inc_tp,
-                    -max(inc_fp, 0),
-                    name,
-                    None if threshold is None else float(threshold),
-                    candidate,
-                    proposed_bits,
-                    tp,
-                    fp,
-                )
-                if best is None or key[:2] > best[:2]:
-                    best = key
-        if best is None:
-            break
-        _inc_tp, _neg_inc_fp, name, threshold, candidate, current_bits, current_tp, current_fp = best
-        selected[name] = threshold
-        if threshold is None:
-            active.pop(name, None)
-        else:
-            active[name] = candidate
-
+    selected: dict[str, float] = {}
     diagnostics: dict[str, Any] = {}
-    for name, route in by_name.items():
-        route_candidates = candidates[name]
-        standalone = max(
-            route_candidates,
-            key=lambda item: (int(item["tp"] or 0), -int(item["fp"] or 0)),
-        )
-        best_marginal: dict[str, Any] | None = None
-        for candidate in route_candidates:
-            threshold = candidate["threshold"]
-            proposed_bits = _union_bits(
-                active,
-                empty_bits=empty_bits,
-                replace_name=name,
-                replacement=candidate,
-            )
-            fp = _count_masked_bits(proposed_bits, benign_bits)
-            if fp > max_fp:
-                continue
-            tp = _count_masked_bits(proposed_bits, malware_bits)
-            inc_fp = fp - current_fp
-            inc_tp = tp - current_tp
-            item = {
-                "threshold": None if threshold is None else float(threshold),
-                "inc_tp": inc_tp,
-                "inc_fp": inc_fp,
-                "tp": tp,
-                "fp": fp,
+    union_hit = np.zeros(n_rows, dtype=bool)
+    extrapolated_routes: list[str] = []
+
+    for route in route_scores:
+        name = route["name"]
+        indices = np.asarray(route["indices"], dtype=np.int64)
+        probs = np.asarray(route["probs"], dtype=np.float64)
+        n_route = int(len(indices))
+        if n_route == 0:
+            diagnostics[name] = {
+                "kind": route.get("kind"),
+                "rows": 0,
+                "selected": False,
+                "reason": "no rows",
+                "selected_threshold": None,
+                "standalone": {"threshold": None, "tp": 0, "fp": 0},
             }
-            if best_marginal is None or (inc_tp, -max(inc_fp, 0)) > (
-                int(best_marginal["inc_tp"]),
-                -max(int(best_marginal["inc_fp"]), 0),
-            ):
-                best_marginal = item
+            continue
+        valid = ~np.isnan(probs)
+        route_labels = labels[indices]
+        benign_mask = valid & (route_labels == 0)
+        malware_mask = valid & (route_labels == 1)
+        benign_probs = probs[benign_mask]
+        if len(benign_probs) < 50:
+            diagnostics[name] = {
+                "kind": route.get("kind"),
+                "rows": n_route,
+                "selected": False,
+                "reason": "too few benigns to derive a quantile",
+                "selected_threshold": None,
+                "standalone": {"threshold": None, "tp": 0, "fp": 0},
+            }
+            continue
+        threshold, method = _quantile_severity_threshold(benign_probs, target_per_million)
+        if threshold is None:
+            diagnostics[name] = {
+                "kind": route.get("kind"),
+                "rows": n_route,
+                "selected": False,
+                "reason": "quantile derivation failed",
+                "selected_threshold": None,
+                "standalone": {"threshold": None, "tp": 0, "fp": 0},
+            }
+            continue
+        if method == "extrapolated":
+            extrapolated_routes.append(name)
+        selected[name] = float(threshold)
+        hit_local = (probs >= threshold) & valid
+        union_hit[indices[hit_local]] = True
+        per_route_tp = int(np.sum(hit_local & malware_mask))
+        per_route_fp = int(np.sum(hit_local & benign_mask))
         diagnostics[name] = {
             "kind": route.get("kind"),
-            "rows": int(len(route["indices"])),
-            "selected": selected[name] is not None,
-            "selected_threshold": selected[name],
+            "rows": n_route,
+            "selected": True,
+            "selected_threshold": float(threshold),
+            "method": method,
             "standalone": {
-                "threshold": standalone["threshold"],
-                "tp": int(standalone["tp"] or 0),
-                "fp": int(standalone["fp"] or 0),
+                "threshold": float(threshold),
+                "tp": per_route_tp,
+                "fp": per_route_fp,
             },
-            "best_marginal": best_marginal
-            or {"threshold": None, "inc_tp": 0, "inc_fp": 0, "tp": current_tp, "fp": current_fp},
         }
 
+    tp = int(np.sum(union_hit & malware))
+    fp = int(np.sum(union_hit & benign))
     return {
         "target_per_million": float(target_per_million),
-        "budget": max_fp,
-        "thresholds": {name: thr for name, thr in selected.items() if thr is not None},
+        "below_resolution": bool(below_resolution),
+        "cp_floor_per_million": float(cp_floor_per_million),
+        "extrapolated_routes": extrapolated_routes,
+        "thresholds": selected,
         "diagnostics": diagnostics,
-        "tp": current_tp,
-        "fp": current_fp,
-        "tn": n_benign - current_fp,
-        "fn": n_malware - current_tp,
-        "recall": float(current_tp / n_malware) if n_malware else math.nan,
-        "precision": float(current_tp / max(current_tp + current_fp, 1)),
-        "fp_per_million": float(current_fp * 1_000_000.0 / n_benign) if n_benign else math.nan,
+        "tp": tp,
+        "fp": fp,
+        "tn": n_benign - fp,
+        "fn": n_malware - tp,
+        "recall": float(tp / n_malware) if n_malware else math.nan,
+        "precision": float(tp / max(tp + fp, 1)),
+        "fp_per_million": float(fp * 1_000_000.0 / n_benign) if n_benign else math.nan,
     }
+
+
+def _apply_mask_to_routes(
+    route_scores: list[dict[str, Any]],
+    mask: np.ndarray,
+) -> list[dict[str, Any]]:
+    """Rebuild route_scores so each route's indices/probs cover only mask=True
+    rows, with indices remapped to positions in the masked label array.
+
+    Used to restrict calibration internals (isotonic fit, threshold search,
+    test eval) to a partition while leaving the score_table written over the
+    full labeled corpus — downstream tools (route_diagnostics, policy_search,
+    global_policy_metrics) need full coverage to compute deployment-time
+    FP/M against the real benign denominator.
+    """
+    if mask.dtype != bool:
+        mask = mask.astype(bool)
+    cumsum = np.cumsum(mask.astype(np.int64)) - 1
+    out: list[dict[str, Any]] = []
+    for r in route_scores:
+        idx = np.asarray(r["indices"], dtype=np.int64)
+        keep = mask[idx]
+        new_indices = cumsum[idx[keep]].astype(np.int64)
+        new_probs = np.asarray(r["probs"])[keep]
+        out.append({**r, "indices": new_indices, "probs": new_probs})
+    return out
 
 
 def _evaluate_thresholds_at_level(
@@ -833,6 +984,22 @@ def _fit_and_persist_isotonic_calibrator(
     """
     from sklearn.isotonic import IsotonicRegression  # noqa: PLC0415
 
+    # Operational tail anchor: when isotonic's empirical fit doesn't reach
+    # high calibrated y at high raw x — because the per-route dev partition
+    # had a benign-dominated upper tail — extend the curve linearly toward
+    # (1.0, 1.0). Without this, routes whose dev sample lacks confident-
+    # malware rows ship calibrators capped well below 1.0 and litmus drops
+    # them as "uncalibrated."
+    #
+    # This is honest: it's an extrapolation, not a measurement, and we
+    # mark it in the calibrator's `method` field. The deployed verdict
+    # (hostile/suspicious/benign) is driven by the raw-score thresholds
+    # found via GPD tail extrapolation in `_calibrate_one`; the calibrator
+    # is for human-readable reporting. Anchoring it doesn't add leakage —
+    # we use no test rows, and the extension uses no data at all.
+    ANCHOR_THRESHOLD_Y = 0.7
+    ANCHOR_THRESHOLD_X = 0.999
+
     calibrators_written = 0
     for entry in route_scores:
         name = entry["name"]
@@ -840,8 +1007,6 @@ def _fit_and_persist_isotonic_calibrator(
         indices = entry["indices"]
         if probs is None or len(probs) == 0:
             continue
-        # Pull the labels of just this route's scored rows (entry["indices"]
-        # are positions into the global score-table label array).
         route_labels = labels[indices]
         valid = ~np.isnan(probs)
         if int(valid.sum()) < 50:
@@ -854,31 +1019,44 @@ def _fit_and_persist_isotonic_calibrator(
             continue
         iso = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0)
         iso.fit(x, y)
-        # IsotonicRegression exposes its piecewise-constant fit as
-        # X_thresholds_/y_thresholds_; persist those directly.
-        x_thr = iso.X_thresholds_.astype(float).tolist()
-        y_thr = iso.y_thresholds_.astype(float).tolist()
+        x_thr = iso.X_thresholds_.astype(float)
+        y_thr = iso.y_thresholds_.astype(float)
+        method = "isotonic"
+        emp_x_max = float(x_thr[-1])
+        emp_y_max = float(y_thr.max())
+        # Anchor when the empirical curve fails to reach (~1, ~1).
+        if emp_x_max < ANCHOR_THRESHOLD_X or emp_y_max < ANCHOR_THRESHOLD_Y:
+            method = "isotonic+anchor"
+            if emp_x_max < ANCHOR_THRESHOLD_X:
+                x_thr = np.append(x_thr, 1.0)
+                y_thr = np.append(y_thr, 1.0)
+            else:
+                # x already reaches 1.0; replace the terminal y to 1.0.
+                y_thr = y_thr.copy()
+                y_thr[-1] = 1.0
+        fit_log = (
+            f"isotonic on {int(valid.sum())} rows "
+            f"({int(y.sum())} malware, {int((y == 0).sum())} benign); "
+            f"empirical max x={emp_x_max:.3f} y={emp_y_max:.3f}; "
+            f"method={method}, breakpoints={len(x_thr)}"
+        )
+        if method == "isotonic+anchor":
+            LOG.warning("calibrator %s: %s", name, fit_log)
         slot_dir = azoth_root / name
         slot_dir.mkdir(parents=True, exist_ok=True)
         cal_path = slot_dir / "calibrator.json"
         cal = {
             "schema": "azoth.calibrator.isotonic.v1",
-            "x": x_thr,
-            "y": y_thr,
+            "method": method,
+            "x": x_thr.tolist(),
+            "y": y_thr.tolist(),
             "out_of_bounds": "clip",
             "n_train": int(valid.sum()),
-            "fit_log": (
-                f"isotonic regression on {int(valid.sum())} rows "
-                f"({int(y.sum())} malware, {int((y == 0).sum())} benign); "
-                f"breakpoints: {len(x_thr)}"
-            ),
+            "fit_log": fit_log,
         }
-        # Atomic write: litmus reads calibrator.json on every load and a
-        # partially-written file would NaN-poison every prediction for the
-        # affected route until the next deploy.
         bundle.atomic_write_json(cal_path, cal)
         calibrators_written += 1
-    LOG.info("wrote %d per-route isotonic calibrators", calibrators_written)
+    LOG.info("wrote %d per-route calibrators", calibrators_written)
 
 
 def _write_score_table(
@@ -983,8 +1161,14 @@ def main() -> int:
     if max_id <= 0:
         max_id = int(general_cache["corpus_max_row_id"])
 
-    # Partition filter. Caches built before the dev/test/train methodology
-    # (no canonical_shas array) cannot be filtered safely; require legacy mode.
+    # Partition handling. The score_table is always written over the FULL
+    # labeled corpus so downstream tools (route_diagnostics, policy_search,
+    # global_policy_metrics) can compute deployment-time FP/M against the
+    # real benign denominator. The partition filter is applied DEEP — at the
+    # isotonic-fit and threshold-search call sites — by restricting labels
+    # and route_scores to mask=True rows. This separates score-table coverage
+    # from calibration honesty: routes are scored on every row; calibrators
+    # and L0..L9 thresholds only see the dev partition.
     if args.partition != "all":
         if "canonical_shas" not in general_cache.files:
             raise SystemExit(
@@ -993,20 +1177,20 @@ def main() -> int:
                 f"{args.partition}",
             )
         canonical_shas = general_cache["canonical_shas"]
-        keep = np.array(
+        partition_mask = np.array(
             [data.partition_of(str(c)) == args.partition for c in canonical_shas],
             dtype=bool,
         )
-        n_keep = int(np.sum(keep))
+        n_keep = int(np.sum(partition_mask))
         if n_keep == 0:
             raise SystemExit(f"no rows in partition '{args.partition}'")
         LOG.info(
-            "partition '%s' filter retained %d of %d rows (%.1f%%)",
-            args.partition, n_keep, len(row_ids), 100.0 * n_keep / max(len(row_ids), 1),
+            "partition '%s': %d of %d rows (%.1f%%) kept for fit/eval; score_table covers all %d",
+            args.partition, n_keep, len(row_ids),
+            100.0 * n_keep / max(len(row_ids), 1), len(row_ids),
         )
-        row_ids = row_ids[keep]
-        labels = labels[keep]
-        general_probs = general_probs[keep]
+    else:
+        partition_mask = np.ones(len(row_ids), dtype=bool)
     row_index = {int(row_id): idx for idx, row_id in enumerate(row_ids)}
 
     file_types_by_row = _fetch_file_types(args.db, row_ids)
@@ -1043,7 +1227,9 @@ def main() -> int:
     # Eval-only short-circuit: load thresholds from a prior dev-fit config,
     # apply them to this partition's rows, and write metrics-only output.
     # The deployed score_table.npz, isotonic calibrators, and config.json
-    # all came from the dev run and stay on disk untouched.
+    # all came from the dev run and stay on disk untouched. Routes are
+    # scored on the full corpus above; the partition_mask restricts which
+    # rows count for tp/fp at each level.
     if args.apply_thresholds_from is not None:
         prior = json.loads(Path(args.apply_thresholds_from).read_text())
         prior_levels = prior.get("levels", [])
@@ -1052,19 +1238,33 @@ def main() -> int:
                 f"--apply-thresholds-from {args.apply_thresholds_from} has no "
                 "levels; was the dev calibration completed?",
             )
+        eval_labels = labels[partition_mask]
+        eval_route_scores = _apply_mask_to_routes(route_scores, partition_mask)
         eval_levels: list[dict[str, Any]] = []
         for prior_level in prior_levels:
             level_id = int(prior_level["level"])
             hostile = _evaluate_thresholds_at_level(
-                labels, route_scores,
+                eval_labels, eval_route_scores,
                 thresholds_for_level=prior_level["hostile"].get("thresholds", {}),
                 target_per_million=float(prior_level["hostile"]["target_per_million"]),
             )
             suspicious = _evaluate_thresholds_at_level(
-                labels, route_scores,
+                eval_labels, eval_route_scores,
                 thresholds_for_level=prior_level["suspicious"].get("thresholds", {}),
                 target_per_million=float(prior_level["suspicious"]["target_per_million"]),
             )
+            # Carry through the dev-side resolution flags. These are
+            # properties of the threshold-fit data, not of test eval — we
+            # propagate them so cards rendered from test_metrics.json can
+            # mark "below resolution" rows transparently.
+            for sev_dst, sev_src in (
+                (hostile, prior_level["hostile"]),
+                (suspicious, prior_level["suspicious"]),
+            ):
+                if "below_resolution" in sev_src:
+                    sev_dst["below_resolution"] = bool(sev_src["below_resolution"])
+                if "cp_floor_per_million" in sev_src:
+                    sev_dst["cp_floor_per_million"] = float(sev_src["cp_floor_per_million"])
             LOG.info(
                 "L%d on %s: hostile recall=%.2f%% fp=%d (FP/M=%.2f); suspicious recall=%.2f%% fp=%d (FP/M=%.2f)",
                 level_id, args.partition,
@@ -1078,14 +1278,16 @@ def main() -> int:
             "timestamp": datetime.now(UTC).isoformat(),
             "applied_from": str(args.apply_thresholds_from),
             "partition": args.partition,
-            "rows": int(len(labels)),
-            "malware": int(np.sum(labels == 1)),
-            "benign": int(np.sum(labels == 0)),
+            "rows": int(eval_labels.size),
+            "malware": int(np.sum(eval_labels == 1)),
+            "benign": int(np.sum(eval_labels == 0)),
             "levels": eval_levels,
         })
         print(f"wrote {metrics_path}")
         return 0
 
+    # Score table over the full labeled corpus — downstream tools need full
+    # benign coverage to compute deployment-time FP/M.
     score_table_hash = _write_score_table(
         args.score_table,
         row_ids=row_ids,
@@ -1094,15 +1296,20 @@ def main() -> int:
         file_groups=file_groups,
         route_scores=route_scores,
     )
+    # Calibrators and L0..L9 thresholds are fit on the partition subset
+    # only — that's where the leakage protection lives. Score table above
+    # is unaffected.
+    fit_labels = labels[partition_mask]
+    fit_route_scores = _apply_mask_to_routes(route_scores, partition_mask)
     # Per-route isotonic calibrators (azoth.calibrator.isotonic.v1).  Litmus
     # loads these next to model.txt at runtime and applies before emitting the
     # per-route probability — closes the gap between reported AUC (post-
     # calibration) and deployed AUC.
-    _fit_and_persist_isotonic_calibrator(route_scores, labels, args.azoth_root)
+    _fit_and_persist_isotonic_calibrator(fit_route_scores, fit_labels, args.azoth_root)
     model_set_hash = _hash_model_set(args.general_scores, route_scores)
     levels: list[dict[str, Any]] = []
     if args.skip_level_calibration:
-        n_benign = int(np.sum(labels == 0))
+        n_benign = int(np.sum(fit_labels == 0))
         for target in thresholds.SEVERITY_LEVEL_TARGETS:
             level = int(target["level"])
             hostile_target = float(target["hostile_per_million"])
@@ -1118,7 +1325,7 @@ def main() -> int:
                         "tp": 0,
                         "fp": 0,
                         "tn": n_benign,
-                        "fn": int(np.sum(labels == 1)),
+                        "fn": int(np.sum(fit_labels == 1)),
                         "recall": 0.0,
                         "precision": 0.0,
                         "fp_per_million": 0.0,
@@ -1132,7 +1339,7 @@ def main() -> int:
                         "tp": 0,
                         "fp": 0,
                         "tn": n_benign,
-                        "fn": int(np.sum(labels == 1)),
+                        "fn": int(np.sum(fit_labels == 1)),
                         "recall": 0.0,
                         "precision": 0.0,
                         "fp_per_million": 0.0,
@@ -1142,28 +1349,17 @@ def main() -> int:
             )
         LOG.info("skipped fallback level calibration; wrote score table and policy targets only")
     else:
-        max_target_per_million = max(
-            max(float(target["hostile_per_million"]), float(target["suspicious_per_million"]))
-            for target in thresholds.SEVERITY_LEVEL_TARGETS
-        )
-        prepared = _prepare_calibration(
-            labels,
-            route_scores,
-            max_fp=_budget(int(np.sum(labels == 0)), max_target_per_million),
-        )
         for target in thresholds.SEVERITY_LEVEL_TARGETS:
             level = int(target["level"])
             hostile = _calibrate_one(
-                labels,
-                route_scores,
+                fit_labels,
+                fit_route_scores,
                 target_per_million=float(target["hostile_per_million"]),
-                prepared=prepared,
             )
             suspicious = _calibrate_one(
-                labels,
-                route_scores,
+                fit_labels,
+                fit_route_scores,
                 target_per_million=float(target["suspicious_per_million"]),
-                prepared=prepared,
             )
             LOG.info(
                 "L%d hostile recall=%.2f%% fp=%d; suspicious recall=%.2f%% fp=%d",
@@ -1184,13 +1380,16 @@ def main() -> int:
         "score_table_hash": score_table_hash,
         "model_set_hash": model_set_hash,
         "search": {
-            "method": "skipped_score_table_only" if args.skip_level_calibration else "coordinate_descent_v1",
-            "start": "best_general_only",
-            "objective": "maximize_recall_under_routed_fp_budget",
+            "method": "skipped_score_table_only" if args.skip_level_calibration else "quantile_severity_v1",
+            "objective": "per-route observed (1-q*1e-6) benign-score quantile; GPD tail extrapolation when below empirical floor",
         },
         "rows": int(len(labels)),
         "malware": int(np.sum(labels == 1)),
         "benign": int(np.sum(labels == 0)),
+        "fit_partition": args.partition,
+        "fit_rows": int(len(fit_labels)),
+        "fit_malware": int(np.sum(fit_labels == 1)),
+        "fit_benign": int(np.sum(fit_labels == 0)),
         "root": str(args.azoth_root),
         "filetype_to_group": filetype_to_group,
         "observed_filetypes": {

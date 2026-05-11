@@ -80,6 +80,23 @@ def partition_of(canonical_sha256: str) -> str:
     return "train"
 
 
+def oof_fold_of(canonical_sha256: str) -> int | None:
+    """Return the OOF fold (0 or 1) for non-test rows, or None for test.
+
+    For publication-quality calibration via k=2 out-of-fold predictions,
+    the train+dev partition (byte >= TEST_BUCKET_MAX) is split deterministically
+    into two halves on the second-to-last hex digit (parity of the next-to-
+    last byte). This is independent of the train/dev split, so each fold
+    contains roughly half of train rows and half of dev rows.
+
+    Test partition rows return None — they're never part of OOF calibration
+    and stay locked for headline reporting.
+    """
+    if int(canonical_sha256[-2:], 16) < TEST_BUCKET_MAX:
+        return None
+    return int(canonical_sha256[-4:-2], 16) & 1
+
+
 def _label_int(label: str) -> int:
     """Map hopper label string to int. 'bad' -> 1, everything else -> 0."""
     return 1 if label == "bad" else 0
@@ -301,15 +318,21 @@ def stream_samples(
     exclude_eval: bool = False,
     only_test: bool = False,
     only_dev: bool = False,
+    exclude_oof_fold: int | None = None,
     limit: int = 0,
 ) -> Iterator[Sample]:
     """Yield labeled samples from a hopper database.
 
     Filter flags (mutually exclusive families):
-      exclude_test=True   drop test rows; keep dev + train.
-      exclude_eval=True   drop test AND dev rows; training-only.
-      only_test=True      yield test rows only.
-      only_dev=True       yield dev rows only.
+      exclude_test=True       drop test rows; keep dev + train.
+      exclude_eval=True       drop test AND dev rows; training-only.
+      only_test=True          yield test rows only.
+      only_dev=True           yield dev rows only.
+      exclude_oof_fold=N      drop test rows AND drop train+dev rows whose
+                              ``oof_fold_of`` equals N. Used for k=2 OOF:
+                              setting it to 0 trains on fold 1 only; the
+                              held-out fold 0 rows then get OOF predictions
+                              from this model.
     Default yields every labeled row.
     """
     query = _TRAINABLE_QUERY
@@ -327,6 +350,11 @@ def stream_samples(
                 continue
             if only_dev and partition != "dev":
                 continue
+            if exclude_oof_fold is not None:
+                if partition == "test":
+                    continue
+                if oof_fold_of(split_key) == exclude_oof_fold:
+                    continue
             raw = _cleave_json(cleave_result)
             if raw is None:
                 continue

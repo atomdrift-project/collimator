@@ -76,3 +76,23 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260510T235009-filetypes-pdf` — 2026-05-10T23:50:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0150e7d57f8d6f32` | pdf_train_leaves128_lr003 | ok | 0.5000 | 0.5000 | 0.6667 | 22 | [log](out/autocollie/runs/2026-05-10T23-56-04_20260510T235009-filetypes-pdf_pdf_train_leaves128_lr003.log) |
+| `e7901cc1cf3f796f` | pdf_hsn15_frac025 | ok | 0.5000 | 0.5000 | 0.6667 | 4 | [log](out/autocollie/runs/2026-05-10T23-56-26_20260510T235009-filetypes-pdf_pdf_hsn15_frac025.log) |
+| `bda87b6122045044` | pdf_add_textenc_kv | ok | 0.5000 | 0.5000 | 0.6667 | 4 | [log](out/autocollie/runs/2026-05-10T23-56-29_20260510T235009-filetypes-pdf_pdf_add_textenc_kv.log) |
+| `301a99765d0ed952` | pdf_abl_no_blindfold | ok | 0.5000 | 0.5000 | 0.6667 | 4 | [log](out/autocollie/runs/2026-05-10T23-56-34_20260510T235009-filetypes-pdf_pdf_abl_no_blindfold.log) |
+| `63d50e06de8730bd` | pdf_seed3_ensemble | ok | 0.5000 | 0.5000 | 0.6667 | 10 | [log](out/autocollie/runs/2026-05-10T23-56-38_20260510T235009-filetypes-pdf_pdf_seed3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_train_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — training-only sweep: larger leaves + lower LR for finer-grained splits on cached matrix
+- **`pdf_hsn15_frac025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — training-only: stronger hard-negative weight with modest fraction to sharpen FP tail
+- **`pdf_add_textenc_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — feature addition: text_encoding + kv_vocab on top of base, porting from best pdf_textenc_kv_deep_paths
+- **`pdf_abl_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — feature ablation: remove blindfold dropout to test if it contributes or just adds noise
+- **`pdf_seed3_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — seed search k=3 with save_all_seeds to average ensemble and reduce seed variance
+
+</details>
+

@@ -279,6 +279,100 @@ only) is pending — its absolute F1 will be slightly lower because
 the model has 14% less training data and no longer memorizes any
 evaluation rows.
 
+## Calibration design
+
+### Headline metrics
+
+- **PR AUC (`avg_precision`)** is the single ranking number we report
+  and tune against. It captures the recall-vs-precision trade-off
+  across the full operating range and is robust to the corpus's
+  imbalance toward benigns — unlike ROC AUC, which is dominated by
+  the easy benign mass on a 24:76 split.
+- **Recall@3FP/M** is the deployment-budget headline: the fraction of
+  malware ranked above the threshold at which dev would emit 3 FP per
+  million benigns. Single number, security-engineer-relevant.
+- **F-beta=2 threshold pick** at training time. The training step's
+  per-route `optimal_threshold` is chosen on dev to maximize F2, biasing
+  the deployed cut toward recall (β=2 ≈ recall weighted twice as much
+  as precision). EMBER's heritage F1-optimum is a class-balanced summary
+  not aligned with the security goal of catching malware at fixed
+  benign cost; F2 is.
+- **ROC AUC** stays in the table for academic continuity.
+
+### L0..L9 severity tiers
+
+The deployed bundle ships per-route, per-level thresholds for litmus's
+severity grade (L0 strictest … L9 loosest). These are *observation*-
+derived, not optimization targets:
+
+For each route and each level Lk's FP/M target qk, the threshold is
+
+```
+T = quantile_{1 - qk × 10⁻⁶}(benign_dev_scores_route)
+```
+
+i.e., the score cut at which roughly qk benigns per million sit above
+it on dev. When qk × N_benign / 10⁶ < 1 (the empirical floor — a single
+benign per million benigns is the smallest rate the sample can resolve
+directly), the threshold comes from a **generalized-Pareto fit** to the
+upper tail of the route's benign scores; the GPD inverse gives the
+score at which `P(benign > T) = qk × 10⁻⁶`. This earlier failed when
+GPD was used as a calibration *optimization target* — it produced
+thresholds above the malware distribution and zero-recall policies. As
+an observation (one extrapolated number per (route, level) used to
+*describe* the score curve, not chosen *to satisfy* a budget), it is
+the right tool: the same parametric assumption that fails to defend a
+deployment claim is fine for grading severity.
+
+**This is a deployment dial, not a model-quality result.** The headline
+PR AUC and recall@3FP/M numbers don't change with L; they describe the
+underlying ranking. L is litmus's choice of how strict the deploy
+threshold should be. Default deploy is L3 hostile / L5 suspicious.
+
+### Per-filetype dimension
+
+`azoth_route_policy_search.py` derives the same per-route quantile
+thresholds within each filetype's row slice. For small filetypes
+(e.g., ELF with ~14k benigns → empirical floor ~70 FP/M for resolvable
+qk) the strict-tier thresholds are GPD-extrapolated; this is reported
+in `route_policies.md` per (filetype, level). Per-filetype policy
+choice (general_only vs specialist_primary_with_escape, etc.) is then
+made by `_choose_best` on the resulting OR-rule recall/F1, with an
+inclusiveness tiebreaker that prefers specialist participation when
+metrics tie (so litmus's `contains_route` check loads the specialist).
+
+### Why not Clopper-Pearson budgets
+
+An earlier design used Clopper-Pearson exact upper bounds at α=0.05 to
+pick the largest dev FP count `x` whose 95% upper bound projected to ≤
+qk FP/M, then optimized a coordinate-descent search over per-route
+thresholds within that FP budget. We replaced it because:
+
+1. The CP floor (~20 FP/M for 150k dev benigns at α=0.05) collapsed
+   strict L tiers into below-resolution markers without giving litmus
+   meaningful severity discrimination at L0..L3.
+2. The search-under-budget objective conflated *which threshold to
+   deploy* with *what severity grade to assign*; severity grading
+   doesn't need a confidence claim, only a description of the score's
+   strictness.
+3. Splitting the two — F2 picks the deploy threshold, quantile observation
+   describes the severity grade — is cleaner than one objective trying
+   to do both jobs.
+
+CP bounds are still computed and reported (`cp_floor_per_million` per
+level) as honest annotations on how confidently any single observation
+generalizes to deployment, but they no longer gate threshold selection.
+
+### k=2 OOF for publication-grade calibration
+
+For the rare publication run we use k=2 out-of-fold predictions on
+train+dev (`make azoth-publish-train`). Effective benign sample becomes
+~2.4M; the empirical floor drops from one-per-150k-benigns to
+one-per-2.4M-benigns. Strict tiers become directly resolvable
+empirically (no GPD extrapolation needed below ~0.4 FP/M). Compute
+cost: ~16h elapsed. Not the daily cadence, but the path when a paper
+needs strict-tier numbers without extrapolation.
+
 ## Stated limitations
 
 These belong in any paper's Limitations section, not hidden:
@@ -294,12 +388,14 @@ These belong in any paper's Limitations section, not hidden:
   packing time, not corpus ingest time. Once hopper logs ingest
   timestamps and the corpus has enough time depth, time-blocked
   evaluation should be reported alongside random-split metrics.
-- **Strict-FP/M operating points are precision-floored.** At L0–L3
-  (FP/M ≤ 3) the expected FP count over the dev or test partition is
-  small (≤ 1 event), so bootstrap CIs on FP/M are wide regardless of
-  split structure. The constraint is total benign volume in the
-  corpus, not allocation. L3 is the recommended primary deployment
-  level; L0–L2 are reported with explicit wide CIs.
+- **Strict-tier severity thresholds (L0–L3) are GPD-extrapolated, not
+  empirical, on a single dev partition.** The per-route empirical
+  floor is ~6 FP/M (1 benign per 150k); below that, the deployed L
+  thresholds come from a generalized-Pareto fit to each route's
+  benign-score upper tail. The fit is honest as a *description* of
+  the score's strictness — not a confidence claim about deployment
+  FP rate. The k=2 OOF run drops the empirical floor to ~0.4 FP/M
+  and makes L0–L2 directly empirical when needed.
 - **Inter-route FP correlation is not separately measured.** The
   routed FP budget is owned by the OR over routes; correlated FPs
   across routes inflate the budget conservatively (worst case) but

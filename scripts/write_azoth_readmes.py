@@ -14,8 +14,13 @@ from typing import Any
 _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
+# scripts/ also isn't a package; pull the CP helper from the calibrate script.
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
 
 from collimator import bundle  # noqa: E402  — late import after sys.path patch
+from azoth_calibrate_ensemble import _clopper_pearson_fp_per_million_upper  # noqa: E402
 
 
 def _pct(value: Any) -> str:
@@ -141,52 +146,84 @@ HEADLINE_FILETYPES = (
 )
 
 
-def _ensemble_table(metrics: dict[str, Any], filetypes: tuple[str, ...]) -> list[str]:
-    """Headline table: routed ensemble per filetype, with EMBER 2024 delta where
-    a published reference exists.  ROC + PR + F1 columns; n_files for context.
+def _metric_cell(point: Any, low: Any, high: Any) -> str:
+    """Render `point [low, high]` for a metric with bootstrap CI; collapses to
+    bare point if CI fields aren't populated (small-corpus / single-class).
+    Returns "—" for missing or NaN points (e.g., recall@3FP/M when the route's
+    benign count is too small to resolve 3 per million directly)."""
+    if point is None:
+        return "—"
+    try:
+        numeric = float(point)
+    except (TypeError, ValueError):
+        return "—"
+    if math.isnan(numeric):
+        return "—"
+    base = _num(numeric, 4)
+    if low is None or high is None:
+        return base
+    return f"{base} [{_num(low, 4)}, {_num(high, 4)}]"
 
-    The ensemble column is the *deployed* reality: when a route's policy at
-    the headline operating level is `no_policy` (no allowed routes meet the
-    FP/M target), the ensemble doesn't fire — we mark it explicitly rather
-    than falling back to the specialist's standalone number, so the table
-    reflects what production actually does on that filetype.
+
+def _ensemble_table(
+    metrics: dict[str, Any], filetypes: tuple[str, ...], *, link_routes: bool = False,
+) -> list[str]:
+    """Headline table: routed ensemble per filetype.
+
+    Columns: filetype (linked to per-route card when ``link_routes=True``),
+    Mal/Ben, PR AUC + 95% CI (lead — recall-vs-precision summary, the
+    security-relevant ranking metric for an imbalanced corpus),
+    recall@3FP/M + 95% CI (deployment-budget headline: how many malware
+    we catch when we accept ≤3 benign FPs per million benigns), ROC AUC
+    + 95% CI (academic continuity), F1 + 95% CI, EMBER 2024 Δ. CIs come
+    from `collimator.stats.bootstrap_metric` and are written by
+    compute_routed_metrics; they collapse to bare point estimates on
+    routes too small (<50 rows or <5 of either class) for stable
+    bootstrap. ``recall@3FP/M`` is NaN for any filetype whose dev sample
+    is too small to resolve 3 FP/M directly (n_benign × 3e-6 < 1).
     """
     lines = [
-        "| File type | Files | Routed ROC AUC | Routed PR AUC | Routed F1 | EMBER ROC | Δ ROC | EMBER PR | Δ PR |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| File type | Mal / Ben | PR AUC [95% CI] | Recall@3FP/M [95% CI] | ROC AUC [95% CI] | F1 [95% CI] | Δ vs EMBER 2024 |",
+        "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for ft in filetypes:
         entry = metrics.get("filetypes", {}).get(ft)
         if not entry:
             continue
         ens = entry.get("ensemble") or {}
-        policy = entry.get("ensemble_policy")
         ember = _ember_for(ft, "specialist")
-        ember_roc = f"{ember['roc_auc']:.4f}" if ember else "—"
-        ember_pr = f"{ember['pr_auc']:.4f}" if ember else "—"
         ens_roc = ens.get("roc_auc")
         ens_pr = ens.get("pr_auc")
         ens_f1 = ens.get("f1")
-        # Headline columns are raw discrimination metrics (AUC/PR AUC/F1) — the
-        # combiner's continuous-domain ranking ability.  These are EMBER-comparable
-        # by design.  The deployed thresholded gate (L=N policy) is a separate
-        # operational concern surfaced on the per-route cards, not here.
+        ens_recall = ens.get("recall_at_3fp_per_million")
+        n_mal = entry.get("n_malware")
+        n_ben = entry.get("n_benign")
+        balance = f"{_int(n_mal)} / {_int(n_ben)}"
         if ens_roc is None or ens.get("n_evaluated", 1) == 0:
-            roc_str = "—"
-            pr_str = "—"
-            f1_str = "—"
-            d_roc = "—"
-            d_pr = "—"
+            roc_str = pr_str = f1_str = recall_str = "—"
+            ember_str = "—"
         else:
-            roc_str = _num(ens_roc, 4)
-            pr_str = _num(ens_pr, 4)
-            f1_str = _num(ens_f1, 4)
-            d_roc = _delta(ens_roc, ember.get("roc_auc") if ember else None)
-            d_pr = _delta(ens_pr, ember.get("pr_auc") if ember else None)
+            roc_str = _metric_cell(ens_roc, ens.get("roc_auc_ci_low"), ens.get("roc_auc_ci_high"))
+            pr_str = _metric_cell(ens_pr, ens.get("pr_auc_ci_low"), ens.get("pr_auc_ci_high"))
+            f1_str = _metric_cell(ens_f1, ens.get("f1_ci_low"), ens.get("f1_ci_high"))
+            recall_str = _metric_cell(
+                ens_recall,
+                ens.get("recall_at_3fp_per_million_ci_low"),
+                ens.get("recall_at_3fp_per_million_ci_high"),
+            )
+            if ember:
+                ember_str = (
+                    f"PR {_delta(ens_pr, ember.get('pr_auc'))} / "
+                    f"ROC {_delta(ens_roc, ember.get('roc_auc'))}"
+                )
+            else:
+                ember_str = "—"
+        if link_routes:
+            ft_cell = f"[`{ft}`](filetypes/{ft}/README.md)"
+        else:
+            ft_cell = f"`{ft}`"
         lines.append(
-            f"| `{ft}` | {entry['n_files']} | "
-            f"{roc_str} | {pr_str} | {f1_str} | "
-            f"{ember_roc} | {d_roc} | {ember_pr} | {d_pr} |"
+            f"| {ft_cell} | {balance} | {pr_str} | {recall_str} | {roc_str} | {f1_str} | {ember_str} |"
         )
     return lines
 
@@ -359,27 +396,61 @@ def _global_policy_table(root: Path) -> str:
     with open(path) as f:
         data = json.load(f)
     total = data.get("rows") or 0
+    # CP 95% upper bound on the test-observed FP rate per (level, severity).
+    # This is the honest deployment-FP/M claim: "given x test FPs in N test
+    # benigns, the true rate is ≤ this with 95% confidence." For
+    # below-resolution rows, this column will exceed the L target — making
+    # the volume floor visible in the table without footnote-only treatment.
+    n_test_benign = int(data.get("benign") or 0)
+    any_below = any(
+        bool(lvl.get(sev, {}).get("below_resolution"))
+        for lvl in data["levels"] for sev in ("hostile", "suspicious")
+    )
+
+    def _cp_upper(fp: int | None) -> float | None:
+        if fp is None or n_test_benign <= 0:
+            return None
+        return _clopper_pearson_fp_per_million_upper(int(fp), n_test_benign, alpha=0.05)
+
     lines = [
-        "| L | H target/1M | H accuracy | H recall | H FP/1M | S target/1M | S accuracy | S recall | S FP/1M |",
+        "| L | H target/1M | H recall | H FP/1M | H 95% CI upper | S target/1M | S recall | S FP/1M | S 95% CI upper |",
         "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for level_no in range(10):
         level = next(item for item in data["levels"] if int(item["level"]) == level_no)
         h = level["hostile"]
         s = level["suspicious"]
-        h_accuracy = None
-        s_accuracy = None
-        if total:
-            h_accuracy = ((h.get("tp") or 0) + (h.get("tn") or 0)) / total
-            s_accuracy = ((s.get("tp") or 0) + (s.get("tn") or 0)) / total
+        h_target = _num(h.get("target_per_million"), 1)
+        s_target = _num(s.get("target_per_million"), 1)
+        if h.get("below_resolution"):
+            h_target = h_target + "†"
+        if s.get("below_resolution"):
+            s_target = s_target + "†"
+        h_cp = _cp_upper(h.get("fp"))
+        s_cp = _cp_upper(s.get("fp"))
         lines.append(
             "| "
-            f"{level_no} | {_num(h.get('target_per_million'), 1)} | "
-            f"{_pct(h_accuracy)} | {_pct(h.get('recall'))} | {_num(h.get('fp_per_million'), 2)} | "
-            f"{_num(s.get('target_per_million'), 1)} | "
-            f"{_pct(s_accuracy)} | {_pct(s.get('recall'))} | {_num(s.get('fp_per_million'), 2)} |"
+            f"{level_no} | {h_target} | "
+            f"{_pct(h.get('recall'))} | {_num(h.get('fp_per_million'), 2)} | {_num(h_cp, 2)} | "
+            f"{s_target} | "
+            f"{_pct(s.get('recall'))} | {_num(s.get('fp_per_million'), 2)} | {_num(s_cp, 2)} |"
         )
-    return "\n".join(lines)
+    out = "\n".join(lines)
+    out += (
+        f"\n\n*95% CI upper* is the Clopper-Pearson upper bound on the deployment "
+        f"FP rate given the observed FP count in {n_test_benign:,} test-partition "
+        f"benigns. The honest deployment-FP/M claim sits below this number with "
+        f"95% confidence."
+    )
+    if any_below:
+        out += (
+            "\n\n† below data resolution: the dev calibration sample is too small "
+            "to credibly assert FP/M ≤ target at this level (95% CI). The deployed "
+            "threshold falls back to the loosest empirical 0-FP fit; the FP/M and "
+            "95% CI columns show what the test partition actually achieves under "
+            "that threshold, which exceeds the L target."
+        )
+    return out
 
 
 def _model_algo(config: dict[str, Any] | None) -> str:
@@ -514,207 +585,170 @@ def _write_general(root: Path) -> None:
 
 
 def _write_route(root: Path, path: Path) -> None:
-    """Per-route README. Leads with the specialist's single-model performance
-    on the test bucket (apples-to-apples vs EMBER 2024 where applicable),
-    states how the routed ensemble uses this specialist, then training
-    profile, then operational FP/M policy levels at the bottom."""
+    """Per-route README. ≤50-line budget: one metrics table + a compact
+    training profile + a single line on routing policy. Detailed L0..L9
+    operating points and full ensemble explanations live in the bundle's
+    top-level cards, not here."""
     with open(path / "benchmark.json") as f:
         data = json.load(f)
     metrics = data.get("metrics") or {}
     name = data["name"]
     kind = data["kind"]
     file_types = ", ".join(f"`{item}`" for item in data.get("file_types", []))
-    route_prefix = "filegroups" if kind == "filegroup" else "filetypes"
 
-    # Pull the routed-ensemble per-filetype block for this route, if any.
     per_ft = _load_per_filetype_metrics(root)
     pf_entry = per_ft.get("filetypes", {}).get(name) if kind == "filetype" else None
     spec_metrics = (pf_entry or {}).get("specialist") or {}
-    ens_metrics = (pf_entry or {}).get("ensemble") or {}
     ember = _ember_for(name, "specialist") if kind == "filetype" else None
-    allowed_routes = (pf_entry or {}).get("ensemble_allowed_routes") or []
     ensemble_policy = (pf_entry or {}).get("ensemble_policy") or "—"
-
-    warning = ""
-    if metrics.get("roc_auc") is not None and float(metrics["roc_auc"]) <= 0.501:
-        warning = (
-            "\n> ⚠ Benchmark AUC is degenerate on this split — keep the artifact "
-            "for coverage, but rely on routed full-corpus calibration before relying on it."
-        )
+    allowed_routes = (pf_entry or {}).get("ensemble_allowed_routes") or []
 
     lines = [
-        f"# Azoth {kind.title()} — `{name}`",
+        f"# `{kind}/{name}`",
         "",
-        f"Specialist classifier for {file_types}. Used by the routed ensemble — see [../../ENSEMBLE_MODEL.md](../../ENSEMBLE_MODEL.md).",
-        "",
-        warning if warning else "",
-        "## Single-model performance",
+        f"LightGBM specialist for {file_types}. Member of the Azoth routed "
+        f"ensemble; bundle root: [../..](../..).",
         "",
     ]
+
+    if metrics.get("roc_auc") is not None and float(metrics["roc_auc"]) <= 0.501:
+        lines.extend([
+            "> Benchmark AUC degenerate on this split. Routed full-corpus calibration governs deployment.",
+            "",
+        ])
+
     if pf_entry:
         n_eval = pf_entry.get("n_files", 0)
-        ember_roc_str = f"{ember['roc_auc']:.4f}" if ember else "—"
-        ember_pr_str = f"{ember['pr_auc']:.4f}" if ember else "—"
-        ember_roc_val = ember.get("roc_auc") if ember else None
-        ember_pr_val = ember.get("pr_auc") if ember else None
+        n_mal = pf_entry.get("n_malware")
+        n_ben = pf_entry.get("n_benign")
+        ember_str = (
+            f"ROC {_delta(spec_metrics.get('roc_auc'), ember.get('roc_auc'))} / "
+            f"PR {_delta(spec_metrics.get('pr_auc'), ember.get('pr_auc'))}"
+            if ember
+            else "—"
+        )
         lines.extend([
-            f"On `{name}` test-partition rows (n={n_eval}, SHA256-deterministic 12.5% locked holdout):",
+            f"## Performance",
             "",
-            "| Metric | Specialist (this model alone) | EMBER 2024 reference | Δ |",
-            "|---|---:|---:|---:|",
-            f"| ROC AUC | {_num(spec_metrics.get('roc_auc'), 4)} | {ember_roc_str} | "
-            f"{_delta(spec_metrics.get('roc_auc'), ember_roc_val)} |",
-            f"| PR AUC | {_num(spec_metrics.get('pr_auc'), 4)} | {ember_pr_str} | "
-            f"{_delta(spec_metrics.get('pr_auc'), ember_pr_val)} |",
-            f"| F1 | {_num(spec_metrics.get('f1'), 4)} | — | — |",
-            f"| Brier (calibration) | {_num(spec_metrics.get('brier'), 4)} | — | — |",
+            f"Test partition, n={n_eval} ({_int(n_mal)} malware / {_int(n_ben)} benign).",
+            "",
+            "| ROC AUC [95% CI] | PR AUC [95% CI] | F1 [95% CI] | Brier | Δ vs EMBER 2024 |",
+            "|---:|---:|---:|---:|---:|",
+            (
+                f"| {_metric_cell(spec_metrics.get('roc_auc'), spec_metrics.get('roc_auc_ci_low'), spec_metrics.get('roc_auc_ci_high'))} | "
+                f"{_metric_cell(spec_metrics.get('pr_auc'), spec_metrics.get('pr_auc_ci_low'), spec_metrics.get('pr_auc_ci_high'))} | "
+                f"{_metric_cell(spec_metrics.get('f1'), spec_metrics.get('f1_ci_low'), spec_metrics.get('f1_ci_high'))} | "
+                f"{_num(spec_metrics.get('brier'), 4)} | {ember_str} |"
+            ),
             "",
         ])
     else:
         lines.extend([
-            "Training-time benchmark (no test-bucket-only metric on file):",
+            f"## Performance",
             "",
-            f"- ROC AUC / PR AUC / F1: {_num(metrics.get('roc_auc'), 4)} / "
-            f"{_num(metrics.get('avg_precision'), 4)} / {_num(metrics.get('max_f1'), 4)}",
-            f"- Benchmark rows: {_int(data.get('benchmark_rows'))} "
-            f"({_int(data.get('benchmark_malware'))} malware, "
-            f"{_int(data.get('benchmark_benign'))} benign).",
+            f"Training-time benchmark only (no test-partition rows for `{name}`). "
+            f"ROC {_num(metrics.get('roc_auc'), 4)}, "
+            f"PR {_num(metrics.get('avg_precision'), 4)}, "
+            f"F1 {_num(metrics.get('max_f1'), 4)} on "
+            f"{_int(data.get('benchmark_rows'))} rows "
+            f"({_int(data.get('benchmark_malware'))} mal / "
+            f"{_int(data.get('benchmark_benign'))} ben).",
             "",
         ])
 
-    if pf_entry:
-        ens_block = [
-            "## How the ensemble uses this specialist",
-            "",
-            f"At the default operating level, the deployed routing policy for `{name}` is `{ensemble_policy}`.",
-        ]
-        if allowed_routes:
-            ens_block.append(
-                f"Routes consulted (max-of-thresholds): {', '.join(f'`{r}`' for r in allowed_routes)}."
-            )
-        ens_block.extend([
-            "",
-            f"Ensemble's headline numbers on this filetype's test bucket: "
-            f"ROC AUC = **{_num(ens_metrics.get('roc_auc'), 4)}**, "
-            f"PR AUC = **{_num(ens_metrics.get('pr_auc'), 4)}**, "
-            f"F1 = **{_num(ens_metrics.get('f1'), 4)}**. "
-            "When the ensemble lags the specialist, the router is being conservative for FP/M-budget reasons; the specialist alone is what production would get if you bypassed routing.",
-            "",
-        ])
-        lines.extend(ens_block)
-
+    routes_str = ", ".join(f"`{r}`" for r in allowed_routes) if allowed_routes else "none"
     lines.extend([
+        "## Routing",
+        "",
+        f"Default-level policy `{ensemble_policy}`. Allowed routes (OR over thresholds): {routes_str}. "
+        f"Per-level severity thresholds in `route_policies.md` at the bundle root.",
+        "",
         "## Training",
         "",
-        f"- Inputs: shared general `feature_spec.json` ({data.get('n_features')} features); feature-spec policy `{data.get('feature_spec_policy')}`.",
-        f"- Algorithm: {_model_algo(data.get('train_config'))}",
-        "- Feature families:",
-        _feature_summary(),
-        f"- Training rows: {_int(data.get('train_rows'))} "
-        f"({_int(data.get('train_malware'))} malware, {_int(data.get('train_benign'))} benign).",
-        f"- Internal training-time benchmark rows: {_int(data.get('benchmark_rows'))} "
-        f"({_int(data.get('benchmark_malware'))} malware, "
-        f"{_int(data.get('benchmark_benign'))} benign).",
-        f"- Internal training-time benchmark AUC/AP/F1: {_num(metrics.get('roc_auc'), 4)} / "
-        f"{_num(metrics.get('avg_precision'), 4)} / {_num(metrics.get('max_f1'), 4)}.",
-        "",
-        "## Operational policy levels (advanced)",
-        "",
-        "Per-FP/M-target operating points for this specialist. Default deploy uses L3 hostile, L5 suspicious; lower levels = stricter FP budget. Useful when you need to tune deployed sensitivity.",
-        "",
-        _level_table(data["levels"]),
+        f"{_model_algo(data.get('train_config'))} "
+        f"Feature spec: general-shared, {data.get('n_features')} features, policy `{data.get('feature_spec_policy')}`. "
+        f"Trained on {_int(data.get('train_rows'))} rows "
+        f"({_int(data.get('train_malware'))} mal / {_int(data.get('train_benign'))} ben).",
     ])
-    policy_lines = _policy_levels(root, f"{route_prefix}/{name}")
-    if policy_lines:
-        lines.extend([
-            "",
-            "## Routed policy decisions",
-            "",
-            "What the ensemble actually does with this route at each operating level.",
-            "",
-            *policy_lines,
-        ])
-    _write(path / "README.md", "\n".join(line for line in lines if line is not None))
+    _write(path / "README.md", "\n".join(line for line in lines if line is not None) + "\n")
 
 
 def _write_bundle(root: Path) -> None:
-    """Write the top-level README — the front door for anyone evaluating the
-    bundle.  Showcases the routed ensemble's per-filetype performance with
-    EMBER 2024 deltas, and points at the deeper cards."""
+    """Bundle README. Lead paragraph, performance table (linked to per-route
+    cards), operating points, provenance, limits, sources. No imperatives,
+    no marketing, no "see also". Pike voice."""
     with open(root / "config.json") as f:
         config = json.load(f)
     metrics = _load_per_filetype_metrics(root)
-    eval_note = (
-        "test-partition only (apples-to-apples vs EMBER 2024 — locked holdout, never seen in training or calibration)"
-        if metrics.get("evaluated_on") == "test_bucket_only"
-        else "full corpus including training rows — re-run `compute_routed_metrics.py --db ...` for honest test-only numbers"
-    )
     n_eval = metrics.get("n_rows_evaluated", 0)
     lines = [
-        "# Azoth — Routed Multi-Format Malware Classifier",
+        "# Azoth",
         "",
-        "Azoth is a **routed ensemble** of file-type specialists with a general fallback. "
-        "For each file we detect the format (ELF, PE, PDF, JavaScript, …), pick the strongest "
-        "route the calibrated policy allows for that format, and combine the chosen route's score "
-        "with the general model's via the OR rule (a file is flagged iff any allowed route "
-        "exceeds its calibrated threshold). The deployed router is what runs in production; the "
-        "individual classifiers are ingredients.",
+        "Routed ensemble for static malware detection. A general LightGBM "
+        "classifier scores every file; per-filetype specialists score files "
+        "in their domain; any route above its calibrated threshold flags "
+        f"the file. Calibrators and L0..L9 thresholds fit on a "
+        f"{_int(config.get('fit_rows') or config.get('rows'))}-row "
+        f"{config.get('fit_partition') or 'dev'} partition "
+        f"(12.5% of the labeled corpus). Metrics below: "
+        f"locked {n_eval}-row test partition, disjoint from training and "
+        "calibration. EMBER 2024 reference: Joyce et al., *KDD'25*.",
         "",
-        "## Per-filetype performance (routed ensemble)",
+        "## Use",
         "",
-        f"Calibrated against {_int(config.get('rows'))} dev-partition rows "
-        f"({_int(config.get('malware'))} malware, {_int(config.get('benign'))} benign); "
-        f"per-filetype numbers below are evaluated on **{n_eval} test-partition rows** "
-        f"(SHA256-deterministic 12.5% locked holdout — never seen during training or calibration). "
-        "EMBER columns reference Joyce et al., *KDD'25 — A Benchmark Dataset for Holistic Evaluation of Malware Classifiers*, Table 5.",
+        "Input: cleave-extracted JSON reports. Output: one of `benign`, "
+        "`suspicious`, `hostile`, with severity level L0..L9. Loaded at "
+        "scan time by [litmus](https://codeberg.org/atomdrift/litmus); "
+        "deployed default is L3 hostile, L5 suspicious.",
         "",
-        *_ensemble_table(metrics, HEADLINE_FILETYPES),
+        "Bundle layout: `config.json` (deployed thresholds), then per-route "
+        "subdirectories under `general/`, `filegroups/<name>/`, "
+        "`filetypes/<name>/`, each carrying `model.txt`, `feature_spec.json`, "
+        "and `calibrator.json`. Architecture and FP-budget design: "
+        "[DESIGN.md](DESIGN.md). Routing detail: "
+        "[ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md). Single-model baseline: "
+        "[GENERALIST_MODEL.md](GENERALIST_MODEL.md). Apache 2.0.",
         "",
-        f"_Evaluation scope: {eval_note}. Numbers are raw discrimination metrics (continuous-domain ranking) — directly comparable to EMBER 2024's published AUC/PR. The deployed thresholded operating points (L=0..9 FP/M targets) are an orthogonal concern surfaced on the per-route cards._",
+        "## Performance",
         "",
-        "## What's in this bundle",
+        *_ensemble_table(metrics, HEADLINE_FILETYPES, link_routes=True),
         "",
-        f"- {_route_summary(config)} routes; runtime names are `az`, `az/<filegroup>`, `az/<filetype>`.",
-        "- One cleave report per file, vectorized by the feature spec shipped with the selected route.",
-        "- Per-route LightGBM specialists; the general model is also LightGBM trained on the full mixed corpus.",
+        "PR AUC summarizes recall-vs-precision across operating points; "
+        "Recall@3FP/M is the deployment-budget headline. Per-severity "
+        "L0..L9 thresholds (observed benign-score quantiles per route, "
+        "GPD-extrapolated for FP/M targets below the empirical floor) are "
+        "in [route_policies.md](route_policies.md) — they document the "
+        "severity-grading curve litmus uses, not optimization targets.",
         "",
-        "## Where to look next",
+        "## Provenance",
         "",
-        "- **[ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md)** — how the router decides, three-way (general/specialist/ensemble) per-filetype comparison, and operational FP/M policy levels.",
-        "- **[GENERALIST_MODEL.md](GENERALIST_MODEL.md)** — the single-model fallback, per-filetype performance, EMBER-comparable.",
-        "- **`filetypes/<name>/README.md`** — each specialist: its own training profile, single-model benchmark, and how the router uses it.",
-        "",
-        "## Reproducibility",
-        "",
-        f"- Calibration snapshot: `{config.get('calibration_snapshot_id')}`",
-        f"- Score table: `{_short_hash(config.get('score_table_hash'))}`",
-        f"- Model set: `{_short_hash(config.get('model_set_hash'))}`",
+        f"Calibration snapshot `{config.get('calibration_snapshot_id')}`, "
+        f"score-table `{_short_hash(config.get('score_table_hash'))}`, "
+        f"model-set `{_short_hash(config.get('model_set_hash'))}`. "
+        f"{_route_summary(config)} routes.",
         "",
         "## Limits",
         "",
-        "- Metrics are on the labeled corpus's dev (calibration) and test (locked headline) partitions. Deployment-time distribution shift can change real-world results.",
-        "- Some narrow filetypes (powershell, ruby, jar, macho) have small benign sample sizes — the *raw* discrimination metric is reliable, but the per-FP-target threshold calibration on the per-route cards is noisier than wider-corpus routes (pe, elf, javascript). Treat the L0..L9 numbers there as guidance, not as confidence intervals.",
-        "- Strict-FP/M operating points (L0–L3) are precision-floored by the dev/test partition sizes (~286k rows each, ~150k benign): a single FP moves the FP/M estimate by ~6. Reported numbers at those levels carry wider implicit CIs than the figure suggests.",
-        "- The split is content-deduplicated by `canonical_sha256` (archives and their inner files always co-locate) but not family- or campaign-aware. Same actor / same packer can produce different content hashes that land on opposite sides of the split. Family-aware splitting is on the methodological roadmap; until then, generalization to truly unseen campaigns may be over-stated.",
+        "- Strict L0..L3 FP/M targets sit below empirical resolution on a single dev partition (one FP per 150k benigns ≈ 6 FP/M); their thresholds are GPD tail-extrapolations.",
+        "- The split is content-deduplicated by `canonical_sha256`, not family-aware. Campaign-level generalization may be overstated.",
+        "- Deployment distribution may differ from the training corpus.",
         "",
-        "## Dataset credits",
+        "## Sources",
         "",
-        "Training samples were sourced from the following malware corpora. This project wouldn't have gone anywhere without their service and support:",
-        "",
-        "- [MalwareBazaar](https://bazaar.abuse.ch/)",
-        "- [VirusShare](https://virusshare.com/)",
-        "- [Backstabber's Knife Collection](https://dasfreak.github.io/Backstabbers-Knife-Collection/)",
-        "- [DataDog malicious-software-packages-dataset](https://github.com/DataDog/malicious-software-packages-dataset)",
-        "- [VX Underground](https://vx-underground.org/)",
-        "- [PyPI MalRegistry](https://github.com/lxyeternal/pypi_malregistry)",
-        "- [Linux Malware Samples](https://github.com/MalwareSamples/Linux-Malware-Samples)",
-        "- [Tim (Wadhwa-)Brown's Linux Malware Repo](https://github.com/timb-machine/linux-malware)",
-        "- [Javascript Malware Collection](https://github.com/HynekPetrak/javascript-malware-collection)",
-        "- [ObjectiveSee macOS Malware Collection](https://github.com/objective-see/Malware)",
-        "- [Practical Security Analytics LLC PE Malware ML Dataset](https://practicalsecurityanalytics.com/pe-malware-machine-learning-dataset/)",
-        "- [Ultimate RAT Collection](https://github.com/Cryakl/Ultimate-RAT-Collection)",
+        "[MalwareBazaar](https://bazaar.abuse.ch/), "
+        "[VirusShare](https://virusshare.com/), "
+        "[Backstabber's Knife Collection](https://dasfreak.github.io/Backstabbers-Knife-Collection/), "
+        "[DataDog malicious-software-packages-dataset](https://github.com/DataDog/malicious-software-packages-dataset), "
+        "[VX Underground](https://vx-underground.org/), "
+        "[PyPI MalRegistry](https://github.com/lxyeternal/pypi_malregistry), "
+        "[Linux Malware Samples](https://github.com/MalwareSamples/Linux-Malware-Samples), "
+        "[Tim (Wadhwa-)Brown's Linux Malware Repo](https://github.com/timb-machine/linux-malware), "
+        "[Javascript Malware Collection](https://github.com/HynekPetrak/javascript-malware-collection), "
+        "[ObjectiveSee macOS Malware Collection](https://github.com/objective-see/Malware), "
+        "[Practical Security Analytics PE Malware ML Dataset](https://practicalsecurityanalytics.com/pe-malware-machine-learning-dataset/), "
+        "[Ultimate RAT Collection](https://github.com/Cryakl/Ultimate-RAT-Collection).",
     ]
-    _write(root / "README.md", "\n".join(lines))
+    _write(root / "README.md", "\n".join(lines) + "\n")
 
 
 def _write_ensemble_card(root: Path) -> None:
@@ -762,15 +796,13 @@ def _write_ensemble_card(root: Path) -> None:
         "",
         "Reading the table: ensemble ≥ specialist holds for every filetype by design. When `strategy = specialist_priority`, the ensemble's column matches the specialist's. When `strategy = calibrated_max`, the routing-free combiner beats the specialist alone — those filetypes benefit most from cross-model signal.",
         "",
-        "## Operational FP/M dialing (deployment knob)",
+        "## Severity tiers (L0..L9)",
         "",
-        "Independently of the AUC/PR metrics above, the bundle is calibrated at ten thresholded operating points (L0…L9) per severity. Each level corresponds to a per-million false-positive budget; the calibrator picks the per-route thresholds that maximize true positives subject to that global budget.",
+        "L0..L9 are observation-derived severity grades, not optimization targets. For each route, level Lk's threshold is the (1 − qk × 10⁻⁶) quantile of that route's calibrated benign-score distribution on the dev partition — i.e., the score cut at which roughly qk benigns per million would be flagged. Strict tiers (qk below the empirical floor of n_benign × qk × 10⁻⁶ < 1) come from a generalized-Pareto fit to the benign-score upper tail; looser tiers are direct empirical quantiles.",
         "",
-        "**This is a deployment dial, not a model-quality result.** When a route shows `no_policy` at a given level, it means no threshold for that route fits inside the global FP budget at that level — which is a function of corpus size, route benign-tail shape, and the FP target, not the model's discrimination ability. Dialing the operating level up admits more routes; dialing down enforces a stricter FP target. Per-route operating tables live in each `filetypes/<name>/README.md`.",
+        "**The grade is a description of the score's strictness, not a deployment knob optimized for any objective.** Litmus reads the per-level thresholds out of `route_policies.json`/`config.json` and assigns severity per file. The headline PR AUC and recall@3FP/M numbers above describe the underlying ranking — they don't depend on the L grade.",
         "",
-        _global_policy_table(root),
-        "",
-        "Default deploy: L3 for hostile, L5 for suspicious. The headline AUC/PR/F1 figures elsewhere in this bundle are about the model's ranking ability — they don't change with the operating level.",
+        "Default deploy: L3 for hostile, L5 for suspicious. Per-route L0..L9 thresholds and observed FP/M live in [route_policies.md](route_policies.md) and each `filetypes/<name>/README.md`.",
     ]
     _write(root / "ENSEMBLE_MODEL.md", "\n".join(lines))
 

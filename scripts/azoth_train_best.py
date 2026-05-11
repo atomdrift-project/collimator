@@ -20,7 +20,9 @@ specialist suite.
 Selection
 ---------
 - Runs are filtered to a target route (default ``general``).
-- Among matching runs we pick the highest ``sampled_test_metrics.f1``;
+- Among matching runs we pick the highest
+  ``sampled_test_metrics.avg_precision`` (PR AUC, the security-relevant
+  ranking metric for the imbalanced malware-vs-benign classification);
   ties broken by ``save_all_seeds`` (prefer averaged), then most recent
   ``timestamp`` (replay-stable).
 
@@ -89,11 +91,15 @@ def _format_env_value(value: Any) -> str:
 
 
 def _select_best_run(runs_dir: Path, route: str) -> dict[str, Any] | None:
-    """Pick the highest-F1 historical run for ``route``.
+    """Pick the highest-PR-AUC historical run for ``route``.
 
     Returns the parsed run dict, or None when no matching run exists. Ties on
-    F1 break in favor of save_all_seeds=True then later timestamp — same rule
-    azoth_specialist_suite uses for its picker, so the two stay in sync.
+    avg_precision break in favor of save_all_seeds=True then later timestamp —
+    same rule azoth_specialist_suite uses for its picker, so the two stay in
+    sync. PR AUC (avg_precision) is the headline ranking metric for the
+    imbalanced malware-vs-benign classification — it captures
+    detection-vs-false-positive trade-off across the full operating range
+    without being dominated by the easy benign mass the way ROC AUC is.
     """
     if not runs_dir.is_dir():
         LOG.error("runs dir %s does not exist", runs_dir)
@@ -109,11 +115,11 @@ def _select_best_run(runs_dir: Path, route: str) -> dict[str, Any] | None:
             continue
         if run.get("route") != route:
             continue
-        f1 = (run.get("sampled_test_metrics") or {}).get("f1")
-        if not isinstance(f1, (int, float)):
+        ap = (run.get("sampled_test_metrics") or {}).get("avg_precision")
+        if not isinstance(ap, (int, float)):
             continue
         candidate = (
-            float(f1),
+            float(ap),
             bool(run.get("save_all_seeds")),
             str(run.get("timestamp") or ""),
             run,
@@ -215,10 +221,10 @@ def main() -> int:
         LOG.error("no historical run found for route %r in %s", args.route, args.runs_dir)
         return 1
     LOG.info(
-        "best for route %s: key=%s f1=%.4f save_all=%s idea=%s",
+        "best for route %s: key=%s avg_precision=%.4f save_all=%s idea=%s",
         args.route,
         run.get("experiment_key", "?"),
-        (run.get("sampled_test_metrics") or {}).get("f1", float("nan")),
+        (run.get("sampled_test_metrics") or {}).get("avg_precision", float("nan")),
         bool(run.get("save_all_seeds")),
         run.get("idea", "?"),
     )

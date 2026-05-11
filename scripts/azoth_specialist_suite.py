@@ -439,11 +439,16 @@ def _load_autocollie_best_per_route(
     picks each route's deployed-best-quality-of-fit experiment and replays
     its config.
 
-    Selection rule: highest f1 in ``sampled_test_metrics``.  When multiple
-    runs tie, the most recent timestamp wins (replay-stable across re-runs).
-    Save-all-seeds (item-A averaged) runs are preferred over single-seed
-    when they exist for a route, since those are the legitimate multi-seed
-    baselines and produce honest comparisons.
+    Selection rule: highest avg_precision (PR AUC) in
+    ``sampled_test_metrics``.  When multiple runs tie, the most recent
+    timestamp wins (replay-stable across re-runs).  Save-all-seeds (item-A
+    averaged) runs are preferred over single-seed when they exist for a
+    route, since those are the legitimate multi-seed baselines and produce
+    honest comparisons.
+
+    PR AUC is the headline ranking metric for malware classification: it
+    summarizes recall vs precision across the operating range and isn't
+    swamped by benign mass the way ROC AUC is on this imbalanced corpus.
 
     Routes with no historical runs in ``runs_dir`` get empty overrides and
     fall through to the suite's CLI defaults — same as before.
@@ -471,15 +476,15 @@ def _load_autocollie_best_per_route(
         if route not in targeted_routes:
             continue
         metrics = run.get("sampled_test_metrics") or {}
-        f1 = metrics.get("f1")
-        if not isinstance(f1, (int, float)):
+        ap = metrics.get("avg_precision")
+        if not isinstance(ap, (int, float)):
             continue
         save_all = bool(run.get("save_all_seeds"))
         timestamp = str(run.get("timestamp") or "")
-        # Tuple ordering: f1 first (max), then save_all_seeds (prefer True),
-        # then timestamp (prefer newer).  Python tuple comparison is stable
-        # so this gives a total ordering.
-        candidate = (float(f1), save_all, timestamp, run)
+        # Tuple ordering: avg_precision first (max), then save_all_seeds
+        # (prefer True), then timestamp (prefer newer).  Python tuple comparison
+        # is stable so this gives a total ordering.
+        candidate = (float(ap), save_all, timestamp, run)
         prev = best.get(route)
         if prev is None or candidate[:3] > prev[:3]:
             best[route] = candidate
@@ -487,7 +492,7 @@ def _load_autocollie_best_per_route(
     valid_train_fields = _train_config_field_names()
     train_overrides: dict[str, dict[str, Any]] = {}
     feature_envs: dict[str, dict[str, str]] = {}
-    for route, (f1, save_all, _ts, run) in best.items():
+    for route, (ap, save_all, _ts, run) in best.items():
         train_cfg = run.get("train_config") or {}
         # Filter to TrainConfig fields the suite knows about; drop unknown
         # keys silently rather than raising — tolerates schema drift.
@@ -505,8 +510,8 @@ def _load_autocollie_best_per_route(
             feature_envs[route] = env_overrides
 
         LOG.info(
-            "autocollie-best: %s -> key=%s f1=%.4f save_all=%s overrides=%d env=%d",
-            route, run.get("experiment_key", "?"), f1, save_all,
+            "autocollie-best: %s -> key=%s avg_precision=%.4f save_all=%s overrides=%d env=%d",
+            route, run.get("experiment_key", "?"), ap, save_all,
             len(cfg_overrides), len(env_overrides),
         )
 

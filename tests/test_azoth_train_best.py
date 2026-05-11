@@ -20,7 +20,7 @@ sys.modules["azoth_train_best"] = _mod
 _spec.loader.exec_module(_mod)
 
 
-def _write_run(runs_dir: Path, key: str, route: str, *, f1: float,
+def _write_run(runs_dir: Path, key: str, route: str, *, avg_precision: float,
                save_all: bool = False, timestamp: str = "2026-01-01",
                train_config: dict | None = None,
                feature_env: dict | None = None,
@@ -33,7 +33,7 @@ def _write_run(runs_dir: Path, key: str, route: str, *, f1: float,
         "idea": idea,
         "timestamp": timestamp,
         "save_all_seeds": save_all,
-        "sampled_test_metrics": {"f1": f1},
+        "sampled_test_metrics": {"avg_precision": avg_precision},
         "train_config": train_config or {},
         "feature_env": feature_env or {},
         "experiment_spec": experiment_spec or {},
@@ -43,10 +43,10 @@ def _write_run(runs_dir: Path, key: str, route: str, *, f1: float,
     return p
 
 
-def test_select_best_picks_highest_f1(tmp_path: Path) -> None:
+def test_select_best_picks_highest_avg_precision(tmp_path: Path) -> None:
     runs = tmp_path / "runs"
-    _write_run(runs, "low", "general", f1=0.95)
-    _write_run(runs, "high", "general", f1=0.99)
+    _write_run(runs, "low", "general", avg_precision=0.95)
+    _write_run(runs, "high", "general", avg_precision=0.99)
     best = _mod._select_best_run(runs, "general")  # type: ignore[attr-defined]
     assert best is not None
     assert best["experiment_key"] == "high"
@@ -54,8 +54,8 @@ def test_select_best_picks_highest_f1(tmp_path: Path) -> None:
 
 def test_select_best_filters_by_route(tmp_path: Path) -> None:
     runs = tmp_path / "runs"
-    _write_run(runs, "ggood", "general", f1=0.99)
-    _write_run(runs, "bbest", "filetypes/perl", f1=1.0)  # higher F1 but wrong route
+    _write_run(runs, "ggood", "general", avg_precision=0.99)
+    _write_run(runs, "bbest", "filetypes/perl", avg_precision=1.0)  # higher PR AUC but wrong route
     best = _mod._select_best_run(runs, "general")  # type: ignore[attr-defined]
     assert best is not None
     assert best["experiment_key"] == "ggood"
@@ -63,8 +63,10 @@ def test_select_best_filters_by_route(tmp_path: Path) -> None:
 
 def test_select_best_prefers_save_all_seeds_on_tie(tmp_path: Path) -> None:
     runs = tmp_path / "runs"
-    _write_run(runs, "single", "general", f1=0.99, save_all=False, timestamp="2026-02-01")
-    _write_run(runs, "averaged", "general", f1=0.99, save_all=True, timestamp="2026-01-01")
+    _write_run(runs, "single", "general", avg_precision=0.99,
+               save_all=False, timestamp="2026-02-01")
+    _write_run(runs, "averaged", "general", avg_precision=0.99,
+               save_all=True, timestamp="2026-01-01")
     best = _mod._select_best_run(runs, "general")  # type: ignore[attr-defined]
     assert best is not None
     assert best["experiment_key"] == "averaged"
@@ -72,8 +74,8 @@ def test_select_best_prefers_save_all_seeds_on_tie(tmp_path: Path) -> None:
 
 def test_select_best_prefers_newer_timestamp_on_full_tie(tmp_path: Path) -> None:
     runs = tmp_path / "runs"
-    _write_run(runs, "older", "general", f1=0.99, save_all=True, timestamp="2026-01-01")
-    _write_run(runs, "newer", "general", f1=0.99, save_all=True, timestamp="2026-03-01")
+    _write_run(runs, "older", "general", avg_precision=0.99, save_all=True, timestamp="2026-01-01")
+    _write_run(runs, "newer", "general", avg_precision=0.99, save_all=True, timestamp="2026-03-01")
     best = _mod._select_best_run(runs, "general")  # type: ignore[attr-defined]
     assert best is not None
     assert best["experiment_key"] == "newer"
@@ -81,17 +83,19 @@ def test_select_best_prefers_newer_timestamp_on_full_tie(tmp_path: Path) -> None
 
 def test_select_best_returns_none_when_no_matches(tmp_path: Path) -> None:
     runs = tmp_path / "runs"
-    _write_run(runs, "x", "filetypes/perl", f1=1.0)
+    _write_run(runs, "x", "filetypes/perl", avg_precision=1.0)
     best = _mod._select_best_run(runs, "general")  # type: ignore[attr-defined]
     assert best is None
 
 
 def test_select_best_skips_feature_spec_sidecars(tmp_path: Path) -> None:
     runs = tmp_path / "runs"
-    _write_run(runs, "real", "general", f1=0.99)
+    _write_run(runs, "real", "general", avg_precision=0.99)
     # A feature spec sidecar that happens to have a "route" field shouldn't be considered.
     sidecar = runs / "real_feature_spec.json"
-    sidecar.write_text(json.dumps({"route": "general", "sampled_test_metrics": {"f1": 1.0}}))
+    sidecar.write_text(
+        json.dumps({"route": "general", "sampled_test_metrics": {"avg_precision": 1.0}}),
+    )
     best = _mod._select_best_run(runs, "general")  # type: ignore[attr-defined]
     assert best is not None
     assert best["experiment_key"] == "real"
@@ -99,7 +103,7 @@ def test_select_best_skips_feature_spec_sidecars(tmp_path: Path) -> None:
 
 def test_select_best_tolerates_corrupt_json(tmp_path: Path) -> None:
     runs = tmp_path / "runs"
-    _write_run(runs, "good", "general", f1=0.99)
+    _write_run(runs, "good", "general", avg_precision=0.99)
     (runs / "broken.json").write_text("{not json")
     best = _mod._select_best_run(runs, "general")  # type: ignore[attr-defined]
     assert best is not None
