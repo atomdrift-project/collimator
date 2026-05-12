@@ -166,3 +166,41 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260512T001333-filetypes-go` — 2026-05-12T00:13:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | go_default_baseline | fail | — | — | — | 675 | [log](out/autocollie/runs/2026-05-12T00-22-56_20260512T001333-filetypes-go_go_default_baseline.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_default_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250` — pure defaults with no feature overrides to establish if the route baseline works
+
+</details>
+
+## Cycle `20260512T003416-filetypes-go` — 2026-05-12T00:34:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07bcaec6e615b7a2` | go_score_traits_hardneg_replicate | ok | 0.9658 | 0.9888 | 0.9096 | 222 | [log](out/autocollie/runs/2026-05-12T00-49-14_20260512T003416-filetypes-go_go_score_traits_hardneg_replicate.log) |
+| `0d276cc6df4b1edc` | go_score_traits_leaves128_reg2 | ok | 0.9609 | 0.9870 | 0.8922 | 31 | [log](out/autocollie/runs/2026-05-12T00-52-56_20260512T003416-filetypes-go_go_score_traits_leaves128_reg2.log) |
+| `086d3c0bae3d6dd4` | go_score_traits_scalepos05 | ok | 0.9610 | 0.9869 | 0.8830 | 2 | [log](out/autocollie/runs/2026-05-12T00-53-27_20260512T003416-filetypes-go_go_score_traits_scalepos05.log) |
+| `4fbb7ca9c1cc5d98` | go_score_traits_lr003_deep | ok | 0.9602 | 0.9868 | 0.8976 | 3 | [log](out/autocollie/runs/2026-05-12T00-53-29_20260512T003416-filetypes-go_go_score_traits_lr003_deep.log) |
+| `17109f725cdc075c` | go_score_traits_gamma1 | ok | 0.9622 | 0.9874 | 0.8935 | 3 | [log](out/autocollie/runs/2026-05-12T00-53-33_20260512T003416-filetypes-go_go_score_traits_gamma1.log) |
+| `295be606ce2c1cc2` | go_score_traits_goss | ok | 0.9571 | 0.9860 | 0.8944 | 3 | [log](out/autocollie/runs/2026-05-12T00-53-36_20260512T003416-filetypes-go_go_score_traits_goss.log) |
+| `8385a94cbd9790a4` | go_score_traits_extra_trees | ok | 0.9637 | 0.9876 | 0.8809 | 4 | [log](out/autocollie/runs/2026-05-12T00-53-39_20260512T003416-filetypes-go_go_score_traits_extra_trees.log) |
+| `a3acd49c6da3107a` | go_score_traits_minchild200 | ok | 0.9480 | 0.9835 | 0.8807 | 2 | [log](out/autocollie/runs/2026-05-12T00-53-42_20260512T003416-filetypes-go_go_score_traits_minchild200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_score_traits_hardneg_replicate`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — replicate historical best: score_weighted_traits plus hard negative mining frac=0.3 weight=8
+- **`go_score_traits_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — same features as above with larger tree capacity and stronger L2 regularization
+- **`go_score_traits_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — downweight positives to 0.5x for better PR AUC precision tail
+- **`go_score_traits_lr003_deep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — slower learning rate with more estimators for finer gradient steps
+- **`go_score_traits_gamma1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — minimum split gain of 1.0 to prune weak splits and reduce overfit on small corpus
+- **`go_score_traits_goss`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=goss …` — goss boosting for gradient-based sampling, alternative to gbdt without dart crash risk
+- **`go_score_traits_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — extra trees random splits for ensemble diversity on small corpus
+- **`go_score_traits_minchild200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — larger min_child_samples with L2 reg to prevent overfit on 3k training rows
+
+</details>
+

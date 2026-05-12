@@ -107,3 +107,77 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260511T030434-filetypes-javascript` — 2026-05-11T03:04:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | js_no_presence_lr03_depth14 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T03-14-04_20260511T030434-filetypes-javascript_js_no_presence_lr03_depth14.log) |
+| `` | js_no_presence_dart | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T03-44-04_20260511T030434-filetypes-javascript_js_no_presence_dart.log) |
+
+Rejected before run:
+
+- `js_anti_baseline_reenable_all` — at least one of profile/features/training must be set
+
+<details><summary>Spec details</summary>
+
+- **`js_no_presence_lr03_depth14`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=14` — slower learning with deeper trees for better convergence on saturated route
+- **`js_no_presence_dart`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03` — DART dropout boosting for improved tail generalization
+
+</details>
+
+## Cycle `20260511T041118-filetypes-javascript` — 2026-05-11T04:11:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | js_no_presence_dart_lr03 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T04-12-57_20260511T041118-filetypes-javascript_js_no_presence_dart_lr03.log) |
+| `` | js_no_presence_extratrees | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T04-42-57_20260511T041118-filetypes-javascript_js_no_presence_extratrees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_no_presence_dart_lr03`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03` — DART dropout boosting for tail generalization on saturated route
+- **`js_no_presence_extratrees`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTRA_TREES=1` — extra trees random splits for ensemble diversity
+
+</details>
+
+## Cycle `20260511T041227-filetypes-javascript` — 2026-05-11T04:12:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | js_no_presence_dart_lr03 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T04-13-47_20260511T041227-filetypes-javascript_js_no_presence_dart_lr03.log) |
+| `` | js_no_presence_extratrees | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T04-43-47_20260511T041227-filetypes-javascript_js_no_presence_extratrees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_no_presence_dart_lr03`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03` — DART dropout boosting with slower learning for tail generalization
+- **`js_no_presence_extratrees`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTRA_TREES=1` — extra trees random splits for ensemble noise at low-FPR region
+
+</details>
+
+## Cycle `20260512T130113-filetypes-javascript` — 2026-05-12T13:01:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | js_no_presence_hn10_w12 | fail | — | — | — | 308 | [log](out/autocollie/runs/2026-05-12T13-03-53_20260512T130113-filetypes-javascript_js_no_presence_hn10_w12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_no_presence_hn10_w12`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12` — hard negative mining with higher weight to sharpen ranking boundary
+
+</details>
+
+## Cycle `20260512T130903-filetypes-javascript` — 2026-05-12T13:09:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a73251c57ee777d7` | js_no_presence_subsample07 | ok | 0.9999 | 0.9998 | 0.9939 | 358 | [log](out/autocollie/runs/2026-05-12T13-13-29_20260512T130903-filetypes-javascript_js_no_presence_subsample07.log) |
+| `ac2953d1589ff121` | js_no_presence_colsample06 | ok | 0.9999 | 0.9998 | 0.9939 | 412 | [log](out/autocollie/runs/2026-05-12T13-19-27_20260512T130903-filetypes-javascript_js_no_presence_colsample06.log) |
+| `` | js_no_presence_add_textenc | fail | — | — | — | 259 | [log](out/autocollie/runs/2026-05-12T13-26-19_20260512T130903-filetypes-javascript_js_no_presence_add_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_no_presence_subsample07`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_SUBSAMPLE=0.7` — row subsampling for regularization without memory-heavy features
+- **`js_no_presence_colsample06`** `EXP_COLSAMPLE_BYTREE=0.6 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc` — column subsampling for feature-level regularization
+- **`js_no_presence_add_textenc`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_TEXT_ENCODING_FEATURES=1` — add text_encoding features for javascript as text-heavy filetype
+
+</details>
+

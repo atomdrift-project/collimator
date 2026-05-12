@@ -120,3 +120,77 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260511T045417-filetypes-pe` — 2026-05-11T04:54:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pe_hardneg_001_16 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T04-57-27_20260511T045417-filetypes-pe_pe_hardneg_001_16.log) |
+| `` | pe_extra_trees_hardneg | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T05-27-27_20260511T045417-filetypes-pe_pe_extra_trees_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_hardneg_001_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only hard negative sweep fraction=0.01 weight=16 on cached matrix
+- **`pe_extra_trees_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — port extra_trees from perl route combined with hard negative tuning
+
+</details>
+
+## Cycle `20260511T052122-filetypes-pe` — 2026-05-11T05:21:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pe_hardneg_005_20_training | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T05-29-21_20260511T052122-filetypes-pe_pe_hardneg_005_20_training.log) |
+| `` | pe_extra_trees_port_perl | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T05-59-21_20260511T052122-filetypes-pe_pe_extra_trees_port_perl.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_hardneg_005_20_training`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only sweep: smallest fraction highest weight hard negative combo on cached matrix
+- **`pe_extra_trees_port_perl`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — port extra_trees from perl route (PR_AUC 1.0) with moderate hard negative on cached matrix
+
+</details>
+
+## Cycle `20260511T052203-filetypes-pe` — 2026-05-11T05:22:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pe_hardneg_002_12 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T05-32-26_20260511T052203-filetypes-pe_pe_hardneg_002_12.log) |
+| `` | pe_extra_trees_hardneg_port | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T06-02-26_20260511T052203-filetypes-pe_pe_extra_trees_hardneg_port.log) |
+
+Rejected before run:
+
+- `pe_ablate_blindfold` — features.disable_groups: "blindfold" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+
+<details><summary>Spec details</summary>
+
+- **`pe_hardneg_002_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only hard negative sweep fraction=0.02 weight=12 on cached matrix
+- **`pe_extra_trees_hardneg_port`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — port extra_trees from perl route combined with hard negative for tail generalization
+
+</details>
+
+## Cycle `20260511T063953-filetypes-pe` — 2026-05-11T06:39:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pe_hardneg_005_20 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T06-43-46_20260511T063953-filetypes-pe_pe_hardneg_005_20.log) |
+| `` | pe_hardneg_015_8 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T07-13-46_20260511T063953-filetypes-pe_pe_hardneg_015_8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_hardneg_005_20`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: aggressive weight tiny fraction hard negative combo
+- **`pe_hardneg_015_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: larger fraction lower weight hard negative combo
+
+</details>
+
+## Cycle `20260511T101007-filetypes-pe` — 2026-05-11T10:10:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pe_capacity_leaves128_lr003 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T10-17-29_20260511T101007-filetypes-pe_pe_capacity_leaves128_lr003.log) |
+| `` | pe_scalepos075_reg2 | fail | — | — | — | 1540 | [log](out/autocollie/runs/2026-05-11T10-47-29_20260511T101007-filetypes-pe_pe_scalepos075_reg2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_capacity_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only capacity boost with deeper trees and slower learning rate, no hard_negative to avoid OOM
+- **`pe_scalepos075_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only class weight down-weighting plus L2 regularization for tail precision, no hard_negative
+
+</details>
+

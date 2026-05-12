@@ -112,3 +112,53 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260511T024044-filetypes-elf` — 2026-05-11T02:40:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8cb4bcc4bf6fad49` | elf_train_simpler_leaves64_reg2 | ok | 1.0000 | 1.0000 | 0.9956 | 1356 | [log](out/autocollie/runs/2026-05-11T02-48-42_20260511T024044-filetypes-elf_elf_train_simpler_leaves64_reg2.log) |
+| `` | elf_train_hardneg_mining | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T03-11-18_20260511T024044-filetypes-elf_elf_train_hardneg_mining.log) |
+| `` | elf_train_threshold_fpr3e6 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T03-41-18_20260511T024044-filetypes-elf_elf_train_threshold_fpr3e6.log) |
+
+Rejected before run:
+
+- `elf_abl_no_attack_features` — features.disable_groups: "attack_features" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+
+<details><summary>Spec details</summary>
+
+- **`elf_train_simpler_leaves64_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_DEPTH=10 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2` — test if simpler trees also achieve perfect PR_AUC at saturation
+- **`elf_train_hardneg_mining`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12` — hard-negative mining for native binary route per search guidance
+- **`elf_train_threshold_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — optimize deployed operating point directly with max_recall_at_fpr
+
+</details>
+
+## Cycle `20260511T024453-filetypes-elf` — 2026-05-11T02:44:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `748b3824c1f91a9a` | elf_abl_no_extreme | ok | 1.0000 | 1.0000 | 0.9979 | 1388 | [log](out/autocollie/runs/2026-05-11T02-49-20_20260511T024453-filetypes-elf_elf_abl_no_extreme.log) |
+| `` | elf_abl_no_blindfold | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T03-12-27_20260511T024453-filetypes-elf_elf_abl_no_blindfold.log) |
+| `` | elf_abl_no_airgap | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T03-42-27_20260511T024453-filetypes-elf_elf_abl_no_airgap.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_abl_no_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTREME_FEATURES=0` — remove extreme features to test if they contribute at PR_AUC saturation
+- **`elf_abl_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — remove blindfold dropout features to test if they contribute at saturation
+- **`elf_abl_no_airgap`** `EXP_AIR_GAP_SIGNAL=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — remove air_gap_signal to test if it contributes at saturation
+
+</details>
+
+## Cycle `20260511T085122-filetypes-elf` — 2026-05-11T08:51:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | elf_train_hardneg_frac001_w12 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T08-54-48_20260511T085122-filetypes-elf_elf_train_hardneg_frac001_w12.log) |
+| `` | elf_train_scalepos075 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T09-24-48_20260511T085122-filetypes-elf_elf_train_scalepos075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_train_hardneg_frac001_w12`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12` — hard negative mining to refine score distribution at saturation
+- **`elf_train_scalepos075`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.75` — down-weight positives to reduce FP pressure at low FPR operating point
+
+</details>
+

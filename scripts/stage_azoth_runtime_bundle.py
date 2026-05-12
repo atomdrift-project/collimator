@@ -80,8 +80,6 @@ def stage_runtime_bundle(src: Path, dst: Path) -> None:
         _copy_if_exists(required, dst / name)
 
     for path in sorted(src.glob("*.md")):
-        if path.name == "README.md":
-            continue
         _copy_if_exists(path, dst / path.name)
     _copy_if_exists(src / "LICENSE", dst / "LICENSE")
 

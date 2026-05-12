@@ -96,3 +96,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260511T041404-filetypes-pdf` — 2026-05-11T04:14:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `676ecc39d32142b3` | pdf_train_leaves64_lr01 | ok | 0.5000 | 0.5000 | 0.6667 | 29 | [log](out/autocollie/runs/2026-05-11T04-52-17_20260511T041404-filetypes-pdf_pdf_train_leaves64_lr01.log) |
+| `90282cc4728307ef` | pdf_train_dart_boosting | ok | 0.5000 | 0.5000 | 0.6667 | 13 | [log](out/autocollie/runs/2026-05-11T04-52-46_20260511T041404-filetypes-pdf_pdf_train_dart_boosting.log) |
+| `18adc01ef7b6bfed` | pdf_feat_text_metrics_full | ok | 0.5000 | 0.5000 | 0.6667 | 16 | [log](out/autocollie/runs/2026-05-11T04-52-59_20260511T041404-filetypes-pdf_pdf_feat_text_metrics_full.log) |
+| `9dc5face3067e770` | pdf_feat_doc_obfuscation | ok | 0.5000 | 0.5000 | 0.6667 | 15 | [log](out/autocollie/runs/2026-05-11T04-53-15_20260511T041404-filetypes-pdf_pdf_feat_doc_obfuscation.log) |
+| `56cdd62e728cbb42` | pdf_feat_textmetrics_linebuckets | ok | 0.5000 | 0.5000 | 0.6667 | 15 | [log](out/autocollie/runs/2026-05-11T04-53-30_20260511T041404-filetypes-pdf_pdf_feat_textmetrics_linebuckets.log) |
+| `8b587ec7dfabce46` | pdf_abl_reenable_score | ok | 0.5000 | 0.5000 | 0.6667 | 15 | [log](out/autocollie/runs/2026-05-11T04-53-45_20260511T041404-filetypes-pdf_pdf_abl_reenable_score.log) |
+| `368828e74dd1ba36` | pdf_train_extra_trees_reg | ok | 0.5000 | 0.5000 | 0.6667 | 13 | [log](out/autocollie/runs/2026-05-11T04-54-00_20260511T041404-filetypes-pdf_pdf_train_extra_trees_reg.log) |
+
+Rejected before run:
+
+- `pdf_train_scalepos05` — spec route "pdf_scalepos05" != cycle route "filetypes/pdf"
+
+<details><summary>Spec details</summary>
+
+- **`pdf_train_leaves64_lr01`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — training-only: smaller leaves + higher LR for regularization on tiny 4-sample holdout
+- **`pdf_train_dart_boosting`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only: DART boosting for dropout regularization to reduce overfit on small corpus
+- **`pdf_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — feature addition: enable text_metrics_full (~22 ms.text fields) targeted at PDF/DOCX routes
+- **`pdf_feat_doc_obfuscation`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — feature addition: document_obfuscation_features targeting PDF malware taxonomy subtrees
+- **`pdf_feat_textmetrics_linebuckets`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — feature addition: combine text_metrics_full with line_length_buckets for document obfuscation signal
+- **`pdf_abl_reenable_score`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — anti-baseline: re-enable score features that current best disables to test if they help PDF
+- **`pdf_train_extra_trees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — training-only: extra_trees for ensemble noise + L1/L2 regularization for small corpus generalization
+
+</details>
+
+## Cycle `20260511T063056-filetypes-pdf` — 2026-05-11T06:30:56Z
+
+_No specs ran._
+
+## Cycle `20260512T000946-filetypes-pdf` — 2026-05-12T00:09:46Z
+
+_No specs ran._
+

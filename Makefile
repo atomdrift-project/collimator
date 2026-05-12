@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle
+.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -63,6 +63,7 @@ AZOTH_REFRESH_SCORES_ARG := $(if $(filter 1 true yes,$(AZOTH_REFRESH_SCORES)),--
 AZOTH_REFRESH_ROUTE ?=
 AZOTH_SKIP_LEVEL_CALIBRATION ?= 0
 AZOTH_SKIP_LEVEL_CALIBRATION_ARG := $(if $(filter 1 true yes,$(AZOTH_SKIP_LEVEL_CALIBRATION)),--skip-level-calibration,)
+AZOTH_SKIP_LITMUS_VALIDATE ?= 0
 AZOTH_FEATURE_CACHE_DIR ?= $(OUT_DIR)/cache/azoth-route-features
 AZOTH_SPECIALIST_FOLDS ?= 0
 AZOTH_SPECIALIST_ESTIMATORS ?= 400
@@ -235,6 +236,40 @@ EXP_KV_VOCAB_MAX ?= 5000
 EXP_KV_MIN_FREQ ?= 5
 EXP_KV_SHAPE_FEATURES ?= 0
 EXP_TEXT_ENCODING_FEATURES ?= 0
+# Batch 1 — cheap metric extracts (default off; autocollie can toggle each).
+EXP_PE_FORMAT_FLAGS ?= 0
+EXP_PE_TEMPORAL_ANOMALY ?= 0
+EXP_TEXT_METRICS_FULL ?= 0
+EXP_OVERLAY_SIGNAL ?= 0
+EXP_METRIC_RATIO_FEATURES ?= 0
+EXP_SIZE_NORMALIZED_METRICS ?= 0
+EXP_NONSTANDARD_SECTION_SIGNAL ?= 0
+EXP_LINE_LENGTH_BUCKETS ?= 0
+# Batch 2 — allowlist + filter knobs (default off / no filter).
+EXP_EXTENDED_METRICS_INCLUDE ?=
+EXP_TOP_K_RISK_FILES_MIN_CRIT ?= 0
+EXP_METRIC_CORRELATION_PAIRS ?=
+EXP_KV_VALUE_SPLIT ?= 0
+# Batch 3 — symbol & string n-grams (default off; trigram_min_freq is the
+# symmetry knob and defaults to the previously-hardcoded value of 5).
+EXP_SYMBOL_BIGRAMS ?= 0
+EXP_SYMBOL_BIGRAM_MAX ?= 5000
+EXP_SYMBOL_MIN_FREQ_BIGRAM ?= 10
+EXP_SYMBOL_TRIGRAMS ?= 0
+EXP_SYMBOL_TRIGRAM_MAX ?= 2000
+EXP_SYMBOL_MIN_FREQ_TRIGRAM ?= 10
+EXP_TRIGRAM_MIN_FREQ ?= 5
+EXP_TIERED_CRIT_QUADGRAMS ?= 0
+EXP_TIERED_QUADGRAM_PATH_DEPTH ?= 3
+EXP_TIERED_QUADGRAM_MIN_CRIT ?= 3
+EXP_TIERED_QUADGRAM_MAX ?= 5000
+EXP_TIERED_QUADGRAM_MIN_FREQ ?= 5
+# Batch 4 — trait & taxonomy extensions (default off / no overrides).
+EXP_MBC_ID_VOCAB ?= 0
+EXP_TRAIT_CONFIDENCE_MOMENTS ?= 0
+EXP_TRAIT_ID_LEXICAL_DISTANCE ?= 0
+EXP_DOCUMENT_OBFUSCATION_FEATURES ?= 0
+EXP_TIERED_BIGRAM_BRANCH_MIN_CRIT ?=
 EXP_DISABLE_FEATURE_GROUPS ?= clusters
 # packaged_capability compute mode: zero | chars | tokens | paths | findings
 EXP_PACKAGED_CAPABILITY_MODE ?= paths
@@ -513,9 +548,25 @@ thresholds-refresh: venv check-db
 #
 # Make builds command-line goals left-to-right by default, so `repin` runs
 # first, then the next target rebuilds the pin from the current DB.
+# Prints the current pin (so you have a revert path) before clearing or
+# re-setting. Pass PIN_TO=<id> to atomically replace the pin with a
+# specific id (useful when reverting to the value an earlier `make repin`
+# printed). Default behavior with no PIN_TO clears the pin so the next
+# experiment re-queries max(id).
 repin:
-	@rm -f $(EXP_CACHE_DIR)/snapshot_max_id.txt
-	@echo "cleared snapshot pin: $(EXP_CACHE_DIR)/snapshot_max_id.txt (next invocation will re-query max(id))"
+	@if [ -f $(EXP_CACHE_DIR)/snapshot_max_id.txt ]; then \
+		echo "previous pin: $$(cat $(EXP_CACHE_DIR)/snapshot_max_id.txt) (revert with: make repin PIN_TO=$$(cat $(EXP_CACHE_DIR)/snapshot_max_id.txt))"; \
+	else \
+		echo "previous pin: (none)"; \
+	fi
+	@if [ -n "$(PIN_TO)" ]; then \
+		mkdir -p $(EXP_CACHE_DIR); \
+		echo "$(PIN_TO)" > $(EXP_CACHE_DIR)/snapshot_max_id.txt; \
+		echo "set snapshot pin: $(EXP_CACHE_DIR)/snapshot_max_id.txt -> $(PIN_TO)"; \
+	else \
+		rm -f $(EXP_CACHE_DIR)/snapshot_max_id.txt; \
+		echo "cleared snapshot pin: $(EXP_CACHE_DIR)/snapshot_max_id.txt (next invocation will re-query max(id))"; \
+	fi
 
 # azoth-clean-bundle: wipe regen-able deployed artifacts from the source
 # bundle slot at $(AZOTH_ROOT). Caches under */cache/ are preserved (rebuilding
@@ -692,9 +743,10 @@ azoth-policies: venv
 
 # azoth-validate runs every gate that azoth-deploy runs (calibrate, route
 # diagnostics, policy search, global FP/M with --fail-on-budget, bundle
-# validator, litmus parity), but stops short of copying anything into
-# $(AZOTH_DEPLOY_DIR). Used by autocollie's auto-promote path to vet a
-# candidate bundle without touching the live deploy.
+# validator, and litmus parity unless AZOTH_SKIP_LITMUS_VALIDATE=1), but
+# stops short of copying anything into $(AZOTH_DEPLOY_DIR). Used by
+# autocollie's auto-promote path to vet a candidate bundle without touching
+# the live deploy.
 .PHONY: azoth-validate
 azoth-validate: azoth-calibrate
 	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
@@ -734,9 +786,13 @@ azoth-validate: azoth-calibrate
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
-	  ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
-	  $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf && \
+	  if [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "1" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "true" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "yes" ]; then \
+	    echo "Skipping litmus deployed-ensemble compatibility checks (AZOTH_SKIP_LITMUS_VALIDATE=$(AZOTH_SKIP_LITMUS_VALIDATE))"; \
+	  else \
+	    echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
+	    ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
+	    $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf; \
+	  fi && \
 	  rm -rf "$$_STAGE" && \
 	  echo "azoth-validate: all gates passed for $(AZOTH_ROOT)" \
 	|| { ec=$$?; rm -rf "$$_STAGE"; exit $$ec; }
@@ -772,28 +828,55 @@ azoth-deploy: azoth-calibrate
 		--fail-on-budget
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
-	$(eval _STAGE := $(shell mktemp -d))
-	$(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$(_STAGE)"
-	cp "$(AZOTH_DIAGNOSTICS)" "$(_STAGE)/route_diagnostics.md"
-	cp "$(AZOTH_SLICE_METRICS)" "$(_STAGE)/slice_metrics.md"
-	cp "$(AZOTH_ROUTE_POLICIES_MD)" "$(_STAGE)/route_policies.md"
-	cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$(_STAGE)/global_policy_metrics.md"
-	$(PYTHON) scripts/validate_azoth_bundle.py "$(_STAGE)" || { rm -rf $(_STAGE); exit 1; }
-	@echo "Running litmus deployed-ensemble compatibility checks against staged copy..."
-	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test scan_no_deadlock || { rm -rf $(_STAGE); exit 1; }
-	$(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$(_STAGE)" --required-model az/native --required-model az/elf || { rm -rf $(_STAGE); exit 1; }
-	@mkdir -p "$(AZOTH_DEPLOY_DIR)"
+	$(MAKE) azoth-deploy-final
+
+# azoth-deploy-final reruns only the post-generation deploy stages: stage the
+# curated runtime/docs bundle, validate it, run litmus compatibility checks,
+# mirror it into $(AZOTH_DEPLOY_DIR), and verify litmus's default deployed path.
+# It intentionally skips azoth-calibrate, diagnostics, policy search, routed
+# metrics, and README regeneration; use after those artifacts already exist.
+azoth-deploy-final: venv
+	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
+	@test -f $(AZOTH_ROOT)/general/model.txt || ls $(AZOTH_ROOT)/general/models/seed_*.txt >/dev/null 2>&1 || { echo "error: $(AZOTH_ROOT)/general missing model.txt or models/seed_*.txt"; exit 1; }
+	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
+	@test -f $(AZOTH_DIAGNOSTICS) || { echo "error: $(AZOTH_DIAGNOSTICS) not found; run make azoth-deploy or regenerate diagnostics first"; exit 1; }
+	@test -f $(AZOTH_SLICE_METRICS) || { echo "error: $(AZOTH_SLICE_METRICS) not found; run make azoth-deploy or regenerate diagnostics first"; exit 1; }
+	@test -f $(AZOTH_ROUTE_POLICIES) || { echo "error: $(AZOTH_ROUTE_POLICIES) not found; run make azoth-deploy or make azoth-policies first"; exit 1; }
+	@test -f $(AZOTH_ROUTE_POLICIES_MD) || { echo "error: $(AZOTH_ROUTE_POLICIES_MD) not found; run make azoth-deploy or make azoth-policies first"; exit 1; }
+	@test -f $(AZOTH_GLOBAL_POLICY_METRICS_MD) || { echo "error: $(AZOTH_GLOBAL_POLICY_METRICS_MD) not found; run make azoth-deploy first"; exit 1; }
 	@# Mirror staged bundle into deploy dir, deleting anything in the deploy
 	@# tree that isn't in the staged copy. Per-route slot contents (e.g. an
 	@# old `models/` dir from a prior multi-seed deploy) get cleaned even
 	@# when the new bundle ships a single-seed `model.txt` for that route.
-	@# `--exclude` preserves repo-management files in the deploy dir.
-	rsync -a --delete \
-	  --exclude=.git --exclude=.gitignore \
-	  --exclude=LICENSE --exclude=README.md --exclude=TRAINING.md \
-	  "$(_STAGE)/" "$(AZOTH_DEPLOY_DIR)/"
-	@rm -rf $(_STAGE)
-	@echo "Deployed azoth ensemble bundle to $(AZOTH_DEPLOY_DIR)"
+	@# The lock prevents concurrent deploys from deleting each other's rsync
+	@# temp files; --delete-before avoids interleaving deletes with writes.
+	@# Protect only deploy repo metadata and static root legal/training docs;
+	@# the staged runtime/generated-docs payload is otherwise canonical, so
+	@# stale training artifacts are removed.
+	@_STAGE=$$(mktemp -d) && \
+	  _LOCK=$$(dirname "$(AZOTH_DEPLOY_DIR)")/.azoth-deploy.lock && \
+	  trap 'rm -rf "$$_STAGE"' EXIT INT TERM && \
+	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
+	  cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
+	  cp "$(AZOTH_SLICE_METRICS)" "$$_STAGE/slice_metrics.md" && \
+	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
+	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
+	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
+	  echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
+	  ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
+	  $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf && \
+	  mkdir -p "$(AZOTH_DEPLOY_DIR)" && \
+	  flock "$$_LOCK" rsync -a --delete-before \
+	    --filter='protect /.git/***' \
+	    --filter='protect /.gitignore' \
+	    --filter='protect /LICENSE' \
+	    --filter='protect /TRAINING.md' \
+	    "$$_STAGE/" "$(AZOTH_DEPLOY_DIR)/" && \
+	  echo "Running litmus default deployed-model check..." && \
+	  ( cd $(LITMUS_DIR) && cargo run --release -- --extra --show all scan /bin/ls ) && \
+	  echo "Deployed azoth ensemble bundle to $(AZOTH_DEPLOY_DIR)"
 
 false-positives: venv check-db
 	$(PYTHON) -u -m collimator false-positives --db $(DB) \
@@ -956,6 +1039,35 @@ experiment: venv check-db
 	COLLIMATOR_KV_SHAPE_FEATURES=$(EXP_KV_SHAPE_FEATURES) \
 	COLLIMATOR_TEXT_ENCODING_FEATURES=$(EXP_TEXT_ENCODING_FEATURES) \
 	COLLIMATOR_ATTACK_CODE_NGRAMS=$(EXP_ATTACK_CODE_NGRAMS) \
+	COLLIMATOR_PE_FORMAT_FLAGS=$(EXP_PE_FORMAT_FLAGS) \
+	COLLIMATOR_PE_TEMPORAL_ANOMALY=$(EXP_PE_TEMPORAL_ANOMALY) \
+	COLLIMATOR_TEXT_METRICS_FULL=$(EXP_TEXT_METRICS_FULL) \
+	COLLIMATOR_OVERLAY_SIGNAL=$(EXP_OVERLAY_SIGNAL) \
+	COLLIMATOR_METRIC_RATIO_FEATURES=$(EXP_METRIC_RATIO_FEATURES) \
+	COLLIMATOR_SIZE_NORMALIZED_METRICS=$(EXP_SIZE_NORMALIZED_METRICS) \
+	COLLIMATOR_NONSTANDARD_SECTION_SIGNAL=$(EXP_NONSTANDARD_SECTION_SIGNAL) \
+	COLLIMATOR_LINE_LENGTH_BUCKETS=$(EXP_LINE_LENGTH_BUCKETS) \
+	COLLIMATOR_EXTENDED_METRICS_INCLUDE=$(EXP_EXTENDED_METRICS_INCLUDE) \
+	COLLIMATOR_TOP_K_RISK_FILES_MIN_CRIT=$(EXP_TOP_K_RISK_FILES_MIN_CRIT) \
+	COLLIMATOR_METRIC_CORRELATION_PAIRS=$(EXP_METRIC_CORRELATION_PAIRS) \
+	COLLIMATOR_KV_VALUE_SPLIT=$(EXP_KV_VALUE_SPLIT) \
+	COLLIMATOR_SYMBOL_BIGRAMS=$(EXP_SYMBOL_BIGRAMS) \
+	COLLIMATOR_SYMBOL_BIGRAM_MAX=$(EXP_SYMBOL_BIGRAM_MAX) \
+	COLLIMATOR_SYMBOL_MIN_FREQ_BIGRAM=$(EXP_SYMBOL_MIN_FREQ_BIGRAM) \
+	COLLIMATOR_SYMBOL_TRIGRAMS=$(EXP_SYMBOL_TRIGRAMS) \
+	COLLIMATOR_SYMBOL_TRIGRAM_MAX=$(EXP_SYMBOL_TRIGRAM_MAX) \
+	COLLIMATOR_SYMBOL_MIN_FREQ_TRIGRAM=$(EXP_SYMBOL_MIN_FREQ_TRIGRAM) \
+	COLLIMATOR_TRIGRAM_MIN_FREQ=$(EXP_TRIGRAM_MIN_FREQ) \
+	COLLIMATOR_TIERED_CRIT_QUADGRAMS=$(EXP_TIERED_CRIT_QUADGRAMS) \
+	COLLIMATOR_TIERED_QUADGRAM_PATH_DEPTH=$(EXP_TIERED_QUADGRAM_PATH_DEPTH) \
+	COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT=$(EXP_TIERED_QUADGRAM_MIN_CRIT) \
+	COLLIMATOR_TIERED_QUADGRAM_MAX=$(EXP_TIERED_QUADGRAM_MAX) \
+	COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ=$(EXP_TIERED_QUADGRAM_MIN_FREQ) \
+	COLLIMATOR_MBC_ID_VOCAB=$(EXP_MBC_ID_VOCAB) \
+	COLLIMATOR_TRAIT_CONFIDENCE_MOMENTS=$(EXP_TRAIT_CONFIDENCE_MOMENTS) \
+	COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE=$(EXP_TRAIT_ID_LEXICAL_DISTANCE) \
+	COLLIMATOR_DOCUMENT_OBFUSCATION_FEATURES=$(EXP_DOCUMENT_OBFUSCATION_FEATURES) \
+	COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT=$(EXP_TIERED_BIGRAM_BRANCH_MIN_CRIT) \
 	COLLIMATOR_EXPERIMENT_TAG=$(EXP_TAG) \
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(EXP_OUT_DIR) --model-name $(MODEL) --learner $(LEARNER) $(EXP_WORKERS_ARG) --seed $(SEED) \
 		--experiment-idea $(EXP_IDEA) --route $(EXP_ROUTE) $(EXP_RERUN_ARG) \
@@ -1108,6 +1220,7 @@ verify-litmus:
 AUTOCOLLIE_DIR ?= ../autocollie
 AUTOCOLLIE_BIN := $(AUTOCOLLIE_DIR)/bin/autocollie
 EXPERIMENTS ?= 8
+AUTOCOLLIE_LLM_IDLE_TIMEOUT ?= 5m
 # Autocollie defaults to the hopper-host Postgres so it doesn't compete with
 # the local replica while it's syncing. Override with DB= to point elsewhere.
 AUTOCOLLIE_DB ?= postgres://hopper@hopper:5432/hopper
@@ -1178,6 +1291,7 @@ autocollie-screen: venv check-db autocollie-build
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--routes $(ROUTES) \
 		--experiments $(EXPERIMENTS) \
+		--llm-idle-timeout $(AUTOCOLLIE_LLM_IDLE_TIMEOUT) \
 		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # Confirm a screening winner by re-running with a different seed.
@@ -1227,6 +1341,7 @@ autocollie: venv check-db autocollie-build
 		--experiments $(EXPERIMENTS) \
 		--passes $(PASSES) \
 		--seed $(CONFIRM_SEED) \
+		--llm-idle-timeout $(AUTOCOLLIE_LLM_IDLE_TIMEOUT) \
 		--screen-timeout 30m \
 		--promote-timeout 180m \
 		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
@@ -1287,7 +1402,7 @@ help:
 	@echo "  autocollie-promote Confirm + full-train + compare; writes a deploy-or-not report"
 	@echo "  autocollie         Full hands-off ladder: screen + auto-promote per route"
 	@echo "  autocollie-loop    Same as autocollie with PASSES=0 (loop until Ctrl-C)"
-	@echo "  azoth-validate     Run all azoth-deploy gates against AZOTH_ROOT without copying"
+	@echo "  azoth-validate     Run azoth-deploy gates against AZOTH_ROOT without copying (AZOTH_SKIP_LITMUS_VALIDATE=1 skips litmus)"
 	@echo "  demo-db            Create a small SQLite DB for testing"
 	@echo "  test               Run unit tests"
 	@echo "  deploy             Copy model artifacts to ../litmus-models"

@@ -85,6 +85,7 @@ import logging
 import math
 import multiprocessing as mp
 import os
+import re
 import subprocess
 import time
 from collections import defaultdict
@@ -155,6 +156,207 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
 # Metric keys where log1p should be applied (counts, sizes, lengths).
 _LOG_METRIC_WORDS = frozenset({"count", "size", "total", "bytes", "length"})
 
+
+# ---------------------------------------------------------------------------
+# Batch 1 — cheap metric extracts (gated per-knob, optional)
+# ---------------------------------------------------------------------------
+# Each Batch-1 knob exposes a list of metric columns in the existing
+# `metrics:<suffix>` namespace. Columns are added to the feature spec only
+# when the knob is enabled, so disabled knobs cost nothing and don't affect
+# cached feature_specs of routes that never turn them on.
+#
+# A "getter" reads the merged ms.* dict and returns a float. For values that
+# don't survive the per-file → per-report max-aggregation (strings like
+# entry_section), the getter takes the raw `files` list as a fallback source.
+# Boolean cleave fields are converted to 0/1 via _metric_bool. Use_log1p
+# follows KEY_METRICS — log1p for counts/sizes, raw for ratios/booleans.
+
+# Each entry: (column_suffix, getter(metrics, files) -> float, use_log1p).
+# The full column name is "metrics:" + column_suffix.
+_Batch1Entry = tuple[str, "Callable[[dict, list[dict]], float]", bool]
+
+
+def _pe_entry_section_nontext(_metrics: dict, files: list[dict]) -> float:
+    """1.0 if any file's PE entry section isn't .text. Strings don't survive
+    metric max-aggregation, so we scan files directly."""
+    for f in files:
+        es = ((f.get("ms") or {}).get("pe") or {}).get("entry_section")
+        if isinstance(es, str) and es and es != ".text":
+            return 1.0
+    return 0.0
+
+
+def _pe_year_distance(metrics: dict, _files: list[dict]) -> float:
+    y = _metric_number(metrics, "pe", "timestamp_year")
+    if y <= 0:
+        return 0.0
+    from datetime import datetime  # noqa: PLC0415 — stdlib, local for cold path
+    return float(abs(datetime.now().year - y))
+
+
+def _ratio(num: float, denom: float) -> float:
+    return num / denom if denom > 0 else 0.0
+
+
+# pe_format_flags — 5 PE flag-shape extracts.
+_BATCH1_PE_FORMAT_FLAGS: list[_Batch1Entry] = [
+    ("pe_is_dotnet",             lambda m, _f: float(_metric_bool(m, "pe", "is_dotnet")),       False),
+    ("pe_linker_major_version",  lambda m, _f: _metric_number(m, "pe", "linker_major_version"), False),
+    ("pe_subsystem",             lambda m, _f: _metric_number(m, "pe", "subsystem"),            False),
+    ("pe_checksum_missing",      lambda m, _f: float(_metric_bool(m, "pe", "checksum_missing")),False),
+    ("pe_entry_section_nontext", _pe_entry_section_nontext,                                     False),
+]
+
+# pe_temporal_anomaly — distance from current year + 1970/future flags.
+_BATCH1_PE_TEMPORAL: list[_Batch1Entry] = [
+    ("pe_year_distance", _pe_year_distance,                                                           True),
+    ("pe_year_pre_2000", lambda m, _f: 1.0 if 0 < _metric_number(m, "pe", "timestamp_year") < 2000 else 0.0, False),
+    ("pe_year_future",   lambda m, _f: 1.0 if _metric_number(m, "pe", "timestamp_year") > 2030 else 0.0,     False),
+]
+
+# text_metrics_full — promote ~25 ms.text.* fields. Currently only
+# char_entropy/unique_chars/whitespace_ratio/most_common_ratio/total_lines
+# are in KEY_METRICS; the rest of the text block sits idle, despite being
+# the most-distinguishing signal we found between good/bad PDFs.
+_TEXT_FULL_FIELDS: list[tuple[str, bool]] = [
+    ("non_ascii_ratio", False), ("non_printable_ratio", False), ("null_byte_count", True),
+    ("high_byte_ratio", False), ("avg_line_length", True), ("max_line_length", True),
+    ("line_length_stddev", True), ("last_line_length", True), ("empty_line_ratio", False),
+    ("tab_count", True), ("space_count", True), ("trailing_whitespace_lines", True),
+    ("unusual_whitespace", True), ("max_inline_whitespace_run", True),
+    ("unicode_escape_count", True), ("octal_escape_count", True), ("escape_density", False),
+    ("invisible_chars", True), ("long_token_count", True),
+    ("repeated_char_sequences", True), ("digit_ratio", False),
+]
+_BATCH1_TEXT_FULL: list[_Batch1Entry] = [
+    (f"text_{f}", (lambda m, _f, f=f: _metric_number(m, "text", f)), use_log)
+    for f, use_log in _TEXT_FULL_FIELDS
+] + [
+    ("text_mixed_indent", lambda m, _f: float(_metric_bool(m, "text", "mixed_indent")), False),
+]
+
+# overlay_signal_features — promote overlay metrics from the one-shot
+# threshold check at line ~2134 to continuous features.
+_BATCH1_OVERLAY: list[_Batch1Entry] = [
+    ("binary_overlay_ratio",   lambda m, _f: _metric_number(m, "binary", "overlay_ratio"),   False),
+    ("binary_overlay_entropy", lambda m, _f: _metric_number(m, "binary", "overlay_entropy"), False),
+    ("binary_overlay_size",    lambda m, _f: _metric_number(m, "binary", "overlay_size"),    True),
+    ("binary_has_overlay",     lambda m, _f: float(_metric_bool(m, "binary", "has_overlay")), False),
+]
+
+# metric_ratio_features — derived cross-metric ratios. Trees can in
+# principle learn these, but pre-engineering helps on small corpora where
+# the tree can't afford to discover every interaction itself.
+_BATCH1_RATIOS: list[_Batch1Entry] = [
+    ("derived_string_per_function",
+     lambda m, _f: _ratio(_metric_number(m, "binary", "string_count"),
+                          _metric_number(m, "binary", "function_count")), False),
+    ("derived_imports_per_dependency",
+     lambda m, _f: _ratio(_metric_number(m, "binary", "import_count"),
+                          _metric_number(m, "binary", "dependency_count")), False),
+    ("derived_wide_string_ratio",
+     lambda m, _f: _ratio(_metric_number(m, "binary", "wide_string_count"),
+                          _metric_number(m, "binary", "string_count")), False),
+]
+
+# size_normalized_metrics — raw structural counts divided by file size in
+# KB. Distinct from the existing finding-density features (which normalize
+# *finding* counts).
+_BATCH1_SIZE_NORMALIZED: list[_Batch1Entry] = [
+    ("derived_imports_per_kb",
+     lambda m, _f: _ratio(_metric_number(m, "binary", "import_count"),
+                          _metric_number(m, "binary", "file_size") / 1024.0), False),
+    ("derived_sections_per_kb",
+     lambda m, _f: _ratio(_metric_number(m, "binary", "section_count"),
+                          _metric_number(m, "binary", "file_size") / 1024.0), False),
+    ("derived_strings_per_kb",
+     lambda m, _f: _ratio(_metric_number(m, "binary", "string_count"),
+                          _metric_number(m, "binary", "file_size") / 1024.0), False),
+]
+
+# nonstandard_section_signal — promote one binary metric to a feature.
+_BATCH1_NONSTANDARD_SECTION: list[_Batch1Entry] = [
+    ("binary_nonstandard_section_name_count",
+     lambda m, _f: _metric_number(m, "binary", "nonstandard_section_name_count"), True),
+]
+
+# line_length_bucket_histogram — explicit bucketed histogram + the per-
+# bucket differentials (lines in 200-499 range vs 500-999 range).
+_BATCH1_LINE_BUCKETS: list[_Batch1Entry] = [
+    ("text_lines_over_200",  lambda m, _f: _metric_number(m, "text", "lines_over_200"),  True),
+    ("text_lines_over_500",  lambda m, _f: _metric_number(m, "text", "lines_over_500"),  True),
+    ("text_lines_over_1000", lambda m, _f: _metric_number(m, "text", "lines_over_1000"), True),
+    ("text_lines_in_200_499",
+     lambda m, _f: max(0.0, _metric_number(m, "text", "lines_over_200")
+                            - _metric_number(m, "text", "lines_over_500")), True),
+    ("text_lines_in_500_999",
+     lambda m, _f: max(0.0, _metric_number(m, "text", "lines_over_500")
+                            - _metric_number(m, "text", "lines_over_1000")), True),
+]
+
+
+def _batch1_enabled_tables(config: "FeatureConfig") -> list[list[_Batch1Entry]]:
+    """Ordered list of Batch-1 tables whose knob is enabled in `config`."""
+    out: list[list[_Batch1Entry]] = []
+    if config.include_pe_format_flags:            out.append(_BATCH1_PE_FORMAT_FLAGS)
+    if config.include_pe_temporal_anomaly:        out.append(_BATCH1_PE_TEMPORAL)
+    if config.include_text_metrics_full:          out.append(_BATCH1_TEXT_FULL)
+    if config.include_overlay_signal:             out.append(_BATCH1_OVERLAY)
+    if config.include_metric_ratio_features:      out.append(_BATCH1_RATIOS)
+    if config.include_size_normalized_metrics:    out.append(_BATCH1_SIZE_NORMALIZED)
+    if config.include_nonstandard_section_signal: out.append(_BATCH1_NONSTANDARD_SECTION)
+    if config.include_line_length_buckets:        out.append(_BATCH1_LINE_BUCKETS)
+    return out
+
+
+def _batch1_column_suffixes(config: "FeatureConfig") -> list[str]:
+    """All Batch-1 column suffixes this config enables (no `metrics:` prefix)."""
+    return [suffix for table in _batch1_enabled_tables(config) for suffix, _, _ in table]
+
+
+# ---------------------------------------------------------------------------
+# Batch 2 — allowlist + filter knobs
+# ---------------------------------------------------------------------------
+# `metric_correlation_pairs` accepts a CSV of `<group_a>.<key_a>*<group_b>.<key_b>`
+# pair specs and exposes each as a derived `metrics:derived_corr_*` column.
+# Trees can in principle learn pairwise interactions, but pre-engineering
+# them helps on small corpora where the tree can't afford to discover
+# every interaction itself.
+
+def _parse_metric_pair(spec: str) -> tuple[tuple[str, str], tuple[str, str]] | None:
+    """Parse a `<group_a>.<key_a>*<group_b>.<key_b>` pair spec.
+
+    Returns ((group_a, key_a), (group_b, key_b)) or None if malformed.
+    """
+    if "*" not in spec:
+        return None
+    a, _, b = spec.partition("*")
+    a_parts = a.strip().split(".", 1)
+    b_parts = b.strip().split(".", 1)
+    if len(a_parts) != 2 or len(b_parts) != 2:
+        return None
+    if not all(p.strip() for p in a_parts + b_parts):
+        return None
+    return (a_parts[0].strip(), a_parts[1].strip()), (b_parts[0].strip(), b_parts[1].strip())
+
+
+_MetricPair = tuple[str, str]
+_CorrelationColumn = tuple[str, _MetricPair, _MetricPair]
+
+
+def _metric_correlation_columns(config: "FeatureConfig") -> list[_CorrelationColumn]:
+    """For each parseable pair spec, return (column_suffix, a, b)."""
+    out: list[_CorrelationColumn] = []
+    for raw in config.metric_correlation_pairs:
+        parsed = _parse_metric_pair(raw)
+        if parsed is None:
+            continue
+        a, b = parsed
+        suffix = f"derived_corr_{a[0]}_{a[1]}_x_{b[0]}_{b[1]}"
+        out.append((suffix, a, b))
+    return out
+
+
 _CRIT_PREFIX = {3: "n", 4: "s", 5: "h"}  # notable, suspicious, hostile
 
 # Top-level categories included in crit-category n-grams.
@@ -189,21 +391,71 @@ def _crit_category_tokens(sample_paths: dict[str, int]) -> list[str]:
     return sorted(f"{_CRIT_PREFIX.get(crit, 'n')}:{key}" for key, crit in path_max_crit.items())
 
 
+def _parse_branch_min_crit_overrides(items: tuple[str, ...]) -> dict[str, int]:
+    """Parse `<branch>=<min_crit>` overrides for tiered_bigram min-crit gating.
+
+    Skips malformed entries silently. Branches are matched against a
+    finding's top-level path component (e.g. `objectives` matches
+    `objectives/evasion/process`).
+    """
+    out: dict[str, int] = {}
+    for raw in items:
+        if "=" not in raw:
+            continue
+        branch, _, value = raw.partition("=")
+        branch = branch.strip()
+        try:
+            crit = int(value.strip())
+        except ValueError:
+            continue
+        if branch and 0 <= crit <= 5:
+            out[branch] = crit
+    return out
+
+
 def _tiered_bigram_tokens(
     sample_paths: dict[str, int],
     *,
     depth: int,
     min_crit: int,
+    branch_min_crit: dict[str, int] | None = None,
 ) -> list[str]:
-    """Generate severity-prefixed report-level path tokens for tiered bigrams."""
+    """Generate severity-prefixed report-level path tokens for tiered bigrams.
+
+    When `branch_min_crit` is supplied, the per-branch floor (matched against
+    the path's top-level component) overrides the global `min_crit`. Branches
+    not in the map fall back to `min_crit`. Lets autocollie set tighter floors
+    on noisy branches (e.g. `metadata=4`) and looser on signal-dense ones
+    (e.g. `objectives=2`).
+    """
     token_max_crit: dict[str, int] = {}
+    branch_min_crit = branch_min_crit or {}
     for path, max_ord in sample_paths.items():
-        if max_ord < min_crit:
+        branch = path.split("/", 1)[0]
+        floor = branch_min_crit.get(branch, min_crit)
+        if max_ord < floor:
             continue
         key = _truncate_path(path, depth)
         if max_ord > token_max_crit.get(key, 0):
             token_max_crit[key] = max_ord
     return sorted(f"{_CRIT_PREFIX.get(crit, 'n')}:{path}" for path, crit in token_max_crit.items())
+
+
+def _quadgram_tokens(tokens: list[str]) -> "Iterator[str]":
+    """Yield 4-token combinations as `t1 + t2 + t3 + t4` strings.
+
+    Mirrors the tiered_trigram pattern (`t1 + t2 + t3`) one order up.
+    Tokens are assumed already sorted; combinations preserve that order.
+    """
+    n = len(tokens)
+    for i in range(n):
+        t1 = tokens[i]
+        for j in range(i + 1, n):
+            t2 = tokens[j]
+            for k in range(j + 1, n):
+                t3 = tokens[k]
+                for m in range(k + 1, n):
+                    yield f"{t1} + {t2} + {t3} + {tokens[m]}"
 
 LOGIC_GAPS = {
     # Behavior Category -> (List of imports that imply it, List of trait paths that represent it)
@@ -362,6 +614,61 @@ class FeatureConfig:
     exp_entropy_hostile: bool        # 8: entropy × hostile concentration
     exp_hostile_objective_div: bool  # 9: hostile-level objective category diversity
     exp_import_finding_ratio: bool   # 10: import count / finding count ratio
+    # Batch 1: cheap metric extracts. Each toggle adds a small list of
+    # `metrics:<suffix>` columns; see _BATCH1_* tables above for the exact
+    # column names. All default off so disabled knobs cost nothing.
+    include_pe_format_flags: bool
+    include_pe_temporal_anomaly: bool
+    include_text_metrics_full: bool
+    include_overlay_signal: bool
+    include_metric_ratio_features: bool
+    include_size_normalized_metrics: bool
+    include_nonstandard_section_signal: bool
+    include_line_length_buckets: bool
+    # Batch 2: allowlist + filter knobs. Allow autocollie to dial in finer
+    # selections of existing infrastructure without all-or-nothing toggles.
+    # Non-empty extended_metrics_include restricts the extended_metrics scan
+    # to keys matching one of those `<group>_<key>` prefixes.
+    extended_metrics_include: tuple[str, ...]
+    # Min cleave-crit floor for files eligible for top-k risk aggregation.
+    # 0 = no floor (current behavior).
+    top_k_risk_files_min_crit: int
+    # CSV of `<group_a>.<key_a>*<group_b>.<key_b>` pairs exposed as derived
+    # `metrics:derived_corr_*` columns (pre-computed pairwise products).
+    metric_correlation_pairs: tuple[str, ...]
+    # Additionally split string-valued kv tokens on common separators.
+    include_kv_value_split: bool
+    # Batch 3 — symbol & string n-grams. Each toggle adds a new vocab built
+    # from the corpus scan; columns appear in the spec only when the
+    # corresponding bool is on. Defaults preserve current behavior (off).
+    include_symbol_bigrams: bool
+    symbol_bigram_max: int
+    symbol_min_freq_bigram: int
+    include_symbol_trigrams: bool
+    symbol_trigram_max: int
+    symbol_min_freq_trigram: int
+    # Symmetry fix: existing path-trigrams hard-code `c >= 5` for vocab
+    # inclusion. This knob exposes that floor so autocollie can sweep it
+    # the same way it sweeps `bigram_min_freq`.
+    trigram_min_freq: int
+    # Tiered crit quadgrams — extends the tiered_crit_bigrams /
+    # tiered_crit_trigrams ladder one more order. C(n, 4) cost is steep,
+    # so the per-token cap stays the same (512) but autocollie should
+    # only enable this on routes where the trigram knob already won.
+    include_tiered_crit_quadgrams: bool
+    tiered_quadgram_path_depth: int
+    tiered_quadgram_min_crit: int
+    tiered_quadgram_max: int
+    tiered_quadgram_min_freq: int
+    # Batch 4 — trait & taxonomy extensions.
+    include_mbc_id_vocab: bool                      # bag of unique MBC IDs (m-field) as binary features
+    include_trait_confidence_moments: bool          # mean/std/skew/kurtosis of finding confidences
+    include_trait_id_lexical_distance: bool         # avg Levenshtein distance between sorted trait IDs
+    include_document_obfuscation_features: bool     # aggregate counts of doc-obfuscation/eval/lure paths
+    # CSV of `<top_level_branch>=<min_crit>` overrides for the tiered_bigram
+    # min_crit gate (e.g. `capability=4,metadata=2`). Branches not listed
+    # fall back to tiered_bigram_min_crit. Empty = current behavior (uniform).
+    tiered_bigram_branch_min_crit: tuple[str, ...]
 
 
 @lru_cache(maxsize=1)
@@ -532,6 +839,80 @@ def feature_config_from_env() -> FeatureConfig:
         exp_entropy_hostile=os.getenv("COLLIMATOR_EXP_8") == "1",
         exp_hostile_objective_div=os.getenv("COLLIMATOR_EXP_9") == "1",
         exp_import_finding_ratio=os.getenv("COLLIMATOR_EXP_10") == "1",
+        # Batch 1 — cheap metric extracts.
+        include_pe_format_flags=os.getenv("COLLIMATOR_PE_FORMAT_FLAGS") in {
+            "1", "true", "yes", "on",
+        },
+        include_pe_temporal_anomaly=os.getenv("COLLIMATOR_PE_TEMPORAL_ANOMALY") in {
+            "1", "true", "yes", "on",
+        },
+        include_text_metrics_full=os.getenv("COLLIMATOR_TEXT_METRICS_FULL") in {
+            "1", "true", "yes", "on",
+        },
+        include_overlay_signal=os.getenv("COLLIMATOR_OVERLAY_SIGNAL") in {
+            "1", "true", "yes", "on",
+        },
+        include_metric_ratio_features=os.getenv("COLLIMATOR_METRIC_RATIO_FEATURES") in {
+            "1", "true", "yes", "on",
+        },
+        include_size_normalized_metrics=os.getenv("COLLIMATOR_SIZE_NORMALIZED_METRICS") in {
+            "1", "true", "yes", "on",
+        },
+        include_nonstandard_section_signal=os.getenv("COLLIMATOR_NONSTANDARD_SECTION_SIGNAL") in {
+            "1", "true", "yes", "on",
+        },
+        include_line_length_buckets=os.getenv("COLLIMATOR_LINE_LENGTH_BUCKETS") in {
+            "1", "true", "yes", "on",
+        },
+        # Batch 2 — allowlist + filter knobs.
+        extended_metrics_include=tuple(
+            p.strip() for p in os.getenv("COLLIMATOR_EXTENDED_METRICS_INCLUDE", "").split(",")
+            if p.strip()
+        ),
+        top_k_risk_files_min_crit=max(int(os.getenv("COLLIMATOR_TOP_K_RISK_FILES_MIN_CRIT", "0") or "0"), 0),
+        metric_correlation_pairs=tuple(
+            p.strip() for p in os.getenv("COLLIMATOR_METRIC_CORRELATION_PAIRS", "").split(",")
+            if p.strip()
+        ),
+        include_kv_value_split=os.getenv("COLLIMATOR_KV_VALUE_SPLIT") in {
+            "1", "true", "yes", "on",
+        },
+        # Batch 3 — symbol & string n-grams.
+        include_symbol_bigrams=os.getenv("COLLIMATOR_SYMBOL_BIGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        symbol_bigram_max=int(os.getenv("COLLIMATOR_SYMBOL_BIGRAM_MAX", "5000")),
+        symbol_min_freq_bigram=int(os.getenv("COLLIMATOR_SYMBOL_MIN_FREQ_BIGRAM", "10")),
+        include_symbol_trigrams=os.getenv("COLLIMATOR_SYMBOL_TRIGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        symbol_trigram_max=int(os.getenv("COLLIMATOR_SYMBOL_TRIGRAM_MAX", "2000")),
+        symbol_min_freq_trigram=int(os.getenv("COLLIMATOR_SYMBOL_MIN_FREQ_TRIGRAM", "10")),
+        trigram_min_freq=int(os.getenv("COLLIMATOR_TRIGRAM_MIN_FREQ", "5")),
+        include_tiered_crit_quadgrams=os.getenv("COLLIMATOR_TIERED_CRIT_QUADGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        tiered_quadgram_path_depth=int(os.getenv("COLLIMATOR_TIERED_QUADGRAM_PATH_DEPTH", "3")),
+        tiered_quadgram_min_crit=int(os.getenv("COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT", "3")),
+        tiered_quadgram_max=int(os.getenv("COLLIMATOR_TIERED_QUADGRAM_MAX", "5000")),
+        tiered_quadgram_min_freq=int(os.getenv("COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ", "5")),
+        # Batch 4 — trait & taxonomy extensions.
+        include_mbc_id_vocab=os.getenv("COLLIMATOR_MBC_ID_VOCAB") in {
+            "1", "true", "yes", "on",
+        },
+        include_trait_confidence_moments=os.getenv("COLLIMATOR_TRAIT_CONFIDENCE_MOMENTS") in {
+            "1", "true", "yes", "on",
+        },
+        include_trait_id_lexical_distance=os.getenv("COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE") in {
+            "1", "true", "yes", "on",
+        },
+        include_document_obfuscation_features=os.getenv("COLLIMATOR_DOCUMENT_OBFUSCATION_FEATURES") in {
+            "1", "true", "yes", "on",
+        },
+        tiered_bigram_branch_min_crit=tuple(
+            p.strip() for p in os.getenv("COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT", "").split(",")
+            if p.strip()
+        ),
     )
 
 
@@ -582,6 +963,38 @@ def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
     return symbols
 
 
+# Per-file caps for symbol n-gram generation. Real binaries can have 300+
+# imports; C(300, 2) = 44k pairs and C(300, 3) = 4.4M triples per file
+# would blow corpus-scan memory + time. Sorting alphabetically and taking
+# the first N gives deterministic vocab across rebuilds; the corpus-scan
+# min_freq filter then drops pairs that don't survive across files.
+_SYMBOL_BIGRAM_CAP = 64
+_SYMBOL_TRIGRAM_CAP = 24
+
+
+def _file_symbol_bigrams(file_entry: dict[str, Any]) -> list[str]:
+    """Sorted unordered symbol-pair tokens. Capped per file."""
+    syms = sorted(_file_symbols(file_entry))[:_SYMBOL_BIGRAM_CAP]
+    out: list[str] = []
+    for i, a in enumerate(syms):
+        for b in syms[i + 1:]:
+            out.append(f"{a}||{b}")
+    return out
+
+
+def _file_symbol_trigrams(file_entry: dict[str, Any]) -> list[str]:
+    """Sorted unordered symbol-triple tokens. Capped tighter than bigrams
+    because C(n, 3) grows much faster."""
+    syms = sorted(_file_symbols(file_entry))[:_SYMBOL_TRIGRAM_CAP]
+    out: list[str] = []
+    for i, a in enumerate(syms):
+        for j in range(i + 1, len(syms)):
+            b = syms[j]
+            for c in syms[j + 1:]:
+                out.append(f"{a}||{b}||{c}")
+    return out
+
+
 def _bucket_count(value: int) -> str:
     if value <= 0:
         return "0"
@@ -626,8 +1039,22 @@ def _bucket_number(value: float) -> str:
     return f"{sign}_{bucket}"
 
 
-def _metric_kv_tokens(file_entry: dict[str, Any], *, include_shape: bool = False) -> set[str]:
-    """Return ms.* key/value and shape tokens for experimental KV vocab."""
+_KV_VALUE_SPLIT_SEPARATORS = re.compile(r"[\s,;:/\\|]+")
+
+
+def _metric_kv_tokens(
+    file_entry: dict[str, Any],
+    *,
+    include_shape: bool = False,
+    split_string_values: bool = False,
+) -> set[str]:
+    """Return ms.* key/value and shape tokens for experimental KV vocab.
+
+    `split_string_values` additionally emits per-component tokens for
+    string-valued metrics by splitting on common separators — recovers
+    the per-element signal in things like `needed_libs="[libcap.so.2,
+    libc.so.6]"` that would otherwise be one opaque blob token.
+    """
     tokens: set[str] = set()
     metrics = file_entry.get("ms") or {}
     for group, fields in metrics.items():
@@ -646,6 +1073,11 @@ def _metric_kv_tokens(file_entry: dict[str, Any], *, include_shape: bool = False
                 if include_shape:
                     tokens.add(f"{base}:strlen={_bucket_count(len(value))}")
                     tokens.add(f"{base}:nonempty" if value else f"{base}:empty")
+                if split_string_values and value:
+                    for component in _KV_VALUE_SPLIT_SEPARATORS.split(value):
+                        sub = _normalize_vocab_token(component, max_len=64)
+                        if sub:
+                            tokens.add(f"{base}=part:{sub}")
             else:
                 if include_shape:
                     if value in (None, [], {}, ()):
@@ -764,8 +1196,12 @@ class FeatureSpec:
     mbc_trigram_vocab: list[str] = field(default_factory=list)
     tiered_bigram_vocab: list[str] = field(default_factory=list)
     tiered_trigram_vocab: list[str] = field(default_factory=list)
+    tiered_quadgram_vocab: list[str] = field(default_factory=list)
     symbol_vocab: list[str] = field(default_factory=list)
+    symbol_bigram_vocab: list[str] = field(default_factory=list)
+    symbol_trigram_vocab: list[str] = field(default_factory=list)
     kv_vocab: list[str] = field(default_factory=list)
+    mbc_id_vocab: list[str] = field(default_factory=list)
     feature_names: list[str] = field(default_factory=list)
     total_features: int = 0
     feature_means: list[float] | None = None
@@ -797,8 +1233,12 @@ class FeatureSpec:
             "mbc_trigram_vocab": self.mbc_trigram_vocab,
             "tiered_bigram_vocab": self.tiered_bigram_vocab,
             "tiered_trigram_vocab": self.tiered_trigram_vocab,
+            "tiered_quadgram_vocab": self.tiered_quadgram_vocab,
             "symbol_vocab": self.symbol_vocab,
+            "symbol_bigram_vocab": self.symbol_bigram_vocab,
+            "symbol_trigram_vocab": self.symbol_trigram_vocab,
             "kv_vocab": self.kv_vocab,
+            "mbc_id_vocab": self.mbc_id_vocab,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -844,8 +1284,12 @@ class FeatureSpec:
             mbc_trigram_vocab=data.get("mbc_trigram_vocab", []),
             tiered_bigram_vocab=data.get("tiered_bigram_vocab", []),
             tiered_trigram_vocab=data.get("tiered_trigram_vocab", []),
+            tiered_quadgram_vocab=data.get("tiered_quadgram_vocab", []),
             symbol_vocab=data.get("symbol_vocab", []),
+            symbol_bigram_vocab=data.get("symbol_bigram_vocab", []),
+            symbol_trigram_vocab=data.get("symbol_trigram_vocab", []),
             kv_vocab=data.get("kv_vocab", []),
+            mbc_id_vocab=data.get("mbc_id_vocab", []),
             feature_names=data["feature_names"],
             total_features=data["total_features"],
             feature_means=data.get("feature_means"),
@@ -895,8 +1339,12 @@ def _build_feature_names(
     mbc_trigram_vocab: list[str] | None = None,
     tiered_bigram_vocab: list[str] | None = None,
     tiered_trigram_vocab: list[str] | None = None,
+    tiered_quadgram_vocab: list[str] | None = None,
     symbol_vocab: list[str] | None = None,
+    symbol_bigram_vocab: list[str] | None = None,
+    symbol_trigram_vocab: list[str] | None = None,
     kv_vocab: list[str] | None = None,
+    mbc_id_vocab: list[str] | None = None,
 ) -> list[str]:
     """Generate the full ordered list of feature names for a given vocabulary."""
     config = feature_config_from_env()
@@ -1010,8 +1458,24 @@ def _build_feature_names(
             feature_names.append("agg:import_category_count")
         if config.exp_suspicious_api_combo:
             feature_names.append("agg:suspicious_api_combo")
-        if config.exp_confidence_skew:
+        if config.exp_confidence_skew or config.include_trait_confidence_moments:
             feature_names.extend(["agg:confidence_mean", "agg:confidence_std"])
+        if config.include_trait_confidence_moments:
+            # Promote from EXP_3 with 2 additional moments (skew + kurtosis).
+            feature_names.extend(["agg:confidence_skew", "agg:confidence_kurtosis"])
+        if config.include_trait_id_lexical_distance:
+            feature_names.append("agg:trait_id_lexical_distance")
+        if config.include_document_obfuscation_features:
+            # Aggregate counts of doc-obfuscation / interpreter-eval / lure
+            # paths from cleave's document-malware taxonomy. These show up
+            # frequently on PDF/RTF/DOCX malware and rarely on benign docs.
+            feature_names.extend([
+                "agg:docobf_obfuscation_count",
+                "agg:docobf_eval_count",
+                "agg:docobf_lure_count",
+                "agg:docobf_total_count",
+                "agg:docobf_has_any",
+            ])
         if config.exp_finding_depth_var:
             feature_names.append("agg:finding_depth_var")
         if config.exp_multifile_crit_spread:
@@ -1087,6 +1551,11 @@ def _build_feature_names(
                 feature_names.append(f"mbcbi:{mb}")
             for mt in (mbc_trigram_vocab or []):
                 feature_names.append(f"mbctri:{mt}")
+        # Batch 4: unigram MBC IDs as binary features (mirrors symbol_vocab
+        # shape but pulled from the trait `m` field).
+        if config.include_mbc_id_vocab:
+            for mid in (mbc_id_vocab or []):
+                feature_names.append(f"mbc:{mid}")
 
     # Group 4: Third-Party / Well-Known Summary (6).
     if "ext" in config.enabled_groups:
@@ -1099,12 +1568,24 @@ def _build_feature_names(
             "ext:has_yara_match",
         ])
 
-    # Group 5: Key Metrics (16 base) + extended metric vocab.
+    # Group 5: Key Metrics (16 base) + extended metric vocab + Batch-1 toggles.
     if "metrics" in config.enabled_groups:
         for group, fname, _ in KEY_METRICS:
             feature_names.append(f"metrics:{group}_{fname}")
+        # Batch 1 columns are appended before extended_metrics so the dedup
+        # below can skip any extended-metrics-vocab entries that collide
+        # (e.g. the corpus may have surfaced `pe_is_dotnet` already).
+        batch1_suffixes = _batch1_column_suffixes(config)
+        seen = {f"{g}_{f}" for g, f, _ in KEY_METRICS} | set(batch1_suffixes)
+        for suffix in batch1_suffixes:
+            feature_names.append(f"metrics:{suffix}")
+        for suffix, _a, _b in _metric_correlation_columns(config):
+            seen.add(suffix)
+            feature_names.append(f"metrics:{suffix}")
         if config.include_extended_metrics:
-            for mk in metric_vocab:
+            for mk in (metric_vocab or ()):
+                if mk in seen:
+                    continue
                 feature_names.append(f"metrics:{mk}")
 
     # Group 6: File Type multi-hot across all files in the report.
@@ -1190,6 +1671,13 @@ def _build_feature_names(
     if "tiered_trigrams" in config.enabled_groups and config.include_tiered_crit_trigrams:
         for trigram in (tiered_trigram_vocab or []):
             feature_names.append(f"tiertri:{trigram}")
+
+    # Group 11d (Batch 3): Report-level severity-prefixed trait quadgrams.
+    # Reuses the `tiered_trigrams` group toggle so quadgrams ride the same
+    # disable_groups switch — they're an extension of the same family.
+    if "tiered_trigrams" in config.enabled_groups and config.include_tiered_crit_quadgrams:
+        for quadgram in (tiered_quadgram_vocab or []):
+            feature_names.append(f"tierquad:{quadgram}")
 
     # Group 12: Ghosts (absence of expected benign behavior).
     if "ghosts" in config.enabled_groups:
@@ -1278,6 +1766,15 @@ def _build_feature_names(
     if "symbols" in config.enabled_groups and config.include_symbol_vocab:
         for sym in symbol_vocab or []:
             feature_names.append(f"symbol:{sym}")
+
+    # Batch 3: symbol n-grams. Same `symbols` group toggle so they ride the
+    # disable_groups switch alongside `symbol_vocab`.
+    if "symbols" in config.enabled_groups and config.include_symbol_bigrams:
+        for bi in symbol_bigram_vocab or []:
+            feature_names.append(f"symbol_bi:{bi}")
+    if "symbols" in config.enabled_groups and config.include_symbol_trigrams:
+        for tri in symbol_trigram_vocab or []:
+            feature_names.append(f"symbol_tri:{tri}")
 
     if "kv" in config.enabled_groups and config.include_kv_vocab:
         for kv in kv_vocab or []:
@@ -1757,12 +2254,22 @@ def _topk_file_risk_features(
     k: int,
     *,
     include_breadth_density: bool = False,
+    min_crit: int = 0,
 ) -> tuple[float, ...]:
-    """Summarize the riskiest files so a few bad files survive package dilution."""
+    """Summarize the riskiest files so a few bad files survive package dilution.
+
+    `min_crit` filters out files whose max_crit is below the floor before
+    sorting. This keeps the top-k from surfacing 0.1-crit noise on archives
+    that have no real findings.
+    """
     if k <= 0 or not files:
         return 0.0, 0.0, 0.0, 0.0
 
     stats = [_file_risk_stats(file_entry) for file_entry in files]
+    if min_crit > 0:
+        stats = [s for s in stats if s.max_crit >= min_crit]
+        if not stats:
+            return 0.0, 0.0, 0.0, 0.0
     top_suspicious = sorted(
         stats,
         key=lambda s: (s.suspicious_ratio, s.suspicious_findings, s.hostile_ratio, s.hostile_findings),
@@ -1850,6 +2357,7 @@ def _apply_aggregate_features(
     include_hostile_weighted_density: bool,
     include_repetition_penalty: bool,
     include_file_severity_distribution: bool,
+    top_k_risk_files_min_crit: int = 0,
 ) -> None:
     """Group 3: aggregate path breadth and concentration features."""
     sample_paths = summary.sample_paths
@@ -1936,6 +2444,7 @@ def _apply_aggregate_features(
         files,
         top_k_risk_files,
         include_breadth_density=include_breadth_density,
+        min_crit=top_k_risk_files_min_crit,
     )
     topk_susp_ratio, topk_host_ratio, topk_susp_log, topk_host_log = topk_features[:4]
     _assign(vec, lookup.get(f"agg:top{top_k_risk_files}_file_suspicious_ratio_sum"), topk_susp_ratio)
@@ -2090,14 +2599,27 @@ def _apply_experimental_features(
         high_risk_present = import_categories & _HIGH_RISK_COMBOS
         _assign(vec, lookup.get("agg:suspicious_api_combo"), float(len(high_risk_present)))
 
-    # Exp 3: Confidence distribution features.
-    if config.exp_confidence_skew:
+    # Exp 3 / Batch 4: Confidence distribution features. The legacy EXP_3
+    # path emits mean+std; the Batch-4 promotion adds skew+kurtosis as
+    # 3rd/4th moments. Either flag triggers the mean+std columns; only
+    # trait_confidence_moments adds the higher moments.
+    if config.exp_confidence_skew or config.include_trait_confidence_moments:
         confs = summary.finding_confidences
         if confs:
-            mean_c = sum(confs) / len(confs)
-            var_c = sum((c - mean_c) ** 2 for c in confs) / len(confs)
+            n = len(confs)
+            mean_c = sum(confs) / n
+            var_c = sum((c - mean_c) ** 2 for c in confs) / n
             _assign(vec, lookup.get("agg:confidence_mean"), mean_c)
             _assign(vec, lookup.get("agg:confidence_std"), var_c ** 0.5)
+            if config.include_trait_confidence_moments:
+                std_c = var_c ** 0.5
+                if std_c > 1e-9:
+                    skew = sum((c - mean_c) ** 3 for c in confs) / n / (std_c ** 3)
+                    kurt = sum((c - mean_c) ** 4 for c in confs) / n / (std_c ** 4) - 3.0
+                else:
+                    skew, kurt = 0.0, 0.0
+                _assign(vec, lookup.get("agg:confidence_skew"), skew)
+                _assign(vec, lookup.get("agg:confidence_kurtosis"), kurt)
 
     # Exp 4: Finding depth variance.
     if config.exp_finding_depth_var:
@@ -2173,6 +2695,51 @@ def _apply_experimental_features(
         finding_count = max(summary.filtered_finding_count, 1)
         _assign(vec, lookup.get("agg:import_finding_ratio"),
                 math.log1p(total_imports) / math.log1p(finding_count))
+
+    # Batch 4: trait_id lexical distance — average per-character edit distance
+    # between consecutive sorted trait IDs. Bursts of similar IDs (e.g.
+    # `xattr-list-listxattr`, `xattr-list-llistxattr`) shrink the average;
+    # scattershot IDs spanning unrelated subtrees grow it.
+    if config.include_trait_id_lexical_distance:
+        all_ids: set[str] = set()
+        for fe in files:
+            for finding in fe.get("ts") or []:
+                fid = finding.get("i")
+                if isinstance(fid, str) and fid:
+                    all_ids.add(fid)
+        sorted_ids = sorted(all_ids)
+        if len(sorted_ids) >= 2:
+            total = sum(_lexical_distance(sorted_ids[i], sorted_ids[i + 1])
+                        for i in range(len(sorted_ids) - 1))
+            avg = total / (len(sorted_ids) - 1)
+        else:
+            avg = 0.0
+        _assign(vec, lookup.get("agg:trait_id_lexical_distance"), avg)
+
+    # Batch 4: document-obfuscation aggregate counts. Cleave's document-malware
+    # taxonomy concentrates under three subtree prefixes; counting findings
+    # under each gives the model a dedicated "document is doing
+    # obfuscation/eval/lure things" signal that doesn't get diluted by the
+    # general taxonomy presence vocabulary.
+    if config.include_document_obfuscation_features:
+        obf_count = eval_count = lure_count = 0
+        for fe in files:
+            for finding in fe.get("ts") or []:
+                fid = finding.get("i", "")
+                if not isinstance(fid, str):
+                    continue
+                if fid.startswith("objectives/anti-static/obfuscation/document"):
+                    obf_count += 1
+                elif fid.startswith("objectives/execution/interpreter/eval"):
+                    eval_count += 1
+                elif fid.startswith("objectives/execution/lure/document"):
+                    lure_count += 1
+        total = obf_count + eval_count + lure_count
+        _assign(vec, lookup.get("agg:docobf_obfuscation_count"), float(obf_count))
+        _assign(vec, lookup.get("agg:docobf_eval_count"), float(eval_count))
+        _assign(vec, lookup.get("agg:docobf_lure_count"), float(lure_count))
+        _assign(vec, lookup.get("agg:docobf_total_count"), float(total))
+        _assign(vec, lookup.get("agg:docobf_has_any"), 1.0 if total > 0 else 0.0)
 
     if config.include_ember_lite_features:
         _apply_ember_lite_features(files, ctx, vec)
@@ -2366,21 +2933,38 @@ def _apply_ember_lite_features(
 
 def _apply_metric_features(
     metrics: dict[str, Any],
+    files: list[dict[str, Any]],
     ctx: _ExtractContext,
     vec: np.ndarray,
 ) -> None:
-    """Group 5: curated numeric metrics + extended metric vocabulary."""
+    """Group 5: curated numeric metrics + Batch-1 toggles + extended vocab."""
     lookup = ctx.absolute_lookup
+    config = feature_config_from_env()
     for group, fname, use_log in KEY_METRICS:
         val = _float((metrics.get(group) or {}).get(fname))
         if use_log:
             val = math.log1p(abs(val))
         _assign(vec, lookup.get(f"metrics:{group}_{fname}"), val)
-    if feature_config_from_env().include_extended_metrics:
+
+    batch1_seen: set[str] = set()
+    for table in _batch1_enabled_tables(config):
+        for suffix, getter, use_log in table:
+            val = getter(metrics, files)
+            if use_log:
+                val = math.log1p(abs(val))
+            _assign(vec, lookup.get(f"metrics:{suffix}"), val)
+            batch1_seen.add(suffix)
+
+    for suffix, (group_a, key_a), (group_b, key_b) in _metric_correlation_columns(config):
+        product = _metric_number(metrics, group_a, key_a) * _metric_number(metrics, group_b, key_b)
+        _assign(vec, lookup.get(f"metrics:{suffix}"), product)
+        batch1_seen.add(suffix)
+
+    if config.include_extended_metrics:
         # Extract all numeric metrics in the extended vocabulary.
-        # Skip keys already handled by KEY_METRICS to avoid overwriting
-        # their log-transformed values with raw values.
-        base_keys = {f"{g}_{f}" for g, f, _ in KEY_METRICS}
+        # Skip keys already handled by KEY_METRICS or a Batch-1 toggle so
+        # we don't overwrite their (possibly log-transformed) values.
+        base_keys = {f"{g}_{f}" for g, f, _ in KEY_METRICS} | batch1_seen
         for group, fields in metrics.items():
             if not isinstance(fields, dict):
                 continue
@@ -2408,6 +2992,76 @@ def _apply_symbol_vocab_features(
             _assign(vec, lookup.get(f"symbol:{sym}"), 1.0)
 
 
+def _apply_symbol_bigram_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Batch 3: bigram multi-hot over import/symbol pairs (capped per file)."""
+    lookup = ctx.absolute_lookup
+    for file_entry in files:
+        for bi in _file_symbol_bigrams(file_entry):
+            _assign(vec, lookup.get(f"symbol_bi:{bi}"), 1.0)
+
+
+def _apply_symbol_trigram_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Batch 3: trigram multi-hot over import/symbol triples (capped per file)."""
+    lookup = ctx.absolute_lookup
+    for file_entry in files:
+        for tri in _file_symbol_trigrams(file_entry):
+            _assign(vec, lookup.get(f"symbol_tri:{tri}"), 1.0)
+
+
+def _apply_mbc_id_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Batch 4: bag-of-MBC-IDs binary multi-hot from the trait `m` field.
+
+    Mirrors the symbol_vocab shape but pulls from the Malware Behavior
+    Catalog code on each finding (e.g. `E1082`, `T1083`). Distinct from
+    attack_features (which exposes only aggregate counts) and from the
+    existing mbc_bigram_vocab/mbc_trigram_vocab (which capture co-occurrence).
+    """
+    lookup = ctx.absolute_lookup
+    for fe in files:
+        for finding in fe.get("ts") or []:
+            mid = finding.get("m")
+            if isinstance(mid, str) and mid:
+                _assign(vec, lookup.get(f"mbc:{mid}"), 1.0)
+
+
+def _lexical_distance(a: str, b: str) -> int:
+    """Levenshtein distance between two strings. Linear-space DP.
+
+    Used by the trait_id_lexical_distance aggregate feature; tiny enough
+    to inline if it ever shows up as a hot path, but kept as a helper for
+    test coverage of the edge cases (empty strings, unicode).
+    """
+    if a == b:
+        return 0
+    if not a:
+        return len(b)
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        curr = [i] + [0] * len(b)
+        for j, cb in enumerate(b, 1):
+            curr[j] = min(
+                prev[j] + 1,
+                curr[j - 1] + 1,
+                prev[j - 1] + (0 if ca == cb else 1),
+            )
+        prev = curr
+    return prev[-1]
+
+
 def _apply_kv_vocab_features(
     files: list[dict[str, Any]],
     ctx: _ExtractContext,
@@ -2415,9 +3069,13 @@ def _apply_kv_vocab_features(
 ) -> None:
     """Experimental categorical ms.* key/value vocabulary features."""
     lookup = ctx.absolute_lookup
-    include_shape = feature_config_from_env().include_kv_shape_features
+    config = feature_config_from_env()
     for file_entry in files:
-        for token in _metric_kv_tokens(file_entry, include_shape=include_shape):
+        for token in _metric_kv_tokens(
+            file_entry,
+            include_shape=config.include_kv_shape_features,
+            split_string_values=config.include_kv_value_split,
+        ):
             _assign(vec, lookup.get(f"kv:{token}"), 1.0)
 
 
@@ -2914,6 +3572,7 @@ def _apply_tiered_bigram_features(
         summary.sample_paths,
         depth=config.tiered_bigram_path_depth,
         min_crit=config.tiered_bigram_min_crit,
+        branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
     )
     if len(tokens) > 512:
         log.warning("too many tiered bigram tokens (%d); skipping sample", len(tokens))
@@ -2943,6 +3602,29 @@ def _apply_tiered_trigram_features(
             t2 = tokens[j]
             for t3 in tokens[j + 1:]:
                 _assign(vec, ctx.tiered_trigram_lookup.get(f"{t1} + {t2} + {t3}"), 1.0)
+
+
+def _apply_tiered_quadgram_features(
+    summary: "_FindingSummary",
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Batch 3: report-level severity-prefixed quadgrams (one order up from trigrams).
+
+    Tighter token cap than trigrams (64 vs 512) because C(n, 4) grows much
+    faster — 64 tokens = 635k quadgrams; 128 = 10.5M.
+    """
+    config = feature_config_from_env()
+    tokens = _tiered_bigram_tokens(
+        summary.sample_paths,
+        depth=config.tiered_quadgram_path_depth,
+        min_crit=config.tiered_quadgram_min_crit,
+    )
+    if len(tokens) > 64:
+        log.warning("too many tiered quadgram tokens (%d); skipping sample", len(tokens))
+        return
+    for quad in _quadgram_tokens(tokens):
+        _assign(vec, ctx.absolute_lookup.get(f"tierquad:{quad}"), 1.0)
 
 
 def _apply_ghost_features(
@@ -3155,6 +3837,7 @@ def _extract_into(
             config.include_hostile_weighted_density,
             config.include_repetition_penalty_features,
             config.include_file_severity_distribution,
+            top_k_risk_files_min_crit=config.top_k_risk_files_min_crit,
         )
         if config.include_hostile_depth_weight:
             _assign(vec, ctx.absolute_lookup.get("agg:hostile_depth_weight"), hostile_depth_weight)
@@ -3162,9 +3845,17 @@ def _extract_into(
     if "ext" in config.enabled_groups:
         _apply_external_signal_features(summary, ctx, vec)
     if "metrics" in config.enabled_groups:
-        _apply_metric_features(metrics, ctx, vec)
+        _apply_metric_features(metrics, files, ctx, vec)
     if "symbols" in config.enabled_groups and config.include_symbol_vocab:
         _apply_symbol_vocab_features(files, ctx, vec)
+    if "symbols" in config.enabled_groups and config.include_symbol_bigrams:
+        _apply_symbol_bigram_features(files, ctx, vec)
+    if "symbols" in config.enabled_groups and config.include_symbol_trigrams:
+        _apply_symbol_trigram_features(files, ctx, vec)
+    # Batch 4: MBC ID unigram vocab. Lives in the `agg` group since attack
+    # features (its closest sibling) live there too.
+    if "agg" in config.enabled_groups and config.include_mbc_id_vocab:
+        _apply_mbc_id_features(files, ctx, vec)
     if "kv" in config.enabled_groups and config.include_kv_vocab:
         _apply_kv_vocab_features(files, ctx, vec)
     if "textenc" in config.enabled_groups and config.include_text_encoding_features:
@@ -3207,6 +3898,12 @@ def _extract_into(
     ):
         _apply_tiered_trigram_features(summary, ctx, vec)
 
+    if (
+        "tiered_trigrams" in config.enabled_groups
+        and config.include_tiered_crit_quadgrams
+    ):
+        _apply_tiered_quadgram_features(summary, ctx, vec)
+
     if "ghosts" in config.enabled_groups:
         _apply_ghost_features(summary.sample_paths, ctx, vec)
 
@@ -3243,7 +3940,10 @@ def _extract_into(
             config.exp_multifile_crit_spread, config.exp_metric_anomaly,
             config.exp_unsigned_import_density, config.exp_entropy_hostile,
             config.exp_hostile_objective_div, config.exp_import_finding_ratio,
-            config.include_ember_lite_features)):
+            config.include_ember_lite_features,
+            config.include_trait_confidence_moments,
+            config.include_trait_id_lexical_distance,
+            config.include_document_obfuscation_features)):
         _apply_experimental_features(report, summary, files, metrics, ctx, vec, score)
 
     # ATT&CK/MBC code n-grams: vocab-based features from T-codes and MBC B-codes.
@@ -4249,11 +4949,12 @@ def build_vocab_from_db(
     bigram_vocab = sorted(k for k, c in bigram_counts.items() if c >= config.bigram_min_freq)[:config.bigram_max]
     skeleton_vocab = sorted(k for k, c in skeleton_counts.items() if c >= 100)
 
-    # Trigrams: malware-enriched triplets, top N by frequency.
+    # Trigrams: malware-enriched triplets, top N by frequency. Min-freq cutoff
+    # is configurable (Batch 3 symmetry fix); previous hardcoded `>= 5`.
     trigram_benign_ceil = int(config.trigram_max_benign_frac * benign_total) if config.trigram_max_benign_frac > 0 else 0
     malware_only_trigrams = sorted(
         [(k, c) for k, c in trigram_counts.items()
-         if benign_trigrams.get(k, 0) <= trigram_benign_ceil and c >= 5],
+         if benign_trigrams.get(k, 0) <= trigram_benign_ceil and c >= config.trigram_min_freq],
         key=lambda x: x[1],
         reverse=True,
     )[:config.trigram_max]
@@ -4311,14 +5012,23 @@ def build_vocab_from_db(
                                 metric_key_counts[mk] = metric_key_counts.get(mk, 0) + 1
         # Keep keys appearing above a frequency threshold. Exclude keys already in KEY_METRICS.
         # Default 5%; override via COLLIMATOR_METRIC_MIN_FREQ_PCT for experiments.
+        # When `extended_metrics_include` is set, restrict to keys matching one of
+        # those prefixes (e.g. `pe_timestamp,binary_overlay`) — lets autocollie
+        # isolate the effect of newly-added metric families instead of toggling
+        # every numeric ms.* field at once.
         base_keys = {f"{g}_{f}" for g, f, _ in KEY_METRICS}
         metric_pct = float(os.getenv("COLLIMATOR_METRIC_MIN_FREQ_PCT", "5")) / 100
         threshold = max(len(scan_ids) * metric_pct, 10)
+        prefixes = config.extended_metrics_include
         metric_vocab = sorted(
             k for k, c in metric_key_counts.items()
-            if c >= threshold and k not in base_keys
+            if c >= threshold
+            and k not in base_keys
+            and (not prefixes or any(k.startswith(p) for p in prefixes))
         )
-        log.info("extended metrics: %d keys from %d scanned rows", len(metric_vocab), len(scan_ids))
+        log.info("extended metrics: %d keys from %d scanned rows%s",
+                 len(metric_vocab), len(scan_ids),
+                 f" (filtered by prefixes: {','.join(prefixes)})" if prefixes else "")
 
     # Crit-category n-gram vocabulary: build from the same sample_paths
     # already computed by the vocab workers (stored in presence_counts).
@@ -4390,16 +5100,20 @@ def build_vocab_from_db(
         )
 
     # ATT&CK/MBC code n-gram vocabulary: bigrams/trigrams from T-codes and MBC B-codes.
+    # MBC unigram vocab (Batch 4) is built in the same scan when its knob is on.
     attack_bigram_vocab: list[str] = []
     attack_trigram_vocab: list[str] = []
     mbc_bigram_vocab: list[str] = []
     mbc_trigram_vocab: list[str] = []
-    if config.include_attack_code_ngrams:
+    mbc_id_vocab: list[str] = []
+    needs_attack_scan = config.include_attack_code_ngrams or config.include_mbc_id_vocab
+    if needs_attack_scan:
         from . import data as _data  # noqa: PLC0415
         atk_bi_counts: dict[str, int] = {}
         atk_tri_counts: dict[str, int] = {}
         mbc_bi_counts: dict[str, int] = {}
         mbc_tri_counts: dict[str, int] = {}
+        mbc_unigram_counts: dict[str, int] = {}
         atk_bi_benign: dict[str, int] = {}
         mbc_bi_benign: dict[str, int] = {}
         scan_ids_labels = row_ids_labels[:5000]
@@ -4421,6 +5135,11 @@ def build_vocab_from_db(
                         m = finding.get("m")
                         if m:
                             mbcs.add(m)
+                if config.include_mbc_id_vocab:
+                    for mid in mbcs:
+                        mbc_unigram_counts[mid] = mbc_unigram_counts.get(mid, 0) + 1
+                if not config.include_attack_code_ngrams:
+                    continue
                 # ATT&CK bigrams/trigrams
                 sorted_a = sorted(attacks)
                 for i, a1 in enumerate(sorted_a):
@@ -4448,33 +5167,53 @@ def build_vocab_from_db(
 
         n_benign_scan = len(benign_scan)
         benign_ceil = int(0.01 * n_benign_scan)
-        attack_bigram_vocab = sorted(
-            k for k, c in sorted(atk_bi_counts.items(), key=lambda x: -x[1])[:500]
-            if c >= 5 and atk_bi_benign.get(k, 0) <= benign_ceil
-        )
-        attack_trigram_vocab = sorted(
-            k for k, c in sorted(atk_tri_counts.items(), key=lambda x: -x[1])[:500]
-            if c >= 3
-        )
-        mbc_bigram_vocab = sorted(
-            k for k, c in sorted(mbc_bi_counts.items(), key=lambda x: -x[1])[:500]
-            if c >= 5 and mbc_bi_benign.get(k, 0) <= benign_ceil
-        )
-        mbc_trigram_vocab = sorted(
-            k for k, c in sorted(mbc_tri_counts.items(), key=lambda x: -x[1])[:500]
-            if c >= 3
-        )
-        log.info(
-            "ATT&CK/MBC n-grams: %d/%d atk bi/tri, %d/%d mbc bi/tri from %d scanned rows",
-            len(attack_bigram_vocab), len(attack_trigram_vocab),
-            len(mbc_bigram_vocab), len(mbc_trigram_vocab), len(scan_ids_labels),
-        )
+        if config.include_attack_code_ngrams:
+            attack_bigram_vocab = sorted(
+                k for k, c in sorted(atk_bi_counts.items(), key=lambda x: -x[1])[:500]
+                if c >= 5 and atk_bi_benign.get(k, 0) <= benign_ceil
+            )
+            attack_trigram_vocab = sorted(
+                k for k, c in sorted(atk_tri_counts.items(), key=lambda x: -x[1])[:500]
+                if c >= 3
+            )
+            mbc_bigram_vocab = sorted(
+                k for k, c in sorted(mbc_bi_counts.items(), key=lambda x: -x[1])[:500]
+                if c >= 5 and mbc_bi_benign.get(k, 0) <= benign_ceil
+            )
+            mbc_trigram_vocab = sorted(
+                k for k, c in sorted(mbc_tri_counts.items(), key=lambda x: -x[1])[:500]
+                if c >= 3
+            )
+            log.info(
+                "ATT&CK/MBC n-grams: %d/%d atk bi/tri, %d/%d mbc bi/tri from %d scanned rows",
+                len(attack_bigram_vocab), len(attack_trigram_vocab),
+                len(mbc_bigram_vocab), len(mbc_trigram_vocab), len(scan_ids_labels),
+            )
+        if config.include_mbc_id_vocab:
+            # Min freq=5 mirrors the bigram floor; cap at 500 to keep vocab tight.
+            mbc_id_vocab = sorted(
+                k for k, c in sorted(mbc_unigram_counts.items(), key=lambda x: -x[1])[:500]
+                if c >= 5
+            )
+            log.info("MBC unigram vocab: %d entries from %d scanned rows",
+                     len(mbc_id_vocab), len(scan_ids_labels))
 
     symbol_vocab: list[str] = []
+    symbol_bigram_vocab: list[str] = []
+    symbol_trigram_vocab: list[str] = []
+    tiered_quadgram_vocab: list[str] = []
     kv_vocab: list[str] = []
-    if config.include_symbol_vocab or config.include_kv_vocab:
+    needs_symbol_scan = (
+        config.include_symbol_vocab
+        or config.include_symbol_bigrams
+        or config.include_symbol_trigrams
+    )
+    if needs_symbol_scan or config.include_kv_vocab or config.include_tiered_crit_quadgrams:
         from . import data as _data  # noqa: PLC0415
         symbol_counts: dict[str, int] = {}
+        symbol_bigram_counts: dict[str, int] = {}
+        symbol_trigram_counts: dict[str, int] = {}
+        tiered_quadgram_counts: dict[str, int] = {}
         kv_counts: dict[str, int] = {}
         scan_ids = [rid for rid, _l in row_ids_labels[:5000]]
         for start in range(0, len(scan_ids), 500):
@@ -4484,19 +5223,46 @@ def build_vocab_from_db(
                 if report is None:
                     continue
                 report_symbols: set[str] = set()
+                report_symbol_bigrams: set[str] = set()
+                report_symbol_trigrams: set[str] = set()
                 report_kvs: set[str] = set()
                 for file_entry in report_files(report):
                     if config.include_symbol_vocab:
                         report_symbols.update(_file_symbols(file_entry))
+                    if config.include_symbol_bigrams:
+                        report_symbol_bigrams.update(_file_symbol_bigrams(file_entry))
+                    if config.include_symbol_trigrams:
+                        report_symbol_trigrams.update(_file_symbol_trigrams(file_entry))
                     if config.include_kv_vocab:
                         report_kvs.update(
                             _metric_kv_tokens(
                                 file_entry,
                                 include_shape=config.include_kv_shape_features,
+                                split_string_values=config.include_kv_value_split,
                             )
                         )
+                if config.include_tiered_crit_quadgrams:
+                    # Tiered quadgrams: one per report (not per file). Use the
+                    # already-summarized sample_paths via _summarize_report_files.
+                    quad_summary = _summarize_report_files(report_files(report))
+                    tokens = _tiered_bigram_tokens(
+                        quad_summary.sample_paths,
+                        depth=config.tiered_quadgram_path_depth,
+                        min_crit=config.tiered_quadgram_min_crit,
+                    )
+                    # Tighter cap than tiered_trigram (which uses 512) because
+                    # C(n, 4) grows much faster: 64 tokens -> 635k quadgrams.
+                    if len(tokens) <= 64:
+                        for quad in _quadgram_tokens(tokens):
+                            if len(tiered_quadgram_counts) >= 100000:
+                                break
+                            tiered_quadgram_counts[quad] = tiered_quadgram_counts.get(quad, 0) + 1
                 for sym in report_symbols:
                     symbol_counts[sym] = symbol_counts.get(sym, 0) + 1
+                for bi in report_symbol_bigrams:
+                    symbol_bigram_counts[bi] = symbol_bigram_counts.get(bi, 0) + 1
+                for tri in report_symbol_trigrams:
+                    symbol_trigram_counts[tri] = symbol_trigram_counts.get(tri, 0) + 1
                 for kv in report_kvs:
                     kv_counts[kv] = kv_counts.get(kv, 0) + 1
         if config.include_symbol_vocab:
@@ -4505,19 +5271,42 @@ def build_vocab_from_db(
                 if c >= config.symbol_min_freq
             )
             log.info("symbol vocab: %d entries from %d scanned rows", len(symbol_vocab), len(scan_ids))
+        if config.include_symbol_bigrams:
+            symbol_bigram_vocab = sorted(
+                k for k, c in sorted(symbol_bigram_counts.items(), key=lambda x: -x[1])[:config.symbol_bigram_max]
+                if c >= config.symbol_min_freq_bigram
+            )
+            log.info("symbol bigram vocab: %d entries (cap=%d/file) from %d scanned rows",
+                     len(symbol_bigram_vocab), _SYMBOL_BIGRAM_CAP, len(scan_ids))
+        if config.include_symbol_trigrams:
+            symbol_trigram_vocab = sorted(
+                k for k, c in sorted(symbol_trigram_counts.items(), key=lambda x: -x[1])[:config.symbol_trigram_max]
+                if c >= config.symbol_min_freq_trigram
+            )
+            log.info("symbol trigram vocab: %d entries (cap=%d/file) from %d scanned rows",
+                     len(symbol_trigram_vocab), _SYMBOL_TRIGRAM_CAP, len(scan_ids))
         if config.include_kv_vocab:
             kv_vocab = sorted(
                 k for k, c in sorted(kv_counts.items(), key=lambda x: -x[1])[:config.kv_vocab_max]
                 if c >= config.kv_min_freq
             )
             log.info("kv vocab: %d entries from %d scanned rows", len(kv_vocab), len(scan_ids))
+        if config.include_tiered_crit_quadgrams:
+            tiered_quadgram_vocab = sorted(
+                k for k, c in sorted(tiered_quadgram_counts.items(), key=lambda x: -x[1])[:config.tiered_quadgram_max]
+                if c >= config.tiered_quadgram_min_freq
+            )
+            log.info("tiered crit quadgrams: %d vocab entries from %d scanned rows",
+                     len(tiered_quadgram_vocab), len(scan_ids))
 
     feature_names = _build_feature_names(
         presence_vocab, filetype_vocab, element_vocab, bigram_vocab,
         ghost_vocab, skeleton_vocab, rare_element_vocab, trigram_vocab,
         metric_vocab, crit_unigram_vocab, crit_bigram_vocab, crit_trigram_vocab,
         attack_bigram_vocab, attack_trigram_vocab, mbc_bigram_vocab, mbc_trigram_vocab,
-        tiered_bigram_vocab, tiered_trigram_vocab, symbol_vocab, kv_vocab,
+        tiered_bigram_vocab, tiered_trigram_vocab, tiered_quadgram_vocab,
+        symbol_vocab, symbol_bigram_vocab, symbol_trigram_vocab, kv_vocab,
+        mbc_id_vocab=mbc_id_vocab,
     )
 
     spec = FeatureSpec(
@@ -4539,8 +5328,12 @@ def build_vocab_from_db(
         mbc_trigram_vocab=mbc_trigram_vocab,
         tiered_bigram_vocab=tiered_bigram_vocab,
         tiered_trigram_vocab=tiered_trigram_vocab,
+        tiered_quadgram_vocab=tiered_quadgram_vocab,
         symbol_vocab=symbol_vocab,
+        symbol_bigram_vocab=symbol_bigram_vocab,
+        symbol_trigram_vocab=symbol_trigram_vocab,
         kv_vocab=kv_vocab,
+        mbc_id_vocab=mbc_id_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
     )

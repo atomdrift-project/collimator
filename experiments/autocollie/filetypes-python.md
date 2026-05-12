@@ -86,3 +86,147 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260511T074346-filetypes-python` — 2026-05-11T07:43:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | py_train_leaves128_reg2 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T07-51-22_20260511T074346-filetypes-python_py_train_leaves128_reg2.log) |
+| `` | py_train_extratrees | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T08-21-22_20260511T074346-filetypes-python_py_train_extratrees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — training-only: larger leaves + L2 reg on the working feature set
+- **`py_train_extratrees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — training-only: extra_trees for ensemble noise on working feature set
+
+</details>
+
+## Cycle `20260511T063226-filetypes-python` — 2026-05-11T06:32:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | py_recover_clusters_leaves128 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T06-40-50_20260511T063226-filetypes-python_py_recover_clusters_leaves128.log) |
+| `f2fba1536fc537d0` | py_recover_no_presence_style | ok | 0.9989 | 0.9989 | 0.9782 | 1762 | [log](out/autocollie/runs/2026-05-11T07-10-50_20260511T063226-filetypes-python_py_recover_no_presence_style.log) |
+| `58aa1da5c3daf5f0` | py_feat_text_metrics_full | ok | 0.9990 | 0.9990 | 0.9841 | 1313 | [log](out/autocollie/runs/2026-05-11T07-40-13_20260511T063226-filetypes-python_py_feat_text_metrics_full.log) |
+| `` | py_feat_mbc_id_vocab | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T08-02-06_20260511T063226-filetypes-python_py_feat_mbc_id_vocab.log) |
+| `5aafc584acddea2e` | py_train_scalepos075 | ok | 0.9990 | 0.9990 | 0.9820 | 1392 | [log](out/autocollie/runs/2026-05-11T08-32-06_20260511T063226-filetypes-python_py_train_scalepos075.log) |
+| `` | py_train_extratrees | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-11T08-55-18_20260511T063226-filetypes-python_py_train_extratrees.log) |
+| `07313801b8129161` | py_profile_seed9999 | ok | 0.9992 | 0.9993 | 0.9820 | 1736 | [log](out/autocollie/runs/2026-05-11T09-25-18_20260511T063226-filetypes-python_py_profile_seed9999.log) |
+| `0fb64f9d99dce8e1` | py_antibase_all_features | ok | 0.9990 | 0.9991 | 0.9803 | 1106 | [log](out/autocollie/runs/2026-05-11T09-54-14_20260511T063226-filetypes-python_py_antibase_all_features.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_recover_clusters_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — recover to working feature set (clusters-only disable) with leaves128+reg2 training
+- **`py_recover_no_presence_style`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc` — recover to second-best historical config: disable present,maxcrit,score,clusters
+- **`py_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_TEXT_METRICS_FULL=1` — add text_metrics_full (22 ms.text fields) on clusters-only disable — big payoff for scripts
+- **`py_feat_mbc_id_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MBC_ID_VOCAB=1` — add mbc_id_vocab bag-of-MBC-IDs on clusters-only disable for behavioral signal
+- **`py_train_scalepos075`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.75` — precision-tail: down-weight positives to 0.75x on recovered feature set
+- **`py_train_extratrees`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1` — extra_trees ensemble noise on recovered feature set for generalization
+- **`py_profile_seed9999`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — profile shift: different seed on recovered feature set to test generalization
+- **`py_antibase_all_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NUM_LEAVES=128` — anti-baseline: no feature disables at all — test if full feature set helps
+
+</details>
+
+## Cycle `20260512T133050-filetypes-python` — 2026-05-12T13:30:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `68fae179959c68c4` | py_train_leaves128_reg2 | ok | 0.9990 | 0.9991 | 0.9814 | 73 | [log](out/autocollie/runs/2026-05-12T13-38-37_20260512T133050-filetypes-python_py_train_leaves128_reg2.log) |
+| `e5ab9c642e4c2115` | py_train_scalepos05 | ok | 0.9990 | 0.9990 | 0.9853 | 51 | [log](out/autocollie/runs/2026-05-12T13-39-50_20260512T133050-filetypes-python_py_train_scalepos05.log) |
+| `031999071f35bb21` | py_train_beta15 | ok | 0.9990 | 0.9991 | 0.9836 | 87 | [log](out/autocollie/runs/2026-05-12T13-40-41_20260512T133050-filetypes-python_py_train_beta15.log) |
+| `` | py_profile_seed5555 | fail | — | — | — | 33 | [log](out/autocollie/runs/2026-05-12T13-42-08_20260512T133050-filetypes-python_py_profile_seed5555.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: larger capacity with L2 regularization on working feature set
+- **`py_train_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: aggressive positive down-weighting for PR AUC improvement
+- **`py_train_beta15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.5 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only: lower beta to shift threshold toward precision, boosting PR AUC
+- **`py_profile_seed5555`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — profile shift: new seed to test if seed9999 win generalizes
+
+</details>
+
+## Cycle `20260512T134244-filetypes-python` — 2026-05-12T13:42:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c04b95b498e7221e` | py_train_scalepos025 | ok | 0.9989 | 0.9989 | 0.9825 | 16 | [log](out/autocollie/runs/2026-05-12T13-44-35_20260512T134244-filetypes-python_py_train_scalepos025.log) |
+| `94a13ca6b2ea2c89` | py_train_gamma10 | ok | 0.9990 | 0.9991 | 0.9803 | 33 | [log](out/autocollie/runs/2026-05-12T13-44-50_20260512T134244-filetypes-python_py_train_gamma10.log) |
+| `` | py_research_kv_vocab | fail | — | — | — | 224 | [log](out/autocollie/runs/2026-05-12T13-45-23_20260512T134244-filetypes-python_py_research_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_scalepos025`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: aggressive positive down-weight to 0.25x for PR AUC tail
+- **`py_train_gamma10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: min split gain 1.0 to reduce overfitting on rare patterns
+- **`py_research_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — research: enable kv_vocab (5000 max) — remove kv from disable_groups for script route
+
+</details>
+
+## Cycle `20260512T134912-filetypes-python` — 2026-05-12T13:49:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e0c3d3da85d5fa3c` | py_train_mcs200 | ok | 0.9990 | 0.9990 | 0.9840 | 292 | [log](out/autocollie/runs/2026-05-12T13-51-31_20260512T134912-filetypes-python_py_train_mcs200.log) |
+| `3e82072832c27a36` | py_train_hsn01_w12 | ok | 0.9992 | 0.9992 | 0.9873 | 688 | [log](out/autocollie/runs/2026-05-12T13-56-23_20260512T134912-filetypes-python_py_train_hsn01_w12.log) |
+| `` | py_research_textenc | fail | — | — | — | 310 | [log](out/autocollie/runs/2026-05-12T14-07-51_20260512T134912-filetypes-python_py_research_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_mcs200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: higher min_child_samples=200 for stronger regularization, reducing overfit on rare patterns
+- **`py_train_hsn01_w12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: hard negative second pass to sharpen ranking boundary for PR AUC
+- **`py_research_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — research: enable text_encoding features for script route — remove textenc from disable_groups
+
+</details>
+
+## Cycle `20260512T141305-filetypes-python` — 2026-05-12T14:13:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `790ceff1ed59751d` | py_train_hsn005_w15 | ok | 0.9991 | 0.9991 | 0.9843 | 640 | [log](out/autocollie/runs/2026-05-12T14-30-17_20260512T141305-filetypes-python_py_train_hsn005_w15.log) |
+| `8573ae8a157ec895` | py_train_subsample07 | ok | 0.9990 | 0.9991 | 0.9803 | 277 | [log](out/autocollie/runs/2026-05-12T14-40-57_20260512T141305-filetypes-python_py_train_subsample07.log) |
+| `` | py_feat_textmetrics | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-12T14-45-34_20260512T141305-filetypes-python_py_feat_textmetrics.log) |
+| `` | py_research_symbol_vocab | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-12T15-15-34_20260512T141305-filetypes-python_py_research_symbol_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_hsn005_w15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only exploit: smaller hard-neg fraction with higher weight for finer ranking boundary on PR AUC
+- **`py_train_subsample07`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: lower row subsample for stronger implicit regularization, improving generalization
+- **`py_feat_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — feature addition: text_metrics_full adds 22 text columns for scripts without vocab overhead
+- **`py_research_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc …` — research: enable symbol_vocab for script route, removing symbols from disable_groups (different family from crashed kv/textenc)
+
+</details>
+
+## Cycle `20260512T154536-filetypes-python` — 2026-05-12T15:45:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5abd3b06ee3b5c82` | py_train_hsn01_w15 | ok | 0.9992 | 0.9992 | 0.9849 | 722 | [log](out/autocollie/runs/2026-05-12T15-49-11_20260512T154536-filetypes-python_py_train_hsn01_w15.log) |
+| `e6cf26d435f297de` | py_train_colsample06 | ok | 0.9990 | 0.9990 | 0.9842 | 328 | [log](out/autocollie/runs/2026-05-12T16-01-13_20260512T154536-filetypes-python_py_train_colsample06.log) |
+| `` | py_feat_textmetrics_retry | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-12T16-06-41_20260512T154536-filetypes-python_py_feat_textmetrics_retry.log) |
+| `` | py_research_symbol_vocab_retry | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-12T16-36-41_20260512T154536-filetypes-python_py_research_symbol_vocab_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_hsn01_w15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only exploit: keep hsn01 fraction but raise weight from 12 to 15 for sharper ranking boundary
+- **`py_train_colsample06`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.6 EXP_CRIT_CATEGORY_NGRAMS=1 …` — training-only: lower column subsample for stronger feature-level regularization
+- **`py_feat_textmetrics_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — retry text_metrics_full (prior crash was DB timeout, not code error) — 22 text columns add signal for scripts
+- **`py_research_symbol_vocab_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc …` — retry symbol_vocab (prior crash was DB timeout) — symbol names in Python scripts carry behavioral signal
+
+</details>
+
+## Cycle `20260512T170643-filetypes-python` — 2026-05-12T17:06:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `17c4371383cc7d9c` | py_train_hsn01_w18 | ok | 0.9992 | 0.9992 | 0.9870 | 599 | [log](out/autocollie/runs/2026-05-12T17-09-18_20260512T170643-filetypes-python_py_train_hsn01_w18.log) |
+| `0a1ebe557a204709` | py_train_hsn02_w10 | ok | 0.9992 | 0.9992 | 0.9861 | 754 | [log](out/autocollie/runs/2026-05-12T17-19-17_20260512T170643-filetypes-python_py_train_hsn02_w10.log) |
+| `` | py_feat_textmetrics_r3 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-12T17-31-52_20260512T170643-filetypes-python_py_feat_textmetrics_r3.log) |
+| `` | py_research_symbol_vocab_r3 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-12T18-01-52_20260512T170643-filetypes-python_py_research_symbol_vocab_r3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_hsn01_w18`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only exploit: push hard-negative weight to 18 (upper bound of PE/native sweet spot 8-18)
+- **`py_train_hsn02_w10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only exploit: double hard-negative fraction to 0.2 with moderate weight for broader signal
+- **`py_feat_textmetrics_r3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — retry text_metrics_full (prior crashes were DB timeouts, not code errors) — 22 text columns add script signal
+- **`py_research_symbol_vocab_r3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc …` — retry symbol_vocab (prior crashes were DB timeouts) — symbol names in Python carry behavioral signal
+
+</details>
+
