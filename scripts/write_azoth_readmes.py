@@ -146,7 +146,7 @@ HEADLINE_FILETYPES = (
 )
 
 
-def _metric_cell(point: Any, low: Any, high: Any) -> str:
+def _metric_cell(point: Any, low: Any, high: Any, *, include_ci: bool = True) -> str:
     """Render `point [low, high]` for a metric with bootstrap CI; collapses to
     bare point if CI fields aren't populated (small-corpus / single-class).
     Returns "—" for missing or NaN points (e.g., recall@3FP/M when the route's
@@ -160,27 +160,26 @@ def _metric_cell(point: Any, low: Any, high: Any) -> str:
     if math.isnan(numeric):
         return "—"
     base = _num(numeric, 4)
-    if low is None or high is None:
+    if not include_ci or low is None or high is None:
         return base
     return f"{base} [{_num(low, 4)}, {_num(high, 4)}]"
 
 
 def _ensemble_table(
-    metrics: dict[str, Any], filetypes: tuple[str, ...], *, link_routes: bool = False,
+    metrics: dict[str, Any],
+    filetypes: tuple[str, ...],
+    *,
+    link_routes: bool = False,
+    include_ci: bool = False,
 ) -> list[str]:
     """Headline table: routed ensemble per filetype.
 
     Columns: filetype (linked to per-route card when ``link_routes=True``),
-    Mal/Ben, PR AUC + 95% CI (lead — recall-vs-precision summary, the
-    security-relevant ranking metric for an imbalanced corpus),
-    recall@3FP/M + 95% CI (deployment-budget headline: how many malware
-    we catch when we accept ≤3 benign FPs per million benigns), ROC AUC
-    + 95% CI (academic continuity), F1 + 95% CI, EMBER 2024 Δ. CIs come
-    from `collimator.stats.bootstrap_metric` and are written by
-    compute_routed_metrics; they collapse to bare point estimates on
-    routes too small (<50 rows or <5 of either class) for stable
-    bootstrap. ``recall@3FP/M`` is NaN for any filetype whose dev sample
-    is too small to resolve 3 FP/M directly (n_benign × 3e-6 < 1).
+    Mal/Ben, PR AUC, recall@3FP/M, ROC AUC, F1, EMBER 2024 Δ. CI fields
+    remain available for detailed cards, but the headline table defaults to
+    point estimates to keep the README scannable. ``recall@3FP/M`` is NaN for
+    any filetype whose dev sample is too small to resolve 3 FP/M directly
+    (n_benign × 3e-6 < 1).
     """
     lines = [
         "| File type | Mal / Ben | PR AUC [95% CI] | Recall@3FP/M [95% CI] | ROC AUC [95% CI] | F1 [95% CI] | Δ vs EMBER 2024 |",
@@ -203,13 +202,29 @@ def _ensemble_table(
             roc_str = pr_str = f1_str = recall_str = "—"
             ember_str = "—"
         else:
-            roc_str = _metric_cell(ens_roc, ens.get("roc_auc_ci_low"), ens.get("roc_auc_ci_high"))
-            pr_str = _metric_cell(ens_pr, ens.get("pr_auc_ci_low"), ens.get("pr_auc_ci_high"))
-            f1_str = _metric_cell(ens_f1, ens.get("f1_ci_low"), ens.get("f1_ci_high"))
+            roc_str = _metric_cell(
+                ens_roc,
+                ens.get("roc_auc_ci_low"),
+                ens.get("roc_auc_ci_high"),
+                include_ci=include_ci,
+            )
+            pr_str = _metric_cell(
+                ens_pr,
+                ens.get("pr_auc_ci_low"),
+                ens.get("pr_auc_ci_high"),
+                include_ci=include_ci,
+            )
+            f1_str = _metric_cell(
+                ens_f1,
+                ens.get("f1_ci_low"),
+                ens.get("f1_ci_high"),
+                include_ci=include_ci,
+            )
             recall_str = _metric_cell(
                 ens_recall,
                 ens.get("recall_at_3fp_per_million_ci_low"),
                 ens.get("recall_at_3fp_per_million_ci_high"),
+                include_ci=include_ci,
             )
             if ember:
                 ember_str = (

@@ -117,3 +117,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260513T160650-filetypes-ruby` — 2026-05-13T16:06:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e19893cdf2532363` | ruby_exploit_kv_leaves128 | ok | 0.8969 | 0.9965 | 0.8421 | 36 | [log](out/autocollie/runs/2026-05-13T16-08-36_20260513T160650-filetypes-ruby_ruby_exploit_kv_leaves128.log) |
+| `90eb6340ab15acff` | ruby_exploit_kv_extra_trees | ok | 0.8181 | 0.9944 | 0.8889 | 64 | [log](out/autocollie/runs/2026-05-13T16-09-13_20260513T160650-filetypes-ruby_ruby_exploit_kv_extra_trees.log) |
+| `192a78fa8fc2ca11` | ruby_feat_kv_textenc_combined | ok | 0.8338 | 0.9949 | 0.8889 | 96 | [log](out/autocollie/runs/2026-05-13T16-10-16_20260513T160650-filetypes-ruby_ruby_feat_kv_textenc_combined.log) |
+| `5e2f57e02569a163` | ruby_feat_kv_textenc_metrics | ok | 0.9060 | 0.9970 | 0.8889 | 91 | [log](out/autocollie/runs/2026-05-13T16-11-52_20260513T160650-filetypes-ruby_ruby_feat_kv_textenc_metrics.log) |
+| `60b929efbaf312fa` | ruby_ablation_kv_only_minimal | ok | 0.8616 | 0.9955 | 0.8889 | 87 | [log](out/autocollie/runs/2026-05-13T16-13-23_20260513T160650-filetypes-ruby_ruby_ablation_kv_only_minimal.log) |
+| `c34343cc2392ed2e` | ruby_transfer_html_symbols_kv | ok | 0.8894 | 0.9960 | 0.8571 | 100 | [log](out/autocollie/runs/2026-05-13T16-14-50_20260513T160650-filetypes-ruby_ruby_transfer_html_symbols_kv.log) |
+| `69c6381e17501715` | ruby_generalize_kv_seed3 | ok | 0.9309 | 0.9975 | 0.9474 | 191 | [log](out/autocollie/runs/2026-05-13T16-16-30_20260513T160650-filetypes-ruby_ruby_generalize_kv_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_exploit_kv_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — KV vocab was the winning feature (PR_AUC=1.0); test with more leaves and stronger regularization to solidify ranking
+- **`ruby_exploit_kv_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5` — Combine KV vocab (best features) with extra_trees (best F1=0.7273) for synergistic generalization
+- **`ruby_feat_kv_textenc_combined`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1` — Add text_encoding to KV vocab to capture encoding-level obfuscation patterns in ruby scripts
+- **`ruby_feat_kv_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — KV + text_encoding + full text metrics for comprehensive script-level signal on ruby
+- **`ruby_ablation_kv_only_minimal`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MIN_CHILD_SAMPLES=300 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=3` — KV-only with symbols and textenc disabled tests whether KV alone carries the full signal, avoiding noise from other families on this tiny corpus
+- **`ruby_transfer_html_symbols_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SYMBOL_VOCAB=1 …` — Port html_script_symbols_kv winner (PR_AUC=1.0) adding symbol vocab and extended metrics alongside KV
+- **`ruby_generalize_kv_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=80000` — KV vocab with seed_search_k=3 to verify the winning feature set is stable across seeds, not a single-seed artifact
+
+</details>
+

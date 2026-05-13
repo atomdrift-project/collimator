@@ -92,3 +92,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260513T160159-filetypes-lua` — 2026-05-13T16:01:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7f699be8b3769d8d` | lua_precision_regularized_v2 | ok | 0.1739 | 0.5000 | 0.2963 | 11 | [log](out/autocollie/runs/2026-05-13T16-05-53_20260513T160159-filetypes-lua_lua_precision_regularized_v2.log) |
+| `8fb2235b2c3f1ba9` | lua_dart_boosting_precision | ok | 0.1739 | 0.5000 | 0.2963 | 6 | [log](out/autocollie/runs/2026-05-13T16-06-04_20260513T160159-filetypes-lua_lua_dart_boosting_precision.log) |
+| `d50f88ce84db984e` | lua_textenc_research | ok | 0.1739 | 0.5000 | 0.2963 | 8 | [log](out/autocollie/runs/2026-05-13T16-06-10_20260513T160159-filetypes-lua_lua_textenc_research.log) |
+| `2b346696da9a3d8b` | lua_kv_vocab_research | ok | 0.1739 | 0.5000 | 0.2963 | 8 | [log](out/autocollie/runs/2026-05-13T16-06-18_20260513T160159-filetypes-lua_lua_kv_vocab_research.log) |
+| `bb9b7eda0ad60fa0` | lua_applescript_transfer | ok | 0.1739 | 0.5000 | 0.2963 | 6 | [log](out/autocollie/runs/2026-05-13T16-06-26_20260513T160159-filetypes-lua_lua_applescript_transfer.log) |
+| `7e345a21242f3ef1` | lua_no_presence_high_roc | ok | 0.1739 | 0.5000 | 0.2963 | 8 | [log](out/autocollie/runs/2026-05-13T16-06-31_20260513T160159-filetypes-lua_lua_no_presence_high_roc.log) |
+| `af3b0a228da173d3` | lua_hard_negative_tiny | ok | 0.1739 | 0.5000 | 0.2963 | 6 | [log](out/autocollie/runs/2026-05-13T16-06-39_20260513T160159-filetypes-lua_lua_hard_negative_tiny.log) |
+
+<details><summary>Spec details</summary>
+
+- **`lua_precision_regularized_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.02 EXP_NUM_LEAVES=64 EXP_REG_ALPHA=0.5 EXP_REG_LAMBDA=3` — Stronger L2/L1 regularization and smaller trees to prevent overfit on the tiny corpus while preserving PR AUC signal from the best run
+- **`lua_dart_boosting_precision`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=80 EXP_REG_LAMBDA=2` — DART dropout regularization between trees may improve generalization on this tiny corpus without sacrificing rank order
+- **`lua_textenc_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=80 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1` — Text encoding features may capture Lua script encoding patterns (charset, BOM, escape sequences) that distinguish obfuscated malware from benign scripts
+- **`lua_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_NUM_LEAVES=80 EXP_REG_LAMBDA=2` — KV vocab may capture key-value patterns in Lua config/script structures (e.g. module requires, package paths) that signal malicious intent
+- **`lua_applescript_transfer`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1` — Port applescript's perfect-scoring config (text_encoding + extended_metrics + extreme_features) adapted for Lua scripts which share similar text-based structure
+- **`lua_no_presence_high_roc`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2.5` — The no_presence config achieved ROC_AUC 0.9329; disabling present/maxcrit/score groups reduces noise on this tiny corpus and may lift PR AUC with training tweaks
+- **`lua_hard_negative_tiny`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_REG_LAMBDA=1.5` — Hard-negative upweighting may sharpen the decision boundary on the few malware samples by forcing the model to distinguish them from the most confusing benigns
+
+</details>
+

@@ -204,3 +204,53 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260513T002144-filetypes-go` — 2026-05-13T00:21:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fa96af166926217b` | go_extra_trees_leaves128 | ok | 0.9569 | 0.9854 | 0.8782 | 146 | [log](out/autocollie/runs/2026-05-13T00-24-30_20260513T002144-filetypes-go_go_extra_trees_leaves128.log) |
+| `6181b56f8b410f45` | go_hardneg_extra_trees | ok | 0.9594 | 0.9863 | 0.8211 | 297 | [log](out/autocollie/runs/2026-05-13T00-26-55_20260513T002144-filetypes-go_go_hardneg_extra_trees.log) |
+| `5c0abbb2174e2b2c` | go_kv_vocab_enable | ok | 0.9586 | 0.9863 | 0.8915 | 124 | [log](out/autocollie/runs/2026-05-13T00-31-52_20260513T002144-filetypes-go_go_kv_vocab_enable.log) |
+| `33f9154189900733` | go_symbols_textenc_enable | ok | 0.9597 | 0.9868 | 0.8845 | 149 | [log](out/autocollie/runs/2026-05-13T00-33-56_20260513T002144-filetypes-go_go_symbols_textenc_enable.log) |
+| `1fca4286b39a81ea` | go_blindfold_ablation | ok | 0.9566 | 0.9858 | 0.8909 | 126 | [log](out/autocollie/runs/2026-05-13T00-36-25_20260513T002144-filetypes-go_go_blindfold_ablation.log) |
+| `5eddbc6fafe9ee94` | go_hardneg_gamma1 | ok | 0.9584 | 0.9862 | 0.8889 | 270 | [log](out/autocollie/runs/2026-05-13T00-38-31_20260513T002144-filetypes-go_go_hardneg_gamma1.log) |
+| `e36ba8bccaa4690e` | go_seed_search_extra_trees | ok | 0.9521 | 0.9844 | 0.8778 | 400 | [log](out/autocollie/runs/2026-05-13T00-43-01_20260513T002144-filetypes-go_go_seed_search_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_extra_trees_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_NUM_LEAVES=128` — extra_trees won at 0.9637 PR AUC; num_leaves=128 gives random splits more capacity to find ranking signal
+- **`go_hardneg_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=8` — combining extra_trees (0.9637) with hard negatives (best run 0.9658) may compound ranking gains
+- **`go_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=128` — Go source has rich key-value patterns (imports, configs, JSON) that kv_vocab can capture as discriminative signal
+- **`go_symbols_textenc_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TEXT_ENCODING_FEATURES=1` — Go binaries have meaningful symbol tables and text encoding patterns that can separate malware from benign
+- **`go_blindfold_ablation`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc` — blindfold dropout may add noise on this small corpus; removing it could sharpen PR AUC if it was diluting signal
+- **`go_hardneg_gamma1`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_GAMMA=1 EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=8` — gamma=1 (0.9622) and hard negatives (0.9658) both improved ranking; combining may push past the current best
+- **`go_seed_search_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_SEED_SEARCH_K=3` — seed_search_k=3 on extra_trees config to verify the 0.9637 win is robust across seeds, not a seed lottery
+
+</details>
+
+## Cycle `20260513T103203-filetypes-go` — 2026-05-13T10:32:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a734fb74ed4ef577` | go_kv_symbol_leaves128 | ok | 0.9544 | 0.9853 | 0.8681 | 262 | [log](out/autocollie/runs/2026-05-13T11-46-27_20260513T103203-filetypes-go_go_kv_symbol_leaves128.log) |
+| `139bf6bb12360660` | go_kv_symbol_hardneg | ok | 0.9598 | 0.9870 | 0.8889 | 774 | [log](out/autocollie/runs/2026-05-13T11-50-48_20260513T103203-filetypes-go_go_kv_symbol_hardneg.log) |
+| `9a8c21f416646066` | go_kv_symbol_textenc | ok | 0.9574 | 0.9862 | 0.8851 | 358 | [log](out/autocollie/runs/2026-05-13T12-03-42_20260513T103203-filetypes-go_go_kv_symbol_textenc.log) |
+| `843a71368cafe2f2` | go_kv_symbol_bigrams | ok | 0.9590 | 0.9868 | 0.8921 | 464 | [log](out/autocollie/runs/2026-05-13T12-09-40_20260513T103203-filetypes-go_go_kv_symbol_bigrams.log) |
+| `7372960f201ac37b` | go_kv_symbol_no_blindfold | ok | 0.9544 | 0.9853 | 0.8681 | 366 | [log](out/autocollie/runs/2026-05-13T12-17-24_20260513T103203-filetypes-go_go_kv_symbol_no_blindfold.log) |
+| `b19517d760e93eff` | go_kv_symbol_seed_search | ok | 0.9505 | 0.9840 | 0.8922 | 784 | [log](out/autocollie/runs/2026-05-13T12-23-30_20260513T103203-filetypes-go_go_kv_symbol_seed_search.log) |
+| `6d9b531486eb9c72` | go_kv_symbol_seed123 | ok | 0.9520 | 0.9848 | 0.8726 | 108 | [log](out/autocollie/runs/2026-05-13T12-36-34_20260513T103203-filetypes-go_go_kv_symbol_seed123.log) |
+| `158630c3727b15b4` | go_kv_symbol_lr003_gamma05 | ok | 0.9569 | 0.9861 | 0.8818 | 216 | [log](out/autocollie/runs/2026-05-13T12-38-22_20260513T103203-filetypes-go_go_kv_symbol_lr003_gamma05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_kv_symbol_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=150000` — best feature set with num_leaves=128 to test if more tree capacity lifts PR AUC beyond 0.9867
+- **`go_kv_symbol_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=40000 EXP_TRAIN_SAMPLES=150000` — best feature set with hard-negative mining to sharpen ranking at the benign/malware boundary
+- **`go_kv_symbol_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=150000` — add text_encoding to the winning kv+symbols surface for Go string/literal signal
+- **`go_kv_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_TRAIN_SAMPLES=150000` — add symbol_bigrams to capture import co-occurrence patterns (e.g., os/exec pairs) on Go binaries
+- **`go_kv_symbol_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_TRAIN_SAMPLES=150000` — ablating blindfold dropout features to test whether removing noisy structural features improves PR AUC
+- **`go_kv_symbol_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=150000` — seed_search_k=3 on winning config to find a seed that pushes PR AUC higher via holdout recall@3 selection
+- **`go_kv_symbol_seed123`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_TRAIN_SAMPLES=150000` — alternate seed to check if PR AUC 0.9867 is seed-dependent or stable signal
+- **`go_kv_symbol_lr003_gamma05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_GAMMA=0.5 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=40000 EXP_TRAIN_SAMPLES=150000` — lower learning rate with gamma=0.5 regularization to tighten splits and reduce overfit on rare Go patterns
+
+</details>
+

@@ -230,3 +230,33 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260512T183154-filetypes-python` — 2026-05-12T18:31:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `da89278478dfdc5d` | py_train_mcw5 | ok | 0.9990 | 0.9991 | 0.9803 | 333 | [log](out/autocollie/runs/2026-05-12T18-41-19_20260512T183154-filetypes-python_py_train_mcw5.log) |
+| `` | py_train_est400_lr003 | fail | — | — | — | 152 | [log](out/autocollie/runs/2026-05-12T18-46-52_20260512T183154-filetypes-python_py_train_est400_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_mcw5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: min_child_weight=5 for stronger leaf-level regularization, reducing overfit on rare patterns
+- **`py_train_est400_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — training-only: more estimators with lower LR for finer-grained convergence on ranking
+
+</details>
+
+## Cycle `20260512T215500-filetypes-python` — 2026-05-12T21:55:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07c6bb67c2f6a399` | py_train_hsn015_w12_leaves128 | ok | 0.9991 | 0.9991 | 0.9824 | 634 | [log](out/autocollie/runs/2026-05-12T22-08-03_20260512T215500-filetypes-python_py_train_hsn015_w12_leaves128.log) |
+| `c6a1901550f68b9e` | py_feat_kv_vocab_5k | ok | 0.9991 | 0.9991 | 0.9834 | 598 | [log](out/autocollie/runs/2026-05-12T22-18-36_20260512T215500-filetypes-python_py_feat_kv_vocab_5k.log) |
+| `6e3bada412454806` | py_feat_textenc_textmetrics | ok | 0.9991 | 0.9992 | 0.9827 | 599 | [log](out/autocollie/runs/2026-05-12T22-28-35_20260512T215500-filetypes-python_py_feat_textenc_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_hsn015_w12_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_NUM_LEAVES=128` — interpolate hard-negative fraction/weight between top two performers while increasing tree capacity for finer rank separation
+- **`py_feat_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — Python scripts carry structured KV metadata (shebangs, import dicts, config blocks) that KV vocab can capture as discriminative tokens
+- **`py_feat_textenc_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Python is text-heavy; encoding patterns and text metrics (null bytes, line length stats, escape density) add obfuscation signal absent from current feature set
+
+</details>
+

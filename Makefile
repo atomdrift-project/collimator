@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle
+.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle autocollie-backfill-l3
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -129,6 +129,7 @@ DROP_FEATURE_PREFIXES ?=
 # Confirm winners with a different seed, an explicit larger sample, or make azoth-full-train.
 EXP_TRAIN_SAMPLES ?= 150000
 EXP_MAX_TEST_SAMPLES ?= 40000
+EXP_TOTAL_LIMIT ?= 0
 EXP_MAX_ID ?=
 EXP_REFRESH_CACHE_SNAPSHOT ?= 0
 EXP_REFRESH_CACHE_SNAPSHOT_ARG := $(if $(filter 1 true yes,$(EXP_REFRESH_CACHE_SNAPSHOT)),--refresh-cache-snapshot,)
@@ -1072,6 +1073,7 @@ experiment: venv check-db
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(EXP_OUT_DIR) --model-name $(MODEL) --learner $(LEARNER) $(EXP_WORKERS_ARG) --seed $(SEED) \
 		--experiment-idea $(EXP_IDEA) --route $(EXP_ROUTE) $(EXP_RERUN_ARG) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
+		--total-limit $(EXP_TOTAL_LIMIT) \
 		$(if $(EXP_MAX_ID),--max-id $(EXP_MAX_ID),) \
 		$(EXP_REFRESH_CACHE_SNAPSHOT_ARG) \
 		--n-folds $(EXP_FOLDS) --holdout-fraction $(EXP_HOLDOUT_FRACTION) \
@@ -1228,7 +1230,7 @@ AUTOCOLLIE_DB ?= postgres://hopper@hopper:5432/hopper
 # ROUTE (singular) is accepted as a convenience.
 ROUTES ?= $(ROUTE)
 
-.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-confirm autocollie-promote azoth-augment-small-routes
+.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-confirm autocollie-promote autocollie-backfill-l3 azoth-augment-small-routes
 
 # azoth-augment-small-routes — post-hoc threshold re-search for routes whose
 # default-level policy is `no_policy` because their own benign pool is too
@@ -1265,6 +1267,32 @@ azoth-augment-small-routes: venv check-db
 		--fail-on-budget
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
+
+# One-time repair for legacy autocollie baselines whose run JSONs predate
+# recall_at_fp_per_million_* fields. Replays the selected historical baseline
+# specs with EXP_RERUN=1, then copies refreshed metrics back onto the legacy
+# baseline key so autocollie can compare real recall@3FPM instead of falling
+# back to PR AUC.
+#
+# Usage:
+#   make autocollie-backfill-l3 ROUTES=filetypes/python,filetypes/javascript
+#   make autocollie-backfill-l3 ROUTES=filetypes/ DRY_RUN=1
+#   make autocollie-backfill-l3 KEYS=5f2daa8cb63f39c4
+DRY_RUN ?= 0
+KEYS ?=
+BACKFILL_LIMIT ?= 0
+BACKFILL_ALL_MISSING ?= 0
+autocollie-backfill-l3: venv check-db
+	$(PYTHON) scripts/autocollie_backfill_l3.py \
+		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--makefile Makefile \
+		--db $(DB) \
+		--workers $(or $(WORKERS),64) \
+		$(if $(ROUTES),--routes $(ROUTES),) \
+		$(if $(KEYS),--keys $(KEYS),) \
+		$(if $(filter 1 true yes,$(DRY_RUN)),--dry-run,) \
+		$(if $(filter 1 true yes,$(BACKFILL_ALL_MISSING)),--all-missing,) \
+		$(if $(BACKFILL_LIMIT),--limit $(BACKFILL_LIMIT),)
 
 # Autocollie targets all default DB to AUTOCOLLIE_DB (hopper-host). User can
 # still override with `make autocollie DB=...`; command-line vars beat
@@ -1321,7 +1349,7 @@ autocollie-promote: venv check-db autocollie-build
 		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # The full hands-off ladder: screen N specs per route -> if any winner beats
-# the route's historical best, automatically promote it (confirm + full-train
+# the route's currently trained Azoth specialist in $(AZOTH_ROOT), automatically promote it (confirm + full-train
 # + holdout comparison). Writes per-route summaries and a deploy-or-not
 # report on each promotion. Never deploys itself.
 # Usage: make autocollie ROUTES=filetypes/python,filetypes/rust [EXPERIMENTS=10] [PASSES=1]
@@ -1335,6 +1363,7 @@ autocollie: venv check-db autocollie-build
 	$(AUTOCOLLIE_BIN) auto \
 		--collimator $(CURDIR) \
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
+		--baseline-azoth-root $(AZOTH_ROOT) \
 		$(if $(ROUTES),--routes $(ROUTES),) \
 		$(if $(AUTO_ROUTES),--auto-routes $(AUTO_ROUTES),) \
 		$(if $(filter 1 true yes,$(SHUFFLE_ROUTES)),--shuffle-routes,) \
@@ -1400,6 +1429,7 @@ help:
 	@echo "  autocollie-screen  Generate, validate, and run experiment specs via LLM"
 	@echo "  autocollie-confirm Re-run KEY=<16hex> with a different seed (SEED=43 default)"
 	@echo "  autocollie-promote Confirm + full-train + compare; writes a deploy-or-not report"
+	@echo "  autocollie-backfill-l3 Rerun selected legacy baselines to add recall@FP/M fields"
 	@echo "  autocollie         Full hands-off ladder: screen + auto-promote per route"
 	@echo "  autocollie-loop    Same as autocollie with PASSES=0 (loop until Ctrl-C)"
 	@echo "  azoth-validate     Run azoth-deploy gates against AZOTH_ROOT without copying (AZOTH_SKIP_LITMUS_VALIDATE=1 skips litmus)"

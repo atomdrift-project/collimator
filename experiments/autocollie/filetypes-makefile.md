@@ -94,3 +94,53 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260513T010545-filetypes-makefile` — 2026-05-13T01:05:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `574959e13180253b` | makefile_seed_search_no_presence | ok | 0.0909 | 0.5000 | 0.1667 | 9 | [log](out/autocollie/runs/2026-05-13T01-38-27_20260513T010545-filetypes-makefile_makefile_seed_search_no_presence.log) |
+| `d3405e16569e0e40` | makefile_kv_vocab_research | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-13T01-38-37_20260513T010545-filetypes-makefile_makefile_kv_vocab_research.log) |
+| `38fb43d6bd0f01b4` | makefile_textenc_metrics_full | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-13T01-38-41_20260513T010545-filetypes-makefile_makefile_textenc_metrics_full.log) |
+| `7a97c98bea34a404` | makefile_transfer_gz_minimal_disable | ok | 0.0909 | 0.5000 | 0.1667 | 5 | [log](out/autocollie/runs/2026-05-13T01-38-45_20260513T010545-filetypes-makefile_makefile_transfer_gz_minimal_disable.log) |
+| `28001e8c0648a61b` | makefile_train_dart_regularized | ok | 0.0909 | 0.5000 | 0.1667 | 3 | [log](out/autocollie/runs/2026-05-13T01-38-49_20260513T010545-filetypes-makefile_makefile_train_dart_regularized.log) |
+| `044186c17ba21024` | makefile_symbols_vocab_research | ok | 0.0909 | 0.5000 | 0.1667 | 5 | [log](out/autocollie/runs/2026-05-13T01-38-53_20260513T010545-filetypes-makefile_makefile_symbols_vocab_research.log) |
+| `b1f01df867aeed87` | makefile_train_scalepos_extra_trees | ok | 0.0909 | 0.5000 | 0.1667 | 3 | [log](out/autocollie/runs/2026-05-13T01-38-57_20260513T010545-filetypes-makefile_makefile_train_scalepos_extra_trees.log) |
+| `f163bbed6274e785` | makefile_seed73_kv_textenc | ok | 0.0909 | 0.5000 | 0.1667 | 7 | [log](out/autocollie/runs/2026-05-13T01-39-01_20260513T010545-filetypes-makefile_makefile_seed73_kv_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_seed_search_no_presence`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=8 EXP_MAX_TEST_SAMPLES=15000 EXP_NUM_LEAVES=64 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=50000` — seed_search_k=3 on best historical feature set to find a seed with malware in holdout
+- **`makefile_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,symbols,textenc EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=15000 EXP_TRAIN_SAMPLES=50000` — enable kv_vocab for makefile script route to capture key-value config patterns as discriminative signal
+- **`makefile_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols EXP_MAX_TEST_SAMPLES=15000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=50000` — enable text_encoding and text_metrics_full for script route to capture obfuscation and encoding anomalies
+- **`makefile_transfer_gz_minimal_disable`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=15000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=3000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=50000` — transfer gz winning approach of disabling only clusters, keeping kv/symbols/textenc enabled for richer feature surface
+- **`makefile_train_dart_regularized`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=8 EXP_MAX_TEST_SAMPLES=15000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1.5 …` — dart boosting adds dropout regularization that can improve tail ranking on small imbalanced corpora
+- **`makefile_symbols_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,textenc EXP_MAX_TEST_SAMPLES=15000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=3000 EXP_TRAIN_SAMPLES=50000` — enable symbol_vocab to capture import/function name patterns in makefile scripts as discriminative features
+- **`makefile_train_scalepos_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=8 EXP_MAX_TEST_SAMPLES=15000 EXP_NUM_LEAVES=48 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — lower scale_pos_weight with extra_trees to reduce FP on benign makefiles while extra_trees adds generalization noise
+- **`makefile_seed73_kv_textenc`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=15000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=50000` — different seed paired with kv+textenc research surface to find a split with malware in holdout
+
+</details>
+
+## Cycle `20260513T124200-filetypes-makefile` — 2026-05-13T12:42:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d4393674e046d38f` | makefile_exploit_strong_reg | ok | 0.0909 | 0.5000 | 0.1667 | 10 | [log](out/autocollie/runs/2026-05-13T13-04-21_20260513T124200-filetypes-makefile_makefile_exploit_strong_reg.log) |
+| `7134e4c99de16eff` | makefile_exploit_dart_gamma | ok | 0.0909 | 0.5000 | 0.1667 | 6 | [log](out/autocollie/runs/2026-05-13T13-04-31_20260513T124200-filetypes-makefile_makefile_exploit_dart_gamma.log) |
+| `5bd2f62e4ba8fdd5` | makefile_textenc_textmetrics | ok | 0.0909 | 0.5000 | 0.1667 | 8 | [log](out/autocollie/runs/2026-05-13T13-04-38_20260513T124200-filetypes-makefile_makefile_textenc_textmetrics.log) |
+| `aa6e8a45126d25ba` | makefile_kv_value_split_trigrams | ok | 0.0909 | 0.5000 | 0.1667 | 18 | [log](out/autocollie/runs/2026-05-13T13-04-46_20260513T124200-filetypes-makefile_makefile_kv_value_split_trigrams.log) |
+| `ac0b9c3ba36ba981` | makefile_ablate_rares | ok | 0.0909 | 0.5000 | 0.1667 | 13 | [log](out/autocollie/runs/2026-05-13T13-05-03_20260513T124200-filetypes-makefile_makefile_ablate_rares.log) |
+| `77b6f0fd1c836d33` | makefile_transfer_data_extended | ok | 0.0909 | 0.5000 | 0.1667 | 6 | [log](out/autocollie/runs/2026-05-13T13-05-16_20260513T124200-filetypes-makefile_makefile_transfer_data_extended.log) |
+| `ff8e0e607e7a5714` | makefile_seed_search_best | ok | 0.0909 | 0.5000 | 0.1667 | 14 | [log](out/autocollie/runs/2026-05-13T13-05-22_20260513T124200-filetypes-makefile_makefile_seed_search_best.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_exploit_strong_reg`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=3` — Stronger L2 regularization and fewer leaves to prevent overfitting on 4-malware corpus while preserving the winning no-presence feature surface
+- **`makefile_exploit_dart_gamma`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_GAMMA=0.5 EXP_NUM_LEAVES=48` — DART dropout boosting with gamma split threshold improves tail behavior on tiny imbalanced corpus
+- **`makefile_textenc_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Text encoding and full text metrics capture script-level obfuscation and structural patterns in makefile source
+- **`makefile_kv_value_split_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_MIN_FREQ=2 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_OBJECTIVE_TRIGRAMS=1` — KV vocab with value splitting captures makefile variable assignment components; objective trigrams add structural pattern signal
+- **`makefile_ablate_rares`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,rares` — Disabling rares group removes low-frequency noise features that overfit on a 4-malware corpus, potentially improving generalization
+- **`makefile_transfer_data_extended`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1` — Port data route's extended_metrics+extreme_features which achieved perfect scores on the same no-presence disable pattern
+- **`makefile_seed_search_best`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_SEED_SEARCH_K=3` — Seed search on the best config to confirm 0.2084 PR_AUC is robust and not seed-dependent on this 4-malware corpus
+
+</details>
+

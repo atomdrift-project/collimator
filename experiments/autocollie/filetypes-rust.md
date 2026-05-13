@@ -96,3 +96,29 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260513T150950-filetypes-rust` — 2026-05-13T15:09:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `84311803f5549060` | rust_kv_vocab_research | ok | 0.6672 | 0.9682 | 0.7143 | 13 | [log](out/autocollie/runs/2026-05-13T15-47-48_20260513T150950-filetypes-rust_rust_kv_vocab_research.log) |
+| `522593ae16e599da` | rust_symbol_vocab_research | ok | 0.9058 | 0.9890 | 0.7692 | 98 | [log](out/autocollie/runs/2026-05-13T15-48-01_20260513T150950-filetypes-rust_rust_symbol_vocab_research.log) |
+| `919dda9b91d003c1` | rust_text_encoding_metrics | ok | 0.6783 | 0.9709 | 0.7407 | 18 | [log](out/autocollie/runs/2026-05-13T15-49-39_20260513T150950-filetypes-rust_rust_text_encoding_metrics.log) |
+| `3639896e9723ddf0` | rust_simpler_leaves64 | ok | 0.9101 | 0.9898 | 0.8000 | 78 | [log](out/autocollie/runs/2026-05-13T15-49-57_20260513T150950-filetypes-rust_rust_simpler_leaves64.log) |
+| `7dacbe152e1ff115` | rust_dart_boosting_regularization | ok | 0.8388 | 0.9858 | 0.7273 | 217 | [log](out/autocollie/runs/2026-05-13T15-51-15_20260513T150950-filetypes-rust_rust_dart_boosting_regularization.log) |
+| `08e869c7b447c771` | rust_seed_generalization_check | ok | 0.8617 | 0.9851 | 0.7586 | 179 | [log](out/autocollie/runs/2026-05-13T15-54-52_20260513T150950-filetypes-rust_rust_seed_generalization_check.log) |
+| `4b7420ce3d838dc6` | rust_hard_negative_sweep | ok | 0.8987 | 0.9898 | 0.8148 | 206 | [log](out/autocollie/runs/2026-05-13T15-57-51_20260513T150950-filetypes-rust_rust_hard_negative_sweep.log) |
+| `25ac58dd3962d650` | rust_kv_symbol_combined | ok | 0.7286 | 0.9760 | 0.7586 | 37 | [log](out/autocollie/runs/2026-05-13T16-01-17_20260513T150950-filetypes-rust_rust_kv_symbol_combined.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rust_kv_vocab_research`** `EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_NUM_LEAVES=96` — enable kv_vocab to surface key-value analysis signal from rust files, testing research feature family
+- **`rust_symbol_vocab_research`** `EXP_ESTIMATORS=250 EXP_NUM_LEAVES=96 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=6000` — enable symbol_vocab to capture function/import name patterns in rust source, testing research feature family
+- **`rust_text_encoding_metrics`** `EXP_ESTIMATORS=250 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — enable text_encoding and text_metrics_full for rust source code text patterns, testing research surface
+- **`rust_simpler_leaves64`** `EXP_ESTIMATORS=200 EXP_MAX_DEPTH=8 EXP_NUM_LEAVES=64` — reduce num_leaves to 64 to test if perfect scores hold with less model capacity, finding minimum viable config
+- **`rust_dart_boosting_regularization`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96` — try dart boosting type for dropout-style regularization, may improve generalization on held-out data
+- **`rust_seed_generalization_check`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=150000` — test with seed 123 and seed_search_k=3 to verify perfect scores are not seed-dependent artifacts
+- **`rust_hard_negative_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_NUM_LEAVES=128` — apply hard negative mining with moderate weight to sharpen decision boundary and improve ranking robustness
+- **`rust_kv_symbol_combined`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=6000` — combine kv_vocab and symbol_vocab research features to test if their joint signal compounds on rust route
+
+</details>
+

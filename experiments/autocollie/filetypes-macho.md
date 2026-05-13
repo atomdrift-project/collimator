@@ -202,3 +202,29 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260513T130540-filetypes-macho` — 2026-05-13T13:05:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07dfd1f34e37254a` | macho_exploit_leaves128_reg2 | ok | 0.9969 | 0.9992 | 0.9808 | 386 | [log](out/autocollie/runs/2026-05-13T13-11-50_20260513T130540-filetypes-macho_macho_exploit_leaves128_reg2.log) |
+| `3ecf8060777d5aaa` | macho_exploit_hardneg_01_16 | ok | 0.9964 | 0.9992 | 0.9808 | 757 | [log](out/autocollie/runs/2026-05-13T13-18-16_20260513T130540-filetypes-macho_macho_exploit_hardneg_01_16.log) |
+| `34e382072058a04f` | macho_feature_symbol_bigrams | ok | 0.9981 | 0.9995 | 0.9755 | 485 | [log](out/autocollie/runs/2026-05-13T13-30-53_20260513T130540-filetypes-macho_macho_feature_symbol_bigrams.log) |
+| `c5ef1e89e0d634d0` | macho_feature_kv_split | ok | 0.9970 | 0.9993 | 0.9808 | 276 | [log](out/autocollie/runs/2026-05-13T13-38-59_20260513T130540-filetypes-macho_macho_feature_kv_split.log) |
+| `9b01160041f12be5` | macho_ablation_no_blindfold | ok | 0.9975 | 0.9994 | 0.9808 | 379 | [log](out/autocollie/runs/2026-05-13T13-43-35_20260513T130540-filetypes-macho_macho_ablation_no_blindfold.log) |
+| `5e623206ac0bdc13` | macho_transfer_kv_textenc | ok | 0.9968 | 0.9992 | 0.9728 | 405 | [log](out/autocollie/runs/2026-05-13T13-49-54_20260513T130540-filetypes-macho_macho_transfer_kv_textenc.log) |
+| `6e3491160dd09a9c` | macho_generalization_seed3 | ok | 0.9975 | 0.9994 | 0.9808 | 1023 | [log](out/autocollie/runs/2026-05-13T13-56-39_20260513T130540-filetypes-macho_macho_generalization_seed3.log) |
+| `c090a936406a26cf` | macho_threshold_fpr3e6 | ok | 0.9975 | 0.9994 | 0.9513 | 352 | [log](out/autocollie/runs/2026-05-13T14-13-42_20260513T130540-filetypes-macho_macho_threshold_fpr3e6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`macho_exploit_leaves128_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — deeper trees with stronger L2 regularization may improve PR AUC ranking on this small corpus
+- **`macho_exploit_hardneg_01_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16` — small-fraction high-weight hard negatives sharpen the decision boundary for malware ranking without distorting the score distribution
+- **`macho_feature_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000` — symbol bigrams capture import co-occurrence patterns (e.g. dyld load commands paired with kernel calls) specific to Mach-O binaries
+- **`macho_feature_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000` — kv vocab with value splitting recovers per-element signal in Mach-O metadata fields like needed_libs and cmd arguments
+- **`macho_ablation_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters` — removing blindfold dropout may reduce noise on this small corpus if it was masking useful patterns; flat or higher PR AUC means blindfold was dead weight
+- **`macho_transfer_kv_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_TEXT_ENCODING_FEATURES=1` — port xml route winning kv+textenc combo; Mach-O metadata keys and string section encoding patterns may carry similar discriminative signal
+- **`macho_generalization_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SEED_SEARCH_K=3` — seed search k=3 on best config to confirm current signal is robust and not seed-dependent
+- **`macho_threshold_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — optimize threshold at deployed hostile operating point FPR=3e-6 for direct recall@3 FP/M improvement at the real deployment boundary
+
+</details>
+

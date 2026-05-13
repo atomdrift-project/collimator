@@ -132,3 +132,19 @@ _No specs ran._
 
 _No specs ran._
 
+## Cycle `20260512T235733-filetypes-pdf` — 2026-05-12T23:57:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `defb08a83ef29482` | pdf_feat_kv_vocab | ok | 0.9999 | 0.9985 | 0.9917 | 53 | [log](out/autocollie/runs/2026-05-12T23-58-51_20260512T235733-filetypes-pdf_pdf_feat_kv_vocab.log) |
+| `a0635d4a9d54bbaf` | pdf_feat_textmetrics_docobsf_lowfreq | ok | 0.9999 | 0.9986 | 0.9864 | 52 | [log](out/autocollie/runs/2026-05-12T23-59-44_20260512T235733-filetypes-pdf_pdf_feat_textmetrics_docobsf_lowfreq.log) |
+| `39d934f2c3b4503d` | pdf_transfer_gz_minimal_disables | ok | 0.9999 | 0.9987 | 0.9926 | 57 | [log](out/autocollie/runs/2026-05-13T00-00-36_20260512T235733-filetypes-pdf_pdf_transfer_gz_minimal_disables.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_feat_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,symbols,textenc EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — enable KV vocab to capture PDF metadata key-value patterns that may discriminate malware from benign documents
+- **`pdf_feat_textmetrics_docobsf_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — text_metrics_full and document_obfuscation_features target PDF-specific signals; lowering bigram_min_freq from 1000 to 100 captures rarer document patterns
+- **`pdf_transfer_gz_minimal_disables`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — transfer gz winning config which only disables clusters; enabling score+kv+symbols+textenc together may provide the discriminative signal PDFs need
+
+</details>
+

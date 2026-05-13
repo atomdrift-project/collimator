@@ -62,3 +62,17 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260513T161944-general` — 2026-05-13T16:19:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | general_exploit_finer_trees | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-13T16-32-56_20260513T161944-general_general_exploit_finer_trees.log) |
+| `` | general_exploit_dart_extra_trees | fail | — | — | — | 218 | [log](out/autocollie/runs/2026-05-13T17-02-56_20260513T161944-general_general_exploit_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`general_exploit_finer_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — finer leaf splits with lower LR and stronger L2 may sharpen ranking at saturation
+- **`general_exploit_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=1` — dart dropout + extra_trees ensemble noise may improve tail behavior at low FPR
+
+</details>
+

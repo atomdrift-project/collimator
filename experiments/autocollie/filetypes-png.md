@@ -86,3 +86,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260513T141938-filetypes-png` — 2026-05-13T14:19:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07ddc5e464cd9f0b` | png_textenc_minimal_baseline | ok | 0.9895 | 0.9775 | 0.9524 | 30 | [log](out/autocollie/runs/2026-05-13T15-01-51_20260513T141938-filetypes-png_png_textenc_minimal_baseline.log) |
+| `efa61f03f4255c5b` | png_textenc_dart_leaves128 | ok | 0.9697 | 0.9545 | 0.9524 | 205 | [log](out/autocollie/runs/2026-05-13T15-02-21_20260513T141938-filetypes-png_png_textenc_dart_leaves128.log) |
+| `7aee0d7e10950f8e` | png_textenc_extra_trees_depth10 | ok | 0.9871 | 0.9706 | 0.9524 | 33 | [log](out/autocollie/runs/2026-05-13T15-05-45_20260513T141938-filetypes-png_png_textenc_extra_trees_depth10.log) |
+| `d3b3efcdaeeee745` | png_textenc_kv_chunk_vocab | ok | 0.9895 | 0.9775 | 0.9524 | 30 | [log](out/autocollie/runs/2026-05-13T15-06-18_20260513T141938-filetypes-png_png_textenc_kv_chunk_vocab.log) |
+| `10bd9fe5ffc1ac71` | png_textenc_text_metrics_full | ok | 0.9895 | 0.9775 | 0.9524 | 33 | [log](out/autocollie/runs/2026-05-13T15-06-48_20260513T141938-filetypes-png_png_textenc_text_metrics_full.log) |
+| `93fd1884cb802852` | png_transfer_gz_kv_textenc | ok | 0.9873 | 0.9729 | 0.9524 | 43 | [log](out/autocollie/runs/2026-05-13T15-07-21_20260513T141938-filetypes-png_png_transfer_gz_kv_textenc.log) |
+| `5b0581b0c293ddc0` | png_textenc_seed_search_k3 | ok | 0.9895 | 0.9775 | 0.9524 | 101 | [log](out/autocollie/runs/2026-05-13T15-08-04_20260513T141938-filetypes-png_png_textenc_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`png_textenc_minimal_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96` — reproduce winning textenc-only config with minimal noise features to restore near-1.0 PR_AUC
+- **`png_textenc_dart_leaves128`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128` — textenc baseline with dart boosting and higher leaves for better tail regularization at near-saturation
+- **`png_textenc_extra_trees_depth10`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=10 EXP_NUM_LEAVES=64` — textenc baseline with extra_trees and moderate depth for ensemble noise that may improve generalization
+- **`png_textenc_kv_chunk_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,present,maxcrit,score EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96` — add kv_vocab to textenc baseline to capture PNG chunk key-value metadata as additional malware signal
+- **`png_textenc_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1` — add text_metrics_full for richer text analysis of PNG text and annotation chunks alongside textenc
+- **`png_transfer_gz_kv_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96` — port gz winning config with kv+textenc enabled to test whether PNG chunk KV pairs add independent signal
+- **`png_textenc_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3` — seed search on textenc baseline to confirm result stability and find optimal seed for deployment
+
+</details>
+

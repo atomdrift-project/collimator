@@ -181,3 +181,63 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260512T185007-filetypes-javascript` — 2026-05-12T18:50:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | js_control_scalepos075 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-12T18-52-34_20260512T185007-filetypes-javascript_js_control_scalepos075.log) |
+| `` | js_exploit_leaves128_lr04 | fail | — | — | — | 14 | [log](out/autocollie/runs/2026-05-12T19-22-34_20260512T185007-filetypes-javascript_js_exploit_leaves128_lr04.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_control_scalepos075`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_SCALE_POS_WEIGHT_MULT=0.75` — control run with moderate positive downweighting to sharpen PR AUC ranking at high precision tail
+- **`js_exploit_leaves128_lr04`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_LEARNING_RATE=0.04 EXP_NUM_LEAVES=128` — slightly larger trees with moderate learning rate for better convergence on ranking
+
+</details>
+
+## Cycle `20260512T201115-filetypes-javascript` — 2026-05-12T20:11:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | js_hn_frac03_weight8 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-12T20-22-56_20260512T201115-filetypes-javascript_js_hn_frac03_weight8.log) |
+| `` | js_kv_vocab_5000 | fail | — | — | — | 833 | [log](out/autocollie/runs/2026-05-12T20-52-56_20260512T201115-filetypes-javascript_js_kv_vocab_5000.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_hn_frac03_weight8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc …` — hard-negative upweighting should improve PR AUC by better separating hard benigns from malware at the tail
+- **`js_kv_vocab_5000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,symbols,textenc …` — KV vocab adds key-value pair signal that sister routes (html, docx) found effective; conservative vocab limit to avoid OOM
+
+</details>
+
+## Cycle `20260512T210732-filetypes-javascript` — 2026-05-12T21:07:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e02da8eb3083a526` | js_extra_trees_reg | ok | 0.9998 | 0.9997 | 0.9935 | 218 | [log](out/autocollie/runs/2026-05-12T21-24-09_20260512T210732-filetypes-javascript_js_extra_trees_reg.log) |
+| `01a17e23cb5d9565` | js_textenc_metrics_full | ok | 0.9998 | 0.9998 | 0.9924 | 86 | [log](out/autocollie/runs/2026-05-12T21-27-48_20260512T210732-filetypes-javascript_js_textenc_metrics_full.log) |
+| `95a9dc9199738046` | js_kv_vocab_8000 | ok | 0.9998 | 0.9997 | 0.9933 | 78 | [log](out/autocollie/runs/2026-05-12T21-29-14_20260512T210732-filetypes-javascript_js_kv_vocab_8000.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_extra_trees_reg`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_REG_LAMBDA=2` — extra_trees adds random-split noise that can improve generalization at the saturated PR AUC tail without regressing ROC AUC
+- **`js_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols EXP_ESTIMATORS=300 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — text_encoding and text_metrics_full add obfuscation signal for JS scripts that could improve ranking of borderline malware
+- **`js_kv_vocab_8000`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000` — kv_vocab captures key-value pair patterns in JS configs and manifests that could add rank signal beyond path n-grams
+
+</details>
+
+## Cycle `20260512T224518-filetypes-javascript` — 2026-05-12T22:45:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `56254360400e254e` | js_no_presence_leaves160_colsample05_reg2 | ok | 0.9998 | 0.9997 | 0.9929 | 606 | [log](out/autocollie/runs/2026-05-12T23-00-04_20260512T224518-filetypes-javascript_js_no_presence_leaves160_colsample05_reg2.log) |
+| `c1b010940d5c08fd` | js_no_presence_textenc_metrics | ok | 0.9998 | 0.9997 | 0.9925 | 517 | [log](out/autocollie/runs/2026-05-12T23-10-10_20260512T224518-filetypes-javascript_js_no_presence_textenc_metrics.log) |
+| `46cf048075bba01c` | js_no_presence_kv_textenc_combo | ok | 0.9998 | 0.9997 | 0.9930 | 530 | [log](out/autocollie/runs/2026-05-12T23-18-47_20260512T224518-filetypes-javascript_js_no_presence_kv_textenc_combo.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_no_presence_leaves160_colsample05_reg2`** `EXP_COLSAMPLE_BYTREE=0.5 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_NUM_LEAVES=160 EXP_REG_LAMBDA=2` — combine higher capacity (leaves=160) with aggressive column subsampling (0.5) and L2 reg to push PR AUC past 0.9999 without overfit
+- **`js_no_presence_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — enable text_encoding and text_metrics_full on no_presence base to test whether JS text-level features add ranking signal beyond kv
+- **`js_no_presence_kv_textenc_combo`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — enable both kv_vocab and text_encoding+metrics on no_presence base to test whether combined research features synergize for PR AUC gains
+
+</details>
+
