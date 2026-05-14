@@ -1232,7 +1232,8 @@ verify-litmus:
 AUTOCOLLIE_DIR ?= ../autocollie
 AUTOCOLLIE_BIN := $(AUTOCOLLIE_DIR)/bin/autocollie
 EXPERIMENTS ?= 12
-AUTOCOLLIE_LLM_IDLE_TIMEOUT ?= 5m
+AUTOCOLLIE_LLM_IDLE_TIMEOUT ?= 15m
+AUTOCOLLIE_SCREEN_TIMEOUT ?= 90m
 # Autocollie defaults to the local Hopper replica. Using the bare `hopper`
 # hostname can resolve through public DNS and burn screen slots on timeouts.
 AUTOCOLLIE_DB ?= postgres://hopper@localhost:5432/hopper
@@ -1381,7 +1382,7 @@ autocollie: venv check-db autocollie-build
 		--passes $(PASSES) \
 		--seed $(CONFIRM_SEED) \
 		--llm-idle-timeout $(AUTOCOLLIE_LLM_IDLE_TIMEOUT) \
-		--screen-timeout 30m \
+		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
 		--promote-timeout 180m \
 		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 

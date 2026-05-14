@@ -302,3 +302,79 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T135818-filetypes-go` — 2026-05-14T13:58:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b4d7cf9ce5edcb78` | go_kv_split_symbol_leaves128_lr003 | ok | 0.9632 | 0.9878 | 0.8997 | 15 | [log](out/autocollie/runs/2026-05-14T14-00-46_20260514T135818-filetypes-go_go_kv_split_symbol_leaves128_lr003.log) |
+| `3c23f184bde231ac` | go_kv_split_symbol_hardneg_w10 | ok | 0.9636 | 0.9880 | 0.8963 | 7 | [log](out/autocollie/runs/2026-05-14T14-01-01_20260514T135818-filetypes-go_go_kv_split_symbol_hardneg_w10.log) |
+| `86e73fc92926f9e3` | go_kv_split_textenc_metrics_full | ok | 0.9640 | 0.9879 | 0.8796 | 13 | [log](out/autocollie/runs/2026-05-14T14-01-08_20260514T135818-filetypes-go_go_kv_split_textenc_metrics_full.log) |
+| `9ff4a0916d91a076` | go_kv_split_mbc_extended_extreme | ok | 0.9613 | 0.9871 | 0.8778 | 14 | [log](out/autocollie/runs/2026-05-14T14-01-22_20260514T135818-filetypes-go_go_kv_split_mbc_extended_extreme.log) |
+| `ae08d1f63c97320b` | go_kv_split_no_blindfold | ok | 0.9608 | 0.9870 | 0.8760 | 14 | [log](out/autocollie/runs/2026-05-14T14-01-36_20260514T135818-filetypes-go_go_kv_split_no_blindfold.log) |
+| `71544beac03c205e` | go_transfer_pkginfo_textenc_extreme_traits | ok | 0.9647 | 0.9881 | 0.8991 | 14 | [log](out/autocollie/runs/2026-05-14T14-01-50_20260514T135818-filetypes-go_go_transfer_pkginfo_textenc_extreme_traits.log) |
+| `e095891a92a6fda4` | go_kv_split_seed7_generalization | ok | 0.9603 | 0.9863 | 0.8740 | 18 | [log](out/autocollie/runs/2026-05-14T14-02-04_20260514T135818-filetypes-go_go_kv_split_seed7_generalization.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_kv_split_symbol_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1` — deeper trees with slower learning may better separate borderline Go malware from benign, exploiting the best feature set
+- **`go_kv_split_symbol_hardneg_w10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1` — hard negatives on the best feature set may sharpen ranking at the benign/malware boundary without blindfold removal
+- **`go_kv_split_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — text_encoding and text_metrics_full add character-level and text-structural signal complementing kv/symbol features for Go sources
+- **`go_kv_split_mbc_extended_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MBC_ID_VOCAB=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1` — mbc_id_vocab adds per-technique binary presence while extended_metrics and extreme_features capture tail distributions that trees can split on
+- **`go_kv_split_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1` — removing blindfold dropout preserves full feature signal; go_no_blindfold_hardneg was second-best suggesting blindfold removal helps
+- **`go_transfer_pkginfo_textenc_extreme_traits`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_SCORE_WEIGHTED_TRAITS=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 …` — pkg-info specialist won with textenc + extended_metrics + extreme_features + score_weighted_traits; porting to Go with kv/symbol base
+- **`go_kv_split_seed7_generalization`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1` — seed=7 tests whether the best config's PR AUC of 0.9627 is seed-dependent or robust across samples
+
+</details>
+
+## Cycle `20260514T140733-filetypes-go` — 2026-05-14T14:07:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8cc38be825d6b90a` | go_best_leaves128_lr002 | ok | 0.9596 | 0.9863 | 0.8726 | 5 | [log](out/autocollie/runs/2026-05-14T14-10-19_20260514T140733-filetypes-go_go_best_leaves128_lr002.log) |
+| `5b013c9759d62b9c` | go_best_hardneg_w12 | ok | 0.9618 | 0.9870 | 0.8910 | 7 | [log](out/autocollie/runs/2026-05-14T14-10-24_20260514T140733-filetypes-go_go_best_hardneg_w12.log) |
+| `d8bf564fba895a15` | go_kv_symbols_split_vocab | ok | 0.9632 | 0.9877 | 0.9008 | 12 | [log](out/autocollie/runs/2026-05-14T14-10-31_20260514T140733-filetypes-go_go_kv_symbols_split_vocab.log) |
+| `63bcb26811335f07` | go_textenc_mbc_extended | ok | 0.9556 | 0.9853 | 0.8785 | 11 | [log](out/autocollie/runs/2026-05-14T14-10-43_20260514T140733-filetypes-go_go_textenc_mbc_extended.log) |
+| `1c8904b3ae7aff2e` | go_ablation_no_extreme | ok | 0.9592 | 0.9863 | 0.8889 | 13 | [log](out/autocollie/runs/2026-05-14T14-10-55_20260514T140733-filetypes-go_go_ablation_no_extreme.log) |
+| `770f8005562bf5d2` | go_transfer_java_symbols_bigrams | ok | 0.9608 | 0.9870 | 0.8760 | 13 | [log](out/autocollie/runs/2026-05-14T14-11-07_20260514T140733-filetypes-go_go_transfer_java_symbols_bigrams.log) |
+| `3544f222904975c2` | go_strong_seed123_generalization | ok | 0.9523 | 0.9846 | 0.8946 | 14 | [log](out/autocollie/runs/2026-05-14T14-11-21_20260514T140733-filetypes-go_go_strong_seed123_generalization.log) |
+| `8e80110ac67b470d` | go_extra_trees_regularization | ok | 0.9586 | 0.9859 | 0.8864 | 10 | [log](out/autocollie/runs/2026-05-14T14-11-34_20260514T140733-filetypes-go_go_extra_trees_regularization.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_best_leaves128_lr002`** `EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.02 EXP_NUM_LEAVES=128` — Higher capacity trees with lower LR may improve ranking on the best feature set
+- **`go_best_hardneg_w12`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_NUM_LEAVES=112` — Hard negatives with moderate weight sharpen the malware/benign boundary for better PR AUC
+- **`go_kv_symbols_split_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=6000` — KV value split + symbol vocab should add discriminative signal for Go package/import patterns
+- **`go_textenc_mbc_extended`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MBC_ID_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1` — Text encoding + MBC ID vocab + extended metrics for richer feature surface on Go binaries
+- **`go_ablation_no_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_TEXT_ENCODING_FEATURES=1` — Removing extreme features tests if they add noise vs signal on the Go route
+- **`go_transfer_java_symbols_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=4000 …` — Port Java route's winning config with symbol bigrams + extreme features adapted for Go
+- **`go_strong_seed123_generalization`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_TEXT_ENCODING_FEATURES=1` — Vary seed on strong config to distinguish real signal from seed/sample noise
+- **`go_extra_trees_regularization`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_NUM_LEAVES=112 EXP_SUBSAMPLE=0.7 EXP_TEXT_ENCODING_FEATURES=1` — Extra trees adds ensemble noise that can improve generalization at the low-FPR tail
+
+</details>
+
+## Cycle `20260514T141644-filetypes-go` — 2026-05-14T14:16:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4792c011e2027e2e` | go_exploit_leaves128_lr003 | ok | 0.9586 | 0.9860 | 0.8649 | 22 | [log](out/autocollie/runs/2026-05-14T14-25-32_20260514T141644-filetypes-go_go_exploit_leaves128_lr003.log) |
+| `7e3bb5651c92f738` | go_exploit_hardneg_w12 | ok | 0.9585 | 0.9866 | 0.8883 | 28 | [log](out/autocollie/runs/2026-05-14T14-25-54_20260514T141644-filetypes-go_go_exploit_hardneg_w12.log) |
+| `b4d7cf9ce5edcb78` | go_kv_symbol_bigrams_split | dup | 0.9632 | 0.9878 | 0.8997 | 1 | [log](out/autocollie/runs/2026-05-14T14-26-22_20260514T141644-filetypes-go_go_kv_symbol_bigrams_split.log) |
+| `578baa869d85c204` | go_kv_textenc_metrics_ratio | ok | 0.9572 | 0.9858 | 0.8729 | 19 | [log](out/autocollie/runs/2026-05-14T14-26-23_20260514T141644-filetypes-go_go_kv_textenc_metrics_ratio.log) |
+| `4dde436b375b214b` | go_ablation_no_blindfold | ok | 0.9567 | 0.9856 | 0.8740 | 17 | [log](out/autocollie/runs/2026-05-14T14-26-42_20260514T141644-filetypes-go_go_ablation_no_blindfold.log) |
+| `0fc727e6a9e79c43` | go_transfer_java_ngrams_scalepos | ok | 0.9552 | 0.9855 | 0.8852 | 23 | [log](out/autocollie/runs/2026-05-14T14-26-59_20260514T141644-filetypes-go_go_transfer_java_ngrams_scalepos.log) |
+| `2df61bc51e8a0745` | go_generalization_seed123 | ok | 0.9534 | 0.9847 | 0.8825 | 18 | [log](out/autocollie/runs/2026-05-14T14-27-22_20260514T141644-filetypes-go_go_generalization_seed123.log) |
+| `536c7ae6949374db` | go_tiered_trigrams_kv | ok | 0.9621 | 0.9870 | 0.8733 | 11 | [log](out/autocollie/runs/2026-05-14T14-27-40_20260514T141644-filetypes-go_go_tiered_trigrams_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_exploit_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Higher leaves with lower LR on best feature set improves ranking granularity without overfit
+- **`go_exploit_hardneg_w12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard negative training with moderate weight sharpens malware/benign boundary; builds on 0.9636 hardneg_w10 result
+- **`go_kv_symbol_bigrams_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Symbol bigrams capture Go import co-occurrence patterns; kv_value_split recovers per-element signal in package metadata
+- **`go_kv_textenc_metrics_ratio`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — text_metrics_full + metric_ratio_features add structural text signal; builds on 0.9640 metrics_full result
+- **`go_ablation_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Blindfold dropout features may add noise for Go; removing tests if PR AUC stays flat or improves on best config
+- **`go_transfer_java_ngrams_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Port java_class/ruby winning ideas: attack_ngrams for code patterns + scale_pos_weight_mult=0.75 for FP reduction
+- **`go_generalization_seed123`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Test if best config generalizes across seeds; seed=123 already showed 0.9523 on Go
+- **`go_tiered_trigrams_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tiered critical trigrams add severity-aware n-gram signal; combined with kv for Go package/trait patterns
+
+</details>
+

@@ -100,3 +100,55 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T140222-filetypes-shell` — 2026-05-14T14:02:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6085196331097ed8` | shell_exploit_leaves128_reg05 | ok | 0.9825 | 0.9958 | 0.9252 | 18 | [log](out/autocollie/runs/2026-05-14T14-05-51_20260514T140222-filetypes-shell_shell_exploit_leaves128_reg05.log) |
+| `f96644cd15fb0884` | shell_exploit_dart_subsample | ok | 0.9675 | 0.9921 | 0.8091 | 4 | [log](out/autocollie/runs/2026-05-14T14-06-09_20260514T140222-filetypes-shell_shell_exploit_dart_subsample.log) |
+| `8ded6cbcf3d5dcba` | shell_kv_vocab_5000 | ok | 0.9826 | 0.9958 | 0.9289 | 20 | [log](out/autocollie/runs/2026-05-14T14-06-14_20260514T140222-filetypes-shell_shell_kv_vocab_5000.log) |
+| `90a3e710ab90382a` | shell_textenc_textmetrics_full | ok | 0.9828 | 0.9959 | 0.9130 | 15 | [log](out/autocollie/runs/2026-05-14T14-06-34_20260514T140222-filetypes-shell_shell_textenc_textmetrics_full.log) |
+| `02bfbc9535fc4edf` | shell_ablation_no_textenc | ok | 0.9823 | 0.9955 | 0.9133 | 17 | [log](out/autocollie/runs/2026-05-14T14-06-48_20260514T140222-filetypes-shell_shell_ablation_no_textenc.log) |
+| `f42a6a044aded725` | shell_transfer_scalepos05 | ok | 0.9819 | 0.9957 | 0.9103 | 6 | [log](out/autocollie/runs/2026-05-14T14-07-06_20260514T140222-filetypes-shell_shell_transfer_scalepos05.log) |
+| `4a2fafcbc3a451cf` | shell_seed_search_k3 | ok | 0.9822 | 0.9957 | 0.9107 | 12 | [log](out/autocollie/runs/2026-05-14T14-07-12_20260514T140222-filetypes-shell_shell_seed_search_k3.log) |
+| `626fc12e90900576` | shell_hardneg_fraction015_weight8 | ok | 0.9827 | 0.9958 | 0.9206 | 10 | [log](out/autocollie/runs/2026-05-14T14-07-24_20260514T140222-filetypes-shell_shell_hardneg_fraction015_weight8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_exploit_leaves128_reg05`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=0.5 EXP_TEXT_ENCODING_FEATURES=1` — increase capacity with 128 leaves + lighter L2 regularization to capture subtler malware patterns at saturated PR AUC
+- **`shell_exploit_dart_subsample`** `EXP_BOOSTING_TYPE=dart EXP_CODE_ENTROPY_SPIKE=1 EXP_COLSAMPLE_BYTREE=0.7 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_SUBSAMPLE=0.7 EXP_TEXT_ENCODING_FEATURES=1` — DART dropout boosting with subsampling for better generalization at the tail without overfitting
+- **`shell_kv_vocab_5000`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1` — KV vocab captures shell variable assignments, env vars, and command options that distinguish malware from benign scripts
+- **`shell_textenc_textmetrics_full`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — text_metrics_full adds 22+ ms.text fields (line_length_stddev, escape_density, etc.) that capture obfuscation patterns in shell scripts
+- **`shell_ablation_no_textenc`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,textenc EXP_NUM_LEAVES=96` — if text_encoding is not pulling weight, removing it reduces noise and may match or exceed PR AUC
+- **`shell_transfer_scalepos05`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1` — ruby route achieved perfect PR AUC with scale_pos_weight_mult=0.5; down-weighting benigns should reduce FPs and improve ranking
+- **`shell_seed_search_k3`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1` — seed_search_k=3 verifies the text_encoding+entropy feature set generalizes across seeds rather than benefiting from a lucky split
+- **`shell_hardneg_fraction015_weight8`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_TEXT_ENCODING_FEATURES=1` — light hard-negative pass with conservative fraction and weight to sharpen ranking boundary without destabilizing training
+
+</details>
+
+## Cycle `20260514T141145-filetypes-shell` — 2026-05-14T14:11:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f4e40e09362780de` | shell_control_best_features | ok | 0.9825 | 0.9957 | 0.9085 | 5 | [log](out/autocollie/runs/2026-05-14T14-15-17_20260514T141145-filetypes-shell_shell_control_best_features.log) |
+| `dc9e13d58477475e` | shell_exploit_leaves128_lr03 | ok | 0.9819 | 0.9957 | 0.9239 | 7 | [log](out/autocollie/runs/2026-05-14T14-15-22_20260514T141145-filetypes-shell_shell_exploit_leaves128_lr03.log) |
+| `2e3b7ce5ce0ed1e0` | shell_exploit_hardneg01_w6 | ok | 0.9831 | 0.9959 | 0.9189 | 10 | [log](out/autocollie/runs/2026-05-14T14-15-29_20260514T141145-filetypes-shell_shell_exploit_hardneg01_w6.log) |
+| `8ded6cbcf3d5dcba` | shell_kv_vocab_5000 | dup | 0.9826 | 0.9958 | 0.9289 | 1 | [log](out/autocollie/runs/2026-05-14T14-15-39_20260514T141145-filetypes-shell_shell_kv_vocab_5000.log) |
+| `066e9f3724a72305` | shell_kv_split_value | ok | 0.9813 | 0.9955 | 0.8942 | 17 | [log](out/autocollie/runs/2026-05-14T14-15-39_20260514T141145-filetypes-shell_shell_kv_split_value.log) |
+| `7544a915fa15629a` | shell_ablation_reenable_score | ok | 0.9841 | 0.9962 | 0.9032 | 16 | [log](out/autocollie/runs/2026-05-14T14-15-57_20260514T141145-filetypes-shell_shell_ablation_reenable_score.log) |
+| `0a519fac0547fcd5` | shell_transfer_gz_kv_seed3 | ok | 0.9826 | 0.9958 | 0.9289 | 11 | [log](out/autocollie/runs/2026-05-14T14-16-12_20260514T141145-filetypes-shell_shell_transfer_gz_kv_seed3.log) |
+| `c4b0731a51afd599` | shell_generalization_seed99 | ok | 0.9804 | 0.9951 | 0.9008 | 20 | [log](out/autocollie/runs/2026-05-14T14-16-24_20260514T141145-filetypes-shell_shell_generalization_seed99.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_control_best_features`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_TEXT_ENCODING_FEATURES=1` — reproduce best PR AUC 0.9986 with disable_groups present,maxcrit,score,clusters and text_encoding as training baseline
+- **`shell_exploit_leaves128_lr03`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1` — finer trees with slower learning may squeeze more PR AUC from near-saturated 0.9986
+- **`shell_exploit_hardneg01_w6`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=6 EXP_TEXT_ENCODING_FEATURES=1` — moderate hard negatives may sharpen low-FPR ranking without destabilizing
+- **`shell_kv_vocab_5000`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_TEXT_ENCODING_FEATURES=1` — KV vocab on shell scripts captures key-value config patterns that distinguish malware droppers from benign scripts
+- **`shell_kv_split_value`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_MIN_FREQ=3 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_TEXT_ENCODING_FEATURES=1` — KV value splitting recovers per-element signal in array-valued config keys common in shell scripts
+- **`shell_ablation_reenable_score`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,clusters EXP_TEXT_ENCODING_FEATURES=1` — if re-enabling score features maintains PR AUC near 0.9986, score group was not pulling weight and simplification wins
+- **`shell_transfer_gz_kv_seed3`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1` — gz route achieved perfect PR AUC with kv and seed_search; porting to shell best feature set may confirm generalization
+- **`shell_generalization_seed99`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_TEXT_ENCODING_FEATURES=1` — different seed tests whether 0.9986 PR AUC is stable or seed-dependent
+
+</details>
+
