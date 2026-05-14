@@ -88,3 +88,17 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T044721-filetypes-pptx` — 2026-05-14T04:47:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pptx_training_capacity_boost | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T04-49-06_20260514T044721-filetypes-pptx_pptx_training_capacity_boost.log) |
+| `` | pptx_hard_negative_mining | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T05-19-06_20260514T044721-filetypes-pptx_pptx_hard_negative_mining.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pptx_training_capacity_boost`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128` — increase model capacity with more leaves and lower LR to escape the random-performance plateau
+- **`pptx_hard_negative_mining`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5` — hard-negative upweighting forces the model to focus on discriminative benign-malware boundary
+
+</details>
+

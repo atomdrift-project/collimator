@@ -254,3 +254,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260513T172420-filetypes-go` — 2026-05-13T17:24:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bb3d6e3a46acaa8e` | go_kv_symbol_leaves128_lr002 | ok | 0.9548 | 0.9853 | 0.8679 | 149 | [log](out/autocollie/runs/2026-05-13T17-30-21_20260513T172420-filetypes-go_go_kv_symbol_leaves128_lr002.log) |
+| `9b187fec289efe59` | go_kv_symbol_hardneg_tuned | ok | 0.9617 | 0.9876 | 0.8620 | 218 | [log](out/autocollie/runs/2026-05-13T17-32-50_20260513T172420-filetypes-go_go_kv_symbol_hardneg_tuned.log) |
+| `ea68cc88251f46f7` | go_kv_bigrams_kvsplit | ok | 0.9585 | 0.9867 | 0.8564 | 137 | [log](out/autocollie/runs/2026-05-13T17-36-28_20260513T172420-filetypes-go_go_kv_bigrams_kvsplit.log) |
+| `6df202d4423cbbf2` | go_kv_symbol_trigrams | ok | 0.9559 | 0.9854 | 0.8870 | 128 | [log](out/autocollie/runs/2026-05-13T17-38-45_20260513T172420-filetypes-go_go_kv_symbol_trigrams.log) |
+| `a9d489db8990e373` | go_kv_textenc_extended_metrics | ok | 0.9609 | 0.9873 | 0.8814 | 109 | [log](out/autocollie/runs/2026-05-13T17-40-54_20260513T172420-filetypes-go_go_kv_textenc_extended_metrics.log) |
+| `2d13fb9ceb41164d` | go_rust_transfer_high_capacity | ok | 0.9567 | 0.9860 | 0.8870 | 213 | [log](out/autocollie/runs/2026-05-13T17-42-42_20260513T172420-filetypes-go_go_rust_transfer_high_capacity.log) |
+| `` | go_kv_symbol_seedsearch_leaves128 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-13T17-46-15_20260513T172420-filetypes-go_go_kv_symbol_seedsearch_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_kv_symbol_leaves128_lr002`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EARLY_STOPPING=30 EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.02 EXP_NUM_LEAVES=128` — More tree capacity with lower LR to better learn fine-grained ranking on go imports/symbols
+- **`go_kv_symbol_hardneg_tuned`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5` — Tuned hard negatives with moderate fraction and higher weight to sharpen FP separation, building on go_kv_symbol_hardneg win at 0.9598
+- **`go_kv_bigrams_kvsplit`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ_BIGRAM=3` — Symbol bigrams plus KV value splitting for richer co-occurrence and per-element KV signal on go modules/imports
+- **`go_kv_symbol_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_SYMBOL_MIN_FREQ_TRIGRAM=3 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=4000` — Symbol trigrams capture 3-way import co-occurrence patterns that bigrams miss, extending the go_kv_symbol_bigrams signal
+- **`go_kv_textenc_extended_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1` — Text encoding features plus extended metrics and ratio features for structural signal on go source files
+- **`go_rust_transfer_high_capacity`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=14 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=0.5` — Port rust's high-capacity training config (deeper trees, more estimators, lower reg) which achieved perfect PR AUC on rust
+- **`go_kv_symbol_seedsearch_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.02 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3` — Seed search on higher-capacity model to find best seed and reduce variance from the ~3000-sample training regime
+
+</details>
+

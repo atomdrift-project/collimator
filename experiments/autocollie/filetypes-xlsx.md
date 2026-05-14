@@ -116,3 +116,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T034415-filetypes-xlsx` — 2026-05-14T03:44:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_kv_vocab_research | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T03-47-21_20260514T034415-filetypes-xlsx_xlsx_kv_vocab_research.log) |
+| `` | xlsx_textenc_research | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T04-17-21_20260514T034415-filetypes-xlsx_xlsx_textenc_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,textenc EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000` — enable kv_vocab on the saturated baseline to test KV research surface signal for xlsx
+- **`xlsx_textenc_research`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — enable text_encoding on the saturated baseline to test text encoding research surface for xlsx documents
+
+</details>
+
