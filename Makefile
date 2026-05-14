@@ -1221,11 +1221,11 @@ verify-litmus:
 
 AUTOCOLLIE_DIR ?= ../autocollie
 AUTOCOLLIE_BIN := $(AUTOCOLLIE_DIR)/bin/autocollie
-EXPERIMENTS ?= 8
+EXPERIMENTS ?= 12
 AUTOCOLLIE_LLM_IDLE_TIMEOUT ?= 5m
-# Autocollie defaults to the hopper-host Postgres so it doesn't compete with
-# the local replica while it's syncing. Override with DB= to point elsewhere.
-AUTOCOLLIE_DB ?= postgres://hopper@hopper:5432/hopper
+# Autocollie defaults to the local Hopper replica. Using the bare `hopper`
+# hostname can resolve through public DNS and burn screen slots on timeouts.
+AUTOCOLLIE_DB ?= postgres://hopper@localhost:5432/hopper
 # ROUTES is comma-separated, e.g. ROUTES=filetypes/javascript,filegroups/scripts
 # ROUTE (singular) is accepted as a convenience.
 ROUTES ?= $(ROUTE)
@@ -1294,7 +1294,7 @@ autocollie-backfill-l3: venv check-db
 		$(if $(filter 1 true yes,$(BACKFILL_ALL_MISSING)),--all-missing,) \
 		$(if $(BACKFILL_LIMIT),--limit $(BACKFILL_LIMIT),)
 
-# Autocollie targets all default DB to AUTOCOLLIE_DB (hopper-host). User can
+# Autocollie targets all default DB to AUTOCOLLIE_DB (local replica). User can
 # still override with `make autocollie DB=...`; command-line vars beat
 # target-specific assignments in GNU make.
 autocollie autocollie-screen autocollie-confirm autocollie-promote autocollie-loop autocollie-dryrun: DB = $(AUTOCOLLIE_DB)
@@ -1456,7 +1456,7 @@ help:
 	@echo "                       Trailing slash expands a prefix from prior runs:"
 	@echo "                       ROUTES=filetypes/   -> all filetypes/* ever run"
 	@echo "                       ROUTES=filegroups/  -> all filegroups/*"
-	@echo "  EXPERIMENTS=n        Specs requested per autocollie cycle (default: 8)"
+	@echo "  EXPERIMENTS=n        Specs requested per autocollie cycle (default: 12)"
 	@echo "  PASSES=n             Times to loop the autocollie route list (0=until Ctrl-C)"
 	@echo "  EXP_ESTIMATORS_DEFAULT=n  Floor for screen/confirm/promote estimators (default: 250)"
 	@echo "  AZOTH_SPECIALIST_TRAIN_OVERRIDE='route:field=value ...'"

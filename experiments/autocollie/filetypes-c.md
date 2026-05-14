@@ -86,3 +86,63 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T120753-filetypes-c` — 2026-05-14T12:07:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `68e8ff8b31a27ccc` | c_kv_symbols_leaves128 | ok | 0.9962 | 0.9980 | 0.9604 | 78 | [log](out/autocollie/runs/2026-05-14T12-14-38_20260514T120753-filetypes-c_c_kv_symbols_leaves128.log) |
+| `4bdb8c24c9a3748a` | c_kv_symbols_dart_reg | ok | 0.9933 | 0.9963 | 0.9311 | 27 | [log](out/autocollie/runs/2026-05-14T12-15-56_20260514T120753-filetypes-c_c_kv_symbols_dart_reg.log) |
+| `ff8743aad44b3530` | c_kv_value_split_symbols | ok | 0.9963 | 0.9981 | 0.9571 | 95 | [log](out/autocollie/runs/2026-05-14T12-16-23_20260514T120753-filetypes-c_c_kv_value_split_symbols.log) |
+| `946ea690cb97664a` | c_textenc_kv_symbols | ok | 0.9958 | 0.9978 | 0.9677 | 160 | [log](out/autocollie/runs/2026-05-14T12-17-59_20260514T120753-filetypes-c_c_textenc_kv_symbols.log) |
+| `9c8d80680ec3f93a` | c_kv_symbols_no_score | ok | 0.9962 | 0.9980 | 0.9615 | 156 | [log](out/autocollie/runs/2026-05-14T12-20-39_20260514T120753-filetypes-c_c_kv_symbols_no_score.log) |
+| `42817a6f0394c0e4` | c_kv_symbols_seed3_ensemble | ok | 0.9962 | 0.9980 | 0.9712 | 432 | [log](out/autocollie/runs/2026-05-14T12-23-14_20260514T120753-filetypes-c_c_kv_symbols_seed3_ensemble.log) |
+| `` | c_kv_symbols_hardneg_transfer | fail | — | — | — | 73 | [log](out/autocollie/runs/2026-05-14T12-30-27_20260514T120753-filetypes-c_c_kv_symbols_hardneg_transfer.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_kv_symbols_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000` — replicate best kv+symbols feature set with 128 leaves and higher estimators to push past 0.9997 PR AUC
+- **`c_kv_symbols_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000` — dart boosting with L2 regularization on kv+symbols for better tail generalization without rank regression
+- **`c_kv_value_split_symbols`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000` — kv_value_split recovers per-element signal in compound KV values like needed_libs arrays, adding rank granularity on top of symbols
+- **`c_textenc_kv_symbols`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TEXT_ENCODING_FEATURES=1` — text_encoding adds character-level encoding signal for C source alongside kv and symbol vocabs to capture obfuscation patterns
+- **`c_kv_symbols_no_score`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000` — ablate score features with kv+symbols to test if score group adds noise at near-saturation PR AUC, extending c_no_score_symbols_only finding
+- **`c_kv_symbols_seed3_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_VOCAB=1 …` — seed search with ensemble averaging on best kv+symbols config to reduce seed variance and confirm 0.9997 is stable signal
+- **`c_kv_symbols_hardneg_transfer`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000` — transfer hard-negative strategy from gz/rust 1.0000 specialists to improve ranking at the tail for C source
+
+</details>
+
+## Cycle `20260514T130400-filetypes-c` — 2026-05-14T13:04:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | c_kv_symbols_leaves192_lr003 | fail | — | — | — | 9 | [log](out/autocollie/runs/2026-05-14T13-05-58_20260514T130400-filetypes-c_c_kv_symbols_leaves192_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_kv_symbols_leaves192_lr003`** `EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=192 EXP_REG_LAMBDA=1.5` — higher tree capacity with lower LR to capture finer ranking separations on the proven kv+symbols feature set
+
+</details>
+
+## Cycle `20260514T130612-filetypes-c` — 2026-05-14T13:06:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `110105013759c7aa` | c_kv_symbols_extra_trees | ok | 0.9947 | 0.9971 | 0.9525 | 18 | [log](out/autocollie/runs/2026-05-14T13-12-43_20260514T130612-filetypes-c_c_kv_symbols_extra_trees.log) |
+| `2c99e090b6e6a952` | c_kv_symbols_goss_minweight | ok | 0.9957 | 0.9977 | 0.9689 | 3 | [log](out/autocollie/runs/2026-05-14T13-13-01_20260514T130612-filetypes-c_c_kv_symbols_goss_minweight.log) |
+| `98aa64304344b88b` | c_alltime_best_features | ok | 0.9997 | 0.9998 | 0.9883 | 15 | [log](out/autocollie/runs/2026-05-14T13-13-03_20260514T130612-filetypes-c_c_alltime_best_features.log) |
+| `90f4622e38b6eac2` | c_symbol_bigrams_kv_split | ok | 0.9960 | 0.9979 | 0.9604 | 18 | [log](out/autocollie/runs/2026-05-14T13-13-19_20260514T130612-filetypes-c_c_symbol_bigrams_kv_split.log) |
+| `4a13220a20875a4c` | c_kv_symbols_no_blindfold | ok | 0.9963 | 0.9981 | 0.9571 | 15 | [log](out/autocollie/runs/2026-05-14T13-13-36_20260514T130612-filetypes-c_c_kv_symbols_no_blindfold.log) |
+| `0644ed6a8d91ea66` | c_kv_symbols_seed3 | ok | 0.9963 | 0.9981 | 0.9571 | 11 | [log](out/autocollie/runs/2026-05-14T13-13-51_20260514T130612-filetypes-c_c_kv_symbols_seed3.log) |
+| `2d30c0d27d87f953` | c_kv_symbols_dart_gamma | ok | 0.9935 | 0.9964 | 0.9213 | 7 | [log](out/autocollie/runs/2026-05-14T13-14-02_20260514T130612-filetypes-c_c_kv_symbols_dart_gamma.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_kv_symbols_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_SYMBOL_VOCAB=1` — extra_trees adds random-split noise that often improves tail generalization on near-saturated routes without hurting PR AUC
+- **`c_kv_symbols_goss_minweight`** `EXP_BOOSTING_TYPE=goss EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MIN_CHILD_WEIGHT=5 EXP_REG_LAMBDA=2 EXP_SYMBOL_VOCAB=1` — goss boosting with min_child_weight regularization may improve ranking stability and reduce overfit on rare patterns in this 7k-sample corpus
+- **`c_alltime_best_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_FORMAT_HINTS=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=7000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SYMBOL_MIN_FREQ=2 …` — recreate the all-time-best c_symbol_static_kv feature set (text_encoding + taxonomy + ember_lite + format_hints) on current snapshot to test if it transfers
+- **`c_symbol_bigrams_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 …` — symbol_bigrams capture import co-occurrence patterns (e.g., kernel32→WriteProcessMemory) that unigrams miss, adding rank signal for C malware
+- **`c_kv_symbols_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_NUM_LEAVES=96 EXP_SYMBOL_VOCAB=1` — removing blindfold dropout features may reduce noise without losing rank signal on this small 7k-sample corpus
+- **`c_kv_symbols_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_VOCAB=1` — seed_search_k=3 tests whether the current 0.9963 PR AUC is stable across seeds or seed-lucky, and may find a better seed
+- **`c_kv_symbols_dart_gamma`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_GAMMA=0.5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SYMBOL_VOCAB=1` — dart boosting with gamma min-split gain adds dropout regularization between trees, targeting better low-FPR tail behavior that recent dart run missed due to insufficient regularization
+
+</details>
+

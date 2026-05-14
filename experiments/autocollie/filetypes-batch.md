@@ -136,3 +136,53 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T102617-filetypes-batch` — 2026-05-14T10:26:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | batch_no_presence_leaves128_lr003 | fail | — | — | — | 1687 | [log](out/autocollie/runs/2026-05-14T10-56-02_20260514T102617-filetypes-batch_batch_no_presence_leaves128_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_no_presence_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_SOFT_PRESENCE=0 EXP_THRESHOLD_MODE=max_recall_at_fpr` — finer tree structure (128 leaves) with slower LR on the best no_presence feature set may squeeze PR AUC above 0.9957
+
+</details>
+
+## Cycle `20260514T112433-filetypes-batch` — 2026-05-14T11:24:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | batch_no_presence_leaves128 | fail | — | — | — | 44 | [log](out/autocollie/runs/2026-05-14T12-06-11_20260514T112433-filetypes-batch_batch_no_presence_leaves128.log) |
+| `` | batch_no_presence_hard_neg | fail | — | — | — | 58 | [log](out/autocollie/runs/2026-05-14T12-06-55_20260514T112433-filetypes-batch_batch_no_presence_hard_neg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_no_presence_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_SOFT_PRESENCE=0 EXP_THRESHOLD_MODE=max_recall_at_fpr` — retry best config with num_leaves=128; prior crash was infra DB timeout not knob issue
+- **`batch_no_presence_hard_neg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_SOFT_PRESENCE=0 EXP_THRESHOLD_MODE=max_recall_at_fpr` — hard negatives may sharpen ranking boundary on this small corpus
+
+</details>
+
+## Cycle `20260514T124451-filetypes-batch` — 2026-05-14T12:44:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `968749c3cb9e8745` | batch_exploit_leaves160_reg2 | ok | 0.9980 | 0.9897 | 0.9763 | 3 | [log](out/autocollie/runs/2026-05-14T13-02-18_20260514T124451-filetypes-batch_batch_exploit_leaves160_reg2.log) |
+| `78c9d80317bc40a9` | batch_exploit_dart_lr004 | ok | 0.9968 | 0.9837 | 0.9724 | 2 | [log](out/autocollie/runs/2026-05-14T13-02-20_20260514T124451-filetypes-batch_batch_exploit_dart_lr004.log) |
+| `c6ea667ec07df721` | batch_kv_vocab_5000 | ok | 0.9979 | 0.9892 | 0.9764 | 4 | [log](out/autocollie/runs/2026-05-14T13-02-22_20260514T124451-filetypes-batch_batch_kv_vocab_5000.log) |
+| `d3308ac70042023e` | batch_textenc_metrics_full | ok | 0.9980 | 0.9901 | 0.9797 | 5 | [log](out/autocollie/runs/2026-05-14T13-02-26_20260514T124451-filetypes-batch_batch_textenc_metrics_full.log) |
+| `1f54169ebc2de6c4` | batch_ablation_no_blindfold | ok | 0.9981 | 0.9904 | 0.9797 | 4 | [log](out/autocollie/runs/2026-05-14T13-02-31_20260514T124451-filetypes-batch_batch_ablation_no_blindfold.log) |
+| `b4e647477ae37c68` | batch_transfer_gz_seed3 | ok | 0.9981 | 0.9904 | 0.9797 | 6 | [log](out/autocollie/runs/2026-05-14T13-02-35_20260514T124451-filetypes-batch_batch_transfer_gz_seed3.log) |
+| `533e63df15e0bb5f` | batch_generalize_seed7 | ok | 0.9976 | 0.9880 | 0.9675 | 8 | [log](out/autocollie/runs/2026-05-14T13-02-41_20260514T124451-filetypes-batch_batch_generalize_seed7.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_exploit_leaves160_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=160 EXP_REG_LAMBDA=2 EXP_SOFT_PRESENCE=0` — increase capacity to 160 leaves with stronger L2 reg to reduce overfit on the small batch corpus while preserving rank signal
+- **`batch_exploit_dart_lr004`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.04 EXP_SOFT_PRESENCE=0` — dart boosting adds dropout regularization between trees improving tail generalization on this small corpus
+- **`batch_kv_vocab_5000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=128 EXP_SOFT_PRESENCE=0` — batch files have structured key-value patterns like registry paths and env vars that kv_vocab captures as discriminative signal
+- **`batch_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_SOFT_PRESENCE=0 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — text_encoding and text_metrics_full capture obfuscation patterns in batch scripts like unicode tricks and encoding anomalies
+- **`batch_ablation_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_SOFT_PRESENCE=0` — blindfold dropout features may add noise on this small corpus; removing them could sharpen ranking if they dilute signal
+- **`batch_transfer_gz_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SEED_SEARCH_K=3 EXP_SOFT_PRESENCE=0` — gz route achieved perfect PR AUC with similar feature set; seed_search_k=3 reduces seed variance on this small corpus
+- **`batch_generalize_seed7`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_SOFT_PRESENCE=0` — test generalization of best config by varying seed to distinguish real signal from seed luck on small corpus
+
+</details>
+

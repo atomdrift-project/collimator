@@ -86,3 +86,17 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T082111-filetypes-shell` — 2026-05-14T08:21:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | shell_exploit_leaves128_reg2 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T08-32-08_20260514T082111-filetypes-shell_shell_exploit_leaves128_reg2.log) |
+| `` | shell_exploit_hardneg_tuned | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T09-02-08_20260514T082111-filetypes-shell_shell_exploit_hardneg_tuned.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_exploit_leaves128_reg2`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1` — increase tree capacity to 128 leaves with stronger L2 regularization to refine ranking at the PR AUC ceiling
+- **`shell_exploit_hardneg_tuned`** `EXP_CODE_ENTROPY_SPIKE=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.25 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_TEXT_ENCODING_FEATURES=1` — tune hard negative fraction and weight to better separate borderline shell malware from complex benign scripts
+
+</details>
+

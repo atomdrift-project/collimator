@@ -147,7 +147,7 @@ def atomic_write_json(path: Path, payload: Any, *, indent: int | None = 2) -> No
     )
     try:
         with os.fdopen(fd, "w") as f:
-            json.dump(payload, f, indent=indent)
+            json.dump(payload, f, indent=indent, allow_nan=False)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, path)

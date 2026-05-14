@@ -162,3 +162,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T054906-filetypes-elf` — 2026-05-14T05:49:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | elf_train_leaves128_lr003 | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T06-00-31_20260514T054906-filetypes-elf_elf_train_leaves128_lr003.log) |
+| `` | elf_train_dart_boosting | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T06-30-31_20260514T054906-filetypes-elf_elf_train_dart_boosting.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_train_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128` — finer trees with lower LR may sharpen score separation at saturation, improving F1 without PR AUC regression
+- **`elf_train_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05` — dart dropout regularization between trees can improve tail generalization at low FPR when PR AUC is saturated
+
+</details>
+

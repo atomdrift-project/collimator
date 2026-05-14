@@ -92,3 +92,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T093208-filetypes-deb` — 2026-05-14T09:32:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | deb_kv_vocab_enable | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T09-33-45_20260514T093208-filetypes-deb_deb_kv_vocab_enable.log) |
+| `` | deb_textenc_kv_research | fail | — | — | — | 979 | [log](out/autocollie/runs/2026-05-14T10-03-45_20260514T093208-filetypes-deb_deb_textenc_kv_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`deb_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=2 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96` — enable kv_vocab to capture DEB control file metadata (Package, Maintainer, Depends) as discriminative features — DEBs are structured KV data
+- **`deb_textenc_kv_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=2 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1` — combine text_encoding with kv_vocab to cover both raw text content and structured metadata in DEB control sections
+
+</details>
+

@@ -30,11 +30,11 @@ def _json_clean(value: Any) -> Any:
         return [_json_clean(v) for v in value]
     if isinstance(value, tuple):
         return [_json_clean(v) for v in value]
-    if isinstance(value, float) and math.isnan(value):
+    if isinstance(value, float) and not math.isfinite(value):
         return None
     if isinstance(value, np.floating):
         f = float(value)
-        return None if math.isnan(f) else f
+        return None if not math.isfinite(f) else f
     if isinstance(value, np.integer):
         return int(value)
     return value
@@ -212,9 +212,11 @@ def _calibrate_policy(
         allowed_routes=present_routes,
     )
     out["below_resolution"] = bool(below_resolution)
-    out["cp_floor_per_million"] = float(
-        _clopper_pearson_fp_per_million_upper(0, n_benign, alpha=0.05),
-    ) if n_benign > 0 else float("inf")
+    out["cp_floor_per_million"] = (
+        float(_clopper_pearson_fp_per_million_upper(0, n_benign, alpha=0.05))
+        if n_benign > 0
+        else None
+    )
     if extrapolated:
         out["extrapolated_routes"] = list(extrapolated)
     return out

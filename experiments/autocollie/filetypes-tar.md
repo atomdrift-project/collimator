@@ -138,3 +138,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T070031-filetypes-tar` — 2026-05-14T07:00:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | tar_kv_vocab_enable | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T07-21-11_20260514T070031-filetypes-tar_tar_kv_vocab_enable.log) |
+| `` | tar_kv_symbols_textenc_all | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-05-14T07-51-11_20260514T070031-filetypes-tar_tar_kv_symbols_textenc_all.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=40000 EXP_TRAIN_SAMPLES=150000` — enable kv_vocab like gz sister route to test if key-value signal adds rank signal for tar archives
+- **`tar_kv_symbols_textenc_all`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=40000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — enable all three research families (kv, symbols, textenc) to test maximum feature surface for tar
+
+</details>
+
