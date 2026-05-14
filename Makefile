@@ -55,6 +55,7 @@ AZOTH_GLOBAL_POLICY_METRICS ?= $(AZOTH_ROOT)/global_policy_metrics.json
 AZOTH_GLOBAL_POLICY_METRICS_MD ?= $(AZOTH_ROOT)/global_policy_metrics.md
 AZOTH_ROUTED_METRICS_ARGS ?=
 AZOTH_VALIDATE_ROUTED_METRICS_ARGS ?= --no-ci --no-stacked
+AZOTH_VALIDATE_DIAGNOSTICS ?= 0
 AZOTH_POLICY_OVERRIDE_ROUTE ?=
 AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/litmus/models/azoth
 ELF_ROUTE_OUTPUT_DIR ?= $(AZOTH_ROOT)/elf_route_optimization
@@ -66,7 +67,7 @@ AZOTH_REFRESH_ROUTE ?=
 AZOTH_SKIP_LEVEL_CALIBRATION ?= 0
 AZOTH_SKIP_LEVEL_CALIBRATION_ARG := $(if $(filter 1 true yes,$(AZOTH_SKIP_LEVEL_CALIBRATION)),--skip-level-calibration,)
 AZOTH_SKIP_LITMUS_VALIDATE ?= 0
-AZOTH_FEATURE_CACHE_DIR ?= $(OUT_DIR)/cache/azoth-route-features
+AZOTH_FEATURE_CACHE_DIR ?= out/cache/azoth-route-features
 AZOTH_SPECIALIST_FOLDS ?= 0
 AZOTH_SPECIALIST_ESTIMATORS ?= 400
 AZOTH_SPECIALIST_MAX_DEPTH ?= 12
@@ -757,13 +758,20 @@ azoth-validate: azoth-calibrate
 	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/model.txt || ls $(AZOTH_ROOT)/general/models/seed_*.txt >/dev/null 2>&1 || { echo "error: $(AZOTH_ROOT)/general missing model.txt or models/seed_*.txt"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
-	$(PYTHON) scripts/azoth_route_diagnostics.py \
-		--config $(AZOTH_CONFIG) \
-		--score-table $(AZOTH_SCORE_TABLE) \
-		--output $(AZOTH_DIAGNOSTICS) \
-		--csv $(AZOTH_DIAGNOSTICS_CSV) \
-		--slice-output $(AZOTH_SLICE_METRICS) \
-		--slice-csv $(AZOTH_SLICE_METRICS_CSV)
+	@if [ "$(AZOTH_VALIDATE_DIAGNOSTICS)" = "1" ] || [ "$(AZOTH_VALIDATE_DIAGNOSTICS)" = "true" ] || [ "$(AZOTH_VALIDATE_DIAGNOSTICS)" = "yes" ]; then \
+	  $(PYTHON) scripts/azoth_route_diagnostics.py \
+	    --config $(AZOTH_CONFIG) \
+	    --score-table $(AZOTH_SCORE_TABLE) \
+	    --output $(AZOTH_DIAGNOSTICS) \
+	    --csv $(AZOTH_DIAGNOSTICS_CSV) \
+	    --slice-output $(AZOTH_SLICE_METRICS) \
+	    --slice-csv $(AZOTH_SLICE_METRICS_CSV); \
+	else \
+	  printf '# Azoth Route Diagnostics\n\nSkipped during fast azoth-validate. Run `make azoth-diagnostics AZOTH_ROOT=%s` for the full report.\n' "$(AZOTH_ROOT)" > "$(AZOTH_DIAGNOSTICS)"; \
+	  printf 'status,message\nskipped,fast azoth-validate\n' > "$(AZOTH_DIAGNOSTICS_CSV)"; \
+	  printf '# Azoth Slice Metrics\n\nSkipped during fast azoth-validate. Run `make azoth-diagnostics AZOTH_ROOT=%s` for the full report.\n' "$(AZOTH_ROOT)" > "$(AZOTH_SLICE_METRICS)"; \
+	  printf 'status,message\nskipped,fast azoth-validate\n' > "$(AZOTH_SLICE_METRICS_CSV)"; \
+	fi
 	$(PYTHON) scripts/azoth_route_policy_search.py \
 		$(if $(AZOTH_POLICY_OVERRIDE_ROUTE),--db $(DB),) \
 		--config $(AZOTH_CONFIG) \
