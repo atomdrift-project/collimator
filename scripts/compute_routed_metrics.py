@@ -22,6 +22,7 @@ threshold) and `f1_at_05` for callers that want a fixed reference point.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import math
@@ -50,6 +51,27 @@ LOG = logging.getLogger("compute_routed_metrics")
 # Default operating point.  Level 5 corresponds to the deploy-time hostile
 # point we currently ship at (matches azoth_calibrate_ensemble's default).
 DEFAULT_LEVEL = 5
+
+
+def _test_mask_cache_key(db_path: str, row_ids: np.ndarray) -> str:
+    """Stable cache key for a score table's row order and split source."""
+    arr = np.ascontiguousarray(row_ids)
+    h = hashlib.sha256()
+    h.update(b"azoth-test-mask-v3")
+    h.update(db_path.encode("utf-8"))
+    h.update(str(collimator_data.TEST_BUCKET_MAX).encode("ascii"))
+    h.update(str(arr.dtype).encode("utf-8"))
+    h.update(np.asarray(arr.shape, dtype=np.int64).tobytes())
+    h.update(arr.view(np.uint8))
+    return h.hexdigest()
+
+
+def _default_test_mask_cache_dir(score_table_path: Path) -> Path:
+    """Use a cache shared by out/models/azoth and candidate bundles."""
+    root = score_table_path.resolve().parent
+    if root.parent.name == "models":
+        return root.parent.parent / "cache" / "azoth-test-masks"
+    return root / ".cache" / "azoth-test-masks"
 
 
 def _recall_at_fpr_per_million(
@@ -445,7 +467,12 @@ def _ensemble_scores_specialist_priority(
     return primary
 
 
-def _load_test_mask(db_path: str, row_ids: np.ndarray) -> np.ndarray:
+def _load_test_mask(
+    db_path: str,
+    row_ids: np.ndarray,
+    *,
+    cache_dir: Path | None = None,
+) -> np.ndarray:
     """Look up canonical_sha256 for each row_id in the score table and return
     a boolean mask of the test-bucket rows (the same SHA256-deterministic
     12.5% slice collimator uses at training time — see data.is_test_sample).
@@ -455,42 +482,80 @@ def _load_test_mask(db_path: str, row_ids: np.ndarray) -> np.ndarray:
     Querying canonical_sha256 in chunks keeps the IN-list small enough that
     Postgres' planner doesn't blow up on 2M+ id lookups.
     """
+    cache_path: Path | None = None
+    if cache_dir is not None:
+        digest = _test_mask_cache_key(db_path, row_ids)
+        cache_path = cache_dir / f"{digest}.npz"
+        if cache_path.exists():
+            try:
+                cached = np.load(cache_path)
+                mask = cached["mask"].astype(bool, copy=False)
+                if mask.shape == row_ids.shape:
+                    LOG.info("loaded cached test bucket mask: %s", cache_path)
+                    LOG.info("test bucket: %d/%d rows (%.2f%%)",
+                             int(mask.sum()), len(row_ids),
+                             100.0 * mask.sum() / len(row_ids))
+                    return mask
+                LOG.warning("ignoring stale test mask cache %s: shape %s != %s",
+                            cache_path, mask.shape, row_ids.shape)
+            except Exception as exc:  # noqa: BLE001
+                LOG.warning("ignoring unreadable test mask cache %s: %s",
+                            cache_path, exc)
+
     LOG.info("loading canonical_sha256 for %d rows to apply test bucket filter",
              len(row_ids))
-    sha_by_id: dict[int, str] = {}
     chunk = 50_000
     is_pg = collimator_data._is_pg(db_path)  # noqa: SLF001
+    mask = np.zeros(len(row_ids), dtype=bool)
     with collimator_data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
         for start in range(0, len(row_ids), chunk):
             ids = [int(x) for x in row_ids[start:start + chunk]]
             if is_pg:
                 with conn.cursor() as cur:
                     cur.execute(
-                        "SELECT id, canonical_sha256 FROM samples WHERE id = ANY(%s)",
-                        [ids],
+                        """
+                        SELECT id
+                        FROM samples
+                        WHERE id = ANY(%s)
+                          AND canonical_sha256 IS NOT NULL
+                          AND length(canonical_sha256) >= 2
+                          AND get_byte(decode(right(canonical_sha256, 2), 'hex'), 0) < %s
+                        """,
+                        [ids, collimator_data.TEST_BUCKET_MAX],
                     )
-                    for row_id, csha in cur:
-                        sha_by_id[int(row_id)] = csha or ""
+                    test_ids = {int(row_id) for (row_id,) in cur}
+                if test_ids:
+                    mask[start:start + chunk] = np.fromiter(
+                        (int(rid) in test_ids for rid in row_ids[start:start + chunk]),
+                        dtype=bool,
+                        count=len(ids),
+                    )
             else:
+                sha_by_id: dict[int, str] = {}
                 placeholders = ",".join("?" for _ in ids)
                 for row_id, csha in conn.execute(
                     f"SELECT id, canonical_sha256 FROM samples WHERE id IN ({placeholders})",  # noqa: S608
                     ids,
                 ):
                     sha_by_id[int(row_id)] = csha or ""
-    mask = np.zeros(len(row_ids), dtype=bool)
-    missing = 0
-    for i, rid in enumerate(row_ids):
-        csha = sha_by_id.get(int(rid), "")
-        if not csha or len(csha) < 2:
-            missing += 1
-            continue
-        mask[i] = collimator_data.is_test_sample(csha)
-    if missing:
-        LOG.warning("missing canonical_sha256 for %d/%d rows; treated as not-in-test",
-                    missing, len(row_ids))
+                missing = 0
+                for offset, rid in enumerate(row_ids[start:start + chunk]):
+                    csha = sha_by_id.get(int(rid), "")
+                    if not csha or len(csha) < 2:
+                        missing += 1
+                        continue
+                    mask[start + offset] = collimator_data.is_test_sample(csha)
+                if missing:
+                    LOG.warning("missing canonical_sha256 for %d/%d rows in chunk; treated as not-in-test",
+                                missing, len(ids))
     LOG.info("test bucket: %d/%d rows (%.2f%%)",
              int(mask.sum()), len(row_ids), 100.0 * mask.sum() / len(row_ids))
+    if cache_path is not None:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = cache_path.with_suffix(".tmp.npz")
+        np.savez(tmp, mask=mask)
+        tmp.replace(cache_path)
+        LOG.info("cached test bucket mask: %s", cache_path)
     return mask
 
 
@@ -499,8 +564,11 @@ def compute_per_filetype_metrics(
     route_policies_path: Path,
     *,
     db_path: str | None = None,
+    test_mask_cache_dir: Path | None = None,
     level: int = DEFAULT_LEVEL,
     severity: str = "hostile",
+    with_ci: bool = True,
+    include_stacked: bool = True,
 ) -> dict[str, Any]:
     score_table = np.load(score_table_path, allow_pickle=True)
     scores: np.ndarray = score_table["scores"]
@@ -517,7 +585,11 @@ def compute_per_filetype_metrics(
     # bucket so the resulting numbers are apples-to-apples.
     test_mask: np.ndarray | None = None
     if db_path:
-        test_mask = _load_test_mask(db_path, row_ids)
+        if test_mask_cache_dir is None:
+            test_mask_cache_dir = _default_test_mask_cache_dir(score_table_path)
+        test_mask = _load_test_mask(
+            db_path, row_ids, cache_dir=test_mask_cache_dir,
+        )
         scores = scores[:, test_mask]
         labels = labels[test_mask]
         file_types = file_types[test_mask]
@@ -543,6 +615,8 @@ def compute_per_filetype_metrics(
         "severity": severity,
         "evaluated_on": "test_bucket_only" if test_mask is not None else "full_corpus",
         "n_rows_evaluated": int(labels.size),
+        "with_ci": with_ci,
+        "stacked_diagnostics": include_stacked,
         "filetypes": {},
         "filegroups": {},
         "all_files": {},
@@ -550,7 +624,9 @@ def compute_per_filetype_metrics(
 
     # All-files view: matches EMBER 2024's "All files" row directly.
     if "general" in idx:
-        out["all_files"]["general"] = _metrics(labels, scores[idx["general"]])
+        out["all_files"]["general"] = _metrics(
+            labels, scores[idx["general"]], with_ci=with_ci,
+        )
         out["all_files"]["n_files"] = int(labels.size)
         out["all_files"]["n_malware"] = int((labels == 1).sum())
         out["all_files"]["n_benign"] = int((labels == 0).sum())
@@ -584,9 +660,13 @@ def compute_per_filetype_metrics(
             "ensemble_allowed_routes": allowed,
         }
         if "general" in idx:
-            entry["general"] = _metrics(f_labels, scores[idx["general"]][mask])
+            entry["general"] = _metrics(
+                f_labels, scores[idx["general"]][mask], with_ci=with_ci,
+            )
         if route_name in idx:
-            entry["specialist"] = _metrics(f_labels, scores[idx[route_name]][mask])
+            entry["specialist"] = _metrics(
+                f_labels, scores[idx[route_name]][mask], with_ci=with_ci,
+            )
 
         # Three ensemble strategies, computed honestly so we can pick the one
         # that doesn't degrade vs the specialist.  See the helper docstrings
@@ -595,10 +675,12 @@ def compute_per_filetype_metrics(
         strategies: dict[str, dict[str, float]] = {}
         naive = _ensemble_scores_naive_max(scores, mask, allowed, idx)
         if naive is not None:
-            strategies["naive_max"] = _metrics(f_labels, naive)
+            strategies["naive_max"] = _metrics(f_labels, naive, with_ci=with_ci)
         calib_max = _ensemble_scores_calibrated_max(calibrated, mask, allowed, idx)
         if calib_max is not None:
-            strategies["calibrated_max"] = _metrics(f_labels, calib_max)
+            strategies["calibrated_max"] = _metrics(
+                f_labels, calib_max, with_ci=with_ci,
+            )
         # Specialist-priority needs a primary + fallback chain.  We use the
         # filetype specialist as primary, then the route's filegroup if
         # known, then general — matching the deployed router's preference
@@ -612,17 +694,24 @@ def compute_per_filetype_metrics(
             scores, mask, route_name, fallback_chain, idx,
         )
         if spec_pri is not None:
-            strategies["specialist_priority"] = _metrics(f_labels, spec_pri)
-        stacked = _ensemble_scores_stacked_lr(
-            scores, mask, allowed, idx, f_labels,
-        )
-        if stacked is not None:
-            strategies["stacked_lr"] = _metrics(f_labels, stacked)
-        stacked_xgb = _ensemble_scores_stacked_xgb(
-            scores, mask, allowed, idx, f_labels,
-        )
-        if stacked_xgb is not None:
-            strategies["stacked_xgb"] = _metrics(f_labels, stacked_xgb)
+            strategies["specialist_priority"] = _metrics(
+                f_labels, spec_pri, with_ci=with_ci,
+            )
+        if include_stacked:
+            stacked = _ensemble_scores_stacked_lr(
+                scores, mask, allowed, idx, f_labels,
+            )
+            if stacked is not None:
+                strategies["stacked_lr"] = _metrics(
+                    f_labels, stacked, with_ci=with_ci,
+                )
+            stacked_xgb = _ensemble_scores_stacked_xgb(
+                scores, mask, allowed, idx, f_labels,
+            )
+            if stacked_xgb is not None:
+                strategies["stacked_xgb"] = _metrics(
+                    f_labels, stacked_xgb, with_ci=with_ci,
+                )
 
         # Headline pick: among non-naive strategies, prefer the one with the
         # highest ROC AUC, breaking ties on PR AUC.  Specialist_priority is
@@ -677,12 +766,16 @@ def compute_per_filetype_metrics(
             "ensemble_allowed_routes": allowed,
         }
         if "general" in idx:
-            entry["general"] = _metrics(f_labels, scores[idx["general"]][mask])
+            entry["general"] = _metrics(
+                f_labels, scores[idx["general"]][mask], with_ci=with_ci,
+            )
         if route_name in idx:
-            entry["specialist"] = _metrics(f_labels, scores[idx[route_name]][mask])
+            entry["specialist"] = _metrics(
+                f_labels, scores[idx[route_name]][mask], with_ci=with_ci,
+            )
         ens = _ensemble_scores_calibrated_max(calibrated, mask, allowed, idx)
         if ens is not None:
-            entry["ensemble"] = _metrics(f_labels, ens)
+            entry["ensemble"] = _metrics(f_labels, ens, with_ci=with_ci)
             entry["ensemble_strategy"] = "calibrated_max"
         out["filegroups"][fgroup] = entry
 
@@ -703,6 +796,20 @@ def main() -> int:
     parser.add_argument("--severity", default="hostile",
                         choices=["hostile", "suspicious"],
                         help="Severity tier to use for routing decision.")
+    parser.add_argument("--test-mask-cache-dir", type=Path, default=None,
+                        help="Directory for cached SHA256 test-bucket masks. "
+                             "Defaults to out/cache/azoth-test-masks for "
+                             "bundles under out/models.")
+    parser.add_argument("--no-test-mask-cache", action="store_true",
+                        help="Disable cached test-bucket masks.")
+    parser.add_argument("--no-ci", action="store_true",
+                        help="Skip bootstrap confidence intervals. Point "
+                             "metrics are unchanged; this is much faster for "
+                             "candidate validation.")
+    parser.add_argument("--no-stacked", action="store_true",
+                        help="Skip stacked LR/XGBoost ensemble diagnostics. "
+                             "Core general/specialist/ensemble metrics are "
+                             "still computed.")
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format="%(message)s")
@@ -711,8 +818,11 @@ def main() -> int:
         root / "score_table.npz",
         root / "route_policies.json",
         db_path=args.db,
+        test_mask_cache_dir=None if args.no_test_mask_cache else args.test_mask_cache_dir,
         level=args.level,
         severity=args.severity,
+        with_ci=not args.no_ci,
+        include_stacked=not args.no_stacked,
     )
     out_path = root / "per_filetype_metrics.json"
     with open(out_path, "w") as f:

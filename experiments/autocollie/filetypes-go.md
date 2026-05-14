@@ -278,3 +278,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T132837-filetypes-go` — 2026-05-14T13:28:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9e4ef736d575dd3b` | go_kv_symbol_hardneg_leaves128_lr003 | ok | 0.9618 | 0.9867 | 0.8839 | 16 | [log](out/autocollie/runs/2026-05-14T13-30-51_20260514T132837-filetypes-go_go_kv_symbol_hardneg_leaves128_lr003.log) |
+| `fe91fa923169fd2e` | go_kv_symbol_hardneg_reg2_mcs200 | ok | 0.9476 | 0.9829 | 0.8769 | 8 | [log](out/autocollie/runs/2026-05-14T13-31-07_20260514T132837-filetypes-go_go_kv_symbol_hardneg_reg2_mcs200.log) |
+| `a52ce830e17f3e4e` | go_kv_split_symbol_bigrams | ok | 0.9627 | 0.9877 | 0.9043 | 25 | [log](out/autocollie/runs/2026-05-14T13-31-16_20260514T132837-filetypes-go_go_kv_split_symbol_bigrams.log) |
+| `c09e11073c8c94b8` | go_textenc_extended_mbc_vocab | ok | 0.9585 | 0.9862 | 0.8895 | 12 | [log](out/autocollie/runs/2026-05-14T13-31-40_20260514T132837-filetypes-go_go_textenc_extended_mbc_vocab.log) |
+| `4a02041af5b3aa2f` | go_no_blindfold_hardneg | ok | 0.9619 | 0.9871 | 0.8902 | 19 | [log](out/autocollie/runs/2026-05-14T13-31-52_20260514T132837-filetypes-go_go_no_blindfold_hardneg.log) |
+| `c6ef665a9dca2259` | go_rust_transfer_capacity_boost | ok | 0.9568 | 0.9858 | 0.8750 | 8 | [log](out/autocollie/runs/2026-05-14T13-32-11_20260514T132837-filetypes-go_go_rust_transfer_capacity_boost.log) |
+| `f5904519e752eb05` | go_kv_symbol_seed2_generalization | ok | 0.9566 | 0.9853 | 0.8820 | 23 | [log](out/autocollie/runs/2026-05-14T13-32-19_20260514T132837-filetypes-go_go_kv_symbol_seed2_generalization.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_kv_symbol_hardneg_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128` — Best recent feature set with deeper trees and lower LR for finer-grained ranking on small corpus
+- **`go_kv_symbol_hardneg_reg2_mcs200`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2` — Stronger L2 regularization and higher min_child_samples to reduce overfit while keeping hard-negative signal
+- **`go_kv_split_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=6 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 …` — KV value splitting recovers per-element signal in Go module/import paths; symbol bigrams catch co-occurrence patterns like syscall→read→write
+- **`go_textenc_extended_mbc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_LEARNING_RATE=0.03 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1` — Text encoding features plus MBC ID vocab add behavioral identification signal for Go binaries beyond structural features
+- **`go_no_blindfold_hardneg`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=8` — Removing blindfold dropout may let the model use full feature signal on this small ~3000-sample corpus where noise reduction hurts
+- **`go_rust_transfer_capacity_boost`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EARLY_STOPPING=30 EXP_ESTIMATORS=400 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128` — Rust's high-capacity training (400 estimators, leaves 128, lr 0.03) may improve ranking on Go's similar compiled-binary corpus
+- **`go_kv_symbol_seed2_generalization`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=2` — Seed search k=2 on hard-negative config to distinguish real PR AUC signal from seed variance on small corpus
+
+</details>
+

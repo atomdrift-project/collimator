@@ -53,6 +53,8 @@ AZOTH_ROUTE_POLICIES_CSV ?= $(AZOTH_ROOT)/route_policies.csv
 AZOTH_ROUTE_POLICIES_MD ?= $(AZOTH_ROOT)/route_policies.md
 AZOTH_GLOBAL_POLICY_METRICS ?= $(AZOTH_ROOT)/global_policy_metrics.json
 AZOTH_GLOBAL_POLICY_METRICS_MD ?= $(AZOTH_ROOT)/global_policy_metrics.md
+AZOTH_ROUTED_METRICS_ARGS ?=
+AZOTH_VALIDATE_ROUTED_METRICS_ARGS ?= --no-ci --no-stacked
 AZOTH_POLICY_OVERRIDE_ROUTE ?=
 AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/litmus/models/azoth
 ELF_ROUTE_OUTPUT_DIR ?= $(AZOTH_ROOT)/elf_route_optimization
@@ -778,7 +780,7 @@ azoth-validate: azoth-calibrate
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget
-	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB)
+	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_VALIDATE_ROUTED_METRICS_ARGS) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	@_STAGE=$$(mktemp -d) && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
@@ -827,7 +829,7 @@ azoth-deploy: azoth-calibrate
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget
-	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB)
+	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	$(MAKE) azoth-deploy-final
 
@@ -1265,7 +1267,7 @@ azoth-augment-small-routes: venv check-db
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget
-	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB)
+	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 
 # One-time repair for legacy autocollie baselines whose run JSONs predate
