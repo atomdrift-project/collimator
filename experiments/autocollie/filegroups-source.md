@@ -110,3 +110,37 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T175815-filegroups-source` — 2026-05-14T17:58:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `670e1163159aca67` | source_formula_density_tax_scalepos075 | ok | 0.9982 | 0.9980 | 0.9772 | 43 | [log](out/autocollie/runs/2026-05-14T18-03-40_20260514T175815-filegroups-source_source_formula_density_tax_scalepos075.log) |
+| `2e6538bb88451dc6` | source_formula_density_tax_dart_reg | ok | 0.9951 | 0.9947 | 0.9558 | 21 | [log](out/autocollie/runs/2026-05-14T18-04-23_20260514T175815-filegroups-source_source_formula_density_tax_dart_reg.log) |
+| `117410863f31abe4` | source_formula_density_tax_hardneg | ok | 0.9983 | 0.9981 | 0.9741 | 70 | [log](out/autocollie/runs/2026-05-14T18-04-43_20260514T175815-filegroups-source_source_formula_density_tax_hardneg.log) |
+| `1ca1ea7a4c1b71a2` | source_formula_density_tax_kv_vocab | ok | 0.9982 | 0.9981 | 0.9793 | 49 | [log](out/autocollie/runs/2026-05-14T18-05-53_20260514T175815-filegroups-source_source_formula_density_tax_kv_vocab.log) |
+| `8a52df56415964a8` | source_formula_density_tax_textenc_metrics | ok | 0.9981 | 0.9980 | 0.9773 | 51 | [log](out/autocollie/runs/2026-05-14T18-06-43_20260514T175815-filegroups-source_source_formula_density_tax_textenc_metrics.log) |
+| `66e5ec5b788b9a88` | source_formula_density_tax_symbol_vocab | ok | 0.9982 | 0.9980 | 0.9726 | 37 | [log](out/autocollie/runs/2026-05-14T18-07-34_20260514T175815-filegroups-source_source_formula_density_tax_symbol_vocab.log) |
+| `3395b32c5182f146` | source_formula_density_tax_no_blindfold | ok | 0.9981 | 0.9980 | 0.9697 | 37 | [log](out/autocollie/runs/2026-05-14T18-08-11_20260514T175815-filegroups-source_source_formula_density_tax_no_blindfold.log) |
+| `57946cc58dceddf4` | source_java_static_metrics_transfer | ok | 0.9980 | 0.9979 | 0.9717 | 34 | [log](out/autocollie/runs/2026-05-14T18-08-48_20260514T175815-filegroups-source_source_java_static_metrics_transfer.log) |
+| `cef01ce1df56906c` | source_ruby_attack_ngrams_scalepos | ok | 0.9981 | 0.9980 | 0.9783 | 30 | [log](out/autocollie/runs/2026-05-14T18-09-22_20260514T175815-filegroups-source_source_ruby_attack_ngrams_scalepos.log) |
+| `fb254c34f1cd2196` | source_formula_density_tax_seed_ensemble | ok | 0.9983 | 0.9981 | 0.9709 | 93 | [log](out/autocollie/runs/2026-05-14T18-09-52_20260514T175815-filegroups-source_source_formula_density_tax_seed_ensemble.log) |
+| `6e96a1c936269d7b` | source_symbol_kv_textenc_combo_retry | ok | 0.9981 | 0.9979 | 0.9745 | 39 | [log](out/autocollie/runs/2026-05-14T18-11-25_20260514T175815-filegroups-source_source_symbol_kv_textenc_combo_retry.log) |
+| `a0f5e134007a1a9c` | source_static_surface_no_traits_retry | ok | 0.9976 | 0.9974 | 0.9704 | 18 | [log](out/autocollie/runs/2026-05-14T18-12-04_20260514T175815-filegroups-source_source_static_surface_no_traits_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_formula_density_tax_scalepos075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Downweight positives to reduce FPs at low FPR, targeting recall@3 FP/M improvement while preserving PR AUC.
+- **`source_formula_density_tax_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — DART boosting with stronger regularization may improve tail generalization and recall@3 FP/M.
+- **`source_formula_density_tax_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard negative mining focuses the model on difficult benigns, potentially lifting recall@3 FP/M without hurting PR AUC.
+- **`source_formula_density_tax_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — KV pairs in source files often contain configuration or dependency signals that improve malicious pattern detection.
+- **`source_formula_density_tax_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Text encoding and full text metrics capture obfuscation and structural anomalies in source code.
+- **`source_formula_density_tax_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Symbol vocab extracts function/variable naming patterns that distinguish malicious source from benign.
+- **`source_formula_density_tax_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters` — Removing blindfold dropout may reduce noise and stabilize ranking, potentially improving PR AUC.
+- **`source_java_static_metrics_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1` — Porting successful Java source configuration with extended and extreme metrics to capture tail signals.
+- **`source_ruby_attack_ngrams_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Combining Ruby route's attack ngrams with aggressive positive downweighting to optimize low-FPR recall.
+- **`source_formula_density_tax_seed_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Averaging over 3 seeds reduces variance and stabilizes recall@3 FP/M gains.
+- **`source_symbol_kv_textenc_combo_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retrying strong historical combo with corrected bigram_min_freq to avoid validator rejection.
+- **`source_static_surface_no_traits_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters` — Retrying static surface ablation to see if data drift improves its previously strong PR AUC.
+
+</details>
+

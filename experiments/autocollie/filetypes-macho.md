@@ -228,3 +228,71 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T174750-filetypes-macho` — 2026-05-14T17:47:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4969cf25a948a48b` | macho_exploit_leaves128_reg15 | ok | 0.9970 | 0.9992 | 0.9722 | 28 | [log](out/autocollie/runs/2026-05-14T17-52-44_20260514T174750-filetypes-macho_macho_exploit_leaves128_reg15.log) |
+| `9fcf6f3b8408edfb` | macho_exploit_hardneg_001_12 | ok | 0.9967 | 0.9992 | 0.9747 | 21 | [log](out/autocollie/runs/2026-05-14T17-53-13_20260514T174750-filetypes-macho_macho_exploit_hardneg_001_12.log) |
+| `dc884c73f508000b` | macho_exploit_tail_fpr3e6 | ok | 0.9972 | 0.9993 | 0.9713 | 12 | [log](out/autocollie/runs/2026-05-14T17-53-34_20260514T174750-filetypes-macho_macho_exploit_tail_fpr3e6.log) |
+| `a9d38818531e42f1` | macho_feature_kv_split_vocab | ok | 0.9966 | 0.9991 | 0.9722 | 28 | [log](out/autocollie/runs/2026-05-14T17-53-46_20260514T174750-filetypes-macho_macho_feature_kv_split_vocab.log) |
+| `57748cbb4d754a71` | macho_feature_symbol_bigrams_trigrams | ok | 0.9978 | 0.9994 | 0.9722 | 36 | [log](out/autocollie/runs/2026-05-14T17-54-14_20260514T174750-filetypes-macho_macho_feature_symbol_bigrams_trigrams.log) |
+| `1f25da7df3daaeb4` | macho_feature_overlay_mbc | ok | 0.9957 | 0.9990 | 0.9746 | 25 | [log](out/autocollie/runs/2026-05-14T17-54-50_20260514T174750-filetypes-macho_macho_feature_overlay_mbc.log) |
+| `58f272779549f003` | macho_feature_textenc_extended | ok | 0.9966 | 0.9991 | 0.9697 | 33 | [log](out/autocollie/runs/2026-05-14T17-55-15_20260514T174750-filetypes-macho_macho_feature_textenc_extended.log) |
+| `549de31c7cbf2394` | macho_ablation_high_bigram_freq | ok | 0.9964 | 0.9991 | 0.9697 | 28 | [log](out/autocollie/runs/2026-05-14T17-55-47_20260514T174750-filetypes-macho_macho_ablation_high_bigram_freq.log) |
+| `b0e2dede1aa519e1` | macho_transfer_dart_reg2 | ok | 0.9934 | 0.9983 | 0.9019 | 11 | [log](out/autocollie/runs/2026-05-14T17-56-15_20260514T174750-filetypes-macho_macho_transfer_dart_reg2.log) |
+| `1616a68396ae5221` | macho_transfer_extreme_metrics | ok | 0.9960 | 0.9990 | 0.9722 | 19 | [log](out/autocollie/runs/2026-05-14T17-56-26_20260514T174750-filetypes-macho_macho_transfer_extreme_metrics.log) |
+| `95160fe398eac4aa` | macho_generalization_natural_prev | ok | 0.9960 | 0.9990 | 0.9722 | 28 | [log](out/autocollie/runs/2026-05-14T17-56-45_20260514T174750-filetypes-macho_macho_generalization_natural_prev.log) |
+| `9574f4f1109ec4c3` | macho_retry_hardtail_symbols | ok | 0.9983 | 0.9995 | 0.9771 | 62 | [log](out/autocollie/runs/2026-05-14T17-57-13_20260514T174750-filetypes-macho_macho_retry_hardtail_symbols.log) |
+
+<details><summary>Spec details</summary>
+
+- **`macho_exploit_leaves128_reg15`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5` — Exploit best feature set with deeper trees and moderate L2 regularization to capture complex Mach-O patterns without overfitting.
+- **`macho_exploit_hardneg_001_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12` — Apply conservative hard-negative mining to sharpen decision boundary at low FPR while preserving PR AUC.
+- **`macho_exploit_tail_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize threshold for production operating point to maximize recall@3 FP/M while guarding PR AUC.
+- **`macho_feature_kv_split_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000` — Enable KV vocab with value splitting to recover per-element signal in Mach-O load commands and metadata.
+- **`macho_feature_symbol_bigrams_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=2000` — Add symbol bigrams and trigrams to capture co-occurrence patterns in Mach-O imports and exports.
+- **`macho_feature_overlay_mbc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MBC_ID_VOCAB=1 EXP_OVERLAY_SIGNAL=1` — Overlay metrics and MBC ID vocab target packer/dropper artifacts common in Mach-O malware.
+- **`macho_feature_textenc_extended`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_TEXT_ENCODING_FEATURES=1` — Research text encoding and extended metrics to capture string/entropy anomalies in Mach-O binaries.
+- **`macho_ablation_high_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=2000 EXP_DISABLE_FEATURE_GROUPS=clusters` — Raise bigram min frequency to 2000 to prune noisy rare bigrams and reduce overfitting on benign variants.
+- **`macho_transfer_dart_reg2`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — Port DART boosting and higher L2 regularization from sister routes to improve generalization at the tail.
+- **`macho_transfer_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1` — Transfer extreme features and extended metrics from pkg-info route to capture tail-distribution signals in Mach-O.
+- **`macho_generalization_natural_prev`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=50000 EXP_TEST_NATURAL_PREVALENCE=1 EXP_TRAIN_SAMPLES=180000` — Use natural prevalence test set with larger sample to better estimate recall@k FP/M and reduce seed variance.
+- **`macho_retry_hardtail_symbols`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000` — Retry prior strong hard-negative + symbol vocab config with corrected fraction to avoid corpus exhaustion.
+
+</details>
+
+## Cycle `20260515T004354-filetypes-macho` — 2026-05-15T00:43:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dc884c73f508000b` | macho_exploit_tail_recall_fpr | dup | 0.9972 | 0.9993 | 0.9713 | 1 | [log](out/autocollie/runs/2026-05-15T00-49-25_20260515T004354-filetypes-macho_macho_exploit_tail_recall_fpr.log) |
+| `af9c1750b2cfcc70` | macho_exploit_hardneg_mining | ok | 0.9967 | 0.9992 | 0.9747 | 29 | [log](out/autocollie/runs/2026-05-15T00-49-26_20260515T004354-filetypes-macho_macho_exploit_hardneg_mining.log) |
+| `fd139c31d4a40807` | macho_exploit_dart_reg | ok | 0.9891 | 0.9971 | 0.9223 | 149 | [log](out/autocollie/runs/2026-05-15T00-49-55_20260515T004354-filetypes-macho_macho_exploit_dart_reg.log) |
+| `cdfbdf0c3d9beb95` | macho_feature_kv_split | ok | 0.9966 | 0.9991 | 0.9722 | 111 | [log](out/autocollie/runs/2026-05-15T00-52-24_20260515T004354-filetypes-macho_macho_feature_kv_split.log) |
+| `92b736e374d3026b` | macho_feature_symbol_bigrams | ok | 0.9973 | 0.9993 | 0.9722 | 180 | [log](out/autocollie/runs/2026-05-15T00-54-15_20260515T004354-filetypes-macho_macho_feature_symbol_bigrams.log) |
+| `784e5a85f8a8786c` | macho_feature_textenc_overlay | ok | 0.9966 | 0.9991 | 0.9697 | 86 | [log](out/autocollie/runs/2026-05-15T00-57-15_20260515T004354-filetypes-macho_macho_feature_textenc_overlay.log) |
+| `6c513407b1397e19` | macho_feature_mbc_trigrams | ok | 0.9972 | 0.9993 | 0.9722 | 150 | [log](out/autocollie/runs/2026-05-15T00-58-41_20260515T004354-filetypes-macho_macho_feature_mbc_trigrams.log) |
+| `6d427a7cd7d22e1a` | macho_ablation_tight_bigrams | ok | 0.9967 | 0.9992 | 0.9722 | 82 | [log](out/autocollie/runs/2026-05-15T01-01-11_20260515T004354-filetypes-macho_macho_ablation_tight_bigrams.log) |
+| `1c852e7236d14e1c` | macho_transfer_seedsearch_kv | ok | 0.9965 | 0.9991 | 0.9746 | 269 | [log](out/autocollie/runs/2026-05-15T01-02-33_20260515T004354-filetypes-macho_macho_transfer_seedsearch_kv.log) |
+| `3888044afa814476` | macho_transfer_conf_ngrams_scale | ok | 0.9965 | 0.9991 | 0.9722 | 143 | [log](out/autocollie/runs/2026-05-15T01-07-02_20260515T004354-filetypes-macho_macho_transfer_conf_ngrams_scale.log) |
+| `4ce77b9bcbc782b7` | macho_generalization_seed123 | ok | 0.9960 | 0.9990 | 0.0000 | 94 | [log](out/autocollie/runs/2026-05-15T01-09-25_20260515T004354-filetypes-macho_macho_generalization_seed123.log) |
+| `3c9052141d9b48a4` | macho_retry_symbol_trigrams | ok | 0.9978 | 0.9994 | 0.9722 | 176 | [log](out/autocollie/runs/2026-05-15T01-11-00_20260515T004354-filetypes-macho_macho_retry_symbol_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`macho_exploit_tail_recall_fpr`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=150000` — Optimize deployed operating point with max_recall_at_fpr and down-weighted positives to boost recall@3 FP/M.
+- **`macho_exploit_hardneg_mining`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=150000` — Apply hard-negative mining to sharpen decision boundary at low FPR for native binaries.
+- **`macho_exploit_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=150000` — Use DART boosting with stronger L2 regularization to improve tail generalization.
+- **`macho_feature_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=150000` — Enable KV vocab with value splitting to capture structured payload/config signals in Mach-O.
+- **`macho_feature_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=150000` — Add symbol bigrams to catch import co-occurrence patterns typical of Mach-O malware.
+- **`macho_feature_textenc_overlay`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_OVERLAY_SIGNAL=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=150000` — Combine text encoding features with overlay metrics to detect packed/obfuscated binaries.
+- **`macho_feature_mbc_trigrams`** `EXP_ATTACK_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=150000` — Leverage MBC ID vocab and objective trigrams for behavioral sequence detection.
+- **`macho_ablation_tight_bigrams`** `EXP_BIGRAM_MAX=2000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=150000 EXP_TRIGRAM_MAX=1000` — Reduce bigram/trigram vocab sizes to filter noise and force reliance on high-signal features.
+- **`macho_transfer_seedsearch_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=150000` — Transfer gz route's seed search ensemble with KV features to reduce variance and boost recall.
+- **`macho_transfer_conf_ngrams_scale`** `EXP_ATTACK_NGRAMS=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=150000` — Port php/java confidence-weighted ngrams with aggressive positive down-weighting for tail precision.
+- **`macho_generalization_seed123`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=100000` — Test seed and sample size variance on the best feature set to confirm signal stability.
+- **`macho_retry_symbol_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=150000` — Retry prior high-PR-AUC symbol trigram config on fresh corpus to check for data-drift gains.
+
+</details>
+

@@ -56,3 +56,39 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T163130-filetypes-msi` — 2026-05-14T16:31:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7cbd69911f5817d2` | msi_control_leaves128_reg2 | ok | 0.9999 | 0.9990 | 0.9892 | 25 | [log](out/autocollie/runs/2026-05-14T16-37-32_20260514T163130-filetypes-msi_msi_control_leaves128_reg2.log) |
+| `420e2e544f8fb8c9` | msi_control_hardneg_tuned | ok | 0.9999 | 0.9980 | 0.9855 | 7 | [log](out/autocollie/runs/2026-05-14T16-37-57_20260514T163130-filetypes-msi_msi_control_hardneg_tuned.log) |
+| `0bf19f66b3e1a2f2` | msi_control_recall3_fpr | ok | 1.0000 | 1.0000 | 0.9818 | 2 | [log](out/autocollie/runs/2026-05-14T16-38-04_20260514T163130-filetypes-msi_msi_control_recall3_fpr.log) |
+| `09441f0e1ad2fd68` | msi_kv_vocab_expansion | ok | 0.9999 | 0.9990 | 0.9892 | 23 | [log](out/autocollie/runs/2026-05-14T16-38-06_20260514T163130-filetypes-msi_msi_kv_vocab_expansion.log) |
+| `d190a9219e984981` | msi_symbol_vocab_bigrams | ok | 0.9999 | 0.9990 | 0.9928 | 25 | [log](out/autocollie/runs/2026-05-14T16-38-29_20260514T163130-filetypes-msi_msi_symbol_vocab_bigrams.log) |
+| `6877a11337231b0c` | msi_text_metrics_encoding | ok | 1.0000 | 1.0000 | 0.9818 | 30 | [log](out/autocollie/runs/2026-05-14T16-38-54_20260514T163130-filetypes-msi_msi_text_metrics_encoding.log) |
+| `fa6b854a3470a609` | msi_transfer_ole_static | ok | 0.9999 | 0.9990 | 0.9928 | 2 | [log](out/autocollie/runs/2026-05-14T16-39-24_20260514T163130-filetypes-msi_msi_transfer_ole_static.log) |
+| `67c9c58c32c79d91` | msi_transfer_tar_hardneg | ok | 0.9998 | 0.9969 | 0.9855 | 24 | [log](out/autocollie/runs/2026-05-14T16-39-26_20260514T163130-filetypes-msi_msi_transfer_tar_hardneg.log) |
+| `8ebbdabe9ffa9182` | msi_gen_seed_search_k3 | ok | 1.0000 | 1.0000 | 0.9892 | 26 | [log](out/autocollie/runs/2026-05-14T16-39-50_20260514T163130-filetypes-msi_msi_gen_seed_search_k3.log) |
+| `3c48019c574c8895` | msi_gen_natural_prevalence | ok | 1.0000 | 1.0000 | 0.9892 | 25 | [log](out/autocollie/runs/2026-05-14T16-40-16_20260514T163130-filetypes-msi_msi_gen_natural_prevalence.log) |
+| `68c45cdf85a22c86` | msi_retry_metadata_lifecycle | ok | 0.9996 | 0.9918 | 0.9856 | 22 | [log](out/autocollie/runs/2026-05-14T16-40-41_20260514T163130-filetypes-msi_msi_retry_metadata_lifecycle.log) |
+
+Rejected before run:
+
+- `msi_ablation_no_extended_metrics` — features.disable_groups: "extended_metrics" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+
+<details><summary>Spec details</summary>
+
+- **`msi_control_leaves128_reg2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — Exploit best feature set with deeper trees and L2 regularization to improve ranking granularity.
+- **`msi_control_hardneg_tuned`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_NUM_LEAVES=96` — Apply conservative hard-negative mining to sharpen decision boundary on scarce benigns.
+- **`msi_control_recall3_fpr`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize threshold directly for production operating point to maximize recall@3 FP/M.
+- **`msi_kv_vocab_expansion`** `EXP_BIGRAM_MAX=5000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5` — Enable KV vocab with lower frequency floor to capture MSI-specific manifest and registry key patterns.
+- **`msi_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=4000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=6000` — Add symbol vocab and bigrams to detect embedded binary and script import patterns in MSI payloads.
+- **`msi_text_metrics_encoding`** `EXP_BIGRAM_MAX=5000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Test text metrics and encoding features to capture obfuscation and scripting signals in MSI embedded content.
+- **`msi_transfer_ole_static`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — Port OLE specialist config with static features and extreme metrics, adjusted for MSI archive structure.
+- **`msi_transfer_tar_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2.5 EXP_SYMBOL_VOCAB=1 …` — Adapt TAR hard-negative full-feature config, enabling KV and symbols for MSI payload extraction signals.
+- **`msi_gen_seed_search_k3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=5000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=15000` — Run seed search on strong config to average out variance and stabilize recall@3 FP/M gains.
+- **`msi_gen_natural_prevalence`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=8000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEST_NATURAL_PREVALENCE=1 EXP_TRAIN_SAMPLES=15000` — Use natural prevalence test set to better calibrate recall@k FP/M resolution on benign-heavy tail.
+- **`msi_retry_metadata_lifecycle`** `EXP_BIGRAM_MAX=5000 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Retry top historical PR AUC config with updated regularization and threshold tuning for current corpus drift.
+
+</details>
+

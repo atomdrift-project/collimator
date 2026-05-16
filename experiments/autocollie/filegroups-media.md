@@ -62,3 +62,71 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T190922-filegroups-media` — 2026-05-14T19:09:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c8957a8822499c7c` | media_baseline_transfer_gz | ok | 0.9946 | 0.9935 | 0.9419 | 6 | [log](out/autocollie/runs/2026-05-14T19-13-28_20260514T190922-filegroups-media_media_baseline_transfer_gz.log) |
+| `f9ac2600914a56c8` | media_kv_textenc_research | ok | 0.9880 | 0.9857 | 0.9161 | 4 | [log](out/autocollie/runs/2026-05-14T19-13-34_20260514T190922-filegroups-media_media_kv_textenc_research.log) |
+| `daf6e9929dd947aa` | media_text_metrics_full | ok | 0.9885 | 0.9863 | 0.9161 | 3 | [log](out/autocollie/runs/2026-05-14T19-13-38_20260514T190922-filegroups-media_media_text_metrics_full.log) |
+| `19f5c5ac3507bbc9` | media_ember_extended_metrics | ok | 0.9925 | 0.9910 | 0.9241 | 3 | [log](out/autocollie/runs/2026-05-14T19-13-42_20260514T190922-filegroups-media_media_ember_extended_metrics.log) |
+| `6f92cb3a01042abf` | media_ablation_score_clusters | ok | 0.9717 | 0.9558 | 0.9054 | 3 | [log](out/autocollie/runs/2026-05-14T19-13-45_20260514T190922-filegroups-media_media_ablation_score_clusters.log) |
+| `2350fd3b316f9b17` | media_transfer_xml_docx | ok | 0.9917 | 0.9900 | 0.9299 | 2 | [log](out/autocollie/runs/2026-05-14T19-13-48_20260514T190922-filegroups-media_media_transfer_xml_docx.log) |
+| `b2a0a27b34dda371` | media_seed_search_k3 | ok | 0.9895 | 0.9874 | 0.9441 | 3 | [log](out/autocollie/runs/2026-05-14T19-13-51_20260514T190922-filegroups-media_media_seed_search_k3.log) |
+| `dea150f44097a786` | media_retry_textenc_kv | ok | 0.9901 | 0.9880 | 0.9212 | 6 | [log](out/autocollie/runs/2026-05-14T19-13-54_20260514T190922-filegroups-media_media_retry_textenc_kv.log) |
+| `169699e601474764` | media_recall3_fpr_target | ok | 0.9898 | 0.9876 | 0.9371 | 6 | [log](out/autocollie/runs/2026-05-14T19-14-00_20260514T190922-filegroups-media_media_recall3_fpr_target.log) |
+| `a921b69aaab27a37` | media_hard_negative_boost | ok | 0.9955 | 0.9945 | 0.9610 | 3 | [log](out/autocollie/runs/2026-05-14T19-14-05_20260514T190922-filegroups-media_media_hard_negative_boost.log) |
+| `bc2ce10f366cbe91` | media_dart_boosting | ok | 0.9843 | 0.9815 | 0.9241 | 2 | [log](out/autocollie/runs/2026-05-14T19-14-08_20260514T190922-filegroups-media_media_dart_boosting.log) |
+| `4de2ccb9a6b8dc90` | media_kv_split_metric_ratios | ok | 0.9885 | 0.9863 | 0.9161 | 3 | [log](out/autocollie/runs/2026-05-14T19-14-10_20260514T190922-filegroups-media_media_kv_split_metric_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`media_baseline_transfer_gz`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port strong gz/tar feature set to break the 0.5 ROC AUC plateau and establish a working baseline.
+- **`media_kv_textenc_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1` — Enable kv and textenc research surfaces to capture metadata and encoding patterns specific to media containers.
+- **`media_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1` — Promote full text metrics to catch obfuscation and structural anomalies in media file headers and payloads.
+- **`media_ember_extended_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_NUM_LEAVES=96` — Port docx-winning ember_lite and extended_metrics to capture binary/container structural signals.
+- **`media_ablation_score_clusters`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MIN_CHILD_SAMPLES=200` — Disable score and clusters groups to reduce noise and let structural features dominate ranking.
+- **`media_transfer_xml_docx`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_LEARNING_RATE=0.03` — Combine xml and docx winning configs with conservative vocab limits adapted for media route.
+- **`media_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=150000` — Use seed_search_k=3 to average out variance and stabilize recall@3 FP/M gains across seeds.
+- **`media_retry_textenc_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MIN_CHILD_WEIGHT=5 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1` — Retry prior textenc+kv carrier idea with adjusted regularization to recover PR AUC guardrails.
+- **`media_recall3_fpr_target`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=50000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEST_NATURAL_PREVALENCE=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize threshold directly for production operating point to boost recall@3 FP/M while preserving guardrails.
+- **`media_hard_negative_boost`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_NUM_LEAVES=128` — Upweight hard negatives to sharpen decision boundary at low FPR and improve tail recall.
+- **`media_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96` — Switch to DART boosting for dropout regularization to improve tail generalization and reduce overfit.
+- **`media_kv_split_metric_ratios`** `EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_METRIC_RATIO_FEATURES=1 EXP_SUBSAMPLE=0.8` — Split KV values and add metric ratios to recover granular signal from media metadata and structural counts.
+
+</details>
+
+## Cycle `20260515T083241-filegroups-media` — 2026-05-15T08:32:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9b89ee6148bfa805` | media_control_hn_weight_leaves | ok | 0.9931 | 0.9910 | 0.9494 | 51 | [log](out/autocollie/runs/2026-05-15T08-37-56_20260515T083241-filegroups-media_media_control_hn_weight_leaves.log) |
+| `77d52adb951803e7` | media_control_dart_lr003 | ok | 0.9825 | 0.9772 | 0.8721 | 201 | [log](out/autocollie/runs/2026-05-15T08-38-47_20260515T083241-filegroups-media_media_control_dart_lr003.log) |
+| `1b7cee5dac756bce` | media_control_pos_weight_075 | ok | 0.9952 | 0.9941 | 0.9434 | 44 | [log](out/autocollie/runs/2026-05-15T08-42-08_20260515T083241-filegroups-media_media_control_pos_weight_075.log) |
+| `e0a593c0be511abd` | media_kv_vocab_split | ok | 0.9955 | 0.9945 | 0.9610 | 18 | [log](out/autocollie/runs/2026-05-15T08-42-52_20260515T083241-filegroups-media_media_kv_vocab_split.log) |
+| `666a6e2a5ceddb58` | media_text_metrics_obfuscation | ok | 0.9955 | 0.9945 | 0.9610 | 4 | [log](out/autocollie/runs/2026-05-15T08-43-09_20260515T083241-filegroups-media_media_text_metrics_obfuscation.log) |
+| `5dd7c4474b71aeb8` | media_symbol_bigrams | ok | 0.9955 | 0.9945 | 0.9610 | 4 | [log](out/autocollie/runs/2026-05-15T08-43-14_20260515T083241-filegroups-media_media_symbol_bigrams.log) |
+| `162b40812d4f6753` | media_tiered_crit_trigrams | ok | 0.9951 | 0.9939 | 0.9494 | 48 | [log](out/autocollie/runs/2026-05-15T08-43-18_20260515T083241-filegroups-media_media_tiered_crit_trigrams.log) |
+| `b947fbc2631ec594` | media_ablation_blindfold_airgap | ok | 0.9968 | 0.9963 | 0.9494 | 62 | [log](out/autocollie/runs/2026-05-15T08-44-05_20260515T083241-filegroups-media_media_ablation_blindfold_airgap.log) |
+| `77b78d0ae2001a78` | media_transfer_gz_kv_hn | ok | 0.9974 | 0.9971 | 0.9615 | 51 | [log](out/autocollie/runs/2026-05-15T08-45-08_20260515T083241-filegroups-media_media_transfer_gz_kv_hn.log) |
+| `a8245e9b97e099ac` | media_transfer_ole_reg_leaves | ok | 0.9684 | 0.9413 | 0.9262 | 56 | [log](out/autocollie/runs/2026-05-15T08-45-59_20260515T083241-filegroups-media_media_transfer_ole_reg_leaves.log) |
+| `d7cec3c48c852b7d` | media_seed_search_ensemble | ok | 0.9974 | 0.9971 | 0.9868 | 179 | [log](out/autocollie/runs/2026-05-15T08-46-55_20260515T083241-filegroups-media_media_seed_search_ensemble.log) |
+| `4182c61ffcf2d3e1` | media_retry_kv_split_ratios | ok | 0.9984 | 0.9982 | 0.9870 | 71 | [log](out/autocollie/runs/2026-05-15T08-49-54_20260515T083241-filegroups-media_media_retry_kv_split_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`media_control_hn_weight_leaves`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate baseline feature set while tuning hard_negative_weight and num_leaves to improve recall@3FPM by better separating hard negatives.
+- **`media_control_dart_lr003`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=400 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use dart boosting with lower learning rate to reduce overfitting and boost recall@3FPM at low FPR.
+- **`media_control_pos_weight_075`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives with scale_pos_weight_mult=0.75 to suppress false positives and directly optimize recall@3FPM.
+- **`media_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to extract granular metadata signals, targeting PR_AUC gains.
+- **`media_text_metrics_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_metrics_full and document_obfuscation_features to capture PDF/DOCX obfuscation patterns, aiming to lift PR_AUC.
+- **`media_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Enable symbol_bigrams with moderate min_freq to catch co-occurrence patterns in embedded scripts, targeting PR_AUC.
+- **`media_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Activate tiered_crit_trigrams with lower min_crit to capture subtle malicious sequences, aiming to improve PR_AUC.
+- **`media_ablation_blindfold_airgap`** `EXP_AIR_GAP_SIGNAL=0 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove blindfold and air_gap_signal to test if dropping noisy features reduces variance and stabilizes PR_AUC.
+- **`media_transfer_gz_kv_hn`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 …` — Port gz route's strong kv and hard-negative config to media, expecting PR_AUC lift from shared archive/media traits.
+- **`media_transfer_ole_reg_leaves`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Adopt ole route's conservative regularization and leaf count to prevent overfitting on small media corpus, targeting stable PR_AUC.
+- **`media_seed_search_ensemble`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 with save_all_seeds to average out RNG variance and produce a more robust PR_AUC and recall@3FPM.
+- **`media_retry_kv_split_ratios`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_MIN_CHILD_SAMPLES=50 …` — Retry prior kv_split_metric_ratios idea with increased estimators and lower min_child_samples to recover PR_AUC after corpus drift.
+
+</details>
+

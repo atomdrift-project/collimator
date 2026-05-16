@@ -92,3 +92,71 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T172407-filetypes-java_class` — 2026-05-14T17:24:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8d2c63c74e08970b` | java_class_recall3fpr_threshold | ok | 0.9867 | 0.9979 | 0.8280 | 8 | [log](out/autocollie/runs/2026-05-14T17-28-10_20260514T172407-filetypes-java_class_java_class_recall3fpr_threshold.log) |
+| `8823e8cc1341f3ca` | java_class_scale_pos_075 | ok | 0.9861 | 0.9978 | 0.9474 | 3 | [log](out/autocollie/runs/2026-05-14T17-28-18_20260514T172407-filetypes-java_class_java_class_scale_pos_075.log) |
+| `6df6b9bf290f8064` | java_class_hardneg_focus | ok | 0.9843 | 0.9976 | 0.9565 | 4 | [log](out/autocollie/runs/2026-05-14T17-28-21_20260514T172407-filetypes-java_class_java_class_hardneg_focus.log) |
+| `9a5b6f388fe34bb4` | java_class_kv_vocab_enable | ok | 0.9867 | 0.9979 | 0.9474 | 6 | [log](out/autocollie/runs/2026-05-14T17-28-26_20260514T172407-filetypes-java_class_java_class_kv_vocab_enable.log) |
+| `4c7c9f482d4c0a7f` | java_class_symbol_vocab_enable | ok | 0.9867 | 0.9979 | 0.9474 | 7 | [log](out/autocollie/runs/2026-05-14T17-28-32_20260514T172407-filetypes-java_class_java_class_symbol_vocab_enable.log) |
+| `5b68439edec706b8` | java_class_trigram_pools | ok | 0.9842 | 0.9975 | 0.9474 | 5 | [log](out/autocollie/runs/2026-05-14T17-28-38_20260514T172407-filetypes-java_class_java_class_trigram_pools.log) |
+| `d10e01029e9cc9c3` | java_class_ablate_blindfold | ok | 0.9867 | 0.9979 | 0.9474 | 6 | [log](out/autocollie/runs/2026-05-14T17-28-43_20260514T172407-filetypes-java_class_java_class_ablate_blindfold.log) |
+| `3162d5ae25f1de4a` | java_class_transfer_gz_kv_seed | ok | 0.9871 | 0.9979 | 0.9556 | 5 | [log](out/autocollie/runs/2026-05-14T17-28-49_20260514T172407-filetypes-java_class_java_class_transfer_gz_kv_seed.log) |
+| `df39953475305ce0` | java_class_transfer_xml_textmetrics | ok | 0.9867 | 0.9979 | 0.9474 | 5 | [log](out/autocollie/runs/2026-05-14T17-28-55_20260514T172407-filetypes-java_class_java_class_transfer_xml_textmetrics.log) |
+| `368456ee150dbe38` | java_class_seed123_samples100k | ok | 0.9887 | 0.9983 | 0.9560 | 8 | [log](out/autocollie/runs/2026-05-14T17-29-00_20260514T172407-filetypes-java_class_java_class_seed123_samples100k.log) |
+| `e7030c0a636e621a` | java_class_ensemble_seeds | ok | 0.9874 | 0.9980 | 0.9626 | 6 | [log](out/autocollie/runs/2026-05-14T17-29-08_20260514T172407-filetypes-java_class_java_class_ensemble_seeds.log) |
+| `be791799efb85c81` | java_class_minmal3_retry | ok | 0.9867 | 0.9979 | 0.9474 | 8 | [log](out/autocollie/runs/2026-05-14T17-29-13_20260514T172407-filetypes-java_class_java_class_minmal3_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_class_recall3fpr_threshold`** `EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize threshold directly for production operating point to maximize recall@3 FP/M without hurting PR AUC.
+- **`java_class_scale_pos_075`** `EXP_SCALE_POS_WEIGHT_MULT=0.75` — Down-weight positives to reduce FP at low FPR, improving recall@3 FP/M while keeping AUC flat.
+- **`java_class_hardneg_focus`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12` — Upweight hard negatives to sharpen decision boundary near benign/malware overlap, boosting tail recall.
+- **`java_class_kv_vocab_enable`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — Enable KV vocab to capture structured metadata patterns in Java class files that n-grams miss.
+- **`java_class_symbol_vocab_enable`** `EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000` — Symbol vocab captures method/field name co-occurrences and naming conventions indicative of obfuscation or malicious intent.
+- **`java_class_trigram_pools`** `EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRIGRAM_MAX=2000` — Add objective and suspicious trigram pools to capture longer-range structural patterns in bytecode metadata.
+- **`java_class_ablate_blindfold`** `EXP_BLINDFOLD=0` — Remove blindfold dropout features to reduce noise and potentially stabilize ranking at the tail.
+- **`java_class_transfer_gz_kv_seed`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_SEED_SEARCH_K=3` — Port gz route successful KV + seed search combo to reduce variance and capture metadata signal.
+- **`java_class_transfer_xml_textmetrics`** `EXP_LINE_LENGTH_BUCKETS=1 EXP_TEXT_METRICS_FULL=1` — Port xml route text metrics success; Java class string tables may benefit from full text metric features.
+- **`java_class_seed123_samples100k`** `EXP_TRAIN_SAMPLES=100000` — Test generalization by varying seed and training sample size to ensure signal is not seed/sample specific.
+- **`java_class_ensemble_seeds`** `EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Average predictions across 3 seeds to reduce variance and improve robust recall@3 FP/M.
+- **`java_class_minmal3_retry`** `EXP_MIN_MALWARE_SCORE=3` — Focus training on high-severity malware to improve recall on confidently malicious samples amid daily corpus drift.
+
+</details>
+
+## Cycle `20260515T132851-filetypes-java_class` — 2026-05-15T13:28:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fbb38484b6202c3b` | java_class_ctrl_leaves128 | ok | 0.9858 | 0.9978 | 0.9613 | 120 | [log](out/autocollie/runs/2026-05-15T13-34-46_20260515T132851-filetypes-java_class_java_class_ctrl_leaves128.log) |
+| `84a7fe3009003437` | java_class_ctrl_hardneg | ok | 0.9843 | 0.9977 | 0.9524 | 192 | [log](out/autocollie/runs/2026-05-15T13-36-46_20260515T132851-filetypes-java_class_java_class_ctrl_hardneg.log) |
+| `f52d9de1717f0614` | java_class_ctrl_scalepos | ok | 0.9836 | 0.9976 | 0.9556 | 68 | [log](out/autocollie/runs/2026-05-15T13-39-58_20260515T132851-filetypes-java_class_java_class_ctrl_scalepos.log) |
+| `c7ec4a8b7beca1bd` | java_class_feat_kv_vocab | ok | 0.9881 | 0.9982 | 0.9613 | 84 | [log](out/autocollie/runs/2026-05-15T13-41-06_20260515T132851-filetypes-java_class_java_class_feat_kv_vocab.log) |
+| `02b6c89610ffddd7` | java_class_feat_symbol_vocab | ok | 0.9881 | 0.9982 | 0.9613 | 80 | [log](out/autocollie/runs/2026-05-15T13-42-30_20260515T132851-filetypes-java_class_java_class_feat_symbol_vocab.log) |
+| `1c794aed0fe582d2` | java_class_feat_text_metrics | ok | 0.9881 | 0.9982 | 0.9613 | 77 | [log](out/autocollie/runs/2026-05-15T13-43-50_20260515T132851-filetypes-java_class_java_class_feat_text_metrics.log) |
+| `b341a1cea09fd510` | java_class_feat_tiered_trigrams | ok | 0.9856 | 0.9978 | 0.9613 | 97 | [log](out/autocollie/runs/2026-05-15T13-45-07_20260515T132851-filetypes-java_class_java_class_feat_tiered_trigrams.log) |
+| `8c583df02adc2b94` | java_class_ablate_blindfold | ok | 0.9881 | 0.9982 | 0.9613 | 79 | [log](out/autocollie/runs/2026-05-15T13-46-44_20260515T132851-filetypes-java_class_java_class_ablate_blindfold.log) |
+| `d2b1aa694f9bd159` | java_class_transfer_gz_kv | ok | 0.9881 | 0.9982 | 0.9613 | 79 | [log](out/autocollie/runs/2026-05-15T13-48-02_20260515T132851-filetypes-java_class_java_class_transfer_gz_kv.log) |
+| `72f21ed554f65cd6` | java_class_transfer_ruby_scalepos | ok | 0.9838 | 0.9976 | 0.9524 | 79 | [log](out/autocollie/runs/2026-05-15T13-49-22_20260515T132851-filetypes-java_class_java_class_transfer_ruby_scalepos.log) |
+| `4dde9ce9ab794852` | java_class_gen_seed_search | ok | 0.9886 | 0.9982 | 0.9626 | 229 | [log](out/autocollie/runs/2026-05-15T13-50-40_20260515T132851-filetypes-java_class_java_class_gen_seed_search.log) |
+| `10ebead8dc12259a` | java_class_retry_leaves128 | ok | 0.9869 | 0.9979 | 0.9570 | 118 | [log](out/autocollie/runs/2026-05-15T13-54-29_20260515T132851-filetypes-java_class_java_class_retry_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_class_ctrl_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Optimize tree complexity with higher leaves and lower LR to improve PR_AUC by capturing finer decision boundaries.
+- **`java_class_ctrl_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Introduce hard-negative sampling to focus model capacity on difficult benigns, targeting recall@3FPM gains.
+- **`java_class_ctrl_scalepos`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positive class to suppress false positives at the tail, directly targeting recall@3FPM improvement.
+- **`java_class_feat_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to extract structured metadata patterns from class files, aiming to lift PR_AUC.
+- **`java_class_feat_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Activate symbol_vocab to capture class and method name distributions, targeting PR_AUC improvement.
+- **`java_class_feat_text_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote text_metrics_full to quantify obfuscation and structural anomalies, aiming to boost PR_AUC.
+- **`java_class_feat_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams to model high-severity path co-occurrences, targeting recall@3FPM lift.
+- **`java_class_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce feature noise and stabilize PR_AUC without sacrificing signal.
+- **`java_class_transfer_gz_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port gz route's kv-focused configuration to java_class to capture structured signals and improve PR_AUC.
+- **`java_class_transfer_ruby_scalepos`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_TRAIN_SAMPLES=30000` — Adapt ruby route's class weighting with relaxed bigram floor to optimize recall@3FPM at low FPR.
+- **`java_class_gen_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search with kv features to average out variance and confirm PR_AUC signal stability.
+- **`java_class_retry_leaves128`** `EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Retry historical top PR_AUC config with disabled crit ngrams to check data-drift recovery and recall@3FPM.
+
+</details>
+

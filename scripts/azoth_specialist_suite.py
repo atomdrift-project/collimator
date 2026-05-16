@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import contextlib
 import json
 import logging
@@ -901,6 +902,44 @@ def _targets(args: argparse.Namespace) -> list[dict[str, Any]]:
     return selected
 
 
+def _pool_init(log_level: str) -> None:
+    """Initialize logging in each worker. With fork start-method workers
+    inherit handlers; with spawn they don't, so set up explicitly."""
+    logging.basicConfig(
+        level=getattr(logging, log_level.upper()),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
+
+def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
+    """ProcessPool entrypoint. Loads general_spec inside the worker so the
+    parent doesn't have to pickle it across the boundary, and isolates the
+    os.environ mutations performed by ``_temporary_feature_env`` from sibling
+    workers."""
+    target = job["target"]
+    try:
+        general_spec = features.FeatureSpec.load(job["general_spec_path"])
+        return _train_one(
+            db_path=job["db_path"],
+            name=str(target["name"]),
+            kind=str(target["kind"]),
+            file_types=tuple(target["file_types"]),
+            output_dir=job["output_dir"],
+            general_spec_path=job["general_spec_path"],
+            general_spec=general_spec,
+            mask_spec_path=job.get("mask_spec_path"),
+            feature_env=job.get("feature_env") or {},
+            config=job["route_config"],
+            workers=job["workers"],
+            max_id=job["max_id"],
+            filegroup_score_filter=job["filegroup_score_filter"],
+            n_seed_extras=job["n_seed_extras"],
+        )
+    except Exception:
+        LOG.exception("%s: failed", target["name"])
+        return {"name": target["name"], "kind": target["kind"], "error": True}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", required=True)
@@ -974,6 +1013,18 @@ def main() -> int:
     )
     parser.add_argument("--no-filegroup-score-filter", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--log-level", default="INFO")
+    parser.add_argument(
+        "--parallelism",
+        type=int,
+        default=1,
+        help=(
+            "Train this many specialists concurrently in worker processes. "
+            "Default 1 (sequential). Use 2-3 on CPU hosts; mind that each "
+            "route already uses --workers for feature extraction and "
+            "LightGBM is multi-threaded, so total CPU load = parallelism * "
+            "(extract_workers + lgbm_threads). GPU mode should stay at 1."
+        ),
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -1028,40 +1079,64 @@ def main() -> int:
     results: list[dict[str, Any]] = [
         _publish_general(args.general_dir, args.output_root / "general"),
     ]
-    LOG.info("training %d specialists", len(targets))
+    LOG.info(
+        "training %d specialists (parallelism=%d)",
+        len(targets), args.parallelism,
+    )
+    filegroup_score_filter = args.filegroup_score_filter and not args.no_filegroup_score_filter
+
+    # Build per-target placeholder slots so we can keep summary order stable
+    # regardless of completion order from the pool.
+    pending: list[dict[str, Any]] = []
+    slot_index: dict[str, int] = {}
     for target in targets:
         kind_dir = "filegroups" if target["kind"] == "filegroup" else "filetypes"
         output_dir = args.output_root / kind_dir / str(target["name"])
+        # Reserve a slot in `results` (one per target, after the general entry).
+        slot_index[str(target["name"])] = len(results)
         if args.skip_existing and (output_dir / "benchmark.json").exists():
             LOG.info("%s: using existing benchmark", target["name"])
             with open(output_dir / "benchmark.json") as f:
                 results.append(json.load(f))
             continue
-        try:
-            route_config = _route_train_config(config, target, train_overrides)
-            results.append(
-                _train_one(
-                    db_path=args.db,
-                    name=str(target["name"]),
-                    kind=str(target["kind"]),
-                    file_types=tuple(target["file_types"]),
-                    output_dir=output_dir,
-                    general_spec_path=general_spec_path,
-                    general_spec=general_spec,
-                    mask_spec_path=mask_specs.get(str(target["name"])),
-                    feature_env=feature_envs.get(str(target["name"]), {}),
-                    config=route_config,
-                    workers=args.workers,
-                    max_id=args.max_id,
-                    filegroup_score_filter=(
-                        args.filegroup_score_filter and not args.no_filegroup_score_filter
-                    ),
-                    n_seed_extras=args.n_seed_extras,
-                ),
-            )
-        except Exception:
-            LOG.exception("%s: failed", target["name"])
-            results.append({"name": target["name"], "kind": target["kind"], "error": True})
+        results.append(None)  # placeholder; filled in below
+        pending.append(
+            {
+                "target": target,
+                "db_path": args.db,
+                "output_dir": output_dir,
+                "general_spec_path": general_spec_path,
+                "mask_spec_path": mask_specs.get(str(target["name"])),
+                "feature_env": feature_envs.get(str(target["name"]), {}),
+                "route_config": _route_train_config(config, target, train_overrides),
+                "workers": args.workers,
+                "max_id": args.max_id,
+                "filegroup_score_filter": filegroup_score_filter,
+                "n_seed_extras": args.n_seed_extras,
+            },
+        )
+
+    if args.parallelism > 1 and len(pending) > 1:
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=args.parallelism,
+            initializer=_pool_init,
+            initargs=(args.log_level,),
+        ) as pool:
+            futures = {
+                pool.submit(_train_target_worker, job): job["target"]
+                for job in pending
+            }
+            for fut in concurrent.futures.as_completed(futures):
+                target = futures[fut]
+                try:
+                    payload = fut.result()
+                except Exception:
+                    LOG.exception("%s: worker raised", target["name"])
+                    payload = {"name": target["name"], "kind": target["kind"], "error": True}
+                results[slot_index[str(target["name"])]] = payload
+    else:
+        for job in pending:
+            results[slot_index[str(job["target"]["name"])]] = _train_target_worker(job)
     payload = {
         "timestamp": datetime.now(UTC).isoformat(),
         "db": str(args.db),

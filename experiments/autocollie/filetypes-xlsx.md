@@ -130,3 +130,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T173434-filetypes-xlsx` — 2026-05-14T17:34:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_control_baseline | fail | — | — | — | 8 | [log](out/autocollie/runs/2026-05-14T17-38-35_20260514T173434-filetypes-xlsx_xlsx_control_baseline.log) |
+| `` | xlsx_train_leaves128_reg2 | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-14T17-38-43_20260514T173434-filetypes-xlsx_xlsx_train_leaves128_reg2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_control_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1` — Baseline control using the best recent feature set to establish cache-hit performance and metric stability.
+- **`xlsx_train_leaves128_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — Increase tree complexity and L2 regularization to capture finer XLSX structural patterns without overfitting.
+
+</details>
+

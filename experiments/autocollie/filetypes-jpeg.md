@@ -138,3 +138,37 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260516T004122-filetypes-jpeg` — 2026-05-16T00:41:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0111673ae1e645b6` | jpeg_control_best_features | ok | 0.8290 | 0.9206 | 0.6957 | 19 | [log](out/autocollie/runs/2026-05-16T00-46-00_20260516T004122-filetypes-jpeg_jpeg_control_best_features.log) |
+| `956de6530a0eb27b` | jpeg_exploit_scale_pos_05 | ok | 0.8598 | 0.9441 | 0.6957 | 9 | [log](out/autocollie/runs/2026-05-16T00-46-19_20260516T004122-filetypes-jpeg_jpeg_exploit_scale_pos_05.log) |
+| `9b7e53b654855836` | jpeg_exploit_dart_reg | ok | 0.7388 | 0.8985 | 0.6400 | 39 | [log](out/autocollie/runs/2026-05-16T00-46-28_20260516T004122-filetypes-jpeg_jpeg_exploit_dart_reg.log) |
+| `ac56cbb158f5f4e2` | jpeg_kv_vocab_5000 | ok | 0.8290 | 0.9206 | 0.6957 | 15 | [log](out/autocollie/runs/2026-05-16T00-47-08_20260516T004122-filetypes-jpeg_jpeg_kv_vocab_5000.log) |
+| `d3e58211c5ef3d77` | jpeg_text_metrics_full | ok | 0.8290 | 0.9206 | 0.6957 | 13 | [log](out/autocollie/runs/2026-05-16T00-47-22_20260516T004122-filetypes-jpeg_jpeg_text_metrics_full.log) |
+| `4d43ce1b33f63916` | jpeg_trigram_expand | ok | 0.8290 | 0.9206 | 0.6957 | 14 | [log](out/autocollie/runs/2026-05-16T00-47-36_20260516T004122-filetypes-jpeg_jpeg_trigram_expand.log) |
+| `a2888ca895c89c7d` | jpeg_abl_blindfold | ok | 0.8290 | 0.9206 | 0.6957 | 17 | [log](out/autocollie/runs/2026-05-16T00-47-50_20260516T004122-filetypes-jpeg_jpeg_abl_blindfold.log) |
+| `4b4bb5d933324d49` | jpeg_transfer_gz_kv | ok | 0.8485 | 0.9353 | 0.6957 | 17 | [log](out/autocollie/runs/2026-05-16T00-48-07_20260516T004122-filetypes-jpeg_jpeg_transfer_gz_kv.log) |
+| `08b0089c214ea915` | jpeg_transfer_extreme_metrics | ok | 0.8485 | 0.9353 | 0.6957 | 14 | [log](out/autocollie/runs/2026-05-16T00-48-24_20260516T004122-filetypes-jpeg_jpeg_transfer_extreme_metrics.log) |
+| `e0b01d8b15a19cf1` | jpeg_seed_search_k3 | ok | 0.8290 | 0.9206 | 0.6957 | 27 | [log](out/autocollie/runs/2026-05-16T00-48-39_20260516T004122-filetypes-jpeg_jpeg_seed_search_k3.log) |
+| `2bb291368c0a9e0f` | jpeg_kv_seed77 | ok | 0.4949 | 0.8029 | 0.6364 | 11 | [log](out/autocollie/runs/2026-05-16T00-49-06_20260516T004122-filetypes-jpeg_jpeg_kv_seed77.log) |
+| `49b7d77f9c7fa794` | jpeg_retry_dart_scale | ok | 0.8402 | 0.9324 | 0.6957 | 42 | [log](out/autocollie/runs/2026-05-16T00-49-17_20260516T004122-filetypes-jpeg_jpeg_retry_dart_scale.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jpeg_control_best_features`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Replicate best PR_AUC feature set to establish baseline matrix cache hit; aims to maintain PR_AUC and ROC_AUC.
+- **`jpeg_exploit_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Down-weight positives to reduce FPs at low FPR, targeting recall@3FPM improvement while keeping PR_AUC flat.
+- **`jpeg_exploit_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Use DART boosting with L2 regularization to improve ranking quality and PR_AUC without overfitting the small corpus.
+- **`jpeg_kv_vocab_5000`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture metadata key-value patterns in JPEGs, targeting PR_AUC gain from new structural signal.
+- **`jpeg_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote unused text metrics to capture obfuscation/encoding anomalies in JPEG payloads, targeting recall@3FPM.
+- **`jpeg_trigram_expand`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=2` — Lower trigram min freq and increase max to capture rare malicious patterns, targeting PR_AUC.
+- **`jpeg_abl_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove blindfold dropout features to reduce noise on small corpus, aiming to stabilize ROC_AUC and PR_AUC.
+- **`jpeg_transfer_gz_kv`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port gz route's strong KV+bigram config to jpeg, targeting PR_AUC via cross-format metadata signal.
+- **`jpeg_transfer_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Adopt applescript's extreme_features + extended_metrics combo to capture tail anomalies, targeting recall@3FPM.
+- **`jpeg_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Run best-of-3 seed search on control features to isolate real signal from seed variance, targeting stable PR_AUC.
+- **`jpeg_kv_seed77`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test KV vocab feature set with alternate seed to verify generalization, targeting PR_AUC consistency.
+- **`jpeg_retry_dart_scale`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Retry past dart+scale_pos config with updated corpus to check for data-drift recovery, targeting recall@3FPM.
+
+</details>
+

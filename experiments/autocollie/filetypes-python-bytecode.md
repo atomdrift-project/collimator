@@ -86,3 +86,39 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260516T004959-filetypes-python-bytecode` — 2026-05-16T00:49:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1397a2e31911150a` | pybc_control_train_reg | ok | 0.9950 | 0.9790 | 0.9851 | 51 | [log](out/autocollie/runs/2026-05-16T00-54-31_20260516T004959-filetypes-python-bytecode_pybc_control_train_reg.log) |
+| `17dda71ba825ed50` | pybc_train_dart_extratrees | ok | 0.9950 | 0.9772 | 0.9851 | 100 | [log](out/autocollie/runs/2026-05-16T00-55-22_20260516T004959-filetypes-python-bytecode_pybc_train_dart_extratrees.log) |
+| `cb0746dfdc19bfaf` | pybc_train_hardneg_scalepos | ok | 0.9975 | 0.9883 | 0.9851 | 56 | [log](out/autocollie/runs/2026-05-16T00-57-02_20260516T004959-filetypes-python-bytecode_pybc_train_hardneg_scalepos.log) |
+| `c33a3a424eaf919b` | pybc_feat_kv_vocab | ok | 0.9954 | 0.9800 | 0.9851 | 25 | [log](out/autocollie/runs/2026-05-16T00-57-58_20260516T004959-filetypes-python-bytecode_pybc_feat_kv_vocab.log) |
+| `48d1e37e1dd80261` | pybc_feat_textenc_metrics | ok | 0.9984 | 0.9921 | 0.9790 | 40 | [log](out/autocollie/runs/2026-05-16T00-58-23_20260516T004959-filetypes-python-bytecode_pybc_feat_textenc_metrics.log) |
+| `e0509f3347de2275` | pybc_feat_lowfreq_ngrams | ok | 0.9981 | 0.9906 | 0.9851 | 33 | [log](out/autocollie/runs/2026-05-16T00-59-03_20260516T004959-filetypes-python-bytecode_pybc_feat_lowfreq_ngrams.log) |
+| `749fdd062770a9c4` | pybc_ablation_noblindfold_attack | ok | 0.9955 | 0.9803 | 0.9851 | 29 | [log](out/autocollie/runs/2026-05-16T00-59-35_20260516T004959-filetypes-python-bytecode_pybc_ablation_noblindfold_attack.log) |
+| `fd0e359c4604989c` | pybc_transfer_kv_seedsearch | ok | 0.9981 | 0.9907 | 0.9852 | 71 | [log](out/autocollie/runs/2026-05-16T01-00-04_20260516T004959-filetypes-python-bytecode_pybc_transfer_kv_seedsearch.log) |
+| `9108f4c06106cc5c` | pybc_gen_seedshift_777 | ok | 0.9959 | 0.9810 | 0.9881 | 24 | [log](out/autocollie/runs/2026-05-16T01-01-15_20260516T004959-filetypes-python-bytecode_pybc_gen_seedshift_777.log) |
+| `5ffc236cd23345d6` | pybc_feat_symbol_vocab | ok | 0.9965 | 0.9846 | 0.9791 | 29 | [log](out/autocollie/runs/2026-05-16T01-01-39_20260516T004959-filetypes-python-bytecode_pybc_feat_symbol_vocab.log) |
+| `c24119588a9bdf0a` | pybc_train_threshold_fpr | ok | 0.9959 | 0.9820 | 0.9206 | 22 | [log](out/autocollie/runs/2026-05-16T01-02-08_20260516T004959-filetypes-python-bytecode_pybc_train_threshold_fpr.log) |
+
+Rejected before run:
+
+- `pybc_retry_portable_static` — features.disable_groups: "blindfold" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct] (to turn off a per-feature toggle like extreme_features or soft_presence, set features.<name>: false instead — disable_groups only takes the coarse group names in this list)
+
+<details><summary>Spec details</summary>
+
+- **`pybc_control_train_reg`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=3 EXP_TRAIN_SAMPLES=30000` — Replicate recent best feature_env while increasing L2 regularization and reducing leaves to stabilize PR_AUC on the small holdout.
+- **`pybc_train_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=80 EXP_TRAIN_SAMPLES=30000` — Use dart boosting with extra_trees to add ensemble noise and improve tail recall@3FPM without overfitting the tiny benign set.
+- **`pybc_train_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.6 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining with moderate weight and down-weight positives to sharpen low-FPR ranking for recall@3FPM.
+- **`pybc_feat_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with low min_freq to capture bytecode metadata and string constants, aiming to lift PR_AUC with new lexical signal.
+- **`pybc_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_encoding and text_metrics_full to extract structural and encoding anomalies from bytecode, targeting PR_AUC gains.
+- **`pybc_feat_lowfreq_ngrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Lower bigram and trigram min_freq to retain rare but high-signal patterns in the small corpus, aiming to improve recall@3FPM.
+- **`pybc_ablation_noblindfold_attack`** `EXP_ATTACK_FEATURES=0 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable blindfold and attack_features to reduce noise on the tiny dataset, expecting flat or higher PR_AUC with cleaner ranking.
+- **`pybc_transfer_kv_seedsearch`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Port gz_kv_seed_search strategy by enabling kv_vocab and using seed_search_k=3 to average out seed variance and stabilize recall@3FPM.
+- **`pybc_gen_seedshift_777`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Shift seed to 777 on control features to verify PR_AUC robustness against seed-driven variance on the small holdout.
+- **`pybc_feat_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_MIN_FREQ=3 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=3000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab to test if import/function name co-occurrences provide discriminative signal for PR_AUC on bytecode.
+- **`pybc_train_threshold_fpr`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Switch threshold_mode to max_recall_at_fpr with 3e-6 target and down-weight positives to directly optimize deployed recall@3FPM.
+
+</details>
+

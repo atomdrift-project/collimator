@@ -99,6 +99,12 @@ AZOTH_SPECIALIST_FEATURE_ENV ?= native:COLLIMATOR_FORMAT_HINTS=1 native:COLLIMAT
 AZOTH_AUTOCOLLIE_RUNS_DIR ?= out/experiments/azoth/runs
 AZOTH_SPECIALIST_SKIP_EXISTING ?= 1
 AZOTH_SPECIALIST_SKIP_EXISTING_ARG := $(if $(filter 1 true yes,$(AZOTH_SPECIALIST_SKIP_EXISTING)),--skip-existing,)
+# Concurrent specialists. Default 2 is the safe ceiling on a typical CPU
+# host: each route already drives feature extraction with --workers and
+# LightGBM is itself multi-threaded, so total CPU pressure scales with
+# parallelism * (extract_workers + lgbm_threads). Bump to 3 on a beefy
+# many-core box; keep at 1 when training on GPU.
+AZOTH_SPECIALIST_PARALLELISM ?= 2
 AZOTH_FILEGROUP_SCORE_FILTER ?= 0
 AZOTH_FILEGROUP_SCORE_FILTER_ARG := $(if $(filter 1 true yes,$(AZOTH_FILEGROUP_SCORE_FILTER)),--filegroup-score-filter,)
 SAMPLES_DIR ?= /data/samples
@@ -678,6 +684,7 @@ azoth-specialists: venv check-db
 		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
 		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
 		--n-seed-extras $(AZOTH_SPECIALIST_N_SEED_EXTRAS) \
+		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
 		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
@@ -695,6 +702,9 @@ azoth-specialists: venv check-db
 # publication runs where the general/threshold_scores.npz already covers
 # train+dev OOF — no further filtering needed.
 AZOTH_CALIBRATE_PARTITION ?= dev
+# Concurrent route scoring. Same trade-offs as
+# AZOTH_SPECIALIST_PARALLELISM — process-based, fan-out hits DB and CPU.
+AZOTH_CALIBRATE_PARALLELISM ?= 2
 
 azoth-calibrate: venv check-db
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
@@ -706,13 +716,16 @@ azoth-calibrate: venv check-db
 		--output $(AZOTH_CONFIG) \
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--partition $(AZOTH_CALIBRATE_PARTITION) \
+		--parallelism $(AZOTH_CALIBRATE_PARALLELISM) \
 		$(AZOTH_REFRESH_SCORES_ARG) \
 		$(AZOTH_SKIP_LEVEL_CALIBRATION_ARG) \
 		$(foreach route,$(AZOTH_REFRESH_ROUTE),--refresh-route $(route)) \
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 	@# Honest test-bucket evaluation: same dev-fit thresholds applied to
 	@# the locked test partition. Output goes to $(AZOTH_ROOT)/test_metrics.json
-	@# alongside (not overwriting) the deployed config.json.
+	@# alongside (not overwriting) the deployed config.json. The second call
+	@# hits the per-route calibration_scores.npz caches written above, so
+	@# parallelism mainly helps the first invocation; no harm passing it here.
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
@@ -722,6 +735,7 @@ azoth-calibrate: venv check-db
 		--output $(AZOTH_CONFIG) \
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--partition test \
+		--parallelism $(AZOTH_CALIBRATE_PARALLELISM) \
 		--apply-thresholds-from $(AZOTH_CONFIG) \
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 
@@ -1232,7 +1246,7 @@ verify-litmus:
 AUTOCOLLIE_DIR ?= ../autocollie
 AUTOCOLLIE_BIN := $(AUTOCOLLIE_DIR)/bin/autocollie
 EXPERIMENTS ?= 12
-AUTOCOLLIE_LLM_IDLE_TIMEOUT ?= 15m
+AUTOCOLLIE_LLM_TIMEOUT ?= 15m
 AUTOCOLLIE_SCREEN_TIMEOUT ?= 90m
 # Autocollie defaults to the local Hopper replica. Using the bare `hopper`
 # hostname can resolve through public DNS and burn screen slots on timeouts.
@@ -1330,7 +1344,7 @@ autocollie-screen: venv check-db autocollie-build
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--routes $(ROUTES) \
 		--experiments $(EXPERIMENTS) \
-		--llm-idle-timeout $(AUTOCOLLIE_LLM_IDLE_TIMEOUT) \
+		--llm-timeout $(AUTOCOLLIE_LLM_TIMEOUT) \
 		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # Confirm a screening winner by re-running with a different seed.
@@ -1381,15 +1395,13 @@ autocollie: venv check-db autocollie-build
 		--experiments $(EXPERIMENTS) \
 		--passes $(PASSES) \
 		--seed $(CONFIRM_SEED) \
-		--llm-idle-timeout $(AUTOCOLLIE_LLM_IDLE_TIMEOUT) \
+		--llm-timeout $(AUTOCOLLIE_LLM_TIMEOUT) \
 		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
 		--promote-timeout 180m \
 		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # autocollie-loop is the same target with PASSES=0 — loops the screen+promote
-# ladder over the route list until Ctrl-C. Pi sessions persist per route so
-# the LLM accumulates context across passes (seeing more prior runs each
-# cycle, naturally avoiding re-proposals).
+# ladder over the route list until Ctrl-C.
 #
 # Three ways to use it:
 #   make autocollie-loop ROUTES=filetypes/python EXPERIMENTS=10

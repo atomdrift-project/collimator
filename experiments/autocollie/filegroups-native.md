@@ -56,3 +56,37 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T194015-filegroups-native` — 2026-05-14T19:40:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e32c6099e50604ef` | native_hn_mining_tail | ok | 0.9999 | 0.9999 | 0.9967 | 879 | [log](out/autocollie/runs/2026-05-14T19-44-56_20260514T194015-filegroups-native_native_hn_mining_tail.log) |
+| `e7c0934eab1fcb76` | native_recall3_fpr_opt | ok | 1.0000 | 0.9999 | 0.0000 | 664 | [log](out/autocollie/runs/2026-05-14T19-59-35_20260514T194015-filegroups-native_native_recall3_fpr_opt.log) |
+| `fb1aa73d138ea2b0` | native_reg_extra_trees | ok | 0.9999 | 0.9999 | 0.9955 | 164 | [log](out/autocollie/runs/2026-05-14T20-10-39_20260514T194015-filegroups-native_native_reg_extra_trees.log) |
+| `3d22e200c53850d3` | native_symbol_overlay_vocab | ok | 0.9999 | 0.9999 | 0.9948 | 758 | [log](out/autocollie/runs/2026-05-14T20-13-23_20260514T194015-filegroups-native_native_symbol_overlay_vocab.log) |
+| `4a0b21db7aa0487e` | native_kv_mbc_research | ok | 0.9999 | 0.9999 | 0.9962 | 707 | [log](out/autocollie/runs/2026-05-14T20-26-01_20260514T194015-filegroups-native_native_kv_mbc_research.log) |
+| `0df94e451587c6dd` | native_tiered_trigrams_pe | ok | 0.9999 | 0.9999 | 0.9954 | 815 | [log](out/autocollie/runs/2026-05-14T20-37-48_20260514T194015-filegroups-native_native_tiered_trigrams_pe.log) |
+| `c7219ba13f3c192b` | native_ablate_blindfold_bigrams | ok | 0.9999 | 0.9999 | 0.9948 | 1188 | [log](out/autocollie/runs/2026-05-14T20-51-23_20260514T194015-filegroups-native_native_ablate_blindfold_bigrams.log) |
+| `c2f4c529042db418` | native_transfer_msi_size | ok | 0.9999 | 0.9999 | 0.8476 | 1249 | [log](out/autocollie/runs/2026-05-14T21-11-11_20260514T194015-filegroups-native_native_transfer_msi_size.log) |
+| `73d2ce4c0b4d8873` | native_transfer_rust_confidence | ok | 0.9999 | 0.9999 | 0.9963 | 1373 | [log](out/autocollie/runs/2026-05-14T21-32-00_20260514T194015-filegroups-native_native_transfer_rust_confidence.log) |
+| `40823edaeb9da796` | native_seed_ensemble_k3 | ok | 0.9999 | 0.9999 | 0.9957 | 1984 | [log](out/autocollie/runs/2026-05-14T21-54-53_20260514T194015-filegroups-native_native_seed_ensemble_k3.log) |
+| `03b8545c564afb68` | native_large_test_natural | ok | 1.0000 | 0.9999 | 0.9982 | 1155 | [log](out/autocollie/runs/2026-05-14T22-27-56_20260514T194015-filegroups-native_native_large_test_natural.log) |
+| `02dba9f2367110ae` | native_retry_kv_cross_hn | ok | 0.9999 | 0.9999 | 0.9965 | 1888 | [log](out/autocollie/runs/2026-05-14T22-47-12_20260514T194015-filegroups-native_native_retry_kv_cross_hn.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_hn_mining_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12` — Test hard-negative mining to sharpen decision boundary at low FPR and improve tail recall.
+- **`native_recall3_fpr_opt`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=50000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEST_NATURAL_PREVALENCE=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize directly for deployed operating point using max_recall_at_fpr and down-weighted positives.
+- **`native_reg_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.04 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — Add ensemble noise and L2 regularization to improve tail generalization without hurting PR AUC.
+- **`native_symbol_overlay_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol bigrams and overlay metrics to capture packer/dropper patterns common in native binaries.
+- **`native_kv_mbc_research`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Test KV value splitting and MBC ID vocab to recover fine-grained library and behavior signals.
+- **`native_tiered_trigrams_pe`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Leverage severity-prefixed trigrams and PE timestamp anomalies for better malicious pattern ranking.
+- **`native_ablate_blindfold_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=3000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Remove blindfold dropout and reduce bigram vocab to cut noise and potentially improve tail recall stability.
+- **`native_transfer_msi_size`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port MSI route recall optimization combined with size-normalized metrics for better density signal.
+- **`native_transfer_rust_confidence`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adapt Rust route capacity boost with confidence moments to capture trait identification certainty.
+- **`native_seed_ensemble_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Average 3 seeds to reduce variance and stabilize recall@3 FP/M gains across corpus splits.
+- **`native_large_test_natural`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=80000 EXP_TEST_NATURAL_PREVALENCE=1` — Increase test budget with natural prevalence to better resolve recall@k FP/M at production operating point.
+- **`native_retry_kv_cross_hn`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry prior high-recall KV cross-binary config with hard-negative mining to recover PR AUC guardrails.
+
+</details>
+

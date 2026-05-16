@@ -82,3 +82,71 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T165630-filetypes-applescript` — 2026-05-14T16:56:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `855ea92f850bf98a` | applescript_tail_fpr3 | ok | 0.4000 | 0.5000 | 0.0000 | 5 | [log](out/autocollie/runs/2026-05-14T17-01-31_20260514T165630-filetypes-applescript_applescript_tail_fpr3.log) |
+| `9d2e428ec17e26da` | applescript_scale_pos_05 | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-14T17-01-36_20260514T165630-filetypes-applescript_applescript_scale_pos_05.log) |
+| `cbac102d9a9c5708` | applescript_dart_regularization | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-14T17-01-38_20260514T165630-filetypes-applescript_applescript_dart_regularization.log) |
+| `155e3f06b09221d7` | applescript_kv_vocab_3k | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-14T17-01-40_20260514T165630-filetypes-applescript_applescript_kv_vocab_3k.log) |
+| `fcd65ff3a5db4ce6` | applescript_text_metrics_full | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-14T17-01-43_20260514T165630-filetypes-applescript_applescript_text_metrics_full.log) |
+| `976c0db4d24bd87c` | applescript_symbol_vocab_2k | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-14T17-01-46_20260514T165630-filetypes-applescript_applescript_symbol_vocab_2k.log) |
+| `83267391cfd99943` | applescript_noblindfold | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-14T17-01-49_20260514T165630-filetypes-applescript_applescript_noblindfold.log) |
+| `05c912e38b6901c5` | applescript_seed_search_3 | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-14T17-01-52_20260514T165630-filetypes-applescript_applescript_seed_search_3.log) |
+| `aff0b37af79348f0` | applescript_extended_metrics | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-14T17-01-56_20260514T165630-filetypes-applescript_applescript_extended_metrics.log) |
+| `68ce0593cde0849c` | applescript_seed123 | ok | 0.4000 | 0.5000 | 0.5714 | 5 | [log](out/autocollie/runs/2026-05-14T17-01-58_20260514T165630-filetypes-applescript_applescript_seed123.log) |
+| `94d0578fafa0be98` | applescript_seed777_subsample | ok | 0.4000 | 0.5000 | 0.5714 | 5 | [log](out/autocollie/runs/2026-05-14T17-02-03_20260514T165630-filetypes-applescript_applescript_seed777_subsample.log) |
+| `f1c2c3262a7ac97d` | applescript_hard_neg_retry | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-14T17-02-08_20260514T165630-filetypes-applescript_applescript_hard_neg_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`applescript_tail_fpr3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — optimize threshold directly for production recall@3 FP/M operating point
+- **`applescript_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — downweight positives to shift score distribution and improve low-FPR recall
+- **`applescript_dart_regularization`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — dart boosting with extra trees adds dropout regularization to prevent overfit on tiny corpus
+- **`applescript_kv_vocab_3k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — add key-value vocab to capture structured script metadata and property lists
+- **`applescript_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — enable full text metrics and encoding features to capture obfuscation and script structure
+- **`applescript_symbol_vocab_2k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — add symbol vocab to detect malicious handler names and imported framework references
+- **`applescript_noblindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters` — remove blindfold dropout to preserve full signal on extremely small dataset where noise reduction may hurt recall
+- **`applescript_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — port seed search ensemble from gz route to reduce variance and stabilize tail recall
+- **`applescript_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — port extended and extreme metrics from python-bytecode to capture tail distribution signals
+- **`applescript_seed123`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters` — test seed variance on best feature set to ensure PR AUC win is robust
+- **`applescript_seed777_subsample`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 EXP_CRIT_CATEGORY_NGRAMS=1 …` — combine new seed with row/column subsampling to check generalization under data drift
+- **`applescript_hard_neg_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — retry hard negative mining with tuned fraction/weight to improve separation on imbalanced tiny corpus
+
+</details>
+
+## Cycle `20260515T082640-filetypes-applescript` — 2026-05-15T08:26:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `82b6549fa5c36e5f` | applescript_control_baseline | ok | 0.4000 | 0.5000 | 0.5714 | 6 | [log](out/autocollie/runs/2026-05-15T08-31-53_20260515T082640-filetypes-applescript_applescript_control_baseline.log) |
+| `d96462ded460fb94` | applescript_hard_neg_tune | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-15T08-31-58_20260515T082640-filetypes-applescript_applescript_hard_neg_tune.log) |
+| `3ddeab29fe26371b` | applescript_pos_weight_leaves | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-15T08-32-01_20260515T082640-filetypes-applescript_applescript_pos_weight_leaves.log) |
+| `0d3bf7ba82fafbd2` | applescript_kv_vocab_expand | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-15T08-32-04_20260515T082640-filetypes-applescript_applescript_kv_vocab_expand.log) |
+| `53663196af720ce8` | applescript_text_metrics_full | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-15T08-32-08_20260515T082640-filetypes-applescript_applescript_text_metrics_full.log) |
+| `10e599d3066d73cd` | applescript_symbol_vocab_deep | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-15T08-32-11_20260515T082640-filetypes-applescript_applescript_symbol_vocab_deep.log) |
+| `e56b014e332f118e` | applescript_ngram_freq_lower | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-15T08-32-15_20260515T082640-filetypes-applescript_applescript_ngram_freq_lower.log) |
+| `aaee973d863fa3b0` | applescript_abl_blindfold | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-15T08-32-19_20260515T082640-filetypes-applescript_applescript_abl_blindfold.log) |
+| `9cbf74e39781bae9` | applescript_transfer_gz_kv | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-15T08-32-23_20260515T082640-filetypes-applescript_applescript_transfer_gz_kv.log) |
+| `d7738bf1eee58d90` | applescript_transfer_java_symbols | ok | 0.4000 | 0.5000 | 0.5714 | 4 | [log](out/autocollie/runs/2026-05-15T08-32-26_20260515T082640-filetypes-applescript_applescript_transfer_java_symbols.log) |
+| `417fc641d7e9b598` | applescript_seed_search_kv | ok | 0.4000 | 0.5000 | 0.5714 | 5 | [log](out/autocollie/runs/2026-05-15T08-32-30_20260515T082640-filetypes-applescript_applescript_seed_search_kv.log) |
+| `5a1f3ea91a478d52` | applescript_retry_hard_neg | ok | 0.4000 | 0.5000 | 0.5714 | 6 | [log](out/autocollie/runs/2026-05-15T08-32-35_20260515T082640-filetypes-applescript_applescript_retry_hard_neg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`applescript_control_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC feature set to establish matrix cache baseline; target PR_AUC stability.
+- **`applescript_hard_neg_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Apply hard-negative upweighting to sharpen decision boundary at low FPR; target recall@3FPM.
+- **`applescript_pos_weight_leaves`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Down-weight positives and increase tree capacity to capture rare malicious patterns; target recall@3FPM.
+- **`applescript_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocabulary to capture structured script metadata patterns; target PR_AUC.
+- **`applescript_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote full text metrics to detect obfuscation and structural anomalies in scripts; target PR_AUC.
+- **`applescript_symbol_vocab_deep`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Expand symbol vocabulary and bigrams to catch API call sequences; target PR_AUC.
+- **`applescript_ngram_freq_lower`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Lower bigram frequency floor to include rarer but high-signal script patterns; target recall@3FPM.
+- **`applescript_abl_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce feature noise and stabilize ranking; target PR_AUC.
+- **`applescript_transfer_gz_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port gz route's KV-focused config to applescript to leverage structured metadata; target PR_AUC.
+- **`applescript_transfer_java_symbols`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=3 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Port java route's symbol/static analysis config to applescript for API pattern detection; target PR_AUC.
+- **`applescript_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search on KV config to distinguish real signal from seed variance; target PR_AUC stability.
+- **`applescript_retry_hard_neg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry prior hard-negative config with fresh seed to check for data-drift recovery; target recall@3FPM.
+
+</details>
+

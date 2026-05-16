@@ -148,3 +148,71 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260514T190015-filetypes-pdf` — 2026-05-14T19:00:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a63a7d19e9cd2f6f` | pdf_exploit_lr003_leaves128 | ok | 1.0000 | 0.9987 | 0.9965 | 12 | [log](out/autocollie/runs/2026-05-14T19-05-03_20260514T190015-filetypes-pdf_pdf_exploit_lr003_leaves128.log) |
+| `ee6d9d3a1ca8edcc` | pdf_exploit_hardneg_tail | ok | 1.0000 | 0.9988 | 0.9942 | 4 | [log](out/autocollie/runs/2026-05-14T19-05-14_20260514T190015-filetypes-pdf_pdf_exploit_hardneg_tail.log) |
+| `9430f6f3a002a503` | pdf_feat_textmetrics_full | ok | 1.0000 | 0.9989 | 0.9967 | 7 | [log](out/autocollie/runs/2026-05-14T19-05-19_20260514T190015-filetypes-pdf_pdf_feat_textmetrics_full.log) |
+| `79746c2cf00e0f96` | pdf_feat_docobsf_linebuckets | ok | 1.0000 | 0.9989 | 0.9957 | 8 | [log](out/autocollie/runs/2026-05-14T19-05-26_20260514T190015-filetypes-pdf_pdf_feat_docobsf_linebuckets.log) |
+| `ac27edfd915a3523` | pdf_feat_kv_vocab_split | ok | 1.0000 | 0.9989 | 0.9967 | 9 | [log](out/autocollie/runs/2026-05-14T19-05-34_20260514T190015-filetypes-pdf_pdf_feat_kv_vocab_split.log) |
+| `507ae86209c934f4` | pdf_feat_tiered_trigrams | ok | 1.0000 | 0.9987 | 0.9965 | 9 | [log](out/autocollie/runs/2026-05-14T19-05-44_20260514T190015-filetypes-pdf_pdf_feat_tiered_trigrams.log) |
+| `d09a9f27284c9116` | pdf_abl_remove_blindfold | ok | 1.0000 | 0.9989 | 0.9967 | 9 | [log](out/autocollie/runs/2026-05-14T19-05-52_20260514T190015-filetypes-pdf_pdf_abl_remove_blindfold.log) |
+| `a938c39838b85020` | pdf_transfer_gz_seedsearch | ok | 1.0000 | 0.9983 | 0.9966 | 9 | [log](out/autocollie/runs/2026-05-14T19-06-01_20260514T190015-filetypes-pdf_pdf_transfer_gz_seedsearch.log) |
+| `da6899f066ef47f6` | pdf_transfer_msi_fpr_target | ok | 1.0000 | 0.9989 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-14T19-06-10_20260514T190015-filetypes-pdf_pdf_transfer_msi_fpr_target.log) |
+| `05e730ae377d6658` | pdf_gen_seed_samples | ok | 1.0000 | 0.9976 | 0.9945 | 11 | [log](out/autocollie/runs/2026-05-14T19-06-13_20260514T190015-filetypes-pdf_pdf_gen_seed_samples.log) |
+| `704f1e1aa00cecaa` | pdf_retry_textmetrics_lowfreq | ok | 1.0000 | 0.9988 | 0.9963 | 9 | [log](out/autocollie/runs/2026-05-14T19-06-24_20260514T190015-filetypes-pdf_pdf_retry_textmetrics_lowfreq.log) |
+| `60a6ca222798dd06` | pdf_recall3_scalepos05 | ok | 1.0000 | 0.9985 | 0.9942 | 2 | [log](out/autocollie/runs/2026-05-14T19-06-33_20260514T190015-filetypes-pdf_pdf_recall3_scalepos05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_exploit_lr003_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128` — Lower LR with more leaves to smooth tail ranking without overfitting.
+- **`pdf_exploit_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_NUM_LEAVES=128` — Hard negatives sharpen boundary at low FPR to boost recall@3 FP/M.
+- **`pdf_feat_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1` — Full text metrics capture PDF structural obfuscation missed by n-grams.
+- **`pdf_feat_docobsf_linebuckets`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_NUM_LEAVES=128` — Document obfuscation + line buckets target PDF-specific evasion patterns.
+- **`pdf_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_NUM_LEAVES=128` — KV vocab with value splitting recovers per-element signal in PDF metadata.
+- **`pdf_feat_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000` — Tiered trigrams capture multi-step PDF attack chains for better ranking.
+- **`pdf_abl_remove_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_NUM_LEAVES=128` — Removing blindfold dropout reduces noise to stabilize tail recall.
+- **`pdf_transfer_gz_seedsearch`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Port gz seed-search ensemble to reduce variance on imbalanced PDF data.
+- **`pdf_transfer_msi_fpr_target`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_NUM_LEAVES=128 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Directly optimize threshold for deployed 3e-6 FPR operating point.
+- **`pdf_gen_seed_samples`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=50000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=200000` — Vary seed and sample size to distinguish real signal from corpus noise.
+- **`pdf_retry_textmetrics_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1` — Retry low-freq text metrics on updated corpus to check drift recovery.
+- **`pdf_recall3_scalepos05`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SCALE_POS_WEIGHT_MULT=0.5` — Down-weight positives to push boundary, targeting recall@3 FP/M gain.
+
+</details>
+
+## Cycle `20260515T064314-filetypes-pdf` — 2026-05-15T06:43:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `082837ebd321ec81` | pdf_ctrl_hardneg_tail | ok | 1.0000 | 0.9973 | 0.9954 | 40 | [log](out/autocollie/runs/2026-05-15T06-48-22_20260515T064314-filetypes-pdf_pdf_ctrl_hardneg_tail.log) |
+| `bfe98e2985babaab` | pdf_ctrl_scalepos_reg | ok | 0.9999 | 0.9943 | 0.9954 | 10 | [log](out/autocollie/runs/2026-05-15T06-49-01_20260515T064314-filetypes-pdf_pdf_ctrl_scalepos_reg.log) |
+| `05ef72bedfff4902` | pdf_ctrl_extra_trees_lr | ok | 1.0000 | 0.9992 | 0.9959 | 55 | [log](out/autocollie/runs/2026-05-15T06-49-11_20260515T064314-filetypes-pdf_pdf_ctrl_extra_trees_lr.log) |
+| `1f14b884c9680ab9` | pdf_feat_kv_vocab_high | ok | 1.0000 | 0.9987 | 0.9958 | 21 | [log](out/autocollie/runs/2026-05-15T06-50-06_20260515T064314-filetypes-pdf_pdf_feat_kv_vocab_high.log) |
+| `92aac977fa42f035` | pdf_feat_text_metrics_full | ok | 1.0000 | 0.9987 | 0.9958 | 20 | [log](out/autocollie/runs/2026-05-15T06-50-27_20260515T064314-filetypes-pdf_pdf_feat_text_metrics_full.log) |
+| `c7caa1a7a4927a2c` | pdf_feat_doc_obsf_linebuckets | ok | 1.0000 | 0.9988 | 0.9958 | 22 | [log](out/autocollie/runs/2026-05-15T06-50-47_20260515T064314-filetypes-pdf_pdf_feat_doc_obsf_linebuckets.log) |
+| `759f96607b18a345` | pdf_feat_text_encoding_lowfreq | ok | 1.0000 | 0.9987 | 0.9910 | 22 | [log](out/autocollie/runs/2026-05-15T06-51-09_20260515T064314-filetypes-pdf_pdf_feat_text_encoding_lowfreq.log) |
+| `836d40e31f83438e` | pdf_abl_remove_blindfold | ok | 1.0000 | 0.9987 | 0.9958 | 20 | [log](out/autocollie/runs/2026-05-15T06-51-31_20260515T064314-filetypes-pdf_pdf_abl_remove_blindfold.log) |
+| `52fb12e22906bbec` | pdf_transfer_xml_textmetrics | ok | 1.0000 | 0.9967 | 0.9954 | 16 | [log](out/autocollie/runs/2026-05-15T06-51-51_20260515T064314-filetypes-pdf_pdf_transfer_xml_textmetrics.log) |
+| `0ff43c3c06e90f11` | pdf_gen_seed_search_kv | ok | 1.0000 | 0.9993 | 0.9985 | 65 | [log](out/autocollie/runs/2026-05-15T06-52-07_20260515T064314-filetypes-pdf_pdf_gen_seed_search_kv.log) |
+| `3af65ac4b9b474ff` | pdf_retry_hardneg_tail_v2 | ok | 0.9999 | 0.9970 | 0.9902 | 27 | [log](out/autocollie/runs/2026-05-15T06-53-12_20260515T064314-filetypes-pdf_pdf_retry_hardneg_tail_v2.log) |
+| `bc5827abf1359587` | pdf_gen_seed_scalepos | ok | 0.9999 | 0.9957 | 0.9954 | 18 | [log](out/autocollie/runs/2026-05-15T06-53-39_20260515T064314-filetypes-pdf_pdf_gen_seed_scalepos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`pdf_ctrl_scalepos_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by down-weighting positives to reduce false positives at the deployed operating point while adding L2 regularization.
+- **`pdf_ctrl_extra_trees_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve PR_AUC by introducing extra_trees ensemble noise to improve generalization at the tail, paired with a lower learning rate.
+- **`pdf_feat_kv_vocab_high`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve PR_AUC by enabling kv_vocab with a high cap to capture rare but malicious key-value patterns in PDF metadata.
+- **`pdf_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by enabling text_metrics_full to capture document obfuscation signals like line length stddev and invisible chars.
+- **`pdf_feat_doc_obsf_linebuckets`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve PR_AUC by enabling document_obfuscation_features and line_length_buckets to target PDF-specific obfuscation taxonomies.
+- **`pdf_feat_text_encoding_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by enabling text_encoding and lowering bigram_min_freq to capture rare encoding artifacts in malicious PDFs.
+- **`pdf_abl_remove_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve PR_AUC by removing blindfold dropout features to reduce noise while keeping ranking signal flat.
+- **`pdf_transfer_xml_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve PR_AUC by porting xml's successful text_metrics configuration, adjusting vocab limits conservatively for PDF structure.
+- **`pdf_gen_seed_search_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by running seed_search_k=3 on the kv_vocab config to distinguish real signal from seed noise.
+- **`pdf_retry_hardneg_tail_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by retrying a strong hard-negative configuration after daily ingest changes, with slightly adjusted weight to recover guardrails.
+- **`pdf_gen_seed_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by varying seed on the scale_pos_weight config to verify stability across RNG splits.
+
+</details>
+

@@ -92,3 +92,19 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T170952-filetypes-groovy` — 2026-05-14T17:09:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | groovy_control_leaves64_reg1 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-14T17-13-22_20260514T170952-filetypes-groovy_groovy_control_leaves64_reg1.log) |
+| `` | groovy_kv_vocab_5000 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-14T17-13-25_20260514T170952-filetypes-groovy_groovy_kv_vocab_5000.log) |
+| `` | groovy_textenc_metrics_full | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-14T17-13-25_20260514T170952-filetypes-groovy_groovy_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`groovy_control_leaves64_reg1`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1` — Exploit best feature set with tighter regularization and smaller trees to reduce overfitting on sparse data.
+- **`groovy_kv_vocab_5000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — Enable KV vocab to capture structured string literals and config-like patterns common in Groovy scripts.
+- **`groovy_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Add text encoding and full text metrics to capture obfuscation and structural script properties.
+
+</details>
+

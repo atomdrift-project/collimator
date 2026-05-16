@@ -110,3 +110,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T154242-filetypes-zip` — 2026-05-14T15:42:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `369c81fc06737ce3` | zip_control_scalepos05 | ok | 0.9986 | 0.9707 | 0.9805 | 295 | [log](out/autocollie/runs/2026-05-14T15-47-26_20260514T154242-filetypes-zip_zip_control_scalepos05.log) |
+| `aa75a91d6c189032` | zip_control_threshold_fpr | ok | 0.9999 | 0.9970 | 0.0000 | 34 | [log](out/autocollie/runs/2026-05-14T15-52-21_20260514T154242-filetypes-zip_zip_control_threshold_fpr.log) |
+| `f89c7beff6212f7a` | zip_feature_ember_lite | ok | 0.9999 | 0.9970 | 0.9964 | 325 | [log](out/autocollie/runs/2026-05-14T15-52-55_20260514T154242-filetypes-zip_zip_feature_ember_lite.log) |
+| `60895eea7e8d0228` | zip_feature_extended_extreme | ok | 0.9999 | 0.9970 | 0.9950 | 322 | [log](out/autocollie/runs/2026-05-14T15-58-19_20260514T154242-filetypes-zip_zip_feature_extended_extreme.log) |
+| `61e8c542d2756e58` | zip_feature_kv_vocab_split | ok | 0.9999 | 0.9972 | 0.9960 | 328 | [log](out/autocollie/runs/2026-05-14T16-03-41_20260514T154242-filetypes-zip_zip_feature_kv_vocab_split.log) |
+| `d7a8e7bc5aca9d25` | zip_feature_textenc_metrics | ok | 0.9999 | 0.9970 | 0.9959 | 328 | [log](out/autocollie/runs/2026-05-14T16-09-09_20260514T154242-filetypes-zip_zip_feature_textenc_metrics.log) |
+| `aab9cf4a7aae2d96` | zip_feature_ember_kv_extended | ok | 0.9999 | 0.9970 | 0.9950 | 335 | [log](out/autocollie/runs/2026-05-14T16-14-37_20260514T154242-filetypes-zip_zip_feature_ember_kv_extended.log) |
+| `f0093e78915b0c17` | zip_training_dart_extratrees | ok | 0.9998 | 0.9946 | 0.9946 | 42 | [log](out/autocollie/runs/2026-05-14T16-20-12_20260514T154242-filetypes-zip_zip_training_dart_extratrees.log) |
+| `c932792bc6560836` | zip_training_hardneg_safe | ok | 0.9999 | 0.9971 | 0.9945 | 66 | [log](out/autocollie/runs/2026-05-14T16-20-54_20260514T154242-filetypes-zip_zip_training_hardneg_safe.log) |
+| `60895eea7e8d0228` | zip_feature_struct_risk | dup | 0.9999 | 0.9970 | 0.9950 | 1 | [log](out/autocollie/runs/2026-05-14T16-22-00_20260514T154242-filetypes-zip_zip_feature_struct_risk.log) |
+| `b5f31751e182375c` | zip_transfer_gz_kv_ember | ok | 0.9999 | 0.9970 | 0.9951 | 47 | [log](out/autocollie/runs/2026-05-14T16-22-01_20260514T154242-filetypes-zip_zip_transfer_gz_kv_ember.log) |
+| `a7c1b87a0342aac2` | zip_retry_ember_threshold | ok | 0.9999 | 0.9970 | 0.0000 | 32 | [log](out/autocollie/runs/2026-05-14T16-22-48_20260514T154242-filetypes-zip_zip_retry_ember_threshold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zip_control_scalepos05`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEST_NATURAL_PREVALENCE=1` — Down-weight positives to reduce FPs at low FPR, targeting recall@3 FP/M.
+- **`zip_control_threshold_fpr`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_TEST_NATURAL_PREVALENCE=1 EXP_THRESHOLD_FPR_TARGET=1e-05 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize threshold directly for deployed operating point FPR to maximize tail recall.
+- **`zip_feature_ember_lite`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EMBER_LITE_FEATURES=1` — Enable ember_lite which drove PR/ROC AUC to ~1.0 in prior best run.
+- **`zip_feature_extended_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1` — Add extended_metrics and extreme_features from sister routes to capture tail signals.
+- **`zip_feature_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — Enable kv_vocab and kv_value_split to recover per-element signal in archive metadata.
+- **`zip_feature_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Enable text_encoding and text_metrics_full to capture obfuscation patterns in extracted files.
+- **`zip_feature_ember_kv_extended`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — Combine ember_lite, kv_vocab, and extended_metrics for maximal rank signal.
+- **`zip_training_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05` — Use dart boosting and extra_trees for regularization to improve tail generalization.
+- **`zip_training_hardneg_safe`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5` — Test hard negatives with conservative fraction/weight to avoid crash while targeting FP reduction.
+- **`zip_feature_struct_risk`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_STRUCT_FILE_RISK_COVERAGE=1 EXP_TOP_K_RISK_FILES=1` — Enable structural risk coverage and top-k risk files to aggregate high-severity signals.
+- **`zip_transfer_gz_kv_ember`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_EMBER_LITE_FEATURES=1 EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_SCALE_POS_WEIGHT_MULT=0.75` — Port gz specialist config (kv_vocab, ember_lite, extended_metrics) to zip route.
+- **`zip_retry_ember_threshold`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EMBER_LITE_FEATURES=1 EXP_ESTIMATORS=250 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Retry top ember_lite config with max_recall_at_fpr thresholding on fresh corpus.
+
+</details>
+

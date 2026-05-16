@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import hashlib
 import json
 import logging
@@ -1087,6 +1088,26 @@ def _write_score_table(
     return _file_sha256(path)
 
 
+def _score_pool_init(log_level: str) -> None:
+    logging.basicConfig(
+        level=getattr(logging, log_level.upper()),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
+
+def _score_route_worker(job: dict[str, Any]) -> dict[str, Any]:
+    return _score_route(
+        job["db_path"],
+        job["route"],
+        row_index=job["row_index"],
+        max_id=job["max_id"],
+        workers=job["workers"],
+        refresh=job["refresh"],
+        refresh_routes=job["refresh_routes"],
+        feature_cache_dir=job["feature_cache_dir"],
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", required=True)
@@ -1146,6 +1167,17 @@ def main() -> int:
         ),
     )
     parser.add_argument("--log-level", default="INFO")
+    parser.add_argument(
+        "--parallelism",
+        type=int,
+        default=1,
+        help=(
+            "Score this many routes concurrently in worker processes. "
+            "Default 1 (sequential). Bump to 2-3 to overlap feature "
+            "extraction and prediction across routes; mind the same "
+            "CPU/DB caveats as azoth_specialist_suite --parallelism."
+        ),
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -1209,20 +1241,41 @@ def main() -> int:
             "probs": general_probs,
         },
     ]
-    for route in _load_routes(args.summary):
-        LOG.info("scoring %s", route["route"])
-        route_scores.append(
-            _score_route(
-                args.db,
-                route,
-                row_index=row_index,
-                max_id=max_id,
-                workers=args.workers,
-                refresh=args.refresh,
-                refresh_routes=set(args.refresh_route),
-                feature_cache_dir=feature_cache_dir,
-            ),
-        )
+    routes = list(_load_routes(args.summary))
+    refresh_routes = set(args.refresh_route)
+    score_jobs = [
+        {
+            "db_path": args.db,
+            "route": route,
+            "row_index": row_index,
+            "max_id": max_id,
+            "workers": args.workers,
+            "refresh": args.refresh,
+            "refresh_routes": refresh_routes,
+            "feature_cache_dir": feature_cache_dir,
+        }
+        for route in routes
+    ]
+    if args.parallelism > 1 and len(score_jobs) > 1:
+        LOG.info("scoring %d routes (parallelism=%d)", len(score_jobs), args.parallelism)
+        route_scores.extend([None] * len(score_jobs))
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=args.parallelism,
+            initializer=_score_pool_init,
+            initargs=(args.log_level,),
+        ) as pool:
+            futures = {
+                pool.submit(_score_route_worker, job): idx
+                for idx, job in enumerate(score_jobs)
+            }
+            general_offset = 1  # index 0 is the general entry already appended above
+            for fut in concurrent.futures.as_completed(futures):
+                idx = futures[fut]
+                route_scores[general_offset + idx] = fut.result()
+    else:
+        for job in score_jobs:
+            LOG.info("scoring %s", job["route"]["route"])
+            route_scores.append(_score_route_worker(job))
 
     # Eval-only short-circuit: load thresholds from a prior dev-fit config,
     # apply them to this partition's rows, and write metrics-only output.

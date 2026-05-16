@@ -116,3 +116,105 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T191648-filegroups-config` — 2026-05-14T19:16:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a7b4054b0b2e7369` | config_exploit_leaves128_reg2 | ok | 0.9999 | 0.9998 | 0.9940 | 16 | [log](out/autocollie/runs/2026-05-14T19-21-22_20260514T191648-filegroups-config_config_exploit_leaves128_reg2.log) |
+| `08e459d3cdc7067a` | config_exploit_hardneg_weight10 | ok | 0.9999 | 0.9998 | 0.9954 | 16 | [log](out/autocollie/runs/2026-05-14T19-21-38_20260514T191648-filegroups-config_config_exploit_hardneg_weight10.log) |
+| `dddc2165e5beb8fc` | config_exploit_dart_reg15 | ok | 0.9997 | 0.9994 | 0.9925 | 5 | [log](out/autocollie/runs/2026-05-14T19-21-55_20260514T191648-filegroups-config_config_exploit_dart_reg15.log) |
+| `e3e265ea9d2e533f` | config_feature_kv_vocab_5000 | ok | 0.9999 | 0.9998 | 0.9940 | 16 | [log](out/autocollie/runs/2026-05-14T19-21-59_20260514T191648-filegroups-config_config_feature_kv_vocab_5000.log) |
+| `abce8c5a8b90a294` | config_feature_textenc_metrics | ok | 0.9999 | 0.9998 | 0.9945 | 13 | [log](out/autocollie/runs/2026-05-14T19-22-15_20260514T191648-filegroups-config_config_feature_textenc_metrics.log) |
+| `1a7b155b76f47e95` | config_feature_lowfreq_bigrams_trigrams | ok | 0.9999 | 0.9998 | 0.9934 | 14 | [log](out/autocollie/runs/2026-05-14T19-22-28_20260514T191648-filegroups-config_config_feature_lowfreq_bigrams_trigrams.log) |
+| `4f8176b47387f1cf` | config_ablate_blindfold | ok | 0.9999 | 0.9998 | 0.9929 | 13 | [log](out/autocollie/runs/2026-05-14T19-22-42_20260514T191648-filegroups-config_config_ablate_blindfold.log) |
+| `cf7e7dab0896e7f3` | config_transfer_html_extreme_metrics | ok | 0.9999 | 0.9998 | 0.9949 | 13 | [log](out/autocollie/runs/2026-05-14T19-22-55_20260514T191648-filegroups-config_config_transfer_html_extreme_metrics.log) |
+| `c926c3d41c69803a` | config_transfer_gz_kv_seedsearch | ok | 0.9999 | 0.9998 | 0.9951 | 27 | [log](out/autocollie/runs/2026-05-14T19-23-08_20260514T191648-filegroups-config_config_transfer_gz_kv_seedsearch.log) |
+| `e95303057a05b66c` | config_gen_seed77_larger_train | ok | 0.9999 | 0.9998 | 0.9951 | 16 | [log](out/autocollie/runs/2026-05-14T19-23-36_20260514T191648-filegroups-config_config_gen_seed77_larger_train.log) |
+| `0b7b097336ef39b0` | config_retry_hostile_density_ember | ok | 0.9999 | 0.9998 | 0.9949 | 7 | [log](out/autocollie/runs/2026-05-14T19-23-51_20260514T191648-filegroups-config_config_retry_hostile_density_ember.log) |
+| `57324b04f5b60821` | config_recall3_fpr_target | ok | 0.9999 | 0.9998 | 0.9929 | 4 | [log](out/autocollie/runs/2026-05-14T19-23-59_20260514T191648-filegroups-config_config_recall3_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`config_exploit_leaves128_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_HOSTILE_FINDING_DENSITY=1 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — Exploit best feature surface with deeper trees and stronger L2 regularization to reduce overfitting on config noise.
+- **`config_exploit_hardneg_weight10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_HOSTILE_FINDING_DENSITY=1 EXP_SCALE_POS_WEIGHT_MULT=0.75` — Focus on tail recall by upweighting hard negatives and slightly downweighting positives to improve recall@3 FP/M.
+- **`config_exploit_dart_reg15`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTRA_TREES=0 EXP_HOSTILE_FINDING_DENSITY=1 EXP_REG_LAMBDA=1.5` — Test DART boosting with dropout regularization to improve generalization at low FPR without changing features.
+- **`config_feature_kv_vocab_5000`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_HOSTILE_FINDING_DENSITY=1 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=96` — Introduce KV vocabulary to capture structured config key-value patterns that n-grams miss.
+- **`config_feature_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_HOSTILE_FINDING_DENSITY=1 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Add text encoding and full text metrics to capture obfuscation and structural anomalies in config files.
+- **`config_feature_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HOSTILE_FINDING_DENSITY=1 EXP_NUM_LEAVES=96 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Lower frequency floors to capture rarer config patterns and add trigram context for better rank signal.
+- **`config_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EMBER_LITE_FEATURES=1 EXP_HOSTILE_FINDING_DENSITY=1 EXP_NUM_LEAVES=96` — Remove blindfold dropout features to reduce noise and potentially improve PR AUC stability.
+- **`config_transfer_html_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_HOSTILE_FINDING_DENSITY=1 EXP_NUM_LEAVES=96` — Transfer successful extended metrics and extreme feature families from HTML routes to capture tail config anomalies.
+- **`config_transfer_gz_kv_seedsearch`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_HOSTILE_FINDING_DENSITY=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Port GZ route KV vocab success with seed search to reduce variance and stabilize recall@3 FP/M.
+- **`config_gen_seed77_larger_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_HOSTILE_FINDING_DENSITY=1 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=200000` — Test generalization by changing seed and increasing training data to verify signal robustness.
+- **`config_retry_hostile_density_ember`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_HOSTILE_FINDING_DENSITY=1 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96` — Retry top historical PR AUC configuration to check for data drift improvements in current corpus.
+- **`config_recall3_fpr_target`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_HOSTILE_FINDING_DENSITY=1 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Directly optimize for production operating point by targeting 3e-6 FPR and downweighting positives to boost tail recall.
+
+</details>
+
+## Cycle `20260514T233739-filegroups-config` — 2026-05-14T23:37:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `77439de313d4006a` | config_ctrl_fpr_target_scalepos | ok | 0.9999 | 0.9998 | 0.9942 | 24 | [log](out/autocollie/runs/2026-05-14T23-43-18_20260514T233739-filegroups-config_config_ctrl_fpr_target_scalepos.log) |
+| `6671a191c2d0fe20` | config_ctrl_dart_extra_trees | ok | 0.9994 | 0.9987 | 0.9920 | 5 | [log](out/autocollie/runs/2026-05-14T23-43-42_20260514T233739-filegroups-config_config_ctrl_dart_extra_trees.log) |
+| `018d4333a62d6847` | config_ctrl_reg_lambda_leaves | ok | 0.9999 | 0.9998 | 0.9936 | 131 | [log](out/autocollie/runs/2026-05-14T23-43-47_20260514T233739-filegroups-config_config_ctrl_reg_lambda_leaves.log) |
+| `e29823216ec893cd` | config_feat_kv_vocab_split | ok | 0.9999 | 0.9998 | 0.9943 | 111 | [log](out/autocollie/runs/2026-05-14T23-45-58_20260514T233739-filegroups-config_config_feat_kv_vocab_split.log) |
+| `530a2938bdb934c0` | config_feat_textenc_metrics | ok | 0.9999 | 0.9998 | 0.9945 | 149 | [log](out/autocollie/runs/2026-05-14T23-47-49_20260514T233739-filegroups-config_config_feat_textenc_metrics.log) |
+| `641aae6f5003137d` | config_feat_ext_metrics_extreme | ok | 0.9999 | 0.9998 | 0.9949 | 111 | [log](out/autocollie/runs/2026-05-14T23-50-18_20260514T233739-filegroups-config_config_feat_ext_metrics_extreme.log) |
+| `a74a11955b228437` | config_ablate_blindfold | ok | 0.9999 | 0.9998 | 0.9951 | 23 | [log](out/autocollie/runs/2026-05-14T23-52-09_20260514T233739-filegroups-config_config_ablate_blindfold.log) |
+| `2c04dbc72c3d4053` | config_transfer_seed_search_ensemble | ok | 0.9999 | 0.9998 | 0.9947 | 212 | [log](out/autocollie/runs/2026-05-14T23-52-32_20260514T233739-filegroups-config_config_transfer_seed_search_ensemble.log) |
+| `c573bb9c05520208` | config_retry_hostile_density | ok | 0.9999 | 0.9998 | 0.9951 | 37 | [log](out/autocollie/runs/2026-05-14T23-56-04_20260514T233739-filegroups-config_config_retry_hostile_density.log) |
+| `f4f3c00035bac287` | config_gen_seed123_larger_train | ok | 0.9999 | 0.9998 | 0.9947 | 157 | [log](out/autocollie/runs/2026-05-14T23-56-41_20260514T233739-filegroups-config_config_gen_seed123_larger_train.log) |
+| `c2634f522b0fc00c` | config_recall3_hard_negatives | ok | 0.9999 | 0.9998 | 0.9947 | 120 | [log](out/autocollie/runs/2026-05-14T23-59-18_20260514T233739-filegroups-config_config_recall3_hard_negatives.log) |
+| `54c5560d3b4ce2ef` | config_retry_metric_ratios | ok | 0.9999 | 0.9998 | 0.9951 | 150 | [log](out/autocollie/runs/2026-05-15T00-01-18_20260514T233739-filegroups-config_config_retry_metric_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`config_ctrl_fpr_target_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Optimize threshold for production operating point while down-weighting positives to reduce FP tail.
+- **`config_ctrl_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Use DART boosting and extra trees to improve generalization and tail recall without overfitting.
+- **`config_ctrl_reg_lambda_leaves`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Increase regularization and leaves to capture complex config patterns while preventing overfit.
+- **`config_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab with value splitting to recover per-element signal in config key-value pairs.
+- **`config_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text encoding and full text metrics to capture obfuscation patterns in config files.
+- **`config_feat_ext_metrics_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port extended metrics and extreme features from HTML route to capture tail distribution signals.
+- **`config_ablate_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters` — Remove blindfold dropout to test if it is adding noise on this small corpus, potentially improving PR AUC.
+- **`config_transfer_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port seed search ensemble from GZ route to reduce variance and stabilize recall@3 FP/M.
+- **`config_retry_hostile_density`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry hostile density features which previously showed promise, adjusting min crit to reduce noise.
+- **`config_gen_seed123_larger_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Test generalization with different seed and larger training sample to distinguish signal from noise.
+- **`config_recall3_hard_negatives`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use hard negative mining to push benign configs further from malware boundary, improving tail recall.
+- **`config_retry_metric_ratios`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry metric ratio features to help trees on small corpora, paired with conservative regularization.
+
+</details>
+
+## Cycle `20260515T051155-filegroups-config` — 2026-05-15T05:11:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5cddbb1581832152` | config_ctrl_leaves128_lr003 | ok | 0.9999 | 0.9998 | 0.9932 | 174 | [log](out/autocollie/runs/2026-05-15T05-16-22_20260515T051155-filegroups-config_config_ctrl_leaves128_lr003.log) |
+| `3033f38a31183714` | config_ctrl_hardneg_01_10 | ok | 0.9999 | 0.9998 | 0.9951 | 287 | [log](out/autocollie/runs/2026-05-15T05-19-16_20260515T051155-filegroups-config_config_ctrl_hardneg_01_10.log) |
+| `e8b02dd6da7f12c1` | config_ctrl_posweight075_extra | ok | 0.9999 | 0.9997 | 0.9936 | 166 | [log](out/autocollie/runs/2026-05-15T05-24-03_20260515T051155-filegroups-config_config_ctrl_posweight075_extra.log) |
+| `03b4f0d7f428caa3` | config_feat_kv_vocab_split | ok | 0.9999 | 0.9998 | 0.9938 | 154 | [log](out/autocollie/runs/2026-05-15T05-26-49_20260515T051155-filegroups-config_config_feat_kv_vocab_split.log) |
+| `7e425d8dfb19c129` | config_feat_textenc_metrics | ok | 0.9999 | 0.9998 | 0.9938 | 156 | [log](out/autocollie/runs/2026-05-15T05-29-23_20260515T051155-filegroups-config_config_feat_textenc_metrics.log) |
+| `5409aa37e2000781` | config_feat_ngram_tuning | ok | 0.9999 | 0.9998 | 0.9938 | 165 | [log](out/autocollie/runs/2026-05-15T05-31-58_20260515T051155-filegroups-config_config_feat_ngram_tuning.log) |
+| `9159fe4ed6140c67` | config_feat_ext_metrics_extreme | ok | 0.9999 | 0.9998 | 0.9951 | 149 | [log](out/autocollie/runs/2026-05-15T05-34-44_20260515T051155-filegroups-config_config_feat_ext_metrics_extreme.log) |
+| `869966aced745821` | config_ablate_blindfold | ok | 0.9999 | 0.9998 | 0.9930 | 156 | [log](out/autocollie/runs/2026-05-15T05-37-13_20260515T051155-filegroups-config_config_ablate_blindfold.log) |
+| `372df176b222d8f2` | config_transfer_java_symbols | ok | 0.9999 | 0.9998 | 0.9938 | 155 | [log](out/autocollie/runs/2026-05-15T05-39-49_20260515T051155-filegroups-config_config_transfer_java_symbols.log) |
+| `dd57e772ddda60a7` | config_gen_seedsearch3 | ok | 0.9999 | 0.9998 | 0.9945 | 415 | [log](out/autocollie/runs/2026-05-15T05-42-24_20260515T051155-filegroups-config_config_gen_seedsearch3.log) |
+| `442f9dc13ffd578a` | config_retry_kv_split_v2 | ok | 0.9999 | 0.9998 | 0.9938 | 151 | [log](out/autocollie/runs/2026-05-15T05-49-19_20260515T051155-filegroups-config_config_retry_kv_split_v2.log) |
+| `76acbfc838fa2fff` | config_retry_textenc_v2 | ok | 0.9999 | 0.9997 | 0.9956 | 156 | [log](out/autocollie/runs/2026-05-15T05-51-49_20260515T051155-filegroups-config_config_retry_textenc_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`config_ctrl_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by using deeper trees and lower LR to better separate malicious config patterns without overfitting.
+- **`config_ctrl_hardneg_01_10`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by applying hard-negative mining to focus the model on difficult benign configs that mimic malware.
+- **`config_ctrl_posweight075_extra`** `EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM at low FPR by down-weighting positives and adding extra tree noise, preserving PR_AUC.
+- **`config_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling KV vocab with value splitting to capture granular config key-value signals.
+- **`config_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text encoding and full text metrics to extract structural obfuscation signals from config files.
+- **`config_feat_ngram_tuning`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Aims to lift PR_AUC by lowering bigram min freq and expanding trigram cap to capture rarer config syntax patterns.
+- **`config_feat_ext_metrics_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling extended metrics and extreme features to capture tail-distribution signals in config payloads.
+- **`config_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC and ROC_AUC by disabling blindfold dropout features to reduce noise and variance.
+- **`config_transfer_java_symbols`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by porting symbol vocab from the java route to capture config identifier co-occurrences.
+- **`config_gen_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to verify recall@3FPM signal stability across seeds using seed search k=3 with ensemble averaging on baseline features.
+- **`config_retry_kv_split_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to recover PR_AUC gains from a prior kv_vocab_split winner by retrying on the updated corpus to account for data drift.
+- **`config_retry_textenc_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to validate PR_AUC signal persistence from a prior textenc_metrics winner by retrying with a new seed after corpus updates.
+
+</details>
+

@@ -378,3 +378,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T145749-filetypes-go` — 2026-05-14T14:57:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `03dcb6a5e5cd5653` | go_exploit_leaves128_lr003 | ok | 0.9619 | 0.9874 | 0.8864 | 11 | [log](out/autocollie/runs/2026-05-14T15-02-28_20260514T145749-filetypes-go_go_exploit_leaves128_lr003.log) |
+| `efe757802e0dc574` | go_exploit_hardneg_w15 | ok | 0.9658 | 0.9886 | 0.9029 | 5 | [log](out/autocollie/runs/2026-05-14T15-02-39_20260514T145749-filetypes-go_go_exploit_hardneg_w15.log) |
+| `e95d8d33d83bab09` | go_recall3_scalepos05 | ok | 0.9601 | 0.9871 | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-14T15-02-44_20260514T145749-filetypes-go_go_recall3_scalepos05.log) |
+| `baa6f445cc2c53f2` | go_kv_textenc_ratio | ok | 0.9546 | 0.9850 | 0.8774 | 19 | [log](out/autocollie/runs/2026-05-14T15-02-47_20260514T145749-filetypes-go_go_kv_textenc_ratio.log) |
+| `7f0dea77b15358af` | go_symbol_bigrams_tiered | ok | 0.9674 | 0.9891 | 0.8858 | 20 | [log](out/autocollie/runs/2026-05-14T15-03-07_20260514T145749-filetypes-go_go_symbol_bigrams_tiered.log) |
+| `03714a3008d9c9df` | go_mbc_confidence_moments | ok | 0.9626 | 0.9875 | 0.8774 | 13 | [log](out/autocollie/runs/2026-05-14T15-03-26_20260514T145749-filetypes-go_go_mbc_confidence_moments.log) |
+| `c6d7a7dd7cdf4f02` | go_ablation_no_blindfold | ok | 0.9575 | 0.9860 | 0.8798 | 20 | [log](out/autocollie/runs/2026-05-14T15-03-39_20260514T145749-filetypes-go_go_ablation_no_blindfold.log) |
+| `728f8b0dfcee0cb3` | go_transfer_java_symbols | ok | 0.9630 | 0.9877 | 0.9060 | 18 | [log](out/autocollie/runs/2026-05-14T15-03-59_20260514T145749-filetypes-go_go_transfer_java_symbols.log) |
+| `03a2c50a1106c85b` | go_generalization_seedsearch | ok | 0.9607 | 0.9867 | 0.8757 | 8 | [log](out/autocollie/runs/2026-05-14T15-04-18_20260514T145749-filetypes-go_go_generalization_seedsearch.log) |
+| `0a2c254a557fe6e0` | go_retry_tiered_trigrams | ok | 0.9563 | 0.9856 | 0.8864 | 17 | [log](out/autocollie/runs/2026-05-14T15-04-25_20260514T145749-filetypes-go_go_retry_tiered_trigrams.log) |
+| `a878cc372e806c15` | go_extra_trees_reg_alpha | ok | 0.9681 | 0.9883 | 0.8941 | 6 | [log](out/autocollie/runs/2026-05-14T15-04-43_20260514T145749-filetypes-go_go_extra_trees_reg_alpha.log) |
+| `a64e0a9a0b9b542f` | go_tiered_quadgrams_path3 | ok | 0.9570 | 0.9858 | 0.8798 | 19 | [log](out/autocollie/runs/2026-05-14T15-04-48_20260514T145749-filetypes-go_go_tiered_quadgrams_path3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_exploit_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1` — Increase tree complexity and lower learning rate to better fit the small Go corpus without overfitting.
+- **`go_exploit_hardneg_w15`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_KV_VOCAB=1 EXP_REG_LAMBDA=1.5 EXP_SYMBOL_VOCAB=1` — Tune hard negative mining weight to reduce false positive tail while preserving PR AUC.
+- **`go_recall3_scalepos05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SYMBOL_VOCAB=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Down-weight positives to shift the decision threshold left, directly targeting production recall@3 FP/M.
+- **`go_kv_textenc_ratio`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_METRIC_RATIO_FEATURES=1 EXP_TEXT_ENCODING_FEATURES=1` — Enable KV vocab and text encoding with metric ratios to capture Go source structure and string patterns.
+- **`go_symbol_bigrams_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_TIERED_CRIT_TRIGRAMS=1` — Add symbol bigrams and tiered crit trigrams to capture Go package and import co-occurrence patterns.
+- **`go_mbc_confidence_moments`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MBC_ID_VOCAB=1 EXP_TRAIT_CONFIDENCE_MOMENTS=1` — Leverage MBC ID vocab and confidence moments to distinguish confident malware traits from noisy probes.
+- **`go_ablation_no_blindfold`** `EXP_AIR_GAP_SIGNAL=0 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1` — Remove blindfold and air gap signals to reduce noise on this small corpus, potentially improving PR AUC.
+- **`go_transfer_java_symbols`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000` — Port Java's successful symbol and extended metrics combo, adapted for Go's package structure.
+- **`go_generalization_seedsearch`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=2 EXP_SYMBOL_VOCAB=1` — Use seed search k=2 on the best feature set to average out variance and stabilize recall@3.
+- **`go_retry_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_TIERED_CRIT_TRIGRAMS=1` — Retry the recent top PR AUC config to check for data drift improvements on the current corpus.
+- **`go_extra_trees_reg_alpha`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_REG_ALPHA=0.5 EXP_SUBSAMPLE=0.8 EXP_SYMBOL_VOCAB=1` — Use extra trees with L1 regularization to improve tail generalization and recall@3 FP/M.
+- **`go_tiered_quadgrams_path3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_TIERED_CRIT_QUADGRAMS=1 EXP_TIERED_QUADGRAM_MAX=3000 EXP_TIERED_QUADGRAM_PATH_DEPTH=3` — Enable tiered quadgrams with shallow path depth to capture deeper Go AST patterns without overfitting.
+
+</details>
+

@@ -260,3 +260,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260515T100217-filetypes-python` — 2026-05-15T10:02:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4e075ecd422bf511` | py_control_hsn02_w10 | ok | 0.9987 | 0.9987 | 0.9826 | 738 | [log](out/autocollie/runs/2026-05-15T10-07-21_20260515T100217-filetypes-python_py_control_hsn02_w10.log) |
+| `3cf2d0f0d38cfc47` | py_train_hsn01_w18_leaves128 | ok | 0.9987 | 0.9988 | 0.9796 | 700 | [log](out/autocollie/runs/2026-05-15T10-19-39_20260515T100217-filetypes-python_py_train_hsn01_w18_leaves128.log) |
+| `31c1494810fbc8ab` | py_train_reg_lambda2_mcw10 | ok | 0.9986 | 0.9987 | 0.9810 | 585 | [log](out/autocollie/runs/2026-05-15T10-31-18_20260515T100217-filetypes-python_py_train_reg_lambda2_mcw10.log) |
+| `9e59b803361ec55c` | py_feat_kv_vocab_8k | ok | 0.9985 | 0.9985 | 0.9798 | 340 | [log](out/autocollie/runs/2026-05-15T10-41-03_20260515T100217-filetypes-python_py_feat_kv_vocab_8k.log) |
+| `bc8d0daa6677017c` | py_feat_textenc_metrics_full | ok | 0.9985 | 0.9985 | 0.9795 | 337 | [log](out/autocollie/runs/2026-05-15T10-46-43_20260515T100217-filetypes-python_py_feat_textenc_metrics_full.log) |
+| `03e749c7499c8882` | py_feat_kv_split_lowfreq | ok | 0.9985 | 0.9985 | 0.9819 | 336 | [log](out/autocollie/runs/2026-05-15T10-52-20_20260515T100217-filetypes-python_py_feat_kv_split_lowfreq.log) |
+| `fa059d620fcc4dbb` | py_feat_symbol_vocab_4k | ok | 0.9985 | 0.9986 | 0.9679 | 332 | [log](out/autocollie/runs/2026-05-15T10-57-56_20260515T100217-filetypes-python_py_feat_symbol_vocab_4k.log) |
+| `a0d745e87d791105` | py_abl_disable_blindfold | ok | 0.9985 | 0.9986 | 0.9785 | 333 | [log](out/autocollie/runs/2026-05-15T11-03-29_20260515T100217-filetypes-python_py_abl_disable_blindfold.log) |
+| `4b10076b1dbb2f3b` | py_transfer_metric_ratios | ok | 0.9985 | 0.9986 | 0.9785 | 333 | [log](out/autocollie/runs/2026-05-15T11-09-02_20260515T100217-filetypes-python_py_transfer_metric_ratios.log) |
+| `bcf04762891c00a0` | py_seed_search_hsn02_w10 | ok | 0.9987 | 0.9988 | 0.9842 | 2027 | [log](out/autocollie/runs/2026-05-15T11-14-35_20260515T100217-filetypes-python_py_seed_search_hsn02_w10.log) |
+| `5d52ba1336ee602b` | py_retry_kv_vocab_5k | ok | 0.9985 | 0.9985 | 0.9798 | 342 | [log](out/autocollie/runs/2026-05-15T11-48-22_20260515T100217-filetypes-python_py_retry_kv_vocab_5k.log) |
+| `9f5c617985dda207` | py_retry_textenc_linebuckets | ok | 0.9986 | 0.9986 | 0.9814 | 337 | [log](out/autocollie/runs/2026-05-15T11-54-04_20260515T100217-filetypes-python_py_retry_textenc_linebuckets.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_control_hsn02_w10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Establishes baseline PR_AUC and recall@3 FP/M using proven hard-negative training knobs on current corpus.
+- **`py_train_hsn01_w18_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Tests higher hard-negative weight and more leaves to improve recall@3 FP/M while maintaining PR_AUC.
+- **`py_train_reg_lambda2_mcw10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_WEIGHT=10 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Adds L2 regularization and min_child_weight to reduce overfitting on rare patterns, targeting stable PR_AUC and ROC_AUC.
+- **`py_feat_kv_vocab_8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab to capture more Python-specific key-value patterns, aiming to boost PR_AUC and recall@3 FP/M.
+- **`py_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text encoding and full text metrics to capture obfuscation and structural signals in Python scripts, targeting PR_AUC gain.
+- **`py_feat_kv_split_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Splits KV values and lowers frequency floor to recover granular signal from Python config strings, aiming for recall@3 FP/M improvement.
+- **`py_feat_symbol_vocab_4k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=4000 EXP_TRAIN_SAMPLES=30000` — Tests symbol vocabulary for Python import/function patterns to add rank signal, targeting PR_AUC.
+- **`py_abl_disable_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout features to reduce noise and potentially stabilize PR_AUC and ROC_AUC.
+- **`py_transfer_metric_ratios`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Transfers metric ratio features from sister routes to improve structural ranking, targeting PR_AUC.
+- **`py_seed_search_hsn02_w10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed search to verify if recent PR_AUC wins are robust or seed-dependent, aiming to stabilize recall@3 FP/M.
+- **`py_retry_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retries strong KV vocab config after corpus drift to check for renewed PR_AUC signal.
+- **`py_retry_textenc_linebuckets`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Retries text encoding with line length buckets to capture obfuscation signals, targeting recall@3 FP/M.
+
+</details>
+

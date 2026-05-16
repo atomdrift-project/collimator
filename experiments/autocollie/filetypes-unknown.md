@@ -88,3 +88,31 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T164501-filetypes-unknown` — 2026-05-14T16:45:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_kv_textenc_leaves128_lr003 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-14T16-50-53_20260514T164501-filetypes-unknown_unknown_kv_textenc_leaves128_lr003.log) |
+| `` | unknown_kv_textenc_hardneg_w10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-14T16-50-58_20260514T164501-filetypes-unknown_unknown_kv_textenc_hardneg_w10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_kv_textenc_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Exploit best feature set with deeper trees and lower LR for better ranking.
+- **`unknown_kv_textenc_hardneg_w10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 …` — Add hard negative mining to improve tail recall without hurting PR AUC.
+
+</details>
+
+## Cycle `20260515T131916-filetypes-unknown` — 2026-05-15T13:19:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_kv_textenc | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-15T13-23-07_20260515T131916-filetypes-unknown_unknown_control_kv_textenc.log) |
+| `` | unknown_train_scalepos075 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-15T13-23-14_20260515T131916-filetypes-unknown_unknown_train_scalepos075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_kv_textenc`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Baseline control replicating best PR_AUC feature set to establish matrix cache hit and verify current data drift impact on PR_AUC.
+- **`unknown_train_scalepos075`** `EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to suppress false positives at low FPR, targeting improved recall@3 FP/M while keeping PR_AUC flat.
+
+</details>
+

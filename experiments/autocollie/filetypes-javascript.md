@@ -241,3 +241,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260515T205246-filetypes-javascript` — 2026-05-15T20:52:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `67d24f8e81b7d5f1` | js_ctrl_hn_frac02_wt5 | ok | 0.9997 | 0.9995 | 0.9913 | 1192 | [log](out/autocollie/runs/2026-05-15T20-57-30_20260515T205246-filetypes-javascript_js_ctrl_hn_frac02_wt5.log) |
+| `49d230bd015f6875` | js_ctrl_scalepos05_lr003 | ok | 0.9997 | 0.9994 | 0.9917 | 629 | [log](out/autocollie/runs/2026-05-15T21-17-22_20260515T205246-filetypes-javascript_js_ctrl_scalepos05_lr003.log) |
+| `0e050116375e2ac2` | js_kv_vocab_10k | ok | 0.9997 | 0.9995 | 0.9914 | 698 | [log](out/autocollie/runs/2026-05-15T21-27-51_20260515T205246-filetypes-javascript_js_kv_vocab_10k.log) |
+| `302ea54c449b659f` | js_textenc_metrics_full | ok | 0.9997 | 0.9995 | 0.9926 | 580 | [log](out/autocollie/runs/2026-05-15T21-39-29_20260515T205246-filetypes-javascript_js_textenc_metrics_full.log) |
+| `48e9e74682641720` | js_bigram_freq250_max10k | ok | 0.9997 | 0.9995 | 0.9917 | 539 | [log](out/autocollie/runs/2026-05-15T21-49-09_20260515T205246-filetypes-javascript_js_bigram_freq250_max10k.log) |
+| `f0571ef7face68ab` | js_obj_susp_trigrams | ok | 0.9997 | 0.9995 | 0.9929 | 525 | [log](out/autocollie/runs/2026-05-15T21-58-08_20260515T205246-filetypes-javascript_js_obj_susp_trigrams.log) |
+| `14b4b22f2374f698` | js_abl_extreme_off | ok | 0.9997 | 0.9995 | 0.9918 | 650 | [log](out/autocollie/runs/2026-05-15T22-06-52_20260515T205246-filetypes-javascript_js_abl_extreme_off.log) |
+| `ebc2a37fd9c8269f` | js_transfer_gz_kv_seed | ok | 0.9997 | 0.9995 | 0.9914 | 544 | [log](out/autocollie/runs/2026-05-15T22-17-43_20260515T205246-filetypes-javascript_js_transfer_gz_kv_seed.log) |
+| `e6a5a351b431d57a` | js_transfer_docx_ember_ext | ok | 0.9997 | 0.9995 | 0.9930 | 502 | [log](out/autocollie/runs/2026-05-15T22-26-47_20260515T205246-filetypes-javascript_js_transfer_docx_ember_ext.log) |
+| `060d1e33da696d3c` | js_gen_kv_seedsearch3 | ok | 0.9997 | 0.9995 | 0.9902 | 1598 | [log](out/autocollie/runs/2026-05-15T22-35-08_20260515T205246-filetypes-javascript_js_gen_kv_seedsearch3.log) |
+| `55c13c2cc0ab4d43` | js_retry_kv8k_drift | ok | 0.9997 | 0.9995 | 0.9914 | 548 | [log](out/autocollie/runs/2026-05-15T23-01-46_20260515T205246-filetypes-javascript_js_retry_kv8k_drift.log) |
+| `302ea54c449b659f` | js_retry_textenc_drift | dup | 0.9997 | 0.9995 | 0.9926 | 1 | [log](out/autocollie/runs/2026-05-15T23-10-54_20260515T205246-filetypes-javascript_js_retry_textenc_drift.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_ctrl_hn_frac02_wt5`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test hard-negative upweighting on best feature set to improve recall@3FPM by focusing on borderline benigns.
+- **`js_ctrl_scalepos05_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives and lower LR to tighten score distribution, targeting PR_AUC and recall@3FPM.
+- **`js_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture structured JS metadata patterns, aiming to lift PR_AUC.
+- **`js_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to capture obfuscation signals in JS, targeting recall@3FPM.
+- **`js_bigram_freq250_max10k`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and increase cap to capture rarer JS attack patterns, aiming for PR_AUC gain.
+- **`js_obj_susp_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enable objective and suspicious trigrams to model longer JS execution chains, targeting recall@3FPM.
+- **`js_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme features to reduce tail noise and overfitting, expecting flat or higher PR_AUC.
+- **`js_transfer_gz_kv_seed`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port gz route's strong KV config to JS, testing cross-route feature transfer for PR_AUC.
+- **`js_transfer_docx_ember_ext`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port docx route's ember_lite and extended_metrics to JS, testing structural metric transfer for recall@3FPM.
+- **`js_gen_kv_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search on KV vocab config to distinguish real signal from seed noise, targeting stable recall@3FPM.
+- **`js_retry_kv8k_drift`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry prior strong KV8k config on fresh corpus to check for data-drift recovery in PR_AUC.
+- **`js_retry_textenc_drift`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry textenc+metrics combo on updated corpus to validate tail recall stability for recall@3FPM.
+
+</details>
+

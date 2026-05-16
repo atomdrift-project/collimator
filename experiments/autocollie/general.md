@@ -76,3 +76,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260515T021609-general` — 2026-05-15T02:16:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cba641c2734bc6ed` | general_control_baseline_train | ok | 0.9990 | 0.9990 | 0.9846 | 689 | [log](out/autocollie/runs/2026-05-15T02-22-33_20260515T021609-general_general_control_baseline_train.log) |
+| `872153930c4b1b62` | general_train_hard_negatives | ok | 0.9991 | 0.9991 | 0.9876 | 1089 | [log](out/autocollie/runs/2026-05-15T02-34-02_20260515T021609-general_general_train_hard_negatives.log) |
+| `6876f335c28ead69` | general_train_pos_weight_fpr | ok | 0.9989 | 0.9990 | 0.0000 | 476 | [log](out/autocollie/runs/2026-05-15T02-52-11_20260515T021609-general_general_train_pos_weight_fpr.log) |
+| `40a8dd716d3123c9` | general_feat_kv_vocab | ok | 0.9990 | 0.9990 | 0.9829 | 661 | [log](out/autocollie/runs/2026-05-15T03-00-07_20260515T021609-general_general_feat_kv_vocab.log) |
+| `0c9a290799324eab` | general_feat_symbol_vocab | ok | 0.9990 | 0.9990 | 0.9783 | 681 | [log](out/autocollie/runs/2026-05-15T03-11-08_20260515T021609-general_general_feat_symbol_vocab.log) |
+| `02b2b6e2f67f0f9b` | general_feat_textenc_metrics | ok | 0.9990 | 0.9990 | 0.9856 | 649 | [log](out/autocollie/runs/2026-05-15T03-22-29_20260515T021609-general_general_feat_textenc_metrics.log) |
+| `d96bb6ed7dae06dd` | general_feat_tiered_trigrams | ok | 0.9990 | 0.9990 | 0.9730 | 674 | [log](out/autocollie/runs/2026-05-15T03-33-18_20260515T021609-general_general_feat_tiered_trigrams.log) |
+| `cba641c2734bc6ed` | general_feat_extended_extreme | dup | 0.9990 | 0.9990 | 0.9846 | 1 | [log](out/autocollie/runs/2026-05-15T03-44-32_20260515T021609-general_general_feat_extended_extreme.log) |
+| `baddbb75412477ca` | general_transfer_attack_ngrams | ok | 0.9990 | 0.9990 | 0.9855 | 634 | [log](out/autocollie/runs/2026-05-15T03-44-33_20260515T021609-general_general_transfer_attack_ngrams.log) |
+| `042b587764b0ec1b` | general_gen_seed_search | ok | 0.9990 | 0.9990 | 0.9845 | 1372 | [log](out/autocollie/runs/2026-05-15T03-55-07_20260515T021609-general_general_gen_seed_search.log) |
+| `34a3f139a5c79966` | general_drift_min_malware_score | ok | 0.9991 | 0.9991 | 0.9859 | 642 | [log](out/autocollie/runs/2026-05-15T04-18-00_20260515T021609-general_general_drift_min_malware_score.log) |
+| `e6ae4bb808d57ecc` | general_ablation_no_blindfold | ok | 0.9990 | 0.9990 | 0.9872 | 705 | [log](out/autocollie/runs/2026-05-15T04-28-42_20260515T021609-general_general_ablation_no_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`general_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env with standard training to establish PR_AUC baseline and ensure matrix cache hits.
+- **`general_train_hard_negatives`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Introduce hard negative mining to improve recall@3FPM by forcing the model to separate tricky benigns from malware.
+- **`general_train_pos_weight_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives and optimize threshold for max recall at 3e-6 FPR to directly boost recall@3FPM.
+- **`general_feat_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture key-value pair signals, aiming to improve PR_AUC by adding structured metadata features.
+- **`general_feat_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable symbol_vocab to capture import/symbol presence, aiming to improve PR_AUC by adding binary execution context.
+- **`general_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding and text_metrics_full to capture obfuscation patterns, aiming to boost recall@3FPM on document/script malware.
+- **`general_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable tiered_crit_trigrams to model higher-order trait combinations, aiming to improve PR_AUC by capturing complex attack sequences.
+- **`general_feat_extended_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable extended_metrics and extreme_features to add structural richness, aiming to improve ROC_AUC by better separating benign/malware distributions.
+- **`general_transfer_attack_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Port attack_ngrams from php route to capture known exploit patterns, aiming to improve PR_AUC by leveraging curated threat intelligence.
+- **`general_gen_seed_search`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed_search_k=3 with save_all_seeds to average out RNG variance, aiming to stabilize recall@3FPM across different data splits.
+- **`general_drift_min_malware_score`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Filter low-severity malware with min_malware_score=3 to reduce training noise, aiming to improve PR_AUC by focusing on high-confidence threats.
+- **`general_ablation_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold dropout features to test if removing regularization noise improves PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

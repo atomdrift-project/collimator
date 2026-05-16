@@ -120,3 +120,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T173847-filetypes-rtf` — 2026-05-14T17:38:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a8b269f5159f3f39` | rtf_control_baseline | ok | 0.9733 | 0.5000 | 0.9865 | 6 | [log](out/autocollie/runs/2026-05-14T17-42-49_20260514T173847-filetypes-rtf_rtf_control_baseline.log) |
+| `6f9d2c39ecd46d59` | rtf_exploit_hard_negatives | ok | 0.9733 | 0.5000 | 0.9865 | 1 | [log](out/autocollie/runs/2026-05-14T17-42-55_20260514T173847-filetypes-rtf_rtf_exploit_hard_negatives.log) |
+| `75172512db16a436` | rtf_recall3_fpr_target | ok | 0.9733 | 0.5000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-14T17-42-56_20260514T173847-filetypes-rtf_rtf_recall3_fpr_target.log) |
+| `b3db68f2313646ff` | rtf_enable_kv_vocab | ok | 0.9733 | 0.5000 | 0.9865 | 4 | [log](out/autocollie/runs/2026-05-14T17-42-57_20260514T173847-filetypes-rtf_rtf_enable_kv_vocab.log) |
+| `735e5b39dfee4567` | rtf_enable_textenc_metrics | ok | 0.9733 | 0.5000 | 0.9865 | 7 | [log](out/autocollie/runs/2026-05-14T17-43-02_20260514T173847-filetypes-rtf_rtf_enable_textenc_metrics.log) |
+| `021aede2e338bb1c` | rtf_kv_value_split_research | ok | 0.9733 | 0.5000 | 0.9865 | 4 | [log](out/autocollie/runs/2026-05-14T17-43-09_20260514T173847-filetypes-rtf_rtf_kv_value_split_research.log) |
+| `38169ad7b66a34ce` | rtf_ablate_blindfold | ok | 0.9733 | 0.5000 | 0.9865 | 4 | [log](out/autocollie/runs/2026-05-14T17-43-14_20260514T173847-filetypes-rtf_rtf_ablate_blindfold.log) |
+| `635d814e9401c0be` | rtf_transfer_scalepos05 | ok | 0.9733 | 0.5000 | 0.9865 | 5 | [log](out/autocollie/runs/2026-05-14T17-43-18_20260514T173847-filetypes-rtf_rtf_transfer_scalepos05.log) |
+| `c1693159e6e6ffa5` | rtf_transfer_capacity_ratio | ok | 0.9733 | 0.5000 | 0.9865 | 4 | [log](out/autocollie/runs/2026-05-14T17-43-23_20260514T173847-filetypes-rtf_rtf_transfer_capacity_ratio.log) |
+| `1cb30dd3f7f12e4b` | rtf_generalize_seed_search | ok | 0.9733 | 0.5000 | 0.9865 | 7 | [log](out/autocollie/runs/2026-05-14T17-43-27_20260514T173847-filetypes-rtf_rtf_generalize_seed_search.log) |
+| `515160eb05be0e46` | rtf_generalize_larger_sample | ok | 0.9733 | 0.5000 | 0.9865 | 6 | [log](out/autocollie/runs/2026-05-14T17-43-34_20260514T173847-filetypes-rtf_rtf_generalize_larger_sample.log) |
+| `dd117695888cbc33` | rtf_retry_tiered_trigrams | ok | 0.9733 | 0.5000 | 0.9865 | 5 | [log](out/autocollie/runs/2026-05-14T17-43-40_20260514T173847-filetypes-rtf_rtf_retry_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rtf_control_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1` — Preserve best recent feature set with conservative training tweaks to stabilize PR AUC on small holdout.
+- **`rtf_exploit_hard_negatives`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_NUM_LEAVES=96` — Add hard negative mining to sharpen ranking at low FPR and improve tail recall.
+- **`rtf_recall3_fpr_target`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize threshold directly for production operating point to boost recall@3 FP/M.
+- **`rtf_enable_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=96` — Enable KV vocab to capture structured RTF metadata and control sequence patterns.
+- **`rtf_enable_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Enable text encoding and full text metrics to detect RTF obfuscation and payload hiding.
+- **`rtf_kv_value_split_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2` — Split KV string values to recover per-element signal in RTF control words and parameters.
+- **`rtf_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64` — Remove blindfold dropout features to reduce noise and variance on the tiny RTF holdout.
+- **`rtf_transfer_scalepos05`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5` — Port ruby route's scale_pos_weight_mult=0.5 to reduce FP pressure on benign RTFs.
+- **`rtf_transfer_capacity_ratio`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_DEPTH=14 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=128` — Port rust route's higher capacity with metric ratios to capture complex RTF macro patterns.
+- **`rtf_generalize_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Average over 3 seeds to reduce variance and stabilize metrics on the small test bucket.
+- **`rtf_generalize_larger_sample`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=25000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=200000` — Increase training samples and change seed to test corpus stability and generalization.
+- **`rtf_retry_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000` — Re-enable tiered critical trigrams to test if they add rank signal without overfitting.
+
+</details>
+

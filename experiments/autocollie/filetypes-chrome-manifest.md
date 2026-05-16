@@ -62,3 +62,71 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T153225-filetypes-chrome-manifest` — 2026-05-14T15:32:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `91cd81d08a745db7` | chrome_manifest_control_extra_trees | ok | 0.1875 | 0.5000 | 0.3158 | 5 | [log](out/autocollie/runs/2026-05-14T15-35-45_20260514T153225-filetypes-chrome-manifest_chrome_manifest_control_extra_trees.log) |
+| `0248c3619eab907c` | chrome_manifest_control_pos_weight | ok | 0.1875 | 0.5000 | 0.3158 | 2 | [log](out/autocollie/runs/2026-05-14T15-35-50_20260514T153225-filetypes-chrome-manifest_chrome_manifest_control_pos_weight.log) |
+| `704378e7aa20bb8d` | chrome_manifest_control_dart_subsample | ok | 0.1875 | 0.5000 | 0.3158 | 2 | [log](out/autocollie/runs/2026-05-14T15-35-51_20260514T153225-filetypes-chrome-manifest_chrome_manifest_control_dart_subsample.log) |
+| `d2c0553efbf0a980` | chrome_manifest_kv_split_vocab | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-14T15-35-53_20260514T153225-filetypes-chrome-manifest_chrome_manifest_kv_split_vocab.log) |
+| `618e6dd852f3253d` | chrome_manifest_text_doc_obfuscation | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-14T15-35-55_20260514T153225-filetypes-chrome-manifest_chrome_manifest_text_doc_obfuscation.log) |
+| `bf4a32395a571c2b` | chrome_manifest_tiered_crit_ngrams | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-14T15-35-58_20260514T153225-filetypes-chrome-manifest_chrome_manifest_tiered_crit_ngrams.log) |
+| `0ff3cc57bb86d048` | chrome_manifest_extended_extreme | ok | 0.1875 | 0.5000 | 0.3158 | 1 | [log](out/autocollie/runs/2026-05-14T15-36-00_20260514T153225-filetypes-chrome-manifest_chrome_manifest_extended_extreme.log) |
+| `b3733172dc3f2b38` | chrome_manifest_ablation_score_maxcrit | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-14T15-36-02_20260514T153225-filetypes-chrome-manifest_chrome_manifest_ablation_score_maxcrit.log) |
+| `4e8ee60a5a65ecb3` | chrome_manifest_transfer_xlsx_rtf | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-14T15-36-04_20260514T153225-filetypes-chrome-manifest_chrome_manifest_transfer_xlsx_rtf.log) |
+| `7ce26e40fc623ca9` | chrome_manifest_seed_ensemble | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-14T15-36-07_20260514T153225-filetypes-chrome-manifest_chrome_manifest_seed_ensemble.log) |
+| `e134b794a90b33f3` | chrome_manifest_retry_kv_textenc | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-14T15-36-10_20260514T153225-filetypes-chrome-manifest_chrome_manifest_retry_kv_textenc.log) |
+| `3f45906d461b5559` | chrome_manifest_recall_fpr_target | ok | 0.1875 | 0.5000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-14T15-36-13_20260514T153225-filetypes-chrome-manifest_chrome_manifest_recall_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`chrome_manifest_control_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2` — Exploit best feature set with extra_trees and L2 regularization to reduce overfitting on tiny holdout
+- **`chrome_manifest_control_pos_weight`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=64 EXP_SCALE_POS_WEIGHT_MULT=0.5` — Downweight positives to suppress false positives at low FPR, targeting recall@3 FP/M improvement
+- **`chrome_manifest_control_dart_subsample`** `EXP_BOOSTING_TYPE=dart EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SUBSAMPLE=0.8` — Use DART boosting with row/column subsampling for stronger ensemble regularization on small data
+- **`chrome_manifest_kv_split_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_REG_LAMBDA=1.5` — Enable KV vocab with value splitting to recover per-element signal from manifest JSON arrays/strings
+- **`chrome_manifest_text_doc_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MIN_CHILD_SAMPLES=150 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Add text encoding, full text metrics, and document obfuscation features to catch structural manipulation
+- **`chrome_manifest_tiered_crit_ngrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_REG_LAMBDA=2 EXP_TIERED_BIGRAM_MIN_FREQ=2 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1` — Low-frequency tiered critical bigrams/trigrams capture rare malicious path co-occurrences in manifests
+- **`chrome_manifest_extended_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTRA_TREES=1 EXP_EXTREME_FEATURES=1` — Enable extended metrics and extreme features to capture tail-distribution signals proven on sister routes
+- **`chrome_manifest_ablation_score_maxcrit`** `EXP_DISABLE_FEATURE_GROUPS=score,maxcrit,clusters EXP_REG_LAMBDA=1` — Remove score and maxcrit groups to eliminate noisy aggregate features that may hurt PR AUC on small corpus
+- **`chrome_manifest_transfer_xlsx_rtf`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2` — Port high-performing document specialist config with ember_lite, extended metrics, and extreme features
+- **`chrome_manifest_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_REG_LAMBDA=1.5 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Train 3 seeds and average predictions to stabilize recall@3 FP/M against holdout sampling variance
+- **`chrome_manifest_retry_kv_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Retry prior near-winner KV+text config with stronger regularization to recover PR/ROC guardrails
+- **`chrome_manifest_recall_fpr_target`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_REG_LAMBDA=1.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Directly optimize threshold for production operating point to maximize recall@3 FP/M without PR AUC regression
+
+</details>
+
+## Cycle `20260515T132319-filetypes-chrome-manifest` — 2026-05-15T13:23:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `21074d23ac77874d` | control_baseline_training | ok | 0.1875 | 0.5000 | 0.3158 | 5 | [log](out/autocollie/runs/2026-05-15T13-28-12_20260515T132319-filetypes-chrome-manifest_control_baseline_training.log) |
+| `ff9bf7bf42575a8d` | exploit_hard_negatives | ok | 0.1875 | 0.5000 | 0.3158 | 2 | [log](out/autocollie/runs/2026-05-15T13-28-16_20260515T132319-filetypes-chrome-manifest_exploit_hard_negatives.log) |
+| `42a7ec6b048da66f` | exploit_dart_extra_trees | ok | 0.1875 | 0.5000 | 0.3158 | 5 | [log](out/autocollie/runs/2026-05-15T13-28-18_20260515T132319-filetypes-chrome-manifest_exploit_dart_extra_trees.log) |
+| `2264490b8ee66374` | feature_kv_vocab_manifest | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-15T13-28-24_20260515T132319-filetypes-chrome-manifest_feature_kv_vocab_manifest.log) |
+| `b4f78a15c4f5f467` | feature_text_metrics_encoding | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-15T13-28-26_20260515T132319-filetypes-chrome-manifest_feature_text_metrics_encoding.log) |
+| `bfcc9e44d0e4fc2d` | feature_rare_ngrams | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-15T13-28-29_20260515T132319-filetypes-chrome-manifest_feature_rare_ngrams.log) |
+| `66df188c40f1acdd` | ablation_attack_features | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-15T13-28-32_20260515T132319-filetypes-chrome-manifest_ablation_attack_features.log) |
+| `55b35cb2b5c33337` | transfer_docx_structural | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-15T13-28-34_20260515T132319-filetypes-chrome-manifest_transfer_docx_structural.log) |
+| `c2d3f788def0d8ba` | transfer_gz_kv_seed | ok | 0.1875 | 0.5000 | 0.3158 | 4 | [log](out/autocollie/runs/2026-05-15T13-28-37_20260515T132319-filetypes-chrome-manifest_transfer_gz_kv_seed.log) |
+| `7a16ca998d108ba8` | generalization_kv_ensemble | ok | 0.1875 | 0.5000 | 0.3158 | 2 | [log](out/autocollie/runs/2026-05-15T13-28-41_20260515T132319-filetypes-chrome-manifest_generalization_kv_ensemble.log) |
+| `427a4faa11f3ea54` | retry_metadata_lifecycle | ok | 0.1875 | 0.5000 | 0.3158 | 5 | [log](out/autocollie/runs/2026-05-15T13-28-43_20260515T132319-filetypes-chrome-manifest_retry_metadata_lifecycle.log) |
+| `ad39f8a32220d3e0` | research_metric_ratios | ok | 0.1875 | 0.5000 | 0.3158 | 3 | [log](out/autocollie/runs/2026-05-15T13-28-48_20260515T132319-filetypes-chrome-manifest_research_metric_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_training`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Replicate recent feature env with standard training to establish a stable baseline for PR_AUC and recall@3 FP/M comparison.
+- **`exploit_hard_negatives`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to push benign manifests lower in ranking, targeting recall@3 FP/M improvement.
+- **`exploit_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use DART boosting and extra trees to regularize the model, aiming to improve tail recall@3 FP/M without hurting PR_AUC.
+- **`feature_kv_vocab_manifest`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture structured key-value patterns in JSON manifests, targeting PR_AUC gain.
+- **`feature_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to detect obfuscation and formatting anomalies in manifests, aiming for PR_AUC lift.
+- **`feature_rare_ngrams`** `EXP_BIGRAM_MIN_FREQ=300 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=5` — Lower bigram/trigram frequency floors to capture rare permission and manifest structure patterns, targeting PR_AUC.
+- **`ablation_attack_features`** `EXP_ATTACK_FEATURES=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable attack_features to remove code-centric noise from JSON manifests, expecting flat or improved PR_AUC with cleaner ranking.
+- **`transfer_docx_structural`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Transfer ember_lite and extended_metrics from docx/xlsx routes to capture structural document signals, targeting PR_AUC.
+- **`transfer_gz_kv_seed`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Port KV vocab and seed search from gz/data routes to stabilize manifest KV signal across seeds, targeting recall@3 FP/M.
+- **`generalization_kv_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Average ensemble across 3 seeds on KV vocab config to reduce variance and verify robust PR_AUC signal.
+- **`retry_metadata_lifecycle`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Retry historical metadata-focused config with higher KV vocab and malware score floor to recover PR_AUC on drifted corpus.
+- **`research_metric_ratios`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Enable metric_ratio_features and size_normalized_metrics to capture structural density ratios in small manifests, targeting PR_AUC.
+
+</details>
+

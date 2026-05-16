@@ -62,3 +62,71 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T165059-filetypes-zst` — 2026-05-14T16:50:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `26ace45b19985fb3` | zst_control_exploit_leaves128 | ok | 1.0000 | 1.0000 | 1.0000 | 12 | [log](out/autocollie/runs/2026-05-14T16-54-46_20260514T165059-filetypes-zst_zst_control_exploit_leaves128.log) |
+| `c3bb3686ac8f1677` | zst_kv_vocab_5k | ok | 1.0000 | 1.0000 | 1.0000 | 12 | [log](out/autocollie/runs/2026-05-14T16-54-57_20260514T165059-filetypes-zst_zst_kv_vocab_5k.log) |
+| `4d8544dac06335f3` | zst_textenc_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 10 | [log](out/autocollie/runs/2026-05-14T16-55-10_20260514T165059-filetypes-zst_zst_textenc_metrics_full.log) |
+| `fe84982ab0ebf227` | zst_symbol_vocab_3k | ok | 1.0000 | 1.0000 | 1.0000 | 11 | [log](out/autocollie/runs/2026-05-14T16-55-20_20260514T165059-filetypes-zst_zst_symbol_vocab_3k.log) |
+| `9c516be892e02977` | zst_ablation_metrics_extreme | ok | 1.0000 | 1.0000 | 1.0000 | 9 | [log](out/autocollie/runs/2026-05-14T16-55-31_20260514T165059-filetypes-zst_zst_ablation_metrics_extreme.log) |
+| `2350bf3381b7439d` | zst_transfer_gz_bigrams | ok | 1.0000 | 1.0000 | 1.0000 | 10 | [log](out/autocollie/runs/2026-05-14T16-55-40_20260514T165059-filetypes-zst_zst_transfer_gz_bigrams.log) |
+| `88c7dac0f9eefa28` | zst_transfer_docx_ember | ok | 1.0000 | 1.0000 | 1.0000 | 11 | [log](out/autocollie/runs/2026-05-14T16-55-50_20260514T165059-filetypes-zst_zst_transfer_docx_ember.log) |
+| `018402ff809d895c` | zst_train_reg_lambda1 | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-14T16-56-01_20260514T165059-filetypes-zst_zst_train_reg_lambda1.log) |
+| `350b6725902bfa96` | zst_train_hardneg_10x | ok | 1.0000 | 1.0000 | 1.0000 | 6 | [log](out/autocollie/runs/2026-05-14T16-56-04_20260514T165059-filetypes-zst_zst_train_hardneg_10x.log) |
+| `4d3c56c063f7bfe7` | zst_profile_seed_search_3 | ok | 1.0000 | 1.0000 | 1.0000 | 5 | [log](out/autocollie/runs/2026-05-14T16-56-10_20260514T165059-filetypes-zst_zst_profile_seed_search_3.log) |
+| `b7a9d4317d50608f` | zst_profile_natural_prev_50k | ok | 1.0000 | 1.0000 | 1.0000 | 12 | [log](out/autocollie/runs/2026-05-14T16-56-15_20260514T165059-filetypes-zst_zst_profile_natural_prev_50k.log) |
+| `035572f6c990e899` | zst_train_max_recall_fpr3e6 | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-14T16-56-27_20260514T165059-filetypes-zst_zst_train_max_recall_fpr3e6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zst_control_exploit_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128` — Baseline feature set with slightly deeper trees to ensure robust ranking at saturated AUC.
+- **`zst_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — Enable KV vocabulary to capture key-value metadata patterns in zst archives.
+- **`zst_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Test text encoding and full text metrics for obfuscation signals in compressed streams.
+- **`zst_symbol_vocab_3k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=3000` — Enable symbol vocabulary to detect malicious naming patterns inside zst payloads.
+- **`zst_ablation_metrics_extreme`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_EXTENDED_METRICS=0 EXP_EXTREME_FEATURES=0` — Disable extended_metrics and extreme_features to test if perfect AUC holds with simpler surface.
+- **`zst_transfer_gz_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters` — Port gz route's bigram configuration to test transferability of n-gram signal.
+- **`zst_transfer_docx_ember`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1` — Port docx route's ember_lite and extended_metrics config to test structural feature transfer.
+- **`zst_train_reg_lambda1`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MIN_CHILD_SAMPLES=200 EXP_REG_ALPHA=0.5 EXP_REG_LAMBDA=1` — Increase L2 regularization to prevent overfitting on rare patterns while maintaining perfect AUC.
+- **`zst_train_hardneg_10x`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10` — Upweight hard negatives to improve tail recall and robustness at low FPR.
+- **`zst_profile_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Run seed search K=3 with ensemble averaging to reduce variance and stabilize recall@3 FP/M.
+- **`zst_profile_natural_prev_50k`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=50000 EXP_TEST_NATURAL_PREVALENCE=1` — Use natural class prevalence with larger test set to improve recall@k FP/M resolution.
+- **`zst_train_max_recall_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize threshold directly for production operating point (3 FP/M) to maximize tail recall.
+
+</details>
+
+## Cycle `20260515T090109-filetypes-zst` — 2026-05-15T09:01:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6a5106d039816df1` | zst_control_max_recall_fpr | ok | 1.0000 | 1.0000 | 1.0000 | 29 | [log](out/autocollie/runs/2026-05-15T09-06-22_20260515T090109-filetypes-zst_zst_control_max_recall_fpr.log) |
+| `6ed01123d93264c9` | zst_exploit_hardneg_tail | ok | 1.0000 | 1.0000 | 1.0000 | 37 | [log](out/autocollie/runs/2026-05-15T09-06-51_20260515T090109-filetypes-zst_zst_exploit_hardneg_tail.log) |
+| `cdbf8fe8716ae771` | zst_exploit_pos_weight_075 | ok | 1.0000 | 1.0000 | 1.0000 | 26 | [log](out/autocollie/runs/2026-05-15T09-07-28_20260515T090109-filetypes-zst_zst_exploit_pos_weight_075.log) |
+| `fc7f824fcc4d7e06` | zst_feat_kv_vocab_15k | ok | 1.0000 | 1.0000 | 1.0000 | 27 | [log](out/autocollie/runs/2026-05-15T09-07-54_20260515T090109-filetypes-zst_zst_feat_kv_vocab_15k.log) |
+| `5aad600702fa752f` | zst_feat_text_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 25 | [log](out/autocollie/runs/2026-05-15T09-08-22_20260515T090109-filetypes-zst_zst_feat_text_metrics_full.log) |
+| `f74d9ddd20dc83a0` | zst_feat_symbol_bigrams | ok | 1.0000 | 1.0000 | 1.0000 | 27 | [log](out/autocollie/runs/2026-05-15T09-08-47_20260515T090109-filetypes-zst_zst_feat_symbol_bigrams.log) |
+| `a2fa71cd560cfd97` | zst_feat_trigram_pools | ok | 1.0000 | 1.0000 | 1.0000 | 26 | [log](out/autocollie/runs/2026-05-15T09-09-13_20260515T090109-filetypes-zst_zst_feat_trigram_pools.log) |
+| `d501697c1ec7b143` | zst_abl_no_blindfold | ok | 1.0000 | 1.0000 | 1.0000 | 31 | [log](out/autocollie/runs/2026-05-15T09-09-40_20260515T090109-filetypes-zst_zst_abl_no_blindfold.log) |
+| `327f1dfaed6ab598` | zst_transfer_gz_seed_search | ok | 1.0000 | 1.0000 | 1.0000 | 61 | [log](out/autocollie/runs/2026-05-15T09-10-10_20260515T090109-filetypes-zst_zst_transfer_gz_seed_search.log) |
+| `d7f8a3105755f0d3` | zst_transfer_xlsx_ember | ok | 1.0000 | 1.0000 | 1.0000 | 26 | [log](out/autocollie/runs/2026-05-15T09-11-12_20260515T090109-filetypes-zst_zst_transfer_xlsx_ember.log) |
+| `3baafc3b705d7721` | zst_gen_seed_1337 | ok | 1.0000 | 1.0000 | 1.0000 | 30 | [log](out/autocollie/runs/2026-05-15T09-11-37_20260515T090109-filetypes-zst_zst_gen_seed_1337.log) |
+| `398e16fd08f316e0` | zst_retry_hardneg_10x | ok | 1.0000 | 1.0000 | 1.0000 | 37 | [log](out/autocollie/runs/2026-05-15T09-12-07_20260515T090109-filetypes-zst_zst_retry_hardneg_10x.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zst_control_max_recall_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicates best feature_env to hit matrix cache; switches threshold_mode to max_recall_at_fpr with 3e-6 target to directly optimize recall@3FPM at the deployed operating point.
+- **`zst_exploit_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Uses control features; increases hard_negative_fraction and weight to sharpen decision boundary at low FPR, targeting recall@3FPM improvement.
+- **`zst_exploit_pos_weight_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Uses control features; lowers scale_pos_weight_mult to 0.75 to down-weight positives slightly, reducing FP noise at the tail and targeting recall@3FPM.
+- **`zst_feat_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enables kv_vocab with 15k cap and lowers kv_min_freq to 5 to capture rare key-value patterns in compressed archives, targeting PR_AUC gain.
+- **`zst_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enables text_metrics_full and text_encoding to extract structural text signals from decompressed payloads, targeting PR_AUC improvement.
+- **`zst_feat_symbol_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enables symbol_vocab and symbol_bigrams with conservative caps to capture co-occurrence patterns in extracted binaries/scripts, targeting PR_AUC.
+- **`zst_feat_trigram_pools`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enables objective_trigrams and suspicious_trigrams to capture higher-order semantic sequences in archive contents, targeting PR_AUC.
+- **`zst_abl_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Disables blindfold dropout features to reduce training noise and stabilize gradient updates, aiming to keep PR_AUC flat while improving ROC_AUC consistency.
+- **`zst_transfer_gz_seed_search`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Ports gz_kv_seed_search config with seed_search_k=3 to average out seed variance and stabilize recall@3FPM across different RNG splits.
+- **`zst_transfer_xlsx_ember`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Ports xlsx_doc_static_no_score config enabling ember_lite and extended_metrics to capture static structural signals, targeting PR_AUC.
+- **`zst_gen_seed_1337`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Tests a different seed (1337) on the control feature set to verify that recent PR_AUC wins are robust to data partitioning and not seed artifacts.
+- **`zst_retry_hardneg_10x`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Retries the high-recall hard_negative_10x configuration after corpus drift to see if tail recall gains persist with updated training data, targeting recall@3FPM.
+
+</details>
+

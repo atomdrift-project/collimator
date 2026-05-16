@@ -110,3 +110,37 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260515T012223-filetypes-ole` — 2026-05-15T01:22:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89d19daad5b7f5e3` | ole_control_leaves128_reg2 | ok | 0.9821 | 0.5000 | 0.9910 | 34 | [log](out/autocollie/runs/2026-05-15T01-27-07_20260515T012223-filetypes-ole_ole_control_leaves128_reg2.log) |
+| `672de72cb224dcd5` | ole_control_extra_trees_gamma05 | ok | 0.9821 | 0.5000 | 0.9910 | 14 | [log](out/autocollie/runs/2026-05-15T01-27-41_20260515T012223-filetypes-ole_ole_control_extra_trees_gamma05.log) |
+| `7c3694757eaaceec` | ole_recall3_fpr_target | ok | 0.9821 | 0.5000 | 0.0000 | 25 | [log](out/autocollie/runs/2026-05-15T01-27-55_20260515T012223-filetypes-ole_ole_recall3_fpr_target.log) |
+| `337e28b10088f579` | ole_kv_vocab_5k | ok | 0.9821 | 0.5000 | 0.9910 | 23 | [log](out/autocollie/runs/2026-05-15T01-28-19_20260515T012223-filetypes-ole_ole_kv_vocab_5k.log) |
+| `fc1c14c41e6bbfd5` | ole_text_encoding_full | ok | 0.9821 | 0.5000 | 0.9910 | 23 | [log](out/autocollie/runs/2026-05-15T01-28-43_20260515T012223-filetypes-ole_ole_text_encoding_full.log) |
+| `7818194d1bf70f3b` | ole_kv_text_combined | ok | 0.9821 | 0.5000 | 0.9910 | 23 | [log](out/autocollie/runs/2026-05-15T01-29-06_20260515T012223-filetypes-ole_ole_kv_text_combined.log) |
+| `05e4b43b26d9d5ab` | ole_ablation_enable_score | ok | 0.9821 | 0.5000 | 0.9910 | 22 | [log](out/autocollie/runs/2026-05-15T01-29-29_20260515T012223-filetypes-ole_ole_ablation_enable_score.log) |
+| `952795b4c64cecfe` | ole_transfer_hardneg_gz | ok | 0.9821 | 0.5000 | 0.9910 | 4 | [log](out/autocollie/runs/2026-05-15T01-29-51_20260515T012223-filetypes-ole_ole_transfer_hardneg_gz.log) |
+| `18b5bcf10e7c847f` | ole_transfer_score_minchild50 | ok | 0.9821 | 0.5000 | 0.9910 | 3 | [log](out/autocollie/runs/2026-05-15T01-29-55_20260515T012223-filetypes-ole_ole_transfer_score_minchild50.log) |
+| `aa027cfce3c5ba75` | ole_generalize_seed_ensemble | ok | 0.9821 | 0.5000 | 0.9910 | 20 | [log](out/autocollie/runs/2026-05-15T01-29-58_20260515T012223-filetypes-ole_ole_generalize_seed_ensemble.log) |
+| `e124afb7aa1f56c8` | ole_retry_leaves128_reg2_seed123 | ok | 0.9821 | 0.5000 | 0.9910 | 30 | [log](out/autocollie/runs/2026-05-15T01-30-18_20260515T012223-filetypes-ole_ole_retry_leaves128_reg2_seed123.log) |
+| `f778578e5cdc77ed` | ole_text_metrics_full | ok | 0.9821 | 0.5000 | 0.9910 | 35 | [log](out/autocollie/runs/2026-05-15T01-30-48_20260515T012223-filetypes-ole_ole_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ole_control_leaves128_reg2`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — baseline feature set with conservative tree complexity and L2 regularization to stabilize ranking on small corpus
+- **`ole_control_extra_trees_gamma05`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_GAMMA=0.5 EXP_REG_LAMBDA=1.5` — extra trees with mild gamma split gain to reduce overfitting on rare OLE patterns while preserving PR AUC
+- **`ole_recall3_fpr_target`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEST_NATURAL_PREVALENCE=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — optimize threshold for production operating point to maximize recall@3 FP/M with natural prevalence test split
+- **`ole_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,symbols,textenc EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1` — enable key-value vocabulary to capture structured OLE metadata and property signals previously disabled
+- **`ole_text_encoding_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1` — enable text encoding features to detect obfuscation and encoding anomalies common in malicious OLE documents
+- **`ole_kv_text_combined`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1` — combine kv and text encoding surfaces to capture both structural metadata and content-level obfuscation signals
+- **`ole_ablation_enable_score`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1` — re-enable score features to test if severity-weighted aggregates provide stronger signal than current disabled set
+- **`ole_transfer_hardneg_gz`** `EXP_BOOSTING_TYPE=gbdt EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_NUM_LEAVES=128` — transfer hard-negative upweighting from gz route to sharpen decision boundary on benign OLE lookalikes
+- **`ole_transfer_score_minchild50`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=3` — port score-enabled configuration with tighter leaf regularization to improve generalization on small holdout
+- **`ole_generalize_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — average across three seeds to reduce variance and stabilize recall@3 FP/M on this low-sample route
+- **`ole_retry_leaves128_reg2_seed123`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_LEARNING_RATE=0.05 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — data-drift retry of top PR AUC configuration with alternate seed and metric ratio features to verify robustness
+- **`ole_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1` — promote full text metrics histogram to capture line length and escape density patterns specific to OLE obfuscation
+
+</details>
+

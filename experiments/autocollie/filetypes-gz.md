@@ -120,3 +120,37 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260515T080139-filetypes-gz` — 2026-05-15T08:01:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8263b12e94d01aa1` | gz_control_reg_small_corpus | ok | 0.9983 | 0.9959 | 0.9817 | 34 | [log](out/autocollie/runs/2026-05-15T08-06-29_20260515T080139-filetypes-gz_gz_control_reg_small_corpus.log) |
+| `9320921b0c4d34a5` | gz_extra_trees_subsample | ok | 0.9989 | 0.9972 | 0.9907 | 37 | [log](out/autocollie/runs/2026-05-15T08-07-03_20260515T080139-filetypes-gz_gz_extra_trees_subsample.log) |
+| `9d63e4a641310e0d` | gz_dart_lr003 | ok | 0.9984 | 0.9957 | 0.9683 | 84 | [log](out/autocollie/runs/2026-05-15T08-07-40_20260515T080139-filetypes-gz_gz_dart_lr003.log) |
+| `4a5837780c324aab` | gz_enable_text_encoding | ok | 0.9988 | 0.9970 | 0.9817 | 41 | [log](out/autocollie/runs/2026-05-15T08-09-04_20260515T080139-filetypes-gz_gz_enable_text_encoding.log) |
+| `07873f720ddc44ca` | gz_kv_vocab_research | ok | 0.9988 | 0.9970 | 0.9817 | 41 | [log](out/autocollie/runs/2026-05-15T08-09-45_20260515T080139-filetypes-gz_gz_kv_vocab_research.log) |
+| `411ca25355f245ef` | gz_text_metrics_full | ok | 0.9988 | 0.9970 | 0.9817 | 36 | [log](out/autocollie/runs/2026-05-15T08-10-27_20260515T080139-filetypes-gz_gz_text_metrics_full.log) |
+| `111e66641d2afc14` | gz_format_hints_extended | ok | 0.9988 | 0.9970 | 0.9817 | 41 | [log](out/autocollie/runs/2026-05-15T08-11-02_20260515T080139-filetypes-gz_gz_format_hints_extended.log) |
+| `442b71bed97a8e87` | gz_transfer_data_metrics | ok | 0.9987 | 0.9967 | 0.9817 | 37 | [log](out/autocollie/runs/2026-05-15T08-11-43_20260515T080139-filetypes-gz_gz_transfer_data_metrics.log) |
+| `3544273d6704e416` | gz_seed_search_ensemble | ok | 0.9991 | 0.9976 | 0.9953 | 99 | [log](out/autocollie/runs/2026-05-15T08-12-20_20260515T080139-filetypes-gz_gz_seed_search_ensemble.log) |
+| `cda679b9513ce86c` | gz_scale_pos_retry_reg | ok | 0.9978 | 0.9945 | 0.9636 | 24 | [log](out/autocollie/runs/2026-05-15T08-13-58_20260515T080139-filetypes-gz_gz_scale_pos_retry_reg.log) |
+| `cea53c70dff77b74` | gz_ablate_blindfold | ok | 0.9988 | 0.9970 | 0.9817 | 40 | [log](out/autocollie/runs/2026-05-15T08-14-23_20260515T080139-filetypes-gz_gz_ablate_blindfold.log) |
+| `3f996ee5a5a631b3` | gz_hard_neg_attack_ngrams | ok | 0.9999 | 0.9998 | 0.9863 | 67 | [log](out/autocollie/runs/2026-05-15T08-15-03_20260515T080139-filetypes-gz_gz_hard_neg_attack_ngrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`gz_control_reg_small_corpus`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC and ROC_AUC by increasing regularization to prevent overfitting on the tiny 56-sample holdout.
+- **`gz_extra_trees_subsample`** `EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by adding ensemble noise via extra_trees and row subsampling to improve generalization at the low-FPR tail.
+- **`gz_dart_lr003`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM using dart boosting with lower learning rate to reduce variance and improve tail recall on small data.
+- **`gz_enable_text_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_encoding features to capture character-level patterns in gzipped streams that standard n-grams miss.
+- **`gz_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling kv_vocab to extract key-value metadata from gz headers, providing structured signal absent in current disabled groups.
+- **`gz_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by promoting text_metrics_full to capture structural text properties in decompressed content.
+- **`gz_format_hints_extended`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_FORMAT_HINTS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by combining format_hints with extended_metrics to leverage file structure signals specific to compressed archives.
+- **`gz_transfer_data_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by transferring the extended_metrics and ember_lite configuration from filetypes/data, adapted for gz corpus size.
+- **`gz_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM stability by using seed_search_k=3 and save_all_seeds to average out seed-driven variance on this tiny corpus.
+- **`gz_scale_pos_retry_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2.5 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Retries the high-recall scale_pos approach with stronger regularization to recover PR_AUC guardrails while preserving tail recall@3FPM.
+- **`gz_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by disabling blindfold dropout features, hypothesizing they add unnecessary noise to the small gz corpus.
+- **`gz_hard_neg_attack_ngrams`** `EXP_ATTACK_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives and enabling attack_ngrams to sharpen decision boundaries around malicious patterns.
+
+</details>
+

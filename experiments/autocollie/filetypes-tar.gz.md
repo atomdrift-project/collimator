@@ -56,3 +56,23 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260516T010230-filetypes-tar.gz` — 2026-05-16T01:02:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `869f668e8821e257` | tar_gz_control_leaves128_lr003 | ok | 0.9996 | 0.9991 | 0.9953 | 599 | [log](out/autocollie/runs/2026-05-16T01-10-21_20260516T010230-filetypes-tar.gz_tar_gz_control_leaves128_lr003.log) |
+| `cbbec2ab2dd1a2a4` | tar_gz_control_hardneg_015_12 | ok | 0.9994 | 0.9989 | 0.9918 | 850 | [log](out/autocollie/runs/2026-05-16T01-20-20_20260516T010230-filetypes-tar.gz_tar_gz_control_hardneg_015_12.log) |
+| `ef3d9462ca1d6ee5` | tar_gz_control_spw075_extratrees | ok | 0.9995 | 0.9989 | 0.9943 | 418 | [log](out/autocollie/runs/2026-05-16T01-34-29_20260516T010230-filetypes-tar.gz_tar_gz_control_spw075_extratrees.log) |
+| `9b15181bc3dcba43` | tar_gz_kv_vocab_15k_min5 | ok | 0.9995 | 0.9991 | 0.9948 | 653 | [log](out/autocollie/runs/2026-05-16T01-41-27_20260516T010230-filetypes-tar.gz_tar_gz_kv_vocab_15k_min5.log) |
+| `` | tar_gz_textenc_metrics_full | fail | — | — | — | 497 | [log](out/autocollie/runs/2026-05-16T01-52-21_20260516T010230-filetypes-tar.gz_tar_gz_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_gz_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Aims to improve PR_AUC by increasing tree complexity and slowing learning to better fit the tail distribution without overfitting.
+- **`tar_gz_control_hardneg_015_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Aims to boost recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`tar_gz_control_spw075_extratrees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Aims to improve recall@3FPM by downweighting positives to reduce FP tail noise and adding extra_trees for better generalization.
+- **`tar_gz_kv_vocab_15k_min5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Aims to increase PR_AUC by capturing finer-grained key-value patterns in archive metadata with a larger vocab and lower frequency floor.
+- **`tar_gz_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Aims to lift PR_AUC by enabling text encoding and full text metrics to capture obfuscation and structural signals in extracted archive contents.
+
+</details>
+

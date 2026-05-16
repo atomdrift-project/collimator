@@ -86,3 +86,38 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260515T015612-filetypes-powershell` — 2026-05-15T01:56:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e20376256f8e9179` | ps_kv_obj_leaves128_reg1 | ok | 0.9926 | 0.9931 | 0.9697 | 63 | [log](out/autocollie/runs/2026-05-15T02-00-12_20260515T015612-filetypes-powershell_ps_kv_obj_leaves128_reg1.log) |
+| `adcd127fe88466c4` | ps_kv_obj_hardneg_tail | ok | 0.9915 | 0.9923 | 0.9697 | 98 | [log](out/autocollie/runs/2026-05-15T02-01-15_20260515T015612-filetypes-powershell_ps_kv_obj_hardneg_tail.log) |
+| `ceeca6387938d3f4` | ps_kv_obj_scalepos075 | ok | 0.9925 | 0.9929 | 0.9634 | 40 | [log](out/autocollie/runs/2026-05-15T02-02-54_20260515T015612-filetypes-powershell_ps_kv_obj_scalepos075.log) |
+| `c5a7a9652d4eaf28` | ps_kv_vocab_expansion | ok | 0.9913 | 0.9917 | 0.9697 | 34 | [log](out/autocollie/runs/2026-05-15T02-03-34_20260515T015612-filetypes-powershell_ps_kv_vocab_expansion.log) |
+| `24dfa2125d2db94a` | ps_textenc_metrics_full | ok | 0.9917 | 0.9917 | 0.9634 | 47 | [log](out/autocollie/runs/2026-05-15T02-04-08_20260515T015612-filetypes-powershell_ps_textenc_metrics_full.log) |
+| `1edad86ccabe5f8c` | ps_obj_susp_trigrams | ok | 0.9928 | 0.9932 | 0.9634 | 49 | [log](out/autocollie/runs/2026-05-15T02-04-55_20260515T015612-filetypes-powershell_ps_obj_susp_trigrams.log) |
+| `a1edd7281fcb6f54` | ps_transfer_seed_search | ok | 0.9923 | 0.9929 | 0.9697 | 143 | [log](out/autocollie/runs/2026-05-15T02-05-44_20260515T015612-filetypes-powershell_ps_transfer_seed_search.log) |
+| `2ca32c662ef0b4db` | ps_transfer_gz_bigrams | ok | 0.9918 | 0.9923 | 0.9697 | 49 | [log](out/autocollie/runs/2026-05-15T02-08-07_20260515T015612-filetypes-powershell_ps_transfer_gz_bigrams.log) |
+| `9a6acc8ba8157a4b` | ps_gen_seed123_samples120k | ok | 0.9946 | 0.9951 | 0.9625 | 45 | [log](out/autocollie/runs/2026-05-15T02-08-56_20260515T015612-filetypes-powershell_ps_gen_seed123_samples120k.log) |
+| `849ada66070283bc` | ps_recall3_beta2_scalepos | ok | 0.9921 | 0.9925 | 0.9524 | 12 | [log](out/autocollie/runs/2026-05-15T02-09-41_20260515T015612-filetypes-powershell_ps_recall3_beta2_scalepos.log) |
+
+Rejected before run:
+
+- `ps_abl_no_extreme` — features.disable_groups: "extreme" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+- `ps_retry_no_presence` — features.disable_groups: "soft_presence" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+
+<details><summary>Spec details</summary>
+
+- **`ps_kv_obj_leaves128_reg1`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Exploit best feature set with deeper trees and moderate L2 regularization to improve PR AUC ranking.
+- **`ps_kv_obj_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Add hard negatives to the best feature set to sharpen decision boundary and boost recall@3 FP/M.
+- **`ps_kv_obj_scalepos075`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives slightly to reduce FP tail noise while preserving recall@3 FP/M.
+- **`ps_kv_vocab_expansion`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab size and lower frequency floor to capture rare PowerShell parameter patterns.
+- **`ps_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to capture obfuscation and script structure signals.
+- **`ps_obj_susp_trigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Add objective and suspicious trigram pools to catch multi-step attack chains in scripts.
+- **`ps_transfer_seed_search`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Port gz seed-search strategy to reduce variance and find a more robust model configuration.
+- **`ps_transfer_gz_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port data/gz bigram expansion to capture longer PowerShell command sequences.
+- **`ps_gen_seed123_samples120k`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Test generalization by varying seed and training sample size on a strong feature set.
+- **`ps_recall3_beta2_scalepos`** `EXP_BETA=2 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SCALE_POS_WEIGHT_MULT=0.6 EXP_TRAIN_SAMPLES=30000` — Push recall@3 FP/M by using beta=2 threshold tuning and down-weighting positives to reduce FP tail.
+
+</details>
+

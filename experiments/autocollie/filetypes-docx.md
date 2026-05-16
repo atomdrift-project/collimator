@@ -118,3 +118,38 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T193444-filetypes-docx` — 2026-05-14T19:34:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ccb062a64ea58ed8` | docx_control_recall3_fpr | ok | 0.9876 | 0.5000 | 0.0000 | 5 | [log](out/autocollie/runs/2026-05-14T19-39-42_20260514T193444-filetypes-docx_docx_control_recall3_fpr.log) |
+| `6a7b2c824a5c8757` | docx_hardneg_tail_recall | ok | 0.9876 | 0.5000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-14T19-39-47_20260514T193444-filetypes-docx_docx_hardneg_tail_recall.log) |
+| `397919492e1672f7` | docx_textmetrics_linebuckets | ok | 0.9876 | 0.5000 | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-14T19-39-48_20260514T193444-filetypes-docx_docx_textmetrics_linebuckets.log) |
+| `c81322f15312ced4` | docx_kv_value_split_expansion | ok | 0.9876 | 0.5000 | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-14T19-39-52_20260514T193444-filetypes-docx_docx_kv_value_split_expansion.log) |
+| `71b8f55b4eec26c7` | docx_doc_obfuscation_extended | ok | 0.9876 | 0.5000 | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-14T19-39-55_20260514T193444-filetypes-docx_docx_doc_obfuscation_extended.log) |
+| `a93572aaa842e3f7` | docx_xlsx_transfer_ember | ok | 0.9876 | 0.5000 | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-14T19-39-58_20260514T193444-filetypes-docx_docx_xlsx_transfer_ember.log) |
+| `a620e82c03a964ec` | docx_seed_search_ensemble | ok | 0.9876 | 0.5000 | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-14T19-40-03_20260514T193444-filetypes-docx_docx_seed_search_ensemble.log) |
+| `7a6d0916474355bf` | docx_scalepos05_recall3 | ok | 0.9876 | 0.5000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-14T19-40-06_20260514T193444-filetypes-docx_docx_scalepos05_recall3.log) |
+| `f84913fb06f3e360` | docx_tiered_trigrams_objective | ok | 0.9876 | 0.5000 | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-14T19-40-09_20260514T193444-filetypes-docx_docx_tiered_trigrams_objective.log) |
+| `0d7f64c94a0ef32f` | docx_extratrees_gamma_reg | ok | 0.9876 | 0.5000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-14T19-40-13_20260514T193444-filetypes-docx_docx_extratrees_gamma_reg.log) |
+
+Rejected before run:
+
+- `docx_ablation_blindfold_crit` — features.disable_groups: "blindfold" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+- `docx_retry_package_findings` — features.package_capability_mode: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`docx_control_recall3_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Optimize deployed operating point directly while preserving saturated AUC.
+- **`docx_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Upweight hard negatives to sharpen decision boundary at low FPR.
+- **`docx_textmetrics_linebuckets`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Add document structure metrics to capture obfuscation patterns missed by ngrams.
+- **`docx_kv_value_split_expansion`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Split KV string values to recover per-element signal in macro and VBA properties.
+- **`docx_doc_obfuscation_extended`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_KV_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Targeted taxonomy counts for document malware objectives improve signal-to-noise.
+- **`docx_xlsx_transfer_ember`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_KV_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Port xlsx specialist config that disables noisy score features and adds ember-lite.
+- **`docx_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Average across 3 seeds to reduce variance and stabilize recall@3 FP/M.
+- **`docx_scalepos05_recall3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Down-weight positives to push threshold lower, capturing more malware at fixed low FPR.
+- **`docx_tiered_trigrams_objective`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Add severity-prefixed trigrams to capture multi-step document attack chains.
+- **`docx_extratrees_gamma_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_GAMMA=0.5 EXP_KV_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Random splits and min-split gain improve generalization at the tail without changing features.
+
+</details>
+

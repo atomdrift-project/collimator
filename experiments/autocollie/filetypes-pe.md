@@ -194,3 +194,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260515T145250-filetypes-pe` — 2026-05-15T14:52:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ece62fe976a425a` | pe_control_baseline_train | ok | 0.9995 | 0.9995 | 0.9936 | 664 | [log](out/autocollie/runs/2026-05-15T14-59-02_20260515T145250-filetypes-pe_pe_control_baseline_train.log) |
+| `a2949fa453e1622f` | pe_hardneg_01_12 | ok | 0.9995 | 0.9996 | 0.9932 | 1032 | [log](out/autocollie/runs/2026-05-15T15-10-06_20260515T145250-filetypes-pe_pe_hardneg_01_12.log) |
+| `e6f6e28d07bab9d9` | pe_scalepos_05_reg1 | ok | 0.9995 | 0.9995 | 0.9934 | 496 | [log](out/autocollie/runs/2026-05-15T15-27-18_20260515T145250-filetypes-pe_pe_scalepos_05_reg1.log) |
+| `48729e8daabc1a57` | pe_symbol_vocab_5k | ok | 0.9995 | 0.9996 | 0.9927 | 736 | [log](out/autocollie/runs/2026-05-15T15-35-34_20260515T145250-filetypes-pe_pe_symbol_vocab_5k.log) |
+| `c28ddf8633aed69f` | pe_kv_vocab_10k | ok | 0.9995 | 0.9995 | 0.9938 | 777 | [log](out/autocollie/runs/2026-05-15T15-47-50_20260515T145250-filetypes-pe_pe_kv_vocab_10k.log) |
+| `d0f84901ce126fe4` | pe_bigram_rare_200 | ok | 0.9995 | 0.9996 | 0.9933 | 745 | [log](out/autocollie/runs/2026-05-15T16-00-46_20260515T145250-filetypes-pe_pe_bigram_rare_200.log) |
+| `7acb69990f78f485` | pe_ablate_blindfold | ok | 0.9995 | 0.9996 | 0.9931 | 684 | [log](out/autocollie/runs/2026-05-15T16-13-12_20260515T145250-filetypes-pe_pe_ablate_blindfold.log) |
+| `875b34a9113a2998` | pe_transfer_gz_seed3 | ok | 0.9995 | 0.9995 | 0.9932 | 1803 | [log](out/autocollie/runs/2026-05-15T16-24-36_20260515T145250-filetypes-pe_pe_transfer_gz_seed3.log) |
+| `6f1080ccf3fccec0` | pe_seed_123_search3 | ok | 0.9996 | 0.9996 | 0.9934 | 1673 | [log](out/autocollie/runs/2026-05-15T16-54-39_20260515T145250-filetypes-pe_pe_seed_123_search3.log) |
+| `60a17f2004d4824c` | pe_retry_scalepos025_extreme | ok | 0.9995 | 0.9995 | 0.9931 | 358 | [log](out/autocollie/runs/2026-05-15T17-22-33_20260515T145250-filetypes-pe_pe_retry_scalepos025_extreme.log) |
+| `655f3d5c87cb112c` | pe_format_flags_temporal | ok | 0.9995 | 0.9996 | 0.9934 | 664 | [log](out/autocollie/runs/2026-05-15T17-28-30_20260515T145250-filetypes-pe_pe_format_flags_temporal.log) |
+| `a6f459f4fc347ad0` | pe_dart_extra_trees | ok | 0.9988 | 0.9990 | 0.9904 | 612 | [log](out/autocollie/runs/2026-05-15T17-39-34_20260515T145250-filetypes-pe_pe_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env to establish matrix cache hit baseline; tweak estimators to 300 to stabilize PR_AUC.
+- **`pe_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Sweep hard negatives with fraction 0.01 and weight 12 to push recall@3 FP/M by focusing model on difficult benigns.
+- **`pe_scalepos_05_reg1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives to 0.5 with mild L2 reg to reduce false positives and improve recall@3 FP/M.
+- **`pe_symbol_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable symbol_vocab with max 5000 to capture PE import/export patterns, targeting PR_AUC gain.
+- **`pe_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with max 10000 to extract structured metadata signals, targeting PR_AUC improvement.
+- **`pe_bigram_rare_200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 200 and raise max to 10000 to capture rarer malicious patterns, targeting recall@3 FP/M.
+- **`pe_ablate_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold dropout to reduce feature noise and stabilize PR_AUC.
+- **`pe_transfer_gz_seed3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port gz route's kv+seed_search strategy to reduce variance and boost recall@3 FP/M.
+- **`pe_seed_123_search3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Vary seed to 123 with search_k=3 to verify signal robustness and improve recall@3 FP/M.
+- **`pe_retry_scalepos025_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry historical scale_pos 0.25 with extreme_features enabled to recover tail recall@3 FP/M after corpus drift.
+- **`pe_format_flags_temporal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable pe_format_flags and pe_temporal_anomaly to capture PE header anomalies, targeting PR_AUC.
+- **`pe_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting with extra_trees to add regularization and improve ROC_AUC without hurting PR_AUC.
+
+</details>
+

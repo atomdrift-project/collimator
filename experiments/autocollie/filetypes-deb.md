@@ -106,3 +106,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260515T044026-filetypes-deb` — 2026-05-15T04:40:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ead08802fec98dc` | deb_control_baseline_training | ok | 1.0000 | 1.0000 | 1.0000 | 125 | [log](out/autocollie/runs/2026-05-15T04-45-39_20260515T044026-filetypes-deb_deb_control_baseline_training.log) |
+| `5084a369f8db873a` | deb_kv_vocab_research | ok | 1.0000 | 1.0000 | 1.0000 | 120 | [log](out/autocollie/runs/2026-05-15T04-47-44_20260515T044026-filetypes-deb_deb_kv_vocab_research.log) |
+| `d85bf063940a5e45` | deb_textenc_metrics_research | ok | 1.0000 | 1.0000 | 1.0000 | 119 | [log](out/autocollie/runs/2026-05-15T04-49-44_20260515T044026-filetypes-deb_deb_textenc_metrics_research.log) |
+| `10a97c35fe1ab96f` | deb_symbol_vocab_research | ok | 1.0000 | 1.0000 | 1.0000 | 122 | [log](out/autocollie/runs/2026-05-15T04-51-43_20260515T044026-filetypes-deb_deb_symbol_vocab_research.log) |
+| `2a0acdc475d0a2fa` | deb_transfer_extended_extreme | ok | 1.0000 | 1.0000 | 1.0000 | 18 | [log](out/autocollie/runs/2026-05-15T04-53-45_20260515T044026-filetypes-deb_deb_transfer_extended_extreme.log) |
+| `4b66dd60180bdf2e` | deb_ngram_freq_lower | ok | 1.0000 | 1.0000 | 1.0000 | 115 | [log](out/autocollie/runs/2026-05-15T04-54-03_20260515T044026-filetypes-deb_deb_ngram_freq_lower.log) |
+| `f74ea043092bf0f4` | deb_ablation_score_clusters | ok | 1.0000 | 1.0000 | 1.0000 | 115 | [log](out/autocollie/runs/2026-05-15T04-55-58_20260515T044026-filetypes-deb_deb_ablation_score_clusters.log) |
+| `9cfd78cd6bbd83ec` | deb_train_regularized | ok | 1.0000 | 1.0000 | 1.0000 | 20 | [log](out/autocollie/runs/2026-05-15T04-57-52_20260515T044026-filetypes-deb_deb_train_regularized.log) |
+| `8cd4ac929d5c9966` | deb_train_dart_extra_trees | ok | 1.0000 | 1.0000 | 0.8000 | 31 | [log](out/autocollie/runs/2026-05-15T04-58-13_20260515T044026-filetypes-deb_deb_train_dart_extra_trees.log) |
+| `4c1ecb4b4726eada` | deb_train_pos_weight_fpr | ok | 1.0000 | 1.0000 | 1.0000 | 17 | [log](out/autocollie/runs/2026-05-15T04-58-43_20260515T044026-filetypes-deb_deb_train_pos_weight_fpr.log) |
+| `dd6464906b1a987f` | deb_seed_search_kv | ok | 1.0000 | 1.0000 | 1.0000 | 154 | [log](out/autocollie/runs/2026-05-15T04-59-01_20260515T044026-filetypes-deb_deb_seed_search_kv.log) |
+| `138b5be835013789` | deb_profile_high_sev_holdout | ok | 1.0000 | 1.0000 | 1.0000 | 121 | [log](out/autocollie/runs/2026-05-15T05-01-35_20260515T044026-filetypes-deb_deb_profile_high_sev_holdout.log) |
+
+<details><summary>Spec details</summary>
+
+- **`deb_control_baseline_training`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env with clusters disabled; increases estimators to 300 to improve PR_AUC via better convergence on cached matrix.
+- **`deb_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with moderate cap to capture package metadata patterns; aims to boost PR_AUC by adding discriminative key-value signals.
+- **`deb_textenc_metrics_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full to detect script obfuscation in DEB control scripts; targets recall@3FPM improvement.
+- **`deb_symbol_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab to capture library dependency co-occurrences; aims to improve ROC_AUC by adding structural dependency signals.
+- **`deb_transfer_extended_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports extended_metrics and extreme_features from top sister routes; expects PR_AUC gain from rich structural and tail-distribution features.
+- **`deb_ngram_freq_lower`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Lowers bigram/trigram min_freq to 50/10 to capture rarer malicious patterns; targets recall@3FPM by expanding rare signal coverage.
+- **`deb_ablation_score_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables score and clusters groups to reduce noise; aims to stabilize ROC_AUC and potentially lift PR_AUC by focusing on cleaner structural features.
+- **`deb_train_regularized`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Applies stronger L2 regularization and lower learning rate to prevent overfitting on benign-heavy data; targets PR_AUC stability.
+- **`deb_train_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Switches to dart boosting with extra_trees to add ensemble noise; aims to improve recall@3FPM by enhancing tail generalization.
+- **`deb_train_pos_weight_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Down-weights positives and targets max_recall_at_fpr at 3e-6; directly optimizes recall@3FPM for the deployed operating point.
+- **`deb_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Combines seed_search_k=3 with kv_vocab to average out seed variance; aims to stabilize and confirm PR_AUC gains from KV features.
+- **`deb_profile_high_sev_holdout`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HOLDOUT_FRACTION=0.2 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Filters training to min_malware_score=3 and increases holdout to 0.2; aims to improve recall@3FPM by focusing on confident malware and better early stopping.
+
+</details>
+

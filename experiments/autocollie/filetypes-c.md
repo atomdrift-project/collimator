@@ -146,3 +146,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T170211-filetypes-c` — 2026-05-14T17:02:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e1abd7c5b018f535` | c_exploit_leaves128_reg2 | ok | 0.9958 | 0.9978 | 0.9712 | 14 | [log](out/autocollie/runs/2026-05-14T17-06-53_20260514T170211-filetypes-c_c_exploit_leaves128_reg2.log) |
+| `f174b94c0506f647` | c_exploit_dart_extra_trees | ok | 0.9868 | 0.9926 | 0.9248 | 4 | [log](out/autocollie/runs/2026-05-14T17-07-06_20260514T170211-filetypes-c_c_exploit_dart_extra_trees.log) |
+| `8e11961a215892a3` | c_exploit_hardneg_scalepos | ok | 0.9959 | 0.9978 | 0.9613 | 7 | [log](out/autocollie/runs/2026-05-14T17-07-10_20260514T170211-filetypes-c_c_exploit_hardneg_scalepos.log) |
+| `20985c23c1c38669` | c_feat_kv_symbols_no_blindfold | ok | 0.9961 | 0.9980 | 0.9625 | 22 | [log](out/autocollie/runs/2026-05-14T17-07-17_20260514T170211-filetypes-c_c_feat_kv_symbols_no_blindfold.log) |
+| `94a98f7630746d1d` | c_feat_kv_split_symbol_bigrams | ok | 0.9956 | 0.9977 | 0.9582 | 23 | [log](out/autocollie/runs/2026-05-14T17-07-39_20260514T170211-filetypes-c_c_feat_kv_split_symbol_bigrams.log) |
+| `ecfeb60b102d5573` | c_feat_textenc_metrics_ext | ok | 0.9956 | 0.9977 | 0.9690 | 12 | [log](out/autocollie/runs/2026-05-14T17-08-03_20260514T170211-filetypes-c_c_feat_textenc_metrics_ext.log) |
+| `ed99ba0ae31fa58f` | c_feat_symbol_trigrams_research | ok | 0.9961 | 0.9979 | 0.9658 | 18 | [log](out/autocollie/runs/2026-05-14T17-08-14_20260514T170211-filetypes-c_c_feat_symbol_trigrams_research.log) |
+| `c7dfdde456ee1f09` | c_ablation_no_blindfold_critcat | ok | 0.9957 | 0.9977 | 0.9612 | 12 | [log](out/autocollie/runs/2026-05-14T17-08-32_20260514T170211-filetypes-c_c_ablation_no_blindfold_critcat.log) |
+| `843bb6e0499d82f8` | c_transfer_subsample_col_ratio | ok | 0.9938 | 0.9967 | 0.9600 | 21 | [log](out/autocollie/runs/2026-05-14T17-08-44_20260514T170211-filetypes-c_c_transfer_subsample_col_ratio.log) |
+| `5c2fa57be135ad6a` | c_gen_seed_search_ensemble | ok | 0.9958 | 0.9978 | 0.9745 | 21 | [log](out/autocollie/runs/2026-05-14T17-09-06_20260514T170211-filetypes-c_c_gen_seed_search_ensemble.log) |
+| `52aa4ac35c5be2eb` | c_drift_kv_symbols_seed7 | ok | 0.9962 | 0.9980 | 0.9677 | 18 | [log](out/autocollie/runs/2026-05-14T17-09-27_20260514T170211-filetypes-c_c_drift_kv_symbols_seed7.log) |
+| `615ab5b95782d0eb` | c_recall3_fpr_target | ok | 0.9959 | 0.9979 | 0.9607 | 8 | [log](out/autocollie/runs/2026-05-14T17-09-44_20260514T170211-filetypes-c_c_recall3_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_exploit_leaves128_reg2`** `EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2` — Exploit best feature set with deeper trees and stronger L2 regularization to reduce overfitting and improve PR AUC.
+- **`c_exploit_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_EXTRA_TREES=1 EXP_GAMMA=0.5` — Test dart boosting with extra trees and gamma regularization to improve tail generalization.
+- **`c_exploit_hardneg_scalepos`** `EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_SCALE_POS_WEIGHT_MULT=0.75` — Use mild hard negatives and lower positive weight to suppress false positives at low FPR.
+- **`c_feat_kv_symbols_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000` — Add KV and symbol vocabs while removing blindfold to capture C-specific struct/function patterns.
+- **`c_feat_kv_split_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000` — Split KV values and enable symbol bigrams to capture co-occurrence patterns in C code.
+- **`c_feat_textenc_metrics_ext`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Enable text encoding, full text metrics, and extended metrics to capture structural C file signals.
+- **`c_feat_symbol_trigrams_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1` — Research symbol trigrams to capture longer API call sequences common in C malware.
+- **`c_ablation_no_blindfold_critcat`** `EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters` — Remove blindfold and crit-category ngrams to reduce noise and potentially improve PR AUC.
+- **`c_transfer_subsample_col_ratio`** `EXP_COLSAMPLE_BYTREE=0.7 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_METRIC_RATIO_FEATURES=1 EXP_SUBSAMPLE=0.7` — Transfer subsampling/colsample from perl route and add metric ratios for small corpus benefit.
+- **`c_gen_seed_search_ensemble`** `EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Use seed search and ensemble averaging to reduce variance and find robust configuration.
+- **`c_drift_kv_symbols_seed7`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=200000` — Retry KV+symbols combo with more training data and different seed to check data drift.
+- **`c_recall3_fpr_target`** `EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Directly optimize threshold for production operating point to maximize recall@3 FP/M.
+
+</details>
+

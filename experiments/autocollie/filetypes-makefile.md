@@ -144,3 +144,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260515T075749-filetypes-makefile` — 2026-05-15T07:57:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `558fd50e0c2bf384` | makefile_control_baseline | ok | 0.0909 | 0.5000 | 0.1667 | 10 | [log](out/autocollie/runs/2026-05-15T08-00-49_20260515T075749-filetypes-makefile_makefile_control_baseline.log) |
+| `d00abcb31fc62bd3` | makefile_exploit_extra_trees | ok | 0.0909 | 0.5000 | 0.1667 | 3 | [log](out/autocollie/runs/2026-05-15T08-00-59_20260515T075749-filetypes-makefile_makefile_exploit_extra_trees.log) |
+| `bc85b7d755185211` | makefile_exploit_hard_neg | ok | 0.0909 | 0.5000 | 0.1667 | 3 | [log](out/autocollie/runs/2026-05-15T08-01-02_20260515T075749-filetypes-makefile_makefile_exploit_hard_neg.log) |
+| `eb0341b0db85cdd2` | makefile_kv_vocab_split | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-15T08-01-05_20260515T075749-filetypes-makefile_makefile_kv_vocab_split.log) |
+| `9f7e7773fb966e62` | makefile_textenc_metrics | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-15T08-01-08_20260515T075749-filetypes-makefile_makefile_textenc_metrics.log) |
+| `a31cb68286b9ab59` | makefile_trigram_pools | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-15T08-01-12_20260515T075749-filetypes-makefile_makefile_trigram_pools.log) |
+| `6ddb0ed9327d36c5` | makefile_ablate_blindfold | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-15T08-01-16_20260515T075749-filetypes-makefile_makefile_ablate_blindfold.log) |
+| `8592b738d4dd2d25` | makefile_transfer_data_kv | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-15T08-01-19_20260515T075749-filetypes-makefile_makefile_transfer_data_kv.log) |
+| `b2f784447afa77d9` | makefile_transfer_perl_textenc | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-15T08-01-23_20260515T075749-filetypes-makefile_makefile_transfer_perl_textenc.log) |
+| `bcf6c86ee21b5869` | makefile_seed_search_kv | ok | 0.0909 | 0.5000 | 0.1667 | 5 | [log](out/autocollie/runs/2026-05-15T08-01-27_20260515T075749-filetypes-makefile_makefile_seed_search_kv.log) |
+| `a3cf54d8e4cd65e3` | makefile_retry_script_no_presence | ok | 0.0909 | 0.5000 | 0.1667 | 4 | [log](out/autocollie/runs/2026-05-15T08-01-32_20260515T075749-filetypes-makefile_makefile_retry_script_no_presence.log) |
+| `fb13f5293d943b19` | makefile_exploit_scale_pos | ok | 0.0909 | 0.5000 | 0.1667 | 3 | [log](out/autocollie/runs/2026-05-15T08-01-37_20260515T075749-filetypes-makefile_makefile_exploit_scale_pos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_control_baseline`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env to establish a stable baseline for PR_AUC comparison.
+- **`makefile_exploit_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Add extra_trees regularization to reduce overfitting on the tiny corpus, aiming to improve PR_AUC.
+- **`makefile_exploit_hard_neg`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`makefile_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to parse makefile variable assignments, targeting PR_AUC gains from structured signal.
+- **`makefile_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture script obfuscation patterns, targeting recall@3FPM.
+- **`makefile_trigram_pools`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=2` — Enable objective_trigrams and suspicious_trigrams to detect malicious command sequences, targeting PR_AUC.
+- **`makefile_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout features to reduce noise on the small corpus, aiming to stabilize PR_AUC.
+- **`makefile_transfer_data_kv`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port high-PR-AUC data route config with kv_vocab enabled and lower bigram_min_freq for scripts, targeting PR_AUC.
+- **`makefile_transfer_perl_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=2000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adapt perl route success by enabling textenc and kv while disabling clusters, targeting recall@3FPM.
+- **`makefile_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the kv_vocab config to verify signal stability and improve PR_AUC via ensemble averaging.
+- **`makefile_retry_script_no_presence`** `EXP_DISABLE_FEATURE_GROUPS=present EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Retry historical best PR_AUC config to check for data-drift improvements on the updated corpus.
+- **`makefile_exploit_scale_pos`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives with scale_pos_weight_mult=0.5 to suppress FPs at low FPR, targeting recall@3FPM.
+
+</details>
+

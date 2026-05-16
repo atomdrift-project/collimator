@@ -110,3 +110,71 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T174345-filetypes-png` — 2026-05-14T17:43:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4514fd948b740d56` | png_control_leaves128_lr003 | ok | 0.9897 | 0.9752 | 0.9440 | 5 | [log](out/autocollie/runs/2026-05-14T17-47-04_20260514T174345-filetypes-png_png_control_leaves128_lr003.log) |
+| `3648a85f8c12313c` | png_control_dart_extra_trees | ok | 0.9824 | 0.9628 | 0.9524 | 2 | [log](out/autocollie/runs/2026-05-14T17-47-09_20260514T174345-filetypes-png_png_control_dart_extra_trees.log) |
+| `bfb428040eaf5734` | png_control_hardneg_scalepos | ok | 0.9797 | 0.9550 | 0.9524 | 1 | [log](out/autocollie/runs/2026-05-14T17-47-11_20260514T174345-filetypes-png_png_control_hardneg_scalepos.log) |
+| `1761e930735f4493` | png_kv_vocab_5k | ok | 0.9897 | 0.9780 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-14T17-47-12_20260514T174345-filetypes-png_png_kv_vocab_5k.log) |
+| `fe67caf65b7d1d89` | png_textenc_metrics_full | ok | 0.9897 | 0.9754 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-14T17-47-15_20260514T174345-filetypes-png_png_textenc_metrics_full.log) |
+| `7066338781908f1a` | png_symbol_vocab_2k | ok | 0.9897 | 0.9780 | 0.9524 | 4 | [log](out/autocollie/runs/2026-05-14T17-47-19_20260514T174345-filetypes-png_png_symbol_vocab_2k.log) |
+| `69f2012fdd4bdd62` | png_extended_extreme_metrics | ok | 0.9880 | 0.9743 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-14T17-47-22_20260514T174345-filetypes-png_png_extended_extreme_metrics.log) |
+| `8e88c7b4ea4cb24a` | png_ablate_blindfold | ok | 0.9897 | 0.9780 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-14T17-47-25_20260514T174345-filetypes-png_png_ablate_blindfold.log) |
+| `f52accdb7cd558e9` | png_transfer_gz_full_vocab | ok | 0.9880 | 0.9743 | 0.9524 | 4 | [log](out/autocollie/runs/2026-05-14T17-47-29_20260514T174345-filetypes-png_png_transfer_gz_full_vocab.log) |
+| `84955c2bfbcfadb8` | png_generalize_seed123_k3 | ok | 0.9900 | 0.9787 | 0.9524 | 10 | [log](out/autocollie/runs/2026-05-14T17-47-32_20260514T174345-filetypes-png_png_generalize_seed123_k3.log) |
+| `0b481b445e8ae7ae` | png_retry_transfer_gz_kv | ok | 0.9910 | 0.9798 | 0.9524 | 5 | [log](out/autocollie/runs/2026-05-14T17-47-43_20260514T174345-filetypes-png_png_retry_transfer_gz_kv.log) |
+| `9f225c7b2233778e` | png_recall3_fpr_target | ok | 0.9857 | 0.9789 | 0.9355 | 2 | [log](out/autocollie/runs/2026-05-14T17-47-48_20260514T174345-filetypes-png_png_recall3_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`png_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1` — Exploit best feature set with deeper trees and lower LR to reduce variance and improve PR AUC.
+- **`png_control_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_EXTRA_TREES=1 EXP_NUM_LEAVES=64` — Test dart boosting with extra trees for better tail generalization and recall@3 FP/M.
+- **`png_control_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_SCALE_POS_WEIGHT_MULT=0.75` — Down-weight positives and up-weight hard negatives to sharpen low-FPR ranking for production operating point.
+- **`png_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,present,maxcrit,score EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000` — Enable KV vocab to capture PNG metadata and chunk key-value patterns that may signal packing or steganography.
+- **`png_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Enable text encoding and full text metrics to detect obfuscation or anomalous text chunks in PNG files.
+- **`png_symbol_vocab_2k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,present,maxcrit,score EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=2000` — Enable symbol vocab to catch structured identifiers in PNG metadata or embedded payloads.
+- **`png_extended_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1` — Transfer from data route: enable extended and extreme metrics to capture structural anomalies in PNG packing.
+- **`png_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score` — Disable blindfold dropout to test if removing feature noise improves PR AUC stability on small PNG corpus.
+- **`png_transfer_gz_full_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=3000 EXP_TEXT_ENCODING_FEATURES=1` — Port gz route's successful full-vocab config, enabling kv, textenc, and symbols to maximize signal for PNG metadata.
+- **`png_generalize_seed123_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=100000` — Test seed stability and sample size sensitivity on the best feature set to distinguish real signal from variance.
+- **`png_retry_transfer_gz_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1` — Retry prior transfer candidate with tuned tree depth and regularization to recover PR AUC guardrails after data drift.
+- **`png_recall3_fpr_target`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,present,maxcrit,score EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Directly optimize for production operating point with aggressive hard negatives and low FPR target to boost recall@3 FP/M.
+
+</details>
+
+## Cycle `20260515T065357-filetypes-png` — 2026-05-15T06:53:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c4d6b7561468b918` | png_control_lr003_leaves128 | ok | 0.9880 | 0.9743 | 0.9524 | 16 | [log](out/autocollie/runs/2026-05-15T06-58-08_20260515T065357-filetypes-png_png_control_lr003_leaves128.log) |
+| `0d9007b7ce97da29` | png_control_hardneg_reg | ok | 0.9882 | 0.9821 | 0.9524 | 17 | [log](out/autocollie/runs/2026-05-15T06-58-24_20260515T065357-filetypes-png_png_control_hardneg_reg.log) |
+| `1058515a7465bfe5` | png_control_scalepos_dart | ok | 0.9824 | 0.9630 | 0.9524 | 68 | [log](out/autocollie/runs/2026-05-15T06-58-41_20260515T065357-filetypes-png_png_control_scalepos_dart.log) |
+| `e8432b20eed48ec6` | png_kv_vocab_split | ok | 0.9880 | 0.9743 | 0.9524 | 10 | [log](out/autocollie/runs/2026-05-15T06-59-49_20260515T065357-filetypes-png_png_kv_vocab_split.log) |
+| `0d35f955cf22a4d5` | png_textenc_metrics_full | ok | 0.9880 | 0.9743 | 0.9524 | 10 | [log](out/autocollie/runs/2026-05-15T06-59-59_20260515T065357-filetypes-png_png_textenc_metrics_full.log) |
+| `5f0e2b77ad58f2b4` | png_tiered_crit_trigrams | ok | 0.9880 | 0.9747 | 0.9524 | 9 | [log](out/autocollie/runs/2026-05-15T07-00-09_20260515T065357-filetypes-png_png_tiered_crit_trigrams.log) |
+| `eca235947121e19e` | png_symbol_bigram_vocab | ok | 0.9880 | 0.9743 | 0.9524 | 10 | [log](out/autocollie/runs/2026-05-15T07-00-18_20260515T065357-filetypes-png_png_symbol_bigram_vocab.log) |
+| `f143a9380dcdb7eb` | png_ablate_blindfold_extreme | ok | 0.9880 | 0.9743 | 0.9524 | 9 | [log](out/autocollie/runs/2026-05-15T07-00-28_20260515T065357-filetypes-png_png_ablate_blindfold_extreme.log) |
+| `a26142dbde068811` | png_transfer_gz_full_vocab | ok | 0.9880 | 0.9743 | 0.9524 | 10 | [log](out/autocollie/runs/2026-05-15T07-00-37_20260515T065357-filetypes-png_png_transfer_gz_full_vocab.log) |
+| `03b98befa8e25de2` | png_transfer_docx_ember_ext | ok | 0.9873 | 0.9734 | 0.9524 | 10 | [log](out/autocollie/runs/2026-05-15T07-00-47_20260515T065357-filetypes-png_png_transfer_docx_ember_ext.log) |
+| `e19bb1be9c4143fb` | png_generalize_seed_k3 | ok | 0.9873 | 0.9727 | 0.9545 | 21 | [log](out/autocollie/runs/2026-05-15T07-00-57_20260515T065357-filetypes-png_png_generalize_seed_k3.log) |
+| `a9f6834a18d847b6` | png_retry_fpr_target_drift | ok | 0.9880 | 0.9743 | 0.9524 | 8 | [log](out/autocollie/runs/2026-05-15T07-01-17_20260515T065357-filetypes-png_png_retry_fpr_target_drift.log) |
+
+<details><summary>Spec details</summary>
+
+- **`png_control_lr003_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by fine-tuning learning rate and leaves on the best feature set to improve ranking without changing the matrix.
+- **`png_control_hardneg_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by applying hard-negative weighting to push benign PNGs lower in the score distribution while keeping PR_AUC flat.
+- **`png_control_scalepos_dart`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by down-weighting positives and using DART boosting to reduce overfitting on the small PNG corpus.
+- **`png_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling kv_vocab and kv_value_split to recover per-element signal from PNG metadata chunks, improving rank quality.
+- **`png_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling text_encoding and text_metrics_full to capture structural obfuscation patterns in PNG text chunks.
+- **`png_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling tiered_crit_trigrams to capture severity-prefixed path co-occurrences specific to PNG malware families.
+- **`png_symbol_bigram_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=3000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling symbol_vocab and symbol_bigrams to catch co-occurrence patterns in PNG parser/decoder symbol references.
+- **`png_ablate_blindfold_extreme`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by removing blindfold and extreme_features to reduce noise on the small PNG corpus while preserving core ranking signal.
+- **`png_transfer_gz_full_vocab`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by porting the gz route's successful full vocab configuration, adjusting kv_vocab_max conservatively for PNG metadata density.
+- **`png_transfer_docx_ember_ext`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by transferring ember_lite and extended_metrics from document routes to capture structural PNG anomalies.
+- **`png_generalize_seed_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by running seed_search_k=3 on the best feature set to distinguish real signal from seed noise and stabilize recall@3FPM.
+- **`png_retry_fpr_target_drift`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by retrying the fpr_target threshold mode on the current corpus to see if daily ingest shifts improve low-FPR recall.
+
+</details>
+

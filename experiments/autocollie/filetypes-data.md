@@ -86,3 +86,105 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T185204-filetypes-data` — 2026-05-14T18:52:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5e0ea03f43ec4c00` | data_control_baseline | ok | 1.0000 | 1.0000 | 0.9880 | 5 | [log](out/autocollie/runs/2026-05-14T18-57-13_20260514T185204-filetypes-data_data_control_baseline.log) |
+| `39a08fb15270f337` | data_hn_weight10 | ok | 1.0000 | 1.0000 | 0.9630 | 1 | [log](out/autocollie/runs/2026-05-14T18-57-18_20260514T185204-filetypes-data_data_hn_weight10.log) |
+| `425e00565b0a7d10` | data_scalepos05 | ok | 1.0000 | 1.0000 | 0.9880 | 2 | [log](out/autocollie/runs/2026-05-14T18-57-20_20260514T185204-filetypes-data_data_scalepos05.log) |
+| `470e46280d9aa913` | data_kv_vocab_5000 | ok | 1.0000 | 1.0000 | 0.9880 | 3 | [log](out/autocollie/runs/2026-05-14T18-57-21_20260514T185204-filetypes-data_data_kv_vocab_5000.log) |
+| `ef68f0b7acd54456` | data_text_metrics_full | ok | 1.0000 | 1.0000 | 0.9880 | 5 | [log](out/autocollie/runs/2026-05-14T18-57-24_20260514T185204-filetypes-data_data_text_metrics_full.log) |
+| `be05a1b833945ec3` | data_symbol_vocab_2000 | ok | 1.0000 | 1.0000 | 0.9880 | 3 | [log](out/autocollie/runs/2026-05-14T18-57-29_20260514T185204-filetypes-data_data_symbol_vocab_2000.log) |
+| `a29371db1ec051a8` | data_abl_blindfold | ok | 1.0000 | 1.0000 | 0.9880 | 3 | [log](out/autocollie/runs/2026-05-14T18-57-33_20260514T185204-filetypes-data_data_abl_blindfold.log) |
+| `0aca42cd3f7304aa` | data_transfer_gz_bigrams | ok | 1.0000 | 1.0000 | 0.9880 | 3 | [log](out/autocollie/runs/2026-05-14T18-57-36_20260514T185204-filetypes-data_data_transfer_gz_bigrams.log) |
+| `42b9f557337b8f96` | data_seed_search_k3 | ok | 1.0000 | 1.0000 | 0.9880 | 3 | [log](out/autocollie/runs/2026-05-14T18-57-39_20260514T185204-filetypes-data_data_seed_search_k3.log) |
+| `a8a9e9adcf08ba3f` | data_recall_fpr_target | ok | 1.0000 | 1.0000 | 0.9880 | 2 | [log](out/autocollie/runs/2026-05-14T18-57-41_20260514T185204-filetypes-data_data_recall_fpr_target.log) |
+| `5e0ea03f43ec4c00` | data_extended_metrics | dup | 1.0000 | 1.0000 | 0.9880 | 1 | [log](out/autocollie/runs/2026-05-14T18-57-43_20260514T185204-filetypes-data_data_extended_metrics.log) |
+| `20591f923e9770c9` | data_dart_boosting_reg | ok | 1.0000 | 1.0000 | 0.9880 | 2 | [log](out/autocollie/runs/2026-05-14T18-57-44_20260514T185204-filetypes-data_data_dart_boosting_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_control_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Baseline control using best feature set to establish cache hit and verify current performance.
+- **`data_hn_weight10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Test hard negative weighting to improve tail recall without hurting PR AUC.
+- **`data_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Down-weight positives to reduce FPs at low FPR, targeting recall@3 FP/M.
+- **`data_kv_vocab_5000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Enable KV vocab features to capture key-value pair signals in data files.
+- **`data_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Add text_metrics_full to capture structural text properties in data files.
+- **`data_symbol_vocab_2000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Enable symbol vocab to detect malicious function names or imports in data payloads.
+- **`data_abl_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters` — Remove blindfold features to test if they add noise or if simpler features generalize better.
+- **`data_transfer_gz_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Port gz route successful bigram configuration with adjusted min_freq for data route.
+- **`data_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Use seed search to reduce variance and find a more robust model configuration.
+- **`data_recall_fpr_target`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Optimize threshold directly for low FPR to improve recall@3 FP/M at production operating point.
+- **`data_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Add extended metrics to capture additional structural signals from data files.
+- **`data_dart_boosting_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Test DART boosting with regularization to improve generalization on small corpus.
+
+</details>
+
+## Cycle `20260515T011355-filetypes-data` — 2026-05-15T01:13:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3dee8716f239fd21` | data_exploit_leaves128_lr003 | ok | 1.0000 | 1.0000 | 0.9880 | 19 | [log](out/autocollie/runs/2026-05-15T01-18-30_20260515T011355-filetypes-data_data_exploit_leaves128_lr003.log) |
+| `a9348454e6897503` | data_exploit_dart_reg15 | ok | 1.0000 | 1.0000 | 0.9880 | 65 | [log](out/autocollie/runs/2026-05-15T01-18-50_20260515T011355-filetypes-data_data_exploit_dart_reg15.log) |
+| `39a08fb15270f337` | data_exploit_hardneg_01_10 | dup | 1.0000 | 1.0000 | 0.9630 | 1 | [log](out/autocollie/runs/2026-05-15T01-19-54_20260515T011355-filetypes-data_data_exploit_hardneg_01_10.log) |
+| `470e46280d9aa913` | data_feat_kv_vocab_5k | dup | 1.0000 | 1.0000 | 0.9880 | 1 | [log](out/autocollie/runs/2026-05-15T01-19-55_20260515T011355-filetypes-data_data_feat_kv_vocab_5k.log) |
+| `c3fbb06dbd776d09` | data_feat_textenc_metrics | ok | 1.0000 | 1.0000 | 0.9880 | 14 | [log](out/autocollie/runs/2026-05-15T01-19-56_20260515T011355-filetypes-data_data_feat_textenc_metrics.log) |
+| `d858865a0716be51` | data_feat_symbol_vocab_3k | ok | 1.0000 | 1.0000 | 0.9880 | 14 | [log](out/autocollie/runs/2026-05-15T01-20-10_20260515T011355-filetypes-data_data_feat_symbol_vocab_3k.log) |
+| `a29371db1ec051a8` | data_abl_blindfold_off | dup | 1.0000 | 1.0000 | 0.9880 | 1 | [log](out/autocollie/runs/2026-05-15T01-20-24_20260515T011355-filetypes-data_data_abl_blindfold_off.log) |
+| `6a3b14c24af5f147` | data_transfer_gz_kv_seed3 | ok | 1.0000 | 1.0000 | 0.9880 | 34 | [log](out/autocollie/runs/2026-05-15T01-20-25_20260515T011355-filetypes-data_data_transfer_gz_kv_seed3.log) |
+| `ee0eb5ea36056fae` | data_gen_seed123_samples100k | ok | 1.0000 | 1.0000 | 0.9880 | 20 | [log](out/autocollie/runs/2026-05-15T01-20-59_20260515T011355-filetypes-data_data_gen_seed123_samples100k.log) |
+| `632f726d6612e526` | data_retry_dart_reg2_seed7 | ok | 1.0000 | 1.0000 | 0.9880 | 39 | [log](out/autocollie/runs/2026-05-15T01-21-18_20260515T011355-filetypes-data_data_retry_dart_reg2_seed7.log) |
+| `3d1689a69654cdfe` | data_recall_fpr3e6_scale075 | ok | 1.0000 | 1.0000 | 0.9880 | 12 | [log](out/autocollie/runs/2026-05-15T01-21-57_20260515T011355-filetypes-data_data_recall_fpr3e6_scale075.log) |
+| `6c023fdfbe20eb9f` | data_research_kv_split_ratios | ok | 1.0000 | 1.0000 | 0.9880 | 14 | [log](out/autocollie/runs/2026-05-15T01-22-09_20260515T011355-filetypes-data_data_research_kv_split_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_exploit_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Increase tree capacity and lower LR to refine ranking without overfitting the tiny holdout.
+- **`data_exploit_dart_reg15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — DART boosting with dropout regularization often improves tail recall and generalization on small corpora.
+- **`data_exploit_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Upweight hard negatives to sharpen the decision boundary near the production operating point.
+- **`data_feat_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Enable KV vocab to capture structured key-value patterns in data files that n-grams miss.
+- **`data_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Text encoding and full text metrics may capture obfuscation or structural anomalies in data payloads.
+- **`data_feat_symbol_vocab_3k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Symbol vocab extracts named entities or string constants that may indicate malicious intent in data files.
+- **`data_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Removing blindfold dropout features reduces noise and may stabilize rankings on this small corpus.
+- **`data_transfer_gz_kv_seed3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Port gz route's successful KV vocab + seed search to improve robustness against seed variance.
+- **`data_gen_seed123_samples100k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Vary seed and sample size to distinguish real signal from seed/sample noise on this saturated route.
+- **`data_retry_dart_reg2_seed7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Retry strong dart boosting config with higher L2 regularization and new seed to check data drift stability.
+- **`data_recall_fpr3e6_scale075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Directly optimize threshold for 3 FP/M operating point and downweight positives to reduce tail FPs.
+- **`data_research_kv_split_ratios`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — KV value splitting and metric ratios may recover granular signal in structured data payloads.
+
+</details>
+
+## Cycle `20260515T050336-filetypes-data` — 2026-05-15T05:03:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `28ecbef889f0db60` | data_control_baseline_lr003 | ok | 1.0000 | 1.0000 | 0.9880 | 29 | [log](out/autocollie/runs/2026-05-15T05-07-19_20260515T050336-filetypes-data_data_control_baseline_lr003.log) |
+| `b8dd98f2f1b02ff7` | data_train_dart_reg2 | ok | 1.0000 | 1.0000 | 0.9880 | 45 | [log](out/autocollie/runs/2026-05-15T05-07-48_20260515T050336-filetypes-data_data_train_dart_reg2.log) |
+| `a4b0cfca8274af96` | data_train_scalepos05_fpr3e6 | ok | 1.0000 | 1.0000 | 0.9880 | 11 | [log](out/autocollie/runs/2026-05-15T05-08-34_20260515T050336-filetypes-data_data_train_scalepos05_fpr3e6.log) |
+| `b3f64610125f0ff7` | data_feat_kv_vocab_8k | ok | 1.0000 | 1.0000 | 0.9880 | 16 | [log](out/autocollie/runs/2026-05-15T05-08-45_20260515T050336-filetypes-data_data_feat_kv_vocab_8k.log) |
+| `2f19dd6cba2ccd14` | data_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 0.9880 | 17 | [log](out/autocollie/runs/2026-05-15T05-09-00_20260515T050336-filetypes-data_data_feat_text_metrics_enc.log) |
+| `2def1a6a6da43fe1` | data_feat_symbol_vocab_bigrams | ok | 1.0000 | 1.0000 | 0.9880 | 17 | [log](out/autocollie/runs/2026-05-15T05-09-17_20260515T050336-filetypes-data_data_feat_symbol_vocab_bigrams.log) |
+| `f13297b72d1064fd` | data_feat_ext_metrics_extreme | ok | 1.0000 | 1.0000 | 0.9880 | 15 | [log](out/autocollie/runs/2026-05-15T05-09-34_20260515T050336-filetypes-data_data_feat_ext_metrics_extreme.log) |
+| `2f31ab0a22ed9506` | data_research_kv_split_vocab | ok | 1.0000 | 1.0000 | 0.9880 | 17 | [log](out/autocollie/runs/2026-05-15T05-09-48_20260515T050336-filetypes-data_data_research_kv_split_vocab.log) |
+| `ce05d4c5f80fbde5` | data_research_mbc_vocab_attack_ngrams | ok | 1.0000 | 1.0000 | 0.9880 | 16 | [log](out/autocollie/runs/2026-05-15T05-10-05_20260515T050336-filetypes-data_data_research_mbc_vocab_attack_ngrams.log) |
+| `b3ec070b3dfba456` | data_transfer_gz_kv_seed3 | ok | 1.0000 | 1.0000 | 0.9880 | 40 | [log](out/autocollie/runs/2026-05-15T05-10-22_20260515T050336-filetypes-data_data_transfer_gz_kv_seed3.log) |
+| `80d2625464843a03` | data_gen_seed_avg_ensemble | ok | 1.0000 | 1.0000 | 1.0000 | 38 | [log](out/autocollie/runs/2026-05-15T05-11-02_20260515T050336-filetypes-data_data_gen_seed_avg_ensemble.log) |
+| `c40365368e39821f` | data_ablation_blindfold_off_freq500 | ok | 1.0000 | 1.0000 | 0.9880 | 16 | [log](out/autocollie/runs/2026-05-15T05-11-39_20260515T050336-filetypes-data_data_ablation_blindfold_off_freq500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_control_baseline_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by confirming the baseline feature surface with a slightly lower learning rate to prevent overfitting on the saturated dev set.
+- **`data_train_dart_reg2`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by using dart boosting with L2 regularization to smooth decision boundaries and reduce false positives in the tail.
+- **`data_train_scalepos05_fpr3e6`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by down-weighting positives and optimizing threshold directly at the deployed 3e-6 FPR operating point.
+- **`data_feat_kv_vocab_8k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling key-value vocabulary with a higher cap to capture structured metadata patterns unique to data files.
+- **`data_feat_text_metrics_enc`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by adding full text metrics and encoding features to detect obfuscation and structural anomalies in text-heavy data payloads.
+- **`data_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=4000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by introducing symbol vocabulary and bigrams to capture co-occurrence patterns in embedded scripts or binary blobs within data files.
+- **`data_feat_ext_metrics_extreme`** `EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by enabling extended metrics and extreme features to highlight rare but highly indicative tail signals.
+- **`data_research_kv_split_vocab`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by splitting KV string values on separators to recover per-element signal that would otherwise be lost as opaque blobs.
+- **`data_research_mbc_vocab_attack_ngrams`** `EXP_ATTACK_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by adding MBC ID vocabulary and attack ngrams to explicitly model known malicious behavior catalogs and code patterns.
+- **`data_transfer_gz_kv_seed3`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by porting the gz route's successful KV vocabulary configuration and using seed search to find the most robust model instance.
+- **`data_gen_seed_avg_ensemble`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC stability by training an averaged ensemble across 3 seeds to reduce variance and ensure the win generalizes beyond a single RNG split.
+- **`data_ablation_blindfold_off_freq500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by disabling blindfold dropout and raising bigram frequency floor to reduce noise from rare, potentially spurious patterns.
+
+</details>
+

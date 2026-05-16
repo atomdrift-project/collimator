@@ -160,3 +160,105 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T171326-filetypes-package.json` — 2026-05-14T17:13:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d4c5ece44105d95f` | pkg_json_exploit_leaves128_lr003 | ok | 0.9999 | 0.9997 | 0.9916 | 17 | [log](out/autocollie/runs/2026-05-14T17-18-34_20260514T171326-filetypes-package.json_pkg_json_exploit_leaves128_lr003.log) |
+| `b2915134a2562c3e` | pkg_json_exploit_extra_trees | ok | 0.9999 | 0.9998 | 0.9942 | 10 | [log](out/autocollie/runs/2026-05-14T17-18-51_20260514T171326-filetypes-package.json_pkg_json_exploit_extra_trees.log) |
+| `246223d581374758` | pkg_json_exploit_recall3_fpr | ok | 0.9999 | 0.9998 | 0.9966 | 5 | [log](out/autocollie/runs/2026-05-14T17-19-01_20260514T171326-filetypes-package.json_pkg_json_exploit_recall3_fpr.log) |
+| `7bbc4a5066b1dcb3` | pkg_json_feat_kv_split_vocab | ok | 0.9999 | 0.9998 | 0.9951 | 13 | [log](out/autocollie/runs/2026-05-14T17-19-06_20260514T171326-filetypes-package.json_pkg_json_feat_kv_split_vocab.log) |
+| `5c1111bffcea04dc` | pkg_json_feat_text_metrics_full | ok | 0.9999 | 0.9998 | 0.9947 | 12 | [log](out/autocollie/runs/2026-05-14T17-19-18_20260514T171326-filetypes-package.json_pkg_json_feat_text_metrics_full.log) |
+| `7b33478b7fa1df1a` | pkg_json_feat_symbol_bigrams | ok | 0.9999 | 0.9998 | 0.9947 | 13 | [log](out/autocollie/runs/2026-05-14T17-19-30_20260514T171326-filetypes-package.json_pkg_json_feat_symbol_bigrams.log) |
+| `adc7b4499be0d2fa` | pkg_json_ablation_no_blindfold_ext | ok | 0.9999 | 0.9998 | 0.9951 | 12 | [log](out/autocollie/runs/2026-05-14T17-19-43_20260514T171326-filetypes-package.json_pkg_json_ablation_no_blindfold_ext.log) |
+| `3a985313aed7b57b` | pkg_json_transfer_gz_seed_ensemble | ok | 0.9999 | 0.9998 | 0.9947 | 26 | [log](out/autocollie/runs/2026-05-14T17-19-55_20260514T171326-filetypes-package.json_pkg_json_transfer_gz_seed_ensemble.log) |
+| `d9ec71f4db9ff467` | pkg_json_transfer_docx_ember_text | ok | 0.9999 | 0.9998 | 0.9944 | 13 | [log](out/autocollie/runs/2026-05-14T17-20-21_20260514T171326-filetypes-package.json_pkg_json_transfer_docx_ember_text.log) |
+| `b79085838a35922b` | pkg_json_gen_seed123_120k | ok | 0.9999 | 0.9999 | 0.9971 | 14 | [log](out/autocollie/runs/2026-05-14T17-20-34_20260514T171326-filetypes-package.json_pkg_json_gen_seed123_120k.log) |
+| `81359707119c7536` | pkg_json_gen_seed777_180k | ok | 0.9999 | 0.9997 | 0.9958 | 16 | [log](out/autocollie/runs/2026-05-14T17-20-48_20260514T171326-filetypes-package.json_pkg_json_gen_seed777_180k.log) |
+| `2aa116e02dcee646` | pkg_json_retry_shallow_deep_reg | ok | 0.9999 | 0.9999 | 0.9958 | 5 | [log](out/autocollie/runs/2026-05-14T17-21-03_20260514T171326-filetypes-package.json_pkg_json_retry_shallow_deep_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_exploit_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_LEARNING_RATE=0.03 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5` — Deeper trees with lower LR and higher regularization to capture complex package.json dependency patterns without overfitting.
+- **`pkg_json_exploit_extra_trees`** `EXP_COLSAMPLE_BYTREE=0.7 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_EXTRA_TREES=1 EXP_NUM_LEAVES=96 EXP_SUBSAMPLE=0.8` — Extra trees add ensemble noise that often improves generalization at the low-FPR tail for structured JSON routes.
+- **`pkg_json_exploit_recall3_fpr`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_NUM_LEAVES=110 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Directly optimize threshold for production operating point to maximize recall@3 FP/M while controlling false positives.
+- **`pkg_json_feat_kv_split_vocab`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000` — KV value splitting recovers per-element signal in dependency arrays and version strings that would otherwise be opaque blobs.
+- **`pkg_json_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_LINE_LENGTH_BUCKETS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Full text metrics and line length buckets capture obfuscation and formatting anomalies in malicious package manifests.
+- **`pkg_json_feat_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000` — Symbol bigrams over import/field pairs catch co-occurrence patterns in malicious dependency graphs and script fields.
+- **`pkg_json_ablation_no_blindfold_ext`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_EXTENDED_METRICS=0` — Removing blindfold dropout and extended metrics reduces noise and may tighten the PR curve by focusing on core structural signals.
+- **`pkg_json_transfer_gz_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=150000` — Transfer seed ensemble strategy from gz route to reduce variance and stabilize recall@3 FP/M gains.
+- **`pkg_json_transfer_docx_ember_text`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_KV_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1` — Port ember-lite and text encoding from docx specialist to capture structural and textual anomalies in package files.
+- **`pkg_json_gen_seed123_120k`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=30000 EXP_TRAIN_SAMPLES=120000` — Generalization check with different seed and smaller corpus to verify signal robustness against sample noise.
+- **`pkg_json_gen_seed777_180k`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=45000 EXP_TRAIN_SAMPLES=180000` — Generalization check with larger corpus and alternate seed to distinguish real rank signal from seed-driven variance.
+- **`pkg_json_retry_shallow_deep_reg`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.08 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2` — Retry historical shallow-tree high-regularization config to test if data drift has revived its generalization properties.
+
+</details>
+
+## Cycle `20260514T231840-filetypes-package.json` — 2026-05-14T23:18:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3efd1abb296278e7` | pkg_json_exploit_extra_trees_recall | ok | 0.9999 | 0.9997 | 0.9929 | 90 | [log](out/autocollie/runs/2026-05-14T23-22-43_20260514T231840-filetypes-package.json_pkg_json_exploit_extra_trees_recall.log) |
+| `dfe826261af9043f` | pkg_json_exploit_fpr_target_3e6 | ok | 0.9999 | 0.9997 | 0.9966 | 34 | [log](out/autocollie/runs/2026-05-14T23-24-13_20260514T231840-filetypes-package.json_pkg_json_exploit_fpr_target_3e6.log) |
+| `0a890ea16c68c826` | pkg_json_exploit_dart_boosting | ok | 0.9996 | 0.9990 | 0.9955 | 6 | [log](out/autocollie/runs/2026-05-14T23-24-46_20260514T231840-filetypes-package.json_pkg_json_exploit_dart_boosting.log) |
+| `7914f2103af94068` | pkg_json_feat_kv_vocab_split | ok | 0.9999 | 0.9998 | 0.9951 | 109 | [log](out/autocollie/runs/2026-05-14T23-24-52_20260514T231840-filetypes-package.json_pkg_json_feat_kv_vocab_split.log) |
+| `b5309420b3bd154f` | pkg_json_feat_text_metrics_full | ok | 0.9999 | 0.9998 | 0.9951 | 86 | [log](out/autocollie/runs/2026-05-14T23-26-41_20260514T231840-filetypes-package.json_pkg_json_feat_text_metrics_full.log) |
+| `ee347c5df42a60c2` | pkg_json_feat_bigram_freq_250 | ok | 0.9999 | 0.9998 | 0.9951 | 63 | [log](out/autocollie/runs/2026-05-14T23-28-06_20260514T231840-filetypes-package.json_pkg_json_feat_bigram_freq_250.log) |
+| `e6104e1c42dc7fbb` | pkg_json_abl_blindfold_off | ok | 0.9999 | 0.9998 | 0.9951 | 110 | [log](out/autocollie/runs/2026-05-14T23-29-10_20260514T231840-filetypes-package.json_pkg_json_abl_blindfold_off.log) |
+| `c8d49da115f39d00` | pkg_json_transfer_xml_text_kv | ok | 0.9999 | 0.9998 | 0.9951 | 94 | [log](out/autocollie/runs/2026-05-14T23-31-00_20260514T231840-filetypes-package.json_pkg_json_transfer_xml_text_kv.log) |
+| `1db7994aa02a729e` | pkg_json_gen_seed777_120k | ok | 0.9999 | 0.9997 | 0.9958 | 33 | [log](out/autocollie/runs/2026-05-14T23-32-34_20260514T231840-filetypes-package.json_pkg_json_gen_seed777_120k.log) |
+| `2728938a4f19c29d` | pkg_json_gen_seed_search_3 | ok | 0.9999 | 0.9998 | 0.9947 | 115 | [log](out/autocollie/runs/2026-05-14T23-33-06_20260514T231840-filetypes-package.json_pkg_json_gen_seed_search_3.log) |
+| `bcad97ffa1a0d49b` | pkg_json_retry_kv_lifecycle | ok | 0.9999 | 0.9998 | 0.9947 | 93 | [log](out/autocollie/runs/2026-05-14T23-35-01_20260514T231840-filetypes-package.json_pkg_json_retry_kv_lifecycle.log) |
+| `77b6629fe38a604e` | pkg_json_recall3_hard_neg_light | ok | 0.9999 | 0.9997 | 0.9922 | 64 | [log](out/autocollie/runs/2026-05-14T23-36-35_20260514T231840-filetypes-package.json_pkg_json_recall3_hard_neg_light.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_exploit_extra_trees_recall`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75` — Test extra_trees with lower scale_pos_weight to boost tail recall while preserving PR AUC.
+- **`pkg_json_exploit_fpr_target_3e6`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Directly optimize threshold for production operating point to maximize recall@3 FP/M.
+- **`pkg_json_exploit_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=64` — Switch to dart boosting for dropout regularization to improve tail behavior and reduce overfitting.
+- **`pkg_json_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=96` — Enable kv_vocab and kv_value_split to capture structured dependency/version signals in package.json.
+- **`pkg_json_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1` — Add text_metrics_full to capture obfuscation/formatting anomalies in JSON structure.
+- **`pkg_json_feat_bigram_freq_250`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_NUM_LEAVES=96` — Lower bigram_min_freq to 250 to include rarer but potentially malicious dependency patterns.
+- **`pkg_json_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_NUM_LEAVES=96` — Disable blindfold dropout to reduce feature noise and potentially stabilize PR AUC on small corpus.
+- **`pkg_json_transfer_xml_text_kv`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1` — Port xml route's successful text_metrics and kv combination, adapted for package.json structure.
+- **`pkg_json_gen_seed777_120k`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=30000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=120000` — Test seed variance and reduced sample size to distinguish real signal from sampling noise.
+- **`pkg_json_gen_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3` — Use seed_search_k=3 to average out seed-driven variance and stabilize recall@3 FP/M.
+- **`pkg_json_retry_kv_lifecycle`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1` — Retry top PR AUC historical config to check for data drift improvements.
+- **`pkg_json_recall3_hard_neg_light`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=4 EXP_MAX_TEST_SAMPLES=50000 EXP_SCALE_POS_WEIGHT_MULT=0.6 EXP_TEST_NATURAL_PREVALENCE=1` — Light hard-negative weighting with larger test budget to push benigns down in ranking without triggering previous crash combo.
+
+</details>
+
+## Cycle `20260515T092810-filetypes-package.json` — 2026-05-15T09:28:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cdaa59b162a0ece8` | pkg_json_control_leaves128_lr003 | ok | 0.9999 | 0.9998 | 0.9949 | 135 | [log](out/autocollie/runs/2026-05-15T09-33-33_20260515T092810-filetypes-package.json_pkg_json_control_leaves128_lr003.log) |
+| `3b2ba3f301904e9f` | pkg_json_train_hard_neg_light | ok | 0.9999 | 0.9998 | 0.9938 | 224 | [log](out/autocollie/runs/2026-05-15T09-35-48_20260515T092810-filetypes-package.json_pkg_json_train_hard_neg_light.log) |
+| `47a5f3d0dd1fb3e2` | pkg_json_train_dart_extra_trees | ok | 0.9997 | 0.9993 | 0.9859 | 136 | [log](out/autocollie/runs/2026-05-15T09-39-32_20260515T092810-filetypes-package.json_pkg_json_train_dart_extra_trees.log) |
+| `6ac42b215db712dd` | pkg_json_feat_kv_vocab_10k | ok | 0.9999 | 0.9998 | 0.9951 | 104 | [log](out/autocollie/runs/2026-05-15T09-41-48_20260515T092810-filetypes-package.json_pkg_json_feat_kv_vocab_10k.log) |
+| `10e33e8c16caebbf` | pkg_json_feat_text_metrics_full | ok | 0.9999 | 0.9998 | 0.9951 | 108 | [log](out/autocollie/runs/2026-05-15T09-43-32_20260515T092810-filetypes-package.json_pkg_json_feat_text_metrics_full.log) |
+| `c2955e012d15a078` | pkg_json_feat_symbol_vocab_5k | ok | 0.9999 | 0.9998 | 0.9951 | 113 | [log](out/autocollie/runs/2026-05-15T09-45-20_20260515T092810-filetypes-package.json_pkg_json_feat_symbol_vocab_5k.log) |
+| `fccca8f82b1c1bf4` | pkg_json_feat_tiered_crit_trigrams | ok | 0.9999 | 0.9998 | 0.9953 | 126 | [log](out/autocollie/runs/2026-05-15T09-47-13_20260515T092810-filetypes-package.json_pkg_json_feat_tiered_crit_trigrams.log) |
+| `01f147263e3b1c0d` | pkg_json_feat_obj_trigrams | ok | 0.9999 | 0.9998 | 0.9944 | 113 | [log](out/autocollie/runs/2026-05-15T09-49-19_20260515T092810-filetypes-package.json_pkg_json_feat_obj_trigrams.log) |
+| `cc4916d3ab0ecb60` | pkg_json_transfer_ember_extended | ok | 0.9999 | 0.9998 | 0.9944 | 106 | [log](out/autocollie/runs/2026-05-15T09-51-13_20260515T092810-filetypes-package.json_pkg_json_transfer_ember_extended.log) |
+| `3effe39055300ace` | pkg_json_gen_seed_search_3 | ok | 0.9999 | 0.9998 | 0.9969 | 319 | [log](out/autocollie/runs/2026-05-15T09-52-59_20260515T092810-filetypes-package.json_pkg_json_gen_seed_search_3.log) |
+| `910f59c3a63711e9` | pkg_json_retry_kv_lifecycle | ok | 0.9999 | 0.9999 | 0.9962 | 132 | [log](out/autocollie/runs/2026-05-15T09-58-18_20260515T092810-filetypes-package.json_pkg_json_retry_kv_lifecycle.log) |
+| `874849745fab7628` | pkg_json_abl_blindfold_off | ok | 0.9999 | 0.9998 | 0.9951 | 108 | [log](out/autocollie/runs/2026-05-15T10-00-30_20260515T092810-filetypes-package.json_pkg_json_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best feature_env; tweaks training to stabilize PR_AUC ranking.
+- **`pkg_json_train_hard_neg_light`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=4 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Light hard-negative weighting to improve recall@3FPM by focusing on difficult benigns without crashing.
+- **`pkg_json_train_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — DART boosting and extra trees add regularization to lift ROC_AUC and PR_AUC tail stability.
+- **`pkg_json_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture package dependency patterns, targeting PR_AUC gain.
+- **`pkg_json_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Full text metrics capture obfuscation in JSON strings, aiming for recall@3FPM improvement.
+- **`pkg_json_feat_symbol_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Symbol vocab extracts function/dependency names to boost PR_AUC ranking signal.
+- **`pkg_json_feat_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Tiered critical trigrams add high-signal n-grams to improve PR_AUC.
+- **`pkg_json_feat_obj_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=1000 EXP_TRIGRAM_MIN_FREQ=5` — Objective trigrams capture malicious intent sequences, targeting recall@3FPM.
+- **`pkg_json_transfer_ember_extended`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer ember_lite and extended_metrics from sister routes to boost PR_AUC.
+- **`pkg_json_gen_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Seed search k=3 reduces variance to confirm PR_AUC signal stability across splits.
+- **`pkg_json_retry_kv_lifecycle`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=3 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — Retry prior strong KV lifecycle config to check for data-drift PR_AUC gains.
+- **`pkg_json_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce noise and stabilize ROC_AUC.
+
+</details>
+

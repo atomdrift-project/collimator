@@ -110,3 +110,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260514T150936-filetypes-xml` — 2026-05-14T15:09:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `486f54694f02f8af` | xml_control_fpr3e6 | ok | 0.9967 | 0.9996 | 0.9375 | 7 | [log](out/autocollie/runs/2026-05-14T15-14-53_20260514T150936-filetypes-xml_xml_control_fpr3e6.log) |
+| `d2be4ff730d89d28` | xml_control_spw05 | ok | 0.9967 | 0.9996 | 0.9375 | 2 | [log](out/autocollie/runs/2026-05-14T15-15-00_20260514T150936-filetypes-xml_xml_control_spw05.log) |
+| `ab0e69c47bbe6810` | xml_control_dart | ok | 1.0000 | 1.0000 | 0.9375 | 4 | [log](out/autocollie/runs/2026-05-14T15-15-01_20260514T150936-filetypes-xml_xml_control_dart.log) |
+| `f27d05fac0c3b139` | xml_feat_kv_split | ok | 0.9912 | 0.9989 | 0.9375 | 5 | [log](out/autocollie/runs/2026-05-14T15-15-05_20260514T150936-filetypes-xml_xml_feat_kv_split.log) |
+| `1243c72a442f8cec` | xml_feat_text_metrics | ok | 1.0000 | 1.0000 | 0.9375 | 5 | [log](out/autocollie/runs/2026-05-14T15-15-10_20260514T150936-filetypes-xml_xml_feat_text_metrics.log) |
+| `83f78e8899275636` | xml_feat_obj_trigrams | ok | 1.0000 | 1.0000 | 0.9375 | 5 | [log](out/autocollie/runs/2026-05-14T15-15-14_20260514T150936-filetypes-xml_xml_feat_obj_trigrams.log) |
+| `7de622eea9315714` | xml_transfer_ember | ok | 1.0000 | 1.0000 | 0.9375 | 5 | [log](out/autocollie/runs/2026-05-14T15-15-19_20260514T150936-filetypes-xml_xml_transfer_ember.log) |
+| `36712435475d59c6` | xml_transfer_tiered | ok | 1.0000 | 1.0000 | 0.9375 | 5 | [log](out/autocollie/runs/2026-05-14T15-15-24_20260514T150936-filetypes-xml_xml_transfer_tiered.log) |
+| `40d736c84ad48133` | xml_gen_seed_ensemble | ok | 0.9967 | 0.9996 | 0.9714 | 3 | [log](out/autocollie/runs/2026-05-14T15-15-29_20260514T150936-filetypes-xml_xml_gen_seed_ensemble.log) |
+| `4427c7650a3f4f75` | xml_profile_natural_prev | ok | 0.9967 | 0.9996 | 0.9375 | 7 | [log](out/autocollie/runs/2026-05-14T15-15-32_20260514T150936-filetypes-xml_xml_profile_natural_prev.log) |
+| `c2e2381e25c88336` | xml_feat_symbol_vocab | ok | 0.9967 | 0.9996 | 0.9375 | 5 | [log](out/autocollie/runs/2026-05-14T15-15-39_20260514T150936-filetypes-xml_xml_feat_symbol_vocab.log) |
+
+Rejected before run:
+
+- `xml_ablate_blindfold` — features.disable_groups: "blindfold" not in valid_values [score clusters rares ghosts skeletons present filetype ext format formula intent_gaps logic_gaps neg_space kv metrics textenc symbols tiered_bigrams tiered_trigrams bigrams trigrams elements agg maxcrit signature_synergy struct]
+
+<details><summary>Spec details</summary>
+
+- **`xml_control_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Re-enable kv/textenc and optimize threshold for production recall@3 FP/M.
+- **`xml_control_spw05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Down-weight positives to reduce FPs at low FPR, improving recall@3 FP/M.
+- **`xml_control_dart`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1` — DART boosting with smaller trees for better generalization on small XML corpus.
+- **`xml_feat_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1` — Split KV string values to recover per-element signal in XML attributes.
+- **`xml_feat_text_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_TEXT_METRICS_FULL=1` — Add full text metrics and line length buckets to capture document obfuscation.
+- **`xml_feat_obj_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1` — Capture structured path trigrams in XML objectives and suspicious traits.
+- **`xml_transfer_ember`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_KV_VOCAB=1` — Port docx/xlsx static features that capture XML structural obfuscation.
+- **`xml_transfer_tiered`** `EXP_ATTACK_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1` — Port php tiered trigrams and attack ngrams for better trait co-occurrence signal.
+- **`xml_gen_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1` — Average 3 seeds to reduce variance and stabilize recall@3 FP/M.
+- **`xml_profile_natural_prev`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEST_NATURAL_PREVALENCE=1 EXP_TEXT_ENCODING_FEATURES=1` — Use natural class prevalence in test holdout to improve recall@k FP/M resolution.
+- **`xml_feat_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1` — Enable symbol vocab research surface to catch import/symbol co-occurrence patterns.
+
+</details>
+

@@ -86,3 +86,71 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260514T162320-filetypes-kotlin` — 2026-05-14T16:23:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6b2e9654b1ecd7bf` | kotlin_exploit_hn_tail | ok | 0.9776 | 0.5000 | 0.9887 | 23 | [log](out/autocollie/runs/2026-05-14T16-27-58_20260514T162320-filetypes-kotlin_kotlin_exploit_hn_tail.log) |
+| `b3efd81cd762cdc0` | kotlin_exploit_dart_reg | ok | 0.9776 | 0.5000 | 0.9887 | 23 | [log](out/autocollie/runs/2026-05-14T16-28-20_20260514T162320-filetypes-kotlin_kotlin_exploit_dart_reg.log) |
+| `a96bc7185dbe7793` | kotlin_exploit_extratrees | ok | 0.9776 | 0.5000 | 0.9887 | 3 | [log](out/autocollie/runs/2026-05-14T16-28-44_20260514T162320-filetypes-kotlin_kotlin_exploit_extratrees.log) |
+| `1ad917aefe489242` | kotlin_feat_kv_split | ok | 0.9776 | 0.5000 | 0.9887 | 23 | [log](out/autocollie/runs/2026-05-14T16-28-47_20260514T162320-filetypes-kotlin_kotlin_feat_kv_split.log) |
+| `5b99c64e1a0b3d8d` | kotlin_feat_symbol_bigrams | ok | 0.9776 | 0.5000 | 0.9887 | 25 | [log](out/autocollie/runs/2026-05-14T16-29-10_20260514T162320-filetypes-kotlin_kotlin_feat_symbol_bigrams.log) |
+| `9bae021199f758d6` | kotlin_feat_textenc_metrics | ok | 0.9776 | 0.5000 | 0.9887 | 20 | [log](out/autocollie/runs/2026-05-14T16-29-35_20260514T162320-filetypes-kotlin_kotlin_feat_textenc_metrics.log) |
+| `6f51f83f968e7f6b` | kotlin_feat_tiered_trigrams | ok | 0.9776 | 0.5000 | 0.9887 | 22 | [log](out/autocollie/runs/2026-05-14T16-29-54_20260514T162320-filetypes-kotlin_kotlin_feat_tiered_trigrams.log) |
+| `570051cdea3e0b35` | kotlin_abl_blindfold_off | ok | 0.9776 | 0.5000 | 0.9887 | 20 | [log](out/autocollie/runs/2026-05-14T16-30-16_20260514T162320-filetypes-kotlin_kotlin_abl_blindfold_off.log) |
+| `f9d3f68f0d5c0859` | kotlin_transfer_java_extreme | ok | 0.9776 | 0.5000 | 0.9887 | 4 | [log](out/autocollie/runs/2026-05-14T16-30-36_20260514T162320-filetypes-kotlin_kotlin_transfer_java_extreme.log) |
+| `e0754ccf2eb71de6` | kotlin_transfer_seed_ensemble | ok | 0.9776 | 0.5000 | 0.9887 | 7 | [log](out/autocollie/runs/2026-05-14T16-30-39_20260514T162320-filetypes-kotlin_kotlin_transfer_seed_ensemble.log) |
+| `c0e4232d4136bbe5` | kotlin_gen_seed123_250k | ok | 0.9776 | 0.5000 | 0.9887 | 22 | [log](out/autocollie/runs/2026-05-14T16-30-46_20260514T162320-filetypes-kotlin_kotlin_gen_seed123_250k.log) |
+| `c84aafbe49b48995` | kotlin_recall_nat_prev_fpr | ok | 0.9776 | 0.5000 | 0.0000 | 21 | [log](out/autocollie/runs/2026-05-14T16-31-08_20260514T162320-filetypes-kotlin_kotlin_recall_nat_prev_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`kotlin_exploit_hn_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=200000` — Test hard-negative upweighting on best feature set to boost tail recall without hurting PR AUC.
+- **`kotlin_exploit_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=200000` — Retry DART boosting with moderate L2 regularization to improve generalization on tail.
+- **`kotlin_exploit_extratrees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=200000` — Use extra_trees with higher leaves to reduce overfitting and stabilize low-FPR ranking.
+- **`kotlin_feat_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=200000` — Enable KV vocab with value splitting to capture structured string constants and config patterns in Kotlin sources.
+- **`kotlin_feat_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=3000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Add symbol bigrams to catch import/class co-occurrence patterns typical in malicious Kotlin payloads.
+- **`kotlin_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=200000` — Enable text encoding and full text metrics to detect obfuscation and unusual character distributions in source.
+- **`kotlin_feat_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=200000` — Add tiered critical trigrams and objective trigrams to capture longer-range malicious intent sequences.
+- **`kotlin_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=200000` — Disable blindfold dropout features to reduce noise and potentially sharpen PR AUC if they dilute signal.
+- **`kotlin_transfer_java_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=200000` — Port extreme features and extended metrics from successful Java route to capture tail-risk structural signals.
+- **`kotlin_transfer_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_FILE_SEVERITY_DISTRIBUTION=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=200000` — Use seed search K=3 with ensemble averaging to reduce variance and stabilize recall@3 FP/M.
+- **`kotlin_gen_seed123_250k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=96 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=250000` — Test generalization with different seed and larger training set to confirm signal robustness.
+- **`kotlin_recall_nat_prev_fpr`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=50000 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=96 EXP_TEST_NATURAL_PREVALENCE=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Optimize directly for production operating point using natural prevalence and max_recall_at_fpr threshold mode.
+
+</details>
+
+## Cycle `20260515T001604-filetypes-kotlin` — 2026-05-15T00:16:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `021685c6077936ee` | kotlin_control_recall_fpr | ok | 0.9798 | 0.5000 | 0.0000 | 44 | [log](out/autocollie/runs/2026-05-15T00-20-28_20260515T001604-filetypes-kotlin_kotlin_control_recall_fpr.log) |
+| `ba4258f464ed25f0` | kotlin_control_dart_reg | ok | 0.9798 | 0.5000 | 0.9898 | 41 | [log](out/autocollie/runs/2026-05-15T00-21-13_20260515T001604-filetypes-kotlin_kotlin_control_dart_reg.log) |
+| `01ba49370fa3ee8a` | kotlin_feat_kv_split | ok | 0.9798 | 0.5000 | 0.9898 | 34 | [log](out/autocollie/runs/2026-05-15T00-21-54_20260515T001604-filetypes-kotlin_kotlin_feat_kv_split.log) |
+| `8ba70b02c72c9e46` | kotlin_feat_textenc_metrics | ok | 0.9798 | 0.5000 | 0.9898 | 19 | [log](out/autocollie/runs/2026-05-15T00-22-28_20260515T001604-filetypes-kotlin_kotlin_feat_textenc_metrics.log) |
+| `3da1ca7269794ee4` | kotlin_feat_obj_trigrams | ok | 0.9798 | 0.5000 | 0.9898 | 52 | [log](out/autocollie/runs/2026-05-15T00-22-47_20260515T001604-filetypes-kotlin_kotlin_feat_obj_trigrams.log) |
+| `d45fd7693111a034` | kotlin_feat_symbols | ok | 0.9798 | 0.5000 | 0.9898 | 57 | [log](out/autocollie/runs/2026-05-15T00-23-39_20260515T001604-filetypes-kotlin_kotlin_feat_symbols.log) |
+| `4112bb24f696a1fb` | kotlin_abl_crit_ngrams_off | ok | 0.9798 | 0.5000 | 0.9898 | 28 | [log](out/autocollie/runs/2026-05-15T00-24-36_20260515T001604-filetypes-kotlin_kotlin_abl_crit_ngrams_off.log) |
+| `f6c00ae88555760a` | kotlin_transfer_rust_hardneg | ok | 1.0000 | 0.9994 | 0.9982 | 43 | [log](out/autocollie/runs/2026-05-15T00-25-04_20260515T001604-filetypes-kotlin_kotlin_transfer_rust_hardneg.log) |
+| `db8dee84a7a86769` | kotlin_transfer_pkg_extreme | ok | 0.9798 | 0.5000 | 0.9898 | 17 | [log](out/autocollie/runs/2026-05-15T00-25-47_20260515T001604-filetypes-kotlin_kotlin_transfer_pkg_extreme.log) |
+| `010d1e6bb9123fe1` | kotlin_gen_seed7_ratios | ok | 0.9776 | 0.5000 | 0.9887 | 31 | [log](out/autocollie/runs/2026-05-15T00-26-03_20260515T001604-filetypes-kotlin_kotlin_gen_seed7_ratios.log) |
+| `c9625e80ce3f782e` | kotlin_gen_ensemble_sizenorm | ok | 0.9798 | 0.5000 | 0.9898 | 23 | [log](out/autocollie/runs/2026-05-15T00-26-34_20260515T001604-filetypes-kotlin_kotlin_gen_ensemble_sizenorm.log) |
+| `fb3c395dc0dca67b` | kotlin_retry_best_drift | ok | 0.9776 | 0.5000 | 0.9887 | 3 | [log](out/autocollie/runs/2026-05-15T00-26-57_20260515T001604-filetypes-kotlin_kotlin_retry_best_drift.log) |
+
+<details><summary>Spec details</summary>
+
+- **`kotlin_control_recall_fpr`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=40000 EXP_NUM_LEAVES=128 EXP_TEST_NATURAL_PREVALENCE=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr` — Optimize threshold for production operating point to boost recall@3 FP/M while preserving PR AUC.
+- **`kotlin_control_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2` — Use DART boosting and stronger regularization to reduce overfitting and improve generalization PR AUC.
+- **`kotlin_feat_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_NUM_LEAVES=128` — Enable KV vocab with value splitting to capture fine-grained key-value signal in Kotlin metadata and traits.
+- **`kotlin_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1` — Add text encoding and full text metrics to capture obfuscation and structural text patterns in source files.
+- **`kotlin_feat_obj_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000` — Enable objective and tiered critical trigrams to capture higher-order trait co-occurrences for better ranking.
+- **`kotlin_feat_symbols`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000` — Test symbol vocab surface to identify malicious function and class naming patterns in Kotlin code.
+- **`kotlin_abl_crit_ngrams_off`** `EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=96` — Disable crit category ngrams to test if removing noisy severity-prefixed features reduces overfit and stabilizes PR AUC.
+- **`kotlin_transfer_rust_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_NUM_LEAVES=128` — Port hard-negative weighting from Rust route to sharpen decision boundary on difficult benign Kotlin files.
+- **`kotlin_transfer_pkg_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_NUM_LEAVES=128` — Transfer extended metrics and extreme features from pkg-info to capture tail-distribution signals in Kotlin.
+- **`kotlin_gen_seed7_ratios`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=200000` — Retry best seed with metric ratio features to improve signal on small corpora and verify generalization.
+- **`kotlin_gen_ensemble_sizenorm`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SIZE_NORMALIZED_METRICS=1` — Use seed search ensemble with size-normalized metrics to reduce variance and capture density-independent signals.
+- **`kotlin_retry_best_drift`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_FILE_SEVERITY_DISTRIBUTION=1 EXP_LEARNING_RATE=0.03 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=200000` — Retry top historical config with severity distribution features to check for data drift and capture new signal.
+
+</details>
+
