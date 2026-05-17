@@ -177,19 +177,9 @@ run_experiment filegroups/source source_formula_elements_dense \
   EXP_FORMAT_HINTS=1 EXP_EXTENDED_METRICS=1 COLLIMATOR_METRIC_MIN_FREQ_PCT=0 \
   EXP_TAXONOMY_FEATURES=1
 
-# Package, archive, config, and document routes.
-run_experiment filegroups/archive archive_kv_manifest \
-  EXP_FORMAT_HINTS=1 EXP_EMBER_LITE_FEATURES=1 EXP_TAXONOMY_FEATURES=1 \
-  COLLIMATOR_METRIC_MIN_FREQ_PCT=0
-
-run_experiment filegroups/archive archive_deep_inner_paths \
-  EXP_NGRAM_PATH_DEPTH=7 EXP_NGRAM_MIN_CRIT=0 COLLIMATOR_BIGRAM_MAX=14000 \
-  COLLIMATOR_BIGRAM_MIN_FREQ=90 EXP_FORMAT_HINTS=1
-
-run_experiment filetypes/zip zip_archive_deep_paths \
-  EXP_NGRAM_PATH_DEPTH=6 EXP_NGRAM_MIN_CRIT=0 COLLIMATOR_BIGRAM_MAX=10000 \
-  COLLIMATOR_BIGRAM_MIN_FREQ=80
-
+# Package, config, and document routes. Archive specialists were dropped
+# because litmus extracts and re-grades their contents; only formats with a
+# cleave kv-tree subtree (jar/rpm/chm) remain worthwhile.
 run_experiment filetypes/jar jar_portable_kv_bytecode \
   EXP_FORMAT_HINTS=1 EXP_EMBER_LITE_FEATURES=1 COLLIMATOR_METRIC_MIN_FREQ_PCT=0 \
   EXP_TAXONOMY_FEATURES=1

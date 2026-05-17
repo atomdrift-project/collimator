@@ -242,6 +242,196 @@ def _policy_candidates(
     return out
 
 
+def _specialist_pareto_curve(
+    probs: np.ndarray,
+    labels: np.ndarray,
+) -> dict[int, float]:
+    """Max recall achievable using the specialist's probabilities alone,
+    at each integer FP count in [0, n_benign].
+
+    Returned as ``{fp_count: best_recall}``. NaN probs are dropped; ties
+    favor benigns (worst case for recall — what an attacker can force by
+    pushing malware to the same score as a benign neighbour).
+
+    This is the floor the recall-monotone constraint enforces: any
+    ensemble candidate whose recall undershoots this curve at its own FP
+    count is wasting FP budget compared to tuning the specialist alone
+    to the same budget.
+    """
+    valid = ~np.isnan(probs)
+    if not np.any(valid):
+        return {}
+    p = probs[valid].astype(np.float64)
+    y = labels[valid].astype(np.int8)
+    n_mal = int((y == 1).sum())
+    if n_mal == 0:
+        return {}
+    # Sort descending; on ties put benigns BEFORE malware so cumulative FP
+    # leads its row's TP — matches what _recall_pr_at_fp does in the eval
+    # harness and what an adversary can force at a given threshold.
+    order = np.lexsort((y, -p))
+    y_sorted = y[order]
+    fp_cum = np.cumsum(y_sorted == 0)
+    tp_cum = np.cumsum(y_sorted == 1)
+    max_fp = int(fp_cum[-1]) if len(fp_cum) else 0
+    out: dict[int, float] = {}
+    # Walk FP counts ascending: for each k, the max-recall row with
+    # fp_cum <= k is monotone, so a single pass suffices.
+    j = 0
+    n = len(y_sorted)
+    last_recall = 0.0
+    for k in range(max_fp + 1):
+        while j < n and fp_cum[j] <= k:
+            last_recall = float(tp_cum[j]) / n_mal
+            j += 1
+        out[k] = last_recall
+    return out
+
+
+def _specialist_threshold_for_fp(
+    probs: np.ndarray,
+    labels: np.ndarray,
+    fp_target: int,
+) -> tuple[float | None, int, int]:
+    """Find the loosest specialist threshold yielding at most ``fp_target``
+    benigns above it, and return (threshold, tp_count, fp_count_actual).
+
+    Returns (None, 0, 0) if no such threshold exists (e.g. fewer than
+    ``fp_target`` benigns in the slice). Threshold is set just above the
+    (fp_target+1)-th highest benign so the firing rule ``probs >=
+    threshold`` produces exactly ``fp_count_actual`` benigns above the
+    line.
+    """
+    valid = ~np.isnan(probs)
+    if not np.any(valid):
+        return None, 0, 0
+    p = probs[valid].astype(np.float64)
+    y = labels[valid].astype(np.int8)
+    n_mal = int((y == 1).sum())
+    if n_mal == 0:
+        return None, 0, 0
+    order = np.lexsort((y, -p))
+    p_sorted = p[order]
+    y_sorted = y[order]
+    fp_cum = np.cumsum(y_sorted == 0)
+    tp_cum = np.cumsum(y_sorted == 1)
+    eligible = np.flatnonzero(fp_cum <= fp_target)
+    if len(eligible) == 0:
+        return None, 0, 0
+    end = int(eligible[-1])
+    threshold = float(p_sorted[end])
+    return threshold, int(tp_cum[end]), int(fp_cum[end])
+
+
+def _make_specialist_candidate_at_fp(
+    *,
+    probs: np.ndarray,
+    labels: np.ndarray,
+    fp_target: int,
+    target_per_million: float,
+    total_benign: int,
+    specialist_route: str,
+) -> dict[str, Any] | None:
+    """Build a specialist_only-style candidate tuned to a specific FP
+    count. Returns None when the slice can't support that FP level.
+    """
+    threshold, tp, fp = _specialist_threshold_for_fp(probs, labels, fp_target)
+    if threshold is None:
+        return None
+    valid = ~np.isnan(probs)
+    hit = np.zeros(len(labels), dtype=bool)
+    hit[valid] = probs[valid] >= threshold
+    return _metrics(
+        labels,
+        hit,
+        target_per_million=target_per_million,
+        total_benign=total_benign,
+        thresholds={specialist_route: float(threshold)},
+        policy=f"filetype_only_at_fp_{fp_target}",
+        primary=specialist_route,
+        allowed_routes=(specialist_route,),
+    )
+
+
+def _mark_dominated_by_specialist(
+    candidates: list[dict[str, Any]],
+    route_probs: dict[str, np.ndarray],
+    labels: np.ndarray,
+    *,
+    specialist_route: str,
+    target_per_million: float,
+    total_benign: int,
+) -> None:
+    """Inject specialist-tuned-to-same-FP candidates and mark any
+    ensemble whose recall falls below the specialist's recall at the
+    SAME FP count as dominated.
+
+    Filtering alone isn't enough: removing a dominated ensemble without
+    surfacing the specialist alternative at that FP count leaves the
+    knapsack with strictly worse choices (the specialist's calibrated
+    candidate sits at a different FP). So for each unique FP count used
+    by an ensemble candidate, we build a ``filetype_only_at_fp_K``
+    candidate using the Pareto-optimal specialist threshold for that FP.
+
+    The check uses the full specialist-Pareto curve rather than just the
+    specialist's calibrated operating point — an ensemble spending FP=3
+    is compared against what the specialist could achieve relaxed to
+    FP<=3. This catches ensembles that waste FP budget for no recall
+    gain, even when the specialist's default threshold sits elsewhere.
+
+    Mutates ``candidates`` in place: ensembles get
+    ``dominated_by_specialist`` (bool) and ``specialist_recall_at_fp``
+    (float) for diagnostic display; new ``filetype_only_at_fp_K`` items
+    are appended.
+    """
+    probs = route_probs.get(specialist_route)
+    if probs is None:
+        for item in candidates:
+            item["dominated_by_specialist"] = False
+        return
+    pareto = _specialist_pareto_curve(probs, labels)
+    if not pareto:
+        for item in candidates:
+            item["dominated_by_specialist"] = False
+        return
+    max_fp = max(pareto)
+    extra_fps: set[int] = set()
+    for item in candidates:
+        policy = item.get("policy")
+        if policy in ("filetype_only", "no_policy"):
+            item["dominated_by_specialist"] = False
+            continue
+        item_fp = int(item.get("fp", 0))
+        item_recall = float(item.get("recall", 0.0))
+        if math.isnan(item_recall):
+            item_recall = 0.0
+        spec_recall = pareto.get(item_fp, pareto[max_fp]) if item_fp <= max_fp else pareto[max_fp]
+        if item_recall + 1e-9 < spec_recall:
+            item["dominated_by_specialist"] = True
+            item["specialist_recall_at_fp"] = spec_recall
+            # Make sure the knapsack sees the specialist-at-same-FP
+            # alternative. Without this the dominated ensemble's slot
+            # falls through to the specialist's default-FP candidate,
+            # which may use far less FP — a recall regression even
+            # though the floor was meant to protect against one.
+            extra_fps.add(item_fp)
+        else:
+            item["dominated_by_specialist"] = False
+    existing_fps = {int(c.get("fp", 0)) for c in candidates if c.get("policy") == "filetype_only"}
+    for fp_target in sorted(extra_fps - existing_fps):
+        extra = _make_specialist_candidate_at_fp(
+            probs=probs,
+            labels=labels,
+            fp_target=fp_target,
+            target_per_million=target_per_million,
+            total_benign=total_benign,
+            specialist_route=specialist_route,
+        )
+        if extra is not None:
+            extra["dominated_by_specialist"] = False
+            candidates.append(extra)
+
+
 def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
     """Pick the per-filetype policy strategy that gives the best
     detection-vs-FP balance at this level's FP/M target.
@@ -259,12 +449,18 @@ def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
     the specialist's name in route_policies.json's thresholds map, which
     is what litmus uses to decide whether to load the specialist at all.
 
+    Candidates annotated with ``dominated_by_specialist`` are filtered
+    out: spending more FP than the specialist alone needs for the same
+    recall is a waste of global FP budget that buys nothing.
+
     Accuracy is intentionally not used: with the corpus's ~76% benign /
     24% malware split, accuracy is dominated by the benign class and
     tracks recall most of the way at strict FP budgets.
     """
+    eligible = [c for c in candidates if not c.get("dominated_by_specialist")]
+    pool = eligible if eligible else candidates
     return max(
-        candidates,
+        pool,
         key=lambda item: (
             float(item["recall"]) if not math.isnan(float(item["recall"])) else -1.0,
             float(item["f1"]) if not math.isnan(float(item["f1"])) else -1.0,
@@ -342,6 +538,13 @@ def _apply_global_budget_selection(payload: dict[str, Any], config: dict[str, An
                 next_dp: dict[int, tuple[int, list[int]]] = {}
                 for used_fp, (used_tp, choices) in dp.items():
                     for idx, candidate in enumerate(candidates):
+                        # Recall-monotone floor: skip ensemble candidates
+                        # that lose to the specialist tuned to the same
+                        # FP count. Their slot in the knapsack should go
+                        # to the specialist's own candidate (or no_policy
+                        # if that's not affordable either).
+                        if candidate.get("dominated_by_specialist"):
+                            continue
                         fp = used_fp + int(candidate["fp"])
                         if fp > budget:
                             continue
@@ -647,6 +850,20 @@ def main() -> int:
                             filetype=type_route if type_route in route_probs else None,
                         )
                     )
+                # Recall-monotone floor: any ensemble candidate that
+                # underperforms the specialist tuned to the same FP count
+                # is wasting global FP budget for no recall gain. Mark and
+                # exclude it from selection; the diagnostic stays in the
+                # candidates list so the route_policies.json output still
+                # shows what was considered.
+                _mark_dominated_by_specialist(
+                    candidates,
+                    route_probs,
+                    scoped_labels,
+                    specialist_route=type_route,
+                    target_per_million=target_per_million,
+                    total_benign=total_benign,
+                )
                 level_item[severity] = {
                     "target_per_million": target_per_million,
                     "budget": _budget(benign, target_per_million),

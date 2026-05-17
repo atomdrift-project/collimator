@@ -30,6 +30,62 @@ from collimator import bundle, data, export, features, model, train
 
 LOG = logging.getLogger("azoth_specialist_suite")
 
+# Archive-shaped filetypes whose contents litmus extracts AND for which
+# cleave emits no container-level kv_tree subtree. Specialists on these
+# learn nothing the general/inner-file pipeline can't already see: litmus
+# decomposes the container and re-grades each member at depth>0, and
+# there is no archive-level metadata (manifest, signatures, headers) in
+# cleave_result for a specialist to exploit.
+#
+# Sources of truth:
+#  * cleave's is_archive() at composite_rules/types.rs:417
+#  * the extractor match at analyzers/archive/mod.rs:967-1043 (covers
+#    single-file decompression and cab on top of is_archive)
+#  * the kv-subtree emitters audited against analyzers/archive/{mod.rs,
+#    analyzers.rs} and analyzers/{jar_kv,rpm_kv,chm/chm_kv}.rs
+#
+# DELIBERATELY KEPT as eligible specialists (extracted by litmus *but*
+# cleave emits container kv data):
+#   - jar / war / ear → jar_kv (jar_kv.rs:275): manifest, signing, POM
+#   - rpm → rpm_kv (archive/mod.rs:747): headers, signatures, build meta
+#   - chm → chm_kv (archive/mod.rs:753): ITSF + system metadata
+#
+# DELIBERATELY KEPT (no full extraction):
+#   - msi: ole-container; metadata emitted as findings, not kv_tree, but
+#     the binary itself is graded in place. Specialist remains useful.
+#
+# If any addition to cleave's extractor list also adds a kv subtree,
+# remove that filetype from this set; if it adds extraction without kv,
+# add it here.
+LITMUS_EXTRACTED_FILETYPES: frozenset[str] = frozenset({
+    "7z",
+    "apk",
+    "bz2",
+    "cab",
+    "crx",
+    "deb",
+    "egg",
+    "gem",
+    "gz",
+    "ipa",
+    "npm",
+    "nupkg",
+    "rar",
+    "tar",
+    "tar.bz2",
+    "tar.gz",
+    "tar.xz",
+    "tar.zst",
+    "tgz",
+    "vsix",
+    "whl",
+    "xpi",
+    "xz",
+    "zip",
+    "zst",
+})
+
+
 DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
     "scripts": (
         "batch",
@@ -47,31 +103,9 @@ DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
     "native": ("elf", "macho", "pe"),
     "portable": (
         "dex",
-        "jar",
         "java_class",
         "pyc",
         "wasm",
-    ),
-    "archive": (
-        "7z",
-        "apk",
-        "cab",
-        "deb",
-        "egg",
-        "gz",
-        "msi",
-        "rar",
-        "rpm",
-        "tar",
-        "tar.gz",
-        "tgz",
-        "vsix",
-        "war",
-        "whl",
-        "xpi",
-        "xz",
-        "zip",
-        "zst",
     ),
     "documents": ("doc", "docx", "html", "ole", "pdf", "ppt", "pptx", "rtf", "xls", "xlsx"),
     "source": (
@@ -99,6 +133,28 @@ def _placeholder(db_path: Path | str) -> str:
     return "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
 
 
+def _read_oof_exclude() -> int | None:
+    """Honor EXP_OOF_FOLD_EXCLUDE the same way experiment.py does.
+
+    Matches the contract at src/collimator/experiment.py:417-429 so a single
+    env var drives both general and specialist OOF training: setting it to 0
+    or 1 excludes that fold from training, leaving its rows held out for
+    out-of-fold scoring downstream. Anything else is ignored with a warning.
+    """
+    raw = os.getenv("EXP_OOF_FOLD_EXCLUDE", "").strip()
+    if not raw:
+        return None
+    try:
+        value = int(raw)
+    except ValueError:
+        LOG.warning("ignoring invalid EXP_OOF_FOLD_EXCLUDE=%r (need 0 or 1)", raw)
+        return None
+    if value not in (0, 1):
+        LOG.warning("ignoring EXP_OOF_FOLD_EXCLUDE=%d (need 0 or 1)", value)
+        return None
+    return value
+
+
 def _fetch_rows(
     db_path: Path | str,
     *,
@@ -121,6 +177,13 @@ def _fetch_rows(
         where.append(f"score >= {marker}")
         params.append(int(min_score))
 
+    # EXP_OOF_FOLD_EXCLUDE turns a normal specialist training run into one
+    # half of a k=2 OOF pair. Skipping rows whose canonical hash hashes to
+    # the excluded fold leaves those rows available for honest OOF scoring
+    # afterwards. Test partition rows have oof_fold_of() == None and are
+    # untouched by this filter (they're already excluded from training via
+    # _ids_labels(test=False)).
+    oof_exclude = _read_oof_exclude()
     select = (
         "SELECT id, sha256, label, canonical_sha256, "
         "COALESCE(NULLIF(file_type, ''), 'unknown')"
@@ -135,6 +198,8 @@ def _fetch_rows(
                 cur.execute(query, params)
                 for row_id, sha256, label, canonical, file_type in cur:
                     split_key = canonical or sha256
+                    if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
+                        continue
                     rows.append(
                         (
                             int(row_id),
@@ -150,6 +215,8 @@ def _fetch_rows(
             query = select + " FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
             for row_id, sha256, label, canonical, file_type in conn.execute(query, params):
                 split_key = canonical or sha256
+                if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
+                    continue
                 rows.append(
                     (
                         int(row_id),
@@ -249,10 +316,20 @@ def _eligible_filetypes(
     with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
         rows = data._execute(conn, query, params)  # noqa: SLF001
         for file_type, bad, good, total in rows:
+            file_type_str = str(file_type)
+            if file_type_str in LITMUS_EXTRACTED_FILETYPES:
+                # Litmus has already decomposed and re-graded the contents
+                # at this point; the container itself carries no signal a
+                # specialist could learn that the general model lacks.
+                LOG.info(
+                    "%s: skipping filetype specialist (litmus-extracted; %d bad, %d good)",
+                    file_type_str, int(bad), int(good),
+                )
+                continue
             out.append(
                 {
-                    "name": str(file_type),
-                    "file_types": [str(file_type)],
+                    "name": file_type_str,
+                    "file_types": [file_type_str],
                     "bad": int(bad),
                     "good": int(good),
                     "total": int(total),

@@ -528,7 +528,17 @@ def _gpd_tail_threshold(
         threshold = u + (sigma / xi) * ((p_target / p_above_u) ** (-xi) - 1.0)
     if not np.isfinite(threshold):
         return None
-    threshold = float(np.clip(threshold, 0.0, 1.0))
+    # When the GPD fit on a tightly-concentrated benign distribution
+    # extrapolates above 1.0, the threshold is unreachable for any
+    # calibrated probability score: clipping to 1.0 silently produces a
+    # fire-never policy. Returning None instead lets
+    # _quantile_severity_threshold fall back to its empirical_floor
+    # branch (the max observed benign), which is a real operating point
+    # honestly labeled below-resolution rather than a no-op disguised as
+    # a threshold. Same for thresholds at or below the GPD anchor u —
+    # those indicate a degenerate fit, not a usable answer.
+    if threshold >= 1.0 or threshold <= u:
+        return None
     return threshold, {
         "u": u,
         "xi": float(xi),

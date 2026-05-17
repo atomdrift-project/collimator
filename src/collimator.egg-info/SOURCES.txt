@@ -5,6 +5,7 @@ src/collimator/__init__.py
 src/collimator/__main__.py
 src/collimator/ablation.py
 src/collimator/benchmark.py
+src/collimator/bundle.py
 src/collimator/data.py
 src/collimator/demo.py
 src/collimator/experiment.py
@@ -13,7 +14,7 @@ src/collimator/export.py
 src/collimator/features.py
 src/collimator/inspect.py
 src/collimator/model.py
-src/collimator/thresholds.py
+src/collimator/stats.py
 src/collimator/train.py
 src/collimator/traits.py
 src/collimator.egg-info/PKG-INFO
@@ -22,8 +23,14 @@ src/collimator.egg-info/dependency_links.txt
 src/collimator.egg-info/entry_points.txt
 src/collimator.egg-info/requires.txt
 src/collimator.egg-info/top_level.txt
+src/collimator/thresholds/__init__.py
+src/collimator/thresholds/_inspect.py
 tests/test_ablation.py
 tests/test_archive_error_samples.py
+tests/test_azoth_calibrate.py
+tests/test_azoth_specialist_suite.py
+tests/test_azoth_train_best.py
+tests/test_bundle.py
 tests/test_data.py
 tests/test_data_splits.py
 tests/test_demo.py
@@ -35,6 +42,8 @@ tests/test_features.py
 tests/test_model.py
 tests/test_model_early_stopping.py
 tests/test_reporting_artifacts.py
+tests/test_stats.py
 tests/test_thresholds.py
 tests/test_train.py
 tests/test_traits.py
+tests/test_triage_error_samples.py
