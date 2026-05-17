@@ -285,6 +285,47 @@ def _fetch_rows(
     return rows
 
 
+def _load_oof_route_scores(
+    oof_path: Path,
+    *,
+    row_index: dict[int, int],
+    route_label: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Load a per-route OOF threshold_scores.npz produced by
+    ``azoth_oof_score_routes.py`` and project it into score-table layout.
+
+    Returns ``(indices, probs)``: ``indices`` are positions in the
+    score-table row order; ``probs`` are the matching OOF-predicted
+    probabilities. Rows present in the OOF file but missing from the
+    score-table row index are dropped with a warning (they fell out of
+    the corpus snapshot since OOF was computed).
+    """
+    cache = np.load(oof_path)
+    row_ids = cache["row_ids"].astype(np.int64)
+    probs = cache["probs"].astype(np.float32)
+    indices: list[int] = []
+    kept_probs: list[float] = []
+    dropped = 0
+    for row_id, prob in zip(row_ids.tolist(), probs.tolist(), strict=True):
+        idx = row_index.get(int(row_id))
+        if idx is None:
+            dropped += 1
+            continue
+        indices.append(idx)
+        kept_probs.append(prob)
+    if dropped:
+        LOG.warning(
+            "%s: dropped %d OOF rows missing from current row index "
+            "(corpus snapshot drift?)",
+            route_label,
+            dropped,
+        )
+    return (
+        np.asarray(indices, dtype=np.int64),
+        np.asarray(kept_probs, dtype=np.float32),
+    )
+
+
 def _score_route(
     db_path: Path | str,
     route: dict[str, Any],
@@ -295,10 +336,50 @@ def _score_route(
     refresh: bool,
     refresh_routes: set[str],
     feature_cache_dir: Path | None,
+    oof_route_scores_dir: Path | None = None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     output_dir = Path(route["output_dir"])
     cache_path = output_dir / "calibration_scores.npz"
+
+    # OOF override: when a per-route OOF threshold_scores.npz exists under
+    # ``oof_route_scores_dir`` (produced by azoth_oof_score_routes.py),
+    # short-circuit the in-sample scoring path. The OOF file already has
+    # row_ids and probs in honest OOF order — train+dev rows scored by
+    # whichever fold model didn't see them, test rows scored by the
+    # production bundle (if --prod-root was passed to the merge script).
+    # This eliminates the in-sample-specialist bias the calibration has
+    # historically carried; downstream (recall-monotone floor, Pareto
+    # curves, future stacker) consumes honest probabilities.
+    if oof_route_scores_dir is not None:
+        oof_path = oof_route_scores_dir / route["route"] / "threshold_scores.npz"
+        if oof_path.is_file():
+            indices, probs = _load_oof_route_scores(
+                oof_path,
+                row_index=row_index,
+                route_label=route["route"],
+            )
+            LOG.info(
+                "%s: using OOF scores from %s (%d rows in %.2fs)",
+                route["route"],
+                oof_path,
+                len(indices),
+                time.perf_counter() - started,
+            )
+            return {
+                "name": route["route"],
+                "kind": route["kind"],
+                "file_types": route["file_types"],
+                "output_dir": str(output_dir),
+                "indices": indices,
+                "probs": probs,
+            }
+        LOG.warning(
+            "%s: OOF route scores requested but %s is missing; falling back "
+            "to in-sample scoring (this measurement carries in-sample bias)",
+            route["route"],
+            oof_path,
+        )
     route_hash = _hash_route_artifacts(output_dir)
     force_refresh = refresh or route["route"] in refresh_routes or route["name"] in refresh_routes
     if cache_path.exists() and not force_refresh:
@@ -1115,6 +1196,7 @@ def _score_route_worker(job: dict[str, Any]) -> dict[str, Any]:
         refresh=job["refresh"],
         refresh_routes=job["refresh_routes"],
         feature_cache_dir=job["feature_cache_dir"],
+        oof_route_scores_dir=job.get("oof_route_scores_dir"),
     )
 
 
@@ -1148,6 +1230,21 @@ def main() -> int:
         type=Path,
         default=Path("out/cache/azoth-route-features"),
         help="Shared cache for extracted route feature matrices; use 'none' to disable",
+    )
+    parser.add_argument(
+        "--oof-route-scores-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Directory of per-route OOF scores produced by "
+            "azoth_oof_score_routes.py. When set, each route's scoring "
+            "step reads "
+            "{oof_route_scores_dir}/<route>/threshold_scores.npz instead "
+            "of running an in-sample predict_proba pass. Routes missing "
+            "an OOF file fall back to in-sample scoring with a warning. "
+            "Pair with --general-scores pointing at an OOF general "
+            "threshold_scores.npz for fully-honest calibration."
+        ),
     )
     parser.add_argument(
         "--partition",
@@ -1263,6 +1360,7 @@ def main() -> int:
             "refresh": args.refresh,
             "refresh_routes": refresh_routes,
             "feature_cache_dir": feature_cache_dir,
+            "oof_route_scores_dir": args.oof_route_scores_dir,
         }
         for route in routes
     ]

@@ -105,18 +105,135 @@ def _pr_auc(probs: np.ndarray, labels: np.ndarray) -> float:
     return float(np.sum(delta_recall * precision))
 
 
+_BLEND_LOGIT_EPS = 1e-6
+
+
+def _load_route_calibrator(
+    azoth_root: Path, route_name: str,
+) -> tuple[np.ndarray, np.ndarray] | None:
+    """Load a route's isotonic calibrator. Mirrors the helper in
+    azoth_route_policy_search so the eval's blend evaluation uses the
+    same prob space the blend was fit in (calibrated, not raw)."""
+    if route_name == "general":
+        path = azoth_root / "general" / "calibrator.json"
+    elif route_name.startswith("filegroups/") or route_name.startswith("filetypes/"):
+        path = azoth_root / route_name / "calibrator.json"
+    else:
+        return None
+    if not path.is_file():
+        return None
+    with open(path) as f:
+        cal = json.load(f)
+    x = np.asarray(cal["x"], dtype=np.float64)
+    y = np.asarray(cal["y"], dtype=np.float64)
+    if len(x) < 2 or len(x) != len(y):
+        return None
+    return (x, y)
+
+
+def _apply_isotonic_clipped(
+    probs: np.ndarray, breakpoints: tuple[np.ndarray, np.ndarray],
+) -> np.ndarray:
+    """Linear-interpolate raw probs through isotonic breakpoints; clip
+    out-of-range to boundary y-values. NaNs pass through unchanged.
+    Matches litmus's `predict_calibrated` behavior so eval-side blend
+    semantics align with deploy-side."""
+    x_breaks, y_breaks = breakpoints
+    out = np.full_like(probs, np.nan, dtype=np.float32)
+    valid = ~np.isnan(probs)
+    if not np.any(valid):
+        return out
+    raw = probs[valid].astype(np.float64)
+    out[valid] = np.interp(raw, x_breaks, y_breaks).astype(np.float32)
+    return out
+
+
+def _deployed_blend_metrics(
+    probs_by_route: dict[str, np.ndarray],
+    labels: np.ndarray,
+    blend: dict[str, Any],
+    *,
+    calibrators: dict[str, tuple[np.ndarray, np.ndarray]] | None = None,
+) -> dict[str, Any]:
+    """Learned-blend semantics:
+    ``sigmoid(intercept + sum(w_i * logit(clip(p_i)))) >= threshold``.
+
+    Mirrors what azoth_route_policy_search._make_learned_blend_candidate_at_fp
+    fit on calibration, so the test-side eval here exactly matches the
+    deploy-side behavior litmus will eventually implement. Rows where any
+    blend-route is NaN (specialist missing on that file) are treated as
+    ineligible — same as OR-rule behavior at deploy.
+    """
+    routes = blend["routes"]
+    weights = np.asarray(blend["weights"], dtype=np.float64)
+    intercept = float(blend["intercept"])
+    threshold = float(blend["threshold"])
+    n_rows = len(labels)
+    valid = np.ones(n_rows, dtype=bool)
+    cols: list[np.ndarray] = []
+    for r in routes:
+        probs = probs_by_route.get(r)
+        if probs is None:
+            return {"tp": 0, "fp": 0, "recall": math.nan, "active_routes": []}
+        # Apply isotonic calibration before logit. The blend was fit on
+        # calibrated probs in azoth_route_policy_search (via
+        # _build_calibrated_route_probs) so that the same blend math
+        # applied to litmus's calibrated runtime probs gives the same
+        # answer. Without this step the eval would feed RAW probs through
+        # weights tuned for CALIBRATED inputs and the verdict would drift.
+        # Routes without a calibrator pass through unchanged — matches
+        # the policy_search-side fallback.
+        if calibrators is not None and r in calibrators:
+            probs = _apply_isotonic_clipped(probs, calibrators[r])
+        p = np.clip(
+            probs.astype(np.float64),
+            _BLEND_LOGIT_EPS,
+            1.0 - _BLEND_LOGIT_EPS,
+        )
+        with np.errstate(divide="ignore"):
+            cols.append(np.log(p / (1.0 - p)))
+        valid &= ~np.isnan(probs)
+    stacked = np.stack(cols, axis=1)
+    z = stacked @ weights + intercept
+    blend_score = np.full(n_rows, np.nan, dtype=np.float64)
+    blend_score[valid] = 1.0 / (1.0 + np.exp(-z[valid]))
+    hit = valid & (blend_score >= threshold)
+    malware = labels == 1
+    benign = labels == 0
+    tp = int(np.sum(hit & malware))
+    fp = int(np.sum(hit & benign))
+    n_mal = int(np.sum(malware))
+    return {
+        "tp": tp,
+        "fp": fp,
+        "recall": (tp / n_mal) if n_mal else math.nan,
+        "active_routes": list(routes),
+    }
+
+
 def _deployed_or_metrics(
     probs_by_route: dict[str, np.ndarray],
     labels: np.ndarray,
     thresholds: dict[str, float],
+    blend: dict[str, Any] | None = None,
+    *,
+    calibrators: dict[str, tuple[np.ndarray, np.ndarray]] | None = None,
 ) -> dict[str, Any]:
     """OR-rule across routes at the deployed per-route thresholds.
+
+    When ``blend`` is set, switch to learned-blend semantics instead —
+    the candidate carries fit metadata (weights/intercept/threshold) and
+    the OR-rule thresholds map is empty. Keeps the call site uniform.
 
     A sentinel threshold of 1.0 (or larger) is unreachable for calibrated
     probabilities and is treated as no-op — consistent with the
     policy_search writer that uses 1.0 to keep a route "present but
     inactive" in route_policies.json.
     """
+    if blend:
+        return _deployed_blend_metrics(
+            probs_by_route, labels, blend, calibrators=calibrators,
+        )
     n_rows = len(labels)
     hit = np.zeros(n_rows, dtype=bool)
     active_routes: list[str] = []
@@ -373,6 +490,18 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--score-table", type=Path, default=Path("out/models/azoth/score_table.npz"))
     parser.add_argument(
+        "--azoth-root",
+        type=Path,
+        default=Path("out/models/azoth"),
+        help=(
+            "Root containing per-route calibrator.json files. Used to "
+            "apply isotonic calibration to route probs before evaluating "
+            "learned_blend candidates — the blend was fit on calibrated "
+            "probs (see azoth_route_policy_search._build_calibrated_route_probs), "
+            "so eval-side must apply the same transform to match deploy."
+        ),
+    )
+    parser.add_argument(
         "--general-scores",
         type=Path,
         required=True,
@@ -440,6 +569,17 @@ def main() -> int:
     file_groups_all = np.asarray([str(v) for v in score_table["file_groups"]])
     route_names = [str(v) for v in score_table["route_names"]]
     route_name_to_idx = {name: idx for idx, name in enumerate(route_names)}
+
+    # Load per-route isotonic calibrators once so blend evaluation can apply
+    # them before logit-stacking. Routes without a calibrator fall back to
+    # the raw prob — they'll be slightly off if the policy used them in a
+    # blend, but the cost is low because the relevant blends (PE, batch,
+    # xlsx, ole...) all have calibrators on disk.
+    route_calibrators: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    for route_name in route_names:
+        bps = _load_route_calibrator(args.azoth_root, route_name)
+        if bps is not None:
+            route_calibrators[route_name] = bps
     scores = score_table["scores"]
 
     with open(args.route_policies) as f:
@@ -493,10 +633,19 @@ def main() -> int:
                 for severity in ("hostile", "suspicious"):
                     best = level.get(severity, {}).get("best") or {}
                     thresholds = best.get("thresholds") or {}
-                    if not thresholds:
+                    blend = best.get("blend")
+                    # Learned-blend candidates carry their fit metadata in
+                    # ``blend`` and leave ``thresholds`` empty. Skip only
+                    # when BOTH are absent — that's the no_policy /
+                    # fire-never case.
+                    if not thresholds and not blend:
                         continue
                     or_metrics = _deployed_or_metrics(
-                        probs_by_route, labels_slice, thresholds,
+                        probs_by_route,
+                        labels_slice,
+                        thresholds,
+                        blend=blend,
+                        calibrators=route_calibrators,
                     )
                     deployed_or_by_level[(level_no, severity)] = or_metrics
                     # Headline summary: prefer L9 hostile (the deployment

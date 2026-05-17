@@ -337,6 +337,229 @@ def _joint_or_search(
     return thresholds, _hit_union()
 
 
+_LEARNED_BLEND_LOGIT_EPS = 1e-6
+
+
+def _load_route_calibrator(
+    azoth_root: Path, route_name: str,
+) -> tuple[np.ndarray, np.ndarray] | None:
+    """Load a route's isotonic calibrator breakpoints.
+
+    Returns ``(x, y)`` arrays (raw_prob, calibrated_prob) or None if the
+    route isn't calibrated yet — pre-calibrator bundles and routes that
+    failed calibration won't have the file. Schema is
+    ``azoth.calibrator.isotonic.v1`` (see
+    azoth_calibrate_ensemble._fit_and_persist_isotonic_calibrator).
+    """
+    if route_name == "general":
+        path = azoth_root / "general" / "calibrator.json"
+    elif route_name.startswith("filegroups/"):
+        path = azoth_root / route_name / "calibrator.json"
+    elif route_name.startswith("filetypes/"):
+        path = azoth_root / route_name / "calibrator.json"
+    else:
+        return None
+    if not path.is_file():
+        return None
+    with open(path) as f:
+        cal = json.load(f)
+    x = np.asarray(cal["x"], dtype=np.float64)
+    y = np.asarray(cal["y"], dtype=np.float64)
+    if len(x) < 2 or len(x) != len(y):
+        return None
+    return (x, y)
+
+
+def _apply_isotonic(
+    probs: np.ndarray, breakpoints: tuple[np.ndarray, np.ndarray],
+) -> np.ndarray:
+    """Linear-interpolate raw probs through isotonic breakpoints with
+    clip-out-of-bounds semantics, matching litmus's deploy behavior
+    (litmus/src/model.rs:1437 calls cal.apply, which is clip+lerp).
+
+    NaN inputs pass through as NaN — calibration only applies where the
+    route emitted a real score.
+    """
+    x_breaks, y_breaks = breakpoints
+    out = np.full_like(probs, np.nan, dtype=np.float32)
+    valid = ~np.isnan(probs)
+    if not np.any(valid):
+        return out
+    # np.interp clamps outside the input domain to the boundary y-values,
+    # which is exactly the "clip" out-of-bounds policy the calibrator
+    # file declares. Cast through float64 for numerical stability with
+    # tight raw-prob distributions, then back to float32 to match the
+    # score table's storage type.
+    raw = probs[valid].astype(np.float64)
+    cal = np.interp(raw, x_breaks, y_breaks)
+    out[valid] = cal.astype(np.float32)
+    return out
+
+
+def _build_calibrated_route_probs(
+    raw_route_probs: dict[str, np.ndarray],
+    azoth_root: Path,
+) -> dict[str, np.ndarray]:
+    """Apply each route's isotonic calibrator to its raw probabilities,
+    so the learned-blend fit operates in the same prob space litmus
+    emits at deploy.
+
+    Routes without a calibrator pass through unchanged with a warning —
+    the blend will then be slightly inconsistent for that route, but
+    that's preferable to dropping the route entirely. (Pre-calibrator
+    bundles are vanishingly rare in this pipeline now; the warning
+    surfaces them if they appear.)
+    """
+    out: dict[str, np.ndarray] = {}
+    missing: list[str] = []
+    for route_name, probs in raw_route_probs.items():
+        bps = _load_route_calibrator(azoth_root, route_name)
+        if bps is None:
+            missing.append(route_name)
+            out[route_name] = probs
+            continue
+        out[route_name] = _apply_isotonic(probs, bps)
+    if missing:
+        # Logged at info level rather than warning because deploy still
+        # works; the blend just won't be deploy-accurate for these routes.
+        print(
+            f"# learned_blend: {len(missing)} route(s) without isotonic "
+            f"calibrators; passing raw probs through: {missing}",
+        )
+    return out
+
+
+def _logit_stack(
+    route_probs: dict[str, np.ndarray],
+    routes: tuple[str, ...],
+) -> tuple[np.ndarray, np.ndarray, tuple[str, ...]]:
+    """Stack per-route logits for the learned-blend candidate.
+
+    Returns ``(stacked_logits, valid_row_mask, present_routes)``. Routes
+    that are entirely NaN over the slice get dropped. ``valid_row_mask``
+    is True where every retained route has a non-NaN prob — LR can't
+    accept NaN inputs, and a row missing any route's score must use
+    fallback semantics at deploy too.
+    """
+    cols: list[np.ndarray] = []
+    present: list[str] = []
+    for route in routes:
+        probs = route_probs.get(route)
+        if probs is None or np.all(np.isnan(probs)):
+            continue
+        p = np.clip(
+            probs.astype(np.float64),
+            _LEARNED_BLEND_LOGIT_EPS,
+            1.0 - _LEARNED_BLEND_LOGIT_EPS,
+        )
+        with np.errstate(divide="ignore"):
+            cols.append(np.log(p / (1.0 - p)))
+        present.append(route)
+    if not cols:
+        return (
+            np.empty((len(next(iter(route_probs.values()))), 0), dtype=np.float64),
+            np.zeros(len(next(iter(route_probs.values()))), dtype=bool),
+            tuple(),
+        )
+    stacked = np.stack(cols, axis=1)
+    # A row is valid if no retained route has NaN; the logit clip above
+    # only handles in-range probs, NaN passes through to the stack.
+    valid = ~np.any(np.isnan(stacked), axis=1)
+    return stacked, valid, tuple(present)
+
+
+def _make_learned_blend_candidate_at_fp(
+    *,
+    route_probs: dict[str, np.ndarray],
+    labels: np.ndarray,
+    routes: tuple[str, ...],
+    fp_target: int,
+    target_per_million: float,
+    total_benign: int,
+) -> dict[str, Any] | None:
+    """Fit logistic regression on logit-stacked route probs, Pareto-tune
+    a threshold on the blended sigmoid score at ``fp_target`` FPs in the
+    slice, and return a candidate carrying the fit metadata.
+
+    The candidate's ``thresholds`` field stays empty — the OR-rule
+    semantics don't apply. The new ``blend`` field carries
+    ``{routes, weights, intercept, transform: "logit", threshold}``.
+    Litmus's policy consumer must learn to evaluate
+    ``sigmoid(intercept + sum(w_i * logit(clip(p_i)))) >= threshold``
+    before this candidate can deploy; today it lands in route_policies.json
+    as a candidate the calibration loop selects but the deploy-side OR-rule
+    classifier ignores. The standalone eval in azoth_route_policy_eval
+    DOES honor the blend field, so test-partition numbers reflect what
+    deployment would achieve once litmus catches up.
+
+    Why LR-on-logits rather than LR-on-probs: probabilities pile up near
+    0 and 1 for confident specialist scores, and a linear-in-prob model
+    is forced to throw most of its weight at the [0,1] interior. Working
+    in logit space lets the LR linearly combine evidence in log-odds —
+    the natural language of stacking probabilistic classifiers.
+    """
+    if len(routes) < 2:
+        return None
+    try:
+        from sklearn.linear_model import LogisticRegression  # noqa: PLC0415
+    except ImportError:
+        return None
+    stacked, valid_row, present_routes = _logit_stack(route_probs, routes)
+    if len(present_routes) < 2:
+        return None
+    fit_mask = valid_row
+    n_mal_fit = int(((labels == 1) & fit_mask).sum())
+    n_ben_fit = int(((labels == 0) & fit_mask).sum())
+    # LR needs at least one row per class; below this we'd be fitting on
+    # near-singleton data and the resulting weights aren't trustworthy.
+    if n_mal_fit < 5 or n_ben_fit < 5:
+        return None
+    x_fit = stacked[fit_mask]
+    y_fit = labels[fit_mask].astype(np.int8)
+    # class_weight='balanced' counteracts the corpus's benign skew so the
+    # loss doesn't get dominated by easy benigns. L2 with C=1 is mild —
+    # with only len(present_routes) features we're nowhere near overfit
+    # territory at typical slice sizes.
+    clf = LogisticRegression(
+        C=1.0, class_weight="balanced", solver="liblinear", max_iter=200,
+    ).fit(x_fit, y_fit)
+    weights = clf.coef_[0].astype(np.float64)
+    intercept = float(clf.intercept_[0])
+    # Apply the blend to every valid slice row, NaN otherwise.
+    z = stacked @ weights + intercept
+    blend = np.full(len(labels), np.nan, dtype=np.float64)
+    blend[valid_row] = 1.0 / (1.0 + np.exp(-z[valid_row]))
+    threshold, _, _ = _specialist_threshold_for_fp(
+        blend.astype(np.float32),
+        labels,
+        fp_target,
+    )
+    if threshold is None:
+        return None
+    valid = ~np.isnan(blend)
+    hit = valid & (blend >= threshold)
+    if not np.any(hit):
+        return None
+    candidate = _metrics(
+        labels,
+        hit,
+        target_per_million=target_per_million,
+        total_benign=total_benign,
+        thresholds={},
+        policy=f"learned_blend_at_fp_{fp_target}",
+        primary=None,
+        allowed_routes=present_routes,
+    )
+    candidate["blend"] = {
+        "routes": list(present_routes),
+        "weights": [float(w) for w in weights],
+        "intercept": intercept,
+        "transform": "logit",
+        "threshold": float(threshold),
+    }
+    return candidate
+
+
 def _make_joint_or_candidate_at_fp(
     *,
     route_probs: dict[str, np.ndarray],
@@ -573,6 +796,7 @@ def _mark_dominated_by_specialist(
     specialist_route: str,
     target_per_million: float,
     total_benign: int,
+    calibrated_route_probs: dict[str, np.ndarray] | None = None,
 ) -> None:
     """Inject specialist-tuned-to-same-FP candidates and mark any
     ensemble whose recall falls below the specialist's recall at the
@@ -701,6 +925,48 @@ def _mark_dominated_by_specialist(
             else:
                 joint["dominated_by_specialist"] = False
             candidates.append(joint)
+
+    # Learned-blend (logistic regression on logit-stacked route probs).
+    # Same FP injection set as joint-OR; the floor below filters those
+    # the specialist alone can match at the same FP. The standalone
+    # experiment (scripts/azoth_stacker_experiment.py) showed the
+    # in-sample bias on specialist probs DOES NOT meaningfully shift
+    # train+dev recall vs test recall — train+dev numbers are within
+    # tenths of a percent of test for the blends that ended up
+    # competitive. The integration is therefore safe to consume by the
+    # global knapsack as-is.
+    # Use calibrated probs for blend fitting so the learned weights live
+    # in the same prob space litmus emits at deploy (post-isotonic). The
+    # OR-rule machinery above continues to operate on raw probs because
+    # litmus calibrates per-route THRESHOLDS at load via
+    # calibrate_policy_thresholds_with — that translation is monotone
+    # for the OR-rule but doesn't decompose for a learned blend.
+    blend_probs = (
+        calibrated_route_probs if calibrated_route_probs is not None else route_probs
+    )
+    if len(routes_for_joint_full) >= 2:
+        for fp_target in fp_targets:
+            blend = _make_learned_blend_candidate_at_fp(
+                route_probs=blend_probs,
+                labels=labels,
+                routes=routes_for_joint_full,
+                fp_target=fp_target,
+                target_per_million=target_per_million,
+                total_benign=total_benign,
+            )
+            if blend is None:
+                continue
+            item_fp = int(blend.get("fp", 0))
+            item_recall = float(blend.get("recall", 0.0))
+            if math.isnan(item_recall):
+                item_recall = 0.0
+            spec_recall = pareto.get(item_fp, pareto[max_fp]) if item_fp <= max_fp else pareto[max_fp]
+            if item_recall + 1e-9 < spec_recall:
+                blend["dominated_by_specialist"] = True
+                blend["specialist_recall_at_fp"] = spec_recall
+            else:
+                blend["dominated_by_specialist"] = False
+            candidates.append(blend)
 
 
 def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1053,6 +1319,17 @@ def main() -> int:
     parser.add_argument("--db", default=None)
     parser.add_argument("--config", type=Path, default=Path("out/models/azoth/config.json"))
     parser.add_argument("--score-table", type=Path, default=Path("out/models/azoth/score_table.npz"))
+    parser.add_argument(
+        "--azoth-root",
+        type=Path,
+        default=Path("out/models/azoth"),
+        help=(
+            "Root containing per-route calibrator.json files. Used by the "
+            "learned_blend candidate to fit on isotonic-calibrated probs "
+            "rather than the raw probs in the score table, so the blend "
+            "weights match the deploy-time probabilities litmus emits."
+        ),
+    )
     parser.add_argument("--output", type=Path, default=Path("out/models/azoth/route_policies.json"))
     parser.add_argument("--csv", type=Path, default=Path("out/models/azoth/route_policies.csv"))
     parser.add_argument("--markdown", type=Path, default=Path("out/models/azoth/route_policies.md"))
@@ -1097,6 +1374,13 @@ def main() -> int:
             for route_name in route_names
             if (dense := _dense_route_probs(routes, route_name, indices)) is not None
         }
+        # The learned-blend candidate fits LR on isotonic-calibrated probs
+        # because litmus emits calibrated probs at deploy. Pre-compute the
+        # calibrated view once per slice; the cost (one np.interp per
+        # route) is trivial next to LR fitting.
+        calibrated_route_probs = _build_calibrated_route_probs(
+            route_probs, args.azoth_root,
+        ) if route_probs else {}
         levels: list[dict[str, Any]] = []
         for target in config["levels"]:
             level_no = int(target["level"])
@@ -1157,6 +1441,7 @@ def main() -> int:
                     specialist_route=type_route,
                     target_per_million=target_per_million,
                     total_benign=total_benign,
+                    calibrated_route_probs=calibrated_route_probs,
                 )
                 level_item[severity] = {
                     "target_per_million": target_per_million,

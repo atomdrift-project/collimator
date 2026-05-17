@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle autocollie-backfill-l3
+.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle autocollie-backfill-l3
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -395,48 +395,53 @@ azoth-fast-train: venv check-db
 # their own per-filetype CP floors are still volume-floored and that's
 # documented in the cards.
 azoth-publish-train: venv check-db
-	@echo "azoth-publish-train: starting k=2 OOF run; expect ~3× weekly compute"
-	@# Step 1: clean
-	$(MAKE) azoth-clean-bundle
-	@rm -rf out/models/azoth.oof-fold-a out/models/azoth.oof-fold-b
-	@# Step 2: fold A — train with fold 0 excluded.
+	@echo "azoth-publish-train: starting k=2 OOF run."
+	@echo "  Old structure: 3× full _azoth-train (each ~28h with specialists)."
+	@echo "  New structure: 3× azoth-general (~1h each, skip rescore for folds)"
+	@echo "                 + 1× azoth-specialists (~27h, on final production general)."
+	@echo "  Expected savings: ~2 days vs the pre-split flow."
+	@# Step 1: train fold A — general only, with fold 0 excluded, no rescore.
 	@echo "azoth-publish-train: training fold A (excluding OOF fold 0)"
-	EXP_OOF_FOLD_EXCLUDE=0 $(MAKE) _azoth-train \
+	$(MAKE) azoth-general-fold-a \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	@cp -al out/models/azoth out/models/azoth.oof-fold-a 2>/dev/null \
-		|| cp -a out/models/azoth out/models/azoth.oof-fold-a
-	$(MAKE) azoth-clean-bundle
-	@# Step 3: fold B — train with fold 1 excluded.
+	@# Step 2: train fold B — general only, with fold 1 excluded, no rescore.
 	@echo "azoth-publish-train: training fold B (excluding OOF fold 1)"
-	EXP_OOF_FOLD_EXCLUDE=1 $(MAKE) _azoth-train \
+	$(MAKE) azoth-general-fold-b \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	@cp -al out/models/azoth out/models/azoth.oof-fold-b 2>/dev/null \
-		|| cp -a out/models/azoth out/models/azoth.oof-fold-b
-	$(MAKE) azoth-clean-bundle
-	@# Step 4: final — train on full train+dev for deployment.
-	@echo "azoth-publish-train: training final model"
-	$(MAKE) _azoth-train \
+	@# Step 3: train final production general (no fold exclusion). Rescore is
+	@# deliberately skipped here too — azoth-oof-merge-general below
+	@# overwrites threshold_scores with honest OOF probabilities, so the
+	@# in-sample rescore would be wasted (and would briefly land a stale
+	@# score table on disk between steps 3 and 4 if anything crashed).
+	@echo "azoth-publish-train: training final production general"
+	$(MAKE) azoth-general \
+		AZOTH_GENERAL_SKIP_RESCORE=1 \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	@# Step 5: combine fold predictions into OOF general/threshold_scores.npz.
-	$(PYTHON) scripts/azoth_oof_score.py \
-		--db $(DB) \
-		--fold-a-bundle out/models/azoth.oof-fold-a \
-		--fold-b-bundle out/models/azoth.oof-fold-b \
-		--output $(AZOTH_GENERAL_SCORES) \
-		$(WORKERS_ARG) \
-		$(THRESHOLD_MAX_ID_ARG)
-	@# Step 6 & 7: re-run calibrate + deploy with the OOF general scores.
-	@# --partition=all is intentional: OOF predictions cover all of train+dev,
-	@# so we use the full coverage rather than restricting to dev byte-range.
+	@# Step 4: combine fold predictions into honest OOF general probs.
+	$(MAKE) azoth-oof-merge-general
+	@# Step 5: train specialists ONCE on the production general. This was
+	@# previously buried inside three rounds of _azoth-train (and thus ran
+	@# three times); the fold runs threw two of those specialist trees
+	@# straight into the bin.
+	$(MAKE) azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0
+	@# Step 6: deploy. --partition=all is intentional — OOF predictions
+	@# cover all of train+dev, so we use the full coverage rather than
+	@# restricting to dev byte-range.
 	$(MAKE) azoth-deploy AZOTH_CALIBRATE_PARTITION=all
 	@echo "azoth-publish-train: complete; OOF bundle deployed."
 	@echo "azoth-publish-train: archived fold bundles at out/models/azoth.oof-fold-{a,b}/"
 
-# _azoth-train: shared body for the two named targets above.  Not a public
-# entry point — pick azoth-full-train or azoth-fast-train explicitly.
+# azoth-general: train the general model at deploy fidelity, promote it
+# into the source bundle slot, and rebuild threshold_scores against the
+# fresh model.
+#
+# This is the GENERAL-ONLY half of what _azoth-train used to do, split
+# out so the OOF-publish flow can train fold-A/-B GENERAL bundles
+# without burning compute on specialists that get thrown away. See the
+# refactored azoth-publish-train below.
 #
 # Three steps:
 #   1. Train general at deploy fidelity (writes to out/experiments/azoth/).
@@ -444,8 +449,13 @@ azoth-publish-train: venv check-db
 #      (out/models/azoth/general/) so azoth-deploy actually picks it up —
 #      `make experiment` writes to a different location than azoth-deploy
 #      reads from, and without this step the deploy ships a stale general.
-#   3. Retrain every specialist (force, ignore --skip-existing) and deploy.
-_azoth-train: venv check-db azoth-clean-bundle
+#   3. Rescore threshold_scores against the freshly-promoted model.
+#
+# Set AZOTH_GENERAL_SKIP_RESCORE=1 to skip step 3 — used by the fold
+# variants below since azoth_oof_score.py does its own corpus-wide
+# scoring after merging the two fold bundles, making this rescore a
+# multi-hour wasted pass for fold builds.
+azoth-general: venv check-db azoth-clean-bundle
 	$(PYTHON) scripts/azoth_train_best.py \
 		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
 		--route general \
@@ -478,21 +488,71 @@ _azoth-train: venv check-db azoth-clean-bundle
 	@# and L0..L9 thresholds would be fit on the wrong score distribution.
 	@# Picks model.txt for single-seed bundles, else the lowest-numbered
 	@# seed_*.txt for multi-seed bundles (seed_42 by convention).
-	@set -e; \
-	if [ -f $(AZOTH_GENERAL_DIR)/model.txt ]; then \
-	    seed_model=$(AZOTH_GENERAL_DIR)/model.txt; \
+	@if [ "$(AZOTH_GENERAL_SKIP_RESCORE)" = "1" ]; then \
+		echo "AZOTH_GENERAL_SKIP_RESCORE=1: skipping threshold_scores rescore"; \
 	else \
-	    seed_model=$$(ls $(AZOTH_GENERAL_DIR)/models/seed_*.txt 2>/dev/null | sort | head -1); \
-	fi; \
-	[ -n "$$seed_model" ] || { echo "error: no general seed model found in $(AZOTH_GENERAL_DIR)"; exit 1; }; \
-	echo "rescoring general against full labeled corpus -> $(AZOTH_GENERAL_SCORES)"; \
-	$(PYTHON) -u -m collimator tune-thresholds --db $(DB) \
-	    --model $$seed_model \
-	    --spec $(AZOTH_GENERAL_DIR)/feature_spec.json \
-	    $(WORKERS_ARG) \
-	    --scores-cache $(AZOTH_GENERAL_SCORES) \
-	    --refresh-cache \
-	    --output $(AZOTH_GENERAL_DIR)/threshold_tuning.json
+		set -e; \
+		if [ -f $(AZOTH_GENERAL_DIR)/model.txt ]; then \
+		    seed_model=$(AZOTH_GENERAL_DIR)/model.txt; \
+		else \
+		    seed_model=$$(ls $(AZOTH_GENERAL_DIR)/models/seed_*.txt 2>/dev/null | sort | head -1); \
+		fi; \
+		[ -n "$$seed_model" ] || { echo "error: no general seed model found in $(AZOTH_GENERAL_DIR)"; exit 1; }; \
+		echo "rescoring general against full labeled corpus -> $(AZOTH_GENERAL_SCORES)"; \
+		$(PYTHON) -u -m collimator tune-thresholds --db $(DB) \
+		    --model $$seed_model \
+		    --spec $(AZOTH_GENERAL_DIR)/feature_spec.json \
+		    $(WORKERS_ARG) \
+		    --scores-cache $(AZOTH_GENERAL_SCORES) \
+		    --refresh-cache \
+		    --output $(AZOTH_GENERAL_DIR)/threshold_tuning.json; \
+	fi
+
+# Fold-aware general training. Each variant trains general with one OOF
+# fold held out, then archives the bundle to azoth.oof-fold-{a,b}/ for
+# later consumption by azoth-oof-merge-general. Skips the threshold_scores
+# rescore — those scores get replaced by the OOF merge anyway, so doing it
+# here is a multi-hour wasted pass.
+#
+# Why a separate target rather than a shell variable: the fold-A and
+# fold-B bundles need DISTINCT on-disk locations (different stash dirs).
+# A single parameterized target couldn't run both back-to-back without
+# the second one overwriting the first's bundle slot.
+azoth-general-fold-a: venv check-db
+	EXP_OOF_FOLD_EXCLUDE=0 $(MAKE) azoth-general AZOTH_GENERAL_SKIP_RESCORE=1
+	@echo "stashing fold-A bundle -> $(OUT_ROOT)/azoth.oof-fold-a/"
+	@rm -rf $(OUT_ROOT)/azoth.oof-fold-a
+	@cp -al $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-a 2>/dev/null \
+		|| cp -a $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-a
+
+azoth-general-fold-b: venv check-db
+	EXP_OOF_FOLD_EXCLUDE=1 $(MAKE) azoth-general AZOTH_GENERAL_SKIP_RESCORE=1
+	@echo "stashing fold-B bundle -> $(OUT_ROOT)/azoth.oof-fold-b/"
+	@rm -rf $(OUT_ROOT)/azoth.oof-fold-b
+	@cp -al $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-b 2>/dev/null \
+		|| cp -a $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-b
+
+# Merge the two fold-trained general bundles into honest OOF probabilities.
+# Reads from the stash dirs created by azoth-general-fold-{a,b}, writes
+# the combined threshold_scores.npz that azoth-calibrate consumes. Pulled
+# out of azoth-publish-train so it's individually rerunnable when only
+# the merge needs refreshing.
+azoth-oof-merge-general: venv check-db
+	$(PYTHON) scripts/azoth_oof_score.py \
+		--db $(DB) \
+		--fold-a-bundle $(OUT_ROOT)/azoth.oof-fold-a \
+		--fold-b-bundle $(OUT_ROOT)/azoth.oof-fold-b \
+		--output $(AZOTH_GENERAL_SCORES) \
+		$(WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG)
+
+# _azoth-train: shared body for the two named targets above.  Not a public
+# entry point — pick azoth-full-train or azoth-fast-train explicitly.
+#
+# Calls azoth-general (which does train + promote + rescore), then trains
+# specialists and deploys. The split lets fold-aware OOF training reuse
+# the general half without the specialist+deploy tail.
+_azoth-train: azoth-general
 	$(MAKE) azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0
 	$(MAKE) azoth-deploy
 
@@ -696,6 +756,96 @@ azoth-specialists: venv check-db
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
 		$(if $(DEVICE),--device $(DEVICE),)
 
+# Fold-aware specialist training for OOF score generation. Mirror of
+# azoth-specialists with EXP_OOF_FOLD_EXCLUDE wired through (honored in
+# azoth_specialist_suite._fetch_rows via _read_oof_exclude). Each fold
+# bundle excludes one half of train+dev so the OTHER half can be scored
+# OOF afterwards via azoth-oof-route-scores. Outputs go to azoth-fold-a/
+# and azoth-fold-b/ so the production bundle under $(AZOTH_ROOT) is left
+# alone — the deployed model stays single-fold; the fold bundles exist
+# only to feed honest score merging downstream.
+azoth-specialists-fold-a: venv check-db
+	EXP_OOF_FOLD_EXCLUDE=0 $(PYTHON) scripts/azoth_train_best.py \
+		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--route general \
+		--exec $(PYTHON) scripts/azoth_specialist_suite.py \
+		--db $(DB) \
+		$(EXP_WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
+		--output-root $(OUT_ROOT)/azoth.oof-fold-a \
+		--summary $(OUT_ROOT)/azoth.oof-fold-a/specialists.json \
+		--general-dir $(OUT_ROOT)/azoth.oof-fold-a/general \
+		--seed $(SEED) \
+		--n-folds $(AZOTH_SPECIALIST_FOLDS) \
+		--n-estimators $(AZOTH_SPECIALIST_ESTIMATORS) \
+		--max-depth $(AZOTH_SPECIALIST_MAX_DEPTH) \
+		--learning-rate $(AZOTH_SPECIALIST_LEARNING_RATE) \
+		--early-stopping-rounds $(AZOTH_SPECIALIST_EARLY_STOPPING) \
+		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
+		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
+		--n-seed-extras $(AZOTH_SPECIALIST_N_SEED_EXTRAS) \
+		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
+		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
+		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
+		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
+		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
+		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
+		$(foreach env,$(AZOTH_SPECIALIST_FEATURE_ENV),--feature-env $(env)) \
+		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
+		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
+		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
+		$(if $(DEVICE),--device $(DEVICE),)
+
+azoth-specialists-fold-b: venv check-db
+	EXP_OOF_FOLD_EXCLUDE=1 $(PYTHON) scripts/azoth_train_best.py \
+		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--route general \
+		--exec $(PYTHON) scripts/azoth_specialist_suite.py \
+		--db $(DB) \
+		$(EXP_WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
+		--output-root $(OUT_ROOT)/azoth.oof-fold-b \
+		--summary $(OUT_ROOT)/azoth.oof-fold-b/specialists.json \
+		--general-dir $(OUT_ROOT)/azoth.oof-fold-b/general \
+		--seed $(SEED) \
+		--n-folds $(AZOTH_SPECIALIST_FOLDS) \
+		--n-estimators $(AZOTH_SPECIALIST_ESTIMATORS) \
+		--max-depth $(AZOTH_SPECIALIST_MAX_DEPTH) \
+		--learning-rate $(AZOTH_SPECIALIST_LEARNING_RATE) \
+		--early-stopping-rounds $(AZOTH_SPECIALIST_EARLY_STOPPING) \
+		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
+		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
+		--n-seed-extras $(AZOTH_SPECIALIST_N_SEED_EXTRAS) \
+		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
+		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
+		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
+		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
+		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
+		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
+		$(foreach env,$(AZOTH_SPECIALIST_FEATURE_ENV),--feature-env $(env)) \
+		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
+		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
+		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
+		$(if $(DEVICE),--device $(DEVICE),)
+
+# Merge the two fold-trained specialist bundles into per-route OOF
+# threshold_scores.npz files under $(AZOTH_ROOT)/oof_route_scores/. Pass
+# --prod-root so test rows get scored with the deployed bundle (which
+# never saw test rows at training time, so its predictions on them are
+# legitimately OOS). The downstream calibrate-ensemble run then reads
+# these files via --oof-route-scores-dir.
+AZOTH_OOF_ROUTE_SCORES_DIR ?= $(AZOTH_ROOT)/oof_route_scores
+azoth-oof-route-scores: venv check-db
+	$(PYTHON) scripts/azoth_oof_score_routes.py \
+		--db $(DB) \
+		--fold-a-root $(OUT_ROOT)/azoth.oof-fold-a \
+		--fold-b-root $(OUT_ROOT)/azoth.oof-fold-b \
+		--prod-root $(AZOTH_ROOT) \
+		--summary $(AZOTH_SPECIALISTS_SUMMARY) \
+		--output-dir $(AZOTH_OOF_ROUTE_SCORES_DIR) \
+		$(EXP_WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG)
+
 # AZOTH_CALIBRATE_PARTITION selects which rows the calibrators and L0..L9
 # threshold search see. Default 'dev' is the weekly methodology (dev-only,
 # CP-aware budget acknowledging the volume floor). 'all' is for k=2 OOF
@@ -705,6 +855,12 @@ AZOTH_CALIBRATE_PARTITION ?= dev
 # Concurrent route scoring. Same trade-offs as
 # AZOTH_SPECIALIST_PARALLELISM — process-based, fan-out hits DB and CPU.
 AZOTH_CALIBRATE_PARALLELISM ?= 2
+
+# When AZOTH_USE_OOF_ROUTE_SCORES=1, pass --oof-route-scores-dir so the
+# calibrator reads honest fold-merged specialist probs instead of running
+# in-sample predict_proba. The flag is opt-in so the existing pipeline
+# stays bit-for-bit unchanged when unset.
+AZOTH_OOF_ROUTE_SCORES_ARG := $(if $(filter 1,$(AZOTH_USE_OOF_ROUTE_SCORES)),--oof-route-scores-dir $(AZOTH_OOF_ROUTE_SCORES_DIR),)
 
 azoth-calibrate: venv check-db
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
@@ -719,6 +875,7 @@ azoth-calibrate: venv check-db
 		--parallelism $(AZOTH_CALIBRATE_PARALLELISM) \
 		$(AZOTH_REFRESH_SCORES_ARG) \
 		$(AZOTH_SKIP_LEVEL_CALIBRATION_ARG) \
+		$(AZOTH_OOF_ROUTE_SCORES_ARG) \
 		$(foreach route,$(AZOTH_REFRESH_ROUTE),--refresh-route $(route)) \
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 	@# Honest test-bucket evaluation: same dev-fit thresholds applied to
