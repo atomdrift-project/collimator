@@ -20,13 +20,23 @@ log = logging.getLogger(__name__)
 # Deployment operating points, expressed as false positives per million good
 # files. Hostile policy is the primary signal; suspicious is a broader triage
 # band using (level + 1) * 8 FP/1M.
+#
+# L0..L9 are the original deployment tiers; L0 (0 FP/M, true zero FP) and L3
+# (the default, 3 FP/M) are the operating points we actively shape policies
+# around. L10..L20 extend the curve into the long-tail regime — at the
+# corpus's ~2.7M benign denominator, L9 has a 24-FP global budget while L18
+# has 49; the elbow in the marginal-recall curve sits between L18 and L19.
+# Levels above the elbow are best-effort: they exist so deployments that can
+# tolerate looser FP rates can still pick up coverage on filetypes the
+# tighter tiers leave at no_policy. They are NOT a back door to inflate L9 —
+# litmus's verdict mapping treats each level as a distinct severity band.
 SEVERITY_LEVEL_TARGETS = [
     {
         "level": level,
         "hostile_per_million": float(level),
         "suspicious_per_million": float((level + 1) * 8),
     }
-    for level in range(10)
+    for level in range(21)
 ]
 
 DEFAULT_SEVERITY_LEVEL = 3

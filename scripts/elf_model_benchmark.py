@@ -22,7 +22,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from collimator import data, export, features, model, train
+from collimator import data, export, features, model, thresholds, train
 
 LOG = logging.getLogger("elf_model_benchmark")
 NATIVE_BINARY_TYPES = ("elf", "macho", "pe")
@@ -262,9 +262,10 @@ def _operating_point(
 
 def _level_table(y_true: np.ndarray, y_prob: np.ndarray) -> list[dict[str, Any]]:
     levels: list[dict[str, Any]] = []
-    for level in range(10):
-        hostile = _operating_point(y_true, y_prob, float(level))
-        suspicious = _operating_point(y_true, y_prob, float((level + 1) * 8))
+    for target in thresholds.SEVERITY_LEVEL_TARGETS:
+        level = int(target["level"])
+        hostile = _operating_point(y_true, y_prob, float(target["hostile_per_million"]))
+        suspicious = _operating_point(y_true, y_prob, float(target["suspicious_per_million"]))
         levels.append({"level": level, "hostile": hostile, "suspicious": suspicious})
     return levels
 

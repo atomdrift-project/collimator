@@ -242,6 +242,218 @@ def _policy_candidates(
     return out
 
 
+def _joint_or_search(
+    route_probs: dict[str, np.ndarray],
+    labels: np.ndarray,
+    routes: tuple[str, ...],
+    *,
+    fp_budget: int,
+    max_iters: int = 8,
+) -> tuple[dict[str, float], np.ndarray]:
+    """Coordinate descent on per-route thresholds for an OR-rule policy
+    constrained to ``fp_budget`` total FPs in the slice.
+
+    Each round, hold all-but-one route fixed and solve a 1-D problem:
+    given the OR-hit from the other routes, find the loosest threshold
+    for this route whose newly-added rows keep total FP ≤ budget. This is
+    exactly the per-route Pareto-at-FP problem on rows not already hit by
+    others — closed-form, no learning, no gradient framework needed.
+
+    Repeat until thresholds stop moving (typically 2-3 rounds). The result
+    OR-rule fires at exactly the union of per-route firings under their
+    final thresholds, never overspending the FP budget.
+
+    Why not "gradient descent": the objective (TP@FP≤K) is piecewise-
+    constant in each threshold, so gradients are 0 almost everywhere.
+    Coordinate descent on the 1-D Pareto frontiers is the right shape.
+
+    Returns ``(thresholds, union_hit)``.
+    """
+    n = len(labels)
+    thresholds: dict[str, float] = {route: 1.0 for route in routes}
+    if fp_budget < 0:
+        return thresholds, np.zeros(n, dtype=bool)
+    # Initial seed: each route's solo-Pareto threshold at the full budget.
+    # Coordinate descent then redistributes budget across routes.
+    for route in routes:
+        probs = route_probs[route]
+        threshold, _, _ = _specialist_threshold_for_fp(probs, labels, fp_budget)
+        thresholds[route] = float(threshold) if threshold is not None else 1.0
+
+    def _hit_union(except_route: str | None = None) -> np.ndarray:
+        out = np.zeros(n, dtype=bool)
+        for r, t in thresholds.items():
+            if r == except_route or t >= 1.0:
+                continue
+            probs = route_probs[r]
+            valid = ~np.isnan(probs)
+            out |= valid & (probs >= t)
+        return out
+
+    benign = labels == 0
+    for _ in range(max_iters):
+        changed = False
+        for route in routes:
+            other_hit = _hit_union(except_route=route)
+            other_fp = int(np.sum(other_hit & benign))
+            remaining = fp_budget - other_fp
+            if remaining < 0:
+                # Other routes already exhaust the budget; turn this one off.
+                if thresholds[route] < 1.0:
+                    thresholds[route] = 1.0
+                    changed = True
+                continue
+            probs = route_probs[route]
+            valid = ~np.isnan(probs)
+            mask = valid & ~other_hit
+            if not mask.any():
+                if thresholds[route] < 1.0:
+                    thresholds[route] = 1.0
+                    changed = True
+                continue
+            p = probs[mask].astype(np.float64)
+            y = labels[mask].astype(np.int8)
+            if int((y == 1).sum()) == 0:
+                if thresholds[route] < 1.0:
+                    thresholds[route] = 1.0
+                    changed = True
+                continue
+            order = np.lexsort((y, -p))
+            p_sorted = p[order]
+            y_sorted = y[order]
+            fp_cum = np.cumsum(y_sorted == 0)
+            eligible = np.flatnonzero(fp_cum <= remaining)
+            if len(eligible) == 0:
+                new_t = 1.0
+            else:
+                end = int(eligible[-1])
+                new_t = float(p_sorted[end])
+            if abs(thresholds[route] - new_t) > 1e-12:
+                thresholds[route] = new_t
+                changed = True
+        if not changed:
+            break
+
+    return thresholds, _hit_union()
+
+
+def _make_joint_or_candidate_at_fp(
+    *,
+    route_probs: dict[str, np.ndarray],
+    labels: np.ndarray,
+    routes: tuple[str, ...],
+    fp_target: int,
+    target_per_million: float,
+    total_benign: int,
+) -> dict[str, Any] | None:
+    """Build an OR-rule candidate whose per-route thresholds are
+    jointly tuned to spend at most ``fp_target`` FPs in the slice.
+
+    Returns None when the routes can't be made to fire at all within
+    the budget (e.g., budget=0 and every benign sits at the top of every
+    route's score distribution).
+    """
+    if len(routes) < 2:
+        return None
+    thresholds, hit = _joint_or_search(
+        route_probs, labels, routes, fp_budget=fp_target,
+    )
+    if not np.any(hit):
+        return None
+    thresholds_out = {r: t for r, t in thresholds.items() if t < 1.0}
+    if not thresholds_out:
+        return None
+    return _metrics(
+        labels,
+        hit,
+        target_per_million=target_per_million,
+        total_benign=total_benign,
+        thresholds=thresholds_out,
+        policy=f"joint_or_at_fp_{fp_target}",
+        primary=None,
+        allowed_routes=tuple(thresholds_out.keys()),
+    )
+
+
+def _calibrate_max_rule_policy(
+    labels: np.ndarray,
+    route_probs: dict[str, np.ndarray],
+    *,
+    allowed_routes: tuple[str, ...],
+    target_per_million: float,
+    total_benign: int,
+) -> dict[str, Any]:
+    """Continuous max-rule ensemble: threshold ``max(p_route)`` across the
+    given routes, at a uniform value calibrated to the slice FP target.
+
+    Unlike ``or_general_primary`` and friends — which OR per-route binary
+    fires with INDEPENDENTLY calibrated thresholds and can spend up to
+    N×target FP in the worst case — max-rule with a single uniform
+    threshold spends at most the target FP itself. Mathematically:
+    ``max(p_route) >= T ⟺ any p_route >= T``, so uniform-T OR-of-routes
+    is identical to max-rule.
+
+    Litmus's ``policy_classify`` (model.rs:1499) already evaluates
+    ``any(score.prob >= policy.thresholds[route])``, which matches this
+    semantics when every route in ``thresholds`` carries the same value.
+    No deploy-side change is needed.
+    """
+    present_routes = tuple(
+        route for route in allowed_routes
+        if route in route_probs and not np.all(np.isnan(route_probs[route]))
+    )
+    if len(present_routes) < 2:
+        # Degenerate to a single route — already covered by general_only /
+        # group_only / filetype_only; don't pollute the candidate set.
+        return _no_hit_candidate(
+            labels, target_per_million=target_per_million, total_benign=total_benign,
+        )
+
+    stack = np.stack([route_probs[route] for route in present_routes], axis=0)
+    with np.errstate(invalid="ignore"):
+        max_probs = np.nanmax(stack, axis=0).astype(np.float32)
+    all_nan = np.all(np.isnan(stack), axis=0)
+    max_probs[all_nan] = np.nan
+
+    valid = ~np.isnan(max_probs)
+    benign_mask = valid & (labels == 0)
+    benign_probs = max_probs[benign_mask].astype(np.float64)
+    if len(benign_probs) < 50:
+        out = _no_hit_candidate(
+            labels, target_per_million=target_per_million, total_benign=total_benign,
+        )
+        out["policy"] = "max_rule"
+        out["allowed_routes"] = list(present_routes)
+        return out
+    threshold, method = _quantile_severity_threshold(benign_probs, target_per_million)
+    if threshold is None:
+        out = _no_hit_candidate(
+            labels, target_per_million=target_per_million, total_benign=total_benign,
+        )
+        out["policy"] = "max_rule"
+        out["allowed_routes"] = list(present_routes)
+        return out
+    hit = valid & (max_probs >= threshold)
+    thresholds_out = {route: float(threshold) for route in present_routes}
+    out = _metrics(
+        labels, hit,
+        target_per_million=target_per_million,
+        total_benign=total_benign,
+        thresholds=thresholds_out,
+        policy="max_rule",
+        primary=None,
+        allowed_routes=present_routes,
+    )
+    n_benign = int(np.sum(labels == 0))
+    _, below_resolution = _max_dev_fp_for_target(
+        target_per_million, n_benign, alpha=0.05,
+    ) if n_benign > 0 else (0, True)
+    out["below_resolution"] = bool(below_resolution)
+    if method == "extrapolated":
+        out["extrapolated_routes"] = ["max_rule"]
+    return out
+
+
 def _specialist_pareto_curve(
     probs: np.ndarray,
     labels: np.ndarray,
@@ -417,8 +629,30 @@ def _mark_dominated_by_specialist(
             extra_fps.add(item_fp)
         else:
             item["dominated_by_specialist"] = False
-    existing_fps = {int(c.get("fp", 0)) for c in candidates if c.get("policy") == "filetype_only"}
-    for fp_target in sorted(extra_fps - existing_fps):
+    # The two FP levels we always want operating points at: 0 (absolute
+    # zero-FP-on-calibration, the strictest tier) and 3 (the default
+    # deployment severity). Without these, levels with target_per_million
+    # too strict for a quantile threshold (notably L0 hostile) collapse to
+    # fire-never on every route — even when the specialist has a perfectly
+    # good threshold at exactly the level's budget. Injecting unconditionally
+    # at these FPs guarantees the per-filetype candidate set always carries
+    # a real operating point at the user-priority levels.
+    extra_fps |= {0, 3}
+    # Only treat a filetype_only candidate as "covering" its FP level if it
+    # actually fires (tp > 0). Sentinel fire-never candidates — produced
+    # when target_per_million is below what the quantile machinery can
+    # resolve (L0 hostile sets target=0 and falls into the early-return
+    # at _quantile_severity_threshold:560) — claim fp=0 but catch zero
+    # malware, so suppressing the fp=0 injection would leave L0 with no
+    # operating point. The Pareto-tuned injection below is the actual
+    # zero-FP operating point.
+    existing_fps = {
+        int(c.get("fp", 0))
+        for c in candidates
+        if c.get("policy") == "filetype_only" and int(c.get("tp", 0)) > 0
+    }
+    fp_targets = sorted(extra_fps - existing_fps)
+    for fp_target in fp_targets:
         extra = _make_specialist_candidate_at_fp(
             probs=probs,
             labels=labels,
@@ -430,6 +664,43 @@ def _mark_dominated_by_specialist(
         if extra is not None:
             extra["dominated_by_specialist"] = False
             candidates.append(extra)
+
+    # Joint-OR injection: at each FP level where a dominated ensemble
+    # lived, also try a coordinate-descent OR-rule that respects the
+    # budget. If the specialist's solo-Pareto still wins, the floor
+    # below will dominate this candidate too; if joint-OR catches
+    # malware the specialist alone misses (decorrelated routes), it
+    # survives and the knapsack has a third option besides
+    # specialist-only and the original independent-threshold OR-rule.
+    routes_for_joint = tuple(r for r in route_probs.keys() if r != specialist_route)
+    # Include the specialist in the OR-rule too — multi-route OR with
+    # specialist as one component is what most ensembles look like at
+    # deploy.
+    routes_for_joint_full = tuple(route_probs.keys())
+    if len(routes_for_joint_full) >= 2:
+        for fp_target in fp_targets:
+            joint = _make_joint_or_candidate_at_fp(
+                route_probs=route_probs,
+                labels=labels,
+                routes=routes_for_joint_full,
+                fp_target=fp_target,
+                target_per_million=target_per_million,
+                total_benign=total_benign,
+            )
+            if joint is None:
+                continue
+            # Apply the same recall-monotone floor to joint-OR.
+            item_fp = int(joint.get("fp", 0))
+            item_recall = float(joint.get("recall", 0.0))
+            if math.isnan(item_recall):
+                item_recall = 0.0
+            spec_recall = pareto.get(item_fp, pareto[max_fp]) if item_fp <= max_fp else pareto[max_fp]
+            if item_recall + 1e-9 < spec_recall:
+                joint["dominated_by_specialist"] = True
+                joint["specialist_recall_at_fp"] = spec_recall
+            else:
+                joint["dominated_by_specialist"] = False
+            candidates.append(joint)
 
 
 def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
@@ -850,6 +1121,29 @@ def main() -> int:
                             filetype=type_route if type_route in route_probs else None,
                         )
                     )
+                    # Continuous max-rule ensemble across all present
+                    # routes — a uniform-threshold OR that doesn't waste
+                    # FP budget on per-route threshold independence. The
+                    # recall-monotone floor below will reject it if the
+                    # specialist alone tuned to the same FP already wins.
+                    routes_for_max = tuple(
+                        route for route in (
+                            "general",
+                            group_route if group_route in route_probs else None,
+                            type_route if type_route in route_probs else None,
+                        )
+                        if route is not None
+                    )
+                    if len(routes_for_max) >= 2:
+                        candidates.append(
+                            _calibrate_max_rule_policy(
+                                scoped_labels,
+                                route_probs,
+                                allowed_routes=routes_for_max,
+                                target_per_million=target_per_million,
+                                total_benign=total_benign,
+                            ),
+                        )
                 # Recall-monotone floor: any ensemble candidate that
                 # underperforms the specialist tuned to the same FP count
                 # is wasting global FP budget for no recall gain. Mark and

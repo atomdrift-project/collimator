@@ -26,7 +26,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from collimator import bundle, data, export, features, model, train
+from collimator import bundle, data, export, features, model, thresholds, train
 
 LOG = logging.getLogger("azoth_specialist_suite")
 
@@ -460,7 +460,7 @@ def _level_table(y_true: np.ndarray, y_prob: np.ndarray) -> list[dict[str, Any]]
             "hostile": _operating_point(y_true, y_prob, float(level)),
             "suspicious": _operating_point(y_true, y_prob, float((level + 1) * 8)),
         }
-        for level in range(10)
+        for level in range(len(thresholds.SEVERITY_LEVEL_TARGETS))
     ]
 
 

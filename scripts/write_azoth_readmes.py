@@ -431,7 +431,7 @@ def _global_policy_table(root: Path) -> str:
         "| L | H target/1M | H recall | H FP/1M | H 95% CI upper | S target/1M | S recall | S FP/1M | S 95% CI upper |",
         "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
-    for level_no in range(10):
+    for level_no in sorted(int(item["level"]) for item in data["levels"]):
         level = next(item for item in data["levels"] if int(item["level"]) == level_no)
         h = level["hostile"]
         s = level["suspicious"]
