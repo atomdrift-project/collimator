@@ -205,14 +205,33 @@ def _execute(conn, query: str, params=None):
             yield from cur
 
 
-def _cleave_json(raw) -> str | None:
-    """Normalize cleave_result to a JSON string, handling psycopg's auto-decode."""
+def _cleave_value(raw):
+    """Return the raw cleave_result as-is for downstream pass-through.
+
+    Downstream consumers (``_coerce_report``) already accept either a
+    pre-parsed dict (psycopg's JSONB auto-decode) or a JSON string
+    (SQLite), so re-serializing PG dicts back to strings is wasted work
+    — the previous ``json.dumps(...)`` here + ``json.loads(...)`` in
+    ``_coerce_report`` was a profiling-visible dict→str→dict roundtrip.
+    """
+    return raw
+
+
+def _cleave_report(raw):
+    """Return the cleave_result as a dict (or ``None`` on missing/invalid).
+
+    Handles both psycopg's pre-parsed dict and SQLite's TEXT JSON.
+    """
     if raw is None:
         return None
-    if isinstance(raw, str):
+    if isinstance(raw, dict):
         return raw
-    # psycopg auto-decodes JSONB to dict
-    return json.dumps(raw)
+    if isinstance(raw, str):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return None
+    return None
 
 
 def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str, Any]]:
@@ -231,7 +250,7 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str,
                 cur.execute(query, [ids])
                 return {
                     int(rid): {
-                        "cleave_result": _cleave_json(cr),
+                        "cleave_result": _cleave_value(cr),
                         "formula": formula,
                         "elements": elements,
                         "score": score,
@@ -355,13 +374,10 @@ def stream_samples(
                     continue
                 if oof_fold_of(split_key) == exclude_oof_fold:
                     continue
-            raw = _cleave_json(cleave_result)
-            if raw is None:
-                continue
-            try:
-                report = json.loads(raw)
-            except json.JSONDecodeError:
-                log.warning("invalid JSON for %s, skipping", sha256)
+            report = _cleave_report(cleave_result)
+            if report is None:
+                if cleave_result is not None:
+                    log.warning("invalid JSON for %s, skipping", sha256)
                 continue
             yield Sample(
                 row_id=int(row_id),
@@ -420,13 +436,10 @@ def stream_labeled_samples_full(
 
         for row_id, sha256, path, label, canonical, cleave_result, formula, elements, score, mtime, cluster_id in _execute(conn, query, params):
             split_key = canonical or sha256
-            raw = _cleave_json(cleave_result)
-            if raw is None:
-                continue
-            try:
-                report = json.loads(raw)
-            except json.JSONDecodeError:
-                log.warning("invalid JSON for %s, skipping", sha256)
+            report = _cleave_report(cleave_result)
+            if report is None:
+                if cleave_result is not None:
+                    log.warning("invalid JSON for %s, skipping", sha256)
                 continue
             yield Sample(
                 row_id=int(row_id),
@@ -624,12 +637,8 @@ def lookup_sample(
         if not isinstance(conn, sqlite3.Connection):
             query = "SELECT sha256, path, label, cleave_result FROM samples WHERE sha256 LIKE %s"
         for sha256, path, label, cleave_result in _execute(conn, query, params):
-            raw = _cleave_json(cleave_result)
-            if raw is None:
-                return None
-            try:
-                report = json.loads(raw)
-            except json.JSONDecodeError:
+            report = _cleave_report(cleave_result)
+            if report is None:
                 return None
             return sha256, path or "", label, report
     return None

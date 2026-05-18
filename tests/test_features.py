@@ -66,21 +66,21 @@ def _reports_with_finding(finding_id: str, crit: str, n: int = 35) -> list[dict]
 
 def test_finding_paths_deep() -> None:
     paths = _finding_paths("objectives/evasion/process/injection::technique-x")
-    assert paths == [
+    assert paths == (
         "objectives",
         "objectives/evasion",
         "objectives/evasion/process",
-    ]
+    )
 
 
 def test_finding_paths_two_levels() -> None:
     paths = _finding_paths("metadata/format::no-functions")
-    assert paths == ["metadata", "metadata/format"]
+    assert paths == ("metadata", "metadata/format")
 
 
 def test_finding_paths_single() -> None:
     paths = _finding_paths("standalone")
-    assert paths == ["standalone"]
+    assert paths == ("standalone",)
 
 
 def test_primary_file_returns_first() -> None:

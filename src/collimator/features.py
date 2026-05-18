@@ -1148,17 +1148,21 @@ def _looks_hexish(value: str) -> bool:
     return sum(ch in "0123456789abcdefABCDEF" for ch in compact) / len(compact) > 0.95
 
 
-def _finding_paths(finding_id: str) -> list[str]:
+@lru_cache(maxsize=32768)
+def _finding_paths(finding_id: str) -> tuple[str, ...]:
     """Extract hierarchical path prefixes (1, 2, 3 levels) from a finding ID.
 
     "objectives/evasion/process/injection::technique-x"
-        -> ["objectives", "objectives/evasion", "objectives/evasion/process"]
+        -> ("objectives", "objectives/evasion", "objectives/evasion/process")
     "metadata/format::no-functions"
-        -> ["metadata", "metadata/format"]
+        -> ("metadata", "metadata/format")
+
+    Cached because callers in the hot extraction loop call this 1000+
+    times per row with a small universe of distinct finding_ids.
     """
     base = finding_id.split("::")[0] if "::" in finding_id else finding_id
     parts = base.split("/")
-    return ["/".join(parts[:d]) for d in range(1, min(len(parts), 3) + 1)]
+    return tuple("/".join(parts[:d]) for d in range(1, min(len(parts), 3) + 1))
 
 
 # ---------------------------------------------------------------------------
