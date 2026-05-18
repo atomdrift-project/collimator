@@ -1906,7 +1906,10 @@ class _ExtractContext:
         "rare_element_lookup", "n_re",
         "trigram_lookup", "n_tri", "blindfold", "total_features",
         "score_interaction_lookup", "synergy_lookup",
-        "absolute_lookup"
+        "absolute_lookup",
+        "bigram_vocab_paths", "trigram_vocab_paths", "synergy_vocab_paths",
+        "tiered_bigram_vocab_tokens", "tiered_trigram_vocab_tokens",
+        "tiered_quadgram_vocab_tokens",
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
@@ -1965,6 +1968,23 @@ class _ExtractContext:
             if (idx := name_to_idx.get(f"tiertri:{tri}")) is not None:
                 self.tiered_trigram_lookup[tri] = idx
         self.n_tier_tri = len(spec.tiered_trigram_vocab)
+        # Pre-filter sets for tiered n-grams. Same idea as bigram_vocab_paths
+        # but the tokens are severity-prefixed (e.g. "L5/objectives/network")
+        # rather than raw finding paths.
+        self.tiered_bigram_vocab_tokens: frozenset[str] = frozenset(
+            t for bi in self.tiered_bigram_lookup for t in bi.split(" + ")
+        )
+        self.tiered_trigram_vocab_tokens: frozenset[str] = frozenset(
+            t for tri in self.tiered_trigram_lookup for t in tri.split(" + ")
+        )
+        # Tiered quadgrams live in absolute_lookup under "tierquad:" prefix.
+        # Extract the tokens that appear in at least one vocab quadgram.
+        _quad_tokens: set[str] = set()
+        for key in name_to_idx:
+            if key.startswith("tierquad:"):
+                for t in key[len("tierquad:"):].split(" + "):
+                    _quad_tokens.add(t)
+        self.tiered_quadgram_vocab_tokens: frozenset[str] = frozenset(_quad_tokens)
 
         self.ghost_vocab = spec.ghost_vocab
         self.ghost_lookup: dict[str, int] = {}
@@ -1994,6 +2014,23 @@ class _ExtractContext:
             if (idx := name_to_idx.get(f"trigram:{tri}")) is not None:
                 self.trigram_lookup[tri] = idx
         self.n_tri = len(spec.trigram_vocab)
+
+        # Pre-filter sets: paths that can possibly participate in a vocab
+        # n-gram. _apply_{bigram,trigram,signature_synergy}_features used
+        # to enumerate O(N^2)/O(N^3) over all per-file finding paths, then
+        # dict-miss the vast majority. The vocab paths are a tiny subset
+        # (~50 for trigrams, ~1k for bigrams) of the per-file path
+        # universe, so filtering first turns ~390k trigram-string-formats
+        # per file into ~10-20.
+        self.bigram_vocab_paths: frozenset[str] = frozenset(
+            p for bi in self.bigram_lookup for p in bi.split(" + ")
+        )
+        self.trigram_vocab_paths: frozenset[str] = frozenset(
+            p for tri in self.trigram_lookup for p in tri.split(" + ")
+        )
+        self.synergy_vocab_paths: frozenset[str] = frozenset(
+            p for bi in self.synergy_lookup for p in bi.split(" + ")
+        )
 
 
 @dataclass(slots=True)
@@ -3548,17 +3585,20 @@ def _apply_bigram_features(
     """Group 11: trait bigram multi-hot features."""
     config = feature_config_from_env()
     use_conf = config.include_confidence_weighted_ngrams and summary is not None
+    vocab_paths = ctx.bigram_vocab_paths
+    bigram_lookup = ctx.bigram_lookup
     for file_entry in report_files(report):
         paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
+        paths_list = [p for p in paths_list if p in vocab_paths]
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
                 bigram = f"{p1} + {p2}"
                 if use_conf:
                     c1 = summary.path_confidences.get(p1, 1.0)
                     c2 = summary.path_confidences.get(p2, 1.0)
-                    _assign(vec, ctx.bigram_lookup.get(bigram), (c1 + c2) / 2.0)
+                    _assign(vec, bigram_lookup.get(bigram), (c1 + c2) / 2.0)
                 else:
-                    _assign(vec, ctx.bigram_lookup.get(bigram), 1.0)
+                    _assign(vec, bigram_lookup.get(bigram), 1.0)
 
 
 def _apply_tiered_bigram_features(
@@ -3577,9 +3617,12 @@ def _apply_tiered_bigram_features(
     if len(tokens) > 512:
         log.warning("too many tiered bigram tokens (%d); skipping sample", len(tokens))
         return
+    vocab_tokens = ctx.tiered_bigram_vocab_tokens
+    tokens = [t for t in tokens if t in vocab_tokens]
+    tiered_lookup = ctx.tiered_bigram_lookup
     for i, t1 in enumerate(tokens):
         for t2 in tokens[i + 1:]:
-            _assign(vec, ctx.tiered_bigram_lookup.get(f"{t1} + {t2}"), 1.0)
+            _assign(vec, tiered_lookup.get(f"{t1} + {t2}"), 1.0)
 
 
 def _apply_tiered_trigram_features(
@@ -3597,11 +3640,14 @@ def _apply_tiered_trigram_features(
     if len(tokens) > 512:
         log.warning("too many tiered trigram tokens (%d); skipping sample", len(tokens))
         return
+    vocab_tokens = ctx.tiered_trigram_vocab_tokens
+    tokens = [t for t in tokens if t in vocab_tokens]
+    tiered_lookup = ctx.tiered_trigram_lookup
     for i, t1 in enumerate(tokens):
         for j in range(i + 1, len(tokens)):
             t2 = tokens[j]
             for t3 in tokens[j + 1:]:
-                _assign(vec, ctx.tiered_trigram_lookup.get(f"{t1} + {t2} + {t3}"), 1.0)
+                _assign(vec, tiered_lookup.get(f"{t1} + {t2} + {t3}"), 1.0)
 
 
 def _apply_tiered_quadgram_features(
@@ -3623,8 +3669,11 @@ def _apply_tiered_quadgram_features(
     if len(tokens) > 64:
         log.warning("too many tiered quadgram tokens (%d); skipping sample", len(tokens))
         return
+    vocab_tokens = ctx.tiered_quadgram_vocab_tokens
+    tokens = [t for t in tokens if t in vocab_tokens]
+    absolute_lookup = ctx.absolute_lookup
     for quad in _quadgram_tokens(tokens):
-        _assign(vec, ctx.absolute_lookup.get(f"tierquad:{quad}"), 1.0)
+        _assign(vec, absolute_lookup.get(f"tierquad:{quad}"), 1.0)
 
 
 def _apply_ghost_features(
@@ -3683,14 +3732,17 @@ def _apply_trigram_features(
 ) -> None:
     """Group 16: trait trigram multi-hot features."""
     config = feature_config_from_env()
+    vocab_paths = ctx.trigram_vocab_paths
+    trigram_lookup = ctx.trigram_lookup
     for file_entry in report_files(report):
         paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
+        paths_list = [p for p in paths_list if p in vocab_paths]
         for i, p1 in enumerate(paths_list):
             for j in range(i + 1, len(paths_list)):
                 p2 = paths_list[j]
                 for p3 in paths_list[j + 1 :]:
                     trigram = f"{p1} + {p2} + {p3}"
-                    _assign(vec, ctx.trigram_lookup.get(trigram), 1.0)
+                    _assign(vec, trigram_lookup.get(trigram), 1.0)
 
 
 def _apply_logic_gap_features(
@@ -3735,12 +3787,15 @@ def _apply_signature_synergy_features(
         return
 
     config = feature_config_from_env()
+    vocab_paths = ctx.synergy_vocab_paths
+    synergy_lookup = ctx.synergy_lookup
     for file_entry in report_files(report):
         paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
+        paths_list = [p for p in paths_list if p in vocab_paths]
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
                 bigram = f"{p1} + {p2}"
-                _assign(vec, ctx.synergy_lookup.get(bigram), 1.0)
+                _assign(vec, synergy_lookup.get(bigram), 1.0)
 
 
 def _apply_intent_gap_features(
