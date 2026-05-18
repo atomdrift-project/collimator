@@ -94,14 +94,35 @@ require_file() {
     fi
 }
 
-PARALLEL_FOLDS=${PARALLEL_FOLDS:-0}
+# Default PARALLEL_FOLDS=1 on hosts with enough cores to absorb 2×
+# concurrent fold trainings (≥32 cores). Smaller boxes default to
+# sequential — at parallelism=4 they'd already have only ~2 threads per
+# LightGBM, and halving that under parallel folds tanks per-job
+# throughput. GPU users should set PARALLEL_FOLDS=0 explicitly: device
+# memory is the binding constraint, not CPU.
+if [[ -z "${PARALLEL_FOLDS:-}" ]]; then
+    if (( $(nproc) >= 32 )); then
+        PARALLEL_FOLDS=1
+        echo "[pipeline] PARALLEL_FOLDS=1 (auto, $(nproc) cores)"
+    else
+        PARALLEL_FOLDS=0
+        echo "[pipeline] PARALLEL_FOLDS=0 (auto, $(nproc) cores — below 32-core threshold)"
+    fi
+fi
+
+# When running parallel folds, tell each suite about the other so the
+# auto thread-cap inside azoth_specialist_suite halves correctly.
+# Without this the two suites would each claim nproc/parallelism threads
+# per LightGBM job, doubling load and erasing the win.
+if [[ "$PARALLEL_FOLDS" = "1" ]]; then
+    export AZOTH_CONCURRENT_SUITES=2
+fi
 
 # Stages 1+2 (and 4+5) are independent — fold-A and fold-B touch disjoint
-# bundle roots and the experiment cache key now distinguishes them. Set
-# PARALLEL_FOLDS=1 to run them concurrently; cuts each pair's wall-clock
-# roughly in half on a host with the cores/GPU memory to spare. The cost
-# is 2× peak resource use (CPU, RAM, GPU memory if --device gpu is used)
-# so leave it off when training shares a box with anything else.
+# bundle roots and the experiment cache key now distinguishes them. The
+# fold pairs run concurrently when resources allow (see PARALLEL_FOLDS
+# logic above). GPU users should override PARALLEL_FOLDS=0 because
+# device memory is the binding constraint, not CPU.
 if stage_active 1 && stage_active 2 && [[ "$PARALLEL_FOLDS" = "1" ]]; then
     banner 1 "Train fold-A AND fold-B GENERAL in parallel (PARALLEL_FOLDS=1)"
     require_dir_or_warn() { :; }
@@ -152,6 +173,26 @@ if stage_active 3; then
     STAGE3_PID=$!
 else
     skipped 3 "OOF general merge"
+fi
+
+if stage_active 4; then
+    # Pre-build the cross-fold feature cache so stages 4-5 don't each pay
+    # the per-fold extract. Runs ahead of (and serializes) the specialist
+    # trainings — wall-clock saved exceeds this stage's cost because it
+    # extracts the train+dev union ONCE instead of twice (and twice
+    # concurrently, when PARALLEL_FOLDS=1, fighting for DB/workers).
+    # Skipping when disabled via SKIP_PREFILL=1 (e.g. running only
+    # stage 4-5 against an already-populated cache).
+    if [[ "${SKIP_PREFILL:-0}" != "1" ]]; then
+        banner_substage="[stage-4-prefill]"
+        echo
+        echo "================================================================"
+        echo "$banner_substage Pre-fill route feature cache (shared across fold-A/-B)"
+        echo "================================================================"
+        time make azoth-prefill-specialist-features
+    else
+        echo "[stage-4-prefill] SKIP (SKIP_PREFILL=1)"
+    fi
 fi
 
 if stage_active 4 && stage_active 5 && [[ "$PARALLEL_FOLDS" = "1" ]]; then

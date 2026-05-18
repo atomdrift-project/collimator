@@ -11,6 +11,7 @@ import logging
 import math
 import os
 import shutil
+import sys
 from dataclasses import asdict, fields, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -29,6 +30,25 @@ from sklearn.metrics import (
 from collimator import bundle, data, export, features, model, thresholds, train
 
 LOG = logging.getLogger("azoth_specialist_suite")
+
+
+def _feature_cache_helpers() -> tuple[Any, Any, Any, Any]:
+    """Lazy-import the cache helpers from ``azoth_calibrate_ensemble``.
+
+    The top-level import would create a cycle:
+    ``azoth_calibrate_ensemble`` already imports ``DEPLOYMENT_GROUPS``
+    from this module, so importing back would fail mid-load. Deferring
+    the import to call time avoids the cycle without duplicating the
+    cache format across two files.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from azoth_calibrate_ensemble import (  # noqa: PLC0415
+        _file_sha256,
+        _hash_ints,
+        _load_route_feature_cache,
+        _save_route_feature_cache,
+    )
+    return _file_sha256, _hash_ints, _load_route_feature_cache, _save_route_feature_cache
 
 # Archive-shaped filetypes whose contents litmus extracts AND for which
 # cleave emits no container-level kv_tree subtree. Specialists on these
@@ -765,6 +785,7 @@ def _train_one(
     filegroup_score_filter: bool,
     n_seed_extras: int = 0,
     skip_benchmark: bool = False,
+    feature_cache_dir: Path | None = None,
 ) -> dict[str, Any]:
     train_rows = _fetch_rows(
         db_path,
@@ -808,13 +829,87 @@ def _train_one(
             feature_spec_policy,
             spec.total_features,
         )
-        x_train, y_train, x_bench, y_bench = features.extract_partitioned_from_db(
-            db_path,
-            train_ids_labels,
-            benchmark_ids_labels,
-            spec,
-            n_workers=workers,
-        )
+        # Feature-cache lookup for the training matrix. Cache key matches
+        # what azoth_calibrate_ensemble._score_route uses so a matrix
+        # produced by either side is interchangeable. The cache covers
+        # only the TRAINING half — benchmark features are typically empty
+        # (skip_benchmark=True is the OOF default) or small relative to
+        # train, and live on a separate extract path either way.
+        #
+        # Cross-fold sharing: when azoth_prefill_specialist_features.py
+        # has pre-populated the cache with fold-A and fold-B matrices
+        # (each computed from a single shared union extraction), this
+        # lookup hits and skips the per-fold ``extract_partitioned_from_db``
+        # entirely. On a cache miss we fall back to today's extract path,
+        # then save the result so a retry or a parallel fold benefits.
+        cached_train_matrix = None
+        feature_cache_read_s = 0.0
+        cache_key: dict[str, Any] | None = None
+        if feature_cache_dir is not None:
+            _file_sha256, _hash_ints, _load_cache, _save_cache = _feature_cache_helpers()
+            cache_route_name = (
+                f"filegroups/{name}" if kind == "filegroup" else f"filetypes/{name}"
+            )
+            spec_hash = _file_sha256(output_dir / "feature_spec.json") \
+                if (output_dir / "feature_spec.json").exists() \
+                else _file_sha256(spec_path)
+            train_row_ids = np.asarray(
+                [rid for rid, _label in train_ids_labels], dtype=np.int64,
+            )
+            rows_hash = _hash_ints(train_row_ids)
+            cache_key = {
+                "route_name": cache_route_name,
+                "max_id": max_id,
+                "spec_hash": spec_hash,
+                "rows_hash": rows_hash,
+            }
+            cached_train_matrix, feature_cache_read_s = _load_cache(
+                feature_cache_dir,
+                expected_rows=len(train_ids_labels),
+                expected_features=spec.total_features,
+                **cache_key,
+            )
+        if cached_train_matrix is not None:
+            LOG.info(
+                "%s: cache hit (%.1fs); skipping train extraction",
+                name, feature_cache_read_s,
+            )
+            x_train = cached_train_matrix
+            # Labels are recoverable from train_ids_labels directly — the
+            # extract function sorts by row_id, so reconstruct the same
+            # ordering here. (_load_route_feature_cache verified row
+            # count + feature count above; the per-row label is in the
+            # input list, no second DB hit needed.)
+            sorted_train = sorted(train_ids_labels, key=lambda r: r[0])
+            y_train = np.asarray(
+                [label for _row_id, label in sorted_train], dtype=np.float32,
+            )
+            # Benchmark still needs extraction (or stays empty under
+            # skip_benchmark). Keep the existing call shape but with an
+            # empty train side — extract_partitioned_from_db handles the
+            # empty-train case correctly.
+            if benchmark_ids_labels:
+                _x_train_empty, _y_train_empty, x_bench, y_bench = features.extract_partitioned_from_db(
+                    db_path,
+                    [],
+                    benchmark_ids_labels,
+                    spec,
+                    n_workers=workers,
+                )
+            else:
+                x_bench = sp.csr_matrix((0, spec.total_features), dtype=np.float32)
+                y_bench = np.array([], dtype=np.float32)
+        else:
+            x_train, y_train, x_bench, y_bench = features.extract_partitioned_from_db(
+                db_path,
+                train_ids_labels,
+                benchmark_ids_labels,
+                spec,
+                n_workers=workers,
+            )
+            if feature_cache_dir is not None and cache_key is not None and x_train.shape[0] > 0:
+                _, _, _, _save_cache = _feature_cache_helpers()
+                _save_cache(feature_cache_dir, matrix=x_train, **cache_key)
     allowed_mask, mask_metadata = _allowed_mask_from_spec(spec, mask_spec_path)
     if mask_metadata is not None:
         LOG.info(
@@ -1038,6 +1133,7 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
             filegroup_score_filter=job["filegroup_score_filter"],
             n_seed_extras=job["n_seed_extras"],
             skip_benchmark=job.get("skip_benchmark", False),
+            feature_cache_dir=job.get("feature_cache_dir"),
         )
     except Exception:
         LOG.exception("%s: failed", target["name"])
@@ -1130,6 +1226,22 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--feature-cache-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Directory holding per-route training feature matrices. When "
+            "set, _train_one looks up "
+            "{cache_dir}/<route_slug>-{max_id}-{spec_hash[:16]}-{rows_hash[:16]}.matrix.npz "
+            "before extracting; cache misses save the freshly-extracted "
+            "matrix for later runs. Pre-fill via "
+            "scripts/azoth_prefill_specialist_features.py to share work "
+            "across fold-A / fold-B / retried runs. Format matches "
+            "azoth_calibrate_ensemble._score_route's cache so matrices "
+            "are interchangeable between training and calibration scoring."
+        ),
+    )
+    parser.add_argument(
         "--skip-benchmark",
         action="store_true",
         help=(
@@ -1198,14 +1310,22 @@ def main() -> int:
     # itself to death (we saw load avg ~240 on a 128-core box with
     # parallelism=2). nproc // parallelism keeps total worker count
     # roughly equal to the core count and yields predictable wall-clock.
+    #
+    # AZOTH_CONCURRENT_SUITES (set by scripts/azoth_oof_pipeline.sh when
+    # PARALLEL_FOLDS=1) tells the suite that another instance is running
+    # in parallel and the thread budget should be split across them.
+    # Without this knowledge each suite would claim the full host and
+    # 2× CPU oversubscription would erase the parallel-folds win.
     lgbm_threads = args.lgbm_threads
     if lgbm_threads is None and args.parallelism > 1:
         nproc = os.cpu_count() or 1
-        lgbm_threads = max(1, nproc // args.parallelism)
+        concurrent_suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
+        lgbm_threads = max(1, nproc // (args.parallelism * concurrent_suites))
+        suite_note = f", concurrent_suites={concurrent_suites}" if concurrent_suites > 1 else ""
         LOG.info(
             "auto-capping LightGBM threads per training at %d "
-            "(%d cores / parallelism=%d). Override with --lgbm-threads N.",
-            lgbm_threads, nproc, args.parallelism,
+            "(%d cores / parallelism=%d%s). Override with --lgbm-threads N.",
+            lgbm_threads, nproc, args.parallelism, suite_note,
         )
 
     config = train.TrainConfig(
@@ -1263,6 +1383,7 @@ def main() -> int:
                 "filegroup_score_filter": filegroup_score_filter,
                 "n_seed_extras": args.n_seed_extras,
                 "skip_benchmark": args.skip_benchmark,
+                "feature_cache_dir": args.feature_cache_dir,
             },
         )
 

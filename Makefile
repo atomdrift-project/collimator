@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle autocollie-backfill-l3
+.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle autocollie-backfill-l3
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -55,13 +55,15 @@ AZOTH_ROUTE_POLICIES_CSV ?= $(AZOTH_ROOT)/route_policies.csv
 # < 10 rows across a 671k-row training matrix. ~26% feature reduction, zero
 # borderline drops (no feature firing on ≥10 malware was culled). cleave's
 # allowed_features() reader (src/collimator/features.py:1306) returns None
-# gracefully when the file is missing, so leaving this set when the file
-# hasn't been built yet costs nothing. Override or unset (`COLLIMATOR_ALLOWED_FEATURES_FILE=`)
-# to train on the full feature set.
+# gracefully when the file is missing, so unsetting this is a safe no-op.
 #
-# Regenerate with: python scripts/azoth_build_allowed_features.py --threshold 10
-# Eval upstream of cull: python scripts/azoth_feature_frequency_audit.py
-AZOTH_ALLOWED_FEATURES_FILE ?= $(AZOTH_ROOT)/allowed_features_minfreq10.json
+# The default points at the in-repo committed snapshot so fresh checkouts get
+# the optimization without having to first run the build script. Regenerate
+# from current corpus statistics with:
+#   python scripts/azoth_feature_frequency_audit.py
+#   python scripts/azoth_build_allowed_features.py --threshold 10 \
+#       --output src/collimator/data/azoth_allowed_features_minfreq10.json
+AZOTH_ALLOWED_FEATURES_FILE ?= src/collimator/data/azoth_allowed_features_minfreq10.json
 export COLLIMATOR_ALLOWED_FEATURES_FILE := $(AZOTH_ALLOWED_FEATURES_FILE)
 AZOTH_ROUTE_POLICIES_MD ?= $(AZOTH_ROOT)/route_policies.md
 AZOTH_GLOBAL_POLICY_METRICS ?= $(AZOTH_ROOT)/global_policy_metrics.json
@@ -131,6 +133,11 @@ AZOTH_OOF_SEED_SEARCH_K ?= 1
 # fold pair. Production specialists.json keeps its full metrics.
 AZOTH_OOF_SKIP_BENCHMARK ?= 1
 AZOTH_OOF_SKIP_BENCHMARK_ARG := $(if $(filter 1 true yes,$(AZOTH_OOF_SKIP_BENCHMARK)),--skip-benchmark,)
+# Feature cache for cross-fold sharing. azoth-prefill-specialist-features
+# pre-populates this directory; both fold trainings then read from it via
+# --feature-cache-dir, skipping per-fold extraction. Set empty to disable.
+AZOTH_SPECIALIST_FEATURE_CACHE_DIR ?= out/cache/azoth-route-features
+AZOTH_SPECIALIST_FEATURE_CACHE_ARG := $(if $(AZOTH_SPECIALIST_FEATURE_CACHE_DIR),--feature-cache-dir $(AZOTH_SPECIALIST_FEATURE_CACHE_DIR),)
 AZOTH_SPECIALIST_ONLY ?=
 AZOTH_SPECIALIST_MASK_SPEC ?=
 AZOTH_SPECIALIST_TRAIN_OVERRIDE ?= pe:hard_negative_fraction=0.01 pe:hard_negative_weight=12.0
@@ -825,6 +832,7 @@ azoth-specialists: venv check-db
 		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
+		$(AZOTH_SPECIALIST_FEATURE_CACHE_ARG) \
 		$(if $(DEVICE),--device $(DEVICE),)
 
 # Fold-aware specialist training for OOF score generation. Mirror of
@@ -866,6 +874,7 @@ azoth-specialists-fold-a: venv check-db
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
 		$(AZOTH_OOF_SKIP_BENCHMARK_ARG) \
+		$(AZOTH_SPECIALIST_FEATURE_CACHE_ARG) \
 		$(if $(DEVICE),--device $(DEVICE),)
 
 azoth-specialists-fold-b: venv check-db
@@ -899,7 +908,28 @@ azoth-specialists-fold-b: venv check-db
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
 		$(AZOTH_OOF_SKIP_BENCHMARK_ARG) \
+		$(AZOTH_SPECIALIST_FEATURE_CACHE_ARG) \
 		$(if $(DEVICE),--device $(DEVICE),)
+
+# Pre-build the per-route feature cache before fold-A / fold-B specialist
+# training. Without this, each fold does its own extract_partitioned_from_db
+# pass and the train+dev overlap (~88% of rows) gets extracted twice.
+# Pre-fill extracts the union once and saves a fold-specific matrix under
+# each fold's cache key, so both subsequent fold trainings hit the cache.
+#
+# Safe to run anytime — the worst case is a stale cache entry that
+# fails its row-count check at load time and triggers re-extraction.
+azoth-prefill-specialist-features: venv check-db
+	$(PYTHON) scripts/azoth_prefill_specialist_features.py \
+		--db $(DB) \
+		--general-dir $(AZOTH_GENERAL_DIR) \
+		--feature-cache-dir $(AZOTH_SPECIALIST_FEATURE_CACHE_DIR) \
+		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
+		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
+		$(EXP_WORKERS_ARG) \
+		$(THRESHOLD_MAX_ID_ARG) \
+		$(if $(filter 1 true yes,$(AZOTH_FILEGROUP_SCORE_FILTER)),--filegroup-score-filter,) \
+		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target))
 
 # Merge the two fold-trained specialist bundles into per-route OOF
 # threshold_scores.npz files under $(AZOTH_ROOT)/oof_route_scores/. Pass
