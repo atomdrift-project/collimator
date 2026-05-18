@@ -50,6 +50,19 @@ AZOTH_SLICE_METRICS ?= $(AZOTH_ROOT)/slice_metrics.md
 AZOTH_SLICE_METRICS_CSV ?= $(AZOTH_ROOT)/slice_metrics.csv
 AZOTH_ROUTE_POLICIES ?= $(AZOTH_ROOT)/route_policies.json
 AZOTH_ROUTE_POLICIES_CSV ?= $(AZOTH_ROOT)/route_policies.csv
+
+# Feature allow-list: drops vocab entries where ALL produced columns fire on
+# < 10 rows across a 671k-row training matrix. ~26% feature reduction, zero
+# borderline drops (no feature firing on ≥10 malware was culled). cleave's
+# allowed_features() reader (src/collimator/features.py:1306) returns None
+# gracefully when the file is missing, so leaving this set when the file
+# hasn't been built yet costs nothing. Override or unset (`COLLIMATOR_ALLOWED_FEATURES_FILE=`)
+# to train on the full feature set.
+#
+# Regenerate with: python scripts/azoth_build_allowed_features.py --threshold 10
+# Eval upstream of cull: python scripts/azoth_feature_frequency_audit.py
+AZOTH_ALLOWED_FEATURES_FILE ?= $(AZOTH_ROOT)/allowed_features_minfreq10.json
+export COLLIMATOR_ALLOWED_FEATURES_FILE := $(AZOTH_ALLOWED_FEATURES_FILE)
 AZOTH_ROUTE_POLICIES_MD ?= $(AZOTH_ROOT)/route_policies.md
 AZOTH_GLOBAL_POLICY_METRICS ?= $(AZOTH_ROOT)/global_policy_metrics.json
 AZOTH_GLOBAL_POLICY_METRICS_MD ?= $(AZOTH_ROOT)/global_policy_metrics.md
@@ -86,7 +99,38 @@ AZOTH_SPECIALIST_MIN_GOOD ?= 50
 # noise terms don't actually decorrelate to zero. Setting K=0 reverts to the
 # legacy single-model layout (model.txt) — useful for debugging, since
 # averaged bundles smear blame across members when something regresses.
-AZOTH_SPECIALIST_N_SEED_EXTRAS ?= 2
+#
+# 2026-05 update: the default is now 0 (single seed). Observed seed-to-seed
+# variance on holdout is ~3pp F1 (verified on go/python/pe specialists from a
+# k=3 fold run); averaging trims that to ~0.1-0.5pp at the headline recall,
+# which is smaller than the per-pipeline-run noise our eval harness can
+# resolve. Setting K=2 burns ~18 GPU hours per publish-train for an unverified
+# fraction-of-a-percent of recall — not worth it now that we have honest
+# OOF + recall-monotone floor + learned_blend in the pipeline. Bump back to
+# K=2 if you measure a real regression on test partition; the infrastructure
+# is in place to A/B this cleanly.
+AZOTH_SPECIALIST_N_SEED_EXTRAS ?= 0
+# OOF specialist training (fold-A / fold-B / route-score merge) doesn't ship
+# the resulting bundles to deploy — only their OOF predictions get merged.
+# Variance reduction from multi-seed averaging doesn't compound through the
+# merge (the OOF prediction for each row already comes from a single fold
+# model), so the extra seeds add training cost for no calibration benefit.
+# Default to 0 extras (single seed) for OOF runs; override to 2 if you want
+# parity with production training for an apples-to-apples comparison.
+AZOTH_OOF_SEED_EXTRAS ?= 0
+# Companion knob for the fold GENERAL trainings: the standard
+# azoth_train_best.py invocation sets EXP_SEED_SEARCH_K=3 (train 3 seeds,
+# ship the best). Fold bundles aren't shipped — only their OOF predictions
+# merge into general/threshold_scores.npz — so the K-1 discarded seeds
+# are pure waste during OOF. Production training keeps K=3.
+AZOTH_OOF_SEED_SEARCH_K ?= 1
+# Skip the per-specialist benchmark extract+score during fold training.
+# benchmark.json's diagnostic metrics are only consumed by
+# write_azoth_readmes (which only sees the production bundle), so the
+# fold pair's benchmark passes are pure overhead. Saves ~30-60min per
+# fold pair. Production specialists.json keeps its full metrics.
+AZOTH_OOF_SKIP_BENCHMARK ?= 1
+AZOTH_OOF_SKIP_BENCHMARK_ARG := $(if $(filter 1 true yes,$(AZOTH_OOF_SKIP_BENCHMARK)),--skip-benchmark,)
 AZOTH_SPECIALIST_ONLY ?=
 AZOTH_SPECIALIST_MASK_SPEC ?=
 AZOTH_SPECIALIST_TRAIN_OVERRIDE ?= pe:hard_negative_fraction=0.01 pe:hard_negative_weight=12.0
@@ -99,12 +143,25 @@ AZOTH_SPECIALIST_FEATURE_ENV ?= native:COLLIMATOR_FORMAT_HINTS=1 native:COLLIMAT
 AZOTH_AUTOCOLLIE_RUNS_DIR ?= out/experiments/azoth/runs
 AZOTH_SPECIALIST_SKIP_EXISTING ?= 1
 AZOTH_SPECIALIST_SKIP_EXISTING_ARG := $(if $(filter 1 true yes,$(AZOTH_SPECIALIST_SKIP_EXISTING)),--skip-existing,)
-# Concurrent specialists. Default 2 is the safe ceiling on a typical CPU
-# host: each route already drives feature extraction with --workers and
-# LightGBM is itself multi-threaded, so total CPU pressure scales with
-# parallelism * (extract_workers + lgbm_threads). Bump to 3 on a beefy
-# many-core box; keep at 1 when training on GPU.
-AZOTH_SPECIALIST_PARALLELISM ?= 2
+# Concurrent specialist trainings. Default 4 is a good fit for a typical
+# many-core CPU host (16-128 cores) now that azoth_specialist_suite
+# auto-caps each training's LightGBM threads at ``nproc // parallelism``.
+# The total CPU footprint stays roughly fixed at the core count; bumping
+# parallelism trades thread count per training for more concurrent
+# trainings. Empirically (128-core box, observed in 2026-05) parallelism=4
+# with 32-thread LightGBM jobs runs ~30% faster than parallelism=2 with
+# 64-thread jobs, because LightGBM's intra-training synchronization
+# overhead grows nonlinearly with thread count.
+#
+# Tune knobs:
+#  * GPU training (``--device cuda``): set to 1 — GPU is the single
+#    bottleneck, multiple concurrent jobs serialize on or fight for memory.
+#  * Tiny boxes (< 8 cores): set to 1-2 so each training gets enough
+#    threads to make progress.
+#  * Very large boxes (256+ cores): try 8 — the auto thread cap still
+#    keeps total workers near nproc, and more concurrency hides per-job
+#    feature-extraction stalls.
+AZOTH_SPECIALIST_PARALLELISM ?= 4
 AZOTH_FILEGROUP_SCORE_FILTER ?= 0
 AZOTH_FILEGROUP_SCORE_FILTER_ARG := $(if $(filter 1 true yes,$(AZOTH_FILEGROUP_SCORE_FILTER)),--filegroup-score-filter,)
 SAMPLES_DIR ?= /data/samples
@@ -471,6 +528,8 @@ azoth-general: venv check-db azoth-clean-bundle
 		--set EXP_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES) \
 		--set EXP_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES) \
 		--set EXP_ESTIMATORS=$(DEPLOY_ESTIMATORS) \
+		$(if $(AZOTH_GENERAL_SEED_SEARCH_K),--set EXP_SEED_SEARCH_K=$(AZOTH_GENERAL_SEED_SEARCH_K),) \
+		$(if $(AZOTH_GENERAL_SEED_SEARCH_K),--set EXP_SAVE_ALL_SEEDS=0,) \
 		$(if $(WORKERS),--set EXP_WORKERS=$(WORKERS),)
 	@# Promote the freshly-trained general into the source bundle slot.
 	@# `make experiment` wrote to out/experiments/azoth/{models/,model.txt,
@@ -527,14 +586,18 @@ azoth-general: venv check-db azoth-clean-bundle
 # A single parameterized target couldn't run both back-to-back without
 # the second one overwriting the first's bundle slot.
 azoth-general-fold-a: venv check-db
-	EXP_OOF_FOLD_EXCLUDE=0 $(MAKE) azoth-general AZOTH_GENERAL_SKIP_RESCORE=1
+	EXP_OOF_FOLD_EXCLUDE=0 $(MAKE) azoth-general \
+		AZOTH_GENERAL_SKIP_RESCORE=1 \
+		AZOTH_GENERAL_SEED_SEARCH_K=$(AZOTH_OOF_SEED_SEARCH_K)
 	@echo "stashing fold-A bundle -> $(OUT_ROOT)/azoth.oof-fold-a/"
 	@rm -rf $(OUT_ROOT)/azoth.oof-fold-a
 	@cp -al $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-a 2>/dev/null \
 		|| cp -a $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-a
 
 azoth-general-fold-b: venv check-db
-	EXP_OOF_FOLD_EXCLUDE=1 $(MAKE) azoth-general AZOTH_GENERAL_SKIP_RESCORE=1
+	EXP_OOF_FOLD_EXCLUDE=1 $(MAKE) azoth-general \
+		AZOTH_GENERAL_SKIP_RESCORE=1 \
+		AZOTH_GENERAL_SEED_SEARCH_K=$(AZOTH_OOF_SEED_SEARCH_K)
 	@echo "stashing fold-B bundle -> $(OUT_ROOT)/azoth.oof-fold-b/"
 	@rm -rf $(OUT_ROOT)/azoth.oof-fold-b
 	@cp -al $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-b 2>/dev/null \
@@ -791,7 +854,7 @@ azoth-specialists-fold-a: venv check-db
 		--early-stopping-rounds $(AZOTH_SPECIALIST_EARLY_STOPPING) \
 		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
 		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
-		--n-seed-extras $(AZOTH_SPECIALIST_N_SEED_EXTRAS) \
+		--n-seed-extras $(AZOTH_OOF_SEED_EXTRAS) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
@@ -802,6 +865,7 @@ azoth-specialists-fold-a: venv check-db
 		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
+		$(AZOTH_OOF_SKIP_BENCHMARK_ARG) \
 		$(if $(DEVICE),--device $(DEVICE),)
 
 azoth-specialists-fold-b: venv check-db
@@ -823,7 +887,7 @@ azoth-specialists-fold-b: venv check-db
 		--early-stopping-rounds $(AZOTH_SPECIALIST_EARLY_STOPPING) \
 		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
 		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
-		--n-seed-extras $(AZOTH_SPECIALIST_N_SEED_EXTRAS) \
+		--n-seed-extras $(AZOTH_OOF_SEED_EXTRAS) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
@@ -834,6 +898,7 @@ azoth-specialists-fold-b: venv check-db
 		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
+		$(AZOTH_OOF_SKIP_BENCHMARK_ARG) \
 		$(if $(DEVICE),--device $(DEVICE),)
 
 # Merge the two fold-trained specialist bundles into per-route OOF

@@ -57,30 +57,6 @@ LOG = logging.getLogger("azoth_specialist_suite")
 # If any addition to cleave's extractor list also adds a kv subtree,
 # remove that filetype from this set; if it adds extraction without kv,
 # add it here.
-# Filetypes whose specialists consistently ship PR-AUC below 0.3 — barely
-# better than guessing, and the calibrator hides the noise. Training them
-# burns wall-clock for no measurable lift in test recall vs general-only,
-# so the specialist suite skips them. Numbers behind the cutoff (from the
-# original eval, all per-route PR-AUC on the locked test partition):
-#   makefile  0.025    rust      0.111    text   0.304
-#   groovy    0.051    plist     0.122
-#   xml       0.191    png       0.181    jpeg   0.272
-# Re-evaluate when the corpus grows or features change — anything that
-# pushes one of these above 0.5 should land back in eligibility. To force
-# re-training while debugging, comment out the gate in
-# ``_eligible_filetypes`` rather than mutate this set.
-NON_LEARNABLE_FILETYPES: frozenset[str] = frozenset({
-    "makefile",
-    "groovy",
-    "rust",
-    "plist",
-    "png",
-    "xml",
-    "jpeg",
-    "text",
-})
-
-
 LITMUS_EXTRACTED_FILETYPES: frozenset[str] = frozenset({
     "7z",
     "apk",
@@ -347,18 +323,6 @@ def _eligible_filetypes(
                 # specialist could learn that the general model lacks.
                 LOG.info(
                     "%s: skipping filetype specialist (litmus-extracted; %d bad, %d good)",
-                    file_type_str, int(bad), int(good),
-                )
-                continue
-            if file_type_str in NON_LEARNABLE_FILETYPES:
-                # The specialist for this filetype consistently shipped a
-                # PR-AUC below 0.3 across prior runs — essentially random
-                # decisions wrapped in a calibrator that hides the noise.
-                # Re-training it burns ~30-45 minutes per fold + seed for
-                # no measurable lift over general-only; skip.
-                LOG.info(
-                    "%s: skipping filetype specialist (historically PR-AUC < 0.3; "
-                    "%d bad, %d good)",
                     file_type_str, int(bad), int(good),
                 )
                 continue
@@ -800,6 +764,7 @@ def _train_one(
     max_id: int,
     filegroup_score_filter: bool,
     n_seed_extras: int = 0,
+    skip_benchmark: bool = False,
 ) -> dict[str, Any]:
     train_rows = _fetch_rows(
         db_path,
@@ -807,11 +772,24 @@ def _train_one(
         max_id=max_id,
         min_score=data.MIN_SAMPLE_SCORE if kind == "filegroup" and filegroup_score_filter else None,
     )
-    benchmark_rows = _fetch_rows(db_path, file_types=file_types, max_id=max_id, min_score=None)
     train_ids_labels = _ids_labels(train_rows, test=False)
-    benchmark_ids_labels = _ids_labels(benchmark_rows, test=True)
-    if not train_ids_labels or not benchmark_ids_labels:
-        raise ValueError(f"{name}: no train or benchmark rows")
+    if not train_ids_labels:
+        raise ValueError(f"{name}: no train rows")
+    if skip_benchmark:
+        # OOF fold runs deploy nothing — only the OOF prediction npz is
+        # consumed downstream. The per-specialist benchmark exists purely
+        # for diagnostic metrics in benchmark.json / specialists.json, so
+        # skipping it shaves the test-partition extraction + scoring pass
+        # without affecting OOF correctness. write_azoth_readmes.py (the
+        # one downstream consumer that requires non-empty benchmark.json)
+        # only runs against the production bundle, not the fold bundles.
+        benchmark_rows = []
+        benchmark_ids_labels = []
+    else:
+        benchmark_rows = _fetch_rows(db_path, file_types=file_types, max_id=max_id, min_score=None)
+        benchmark_ids_labels = _ids_labels(benchmark_rows, test=True)
+        if not benchmark_ids_labels:
+            raise ValueError(f"{name}: no benchmark rows")
 
     spec = general_spec
     spec_path = general_spec_path
@@ -903,8 +881,12 @@ def _train_one(
         export.save_model(result.model, output_dir / "model.txt")
 
     # Benchmark probabilities use the same averaging the deployed runtime will,
-    # so reported metrics match what litmus emits.
-    if extra_models:
+    # so reported metrics match what litmus emits. Skipped entirely when
+    # --skip-benchmark is set: x_bench is an empty matrix and predict_proba
+    # would return an empty array, so we shortcut and leave probs empty.
+    if skip_benchmark:
+        probs = np.array([], dtype=np.float32)
+    elif extra_models:
         probs = model.predict_proba(result.model, x_bench).astype(np.float64)
         for extra in extra_models:
             probs += model.predict_proba(extra, x_bench).astype(np.float64)
@@ -937,8 +919,16 @@ def _train_one(
         "feature_mask": mask_metadata,
         "feature_env": feature_env_metadata,
         "train_metrics": result.metrics,
-        "metrics": _classification_metrics(y_bench, probs),
-        "levels": _level_table(y_bench, probs),
+        # When skip_benchmark is set, y_bench/probs are empty and the metric
+        # helpers can't compute anything meaningful. Emit a sentinel marker
+        # so downstream tools (notably write_azoth_readmes) can either
+        # gracefully degrade or refuse to consume a fold bundle.
+        "metrics": (
+            {"skipped": "benchmark"}
+            if skip_benchmark
+            else _classification_metrics(y_bench, probs)
+        ),
+        "levels": [] if skip_benchmark else _level_table(y_bench, probs),
         "train_config": asdict(config),
         "train_score_filter": (
             {"min_score": data.MIN_SAMPLE_SCORE, "scope": "all labels"}
@@ -1047,6 +1037,7 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
             max_id=job["max_id"],
             filegroup_score_filter=job["filegroup_score_filter"],
             n_seed_extras=job["n_seed_extras"],
+            skip_benchmark=job.get("skip_benchmark", False),
         )
     except Exception:
         LOG.exception("%s: failed", target["name"])
@@ -1136,6 +1127,21 @@ def main() -> int:
             "route already uses --workers for feature extraction and "
             "LightGBM is multi-threaded, so total CPU load = parallelism * "
             "(extract_workers + lgbm_threads). GPU mode should stay at 1."
+        ),
+    )
+    parser.add_argument(
+        "--skip-benchmark",
+        action="store_true",
+        help=(
+            "Skip the test-partition extract + score that populates "
+            "benchmark.json's metrics for each specialist. Used by the "
+            "OOF fold targets where the bundles are never deployed and "
+            "the only consumer (write_azoth_readmes) doesn't see them. "
+            "Output benchmark.json still gets written with a "
+            "``metrics: {skipped: \"benchmark\"}`` sentinel so the "
+            "specialists.json summary stays well-formed and so "
+            "--skip-existing can detect that the route was already "
+            "trained without rerunning."
         ),
     )
     parser.add_argument(
@@ -1256,6 +1262,7 @@ def main() -> int:
                 "max_id": args.max_id,
                 "filegroup_score_filter": filegroup_score_filter,
                 "n_seed_extras": args.n_seed_extras,
+                "skip_benchmark": args.skip_benchmark,
             },
         )
 
