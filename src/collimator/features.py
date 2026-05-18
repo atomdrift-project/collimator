@@ -1914,6 +1914,7 @@ class _ExtractContext:
         "bigram_vocab_paths", "trigram_vocab_paths", "synergy_vocab_paths",
         "tiered_bigram_vocab_tokens", "tiered_trigram_vocab_tokens",
         "tiered_quadgram_vocab_tokens",
+        "bigram_lookup_pair", "synergy_lookup_pair", "trigram_lookup_triple",
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
@@ -2035,6 +2036,25 @@ class _ExtractContext:
         self.synergy_vocab_paths: frozenset[str] = frozenset(
             p for bi in self.synergy_lookup for p in bi.split(" + ")
         )
+        # Tuple-keyed mirrors of the string-keyed bigram/trigram/synergy
+        # lookups. Building "p1 + p2" / "p1 + p2 + p3" inside the hot
+        # extraction loop dominated those functions; a tuple lookup
+        # avoids the f-string and string-hashing cost entirely.
+        self.bigram_lookup_pair: dict[tuple[str, str], int] = {}
+        for bi, idx in self.bigram_lookup.items():
+            parts = bi.split(" + ")
+            if len(parts) == 2:
+                self.bigram_lookup_pair[(parts[0], parts[1])] = idx
+        self.synergy_lookup_pair: dict[tuple[str, str], int] = {}
+        for bi, idx in self.synergy_lookup.items():
+            parts = bi.split(" + ")
+            if len(parts) == 2:
+                self.synergy_lookup_pair[(parts[0], parts[1])] = idx
+        self.trigram_lookup_triple: dict[tuple[str, str, str], int] = {}
+        for tri, idx in self.trigram_lookup.items():
+            parts = tri.split(" + ")
+            if len(parts) == 3:
+                self.trigram_lookup_triple[(parts[0], parts[1], parts[2])] = idx
 
 
 @dataclass(slots=True)
@@ -2094,7 +2114,13 @@ def _merge_metric_values(files: list[dict[str, Any]]) -> dict[str, dict[str, flo
 
 def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     """Collect reusable per-report finding statistics."""
-    config = feature_config_from_env()
+    # Hoist hot lookups into locals: dot-attribute and global-name lookups
+    # are slow in a tight loop. include_soft_presence is also read once
+    # (it's a config snapshot, not a per-finding switch) so we can branch
+    # outside the inner loop.
+    include_soft_presence = feature_config_from_env().include_soft_presence
+    min_conf = MIN_CONFIDENCE
+    finding_paths = _finding_paths
     sample_paths: dict[str, int] = {}
     path_confidences: dict[str, float] = {}
     finding_confidences: list[float] = []
@@ -2118,8 +2144,12 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         fid = finding.get("i", "")
         if not fid:
             continue
-        conf = _float(finding.get("c", 1.0))
-        if conf < MIN_CONFIDENCE:
+        # _float used to wrap finding.get("c", 1.0) but the value is
+        # already a float coming from JSON in 99.9% of cases — the
+        # try/float() overhead was hot. Fall back only for stragglers.
+        conf_raw = finding.get("c", 1.0)
+        conf = conf_raw if isinstance(conf_raw, float) else _float(conf_raw)
+        if conf < min_conf:
             continue
         finding_confidences.append(conf)
         filtered_finding_count += 1
@@ -2127,23 +2157,25 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         if crit_ord >= 3:
             notable_finding_count += 1
             notable_ids.add(fid)
-        if crit_ord >= 4:
-            suspicious_finding_count += 1
-            suspicious_ids.add(fid)
-        if crit_ord >= 5:
-            hostile_finding_count += 1
-            hostile_ids.add(fid)
+            if crit_ord >= 4:
+                suspicious_finding_count += 1
+                suspicious_ids.add(fid)
+                if crit_ord >= 5:
+                    hostile_finding_count += 1
+                    hostile_ids.add(fid)
 
-        top = fid.split("/")[0]
+        slash_pos = fid.find("/")
+        top = fid[:slash_pos] if slash_pos >= 0 else fid
         if crit_ord >= 4:
             suspicious_categories.add(top)
-        if crit_ord >= 5:
-            hostile_categories.add(top)
+            if crit_ord >= 5:
+                hostile_categories.add(top)
         if top == "third_party":
             third_party_count += 1
             if crit_ord > third_party_max_crit:
                 third_party_max_crit = crit_ord
-            has_yara = has_yara or fid.startswith("third_party/yara")
+            if not has_yara:
+                has_yara = fid.startswith("third_party/yara")
         elif top == "well-known":
             if crit_ord > well_known_max_crit:
                 well_known_max_crit = crit_ord
@@ -2152,11 +2184,17 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
             elif crit_ord >= 4:
                 well_known_suspicious += 1
 
-        for path in _finding_paths(fid):
-            if crit_ord > sample_paths.get(path, -1):
-                sample_paths[path] = crit_ord
-            if config.include_soft_presence:
-                path_confidences[path] = max(path_confidences.get(path, 0.0), conf)
+        paths = finding_paths(fid)
+        if include_soft_presence:
+            for path in paths:
+                if crit_ord > sample_paths.get(path, -1):
+                    sample_paths[path] = crit_ord
+                if conf > path_confidences.get(path, 0.0):
+                    path_confidences[path] = conf
+        else:
+            for path in paths:
+                if crit_ord > sample_paths.get(path, -1):
+                    sample_paths[path] = crit_ord
 
     return _FindingSummary(
         sample_paths=sample_paths,
@@ -3590,19 +3628,24 @@ def _apply_bigram_features(
     config = feature_config_from_env()
     use_conf = config.include_confidence_weighted_ngrams and summary is not None
     vocab_paths = ctx.bigram_vocab_paths
-    bigram_lookup = ctx.bigram_lookup
+    lookup = ctx.bigram_lookup_pair
     for file_entry in report_files(report):
         paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
         paths_list = [p for p in paths_list if p in vocab_paths]
-        for i, p1 in enumerate(paths_list):
-            for p2 in paths_list[i + 1 :]:
-                bigram = f"{p1} + {p2}"
-                if use_conf:
-                    c1 = summary.path_confidences.get(p1, 1.0)
-                    c2 = summary.path_confidences.get(p2, 1.0)
-                    _assign(vec, bigram_lookup.get(bigram), (c1 + c2) / 2.0)
-                else:
-                    _assign(vec, bigram_lookup.get(bigram), 1.0)
+        if use_conf:
+            path_conf = summary.path_confidences
+            for i, p1 in enumerate(paths_list):
+                c1 = path_conf.get(p1, 1.0)
+                for p2 in paths_list[i + 1 :]:
+                    idx = lookup.get((p1, p2))
+                    if idx is not None:
+                        vec[idx] = (c1 + path_conf.get(p2, 1.0)) / 2.0
+        else:
+            for i, p1 in enumerate(paths_list):
+                for p2 in paths_list[i + 1 :]:
+                    idx = lookup.get((p1, p2))
+                    if idx is not None:
+                        vec[idx] = 1.0
 
 
 def _apply_tiered_bigram_features(
@@ -3737,7 +3780,7 @@ def _apply_trigram_features(
     """Group 16: trait trigram multi-hot features."""
     config = feature_config_from_env()
     vocab_paths = ctx.trigram_vocab_paths
-    trigram_lookup = ctx.trigram_lookup
+    lookup = ctx.trigram_lookup_triple
     for file_entry in report_files(report):
         paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
         paths_list = [p for p in paths_list if p in vocab_paths]
@@ -3745,8 +3788,9 @@ def _apply_trigram_features(
             for j in range(i + 1, len(paths_list)):
                 p2 = paths_list[j]
                 for p3 in paths_list[j + 1 :]:
-                    trigram = f"{p1} + {p2} + {p3}"
-                    _assign(vec, trigram_lookup.get(trigram), 1.0)
+                    idx = lookup.get((p1, p2, p3))
+                    if idx is not None:
+                        vec[idx] = 1.0
 
 
 def _apply_logic_gap_features(
@@ -3792,14 +3836,15 @@ def _apply_signature_synergy_features(
 
     config = feature_config_from_env()
     vocab_paths = ctx.synergy_vocab_paths
-    synergy_lookup = ctx.synergy_lookup
+    lookup = ctx.synergy_lookup_pair
     for file_entry in report_files(report):
         paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
         paths_list = [p for p in paths_list if p in vocab_paths]
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
-                bigram = f"{p1} + {p2}"
-                _assign(vec, synergy_lookup.get(bigram), 1.0)
+                idx = lookup.get((p1, p2))
+                if idx is not None:
+                    vec[idx] = 1.0
 
 
 def _apply_intent_gap_features(
