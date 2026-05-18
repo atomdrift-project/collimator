@@ -6,6 +6,11 @@
 #
 # Stages (rough wall-clock estimates assume AZOTH_SPECIALIST_PARALLELISM=2):
 #
+#   0. azoth-general (prod)       ~1h    train prod general (no fold exclusion).
+#                                        → out/models/azoth/
+#                                        Needed by stage 6 (test-row scoring)
+#                                        and stage 7 (calibrate). Skipped when
+#                                        a fresh prod model already exists.
 #   1. azoth-general-fold-a       ~1h    train general with fold 0 excluded
 #                                        → out/models/azoth.oof-fold-a/
 #   2. azoth-general-fold-b       ~1h    train general with fold 1 excluded
@@ -45,7 +50,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-START_STAGE=${START_STAGE:-1}
+START_STAGE=${START_STAGE:-0}
 STOP_STAGE=${STOP_STAGE:-99}
 
 OUT_ROOT=${OUT_ROOT:-out/models}
@@ -57,7 +62,7 @@ OOF_ROUTE_SCORES_DIR=${AZOTH_ROOT}/oof_route_scores
 EVAL_OUT_MD=${AZOTH_ROOT}/route_policy_eval_oof.md
 EVAL_OUT_JSON=${AZOTH_ROOT}/route_policy_eval_oof.json
 
-NUM_STAGES=9
+NUM_STAGES=10  # stages 0..9; stage 0 (prod general) often a no-op skip
 
 stage_active() {
     local n=$1
@@ -118,20 +123,72 @@ if [[ "$PARALLEL_FOLDS" = "1" ]]; then
     export AZOTH_CONCURRENT_SUITES=2
 fi
 
-# Stages 1+2 (and 4+5) are independent — fold-A and fold-B touch disjoint
-# bundle roots and the experiment cache key now distinguishes them. The
-# fold pairs run concurrently when resources allow (see PARALLEL_FOLDS
-# logic above). GPU users should override PARALLEL_FOLDS=0 because
-# device memory is the binding constraint, not CPU.
+# Per-LightGBM thread cap for the GENERAL trainings. Stage 0 runs up to
+# three generals concurrently (prod + fold-A + fold-B); without a cap
+# each LightGBM uses n_jobs=-1 = nproc, so total LightGBM threads is
+# 3 × nproc and the box ends up at 3× oversubscription during the
+# LightGBM training phase. TrainConfig.__post_init__ reads
+# COLLIMATOR_NUM_THREADS when num_threads is unset, so exporting it here
+# caps every concurrent general training.
+NPROC=$(nproc)
+if [[ "$PARALLEL_FOLDS" = "1" ]]; then
+    # Up to three concurrent generals (prod possibly skipped when fresh,
+    # but cap for the worst case — under-utilization during fold-only
+    # phases is fine; we never want oversubscription during overlap).
+    export COLLIMATOR_NUM_THREADS=$(( NPROC / 3 ))
+    echo "[pipeline] COLLIMATOR_NUM_THREADS=${COLLIMATOR_NUM_THREADS} (nproc=${NPROC} / 3 concurrent generals)"
+fi
+
+# Stage 0: train the prod general if it isn't already on disk. Needed
+# by stage 6 (which scores test rows with the production model) and
+# stage 7 (calibrate, which reads the prod specialists summary). The
+# prod build uses its OWN EXP_OUT_DIR (out/experiments/azoth) — fold
+# trainings get their own fold-specific workspaces, so all three can
+# run truly in parallel with no clobbering. Skipped if a fresh prod
+# model is already on disk (lets repeat runs / resumes avoid the
+# re-train).
+prod_general_ready() {
+    [[ -f "${AZOTH_ROOT}/general/model.txt" ]] \
+        || ls "${AZOTH_ROOT}/general/models/"seed_*.txt >/dev/null 2>&1
+}
+PROD_TRAIN_NEEDED=0
+if stage_active 0; then
+    if prod_general_ready; then
+        echo "[pipeline] prod general already present at ${AZOTH_ROOT}/general/ — skipping stage 0"
+    else
+        PROD_TRAIN_NEEDED=1
+    fi
+fi
+
+# Stages 0, 1, 2 are independent — each touches a distinct bundle root
+# and experiment workspace (out/models/azoth, out/models/azoth.oof-fold-a,
+# out/models/azoth.oof-fold-b respectively) and the experiment cache
+# key includes oof_fold_exclude so the corpus + matrix caches don't
+# collide either. With PARALLEL_FOLDS=1 we run all three concurrently.
+# GPU users should override PARALLEL_FOLDS=0 because device memory is
+# the binding constraint, not CPU.
 if stage_active 1 && stage_active 2 && [[ "$PARALLEL_FOLDS" = "1" ]]; then
-    banner 1 "Train fold-A AND fold-B GENERAL in parallel (PARALLEL_FOLDS=1)"
-    require_dir_or_warn() { :; }
+    if (( PROD_TRAIN_NEEDED )); then
+        banner 0 "Train PROD AND fold-A AND fold-B GENERAL in parallel (PARALLEL_FOLDS=1)"
+    else
+        banner 1 "Train fold-A AND fold-B GENERAL in parallel (PARALLEL_FOLDS=1)"
+    fi
+    PID_PROD=""
+    if (( PROD_TRAIN_NEEDED )); then
+        (time make azoth-general AZOTH_GENERAL_SKIP_RESCORE=1) > >(sed 's/^/[prod]   /') 2>&1 &
+        PID_PROD=$!
+    fi
     (time make azoth-general-fold-a) > >(sed 's/^/[fold-A] /') 2>&1 &
     PID_A=$!
     (time make azoth-general-fold-b) > >(sed 's/^/[fold-B] /') 2>&1 &
     PID_B=$!
+    if [[ -n "$PID_PROD" ]]; then wait "$PID_PROD"; fi
     wait "$PID_A" && wait "$PID_B"
 elif stage_active 1; then
+    if (( PROD_TRAIN_NEEDED )); then
+        banner 0 "Train PROD GENERAL (no fold exclusion → ${AZOTH_ROOT})"
+        time make azoth-general AZOTH_GENERAL_SKIP_RESCORE=1
+    fi
     banner 1 "Train fold-A GENERAL (EXP_OOF_FOLD_EXCLUDE=0 → ${FOLD_A_ROOT})"
     time make azoth-general-fold-a
 else
@@ -256,10 +313,28 @@ if [[ -n "$STAGE3_PID" ]]; then
     rm -f "$STAGE3_LOG"
 fi
 
+# Stage 6 also needs the PROD specialists summary at
+# ${AZOTH_ROOT}/specialists.json — azoth_oof_score_routes.py loads the
+# route → file_type mapping from it and scores test rows with the prod
+# specialist models. Stage 0 trained the prod general but not the prod
+# specialists; without this guard, the pipeline died right here on a
+# missing-file traceback after spending hours on stages 1-5. Train it
+# now if absent. Trains serially (no resource contention with stage 4-5
+# which has already finished by this point).
+prod_specialists_ready() {
+    [[ -f "${AZOTH_ROOT}/specialists.json" ]]
+}
+if stage_active 6 && ! prod_specialists_ready; then
+    banner 5b "Train PROD specialists (needed for stage 6 test-row scoring)"
+    require_dir "prod general bundle" "${AZOTH_ROOT}/general" 0
+    time make azoth-specialists
+fi
+
 if stage_active 6; then
     banner 6 "Merge OOF route scores → ${OOF_ROUTE_SCORES_DIR}"
     require_file "fold-A specialists summary" "${FOLD_A_ROOT}/specialists.json" 4
     require_file "fold-B specialists summary" "${FOLD_B_ROOT}/specialists.json" 5
+    require_file "prod specialists summary" "${AZOTH_ROOT}/specialists.json" "5b (auto)"
     time make azoth-oof-route-scores
 else
     skipped 6 "OOF route-score merge"

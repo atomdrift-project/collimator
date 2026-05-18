@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import warnings
 from dataclasses import dataclass, field
 from typing import Any
@@ -77,7 +78,25 @@ class TrainConfig:
     # AZOTH_SPECIALIST_PARALLELISM > 1) so each LightGBM instance doesn't
     # try to claim all 128 cores and thrash on context switches. The suite
     # auto-computes nproc/parallelism when this is None and parallelism>1.
+    #
+    # ``COLLIMATOR_NUM_THREADS`` env override applies when this is None — lets
+    # the OOF pipeline cap threads for concurrent prod+fold-A+fold-B general
+    # training without plumbing a flag through experiment.py's argparse.
     num_threads: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.num_threads is None:
+            env_val = os.environ.get("COLLIMATOR_NUM_THREADS", "").strip()
+            if env_val:
+                try:
+                    n = int(env_val)
+                except ValueError:
+                    log.warning(
+                        "ignoring invalid COLLIMATOR_NUM_THREADS=%r", env_val,
+                    )
+                else:
+                    if n > 0:
+                        self.num_threads = n
 
 
 @dataclass

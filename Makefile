@@ -544,18 +544,23 @@ azoth-general: venv check-db azoth-clean-bundle
 	@# location, replacing whatever was there. Atomic-ish: the per-file
 	@# `cp` and `rm -rf` are sequenced so an interrupted run leaves the
 	@# slot in a clean (older) state rather than half-overwritten.
+	@# Promote from $(EXP_OUT_DIR) — NOT a hardcoded out/experiments/azoth.
+	@# Hardcoding here used to silently break fold parallelism: both
+	@# fold-A and fold-B wrote to the same path and clobbered each
+	@# other's freshly-trained models. Honoring $(EXP_OUT_DIR) lets
+	@# the fold targets point each invocation at its own workspace.
 	@mkdir -p $(AZOTH_GENERAL_DIR)
-	@if [ -d out/experiments/azoth/models ]; then \
+	@if [ -d $(EXP_OUT_DIR)/models ]; then \
 		rm -rf $(AZOTH_GENERAL_DIR)/models $(AZOTH_GENERAL_DIR)/model.txt $(AZOTH_GENERAL_DIR)/model.json; \
-		cp -a out/experiments/azoth/models $(AZOTH_GENERAL_DIR)/models; \
-	elif [ -f out/experiments/azoth/model.txt ]; then \
+		cp -a $(EXP_OUT_DIR)/models $(AZOTH_GENERAL_DIR)/models; \
+	elif [ -f $(EXP_OUT_DIR)/model.txt ]; then \
 		rm -rf $(AZOTH_GENERAL_DIR)/models $(AZOTH_GENERAL_DIR)/model.txt; \
-		cp -a out/experiments/azoth/model.txt $(AZOTH_GENERAL_DIR)/model.txt; \
+		cp -a $(EXP_OUT_DIR)/model.txt $(AZOTH_GENERAL_DIR)/model.txt; \
 	else \
-		echo "error: azoth_train_best did not produce a general model in out/experiments/azoth/"; \
+		echo "error: azoth_train_best did not produce a general model in $(EXP_OUT_DIR)/"; \
 		exit 1; \
 	fi
-	cp -a out/experiments/azoth/feature_spec.json $(AZOTH_GENERAL_DIR)/feature_spec.json
+	cp -a $(EXP_OUT_DIR)/feature_spec.json $(AZOTH_GENERAL_DIR)/feature_spec.json
 	@# Rebuild the general's threshold_scores cache against the freshly-
 	@# promoted model. Without this, azoth-calibrate would consume a stale
 	@# score table whose probabilities map to a previous model — calibrators
@@ -593,22 +598,26 @@ azoth-general: venv check-db azoth-clean-bundle
 # A single parameterized target couldn't run both back-to-back without
 # the second one overwriting the first's bundle slot.
 azoth-general-fold-a: venv check-db
+	@# Run training in a fold-specific workspace and deploy slot so that
+	@# parallel folds (PARALLEL_FOLDS=1) don't race over EXP_OUT_DIR /
+	@# AZOTH_ROOT. The EXP_CACHE_DIR is intentionally NOT fold-suffixed —
+	@# corpus + matrix caches are content-hashed (oof_fold_exclude is in
+	@# the key), so both folds can share that directory and benefit from
+	@# cross-run cache hits.
 	EXP_OOF_FOLD_EXCLUDE=0 $(MAKE) azoth-general \
+		AZOTH_ROOT=$(OUT_ROOT)/azoth.oof-fold-a \
+		EXP_OUT_DIR=out/experiments/azoth.oof-fold-a \
 		AZOTH_GENERAL_SKIP_RESCORE=1 \
 		AZOTH_GENERAL_SEED_SEARCH_K=$(AZOTH_OOF_SEED_SEARCH_K)
-	@echo "stashing fold-A bundle -> $(OUT_ROOT)/azoth.oof-fold-a/"
-	@rm -rf $(OUT_ROOT)/azoth.oof-fold-a
-	@cp -al $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-a 2>/dev/null \
-		|| cp -a $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-a
+	@echo "fold-A bundle ready at $(OUT_ROOT)/azoth.oof-fold-a/"
 
 azoth-general-fold-b: venv check-db
 	EXP_OOF_FOLD_EXCLUDE=1 $(MAKE) azoth-general \
+		AZOTH_ROOT=$(OUT_ROOT)/azoth.oof-fold-b \
+		EXP_OUT_DIR=out/experiments/azoth.oof-fold-b \
 		AZOTH_GENERAL_SKIP_RESCORE=1 \
 		AZOTH_GENERAL_SEED_SEARCH_K=$(AZOTH_OOF_SEED_SEARCH_K)
-	@echo "stashing fold-B bundle -> $(OUT_ROOT)/azoth.oof-fold-b/"
-	@rm -rf $(OUT_ROOT)/azoth.oof-fold-b
-	@cp -al $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-b 2>/dev/null \
-		|| cp -a $(AZOTH_ROOT) $(OUT_ROOT)/azoth.oof-fold-b
+	@echo "fold-B bundle ready at $(OUT_ROOT)/azoth.oof-fold-b/"
 
 # Merge the two fold-trained general bundles into honest OOF probabilities.
 # Reads from the stash dirs created by azoth-general-fold-{a,b}, writes
@@ -734,14 +743,19 @@ repin:
 #   - $(AZOTH_GENERAL_DIR)/cache/  (route feature matrices, snapshot-keyed)
 #   - any sibling directories not matching the above patterns
 azoth-clean-bundle:
-	@if [ ! -d $(AZOTH_ROOT) ]; then \
+	@# Single shell so the early-out actually skips the rest of the recipe.
+	@# Each `@line` is its own subshell in make; a bare `exit 0` only exits
+	@# its own line, not the recipe. Without this guard, fresh fold roots
+	@# (where AZOTH_ROOT doesn't exist yet) hit `find` and fail.
+	@set -e; \
+	if [ ! -d $(AZOTH_ROOT) ]; then \
 	    echo "azoth-clean-bundle: $(AZOTH_ROOT) does not exist; nothing to do"; \
 	    exit 0; \
-	fi
-	@echo "azoth-clean-bundle: wiping deployed artifacts under $(AZOTH_ROOT) (caches preserved)"
-	@find $(AZOTH_ROOT) -mindepth 1 -maxdepth 1 -type f \
-	    \( -name '*.json' -o -name '*.md' -o -name '*.csv' -o -name '*.npz' \) -delete
-	@for d in $(AZOTH_ROOT)/general $(AZOTH_ROOT)/filegroups/* $(AZOTH_ROOT)/filetypes/*; do \
+	fi; \
+	echo "azoth-clean-bundle: wiping deployed artifacts under $(AZOTH_ROOT) (caches preserved)"; \
+	find $(AZOTH_ROOT) -mindepth 1 -maxdepth 1 -type f \
+	    \( -name '*.json' -o -name '*.md' -o -name '*.csv' -o -name '*.npz' \) -delete; \
+	for d in $(AZOTH_ROOT)/general $(AZOTH_ROOT)/filegroups/* $(AZOTH_ROOT)/filetypes/*; do \
 	    [ -d "$$d" ] || continue; \
 	    rm -f "$$d"/model.txt "$$d"/model.json "$$d"/feature_spec.json \
 	          "$$d"/calibrator.json "$$d"/benchmark.json "$$d"/README.md \

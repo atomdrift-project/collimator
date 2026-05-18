@@ -1183,6 +1183,28 @@ def run_experiment(
                     legacy.unlink()
         else:
             export.save_model(result.model, output_dir / model_filename)
+            # Symmetric to the multi-seed branch above (which unlinks any
+            # leftover `model.txt`): a previous multi-seed run may have
+            # left an `output_dir/models/` directory on disk. Without
+            # this cleanup, the Makefile's `azoth-general` recipe — which
+            # prefers a `models/` directory over a single `model.txt` —
+            # would silently promote the stale bundle and throw away
+            # this freshly-trained single-seed model.
+            stale_models_dir = output_dir / "models"
+            if stale_models_dir.is_dir():
+                for stale in stale_models_dir.iterdir():
+                    if stale.is_file():
+                        stale.unlink()
+                try:
+                    stale_models_dir.rmdir()
+                except OSError:
+                    # Directory not empty (e.g. nested layout we didn't
+                    # write). Leave it alone rather than silently
+                    # nuking unrelated files.
+                    log.warning(
+                        "stale_models_dir %s is non-empty after pruning; leaving in place",
+                        stale_models_dir,
+                    )
         export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
         if keyed_result_path is not None:
             # Atomic write: autocollie reads this as the source of truth for
