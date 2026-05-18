@@ -92,8 +92,17 @@ def _corpus_cache_key(
     route_file_types: tuple[str, ...],
     total_limit: int,
     test_natural_prevalence: bool = False,
+    oof_fold_exclude: int | None = None,
 ) -> str:
-    """Deterministic hash for the row-selection parameters."""
+    """Deterministic hash for the row-selection parameters.
+
+    ``oof_fold_exclude`` mirrors ``EXP_OOF_FOLD_EXCLUDE``: when set to 0
+    or 1, that OOF half is dropped from the corpus snapshot. The two
+    fold variants produce DIFFERENT row sets at the same seed, so the
+    cache key must distinguish them. Otherwise fold-A and fold-B share
+    the same snapshot cache and the second fold gets the first fold's
+    rows back.
+    """
     blob = json.dumps({
         "seed": seed,
         "train_samples": train_samples,
@@ -105,6 +114,7 @@ def _corpus_cache_key(
         "route_file_types": sorted(route_file_types),
         "total_limit": total_limit,
         "test_natural_prevalence": bool(test_natural_prevalence),
+        "oof_fold_exclude": oof_fold_exclude,
     }, sort_keys=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
@@ -716,6 +726,16 @@ def run_experiment(
         "boosting_type": str(boosting_type),
         "extra_trees": bool(extra_trees),
     }
+    # EXP_OOF_FOLD_EXCLUDE controls which OOF fold is held out from
+    # training (see the row-selection branch below). It MUST participate
+    # in the experiment_key — fold-A and fold-B select different rows
+    # but share every other parameter, so without this they collide on
+    # the same cached run and the second fold reuses the first fold's
+    # bundle (the bug that broke azoth-oof-pipeline.sh's stage 2).
+    _oof_fold_exclude_str = os.getenv("EXP_OOF_FOLD_EXCLUDE", "").strip()
+    _oof_fold_exclude: int | None = None
+    if _oof_fold_exclude_str in {"0", "1"}:
+        _oof_fold_exclude = int(_oof_fold_exclude_str)
     experiment_spec: dict[str, object] = {
         "route": route,
         "route_file_types": list(route_file_types),
@@ -728,6 +748,7 @@ def run_experiment(
         # differ in shipped artifact and reported metrics, so reusing one for
         # the other would mask the contract change.
         "save_all_seeds": bool(save_all_seeds) and max(int(seed_search_k), 1) > 1,
+        "oof_fold_exclude": _oof_fold_exclude,
         "train_samples": int(train_samples),
         "max_test_samples": int(max_test_samples),
         "test_natural_prevalence": bool(test_natural_prevalence),
@@ -778,6 +799,7 @@ def run_experiment(
             route_file_types,
             total_limit,
             test_natural_prevalence=test_natural_prevalence,
+            oof_fold_exclude=_oof_fold_exclude,
         )
         if cache_dir
         else ""

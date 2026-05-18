@@ -94,14 +94,26 @@ def _score_partition(
     probs = np.concatenate(pred_batches).astype(np.float32) if pred_batches else np.array([], dtype=np.float32)
     labels = np.concatenate(label_batches).astype(np.int8) if label_batches else np.array([], dtype=np.int8)
     LOG.info("scored %d rows for fold %d", len(probs), oof_fold)
+    # LabeledMetadata is currently a plain tuple type alias (see
+    # src/collimator/features.py:107). The 6-tuple shape from
+    # stream_labeled_metadata_full is:
+    #   (row_id, sha256, path, score, label, canonical_sha256)
+    # The 7-tuple shape from stream_labeled_metadata_full_with_size adds
+    # json_bytes at index 5 and moves canonical_sha256 to index 6 (see
+    # the comment in extract_labeled_metadata_from_db_batches_unordered).
+    # This script feeds the 6-tuple form, so index 5 is canonical_sha256.
+    sample_count = len(sample_buffer)
+    canonical_idx = 6 if sample_count > 0 and len(sample_buffer[0]) >= 7 else 5
     return {
-        "row_ids": np.array([s.row_id for s in sample_buffer], dtype=np.int64),
-        "sha256": np.array([s.sha256 for s in sample_buffer]),
-        "paths": np.array([s.path for s in sample_buffer]),
-        "scores": np.array([s.score for s in sample_buffer], dtype=np.int32),
+        "row_ids": np.array([s[0] for s in sample_buffer], dtype=np.int64),
+        "sha256": np.array([s[1] for s in sample_buffer]),
+        "paths": np.array([s[2] for s in sample_buffer]),
+        "scores": np.array([s[3] for s in sample_buffer], dtype=np.int32),
         "labels": labels,
         "probs": probs,
-        "canonical_shas": np.array([s.canonical_sha256 or s.sha256 for s in sample_buffer]),
+        "canonical_shas": np.array(
+            [s[canonical_idx] or s[1] for s in sample_buffer]
+        ),
     }
 
 
@@ -162,6 +174,34 @@ def main() -> int:
 
     fold_a_model, fold_a_spec = _model_and_spec(fold_a_general)
     fold_b_model, fold_b_spec = _model_and_spec(fold_b_general)
+
+    # Sanity: a cache collision in the experiment runner historically copied
+    # the production general bundle into BOTH fold-a/ and fold-b/. Both
+    # bundles would then produce identical OOF predictions (in-sample on the
+    # whole train+dev set), silently corrupting downstream calibration.
+    # Hash the primary model bytes and abort if they match — catches the
+    # collision before we sink an hour of feature extraction into bad data.
+    import hashlib  # noqa: PLC0415
+    def _sha256(path: Path) -> str:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    fold_a_hash = _sha256(fold_a_model)
+    fold_b_hash = _sha256(fold_b_model)
+    if fold_a_hash == fold_b_hash:
+        raise SystemExit(
+            f"fold-A model {fold_a_model} and fold-B model {fold_b_model} "
+            f"are identical (sha256={fold_a_hash[:16]}…). This typically means "
+            "the experiment cache collided across folds and both bundles got "
+            "the production model. Clear out/cache/experiment/azoth/ and the "
+            "fold roots, then re-run the OOF pipeline.",
+        )
+    LOG.info(
+        "fold-A model %s (%s), fold-B model %s (%s) — distinct, proceeding",
+        fold_a_model, fold_a_hash[:8], fold_b_model, fold_b_hash[:8],
+    )
 
     # Score fold A on rows where oof_fold == 0 (held out from A's training).
     part_a = _score_partition(

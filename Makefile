@@ -350,6 +350,14 @@ DEPLOY_TRAIN_SAMPLES_FULL       ?= 0
 DEPLOY_MAX_TEST_SAMPLES_FULL    ?= 0
 DEPLOY_TRAIN_SAMPLES_FAST       ?= 600000
 DEPLOY_MAX_TEST_SAMPLES_FAST    ?= 80000
+# Default the fidelity for any standalone azoth-general / azoth-general-fold-*
+# invocation to the FULL settings. azoth-publish-train and azoth-full-train
+# still pass the _FULL values explicitly so this just covers the case where
+# someone calls a sub-target directly (or via scripts/azoth_oof_pipeline.sh).
+# Setting them empty (the prior behavior) would propagate "--train-samples ''"
+# through to the experiment CLI and abort it with an empty-arg error.
+DEPLOY_TRAIN_SAMPLES            ?= $(DEPLOY_TRAIN_SAMPLES_FULL)
+DEPLOY_MAX_TEST_SAMPLES         ?= $(DEPLOY_MAX_TEST_SAMPLES_FULL)
 
 azoth-full-train: venv check-db
 	$(MAKE) _azoth-train \

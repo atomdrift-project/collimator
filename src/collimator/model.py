@@ -127,6 +127,7 @@ def create_classifier(
     scale_pos_weight_mult: float = 1.0,
     boosting_type: str = "gbdt",
     extra_trees: bool = False,
+    num_threads: int | None = None,
 ) -> Any:
     """Create a classifier with defaults tuned for malware detection.
 
@@ -176,7 +177,13 @@ def create_classifier(
             reg_lambda=reg_lambda,
             scale_pos_weight=spw,
             random_state=random_state,
-            n_jobs=-1,
+            # n_jobs=-1 means "claim every core" — fine for a solo training,
+            # disastrous when AZOTH_SPECIALIST_PARALLELISM > 1 because
+            # every concurrent LightGBM tries to grab the full host and the
+            # OS spends most of its time context-switching. The specialist
+            # suite passes num_threads = nproc/parallelism to keep total
+            # worker count near the core count.
+            n_jobs=num_threads if num_threads is not None and num_threads > 0 else -1,
             force_col_wise=True,
             verbosity=-1,
             **device_params,

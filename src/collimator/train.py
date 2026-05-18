@@ -71,6 +71,13 @@ class TrainConfig:
     boosting_type: str = "gbdt"
     # LightGBM-only: random splits instead of greedy.  Ignored by XGBoost.
     extra_trees: bool = False
+    # Maximum CPU threads to use per training. ``None`` = let LightGBM use
+    # every core (n_jobs=-1, the historical behavior). Set this when running
+    # multiple trainings concurrently (the specialist suite at
+    # AZOTH_SPECIALIST_PARALLELISM > 1) so each LightGBM instance doesn't
+    # try to claim all 128 cores and thrash on context switches. The suite
+    # auto-computes nproc/parallelism when this is None and parallelism>1.
+    num_threads: int | None = None
 
 
 @dataclass
@@ -493,6 +500,7 @@ def train(
                 scale_pos_weight_mult=config.scale_pos_weight_mult,
                 boosting_type=config.boosting_type,
                 extra_trees=config.extra_trees,
+                num_threads=config.num_threads,
             )
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=UserWarning, module="xgboost")
@@ -535,6 +543,7 @@ def train(
                         scale_pos_weight_mult=config.scale_pos_weight_mult,
                         boosting_type=config.boosting_type,
                         extra_trees=config.extra_trees,
+                        num_threads=config.num_threads,
                     )
                     _fit_model(
                         fold_model,
@@ -600,6 +609,7 @@ def train(
         scale_pos_weight_mult=config.scale_pos_weight_mult,
         boosting_type=config.boosting_type,
         extra_trees=config.extra_trees,
+        num_threads=config.num_threads,
         )
     final_base_weight = _compute_benign_filetype_weights(
         file_types_tv,
@@ -661,6 +671,7 @@ def train(
                 scale_pos_weight_mult=config.scale_pos_weight_mult,
                 boosting_type=config.boosting_type,
                 extra_trees=config.extra_trees,
+                num_threads=config.num_threads,
             )
             _fit_model(
                 final_model,

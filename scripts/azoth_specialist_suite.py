@@ -57,6 +57,30 @@ LOG = logging.getLogger("azoth_specialist_suite")
 # If any addition to cleave's extractor list also adds a kv subtree,
 # remove that filetype from this set; if it adds extraction without kv,
 # add it here.
+# Filetypes whose specialists consistently ship PR-AUC below 0.3 — barely
+# better than guessing, and the calibrator hides the noise. Training them
+# burns wall-clock for no measurable lift in test recall vs general-only,
+# so the specialist suite skips them. Numbers behind the cutoff (from the
+# original eval, all per-route PR-AUC on the locked test partition):
+#   makefile  0.025    rust      0.111    text   0.304
+#   groovy    0.051    plist     0.122
+#   xml       0.191    png       0.181    jpeg   0.272
+# Re-evaluate when the corpus grows or features change — anything that
+# pushes one of these above 0.5 should land back in eligibility. To force
+# re-training while debugging, comment out the gate in
+# ``_eligible_filetypes`` rather than mutate this set.
+NON_LEARNABLE_FILETYPES: frozenset[str] = frozenset({
+    "makefile",
+    "groovy",
+    "rust",
+    "plist",
+    "png",
+    "xml",
+    "jpeg",
+    "text",
+})
+
+
 LITMUS_EXTRACTED_FILETYPES: frozenset[str] = frozenset({
     "7z",
     "apk",
@@ -323,6 +347,18 @@ def _eligible_filetypes(
                 # specialist could learn that the general model lacks.
                 LOG.info(
                     "%s: skipping filetype specialist (litmus-extracted; %d bad, %d good)",
+                    file_type_str, int(bad), int(good),
+                )
+                continue
+            if file_type_str in NON_LEARNABLE_FILETYPES:
+                # The specialist for this filetype consistently shipped a
+                # PR-AUC below 0.3 across prior runs — essentially random
+                # decisions wrapped in a calibrator that hides the noise.
+                # Re-training it burns ~30-45 minutes per fold + seed for
+                # no measurable lift over general-only; skip.
+                LOG.info(
+                    "%s: skipping filetype specialist (historically PR-AUC < 0.3; "
+                    "%d bad, %d good)",
                     file_type_str, int(bad), int(good),
                 )
                 continue
@@ -1102,6 +1138,19 @@ def main() -> int:
             "(extract_workers + lgbm_threads). GPU mode should stay at 1."
         ),
     )
+    parser.add_argument(
+        "--lgbm-threads",
+        type=int,
+        default=None,
+        help=(
+            "Hard cap on LightGBM threads per training. Without this, "
+            "LightGBM grabs every CPU core (n_jobs=-1), so multiple "
+            "concurrent specialist trainings (--parallelism > 1) all try "
+            "to claim the full host and thrash on context switches. "
+            "Default (None): auto-set to max(1, nproc // parallelism) when "
+            "--parallelism > 1, otherwise leave LightGBM uncapped."
+        ),
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -1137,6 +1186,22 @@ def main() -> int:
             LOG.info("autocollie-best: no historical runs found in %s for any target route",
                      args.autocollie_best_runs_dir)
 
+    # Auto-cap LightGBM threads per training when running multiple
+    # specialists concurrently. Without this, every concurrent training
+    # asks for all 128 cores via n_jobs=-1 and the host context-switches
+    # itself to death (we saw load avg ~240 on a 128-core box with
+    # parallelism=2). nproc // parallelism keeps total worker count
+    # roughly equal to the core count and yields predictable wall-clock.
+    lgbm_threads = args.lgbm_threads
+    if lgbm_threads is None and args.parallelism > 1:
+        nproc = os.cpu_count() or 1
+        lgbm_threads = max(1, nproc // args.parallelism)
+        LOG.info(
+            "auto-capping LightGBM threads per training at %d "
+            "(%d cores / parallelism=%d). Override with --lgbm-threads N.",
+            lgbm_threads, nproc, args.parallelism,
+        )
+
     config = train.TrainConfig(
         learner="azoth",
         seed=args.seed,
@@ -1151,6 +1216,7 @@ def main() -> int:
         hard_negative_fraction=args.hard_negative_fraction,
         hard_negative_weight=args.hard_negative_weight,
         beta=1.25,
+        num_threads=lgbm_threads,
     )
     args.output_root.mkdir(parents=True, exist_ok=True)
     results: list[dict[str, Any]] = [
