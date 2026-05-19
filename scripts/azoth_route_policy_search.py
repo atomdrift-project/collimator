@@ -788,6 +788,64 @@ def _make_specialist_candidate_at_fp(
     )
 
 
+def _make_calibrate_inherited_candidate(
+    labels: np.ndarray,
+    route_probs: dict[str, np.ndarray],
+    *,
+    thresholds: dict[str, float],
+    target_per_million: float,
+    total_benign: int,
+    suffix: str = "",
+) -> dict[str, Any]:
+    """Candidate that applies the calibrate stage's per-route thresholds
+    AS-IS — i.e. takes the cascading-scope output (filegroup / general
+    fallback when per-filetype dev is too small) and runs an OR-rule
+    over the routes for which calibrate produced thresholds.
+
+    The standalone _calibrate_policy candidates re-derive thresholds
+    INSIDE the filetype slice. For tiny filetypes that derivation
+    fails ("too few benigns to derive a quantile") and the slice ends
+    up with no thresholds at all. The calibrate stage already handled
+    that case by extrapolating from the wider scope; this candidate
+    just propagates that decision into the policy search so it has a
+    chance to win against ultra-tight joint-OR thresholds.
+    """
+    present_routes = tuple(
+        route for route in thresholds
+        if route in route_probs and not np.all(np.isnan(route_probs[route]))
+    )
+    if not present_routes:
+        return _metrics(
+            labels, np.zeros(len(labels), dtype=bool),
+            target_per_million=target_per_million,
+            total_benign=total_benign,
+            thresholds={},
+            policy=f"calibrate_inherited{suffix}",
+            primary=None,
+            allowed_routes=(),
+        )
+    n_rows = len(labels)
+    union_hit = np.zeros(n_rows, dtype=bool)
+    selected: dict[str, float] = {}
+    for route_name in present_routes:
+        t = float(thresholds[route_name])
+        probs = route_probs[route_name]
+        valid = ~np.isnan(probs)
+        hit = np.zeros(n_rows, dtype=bool)
+        hit[valid] = probs[valid] >= t
+        union_hit |= hit
+        selected[route_name] = t
+    return _metrics(
+        labels, union_hit,
+        target_per_million=target_per_million,
+        total_benign=total_benign,
+        thresholds=selected,
+        policy=f"calibrate_inherited{suffix}",
+        primary=None,
+        allowed_routes=tuple(selected),
+    )
+
+
 def _mark_dominated_by_specialist(
     candidates: list[dict[str, Any]],
     route_probs: dict[str, np.ndarray],
@@ -1426,6 +1484,41 @@ def main() -> int:
                                 allowed_routes=routes_for_max,
                                 target_per_million=target_per_million,
                                 total_benign=total_benign,
+                            ),
+                        )
+
+                # Inherit thresholds from the calibrate stage, which uses
+                # cascading scope (filetype → filegroup → general) when
+                # per-filetype dev is too small to derive a quantile.
+                # Critical for L0 hostile on PE-class slices where the
+                # local 0-FP search picks ultra-tight thresholds that
+                # transfer poorly to test; calibrate's already-extrapolated
+                # thresholds give real recall at the achievable floor.
+                calibrated_thresholds = target[severity].get("thresholds", {})
+                if calibrated_thresholds:
+                    candidates.append(
+                        _make_calibrate_inherited_candidate(
+                            scoped_labels, route_probs,
+                            thresholds=calibrated_thresholds,
+                            target_per_million=target_per_million,
+                            total_benign=total_benign,
+                        ),
+                    )
+                # When hostile is below resolution (target < CP-floor),
+                # calibrate doesn't extrapolate it. Fall through to the
+                # same level's SUSPICIOUS thresholds — they were calibrated
+                # at the achievable floor and represent the strictest
+                # certifiable hostile signal we have.
+                if severity == "hostile" and not calibrated_thresholds:
+                    suspicious_thresholds = target["suspicious"].get("thresholds", {})
+                    if suspicious_thresholds:
+                        candidates.append(
+                            _make_calibrate_inherited_candidate(
+                                scoped_labels, route_probs,
+                                thresholds=suspicious_thresholds,
+                                target_per_million=target_per_million,
+                                total_benign=total_benign,
+                                suffix="_suspicious_fallback",
                             ),
                         )
                 # Recall-monotone floor: any ensemble candidate that
