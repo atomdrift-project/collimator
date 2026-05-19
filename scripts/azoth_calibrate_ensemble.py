@@ -580,15 +580,34 @@ def _gpd_tail_threshold(
     (insufficient tail data, fit failure, or target loose enough that
     empirical quantiles already work without extrapolation).
     """
-    if len(benign_probs) < 200:
+    n = len(benign_probs)
+    if n < 100:
+        # Below 100 benigns there's no usable tail to extrapolate from —
+        # any fit would be dominated by sampling noise. Smaller slices
+        # should fall back to the empirical floor in callers.
         return None
     sorted_probs = np.sort(benign_probs)
-    u_idx = int(0.99 * len(sorted_probs))
-    if u_idx >= len(sorted_probs) - 30:
+    # Adaptive anchor percentile: fixed 0.99 needs n ≥ 3000 to leave ≥30
+    # excesses for a stable fit. For smaller slices, drop the anchor to
+    # 0.95 / 0.90 / 0.80 so we still have enough tail mass. The trade-off:
+    # lower anchor → more bulk in the fit → less faithful to the true
+    # tail shape. The headline-table use case is single-decimal-place
+    # recall percentages, so a looser anchor is fine.
+    if n >= 3000:
+        anchor = 0.99
+    elif n >= 1000:
+        anchor = 0.95
+    elif n >= 300:
+        anchor = 0.90
+    else:
+        anchor = 0.80
+    u_idx = int(anchor * n)
+    n_tail = n - u_idx
+    if n_tail < 20:
         return None
     u = float(sorted_probs[u_idx])
     excesses = sorted_probs[sorted_probs > u] - u
-    if len(excesses) < 30:
+    if len(excesses) < 20:
         return None
     p_above_u = float(len(excesses)) / float(len(sorted_probs))
     p_target = target_per_million / 1_000_000.0
@@ -791,6 +810,41 @@ def _prepare_calibration(
         "malware_bits": np.packbits(malware),
         "candidates": candidates,
     }
+
+
+def _enforce_severity_monotonicity(
+    level: int,
+    hostile: dict[str, Any],
+    suspicious: dict[str, Any],
+) -> None:
+    """Mutate `suspicious['thresholds']` in-place so that, for every route
+    present in both severities, suspicious_threshold ≤ hostile_threshold.
+
+    Independent per-severity extrapolation occasionally inverts this on
+    noisy slices. Litmus rejects inverted (route, level) pairs entirely
+    — silently dropping real recall. We collapse to the stricter
+    threshold (i.e. raise suspicious to hostile) when inverted, which
+    keeps the route active at the cost of merging the two tiers at that
+    operating point for that route.
+    """
+    h_thresholds = hostile.get("thresholds", {}) or {}
+    s_thresholds = suspicious.get("thresholds", {}) or {}
+    fixed: list[str] = []
+    for route, h_t in h_thresholds.items():
+        if h_t is None:
+            continue
+        s_t = s_thresholds.get(route)
+        if s_t is None:
+            continue
+        if s_t > h_t:
+            s_thresholds[route] = h_t
+            fixed.append(route)
+    if fixed:
+        LOG.warning(
+            "L%d: %d route(s) had inverted hostile/suspicious thresholds; "
+            "clamped suspicious to hostile for: %s",
+            level, len(fixed), ", ".join(sorted(fixed)),
+        )
 
 
 def _calibrate_one(
@@ -1522,6 +1576,16 @@ def main() -> int:
                 fit_route_scores,
                 target_per_million=float(target["suspicious_per_million"]),
             )
+            # Per-route monotonicity guard: hostile must be at least as
+            # strict as suspicious (i.e. hostile_threshold ≥ suspicious_threshold).
+            # Independent extrapolation per severity occasionally inverts
+            # this on noisy slices (e.g. small filetypes where the
+            # 3-FP vs 32-FP quantiles wobble). Litmus's classifier
+            # `if prob ≥ hostile → Hostile; elif prob ≥ suspicious → Suspicious`
+            # would silently swallow such routes — losing real recall.
+            # When inverted, raise suspicious to hostile so the two tiers
+            # collapse to the stricter operating point for that (route, level).
+            _enforce_severity_monotonicity(level, hostile, suspicious)
             LOG.info(
                 "L%d hostile recall=%.2f%% fp=%d; suspicious recall=%.2f%% fp=%d",
                 level,

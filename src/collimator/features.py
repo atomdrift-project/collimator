@@ -126,7 +126,7 @@ TOP_K_RISK_FILES = 1
 
 # Stable model ABI version shared with litmus.
 # Keep this in sync with FeatureSpec.version for a single compatibility number.
-MODEL_ABI_VERSION = 16
+MODEL_ABI_VERSION = 17  # v17: adds cluster:* + agg:static_* feature families
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
@@ -1180,7 +1180,9 @@ class FeatureSpec:
     """
 
     # NOTE: bumping this version requires a matching update in ../litmus (Rust).
-    version: int = 16
+    # litmus accepts v16..=v17 to allow live deploys to keep working through
+    # a version transition; new bundles always serialize at MODEL_ABI_VERSION.
+    version: int = 17
     abi_version: int = MODEL_ABI_VERSION
     presence_vocab: list[str] = field(default_factory=list)
     filetype_vocab: list[str] = field(default_factory=list)

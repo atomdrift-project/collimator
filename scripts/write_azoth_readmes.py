@@ -146,11 +146,66 @@ HEADLINE_FILETYPES = (
 )
 
 
-def _metric_cell(point: Any, low: Any, high: Any, *, include_ci: bool = True) -> str:
+def _headline_filetypes(
+    metrics: dict[str, Any],
+    config: dict[str, Any] | None = None,
+) -> tuple[str, ...]:
+    """Pick filetypes for the bundle README's headline table.
+
+    Inclusion: at least 25 malware AND 25 benign in test, OR at least 100
+    of each in the full labeled corpus (covers small-test-slice filetypes
+    where the model still has plenty of training signal). Sort: PR-AUC
+    descending — best models first, so the headline opens strong.
+
+    Filetypes where the ensemble couldn't produce a PR-AUC (no rows) are
+    excluded silently; they aren't headline material.
+    """
+    ft_dict = (metrics or {}).get("filetypes", {})
+    models_by_route = {
+        mo.get("route"): mo
+        for mo in ((config or {}).get("models") or [])
+    }
+
+    def qualifies(ft: str, entry: dict[str, Any]) -> bool:
+        t_mal = entry.get("n_malware", 0) or 0
+        t_ben = entry.get("n_benign", 0) or 0
+        if t_mal >= 25 and t_ben >= 25:
+            return True
+        mo = models_by_route.get(f"filetypes/{ft}") or {}
+        if (mo.get("malware") or 0) >= 100 and (mo.get("benign") or 0) >= 100:
+            return True
+        return False
+
+    def sort_key(item: tuple[str, dict[str, Any]]) -> float:
+        _, entry = item
+        ens = entry.get("ensemble") or {}
+        pr = ens.get("pr_auc")
+        try:
+            return -float(pr) if pr is not None else 0.0
+        except (TypeError, ValueError):
+            return 0.0
+
+    candidates = [
+        (ft, entry) for ft, entry in ft_dict.items()
+        if qualifies(ft, entry) and (entry.get("ensemble") or {}).get("pr_auc") is not None
+    ]
+    candidates.sort(key=sort_key)
+    return tuple(ft for ft, _ in candidates)
+
+
+def _metric_cell(
+    point: Any, low: Any, high: Any,
+    *, include_ci: bool = True, as_percent: bool = False,
+) -> str:
     """Render `point [low, high]` for a metric with bootstrap CI; collapses to
     bare point if CI fields aren't populated (small-corpus / single-class).
-    Returns "—" for missing or NaN points (e.g., recall@3FP/M when the route's
-    benign count is too small to resolve 3 per million directly)."""
+    Returns "—" for missing or NaN points.
+
+    ``as_percent=True`` formats as a percentage (e.g., recall: 0.9355 →
+    "93.55%"). Used for recall, F1 — proportions that are easier to scan
+    than 4-decimal floats. AUCs stay as 4-decimal floats since the
+    interesting variation is in the third+ decimal.
+    """
     if point is None:
         return "—"
     try:
@@ -159,10 +214,11 @@ def _metric_cell(point: Any, low: Any, high: Any, *, include_ci: bool = True) ->
         return "—"
     if math.isnan(numeric):
         return "—"
-    base = _num(numeric, 4)
+    fmt = (lambda v: f"{float(v) * 100:.2f}%") if as_percent else (lambda v: _num(v, 4))
+    base = fmt(numeric)
     if not include_ci or low is None or high is None:
         return base
-    return f"{base} [{_num(low, 4)}, {_num(high, 4)}]"
+    return f"{base} [{fmt(low)}, {fmt(high)}]"
 
 
 def _ensemble_table(
@@ -182,7 +238,7 @@ def _ensemble_table(
     (n_benign × 3e-6 < 1).
     """
     lines = [
-        "| File type | Mal / Ben | PR AUC [95% CI] | Recall@3FP/M [95% CI] | ROC AUC [95% CI] | F1 [95% CI] | Δ vs EMBER 2024 |",
+        "| File type | Test mal / ben | PR AUC | Recall @ 3FP/M | ROC AUC | F1 | Δ vs EMBER 2024 |",
         "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for ft in filetypes:
@@ -219,12 +275,14 @@ def _ensemble_table(
                 ens.get("f1_ci_low"),
                 ens.get("f1_ci_high"),
                 include_ci=include_ci,
+                as_percent=True,
             )
             recall_str = _metric_cell(
                 ens_recall,
                 ens.get("recall_at_3fp_per_million_ci_low"),
                 ens.get("recall_at_3fp_per_million_ci_high"),
                 include_ci=include_ci,
+                as_percent=True,
             )
             if ember:
                 ember_str = (
@@ -601,7 +659,7 @@ def _write_general(root: Path) -> None:
 
 def _write_route(root: Path, path: Path) -> None:
     """Per-route README. ≤50-line budget: one metrics table + a compact
-    training profile + a single line on routing policy. Detailed L0..L9
+    training profile + a single line on routing policy. Detailed L0..L20
     operating points and full ensemble explanations live in the bundle's
     top-level cards, not here."""
     with open(path / "benchmark.json") as f:
@@ -645,14 +703,17 @@ def _write_route(root: Path, path: Path) -> None:
         lines.extend([
             f"## Performance",
             "",
-            f"Test partition, n={n_eval} ({_int(n_mal)} malware / {_int(n_ben)} benign).",
+            f"`filetypes/{name}` specialist scored *alone* on its test-partition "
+            f"slice: {_int(n_mal)} malware / {_int(n_ben)} benign "
+            f"({_int(n_eval)} rows). The bundle README reports the deployed "
+            f"ensemble's metrics on this same slice; numbers there will differ.",
             "",
-            "| ROC AUC [95% CI] | PR AUC [95% CI] | F1 [95% CI] | Brier | Δ vs EMBER 2024 |",
+            "| ROC AUC | PR AUC | F1 | Brier | Δ vs EMBER 2024 |",
             "|---:|---:|---:|---:|---:|",
             (
-                f"| {_metric_cell(spec_metrics.get('roc_auc'), spec_metrics.get('roc_auc_ci_low'), spec_metrics.get('roc_auc_ci_high'))} | "
-                f"{_metric_cell(spec_metrics.get('pr_auc'), spec_metrics.get('pr_auc_ci_low'), spec_metrics.get('pr_auc_ci_high'))} | "
-                f"{_metric_cell(spec_metrics.get('f1'), spec_metrics.get('f1_ci_low'), spec_metrics.get('f1_ci_high'))} | "
+                f"| {_metric_cell(spec_metrics.get('roc_auc'), spec_metrics.get('roc_auc_ci_low'), spec_metrics.get('roc_auc_ci_high'), include_ci=False)} | "
+                f"{_metric_cell(spec_metrics.get('pr_auc'), spec_metrics.get('pr_auc_ci_low'), spec_metrics.get('pr_auc_ci_high'), include_ci=False)} | "
+                f"{_metric_cell(spec_metrics.get('f1'), spec_metrics.get('f1_ci_low'), spec_metrics.get('f1_ci_high'), include_ci=False, as_percent=True)} | "
                 f"{_num(spec_metrics.get('brier'), 4)} | {ember_str} |"
             ),
             "",
@@ -675,15 +736,31 @@ def _write_route(root: Path, path: Path) -> None:
     lines.extend([
         "## Routing",
         "",
-        f"Default-level policy `{ensemble_policy}`. Allowed routes (OR over thresholds): {routes_str}. "
-        f"Per-level severity thresholds in `route_policies.md` at the bundle root.",
+        f"Default level `{ensemble_policy}` over {routes_str}. "
+        f"Full per-level thresholds: [`route_policies.md`](../../route_policies.md).",
         "",
         "## Training",
         "",
-        f"{_model_algo(data.get('train_config'))} "
-        f"Feature spec: general-shared, {data.get('n_features')} features, policy `{data.get('feature_spec_policy')}`. "
-        f"Trained on {_int(data.get('train_rows'))} rows "
-        f"({_int(data.get('train_malware'))} mal / {_int(data.get('train_benign'))} ben).",
+    ])
+    cfg = data.get("train_config") or {}
+    n_features = data.get("n_features", "?")
+    spec_policy = data.get("feature_spec_policy", "?")
+    lines.extend([
+        "| Parameter | Value |",
+        "|---|---:|",
+        f"| Algorithm | LightGBM binary classifier |",
+        f"| Train rows | {_int(data.get('train_rows'))} "
+        f"({_int(data.get('train_malware'))} mal / {_int(data.get('train_benign'))} ben) |",
+        f"| Feature spec | {n_features} features (`{spec_policy}`) |",
+        f"| n_estimators | {cfg.get('n_estimators', '?')} |",
+        f"| num_leaves | {cfg.get('num_leaves', '?')} |",
+        f"| max_depth | {cfg.get('max_depth', '?')} |",
+        f"| min_child_samples | {cfg.get('min_child_samples', '?')} |",
+        f"| learning_rate | {cfg.get('learning_rate', '?')} |",
+        f"| subsample / colsample | {cfg.get('subsample', '?')} / {cfg.get('colsample_bytree', '?')} |",
+        f"| reg_alpha / reg_lambda | {cfg.get('reg_alpha', '?')} / {cfg.get('reg_lambda', '?')} |",
+        f"| early_stopping_rounds | {cfg.get('early_stopping_rounds', '?')} |",
+        f"| device | {cfg.get('device', 'cpu')} |",
     ])
     _write(path / "README.md", "\n".join(line for line in lines if line is not None) + "\n")
 
@@ -702,7 +779,7 @@ def _write_bundle(root: Path) -> None:
         "Routed ensemble for static malware detection. A general LightGBM "
         "classifier scores every file; per-filetype specialists score files "
         "in their domain; any route above its calibrated threshold flags "
-        f"the file. Calibrators and L0..L9 thresholds fit on a "
+        f"the file. Calibrators and L0..L20 thresholds fit on a "
         f"{_int(config.get('fit_rows') or config.get('rows'))}-row "
         f"{config.get('fit_partition') or 'dev'} partition "
         f"(12.5% of the labeled corpus). Metrics below: "
@@ -712,9 +789,9 @@ def _write_bundle(root: Path) -> None:
         "## Use",
         "",
         "Input: cleave-extracted JSON reports. Output: one of `benign`, "
-        "`suspicious`, `hostile`, with severity level L0..L9. Loaded at "
+        "`suspicious`, `hostile`, with severity level L0..L20. Loaded at "
         "scan time by [litmus](https://codeberg.org/atomdrift/litmus); "
-        "deployed default is L3 hostile, L5 suspicious.",
+        "deployed default is L3 (litmus loads both hostile and suspicious thresholds at the same level).",
         "",
         "Bundle layout: `config.json` (deployed thresholds), then per-route "
         "subdirectories under `general/`, `filegroups/<name>/`, "
@@ -724,15 +801,20 @@ def _write_bundle(root: Path) -> None:
         "[ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md). Single-model baseline: "
         "[GENERALIST_MODEL.md](GENERALIST_MODEL.md). Apache 2.0.",
         "",
-        "## Performance",
+        "## Routed Ensemble Performance",
         "",
-        *_ensemble_table(metrics, HEADLINE_FILETYPES, link_routes=True),
+        "Deployed ensemble (general + filegroup + filetype combined per "
+        "`route_policies.json`) measured on each filetype's slice of the "
+        "locked test partition. Sorted by PR AUC, best first. Filetypes "
+        "included: ≥25/25 in test, or ≥100/100 in the full labeled corpus.",
+        "",
+        *_ensemble_table(metrics, _headline_filetypes(metrics, config), link_routes=True),
         "",
         "PR AUC summarizes recall-vs-precision across operating points; "
-        "Recall@3FP/M is the deployment-budget headline. Per-severity "
-        "L0..L9 thresholds (observed benign-score quantiles per route, "
-        "GPD-extrapolated for FP/M targets below the empirical floor) are "
-        "in [route_policies.md](route_policies.md) — they document the "
+        "Recall@3FP/M is the deployment-budget headline (GPD-extrapolated "
+        "for filetypes whose dev slice can't resolve 3 FP/M empirically). "
+        "Per-severity L0..L20 thresholds are in "
+        "[route_policies.md](route_policies.md) — they document the "
         "severity-grading curve litmus uses, not optimization targets.",
         "",
         "## Provenance",
@@ -811,13 +893,13 @@ def _write_ensemble_card(root: Path) -> None:
         "",
         "Reading the table: ensemble ≥ specialist holds for every filetype by design. When `strategy = specialist_priority`, the ensemble's column matches the specialist's. When `strategy = calibrated_max`, the routing-free combiner beats the specialist alone — those filetypes benefit most from cross-model signal.",
         "",
-        "## Severity tiers (L0..L9)",
+        "## Severity tiers (L0..L20)",
         "",
-        "L0..L9 are observation-derived severity grades, not optimization targets. For each route, level Lk's threshold is the (1 − qk × 10⁻⁶) quantile of that route's calibrated benign-score distribution on the dev partition — i.e., the score cut at which roughly qk benigns per million would be flagged. Strict tiers (qk below the empirical floor of n_benign × qk × 10⁻⁶ < 1) come from a generalized-Pareto fit to the benign-score upper tail; looser tiers are direct empirical quantiles.",
+        "L0..L20 are observation-derived severity grades, not optimization targets. For each route, level Lk's threshold is the (1 − qk × 10⁻⁶) quantile of that route's calibrated benign-score distribution on the dev partition — i.e., the score cut at which roughly qk benigns per million would be flagged. Strict tiers (qk below the empirical floor of n_benign × qk × 10⁻⁶ < 1) come from a generalized-Pareto fit to the benign-score upper tail; looser tiers are direct empirical quantiles.",
         "",
         "**The grade is a description of the score's strictness, not a deployment knob optimized for any objective.** Litmus reads the per-level thresholds out of `route_policies.json`/`config.json` and assigns severity per file. The headline PR AUC and recall@3FP/M numbers above describe the underlying ranking — they don't depend on the L grade.",
         "",
-        "Default deploy: L3 for hostile, L5 for suspicious. Per-route L0..L9 thresholds and observed FP/M live in [route_policies.md](route_policies.md) and each `filetypes/<name>/README.md`.",
+        "Default deploy level: L3 (used for both hostile and suspicious tiers). Per-route L0..L20 thresholds and observed FP/M live in [route_policies.md](route_policies.md) and each `filetypes/<name>/README.md`.",
     ]
     _write(root / "ENSEMBLE_MODEL.md", "\n".join(lines))
 
@@ -851,7 +933,7 @@ def _write_generalist_card(root: Path) -> None:
         f"- Feature spec: `general/feature_spec.json` ({_int(n_features)} features)",
         "- Trained on the full mixed corpus across all supported filetypes "
         "(75% train / 12.5% dev / 12.5% test, SHA256-deterministic split). "
-        "Calibrators and L0..L9 thresholds are fit on dev; the metrics in this "
+        "Calibrators and L0..L20 thresholds are fit on dev; the metrics in this "
         "card are reported on the locked test partition (never seen during "
         "training or calibration).",
         "",

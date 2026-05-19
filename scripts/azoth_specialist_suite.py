@@ -823,6 +823,13 @@ def _train_one(
             spec_path = output_dir / "feature_spec.json"
             feature_spec_policy = "route_specific"
             feature_env_metadata = dict(sorted(feature_env.items()))
+            # Persist the spec immediately. Downstream feature-cache lookup
+            # hashes spec_path (line ~855), which fails with FileNotFoundError
+            # when the spec exists only in memory. Native filegroup hit this
+            # and skipped training entirely — produced an empty
+            # filegroups/native bundle dir and broke deploy verification.
+            output_dir.mkdir(parents=True, exist_ok=True)
+            spec.save(spec_path)
         LOG.info(
             "%s: extracting train and benchmark features with %s spec (%d features)",
             name,

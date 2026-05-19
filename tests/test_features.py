@@ -111,7 +111,7 @@ def test_build_vocab_empty() -> None:
     spec = build_vocab([_make_report()])
     assert spec.total_features > 0
     assert len(spec.feature_names) == spec.total_features
-    assert spec.version == 16
+    assert spec.version == 17
 
 
 def test_build_vocab_presence() -> None:
@@ -1027,7 +1027,7 @@ def test_feature_spec_save_load(tmp_path) -> None:
     assert loaded.presence_vocab == spec.presence_vocab
     assert loaded.filetype_vocab == spec.filetype_vocab
     assert loaded.feature_names == spec.feature_names
-    assert loaded.version == 16
+    assert loaded.version == 17
 
 
 def test_feature_spec_save_load_with_standardization(tmp_path) -> None:

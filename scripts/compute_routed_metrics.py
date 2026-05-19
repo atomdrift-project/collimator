@@ -38,6 +38,7 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     average_precision_score,
+    brier_score_loss,
     f1_score,
     precision_recall_curve,
     roc_auc_score,
@@ -107,18 +108,81 @@ def _recall_at_fpr_per_million(
         n_allowed = int(np.floor(n_benign * p_target))
         threshold = float(sorted_benign[n_benign - n_allowed - 1])
     else:
-        # Below empirical floor — extrapolate via GPD on the upper tail.
-        # Same helper the calibrate path uses for strict L tiers.
-        try:
-            from azoth_calibrate_ensemble import _gpd_tail_threshold  # noqa: PLC0415
-        except ImportError:
+        threshold = _extrapolated_threshold(benign_scores, target_per_million)
+        if threshold is None:
             return float("nan")
-        gpd = _gpd_tail_threshold(benign_scores, target_per_million)
-        if gpd is None:
-            return float("nan")
-        threshold = float(gpd[0])
     hits = int(np.sum(scores[malware_mask] >= threshold))
     return float(hits / n_malware)
+
+
+def _extrapolated_threshold(
+    benign_scores: np.ndarray, target_per_million: float,
+) -> float | None:
+    """Best-effort threshold T s.t. P(benign_score > T) ≈ target_per_million × 1e-6.
+
+    Two passes:
+
+    1. **GPD tail fit** (azoth_calibrate_ensemble._gpd_tail_threshold) —
+       adaptive anchor percentile (0.99 / 0.95 / 0.90 / 0.80 by sample
+       size). Parametric, principled, but bails on small samples or
+       degenerate fits.
+
+    2. **Log-linear survival extrapolation** — fits
+       ``log(P(B > x)) ≈ a·x + b`` to the top ~20% of benign scores
+       (capped at 100 anchor points) and solves for x at the target
+       survival probability. Cheap, robust, requires only that the
+       upper tail is monotone — which it is for any calibrated
+       classifier.
+
+    Returns None only when both methods refuse: empty input,
+    degenerate (all-equal) benigns, or fitted slope non-negative.
+    Callers should treat None as "no signal at this resolution".
+    """
+    n = len(benign_scores)
+    if n < 5:
+        return None
+    target_p = target_per_million / 1_000_000.0
+    if target_p <= 0:
+        return None
+
+    try:
+        from azoth_calibrate_ensemble import _gpd_tail_threshold  # noqa: PLC0415
+        gpd = _gpd_tail_threshold(benign_scores, target_per_million)
+        if gpd is not None:
+            return float(gpd[0])
+    except ImportError:
+        pass
+
+    # Log-linear fallback on the tail. Calibrated classifiers tend to
+    # have approximately linear log(survival) vs. score in the upper
+    # tail. We fit ONLY the tail — pulling in the bulk produces a
+    # gentle slope (because most benigns sit at very low scores) and
+    # extrapolates to a threshold above 1.0. Window: tail captures
+    # the top max(20, 1% of n) benigns, capped at 50, so the fit
+    # sees rank-1..50 territory at the worst.
+    sorted_b = np.sort(benign_scores)
+    k = min(max(int(0.01 * n), 20), 50)
+    if k >= n:
+        return None
+    top = sorted_b[-k:]
+    if float(top[-1] - top[0]) < 1e-9:
+        return None
+    p_above = np.arange(k, 0, -1, dtype=np.float64) / n
+    log_p = np.log(p_above)
+    slope, intercept = np.polyfit(top, log_p, 1)
+    if not np.isfinite(slope) or slope >= 0:
+        return None
+    threshold = float((np.log(target_p) - intercept) / slope)
+    if not np.isfinite(threshold):
+        return None
+    if threshold >= 1.0:
+        # Extrapolation says "above 1.0"; clamp to just above the max
+        # observed benign — corresponds to the empirical-floor recall
+        # at FP=0 in this slice, which is the strictest threshold the
+        # model can actually deliver in practice. The caller can read
+        # this as "asked-for FP/M is below the slice's resolution".
+        threshold = float(np.nextafter(float(sorted_b[-1]), np.inf))
+    return max(threshold, float(top[-1]))
 
 
 def _metrics(
@@ -161,8 +225,18 @@ def _metrics(
     best_f1 = float(np.max(f1_curve)) if f1_curve.size else 0.0
     f1_05 = float(f1_score(labels, (scores >= 0.5).astype(np.int8), zero_division=0))
     recall_3fpm = _recall_at_fpr_per_million(labels, scores, 3.0)
+    # Brier score on raw probs: how well-calibrated is this route on the
+    # eval slice. Lower is better. Useful for per-spec cards where the
+    # user wants to see the calibration quality at a glance — bigger
+    # filetypes can compute it from many samples, tiny ones get a noisy
+    # value but still meaningful enough to display.
+    try:
+        brier = float(brier_score_loss(labels, np.clip(scores, 0.0, 1.0)))
+    except (ValueError, TypeError):
+        brier = float("nan")
     out = {"roc_auc": roc, "pr_auc": ap, "f1": best_f1, "f1_at_05": f1_05,
            "recall_at_3fp_per_million": recall_3fpm,
+           "brier": brier,
            "n_evaluated": int(labels.size)}
     if with_ci and labels.size >= 50 and n_pos >= 5 and n_neg >= 5:
         from collimator.stats import bootstrap_metric  # noqa: PLC0415
