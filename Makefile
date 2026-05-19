@@ -629,6 +629,7 @@ azoth-oof-merge-general: venv check-db
 		--db $(DB) \
 		--fold-a-bundle $(OUT_ROOT)/azoth.oof-fold-a \
 		--fold-b-bundle $(OUT_ROOT)/azoth.oof-fold-b \
+		--prod-bundle $(AZOTH_ROOT) \
 		--output $(AZOTH_GENERAL_SCORES) \
 		$(WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG)

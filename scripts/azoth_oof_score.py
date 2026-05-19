@@ -44,7 +44,7 @@ def _score_partition(
     model_path: Path,
     spec_path: Path,
     *,
-    oof_fold: int,
+    oof_fold: int | None,
     workers: int,
     max_id: int,
 ) -> dict[str, Any]:
@@ -54,8 +54,16 @@ def _score_partition(
     canonical_shas — the same shape ``thresholds_refresh`` writes for the
     threshold-score cache. ``oof_fold`` here is the fold being predicted
     (held out from this model's training).
+
+    ``oof_fold=None`` is the special "test partition" mode: score rows
+    where ``oof_fold_of`` returns None (i.e. ``is_test_sample``).
+    Used to fold prod-general predictions on test rows into the OOF
+    cache so the downstream ``--partition test`` calibrate has data
+    to work with. Without this, the OOF cache covers only train+dev
+    and the test-partition calibrate dies with "no rows".
     """
-    LOG.info("scoring %s on OOF fold %d", model_path, oof_fold)
+    label = "test" if oof_fold is None else f"OOF fold {oof_fold}"
+    LOG.info("scoring %s on %s", model_path, label)
     spec = features.FeatureSpec.load(spec_path)
     model = load_model(model_path)
     rows = list(
@@ -64,18 +72,18 @@ def _score_partition(
             max_id=max_id,
         ),
     )
-    # Filter to rows in this OOF fold (excluding test).
+    # Filter to rows in this OOF fold (or test partition when fold is None).
     kept_rows = []
     for row in rows:
         canonical = row[5]
         if data.oof_fold_of(canonical) == oof_fold:
             kept_rows.append(row)
     LOG.info(
-        "fold %d: %d of %d rows match (%.1f%%)",
-        oof_fold, len(kept_rows), len(rows), 100.0 * len(kept_rows) / max(len(rows), 1),
+        "%s: %d of %d rows match (%.1f%%)",
+        label, len(kept_rows), len(rows), 100.0 * len(kept_rows) / max(len(rows), 1),
     )
     if not kept_rows:
-        raise SystemExit(f"no rows in OOF fold {oof_fold}")
+        raise SystemExit(f"no rows in {label}")
 
     # Extract features + score, in the standard batched-by-worker pattern.
     row_metadata = kept_rows
@@ -117,10 +125,13 @@ def _score_partition(
     }
 
 
-def _combine(part_a: dict[str, Any], part_b: dict[str, Any]) -> dict[str, Any]:
-    """Concatenate the two fold partitions in row_id order."""
+def _combine(*parts: dict[str, Any]) -> dict[str, Any]:
+    """Concatenate fold partitions in row_id order. Accepts 2+ parts."""
     keys = ("row_ids", "sha256", "paths", "scores", "labels", "probs", "canonical_shas")
-    combined = {k: np.concatenate([part_a[k], part_b[k]]) for k in keys}
+    nonempty = [p for p in parts if len(p["row_ids"]) > 0]
+    if not nonempty:
+        return {k: np.array([]) for k in keys}
+    combined = {k: np.concatenate([p[k] for p in nonempty]) for k in keys}
     order = np.argsort(combined["row_ids"], kind="mergesort")
     return {k: combined[k][order] for k in keys}
 
@@ -141,6 +152,19 @@ def main() -> int:
         required=True,
         help="Path to the bundle trained with EXP_OOF_FOLD_EXCLUDE=1 "
         "(predicts on fold-1 rows OOF)",
+    )
+    parser.add_argument(
+        "--prod-bundle",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to the production bundle. When provided, the "
+            "script ALSO scores test-partition rows with the prod general "
+            "(test rows have oof_fold_of()==None and are excluded from "
+            "both fold-A and fold-B's coverage). Without this, the output "
+            "covers only train+dev and the downstream --partition test "
+            "calibrate dies with 'no rows in partition'."
+        ),
     )
     parser.add_argument(
         "--output",
@@ -213,7 +237,25 @@ def main() -> int:
         args.db, fold_b_model, fold_b_spec,
         oof_fold=1, workers=args.workers, max_id=args.max_id,
     )
-    combined = _combine(part_a, part_b)
+    parts = [part_a, part_b]
+
+    # Test-partition rows: oof_fold_of(canon)==None. Score them with the
+    # prod general (which never trained on test either, so the scores are
+    # honest). Without this the OOF cache lacks test rows and downstream
+    # calibrate --partition test fails with "no rows".
+    if args.prod_bundle is not None:
+        prod_model, prod_spec = _model_and_spec(args.prod_bundle / "general")
+        part_test = _score_partition(
+            args.db, prod_model, prod_spec,
+            oof_fold=None, workers=args.workers, max_id=args.max_id,
+        )
+        parts.append(part_test)
+    else:
+        LOG.warning(
+            "no --prod-bundle provided; test-partition rows will NOT be in "
+            "the output. Downstream --partition test calibrate will fail.",
+        )
+    combined = _combine(*parts)
 
     n_total = len(combined["labels"])
     n_mal = int(np.sum(combined["labels"] == 1))
