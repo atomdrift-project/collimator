@@ -114,3 +114,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T040907-filegroups-portable` — 2026-05-20T04:09:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b93d8f31e4cd7bc3` | control_baseline_scale_pos | ok | 0.9965 | 0.9991 | 0.9615 | 236 | [log](out/autocollie/runs/2026-05-20T04-14-51_20260520T040907-filegroups-portable_control_baseline_scale_pos.log) |
+| `90d7c68bc4f3bf0e` | dart_extra_trees_reg | ok | 0.9857 | 0.9966 | 0.9577 | 275 | [log](out/autocollie/runs/2026-05-20T04-18-47_20260520T040907-filegroups-portable_dart_extra_trees_reg.log) |
+| `404dbd7cbc6af0ba` | hard_negatives_focus | ok | 0.9948 | 0.9988 | 0.9644 | 183 | [log](out/autocollie/runs/2026-05-20T04-23-22_20260520T040907-filegroups-portable_hard_negatives_focus.log) |
+| `922c60fe741dd8a5` | kv_vocab_research | ok | 0.9967 | 0.9992 | 0.9585 | 247 | [log](out/autocollie/runs/2026-05-20T04-26-25_20260520T040907-filegroups-portable_kv_vocab_research.log) |
+| `ccb13a5e53d3b812` | symbol_vocab_bigrams | ok | 0.9967 | 0.9992 | 0.9585 | 298 | [log](out/autocollie/runs/2026-05-20T04-30-33_20260520T040907-filegroups-portable_symbol_vocab_bigrams.log) |
+| `a264790f531b5daa` | text_encoding_metrics | ok | 0.9957 | 0.9989 | 0.9524 | 371 | [log](out/autocollie/runs/2026-05-20T04-35-31_20260520T040907-filegroups-portable_text_encoding_metrics.log) |
+| `0d012c4576cc441b` | tiered_crit_trigrams | ok | 0.9956 | 0.9989 | 0.9675 | 303 | [log](out/autocollie/runs/2026-05-20T04-41-41_20260520T040907-filegroups-portable_tiered_crit_trigrams.log) |
+| `558bf03f7fb7cb5c` | ablate_blindfold_noise | ok | 0.9967 | 0.9992 | 0.9585 | 250 | [log](out/autocollie/runs/2026-05-20T04-46-44_20260520T040907-filegroups-portable_ablate_blindfold_noise.log) |
+| `b0ebf1ef9bb3e4c2` | transfer_extreme_metrics | ok | 0.9967 | 0.9992 | 0.9585 | 299 | [log](out/autocollie/runs/2026-05-20T04-50-54_20260520T040907-filegroups-portable_transfer_extreme_metrics.log) |
+| `9330ae7259bccf3a` | transfer_struct_ratios | ok | 0.9967 | 0.9992 | 0.9585 | 305 | [log](out/autocollie/runs/2026-05-20T04-55-53_20260520T040907-filegroups-portable_transfer_struct_ratios.log) |
+| `09bb491669677e09` | kv_vocab_seed_ensemble | ok | 0.9966 | 0.9992 | 0.9740 | 760 | [log](out/autocollie/runs/2026-05-20T05-00-58_20260520T040907-filegroups-portable_kv_vocab_seed_ensemble.log) |
+| `6bf89c4c0cfdce05` | retry_low_fpr_threshold | ok | 0.9960 | 0.9990 | 0.9065 | 194 | [log](out/autocollie/runs/2026-05-20T05-13-38_20260520T040907-filegroups-portable_retry_low_fpr_threshold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_scale_pos`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates best feature set to establish a stable baseline for PR_AUC while tuning scale_pos_weight_mult to reduce FPs at low FPR.
+- **`dart_extra_trees_reg`** `EXP_BOOSTING_TYPE=dart EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Uses dart boosting with extra_trees regularization to improve recall@3FPM by smoothing decision boundaries at the tail.
+- **`hard_negatives_focus`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Applies hard-negative upweighting to sharpen ranking on difficult benigns, targeting PR_AUC improvement without hurting ROC_AUC.
+- **`kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value payload signals, aiming to boost PR_AUC by distinguishing malicious config patterns.
+- **`symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Activates symbol_vocab and symbol_bigrams to catch API co-occurrence patterns, targeting recall@3FPM gains on packed binaries.
+- **`text_encoding_metrics`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Turns on text_encoding and text_metrics_full to extract obfuscation signals from script/document payloads, aiming to improve PR_AUC.
+- **`tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Enables tiered critical trigrams with relaxed min_freq to capture rare malicious sequences, targeting ROC_AUC improvement.
+- **`ablate_blindfold_noise`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout features to reduce training variance, aiming to keep PR_AUC flat while stabilizing recall@3FPM.
+- **`transfer_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports extended_metrics and extreme_features from html/pkg-info winners to capture tail-distribution signals, targeting PR_AUC.
+- **`transfer_struct_ratios`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Adopts metric_ratio_features and size_normalized_metrics from sister routes to normalize structural counts, aiming to boost recall@3FPM.
+- **`kv_vocab_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Tests kv_vocab robustness via seed_search_k=3 ensemble to verify PR_AUC gains are not seed-dependent noise.
+- **`retry_low_fpr_threshold`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Retries prior high-recall config with max_recall_at_fpr thresholding to recover tail recall@3FPM after corpus drift.
+
+</details>
+

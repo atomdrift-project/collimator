@@ -161,3 +161,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T034628-filetypes-html` — 2026-05-20T03:46:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `05269f801b4c86de` | html_control_reg_small_corpus | ok | 0.6154 | 0.5000 | 0.7619 | 10 | [log](out/autocollie/runs/2026-05-20T03-51-03_20260520T034628-filetypes-html_html_control_reg_small_corpus.log) |
+| `f0986ae38b19ab33` | html_kv_vocab_html_attrs | ok | 0.6154 | 0.5000 | 0.7619 | 7 | [log](out/autocollie/runs/2026-05-20T03-51-13_20260520T034628-filetypes-html_html_kv_vocab_html_attrs.log) |
+| `b1772422a31c8fc4` | html_text_metrics_full_obfuscation | ok | 0.6154 | 0.5000 | 0.7619 | 7 | [log](out/autocollie/runs/2026-05-20T03-51-20_20260520T034628-filetypes-html_html_text_metrics_full_obfuscation.log) |
+| `7132399c3ed752ad` | html_trigrams_low_freq | ok | 0.6154 | 0.5000 | 0.7619 | 7 | [log](out/autocollie/runs/2026-05-20T03-51-27_20260520T034628-filetypes-html_html_trigrams_low_freq.log) |
+| `373fd4d58faa1ac7` | html_doc_obfuscation_line_buckets | ok | 0.6154 | 0.5000 | 0.7619 | 7 | [log](out/autocollie/runs/2026-05-20T03-51-34_20260520T034628-filetypes-html_html_doc_obfuscation_line_buckets.log) |
+| `5a433b4db9493992` | html_ablate_textenc_symbols | ok | 0.6154 | 0.5000 | 0.7619 | 7 | [log](out/autocollie/runs/2026-05-20T03-51-41_20260520T034628-filetypes-html_html_ablate_textenc_symbols.log) |
+| `6fbb433019a81d1a` | html_transfer_tiered_trigrams | ok | 0.6154 | 0.5000 | 0.7619 | 6 | [log](out/autocollie/runs/2026-05-20T03-51-47_20260520T034628-filetypes-html_html_transfer_tiered_trigrams.log) |
+| `f4209293ff6bbd78` | html_seedsearch_kv_ensemble | ok | 0.6154 | 0.5000 | 0.7619 | 13 | [log](out/autocollie/runs/2026-05-20T03-51-54_20260520T034628-filetypes-html_html_seedsearch_kv_ensemble.log) |
+| `09e06458b28e9f95` | html_train_dart_extra_trees | ok | 0.6154 | 0.5000 | 0.7619 | 5 | [log](out/autocollie/runs/2026-05-20T03-52-07_20260520T034628-filetypes-html_html_train_dart_extra_trees.log) |
+| `dda6124a989a9136` | html_train_hardneg_scalepos | ok | 0.6154 | 0.5000 | 0.7619 | 5 | [log](out/autocollie/runs/2026-05-20T03-52-12_20260520T034628-filetypes-html_html_train_hardneg_scalepos.log) |
+| `fd5903cffac8e6d5` | html_retry_no_presence_extreme | ok | 0.6154 | 0.5000 | 0.7619 | 7 | [log](out/autocollie/runs/2026-05-20T03-52-17_20260520T034628-filetypes-html_html_retry_no_presence_extreme.log) |
+| `1fa8ced3a2785384` | html_kv_value_split_tokens | ok | 0.6154 | 0.5000 | 0.7619 | 7 | [log](out/autocollie/runs/2026-05-20T03-52-24_20260520T034628-filetypes-html_html_kv_value_split_tokens.log) |
+
+<details><summary>Spec details</summary>
+
+- **`html_control_reg_small_corpus`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by applying stronger regularization to the recent best feature set to prevent overfitting on the tiny HTML holdout.
+- **`html_kv_vocab_html_attrs`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 …` — Targets PR_AUC by capturing HTML attribute/value patterns (e.g., script src, iframe src) that standard n-grams miss.
+- **`html_text_metrics_full_obfuscation`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=80 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by adding structural text metrics that catch obfuscated HTML payloads without increasing n-gram noise.
+- **`html_trigrams_low_freq`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=100 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=1 EXP_SUSPICIOUS_TRIGRAMS=1 …` — Targets PR_AUC by capturing longer HTML tag/attribute sequences that indicate malicious intent, with low min-freq to accommodate the small corpus.
+- **`html_doc_obfuscation_line_buckets`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 …` — Targets recall@3FPM by explicitly modeling HTML obfuscation tactics (long lines, eval patterns) common in web-based malware.
+- **`html_ablate_textenc_symbols`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,textenc,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2.5 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by removing irrelevant binary/text-encoding features to reduce noise and improve ranking on the small HTML dataset.
+- **`html_transfer_tiered_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 …` — Targets PR_AUC by transferring a successful trigram strategy from XML routes, tuned for HTML's tag structure.
+- **`html_seedsearch_kv_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 …` — Targets recall@3FPM by averaging over multiple seeds to stabilize performance on the highly variable small HTML holdout.
+- **`html_train_dart_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 …` — Targets ROC_AUC by using DART and extra trees to add ensemble regularization, reducing overfitting on the tiny HTML corpus.
+- **`html_train_hardneg_scalepos`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=80 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Targets recall@3FPM by down-weighting positives and up-weighting hard negatives to sharpen the decision boundary at low FPR.
+- **`html_retry_no_presence_extreme`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_SOFT_PRESENCE=0 …` — Targets PR_AUC by retrying the historical best configuration that removed noisy presence features, adapted for current corpus drift.
+- **`html_kv_value_split_tokens`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=100 …` — Targets PR_AUC by splitting HTML attribute values into individual tokens for finer-grained malware signal extraction.
+
+</details>
+

@@ -160,3 +160,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T054610-filetypes-java_class` — 2026-05-20T05:46:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b7bf6fab39fff2a0` | java_class_control_leaves128 | ok | 0.9959 | 0.9990 | 0.9703 | 99 | [log](out/autocollie/runs/2026-05-20T05-50-29_20260520T054610-filetypes-java_class_java_class_control_leaves128.log) |
+| `ab13e3ef62c5c148` | java_class_exploit_hardneg | ok | 0.9946 | 0.9987 | 0.9739 | 131 | [log](out/autocollie/runs/2026-05-20T05-52-08_20260520T054610-filetypes-java_class_java_class_exploit_hardneg.log) |
+| `c057c372a6de60c9` | java_class_exploit_fpr_target | ok | 0.9965 | 0.9991 | 0.9214 | 68 | [log](out/autocollie/runs/2026-05-20T05-54-20_20260520T054610-filetypes-java_class_java_class_exploit_fpr_target.log) |
+| `2475d5f58f8530f5` | java_class_feat_kv_vocab | ok | 0.9967 | 0.9992 | 0.9585 | 84 | [log](out/autocollie/runs/2026-05-20T05-55-27_20260520T054610-filetypes-java_class_java_class_feat_kv_vocab.log) |
+| `fb9dc21bd8bcf081` | java_class_feat_symbol_vocab | ok | 0.9967 | 0.9992 | 0.9585 | 80 | [log](out/autocollie/runs/2026-05-20T05-56-52_20260520T054610-filetypes-java_class_java_class_feat_symbol_vocab.log) |
+| `ba0057217cbd74dd` | java_class_feat_textenc | ok | 0.9967 | 0.9992 | 0.9585 | 75 | [log](out/autocollie/runs/2026-05-20T05-58-12_20260520T054610-filetypes-java_class_java_class_feat_textenc.log) |
+| `c15f6379ae8ba148` | java_class_feat_ngram_expand | ok | 0.9960 | 0.9990 | 0.9524 | 80 | [log](out/autocollie/runs/2026-05-20T05-59-26_20260520T054610-filetypes-java_class_java_class_feat_ngram_expand.log) |
+| `1835239b9f510554` | java_class_ablate_noise | ok | 0.9960 | 0.9990 | 0.9709 | 91 | [log](out/autocollie/runs/2026-05-20T06-00-47_20260520T054610-filetypes-java_class_java_class_ablate_noise.log) |
+| `bef3f00af8093e77` | java_class_transfer_kv_tri | ok | 0.9963 | 0.9991 | 0.9677 | 89 | [log](out/autocollie/runs/2026-05-20T06-02-18_20260520T054610-filetypes-java_class_java_class_transfer_kv_tri.log) |
+| `58d37dfb7362a5c9` | java_class_transfer_struct | ok | 0.9967 | 0.9992 | 0.9646 | 79 | [log](out/autocollie/runs/2026-05-20T06-03-47_20260520T054610-filetypes-java_class_java_class_transfer_struct.log) |
+| `fcbae5586d24d246` | java_class_gen_seed_avg | ok | 0.9958 | 0.9990 | 0.9709 | 226 | [log](out/autocollie/runs/2026-05-20T06-05-06_20260520T054610-filetypes-java_class_java_class_gen_seed_avg.log) |
+| `bb868fdc18fa7fa4` | java_class_retry_highsev | ok | 0.9969 | 0.9992 | 0.9732 | 84 | [log](out/autocollie/runs/2026-05-20T06-08-52_20260520T054610-filetypes-java_class_java_class_retry_highsev.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_class_control_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by testing a slightly deeper tree and lower LR on the baseline feature set to confirm cache-hit reproducibility.
+- **`java_class_exploit_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`java_class_exploit_fpr_target`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes recall@3FPM by switching threshold tuning to max_recall_at_fpr with a strict 3e-6 target and downweighting positives.
+- **`java_class_feat_kv_vocab`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Seeks PR_AUC gain by enabling KV vocabulary extraction to capture structured key-value patterns in Java class metadata.
+- **`java_class_feat_symbol_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding symbol vocabulary features to detect malicious import/class co-occurrence patterns.
+- **`java_class_feat_textenc`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling text encoding and full text metrics to capture obfuscation and structural anomalies in string pools.
+- **`java_class_feat_ngram_expand`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Seeks PR_AUC improvement by lowering bigram frequency floor and enabling tiered critical trigrams for richer n-gram signal.
+- **`java_class_ablate_noise`** `EXP_BLINDFOLD=0 EXP_EXTENDED_METRICS=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC and ROC_AUC by disabling blindfold and extended_metrics to reduce noise on this small corpus.
+- **`java_class_transfer_kv_tri`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfers a strong sister-route KV+trigram combo to boost PR_AUC via combined structural and sequential signal.
+- **`java_class_transfer_struct`** `EXP_EMBER_LITE_FEATURES=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Ports ember_lite and extreme_features to capture tail-distribution structural signals for PR_AUC gains.
+- **`java_class_gen_seed_avg`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Tests PR_AUC stability by averaging 3 seeds to reduce variance while adding tiered trigrams for signal.
+- **`java_class_retry_highsev`** `EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Retries a historical high-recall config with focused high-severity malware training and KV splitting to recover recall@3FPM.
+
+</details>
+

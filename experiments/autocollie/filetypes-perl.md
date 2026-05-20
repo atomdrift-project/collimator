@@ -116,3 +116,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T051651-filetypes-perl` — 2026-05-20T05:16:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `44016caba3496cd2` | control_extra_trees_reg | ok | 0.9924 | 0.9992 | 0.8333 | 144 | [log](out/autocollie/runs/2026-05-20T05-21-39_20260520T051651-filetypes-perl_control_extra_trees_reg.log) |
+| `a73081138e09f95b` | control_hard_neg_scale | ok | 0.9959 | 0.9996 | 0.8947 | 231 | [log](out/autocollie/runs/2026-05-20T05-24-03_20260520T051651-filetypes-perl_control_hard_neg_scale.log) |
+| `5e1c2a8432891c04` | control_lr_depth | ok | 0.9881 | 0.9985 | 0.9231 | 119 | [log](out/autocollie/runs/2026-05-20T05-27-54_20260520T051651-filetypes-perl_control_lr_depth.log) |
+| `529deaa2613f3848` | feat_kv_vocab_5k | ok | 0.9908 | 0.9989 | 0.9231 | 57 | [log](out/autocollie/runs/2026-05-20T05-29-53_20260520T051651-filetypes-perl_feat_kv_vocab_5k.log) |
+| `440830fb95b039cc` | feat_text_encoding | ok | 0.9894 | 0.9987 | 0.9231 | 29 | [log](out/autocollie/runs/2026-05-20T05-30-50_20260520T051651-filetypes-perl_feat_text_encoding.log) |
+| `ebc4651906a9cd09` | feat_text_metrics_full | ok | 0.9894 | 0.9987 | 0.9231 | 38 | [log](out/autocollie/runs/2026-05-20T05-31-19_20260520T051651-filetypes-perl_feat_text_metrics_full.log) |
+| `ca368c24ae7cdff2` | feat_low_freq_ngrams | ok | 0.9940 | 0.9994 | 0.9231 | 42 | [log](out/autocollie/runs/2026-05-20T05-31-57_20260520T051651-filetypes-perl_feat_low_freq_ngrams.log) |
+| `5f8ab60a6e4b821d` | feat_kv_textenc_combo | ok | 0.9881 | 0.9985 | 0.9231 | 39 | [log](out/autocollie/runs/2026-05-20T05-32-38_20260520T051651-filetypes-perl_feat_kv_textenc_combo.log) |
+| `9a523fae9ea019c7` | feat_symbol_vocab | ok | 0.9908 | 0.9989 | 0.9231 | 40 | [log](out/autocollie/runs/2026-05-20T05-33-18_20260520T051651-filetypes-perl_feat_symbol_vocab.log) |
+| `0b80f8304244275b` | transfer_gz_kv_seed3 | ok | 0.9940 | 0.9994 | 0.9231 | 105 | [log](out/autocollie/runs/2026-05-20T05-33-57_20260520T051651-filetypes-perl_transfer_gz_kv_seed3.log) |
+| `4fc9e32974e01270` | gen_text_metrics_seed3 | ok | 0.9894 | 0.9987 | 0.8649 | 123 | [log](out/autocollie/runs/2026-05-20T05-35-42_20260520T051651-filetypes-perl_gen_text_metrics_seed3.log) |
+| `4235fe2a911009f1` | retry_extra_trees_full | ok | 0.9924 | 0.9992 | 0.8649 | 52 | [log](out/autocollie/runs/2026-05-20T05-37-45_20260520T051651-filetypes-perl_retry_extra_trees_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_extra_trees_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Tests if extra_trees with higher regularization improves PR_AUC by reducing overfit on the small perl corpus.
+- **`control_hard_neg_scale`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by upweighting hard negatives and downweighting positives to sharpen the low-FPR tail.
+- **`control_lr_depth`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Slower learning with shallower trees targets PR_AUC stability by preventing rapid convergence on noisy benign patterns.
+- **`feat_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture perl-specific key-value patterns, targeting PR_AUC gains from structured metadata signal.
+- **`feat_text_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding to detect obfuscation in perl scripts, aiming to improve recall@3FPM on encoded payloads.
+- **`feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds full text metrics to catch document/script obfuscation traits, targeting PR_AUC by enriching the feature surface.
+- **`feat_low_freq_ngrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Lowers n-gram frequency floors to include rarer perl-specific patterns, targeting recall@3FPM gains on novel malware.
+- **`feat_kv_textenc_combo`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Combines kv and textenc families to synergistically capture metadata and encoding signals, targeting PR_AUC.
+- **`feat_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab to extract perl function/import patterns, aiming to boost PR_AUC via lexical signal.
+- **`transfer_gz_kv_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ports gz route's successful kv_vocab + seed search to perl, targeting stable recall@3FPM across seeds.
+- **`gen_text_metrics_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Validates text_metrics_full signal robustness via seed search, targeting consistent PR_AUC without seed luck.
+- **`retry_extra_trees_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Retries the historically strong extra_trees config on current corpus, targeting PR_AUC recovery with modern data.
+
+</details>
+

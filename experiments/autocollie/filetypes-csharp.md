@@ -134,3 +134,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T015953-filetypes-csharp` — 2026-05-20T01:59:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dbf29b47a40cbf4b` | csharp_control_leaves_lr | ok | 0.9867 | 0.9928 | 0.8889 | 82 | [log](out/autocollie/runs/2026-05-20T02-04-38_20260520T015953-filetypes-csharp_csharp_control_leaves_lr.log) |
+| `1de94f5b16cf42f9` | csharp_control_hardneg | ok | 0.9898 | 0.9950 | 0.9189 | 120 | [log](out/autocollie/runs/2026-05-20T02-06-00_20260520T015953-filetypes-csharp_csharp_control_hardneg.log) |
+| `a893bd71bdb6c88e` | csharp_control_pos_weight | ok | 0.9846 | 0.9910 | 0.9565 | 58 | [log](out/autocollie/runs/2026-05-20T02-07-59_20260520T015953-filetypes-csharp_csharp_control_pos_weight.log) |
+| `ee6fc3554b4b053e` | csharp_kv_vocab_split | ok | 0.9872 | 0.9930 | 0.9496 | 65 | [log](out/autocollie/runs/2026-05-20T02-08-58_20260520T015953-filetypes-csharp_csharp_kv_vocab_split.log) |
+| `690e58e72bc2ab55` | csharp_text_metrics_full | ok | 0.9869 | 0.9929 | 0.9559 | 68 | [log](out/autocollie/runs/2026-05-20T02-10-03_20260520T015953-filetypes-csharp_csharp_text_metrics_full.log) |
+| `916bc3e8d8215694` | csharp_symbol_bigrams | ok | 0.9869 | 0.9927 | 0.9565 | 75 | [log](out/autocollie/runs/2026-05-20T02-11-11_20260520T015953-filetypes-csharp_csharp_symbol_bigrams.log) |
+| `e16ab306e8f49212` | csharp_ablation_extended_metrics | ok | 0.9888 | 0.9946 | 0.9388 | 73 | [log](out/autocollie/runs/2026-05-20T02-12-26_20260520T015953-filetypes-csharp_csharp_ablation_extended_metrics.log) |
+| `02219cb6ba45996a` | csharp_transfer_xml_kv | ok | 0.9869 | 0.9927 | 0.9565 | 49 | [log](out/autocollie/runs/2026-05-20T02-13-39_20260520T015953-filetypes-csharp_csharp_transfer_xml_kv.log) |
+| `14ad9b07dc86a006` | csharp_transfer_rust_capacity | ok | 0.9870 | 0.9929 | 0.9565 | 121 | [log](out/autocollie/runs/2026-05-20T02-14-28_20260520T015953-filetypes-csharp_csharp_transfer_rust_capacity.log) |
+| `01f07ba6b5e8e55b` | csharp_seed_search_ensemble | ok | 0.9884 | 0.9938 | 0.9189 | 232 | [log](out/autocollie/runs/2026-05-20T02-16-28_20260520T015953-filetypes-csharp_csharp_seed_search_ensemble.log) |
+| `48ad36d0889e81f2` | csharp_retry_ngram_freq | ok | 0.9854 | 0.9917 | 0.9565 | 88 | [log](out/autocollie/runs/2026-05-20T02-20-21_20260520T015953-filetypes-csharp_csharp_retry_ngram_freq.log) |
+| `3c970b0d3acc017f` | csharp_retry_hn_reg | ok | 0.9892 | 0.9941 | 0.9559 | 157 | [log](out/autocollie/runs/2026-05-20T02-21-49_20260520T015953-filetypes-csharp_csharp_retry_hn_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`csharp_control_leaves_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env to hit matrix cache; increase num_leaves and lower learning_rate to improve PR_AUC by allowing finer decision boundaries without overfitting.
+- **`csharp_control_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use best features; add hard_negative_fraction and weight to push recall@3FPM by forcing the model to better separate borderline benigns from malware.
+- **`csharp_control_pos_weight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Keep best features; lower scale_pos_weight_mult to 0.75 to reduce false positives at low FPR, directly targeting recall@3FPM improvement.
+- **`csharp_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to extract granular key-value signals, aiming to boost PR_AUC by capturing structured metadata patterns missed by n-grams.
+- **`csharp_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and line_length_buckets to add document obfuscation signals, targeting PR_AUC gains from structural text anomalies in C# scripts.
+- **`csharp_symbol_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable symbol_vocab and symbol_bigrams to capture API co-occurrence patterns, aiming to improve PR_AUC by adding semantic call-graph signals.
+- **`csharp_ablation_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable extended_metrics to remove noisy continuous features, targeting PR_AUC stability and ROC_AUC preservation by reducing overfitting on sparse numeric aggregates.
+- **`csharp_transfer_xml_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port xml route's successful kv_vocab and lower bigram_min_freq config, targeting PR_AUC by leveraging proven cross-route feature combinations adapted for C# corpus size.
+- **`csharp_transfer_rust_capacity`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adapt rust route's high-capacity training config with metric_ratio_features to C#, targeting recall@3FPM by allowing the model to learn complex malware decision boundaries.
+- **`csharp_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed_search_k=3 with save_all_seeds=true on best features to average out seed variance, targeting stable PR_AUC and reliable recall@3FPM across random splits.
+- **`csharp_retry_ngram_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry csharp_ngram_freq_lower on fresh daily ingest, targeting PR_AUC recovery as corpus drift may have restored signal for lower-frequency n-grams.
+- **`csharp_retry_hn_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry csharp_transfer_hn_reg with updated data, targeting recall@3FPM by re-evaluating hard-negative regularization effectiveness on current benign/malware mix.
+
+</details>
+

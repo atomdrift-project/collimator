@@ -116,3 +116,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T015526-filetypes-unknown` — 2026-05-20T01:55:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_kv_textenc_v2 | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-20T01-59-43_20260520T015526-filetypes-unknown_unknown_control_kv_textenc_v2.log) |
+| `` | unknown_train_leaves128_lr003 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-20T01-59-50_20260520T015526-filetypes-unknown_unknown_train_leaves128_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_kv_textenc_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=180 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC feature set (kv_vocab+textenc) with baseline training to establish cache-hit control.
+- **`unknown_train_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Increase tree complexity and lower LR to improve PR_AUC ranking without changing features.
+
+</details>
+

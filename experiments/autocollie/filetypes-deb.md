@@ -140,3 +140,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T031951-filetypes-deb` — 2026-05-20T03:19:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `595108f8b71a0a98` | deb_control_baseline_v2 | ok | 1.0000 | 1.0000 | 1.0000 | 105 | [log](out/autocollie/runs/2026-05-20T03-26-04_20260520T031951-filetypes-deb_deb_control_baseline_v2.log) |
+| `01bf6d5207e739cd` | deb_train_dart_regularized | ok | 1.0000 | 1.0000 | 0.8000 | 197 | [log](out/autocollie/runs/2026-05-20T03-27-49_20260520T031951-filetypes-deb_deb_train_dart_regularized.log) |
+| `abd483cf49944569` | deb_train_pos_weight_fpr | ok | 1.0000 | 1.0000 | 1.0000 | 56 | [log](out/autocollie/runs/2026-05-20T03-31-06_20260520T031951-filetypes-deb_deb_train_pos_weight_fpr.log) |
+| `d10011e97c714067` | deb_feat_kv_vocab_research | ok | 1.0000 | 1.0000 | 1.0000 | 101 | [log](out/autocollie/runs/2026-05-20T03-32-02_20260520T031951-filetypes-deb_deb_feat_kv_vocab_research.log) |
+| `15b2c4c637a2f8b0` | deb_feat_textenc_metrics | ok | 1.0000 | 1.0000 | 1.0000 | 100 | [log](out/autocollie/runs/2026-05-20T03-33-42_20260520T031951-filetypes-deb_deb_feat_textenc_metrics.log) |
+| `f97523594fc73e68` | deb_feat_symbol_bigrams | ok | 1.0000 | 1.0000 | 1.0000 | 98 | [log](out/autocollie/runs/2026-05-20T03-35-23_20260520T031951-filetypes-deb_deb_feat_symbol_bigrams.log) |
+| `591eda53fed28c17` | deb_feat_tiered_crit_trigrams | ok | 1.0000 | 1.0000 | 1.0000 | 82 | [log](out/autocollie/runs/2026-05-20T03-37-01_20260520T031951-filetypes-deb_deb_feat_tiered_crit_trigrams.log) |
+| `cd721af2b1a617f1` | deb_feat_extended_metrics | ok | 1.0000 | 1.0000 | 1.0000 | 81 | [log](out/autocollie/runs/2026-05-20T03-38-22_20260520T031951-filetypes-deb_deb_feat_extended_metrics.log) |
+| `caeb21be8ba7b508` | deb_train_hard_negatives | ok | 1.0000 | 1.0000 | 1.0000 | 59 | [log](out/autocollie/runs/2026-05-20T03-39-44_20260520T031951-filetypes-deb_deb_train_hard_negatives.log) |
+| `6448bf6f8854bb72` | deb_profile_seed_search | ok | 1.0000 | 1.0000 | 1.0000 | 159 | [log](out/autocollie/runs/2026-05-20T03-40-42_20260520T031951-filetypes-deb_deb_profile_seed_search.log) |
+| `63c2f138d411d039` | deb_transfer_xml_kv_bigrams | ok | 1.0000 | 1.0000 | 1.0000 | 95 | [log](out/autocollie/runs/2026-05-20T03-43-22_20260520T031951-filetypes-deb_deb_transfer_xml_kv_bigrams.log) |
+| `3e4c2cd0b05ccdfb` | deb_ablation_blindfold | ok | 1.0000 | 1.0000 | 1.0000 | 91 | [log](out/autocollie/runs/2026-05-20T03-44-57_20260520T031951-filetypes-deb_deb_ablation_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`deb_control_baseline_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature_env with slightly more estimators to stabilize PR_AUC on the small corpus.
+- **`deb_train_dart_regularized`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Test dart boosting with extra_trees and L2 regularization to improve tail recall@3 FP/M without overfitting on 2 malware samples.
+- **`deb_train_pos_weight_fpr`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Down-weight positives and optimize threshold directly for deployed operating point to maximize recall@3 FP/M.
+- **`deb_feat_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture package metadata patterns, aiming to lift PR_AUC by adding discriminative key-value signal.
+- **`deb_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text encoding and full text metrics to detect obfuscation in control scripts, targeting PR_AUC gain.
+- **`deb_feat_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_TRAIN_SAMPLES=30000` — Introduce symbol bigrams to catch co-occurrence patterns in ELF imports, aiming to improve ROC_AUC and PR_AUC.
+- **`deb_feat_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=3000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Enable severity-prefixed trigrams to capture higher-order trait combinations, targeting PR_AUC improvement.
+- **`deb_feat_extended_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTENDED_METRICS_INCLUDE=binary_overlay,pe_timestamp EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Add extended metrics focusing on overlay and temporal signals to improve tail recall@3 FP/M for packed DEBs.
+- **`deb_train_hard_negatives`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to sharpen decision boundary, aiming to boost recall@3 FP/M while keeping PR_AUC flat.
+- **`deb_profile_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search with ensemble averaging to reduce variance and stabilize recall@3 FP/M across different RNG splits.
+- **`deb_transfer_xml_kv_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=4000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer strong XML route config with expanded bigram vocab and KV features to capture broader metadata patterns, targeting PR_AUC.
+- **`deb_ablation_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove blindfold dropout to test if deterministic features improve PR_AUC on this tiny corpus without increasing overfit.
+
+</details>
+
