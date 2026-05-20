@@ -122,3 +122,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T203953-filetypes-rust` — 2026-05-19T20:39:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cdf8bb58eaa61320` | rust_control_leaves128_reg2 | ok | 0.8923 | 0.9862 | 0.7500 | 6 | [log](out/autocollie/runs/2026-05-19T20-44-32_20260519T203953-filetypes-rust_rust_control_leaves128_reg2.log) |
+| `4d4085a70612dc2c` | rust_control_scalepos05 | ok | 0.8786 | 0.9826 | 0.7200 | 6 | [log](out/autocollie/runs/2026-05-19T20-44-38_20260519T203953-filetypes-rust_rust_control_scalepos05.log) |
+| `e2b087c8a7ac180b` | rust_kv_vocab_10k | ok | 0.9000 | 0.9855 | 0.7200 | 4 | [log](out/autocollie/runs/2026-05-19T20-44-44_20260519T203953-filetypes-rust_rust_kv_vocab_10k.log) |
+| `869759a839b13ed6` | rust_symbol_vocab_bigrams | ok | 0.9006 | 0.9862 | 0.6957 | 5 | [log](out/autocollie/runs/2026-05-19T20-44-48_20260519T203953-filetypes-rust_rust_symbol_vocab_bigrams.log) |
+| `65936fd5b3f175db` | rust_transfer_ruby_attack_ngrams | ok | 0.8862 | 0.9840 | 0.7200 | 4 | [log](out/autocollie/runs/2026-05-19T20-44-53_20260519T203953-filetypes-rust_rust_transfer_ruby_attack_ngrams.log) |
+| `c3bd7ff7c6c18f1f` | rust_seed_search_k3 | ok | 0.8944 | 0.9855 | 0.6923 | 3 | [log](out/autocollie/runs/2026-05-19T20-44-57_20260519T203953-filetypes-rust_rust_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rust_control_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with deeper trees and stronger L2 regularization to improve PR_AUC ranking without overfitting.
+- **`rust_control_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives to reduce false positives at low FPR, targeting recall@3 FP/M improvement while keeping PR_AUC flat.
+- **`rust_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab features to capture structured metadata patterns in Rust files, aiming to boost PR_AUC by adding discriminative signal.
+- **`rust_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol vocab and bigrams to capture import/function co-occurrence patterns, targeting PR_AUC gains from structural code features.
+- **`rust_transfer_ruby_attack_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Port ruby route's attack_ngrams and scale_pos_weight=0.5 to improve tail recall@3 FP/M by focusing on attack patterns and reducing benign weight.
+- **`rust_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run best control config with seed_search_k=3 to distinguish real signal from seed noise and stabilize recall@3 FP/M.
+
+</details>
+

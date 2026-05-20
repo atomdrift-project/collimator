@@ -117,3 +117,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T195648-filetypes-html` — 2026-05-19T19:56:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `557514db83859da8` | html_control_reg_small_corpus | ok | 0.5455 | 0.5000 | 0.7059 | 5 | [log](out/autocollie/runs/2026-05-19T20-00-46_20260519T195648-filetypes-html_html_control_reg_small_corpus.log) |
+| `0c21c14d90e91dd9` | html_tail_recall_hardneg | ok | 0.5455 | 0.5000 | 0.7059 | 2 | [log](out/autocollie/runs/2026-05-19T20-00-51_20260519T195648-filetypes-html_html_tail_recall_hardneg.log) |
+| `ad62d1d7d3a1d011` | html_textenc_metrics_research | ok | 0.5455 | 0.5000 | 0.7059 | 3 | [log](out/autocollie/runs/2026-05-19T20-00-53_20260519T195648-filetypes-html_html_textenc_metrics_research.log) |
+| `09015a62591a182f` | html_kv_vocab_split | ok | 0.5455 | 0.5000 | 0.7059 | 3 | [log](out/autocollie/runs/2026-05-19T20-00-57_20260519T195648-filetypes-html_html_kv_vocab_split.log) |
+| `4b04c52b8925912a` | html_ablate_extreme_metrics | ok | 0.5455 | 0.5000 | 0.7059 | 3 | [log](out/autocollie/runs/2026-05-19T20-01-00_20260519T195648-filetypes-html_html_ablate_extreme_metrics.log) |
+| `2d8ae17a45443c5f` | html_seed_search_ensemble | ok | 0.5455 | 0.5000 | 0.7059 | 2 | [log](out/autocollie/runs/2026-05-19T20-01-03_20260519T195648-filetypes-html_html_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`html_control_reg_small_corpus`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature set while increasing regularization and reducing tree complexity to prevent overfitting on the tiny 2-malware holdout, targeting stable PR_AUC and ROC_AUC.
+- **`html_tail_recall_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard-negative mining and lower scale_pos_weight_mult to sharpen the decision boundary at low FPR, targeting recall@3 FP/M without sacrificing PR_AUC.
+- **`html_textenc_metrics_research`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding and text_metrics_full to capture HTML obfuscation and structural anomalies, targeting PR_AUC gains from document-specific signal.
+- **`html_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activate kv_vocab with value splitting and lower frequency floor to extract fine-grained key-value patterns from HTML metadata, targeting PR_AUC improvement.
+- **`html_ablate_extreme_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Remove extreme_features and extended_metrics to reduce high-variance noise on the small corpus, targeting flat or improved PR_AUC and ROC_AUC via cleaner signal.
+- **`html_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port gz seed-search strategy with save_all_seeds to average out RNG variance on the tiny dataset, targeting stable recall@3 FP/M and PR_AUC.
+
+</details>
+
+## Cycle `20260519T214725-filetypes-html` — 2026-05-19T21:47:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7da775c231866ad7` | html_control_leaves128_est300 | ok | 0.5455 | 0.5000 | 0.7059 | 1 | [log](out/autocollie/runs/2026-05-19T21-52-30_20260519T214725-filetypes-html_html_control_leaves128_est300.log) |
+| `641d40fe6ab5d225` | html_hardneg_scalepos05 | ok | 0.5455 | 0.5000 | 0.7059 | 2 | [log](out/autocollie/runs/2026-05-19T21-52-31_20260519T214725-filetypes-html_html_hardneg_scalepos05.log) |
+| `74be1f35c390bfba` | html_kv_vocab_textmetrics | ok | 0.5455 | 0.5000 | 0.7059 | 3 | [log](out/autocollie/runs/2026-05-19T21-52-34_20260519T214725-filetypes-html_html_kv_vocab_textmetrics.log) |
+| `9eb01a4b2b7bd386` | html_trigrams_transfer | ok | 0.5455 | 0.5000 | 0.7059 | 4 | [log](out/autocollie/runs/2026-05-19T21-52-36_20260519T214725-filetypes-html_html_trigrams_transfer.log) |
+| `78824fd32ef61aa8` | html_ablate_blindfold_airgap | ok | 0.5455 | 0.5000 | 0.7059 | 3 | [log](out/autocollie/runs/2026-05-19T21-52-40_20260519T214725-filetypes-html_html_ablate_blindfold_airgap.log) |
+| `7c6b6584d3f86c36` | html_seedsearch_kv_ensemble | ok | 0.5455 | 0.5000 | 0.7059 | 5 | [log](out/autocollie/runs/2026-05-19T21-52-43_20260519T214725-filetypes-html_html_seedsearch_kv_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`html_control_leaves128_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with increased leaves and estimators to improve PR_AUC by better fitting the small HTML corpus without overfitting.
+- **`html_hardneg_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard negative mining and positive down-weighting to boost recall@3FPM while controlling FPR at the deployed operating point.
+- **`html_kv_vocab_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add KV vocab and full text metrics to capture HTML structure and obfuscation signals, targeting PR_AUC gain through richer feature surface.
+- **`html_trigrams_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfer trigram signal from sister routes to improve ranking of malicious HTML patterns, aiming for PR_AUC improvement via higher-order sequence features.
+- **`html_ablate_blindfold_airgap`** `EXP_AIR_GAP_SIGNAL=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ablate blindfold and air-gap signals to reduce noise on small HTML corpus, targeting stable ROC_AUC and PR_AUC by removing potentially spurious features.
+- **`html_seedsearch_kv_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Seed search ensemble on KV-enhanced config to verify signal stability and improve recall@3FPM by averaging out seed-driven variance.
+
+</details>
+

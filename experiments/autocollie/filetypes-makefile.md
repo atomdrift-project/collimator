@@ -178,3 +178,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T201651-filetypes-makefile` — 2026-05-19T20:16:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e1f7a02e86d2778d` | makefile_control_baseline_lr | ok | 0.0769 | 0.5000 | 0.1429 | 6 | [log](out/autocollie/runs/2026-05-19T20-21-46_20260519T201651-filetypes-makefile_makefile_control_baseline_lr.log) |
+| `a1c2350d856ea08b` | makefile_kv_vocab_research | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-19T20-21-52_20260519T201651-filetypes-makefile_makefile_kv_vocab_research.log) |
+| `2757c6c31fd77735` | makefile_textenc_metrics | ok | 0.6667 | 0.9167 | 0.4000 | 6 | [log](out/autocollie/runs/2026-05-19T20-21-54_20260519T201651-filetypes-makefile_makefile_textenc_metrics.log) |
+| `5d9745eea6596a21` | makefile_bigram_freq_lower | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-19T20-22-00_20260519T201651-filetypes-makefile_makefile_bigram_freq_lower.log) |
+| `af4a53cd68ea2775` | makefile_train_reg_depth | ok | 0.0769 | 0.5000 | 0.1429 | 2 | [log](out/autocollie/runs/2026-05-19T20-22-03_20260519T201651-filetypes-makefile_makefile_train_reg_depth.log) |
+| `cf7d6534f59ed2fe` | makefile_transfer_extreme_metrics | ok | 0.0769 | 0.5000 | 0.1429 | 1 | [log](out/autocollie/runs/2026-05-19T20-22-04_20260519T201651-filetypes-makefile_makefile_transfer_extreme_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_control_baseline_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Replicate best recent feature_env with lower learning_rate to stabilize PR_AUC and reduce overfitting on the tiny corpus.
+- **`makefile_kv_vocab_research`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Enable kv_vocab to capture key-value pair patterns in makefiles, aiming to improve PR_AUC by adding structured signal.
+- **`makefile_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Enable text_encoding and text_metrics_full to capture script-like obfuscation and formatting patterns, targeting recall@3FPM gains.
+- **`makefile_bigram_freq_lower`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Lower bigram_min_freq to 100 to include rarer syntactic patterns in the small corpus, aiming to boost recall@3FPM.
+- **`makefile_train_reg_depth`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Increase num_leaves and reg_lambda to allow deeper trees with stronger L2 regularization, targeting PR_AUC improvement on sparse data.
+- **`makefile_transfer_extreme_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Port extended_metrics and extreme_features from high-performing sister routes to capture tail-distribution signals, aiming to lift PR_AUC.
+
+</details>
+
+## Cycle `20260519T220547-filetypes-makefile` — 2026-05-19T22:05:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `70c883ef04f86663` | makefile_control_train_tune | ok | 0.0769 | 0.5000 | 0.1429 | 2 | [log](out/autocollie/runs/2026-05-19T22-09-35_20260519T220547-filetypes-makefile_makefile_control_train_tune.log) |
+| `d698c76e6968fedb` | makefile_kv_vocab_split | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-19T22-09-36_20260519T220547-filetypes-makefile_makefile_kv_vocab_split.log) |
+| `54c5e17b89dde589` | makefile_textenc_low_freq | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-19T22-09-39_20260519T220547-filetypes-makefile_makefile_textenc_low_freq.log) |
+| `909479c51e8da870` | makefile_transfer_sister_baseline | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-19T22-09-42_20260519T220547-filetypes-makefile_makefile_transfer_sister_baseline.log) |
+| `e60c8690c4491c38` | makefile_ablate_metrics | ok | 0.0769 | 0.5000 | 0.1429 | 4 | [log](out/autocollie/runs/2026-05-19T22-09-44_20260519T220547-filetypes-makefile_makefile_ablate_metrics.log) |
+| `76132950fdd892b2` | makefile_textenc_seed_search | ok | 0.0769 | 0.5000 | 0.1429 | 2 | [log](out/autocollie/runs/2026-05-19T22-09-48_20260519T220547-filetypes-makefile_makefile_textenc_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Control feature set with tuned training knobs to improve PR_AUC via better tree complexity and regularization.
+- **`makefile_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture makefile variable/target patterns, aiming to boost PR_AUC and recall@3FPM.
+- **`makefile_textenc_low_freq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram min freq and enable text encoding/metrics to capture subtle script obfuscation, targeting PR_AUC gain.
+- **`makefile_transfer_sister_baseline`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer strong sister-route feature config with minimal disables to test if broader feature surface improves recall@3FPM on makefiles.
+- **`makefile_ablate_metrics`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,metrics EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Ablate metrics group to reduce noise and overfitting, aiming to stabilize PR_AUC and improve recall@3FPM.
+- **`makefile_textenc_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry best config with seed search to distinguish real signal from seed noise, targeting stable PR_AUC and recall@3FPM.
+
+</details>
+

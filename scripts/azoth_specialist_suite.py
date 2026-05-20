@@ -77,6 +77,16 @@ def _feature_cache_helpers() -> tuple[Any, Any, Any, Any]:
 # If any addition to cleave's extractor list also adds a kv subtree,
 # remove that filetype from this set; if it adds extraction without kv,
 # add it here.
+# Residual buckets cleave emits when the file's format couldn't be
+# identified (`unknown`) or could only be characterized as a generic
+# binary blob (`data`). These are catch-all labels with no shared
+# underlying structure — a "specialist" trained on them learns whatever
+# weak path/size/fragmentary-feature correlation exists in the
+# unidentifiable subset, which doesn't generalize. The general model
+# handles these rows on its own.
+RESIDUAL_FILETYPES: frozenset[str] = frozenset({"unknown", "data"})
+
+
 LITMUS_EXTRACTED_FILETYPES: frozenset[str] = frozenset({
     "7z",
     "apk",
@@ -343,6 +353,15 @@ def _eligible_filetypes(
                 # specialist could learn that the general model lacks.
                 LOG.info(
                     "%s: skipping filetype specialist (litmus-extracted; %d bad, %d good)",
+                    file_type_str, int(bad), int(good),
+                )
+                continue
+            if file_type_str in RESIDUAL_FILETYPES:
+                # Residual bucket — cleave couldn't identify the format
+                # (or could only call it a generic blob). No shared
+                # structure to learn; let the general model handle it.
+                LOG.info(
+                    "%s: skipping filetype specialist (residual bucket; %d bad, %d good)",
                     file_type_str, int(bad), int(good),
                 )
                 continue

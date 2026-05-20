@@ -1060,12 +1060,20 @@ def _evaluate_thresholds_at_level(
 
 
 def _load_routes(summary_path: Path) -> list[dict[str, Any]]:
+    # Residual buckets cleave can't characterize coherently (see
+    # azoth_specialist_suite.RESIDUAL_FILETYPES). Older bundles may
+    # still carry trained specialist artifacts on disk for these; skip
+    # them here so they don't enter the route list, regardless of what
+    # specialists.json says.
+    residual_filetypes = {"unknown", "data"}
     with open(summary_path) as f:
         summary = json.load(f)
     root = summary_path.parent
     routes: list[dict[str, Any]] = []
     for item in summary["results"]:
         if item.get("error") or item.get("kind") not in {"filegroup", "filetype"}:
+            continue
+        if item.get("kind") == "filetype" and item.get("name") in residual_filetypes:
             continue
         route = (
             f"filegroups/{item['name']}"

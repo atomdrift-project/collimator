@@ -7,7 +7,10 @@ import argparse
 import csv
 import json
 import math
+import multiprocessing as mp
+import os
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -340,6 +343,7 @@ def _joint_or_search(
 _LEARNED_BLEND_LOGIT_EPS = 1e-6
 
 
+@lru_cache(maxsize=None)
 def _load_route_calibrator(
     azoth_root: Path, route_name: str,
 ) -> tuple[np.ndarray, np.ndarray] | None:
@@ -350,6 +354,10 @@ def _load_route_calibrator(
     failed calibration won't have the file. Schema is
     ``azoth.calibrator.isotonic.v1`` (see
     azoth_calibrate_ensemble._fit_and_persist_isotonic_calibrator).
+
+    Cached across calls: the bundle has at most ~50 routes and the file
+    is a few KB each. Saves ~3× redundant disk reads when called from
+    the per-filetype loop.
     """
     if route_name == "general":
         path = azoth_root / "general" / "calibrator.json"
@@ -468,29 +476,22 @@ def _logit_stack(
     return stacked, valid, tuple(present)
 
 
-def _make_learned_blend_candidate_at_fp(
-    *,
+def _fit_learned_blend(
     route_probs: dict[str, np.ndarray],
     labels: np.ndarray,
     routes: tuple[str, ...],
-    fp_target: int,
-    target_per_million: float,
-    total_benign: int,
 ) -> dict[str, Any] | None:
-    """Fit logistic regression on logit-stacked route probs, Pareto-tune
-    a threshold on the blended sigmoid score at ``fp_target`` FPs in the
-    slice, and return a candidate carrying the fit metadata.
+    """Fit a logistic regression over logit-stacked route probabilities.
 
-    The candidate's ``thresholds`` field stays empty — the OR-rule
-    semantics don't apply. The new ``blend`` field carries
-    ``{routes, weights, intercept, transform: "logit", threshold}``.
-    Litmus's policy consumer must learn to evaluate
-    ``sigmoid(intercept + sum(w_i * logit(clip(p_i)))) >= threshold``
-    before this candidate can deploy; today it lands in route_policies.json
-    as a candidate the calibration loop selects but the deploy-side OR-rule
-    classifier ignores. The standalone eval in azoth_route_policy_eval
-    DOES honor the blend field, so test-partition numbers reflect what
-    deployment would achieve once litmus catches up.
+    Returns a dict with the fitted blend (``weights``, ``intercept``,
+    ``present_routes``) plus the precomputed per-row blend score and
+    valid-row mask. The blend score is the same regardless of operating
+    point, so this is the work to hoist out of the per-level loop —
+    only the per-fp threshold step varies (see
+    ``_blend_candidate_from_fit``).
+
+    Returns None when there are fewer than two routes with finite
+    probabilities or fewer than 5 rows per class to fit on.
 
     Why LR-on-logits rather than LR-on-probs: probabilities pile up near
     0 and 1 for confident specialist scores, and a linear-in-prob model
@@ -529,6 +530,33 @@ def _make_learned_blend_candidate_at_fp(
     z = stacked @ weights + intercept
     blend = np.full(len(labels), np.nan, dtype=np.float64)
     blend[valid_row] = 1.0 / (1.0 + np.exp(-z[valid_row]))
+    return {
+        "blend_score": blend,
+        "valid_row": valid_row,
+        "present_routes": present_routes,
+        "weights": weights,
+        "intercept": intercept,
+    }
+
+
+def _blend_candidate_from_fit(
+    fit: dict[str, Any],
+    labels: np.ndarray,
+    *,
+    fp_target: int,
+    target_per_million: float,
+    total_benign: int,
+) -> dict[str, Any] | None:
+    """Tune the threshold on a precomputed blend fit at ``fp_target``
+    false-positives in the slice and emit a candidate. The blend's
+    ``thresholds`` stays empty (OR-rule semantics don't apply); the
+    ``blend`` field carries the fit metadata litmus consumes.
+    """
+    blend = fit["blend_score"]
+    valid_row = fit["valid_row"]
+    present_routes = fit["present_routes"]
+    weights = fit["weights"]
+    intercept = fit["intercept"]
     threshold, _, _ = _specialist_threshold_for_fp(
         blend.astype(np.float32),
         labels,
@@ -558,6 +586,30 @@ def _make_learned_blend_candidate_at_fp(
         "threshold": float(threshold),
     }
     return candidate
+
+
+def _make_learned_blend_candidate_at_fp(
+    *,
+    route_probs: dict[str, np.ndarray],
+    labels: np.ndarray,
+    routes: tuple[str, ...],
+    fp_target: int,
+    target_per_million: float,
+    total_benign: int,
+) -> dict[str, Any] | None:
+    """Back-compat wrapper: fit + threshold in one call. Prefer
+    ``_fit_learned_blend`` + ``_blend_candidate_from_fit`` when the fit
+    can be hoisted out of a per-fp loop (which is most of policy_search).
+    """
+    fit = _fit_learned_blend(route_probs, labels, routes)
+    if fit is None:
+        return None
+    return _blend_candidate_from_fit(
+        fit, labels,
+        fp_target=fp_target,
+        target_per_million=target_per_million,
+        total_benign=total_benign,
+    )
 
 
 def _make_joint_or_candidate_at_fp(
@@ -855,6 +907,8 @@ def _mark_dominated_by_specialist(
     target_per_million: float,
     total_benign: int,
     calibrated_route_probs: dict[str, np.ndarray] | None = None,
+    pareto: dict[int, float] | None = None,
+    blend_fit: dict[str, Any] | None = None,
 ) -> None:
     """Inject specialist-tuned-to-same-FP candidates and mark any
     ensemble whose recall falls below the specialist's recall at the
@@ -883,7 +937,12 @@ def _mark_dominated_by_specialist(
         for item in candidates:
             item["dominated_by_specialist"] = False
         return
-    pareto = _specialist_pareto_curve(probs, labels)
+    # Pareto curve depends only on (specialist probs, labels) — same
+    # for every (level, severity) within a filetype. Accept a
+    # precomputed curve from the caller to avoid 42× redundant compute
+    # per filetype; fall back to computing in place when not provided.
+    if pareto is None:
+        pareto = _specialist_pareto_curve(probs, labels)
     if not pareto:
         for item in candidates:
             item["dominated_by_specialist"] = False
@@ -999,32 +1058,41 @@ def _mark_dominated_by_specialist(
     # litmus calibrates per-route THRESHOLDS at load via
     # calibrate_policy_thresholds_with — that translation is monotone
     # for the OR-rule but doesn't decompose for a learned blend.
+    # Learned-blend candidates reuse a precomputed fit when the caller
+    # supplied one — the LR weights and per-row blend score depend only
+    # on (filetype slice, routes), so they're the same for every level
+    # and severity. Only the threshold tuning per fp_target needs to
+    # vary. The fallback path (no precomputed fit) fits fresh; that's
+    # what the back-compat wrapper does too.
     blend_probs = (
         calibrated_route_probs if calibrated_route_probs is not None else route_probs
     )
     if len(routes_for_joint_full) >= 2:
-        for fp_target in fp_targets:
-            blend = _make_learned_blend_candidate_at_fp(
-                route_probs=blend_probs,
-                labels=labels,
-                routes=routes_for_joint_full,
-                fp_target=fp_target,
-                target_per_million=target_per_million,
-                total_benign=total_benign,
+        if blend_fit is None:
+            blend_fit = _fit_learned_blend(
+                blend_probs, labels, routes_for_joint_full,
             )
-            if blend is None:
-                continue
-            item_fp = int(blend.get("fp", 0))
-            item_recall = float(blend.get("recall", 0.0))
-            if math.isnan(item_recall):
-                item_recall = 0.0
-            spec_recall = pareto.get(item_fp, pareto[max_fp]) if item_fp <= max_fp else pareto[max_fp]
-            if item_recall + 1e-9 < spec_recall:
-                blend["dominated_by_specialist"] = True
-                blend["specialist_recall_at_fp"] = spec_recall
-            else:
-                blend["dominated_by_specialist"] = False
-            candidates.append(blend)
+        if blend_fit is not None:
+            for fp_target in fp_targets:
+                blend = _blend_candidate_from_fit(
+                    blend_fit, labels,
+                    fp_target=fp_target,
+                    target_per_million=target_per_million,
+                    total_benign=total_benign,
+                )
+                if blend is None:
+                    continue
+                item_fp = int(blend.get("fp", 0))
+                item_recall = float(blend.get("recall", 0.0))
+                if math.isnan(item_recall):
+                    item_recall = 0.0
+                spec_recall = pareto.get(item_fp, pareto[max_fp]) if item_fp <= max_fp else pareto[max_fp]
+                if item_recall + 1e-9 < spec_recall:
+                    blend["dominated_by_specialist"] = True
+                    blend["specialist_recall_at_fp"] = spec_recall
+                else:
+                    blend["dominated_by_specialist"] = False
+                candidates.append(blend)
 
 
 def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1372,6 +1440,183 @@ def _apply_route_overrides(
         }
 
 
+# Per-process state populated by the parent before forking workers.
+# Each worker sees an inherited (read-only) view via copy-on-write on
+# Linux; spawn-based platforms reimport this module but the data stays
+# small (the arrays are loaded once in main() from disk).
+_SHARED: dict[str, Any] = {}
+
+
+def _resolve_parallelism(requested: int, n_filetypes: int) -> int:
+    """Pick a worker count. ``requested`` semantics match other scripts:
+    ``0`` (the default) means autodetect, positive integers are honored,
+    and anything > n_filetypes is capped so we don't fork idle workers.
+
+    Autodetect uses ``os.process_cpu_count()`` when available (cgroup
+    aware on Linux 3.13+), falls back to ``os.cpu_count()``. We cap the
+    autodetected count at 32 to avoid memory churn on high-core hosts
+    where each worker is a forked Python process; explicit values
+    above 32 are still honored.
+    """
+    if requested > 0:
+        return min(requested, max(1, n_filetypes))
+    auto = getattr(os, "process_cpu_count", os.cpu_count)() or 1
+    return min(max(1, auto), n_filetypes, 32)
+
+
+def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
+    """Compute one filetype's policy block.
+
+    Reads shared state from ``_SHARED`` (set up by ``main`` before
+    workers fork). Returns the JSON-shaped payload for
+    ``routes[filetypes/<name>]`` plus its key, so the caller can stitch
+    everything back together. Per-filetype work hoisted out of the
+    level loop: specialist Pareto curve and learned-blend LR fit both
+    depend only on (file_type, route_probs, labels), so the work is
+    done once here instead of 42× inside the level loop.
+    """
+    routes = _SHARED["routes"]
+    labels = _SHARED["labels"]
+    file_types = _SHARED["file_types"]
+    filetype_to_group = _SHARED["filetype_to_group"]
+    config = _SHARED["config"]
+    azoth_root = _SHARED["azoth_root"]
+    total_benign = _SHARED["total_benign"]
+
+    mask = file_types == file_type
+    indices = np.flatnonzero(mask).astype(np.int64)
+    scoped_labels = labels[indices]
+    malware = int(np.sum(scoped_labels == 1))
+    benign = int(np.sum(scoped_labels == 0))
+    group = filetype_to_group.get(file_type)
+    group_route = f"filegroups/{group}" if group else None
+    type_route = f"filetypes/{file_type}"
+    route_names = ["general"]
+    if group_route and group_route in routes:
+        route_names.append(group_route)
+    if type_route in routes:
+        route_names.append(type_route)
+    route_probs = {
+        route_name: dense
+        for route_name in route_names
+        if (dense := _dense_route_probs(routes, route_name, indices)) is not None
+    }
+    calibrated_route_probs = _build_calibrated_route_probs(
+        route_probs, azoth_root,
+    ) if route_probs else {}
+    specialist_probs = route_probs.get(type_route)
+    pareto = (
+        _specialist_pareto_curve(specialist_probs, scoped_labels)
+        if specialist_probs is not None else None
+    )
+    routes_for_joint_full = tuple(route_probs.keys())
+    blend_fit = None
+    if len(routes_for_joint_full) >= 2:
+        blend_probs = (
+            calibrated_route_probs if calibrated_route_probs else route_probs
+        )
+        blend_fit = _fit_learned_blend(
+            blend_probs, scoped_labels, routes_for_joint_full,
+        )
+    levels: list[dict[str, Any]] = []
+    for target in config["levels"]:
+        level_no = int(target["level"])
+        level_item: dict[str, Any] = {"level": level_no}
+        for severity in ("hostile", "suspicious"):
+            target_per_million = float(target[severity]["target_per_million"])
+            candidates = [
+                _no_hit_candidate(
+                    scoped_labels,
+                    target_per_million=target_per_million,
+                    total_benign=total_benign,
+                )
+            ]
+            if malware:
+                candidates.extend(
+                    _calibrate_policy(
+                        scoped_labels,
+                        route_probs,
+                        policy=policy,
+                        primary=primary,
+                        allowed_routes=allowed,
+                        target_per_million=target_per_million,
+                        total_benign=total_benign,
+                    )
+                    for policy, primary, allowed in _policy_candidates(
+                        general="general",
+                        group=group_route if group_route in route_probs else None,
+                        filetype=type_route if type_route in route_probs else None,
+                    )
+                )
+                routes_for_max = tuple(
+                    route for route in (
+                        "general",
+                        group_route if group_route in route_probs else None,
+                        type_route if type_route in route_probs else None,
+                    )
+                    if route is not None
+                )
+                if len(routes_for_max) >= 2:
+                    candidates.append(
+                        _calibrate_max_rule_policy(
+                            scoped_labels,
+                            route_probs,
+                            allowed_routes=routes_for_max,
+                            target_per_million=target_per_million,
+                            total_benign=total_benign,
+                        ),
+                    )
+            calibrated_thresholds = target[severity].get("thresholds", {})
+            if calibrated_thresholds:
+                candidates.append(
+                    _make_calibrate_inherited_candidate(
+                        scoped_labels, route_probs,
+                        thresholds=calibrated_thresholds,
+                        target_per_million=target_per_million,
+                        total_benign=total_benign,
+                    ),
+                )
+            if severity == "hostile" and not calibrated_thresholds:
+                suspicious_thresholds = target["suspicious"].get("thresholds", {})
+                if suspicious_thresholds:
+                    candidates.append(
+                        _make_calibrate_inherited_candidate(
+                            scoped_labels, route_probs,
+                            thresholds=suspicious_thresholds,
+                            target_per_million=target_per_million,
+                            total_benign=total_benign,
+                            suffix="_suspicious_fallback",
+                        ),
+                    )
+            _mark_dominated_by_specialist(
+                candidates,
+                route_probs,
+                scoped_labels,
+                specialist_route=type_route,
+                target_per_million=target_per_million,
+                total_benign=total_benign,
+                calibrated_route_probs=calibrated_route_probs,
+                pareto=pareto,
+                blend_fit=blend_fit,
+            )
+            level_item[severity] = {
+                "target_per_million": target_per_million,
+                "budget": _budget(benign, target_per_million),
+                "best": _choose_best(candidates),
+                "candidates": candidates,
+            }
+        levels.append(level_item)
+    return f"filetypes/{file_type}", {
+        "filetype": file_type,
+        "filegroup": group,
+        "models": list(route_probs),
+        "rows": int(len(indices)),
+        "malware": malware,
+        "benign": benign,
+        "levels": levels,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", default=None)
@@ -1393,6 +1638,16 @@ def main() -> int:
     parser.add_argument("--markdown", type=Path, default=Path("out/models/azoth/route_policies.md"))
     parser.add_argument("--override-route", action="append", default=[])
     parser.add_argument("--workers", type=int, default=0)
+    parser.add_argument(
+        "--parallelism",
+        type=int,
+        default=0,
+        help=(
+            "Worker processes for per-filetype policy search. 0 (default) "
+            "autodetects from process_cpu_count() capped at 32 and at "
+            "the filetype count. Set to 1 to force serial."
+        ),
+    )
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -1413,145 +1668,36 @@ def main() -> int:
     total_benign = int(np.sum(labels == 0))
     route_payload: dict[str, Any] = {}
 
-    for file_type in sorted(set(file_types)):
-        mask = file_types == file_type
-        indices = np.flatnonzero(mask).astype(np.int64)
-        scoped_labels = labels[indices]
-        malware = int(np.sum(scoped_labels == 1))
-        benign = int(np.sum(scoped_labels == 0))
-        group = filetype_to_group.get(file_type)
-        group_route = f"filegroups/{group}" if group else None
-        type_route = f"filetypes/{file_type}"
-        route_names = ["general"]
-        if group_route and group_route in routes:
-            route_names.append(group_route)
-        if type_route in routes:
-            route_names.append(type_route)
-        route_probs = {
-            route_name: dense
-            for route_name in route_names
-            if (dense := _dense_route_probs(routes, route_name, indices)) is not None
-        }
-        # The learned-blend candidate fits LR on isotonic-calibrated probs
-        # because litmus emits calibrated probs at deploy. Pre-compute the
-        # calibrated view once per slice; the cost (one np.interp per
-        # route) is trivial next to LR fitting.
-        calibrated_route_probs = _build_calibrated_route_probs(
-            route_probs, args.azoth_root,
-        ) if route_probs else {}
-        levels: list[dict[str, Any]] = []
-        for target in config["levels"]:
-            level_no = int(target["level"])
-            level_item: dict[str, Any] = {"level": level_no}
-            for severity in ("hostile", "suspicious"):
-                target_per_million = float(target[severity]["target_per_million"])
-                candidates = [_no_hit_candidate(scoped_labels, target_per_million=target_per_million, total_benign=total_benign)]
-                if malware:
-                    candidates.extend(
-                        _calibrate_policy(
-                            scoped_labels,
-                            route_probs,
-                            policy=policy,
-                            primary=primary,
-                            allowed_routes=allowed,
-                            target_per_million=target_per_million,
-                            total_benign=total_benign,
-                        )
-                        for policy, primary, allowed in _policy_candidates(
-                            general="general",
-                            group=group_route if group_route in route_probs else None,
-                            filetype=type_route if type_route in route_probs else None,
-                        )
-                    )
-                    # Continuous max-rule ensemble across all present
-                    # routes — a uniform-threshold OR that doesn't waste
-                    # FP budget on per-route threshold independence. The
-                    # recall-monotone floor below will reject it if the
-                    # specialist alone tuned to the same FP already wins.
-                    routes_for_max = tuple(
-                        route for route in (
-                            "general",
-                            group_route if group_route in route_probs else None,
-                            type_route if type_route in route_probs else None,
-                        )
-                        if route is not None
-                    )
-                    if len(routes_for_max) >= 2:
-                        candidates.append(
-                            _calibrate_max_rule_policy(
-                                scoped_labels,
-                                route_probs,
-                                allowed_routes=routes_for_max,
-                                target_per_million=target_per_million,
-                                total_benign=total_benign,
-                            ),
-                        )
+    # Stash per-filetype-shared state where the worker function can see
+    # it. With fork-based multiprocessing (Linux default) child workers
+    # inherit these arrays read-only via COW; on spawn-based platforms
+    # they're rebuilt per worker but the cost is small relative to the
+    # policy_search compute itself.
+    _SHARED["routes"] = routes
+    _SHARED["labels"] = labels
+    _SHARED["file_types"] = file_types
+    _SHARED["filetype_to_group"] = filetype_to_group
+    _SHARED["config"] = config
+    _SHARED["azoth_root"] = args.azoth_root
+    _SHARED["total_benign"] = total_benign
 
-                # Inherit thresholds from the calibrate stage, which uses
-                # cascading scope (filetype → filegroup → general) when
-                # per-filetype dev is too small to derive a quantile.
-                # Critical for L0 hostile on PE-class slices where the
-                # local 0-FP search picks ultra-tight thresholds that
-                # transfer poorly to test; calibrate's already-extrapolated
-                # thresholds give real recall at the achievable floor.
-                calibrated_thresholds = target[severity].get("thresholds", {})
-                if calibrated_thresholds:
-                    candidates.append(
-                        _make_calibrate_inherited_candidate(
-                            scoped_labels, route_probs,
-                            thresholds=calibrated_thresholds,
-                            target_per_million=target_per_million,
-                            total_benign=total_benign,
-                        ),
-                    )
-                # When hostile is below resolution (target < CP-floor),
-                # calibrate doesn't extrapolate it. Fall through to the
-                # same level's SUSPICIOUS thresholds — they were calibrated
-                # at the achievable floor and represent the strictest
-                # certifiable hostile signal we have.
-                if severity == "hostile" and not calibrated_thresholds:
-                    suspicious_thresholds = target["suspicious"].get("thresholds", {})
-                    if suspicious_thresholds:
-                        candidates.append(
-                            _make_calibrate_inherited_candidate(
-                                scoped_labels, route_probs,
-                                thresholds=suspicious_thresholds,
-                                target_per_million=target_per_million,
-                                total_benign=total_benign,
-                                suffix="_suspicious_fallback",
-                            ),
-                        )
-                # Recall-monotone floor: any ensemble candidate that
-                # underperforms the specialist tuned to the same FP count
-                # is wasting global FP budget for no recall gain. Mark and
-                # exclude it from selection; the diagnostic stays in the
-                # candidates list so the route_policies.json output still
-                # shows what was considered.
-                _mark_dominated_by_specialist(
-                    candidates,
-                    route_probs,
-                    scoped_labels,
-                    specialist_route=type_route,
-                    target_per_million=target_per_million,
-                    total_benign=total_benign,
-                    calibrated_route_probs=calibrated_route_probs,
-                )
-                level_item[severity] = {
-                    "target_per_million": target_per_million,
-                    "budget": _budget(benign, target_per_million),
-                    "best": _choose_best(candidates),
-                    "candidates": candidates,
-                }
-            levels.append(level_item)
-        route_payload[f"filetypes/{file_type}"] = {
-            "filetype": file_type,
-            "filegroup": group,
-            "models": list(route_probs),
-            "rows": int(len(indices)),
-            "malware": malware,
-            "benign": benign,
-            "levels": levels,
-        }
+    unique_filetypes = sorted(set(file_types))
+    parallelism = _resolve_parallelism(args.parallelism, len(unique_filetypes))
+    if parallelism <= 1 or len(unique_filetypes) <= 1:
+        print(f"policy_search: processing {len(unique_filetypes)} filetypes serially")
+        results: list[tuple[str, dict[str, Any]]] = [
+            _process_filetype(ft) for ft in unique_filetypes
+        ]
+    else:
+        print(
+            f"policy_search: processing {len(unique_filetypes)} filetypes "
+            f"across {parallelism} worker processes",
+        )
+        ctx = mp.get_context("fork")
+        with ctx.Pool(parallelism) as pool:
+            results = list(pool.imap_unordered(_process_filetype, unique_filetypes))
+    for route_key, ft_payload in results:
+        route_payload[route_key] = ft_payload
 
     payload = {
         "timestamp": datetime.now(UTC).isoformat(),

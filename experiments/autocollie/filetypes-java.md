@@ -56,3 +56,47 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260519T200105-filetypes-java` — 2026-05-19T20:01:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a7d6d28a4014df2f` | java_control_precision_lr003 | ok | 0.4324 | 0.7708 | 0.4000 | 5 | [log](out/autocollie/runs/2026-05-19T20-05-41_20260519T200105-filetypes-java_java_control_precision_lr003.log) |
+| `3914b6d64e4ae93d` | java_symbol_vocab_bigrams | ok | 0.4389 | 0.8021 | 0.4000 | 5 | [log](out/autocollie/runs/2026-05-19T20-05-47_20260519T200105-filetypes-java_java_symbol_vocab_bigrams.log) |
+| `a6c3d56473c252cc` | java_kv_vocab_split | ok | 0.4389 | 0.8021 | 0.4000 | 4 | [log](out/autocollie/runs/2026-05-19T20-05-52_20260519T200105-filetypes-java_java_kv_vocab_split.log) |
+| `e0a974f4c49dcc30` | java_ablate_extreme_metrics | ok | 0.4389 | 0.8021 | 0.4000 | 3 | [log](out/autocollie/runs/2026-05-19T20-05-56_20260519T200105-filetypes-java_java_ablate_extreme_metrics.log) |
+| `efb7e58a22559208` | java_transfer_gz_seedsearch | ok | 0.4389 | 0.8021 | 0.6667 | 4 | [log](out/autocollie/runs/2026-05-19T20-05-59_20260519T200105-filetypes-java_java_transfer_gz_seedsearch.log) |
+| `fb658b32f7c44294` | java_retry_symbols_static_reg | ok | 0.4343 | 0.7812 | 0.4000 | 5 | [log](out/autocollie/runs/2026-05-19T20-06-03_20260519T200105-filetypes-java_java_retry_symbols_static_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_control_precision_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Replicates best recent feature set to establish baseline; lowers learning_rate to 0.03 and increases estimators to 300 to improve PR_AUC stability without overfitting.
+- **`java_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 …` — Enables symbol_vocab and symbol_bigrams to capture Java import/method co-occurrence patterns, targeting PR_AUC gains by adding structural code signal.
+- **`java_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 …` — Enables kv_vocab and kv_value_split to parse Java manifest/property key-value pairs, targeting PR_AUC by recovering granular configuration signal.
+- **`java_ablate_extreme_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_EXTENDED_METRICS=1 …` — Disables extreme_features to reduce tail noise and potential overfitting, aiming to improve ROC_AUC and stabilize PR_AUC by focusing on core structural signals.
+- **`java_transfer_gz_seedsearch`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 …` — Ports gz route's strong baseline with seed_search_k=3 to average out RNG variance, targeting Recall@3FPM by ensuring robust threshold calibration across seeds.
+- **`java_retry_symbols_static_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_EXTENDED_METRICS=1 …` — Retries the top PR_AUC=1.0 symbols_static config with added L2 regularization and lower scale_pos_weight_mult to fix F1=0 overfit, targeting PR_AUC and Recall@3FPM.
+
+</details>
+
+## Cycle `20260519T215248-filetypes-java` — 2026-05-19T21:52:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `add7371329677545` | java_control_leaves128_reg2 | ok | 0.4389 | 0.8021 | 0.4000 | 1 | [log](out/autocollie/runs/2026-05-19T21-56-37_20260519T215248-filetypes-java_java_control_leaves128_reg2.log) |
+| `062abf37d31698b2` | java_kv_vocab_split_freq50 | ok | 0.4389 | 0.8021 | 0.4000 | 4 | [log](out/autocollie/runs/2026-05-19T21-56-38_20260519T215248-filetypes-java_java_kv_vocab_split_freq50.log) |
+| `1dbe67d72a2270e6` | java_symbol_bigrams_vocab | ok | 0.4389 | 0.8021 | 0.4000 | 5 | [log](out/autocollie/runs/2026-05-19T21-56-42_20260519T215248-filetypes-java_java_symbol_bigrams_vocab.log) |
+| `2cf29fc2bd99813a` | java_ablate_blindfold_extreme | ok | 0.0857 | 0.5000 | 0.1579 | 3 | [log](out/autocollie/runs/2026-05-19T21-56-47_20260519T215248-filetypes-java_java_ablate_blindfold_extreme.log) |
+| `8b4f9bc40578313e` | java_seedsearch3_hardneg | ok | 0.4365 | 0.7917 | 0.4000 | 21 | [log](out/autocollie/runs/2026-05-19T21-56-50_20260519T215248-filetypes-java_java_seedsearch3_hardneg.log) |
+| `9c3c02399e4b2cb2` | java_threshold_fpr3e6_scale05 | ok | 0.6056 | 0.8125 | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-19T21-57-11_20260519T215248-filetypes-java_java_threshold_fpr3e6_scale05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_control_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature_env for matrix cache hit; increase num_leaves to 128 and reg_lambda to 2.0 to improve PR_AUC by capturing finer decision boundaries while regularizing against overfit on the small holdout.
+- **`java_kv_vocab_split_freq50`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=50 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enable kv_vocab and kv_value_split to extract per-element signal from Java manifest and property strings, targeting PR_AUC gains by surfacing structured metadata patterns missed by flat n-grams.
+- **`java_symbol_bigrams_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=2 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 …` — Enable symbol_vocab and symbol_bigrams to capture Java import and class co-occurrence patterns, aiming to boost recall@3FPM by distinguishing malicious library chains from benign ones.
+- **`java_ablate_blindfold_extreme`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable blindfold and extreme_features to reduce noise on the tiny 3-malware holdout, targeting PR_AUC stability by preventing the model from overfitting to dropout artifacts and tail outliers.
+- **`java_seedsearch3_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 with hard_negative_fraction to average out seed variance on the small corpus, targeting recall@3FPM consistency while using hard negatives to sharpen the benign/malware boundary.
+- **`java_threshold_fpr3e6_scale05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Switch threshold_mode to max_recall_at_fpr with target 3e-6 and lower scale_pos_weight_mult to 0.5, directly optimizing recall@3FPM by aggressively penalizing false positives at the deployed operating point.
+
+</details>
+

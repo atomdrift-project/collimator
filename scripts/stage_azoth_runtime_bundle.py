@@ -24,6 +24,15 @@ from collimator import bundle  # noqa: E402
 ROUTE_AUX_FILES = ("feature_spec.json", "README.md", "calibrator.json")
 ROOT_FILES = ("config.json", "route_policies.json")
 
+# Optional root files. Deploy proceeds without them, but downstream
+# tools (regression check, dashboards) read them when present.
+OPTIONAL_ROOT_FILES = (
+    "per_filetype_metrics.json",
+    "test_metrics.json",
+    "route_policy_eval_oof.json",
+    "route_policy_eval_oof.md",
+)
+
 
 def _copy_if_exists(src: Path, dst: Path) -> None:
     if src.is_file():
@@ -78,6 +87,9 @@ def stage_runtime_bundle(src: Path, dst: Path) -> None:
         if not required.is_file():
             raise SystemExit(f"missing required file: {required}")
         _copy_if_exists(required, dst / name)
+
+    for name in OPTIONAL_ROOT_FILES:
+        _copy_if_exists(src / name, dst / name)
 
     for path in sorted(src.glob("*.md")):
         _copy_if_exists(path, dst / path.name)

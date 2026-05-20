@@ -120,3 +120,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T204500-filetypes-text` — 2026-05-19T20:45:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `df2a59cb57c223a6` | text_control_train_tune | ok | 0.9413 | 0.9712 | 0.8333 | 8 | [log](out/autocollie/runs/2026-05-19T20-48-53_20260519T204500-filetypes-text_text_control_train_tune.log) |
+| `6a454a7ccc2a8d09` | text_enable_text_metrics_full | ok | 0.9485 | 0.9729 | 0.8333 | 5 | [log](out/autocollie/runs/2026-05-19T20-49-01_20260519T204500-filetypes-text_text_enable_text_metrics_full.log) |
+| `5c6846074027db4c` | text_enable_kv_vocab_research | ok | 0.9464 | 0.9720 | 0.8333 | 4 | [log](out/autocollie/runs/2026-05-19T20-49-06_20260519T204500-filetypes-text_text_enable_kv_vocab_research.log) |
+| `6addb5f038a4d56a` | text_ablate_blindfold_extreme | ok | 0.9485 | 0.9729 | 0.8333 | 6 | [log](out/autocollie/runs/2026-05-19T20-49-09_20260519T204500-filetypes-text_text_ablate_blindfold_extreme.log) |
+| `e77c6bd1c31c65ea` | text_transfer_gz_clusters_off | ok | 0.9564 | 0.9764 | 0.8444 | 4 | [log](out/autocollie/runs/2026-05-19T20-49-15_20260519T204500-filetypes-text_text_transfer_gz_clusters_off.log) |
+| `8dfa174fb037ddbe` | text_seed_search_k3_verify | ok | 0.9524 | 0.9755 | 0.8148 | 6 | [log](out/autocollie/runs/2026-05-19T20-49-19_20260519T204500-filetypes-text_text_seed_search_k3_verify.log) |
+
+<details><summary>Spec details</summary>
+
+- **`text_control_train_tune`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols EXP_ESTIMATORS=300 …` — Replicate strong baseline feature set while tuning num_leaves and reg_lambda to improve PR_AUC without hurting ROC_AUC.
+- **`text_enable_text_metrics_full`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 …` — Enable text_metrics_full to capture document obfuscation signals like line lengths and escape density, targeting PR_AUC gains on text route.
+- **`text_enable_kv_vocab_research`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,symbols,textenc EXP_KV_MIN_FREQ=5 …` — Enable kv_vocab with moderate cap to extract key-value pair signals from text metadata, targeting PR_AUC improvements.
+- **`text_ablate_blindfold_extreme`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_EXTREME_FEATURES=0 …` — Disable blindfold and extreme_features to reduce noise and overfitting, aiming to stabilize ROC_AUC while maintaining PR_AUC.
+- **`text_transfer_gz_clusters_off`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 …` — Port filetypes/gz winning config that disables clusters and enables extended_metrics, expecting similar PR_AUC lift from cleaner feature space.
+- **`text_seed_search_k3_verify`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 …` — Run seed_search_k: 3 on a strong feature set to verify recall@3 FP/M gains are robust to seed variance rather than noise.
+
+</details>
+

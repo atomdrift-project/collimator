@@ -102,3 +102,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T203118-filetypes-pptx` — 2026-05-19T20:31:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ce54710a7e143f7` | pptx_control_training_tune | ok | 0.9231 | 0.5000 | 0.9600 | 5 | [log](out/autocollie/runs/2026-05-19T20-35-19_20260519T203118-filetypes-pptx_pptx_control_training_tune.log) |
+| `3150bab341dab984` | pptx_text_metrics_encoding | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-19T20-35-24_20260519T203118-filetypes-pptx_pptx_text_metrics_encoding.log) |
+| `00144c4f58884dd7` | pptx_kv_vocab_expand | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-19T20-35-27_20260519T203118-filetypes-pptx_pptx_kv_vocab_expand.log) |
+| `67857a43839b1e0d` | pptx_bigram_rare_signal | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-19T20-35-30_20260519T203118-filetypes-pptx_pptx_bigram_rare_signal.log) |
+| `7d97a0d23e270882` | pptx_ablate_extreme_features | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-19T20-35-32_20260519T203118-filetypes-pptx_pptx_ablate_extreme_features.log) |
+| `a1bf4787668a6fee` | pptx_seed_search_ensemble | ok | 0.9231 | 0.5000 | 0.9600 | 5 | [log](out/autocollie/runs/2026-05-19T20-35-35_20260519T203118-filetypes-pptx_pptx_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pptx_control_training_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by increasing model capacity (num_leaves=128, estimators=300) and lowering learning rate to 0.03 on the best recent feature set.
+- **`pptx_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture document obfuscation and VBA string patterns in PPTX files.
+- **`pptx_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by enabling kv_vocab with a higher cap (10000) to capture malicious XML attribute combinations in PPTX structures.
+- **`pptx_bigram_rare_signal`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering bigram_min_freq to 100 and increasing bigram_max to 5000 to include rarer but high-signal XML path bigrams.
+- **`pptx_ablate_extreme_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC while keeping PR_AUC flat by disabling extreme_features to reduce noise from rare tail patterns that may overfit.
+- **`pptx_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3 FP/M by using seed_search_k=3 to average over seeds, reducing variance on the current best feature set.
+
+</details>
+

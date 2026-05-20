@@ -412,3 +412,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T194647-filetypes-go` — 2026-05-19T19:46:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ca119ba27e3f24ce` | go_control_extra_trees_spw075 | ok | 0.9598 | 0.9862 | 0.8811 | 12 | [log](out/autocollie/runs/2026-05-19T19-50-25_20260519T194647-filetypes-go_go_control_extra_trees_spw075.log) |
+| `3b76fee0bb3869cd` | go_exploit_hardneg_w12 | ok | 0.9540 | 0.9848 | 0.8383 | 7 | [log](out/autocollie/runs/2026-05-19T19-50-37_20260519T194647-filetypes-go_go_exploit_hardneg_w12.log) |
+| `8e3fcf0b8e146b96` | go_feat_kv_vocab_15k | ok | 0.9544 | 0.9848 | 0.8939 | 20 | [log](out/autocollie/runs/2026-05-19T19-50-43_20260519T194647-filetypes-go_go_feat_kv_vocab_15k.log) |
+| `c379900aae6bf8f5` | go_feat_symbol_vocab_bigrams | ok | 0.9579 | 0.9860 | 0.8750 | 21 | [log](out/autocollie/runs/2026-05-19T19-51-03_20260519T194647-filetypes-go_go_feat_symbol_vocab_bigrams.log) |
+| `ee3336d97fc37c9a` | go_feat_textenc_metrics | ok | 0.9578 | 0.9858 | 0.8693 | 9 | [log](out/autocollie/runs/2026-05-19T19-51-24_20260519T194647-filetypes-go_go_feat_textenc_metrics.log) |
+| `3f28a78ee0884c6c` | go_retry_symbol_bigrams_tiered | ok | 0.9531 | 0.9850 | 0.8889 | 17 | [log](out/autocollie/runs/2026-05-19T19-51-33_20260519T194647-filetypes-go_go_retry_symbol_bigrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_control_extra_trees_spw075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives to reduce FPs at low thresholds, while keeping PR_AUC flat via extra_trees regularization.
+- **`go_exploit_hardneg_w12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by focusing gradient updates on hard negatives, improving separation at the tail.
+- **`go_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing key-value pair patterns specific to Go binaries that standard n-grams miss.
+- **`go_feat_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by modeling import/symbol co-occurrence patterns common in Go malware.
+- **`go_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding text encoding and metric features that capture obfuscation and structural anomalies.
+- **`go_retry_symbol_bigrams_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to recover PR_AUC by retrying a prior high-performing config to check for data-drift recovery.
+
+</details>
+
+## Cycle `20260519T213623-filetypes-go` — 2026-05-19T21:36:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f4e169b63b50795b` | go_control_baseline_spw075 | ok | 0.9583 | 0.9859 | 0.8743 | 63 | [log](out/autocollie/runs/2026-05-19T21-41-45_20260519T213623-filetypes-go_go_control_baseline_spw075.log) |
+| `1614133f6dc7f119` | go_exploit_hardneg_w15 | ok | 0.9606 | 0.9869 | 0.8785 | 9 | [log](out/autocollie/runs/2026-05-19T21-42-48_20260519T213623-filetypes-go_go_exploit_hardneg_w15.log) |
+| `8e3fcf0b8e146b96` | go_feat_kv_vocab_15k | dup | 0.9544 | 0.9848 | 0.8939 | 1 | [log](out/autocollie/runs/2026-05-19T21-42-57_20260519T213623-filetypes-go_go_feat_kv_vocab_15k.log) |
+| `ea676b5a6dd84116` | go_feat_symbol_bigrams_10k | ok | 0.9531 | 0.9845 | 0.8876 | 17 | [log](out/autocollie/runs/2026-05-19T21-42-57_20260519T213623-filetypes-go_go_feat_symbol_bigrams_10k.log) |
+| `7e27d9bcaeb4eec8` | go_transfer_symbols_seedsearch | ok | 0.9626 | 0.9874 | 0.8907 | 19 | [log](out/autocollie/runs/2026-05-19T21-43-14_20260519T213623-filetypes-go_go_transfer_symbols_seedsearch.log) |
+| `d54587504cd01331` | go_ablation_no_blindfold | ok | 0.9570 | 0.9855 | 0.8798 | 11 | [log](out/autocollie/runs/2026-05-19T21-43-34_20260519T213623-filetypes-go_go_ablation_no_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`go_control_baseline_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature set, lower scale_pos_weight_mult to 0.75 to reduce FPR and improve recall@3 FP/M at deployed operating point.
+- **`go_exploit_hardneg_w15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use hard negatives with weight 15 and fraction 0.1 to sharpen decision boundary for tail recall@3 FP/M while keeping PR_AUC flat.
+- **`go_feat_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with max 15000 to capture Go module/build metadata patterns, aiming to lift PR_AUC via new structural signal.
+- **`go_feat_symbol_bigrams_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable symbol_bigrams with max 10000 to capture import co-occurrence patterns in Go binaries, targeting PR_AUC improvement.
+- **`go_transfer_symbols_seedsearch`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port strong symbol vocab idea from Java route, use seed_search_k=3 to verify signal robustness and improve recall@3 FP/M via ensemble averaging.
+- **`go_ablation_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold dropout to test if retaining full feature variance improves PR_AUC without hurting ROC_AUC, acting as a positive ablation.
+
+</details>
+

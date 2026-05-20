@@ -178,3 +178,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T202709-filetypes-png` — 2026-05-19T20:27:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ae5d8daf24cdb7cb` | png_control_leaves128_lr003 | ok | 0.9803 | 0.9691 | 0.9065 | 6 | [log](out/autocollie/runs/2026-05-19T20-30-58_20260519T202709-filetypes-png_png_control_leaves128_lr003.log) |
+| `05388887f7b9686b` | png_kv_vocab_split | ok | 0.9871 | 0.9767 | 0.9065 | 3 | [log](out/autocollie/runs/2026-05-19T20-31-03_20260519T202709-filetypes-png_png_kv_vocab_split.log) |
+| `865e790045c6e58a` | png_bigram_freq200_trigrams | ok | 0.9803 | 0.9691 | 0.9065 | 3 | [log](out/autocollie/runs/2026-05-19T20-31-07_20260519T202709-filetypes-png_png_bigram_freq200_trigrams.log) |
+| `3596cd1c394ac05f` | png_hardneg_weight10_scale075 | ok | 0.9874 | 0.9745 | 0.9524 | 2 | [log](out/autocollie/runs/2026-05-19T20-31-10_20260519T202709-filetypes-png_png_hardneg_weight10_scale075.log) |
+| `087ed85c3d22c3e9` | png_seed_search_k3_ensemble | ok | 0.9809 | 0.9611 | 0.9014 | 2 | [log](out/autocollie/runs/2026-05-19T20-31-12_20260519T202709-filetypes-png_png_seed_search_k3_ensemble.log) |
+| `dd90d2001b4098cf` | png_text_metrics_ablate_blindfold | ok | 0.9871 | 0.9767 | 0.9065 | 4 | [log](out/autocollie/runs/2026-05-19T20-31-14_20260519T202709-filetypes-png_png_text_metrics_ablate_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`png_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tests deeper trees with lower LR on the top PR_AUC feature set to improve PR_AUC by reducing variance while maintaining ranking quality.
+- **`png_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and value splitting to capture PNG chunk metadata patterns, aiming to boost PR_AUC via finer-grained structural signals.
+- **`png_bigram_freq200_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor and enables objective trigrams to capture rarer PNG-specific sequences, targeting recall@3FPM by improving tail discrimination.
+- **`png_hardneg_weight10_scale075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard negative weighting and reduces positive scale to sharpen the decision boundary at low FPR, targeting recall@3FPM by suppressing benign tail overlap.
+- **`png_seed_search_k3_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Uses seed search with ensemble averaging to reduce variance and stabilize PR_AUC gains across different train splits.
+- **`png_text_metrics_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Transfers text_metrics_full from document routes and disables blindfold to test if structural text signals improve PR_AUC without dropout noise.
+
+</details>
+

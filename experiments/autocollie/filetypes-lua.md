@@ -116,3 +116,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T201122-filetypes-lua` — 2026-05-19T20:11:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `81fc8a2a856be05e` | lua_control_reg_stabilize | ok | 0.8875 | 0.9783 | 0.4000 | 7 | [log](out/autocollie/runs/2026-05-19T20-16-26_20260519T201122-filetypes-lua_lua_control_reg_stabilize.log) |
+| `c989d6451f377e11` | lua_exploit_dart_extra_trees | ok | 0.5588 | 0.8043 | 0.6000 | 3 | [log](out/autocollie/runs/2026-05-19T20-16-34_20260519T201122-filetypes-lua_lua_exploit_dart_extra_trees.log) |
+| `7a228450e27f542b` | lua_feat_kv_vocab_split | ok | 0.2245 | 0.6793 | 0.3750 | 3 | [log](out/autocollie/runs/2026-05-19T20-16-37_20260519T201122-filetypes-lua_lua_feat_kv_vocab_split.log) |
+| `30b3846d9589f9e4` | lua_feat_text_metrics_enc | ok | 0.7431 | 0.8587 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-19T20-16-41_20260519T201122-filetypes-lua_lua_feat_text_metrics_enc.log) |
+| `0e8177b07b712a1b` | lua_gen_seed_ensemble_kv | ok | 0.6627 | 0.8152 | 0.5455 | 4 | [log](out/autocollie/runs/2026-05-19T20-16-43_20260519T201122-filetypes-lua_lua_gen_seed_ensemble_kv.log) |
+| `c987ac4132fa971b` | lua_retry_hardtail_symbols | ok | 0.6429 | 0.9130 | 0.4444 | 4 | [log](out/autocollie/runs/2026-05-19T20-16-47_20260519T201122-filetypes-lua_lua_retry_hardtail_symbols.log) |
+
+<details><summary>Spec details</summary>
+
+- **`lua_control_reg_stabilize`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Stabilize ranking on tiny corpus via stronger regularization to improve PR_AUC and ROC_AUC.
+- **`lua_exploit_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Add dropout and random splits to reduce overfitting on small data, targeting ROC_AUC and PR_AUC.
+- **`lua_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab and value splitting to capture Lua table/config patterns, aiming to lift PR_AUC.
+- **`lua_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activate text metrics and encoding features to leverage script structure for better separation, targeting PR_AUC.
+- **`lua_gen_seed_ensemble_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Average over 3 seeds on KV-enhanced config to reduce variance on small corpus, stabilizing recall@3 FP/M.
+- **`lua_retry_hardtail_symbols`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Re-test hard-negative symbol focus from historical best to recover tail recall@3 FP/M while guarding PR_AUC.
+
+</details>
+
+## Cycle `20260519T220145-filetypes-lua` — 2026-05-19T22:01:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `60518798b81ee333` | lua_control_tail_recall_fpr | ok | 0.5611 | 0.9293 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-19T22-05-30_20260519T220145-filetypes-lua_lua_control_tail_recall_fpr.log) |
+| `8de9fb77e71d8abb` | lua_feat_text_metrics_full | ok | 0.2245 | 0.6522 | 0.3636 | 4 | [log](out/autocollie/runs/2026-05-19T22-05-32_20260519T220145-filetypes-lua_lua_feat_text_metrics_full.log) |
+| `d198ca32161d8bec` | lua_feat_kv_vocab_split | ok | 0.2245 | 0.6793 | 0.3750 | 2 | [log](out/autocollie/runs/2026-05-19T22-05-36_20260519T220145-filetypes-lua_lua_feat_kv_vocab_split.log) |
+| `e70d8234292980ea` | lua_feat_bigram_low_freq | ok | 0.1481 | 0.5000 | 0.2581 | 3 | [log](out/autocollie/runs/2026-05-19T22-05-38_20260519T220145-filetypes-lua_lua_feat_bigram_low_freq.log) |
+| `157d7a78b9c464e4` | lua_train_dart_reg_stabilize | ok | 0.6083 | 0.8370 | 0.4000 | 2 | [log](out/autocollie/runs/2026-05-19T22-05-41_20260519T220145-filetypes-lua_lua_train_dart_reg_stabilize.log) |
+| `e1150b6d6c44c5d7` | lua_profile_seed_search_3 | ok | 0.7026 | 0.8370 | 0.6000 | 4 | [log](out/autocollie/runs/2026-05-19T22-05-43_20260519T220145-filetypes-lua_lua_profile_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`lua_control_tail_recall_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env for matrix cache hit; switches threshold_mode to max_recall_at_fpr with target 3e-6 to directly optimize recall@3FPM at the deployed operating point.
+- **`lua_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full to capture obfuscation and line-length signals common in Lua scripts, aiming to boost PR_AUC by adding structural text features.
+- **`lua_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with kv_value_split to parse Lua table and config structures, targeting PR_AUC improvement via finer-grained key-value signals.
+- **`lua_feat_bigram_low_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 100 to capture rarer Lua-specific patterns, aiming to improve recall@3FPM by surfacing niche malicious constructs.
+- **`lua_train_dart_reg_stabilize`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Uses dart boosting with higher reg_lambda to reduce overfitting on the small Lua corpus, targeting stable ROC_AUC and PR_AUC without tail degradation.
+- **`lua_profile_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Runs seed_search_k=3 on the control feature set to average out seed variance and find a more robust configuration, targeting consistent recall@3FPM across seeds.
+
+</details>
+

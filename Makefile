@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage near-false-positives-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle autocollie-backfill-l3
+.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle autocollie-backfill-l3
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -15,14 +15,25 @@ MODEL ?= azoth
 LEARNER ?= $(if $(filter azoth%,$(MODEL)),azoth,$(MODEL))
 OUT_ROOT ?= out/models
 OUT_DIR ?= $(if $(filter azoth,$(MODEL)),$(OUT_ROOT)/azoth/general,$(OUT_ROOT)/$(MODEL))
-MODEL_FILE ?= $(if $(filter azoth,$(LEARNER)),model.txt,model.json)
+# Resolve the bundle's model file. Single-seed bundles ship `model.txt`
+# directly under $(OUT_DIR); multi-seed bundles ship `models/seed_NN.txt`
+# (the deployed Azoth general is 3-seed). Auto-pick whichever is on disk:
+# `model.txt` if present, else the lowest-numbered seed, else fall back
+# to the legacy `model.txt` name (callers get a clear FileNotFoundError
+# rather than a misleading "missing arg" failure).
+MODEL_FILE_EXT := $(if $(filter azoth,$(LEARNER)),txt,json)
+MODEL_FILE ?= $(patsubst $(OUT_DIR)/%,%,$(or \
+	$(wildcard $(OUT_DIR)/model.$(MODEL_FILE_EXT)), \
+	$(firstword $(sort $(wildcard $(OUT_DIR)/models/seed_*.$(MODEL_FILE_EXT)))), \
+	$(OUT_DIR)/model.$(MODEL_FILE_EXT)))
 LOG_DIR ?= $(OUT_DIR)/logs
 EXP_OUT_DIR ?= out/experiments/$(MODEL)
 EXP_LOG_DIR ?= $(EXP_OUT_DIR)/logs
 THRESHOLD_SCORES ?= $(OUT_DIR)/threshold_scores.npz
 THRESHOLD_MAX_ID ?=
 THRESHOLD_MAX_ID_ARG := $(if $(THRESHOLD_MAX_ID),--max-id $(THRESHOLD_MAX_ID),)
-TOP_ERRORS ?= 100
+TOP_ERRORS ?= 250
+SKIP ?= 0
 THRESHOLD_TOP_ERRORS ?= 0
 FILETYPE_MATRIX_OUTPUT ?= $(OUT_DIR)/filetype_metrics.json
 FILETYPE_MATRIX_CSV ?= $(OUT_DIR)/filetype_metrics.csv
@@ -177,9 +188,13 @@ FALSE_NEGATIVES_ARCHIVE ?= /tmp/false-negatives.tgz
 NEAR_FALSE_POSITIVES_ARCHIVE ?= /tmp/near-false-positives.tgz
 NEAR_FALSE_NEGATIVES_ARCHIVE ?= /tmp/near-false-negatives.tgz
 FALSE_POSITIVES_TRIAGE_DIR ?= /tmp/false-positives
+FALSE_NEGATIVES_TRIAGE_DIR ?= /tmp/false-negatives
 NEAR_FALSE_POSITIVES_TRIAGE_DIR ?= /tmp/near-false-positives
 FALSE_POSITIVES_TRIAGE_JSON ?= /tmp/false-positives.json
+FALSE_NEGATIVES_TRIAGE_JSON ?= /tmp/false-negatives.json
 NEAR_FALSE_POSITIVES_TRIAGE_JSON ?= /tmp/near-false-positives.json
+MISLABELED_TRIAGE_DIR ?= /tmp/mislabeled
+MISLABELED_TRIAGE_JSON ?= /tmp/mislabeled.json
 SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
@@ -1078,6 +1093,13 @@ azoth-validate: azoth-calibrate
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_VALIDATE_ROUTED_METRICS_ARGS) $(AZOTH_ROUTED_METRICS_ARGS)
+	$(PYTHON) scripts/azoth_route_policy_eval.py \
+		--score-table $(AZOTH_ROOT)/score_table.npz \
+		--general-scores $(AZOTH_ROOT)/general/threshold_scores.npz \
+		--route-policies $(AZOTH_ROUTE_POLICIES) \
+		--partition test \
+		--output-md $(AZOTH_ROOT)/route_policy_eval_oof.md \
+		--output-json $(AZOTH_ROOT)/route_policy_eval_oof.json
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	@_STAGE=$$(mktemp -d) && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
@@ -1086,6 +1108,7 @@ azoth-validate: azoth-calibrate
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" && \
 	  if [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "1" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "true" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "yes" ]; then \
 	    echo "Skipping litmus deployed-ensemble compatibility checks (AZOTH_SKIP_LITMUS_VALIDATE=$(AZOTH_SKIP_LITMUS_VALIDATE))"; \
 	  else \
@@ -1127,6 +1150,13 @@ azoth-deploy: azoth-calibrate
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_ROUTED_METRICS_ARGS)
+	$(PYTHON) scripts/azoth_route_policy_eval.py \
+		--score-table $(AZOTH_ROOT)/score_table.npz \
+		--general-scores $(AZOTH_ROOT)/general/threshold_scores.npz \
+		--route-policies $(AZOTH_ROUTE_POLICIES) \
+		--partition test \
+		--output-md $(AZOTH_ROOT)/route_policy_eval_oof.md \
+		--output-json $(AZOTH_ROOT)/route_policy_eval_oof.json
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	$(MAKE) azoth-deploy-final
 
@@ -1164,6 +1194,7 @@ azoth-deploy-final: venv
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" && \
 	  echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
 	  ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
 	  $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf && \
@@ -1178,6 +1209,9 @@ azoth-deploy-final: venv
 	  ( cd $(LITMUS_DIR) && cargo run --release -- --extra --show all scan /bin/ls ) && \
 	  echo "Deployed azoth ensemble bundle to $(AZOTH_DEPLOY_DIR)"
 
+# Legacy single-model false/near reports. Source generation is bumped by
+# SKIP so triage can page past already-reviewed samples (TOP_ERRORS=250
+# SKIP=100 → JSON has 350 rows; triage skips first 100, copies next 250).
 false-positives: venv check-db
 	$(PYTHON) -u -m collimator false-positives --db $(DB) \
 		--model $(OUT_DIR)/$(MODEL_FILE) \
@@ -1185,7 +1219,7 @@ false-positives: venv check-db
 		$(WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
-		--top-errors $(TOP_ERRORS) \
+		--top-errors $$(( $(TOP_ERRORS) + $(SKIP) )) \
 		--output $(OUT_DIR)/false_positives.json
 
 near-false-positives: venv check-db
@@ -1195,7 +1229,7 @@ near-false-positives: venv check-db
 		$(WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
-		--top-errors $(TOP_ERRORS) \
+		--top-errors $$(( $(TOP_ERRORS) + $(SKIP) )) \
 		--output $(OUT_DIR)/near_false_positives.json
 
 false-negatives: venv check-db
@@ -1205,7 +1239,7 @@ false-negatives: venv check-db
 		$(WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
-		--top-errors $(TOP_ERRORS) \
+		--top-errors $$(( $(TOP_ERRORS) + $(SKIP) )) \
 		--output $(OUT_DIR)/false_negatives.json
 
 near-false-negatives: venv check-db
@@ -1215,7 +1249,7 @@ near-false-negatives: venv check-db
 		$(WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
 		--scores-cache $(THRESHOLD_SCORES) \
-		--top-errors $(TOP_ERRORS) \
+		--top-errors $$(( $(TOP_ERRORS) + $(SKIP) )) \
 		--output $(OUT_DIR)/near_false_negatives.json
 
 false-positives-archive: false-positives
@@ -1256,8 +1290,126 @@ false-positives-triage: false-positives
 		--output-dir $(FALSE_POSITIVES_TRIAGE_DIR) \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-positives \
+		--skip $(SKIP) \
 		--top $(TOP_ERRORS)
 	$(CLEAVE) --format=json $(FALSE_POSITIVES_TRIAGE_DIR) > $(FALSE_POSITIVES_TRIAGE_JSON)
+
+false-negatives-triage: false-negatives
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(OUT_DIR)/false_negatives.json \
+		--output-dir $(FALSE_NEGATIVES_TRIAGE_DIR) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-negatives \
+		--skip $(SKIP) \
+		--top $(TOP_ERRORS)
+	$(CLEAVE) --format=json $(FALSE_NEGATIVES_TRIAGE_DIR) > $(FALSE_NEGATIVES_TRIAGE_JSON)
+
+# mislabeled-triage: both FPs and FNs into a single tree for joint review.
+# Layout:
+#   $(MISLABELED_TRIAGE_DIR)/false-positives/...
+#   $(MISLABELED_TRIAGE_DIR)/false-negatives/...
+# cleave is run once over the parent dir so both kinds appear in the same
+# JSON, with their relative path indicating which bucket each sample came from.
+mislabeled-triage: false-positives false-negatives
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(OUT_DIR)/false_positives.json \
+		--output-dir $(MISLABELED_TRIAGE_DIR)/false-positives \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-positives \
+		--skip $(SKIP) \
+		--top $(TOP_ERRORS)
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(OUT_DIR)/false_negatives.json \
+		--output-dir $(MISLABELED_TRIAGE_DIR)/false-negatives \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-negatives \
+		--skip $(SKIP) \
+		--top $(TOP_ERRORS)
+	$(CLEAVE) --format=json $(MISLABELED_TRIAGE_DIR) > $(MISLABELED_TRIAGE_JSON)
+	@echo "samples:  $(MISLABELED_TRIAGE_DIR)/{false-positives,false-negatives}/"
+	@echo "cleave:   $(MISLABELED_TRIAGE_JSON)"
+
+# Scope-aware mislabeled triage. Uses the score table + route policies
+# (no model rescore) to pick top-N benigns flagged or malware missed by
+# a specific subset of routes.
+#
+# Usage:
+#   make false-positives-scope-triage SCOPE=ensemble    LEVEL=3 SEVERITY=hostile
+#   make false-negatives-scope-triage SCOPE=specialists LEVEL=3 SEVERITY=hostile
+#   make mislabeled-scope-triage      SCOPE=ensemble    LEVEL=3 SEVERITY=hostile
+#   make mislabeled-scope-triage      SCOPE=route:filetypes/jpeg LEVEL=3
+SCOPE ?= ensemble
+LEVEL ?= 3
+SEVERITY ?= hostile
+MIS_SCOPE_TAG := $(subst :,-,$(subst /,-,$(SCOPE)))-L$(LEVEL)-$(SEVERITY)
+FP_SCOPE_REPORT ?= $(AZOTH_ROOT)/false_positives_$(MIS_SCOPE_TAG).json
+FN_SCOPE_REPORT ?= $(AZOTH_ROOT)/false_negatives_$(MIS_SCOPE_TAG).json
+FP_SCOPE_TRIAGE_DIR ?= /tmp/false-positives-$(MIS_SCOPE_TAG)
+FN_SCOPE_TRIAGE_DIR ?= /tmp/false-negatives-$(MIS_SCOPE_TAG)
+FP_SCOPE_TRIAGE_JSON ?= /tmp/false-positives-$(MIS_SCOPE_TAG).json
+FN_SCOPE_TRIAGE_JSON ?= /tmp/false-negatives-$(MIS_SCOPE_TAG).json
+MIS_SCOPE_TRIAGE_DIR ?= /tmp/mislabeled-$(MIS_SCOPE_TAG)
+MIS_SCOPE_TRIAGE_JSON ?= /tmp/mislabeled-$(MIS_SCOPE_TAG).json
+
+.PHONY: false-positives-scope false-negatives-scope \
+        false-positives-scope-triage false-negatives-scope-triage \
+        mislabeled-scope-triage
+
+false-positives-scope: venv
+	$(PYTHON) scripts/mislabeled_by_scope.py \
+		--kind false-positives \
+		--score-table $(AZOTH_ROOT)/score_table.npz \
+		--route-policies $(AZOTH_ROOT)/route_policies.json \
+		--scope $(SCOPE) --level $(LEVEL) --severity $(SEVERITY) \
+		--skip $(SKIP) --top-errors $(TOP_ERRORS) --db $(DB) \
+		--output $(FP_SCOPE_REPORT)
+
+false-negatives-scope: venv
+	$(PYTHON) scripts/mislabeled_by_scope.py \
+		--kind false-negatives \
+		--score-table $(AZOTH_ROOT)/score_table.npz \
+		--route-policies $(AZOTH_ROOT)/route_policies.json \
+		--scope $(SCOPE) --level $(LEVEL) --severity $(SEVERITY) \
+		--skip $(SKIP) --top-errors $(TOP_ERRORS) --db $(DB) \
+		--output $(FN_SCOPE_REPORT)
+
+false-positives-scope-triage: false-positives-scope
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(FP_SCOPE_REPORT) \
+		--output-dir $(FP_SCOPE_TRIAGE_DIR) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-positives --db $(DB) --top $(TOP_ERRORS)
+	$(CLEAVE) --format=json $(FP_SCOPE_TRIAGE_DIR) > $(FP_SCOPE_TRIAGE_JSON)
+	@echo "report:   $(FP_SCOPE_REPORT)"
+	@echo "samples:  $(FP_SCOPE_TRIAGE_DIR)"
+	@echo "cleave:   $(FP_SCOPE_TRIAGE_JSON)"
+
+false-negatives-scope-triage: false-negatives-scope
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(FN_SCOPE_REPORT) \
+		--output-dir $(FN_SCOPE_TRIAGE_DIR) \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
+	$(CLEAVE) --format=json $(FN_SCOPE_TRIAGE_DIR) > $(FN_SCOPE_TRIAGE_JSON)
+	@echo "report:   $(FN_SCOPE_REPORT)"
+	@echo "samples:  $(FN_SCOPE_TRIAGE_DIR)"
+	@echo "cleave:   $(FN_SCOPE_TRIAGE_JSON)"
+
+mislabeled-scope-triage: false-positives-scope false-negatives-scope
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(FP_SCOPE_REPORT) \
+		--output-dir $(MIS_SCOPE_TRIAGE_DIR)/false-positives \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-positives --db $(DB) --top $(TOP_ERRORS)
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(FN_SCOPE_REPORT) \
+		--output-dir $(MIS_SCOPE_TRIAGE_DIR)/false-negatives \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
+	$(CLEAVE) --format=json $(MIS_SCOPE_TRIAGE_DIR) > $(MIS_SCOPE_TRIAGE_JSON)
+	@echo "reports:  $(FP_SCOPE_REPORT) + $(FN_SCOPE_REPORT)"
+	@echo "samples:  $(MIS_SCOPE_TRIAGE_DIR)/{false-positives,false-negatives}/"
+	@echo "cleave:   $(MIS_SCOPE_TRIAGE_JSON)"
 
 near-false-positives-triage: near-false-positives
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -1265,6 +1417,7 @@ near-false-positives-triage: near-false-positives
 		--output-dir $(NEAR_FALSE_POSITIVES_TRIAGE_DIR) \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind near-false-positives \
+		--skip $(SKIP) \
 		--top $(TOP_ERRORS)
 	$(CLEAVE) --format=json $(NEAR_FALSE_POSITIVES_TRIAGE_DIR) > $(NEAR_FALSE_POSITIVES_TRIAGE_JSON)
 

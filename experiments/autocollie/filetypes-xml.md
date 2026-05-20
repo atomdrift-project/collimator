@@ -146,3 +146,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T204949-filetypes-xml` — 2026-05-19T20:49:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `abf4efe55c558b96` | xml_control_dart_est300 | ok | 1.0000 | 1.0000 | 1.0000 | 7 | [log](out/autocollie/runs/2026-05-19T20-54-30_20260519T204949-filetypes-xml_xml_control_dart_est300.log) |
+| `1c6b8e267f1dda0c` | xml_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 0.9818 | 4 | [log](out/autocollie/runs/2026-05-19T20-54-37_20260519T204949-filetypes-xml_xml_feat_text_metrics_enc.log) |
+| `b5ad85abb46897d5` | xml_feat_kv_vocab | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-19T20-54-42_20260519T204949-filetypes-xml_xml_feat_kv_vocab.log) |
+| `efc9957e1030d392` | xml_feat_bigram_freq25 | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-19T20-54-46_20260519T204949-filetypes-xml_xml_feat_bigram_freq25.log) |
+| `b296fac64214dfd7` | xml_train_scalepos05 | ok | 1.0000 | 1.0000 | 0.9818 | 2 | [log](out/autocollie/runs/2026-05-19T20-54-50_20260519T204949-filetypes-xml_xml_train_scalepos05.log) |
+| `fb4313638359f696` | xml_profile_seedsearch3 | ok | 1.0000 | 1.0000 | 1.0000 | 4 | [log](out/autocollie/runs/2026-05-19T20-54-53_20260519T204949-filetypes-xml_xml_profile_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xml_control_dart_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Replicates best feature_env with dart boosting and 300 estimators to stabilize PR AUC while preserving ROC AUC.
+- **`xml_feat_text_metrics_enc`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and text_encoding to capture document obfuscation signals, aiming to lift PR AUC.
+- **`xml_feat_kv_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Activates kv_vocab to extract XML attribute signals, targeting improved recall@3 FP/M by identifying malicious payloads.
+- **`xml_feat_bigram_freq25`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 25 to include rare malicious patterns, aiming to boost recall@3 FP/M while reg_lambda controls overfit.
+- **`xml_train_scalepos05`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weights positives with scale_pos_weight_mult=0.5 to suppress false positives at the tail, targeting improved recall@3 FP/M.
+- **`xml_profile_seedsearch3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Uses seed_search_k=3 and save_all_seeds to average predictions, stabilizing PR AUC and recall@3 FP/M against seed variance.
+
+</details>
+

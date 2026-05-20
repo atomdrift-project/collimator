@@ -180,3 +180,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T193451-filetypes-c` — 2026-05-19T19:34:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `93c9e92a9db308b3` | c_control_training_tweak | ok | 0.9920 | 0.9958 | 0.9597 | 18 | [log](out/autocollie/runs/2026-05-19T19-40-13_20260519T193451-filetypes-c_c_control_training_tweak.log) |
+| `e6c3880a76cc525f` | c_feat_kv_vocab_research | ok | 0.9914 | 0.9955 | 0.9542 | 15 | [log](out/autocollie/runs/2026-05-19T19-40-31_20260519T193451-filetypes-c_c_feat_kv_vocab_research.log) |
+| `2e34d73c06a81a3a` | c_feat_symbol_trigrams | ok | 0.9916 | 0.9956 | 0.9519 | 17 | [log](out/autocollie/runs/2026-05-19T19-40-46_20260519T193451-filetypes-c_c_feat_symbol_trigrams.log) |
+| `992239c81db618b9` | c_feat_text_metrics_full | ok | 0.9916 | 0.9957 | 0.9515 | 17 | [log](out/autocollie/runs/2026-05-19T19-41-02_20260519T193451-filetypes-c_c_feat_text_metrics_full.log) |
+| `c0acc4cbbf6aef14` | c_ablation_no_blindfold | ok | 0.9917 | 0.9957 | 0.9553 | 15 | [log](out/autocollie/runs/2026-05-19T19-41-19_20260519T193451-filetypes-c_c_ablation_no_blindfold.log) |
+| `9c4bf17b240a5b3a` | c_gen_seed_ensemble_retry | ok | 0.9922 | 0.9959 | 0.9433 | 17 | [log](out/autocollie/runs/2026-05-19T19-41-34_20260519T193451-filetypes-c_c_gen_seed_ensemble_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_control_training_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Baseline feature set with increased tree capacity and lower LR to improve PR_AUC without overfitting.
+- **`c_feat_kv_vocab_research`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables KV vocab to capture key-value configuration patterns in C headers/sources, targeting PR_AUC gain.
+- **`c_feat_symbol_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol trigrams to model function call sequences common in C malware, aiming to boost recall@3 FP/M.
+- **`c_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activates full text metrics to detect obfuscation and packing artifacts in C binaries/sources, targeting PR_AUC.
+- **`c_ablation_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Removes blindfold dropout to test if retaining full feature density improves PR_AUC and stabilizes recall@3 FP/M.
+- **`c_gen_seed_ensemble_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Runs seed search k=3 on control features to average out variance and improve robust recall@3 FP/M.
+
+</details>
+
+## Cycle `20260519T211532-filetypes-c` — 2026-05-19T21:15:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7c371b408cf4ab11` | c_control_scale_pos_075 | ok | 0.9915 | 0.9956 | 0.9551 | 120 | [log](out/autocollie/runs/2026-05-19T21-19-02_20260519T211532-filetypes-c_c_control_scale_pos_075.log) |
+| `7aa1ff960127f407` | c_control_dart_boosting | ok | 0.9891 | 0.9943 | 0.9387 | 194 | [log](out/autocollie/runs/2026-05-19T21-21-03_20260519T211532-filetypes-c_c_control_dart_boosting.log) |
+| `576f4a6041442b63` | c_feat_kv_symbol_vocab_tuned | ok | 0.9927 | 0.9963 | 0.9621 | 84 | [log](out/autocollie/runs/2026-05-19T21-24-17_20260519T211532-filetypes-c_c_feat_kv_symbol_vocab_tuned.log) |
+| `4c469d27b54063b2` | c_feat_text_metrics_encoding | ok | 0.9914 | 0.9955 | 0.9497 | 11 | [log](out/autocollie/runs/2026-05-19T21-25-41_20260519T211532-filetypes-c_c_feat_text_metrics_encoding.log) |
+| `1f2c6c64c2eac929` | c_transfer_kv_obj_trigrams | ok | 0.9912 | 0.9954 | 0.9557 | 15 | [log](out/autocollie/runs/2026-05-19T21-25-52_20260519T211532-filetypes-c_c_transfer_kv_obj_trigrams.log) |
+| `76b0c5587ca92121` | c_retry_kv_symbols_seed_search | ok | 0.9927 | 0.9962 | 0.9464 | 29 | [log](out/autocollie/runs/2026-05-19T21-26-07_20260519T211532-filetypes-c_c_retry_kv_symbols_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_control_scale_pos_075`** `EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by down-weighting positives to reduce FPs at the deployed operating point, keeping PR_AUC flat.
+- **`c_control_dart_boosting`** `EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests dart boosting to improve tail recall@3 FP/M via dropout regularization, targeting PR_AUC stability.
+- **`c_feat_kv_symbol_vocab_tuned`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Adds KV and symbol vocab features to capture structural C patterns, aiming to lift PR_AUC and recall@3 FP/M.
+- **`c_feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture obfuscation/string patterns in C sources, targeting PR_AUC gain.
+- **`c_transfer_kv_obj_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfers XML route's strong KV vocab signal to C, adding objective trigrams to boost PR_AUC.
+- **`c_retry_kv_symbols_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_VOCAB=1 …` — Retries top PR_AUC config with seed search to distinguish real signal from seed noise, aiming to stabilize recall@3 FP/M.
+
+</details>
+

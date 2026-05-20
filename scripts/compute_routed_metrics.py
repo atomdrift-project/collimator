@@ -541,46 +541,61 @@ def _ensemble_scores_specialist_priority(
     return primary
 
 
-def _load_test_mask(
+def _load_partition_mask(
     db_path: str,
     row_ids: np.ndarray,
+    partition: str = "test",
     *,
     cache_dir: Path | None = None,
 ) -> np.ndarray:
-    """Look up canonical_sha256 for each row_id in the score table and return
-    a boolean mask of the test-bucket rows (the same SHA256-deterministic
-    12.5% slice collimator uses at training time — see data.is_test_sample).
+    """Return a boolean mask of rows in the requested partition.
 
-    Without this filter the score table evaluates on the union of train+test,
-    inflating metrics relative to EMBER 2024's strict train→test reporting.
-    Querying canonical_sha256 in chunks keeps the IN-list small enough that
-    Postgres' planner doesn't blow up on 2M+ id lookups.
+    Partitions are SHA256-deterministic (see ``collimator.data``):
+        test:  byte < TEST_BUCKET_MAX                    (12.5%)
+        dev:   TEST_BUCKET_MAX <= byte < DEV_BUCKET_MAX  (12.5%)
+
+    Without partition filtering the score table evaluates on the union of
+    all rows including train, inflating metrics. Test is the locked
+    reporting partition; dev is used here for honest strategy selection
+    (so the strategy chosen on dev is reported on test).
     """
+    if partition not in {"test", "dev"}:
+        raise ValueError(f"unknown partition: {partition!r}")
     cache_path: Path | None = None
     if cache_dir is not None:
         digest = _test_mask_cache_key(db_path, row_ids)
-        cache_path = cache_dir / f"{digest}.npz"
+        cache_path = cache_dir / f"{partition}-{digest}.npz"
         if cache_path.exists():
             try:
                 cached = np.load(cache_path)
                 mask = cached["mask"].astype(bool, copy=False)
                 if mask.shape == row_ids.shape:
-                    LOG.info("loaded cached test bucket mask: %s", cache_path)
-                    LOG.info("test bucket: %d/%d rows (%.2f%%)",
-                             int(mask.sum()), len(row_ids),
+                    LOG.info("loaded cached %s-bucket mask: %s", partition, cache_path)
+                    LOG.info("%s bucket: %d/%d rows (%.2f%%)",
+                             partition, int(mask.sum()), len(row_ids),
                              100.0 * mask.sum() / len(row_ids))
                     return mask
-                LOG.warning("ignoring stale test mask cache %s: shape %s != %s",
-                            cache_path, mask.shape, row_ids.shape)
+                LOG.warning("ignoring stale %s mask cache %s: shape %s != %s",
+                            partition, cache_path, mask.shape, row_ids.shape)
             except Exception as exc:  # noqa: BLE001
-                LOG.warning("ignoring unreadable test mask cache %s: %s",
-                            cache_path, exc)
+                LOG.warning("ignoring unreadable %s mask cache %s: %s",
+                            partition, cache_path, exc)
 
-    LOG.info("loading canonical_sha256 for %d rows to apply test bucket filter",
-             len(row_ids))
+    LOG.info("loading canonical_sha256 for %d rows to apply %s bucket filter",
+             len(row_ids), partition)
     chunk = 50_000
     is_pg = collimator_data._is_pg(db_path)  # noqa: SLF001
     mask = np.zeros(len(row_ids), dtype=bool)
+    # Postgres-side bucket bounds for the partition.
+    if partition == "test":
+        lower_bound, upper_bound = 0, collimator_data.TEST_BUCKET_MAX
+        py_test = collimator_data.is_test_sample
+    else:  # dev
+        lower_bound, upper_bound = (
+            collimator_data.TEST_BUCKET_MAX,
+            collimator_data.DEV_BUCKET_MAX,
+        )
+        py_test = collimator_data.is_dev_sample
     with collimator_data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
         for start in range(0, len(row_ids), chunk):
             ids = [int(x) for x in row_ids[start:start + chunk]]
@@ -593,14 +608,15 @@ def _load_test_mask(
                         WHERE id = ANY(%s)
                           AND canonical_sha256 IS NOT NULL
                           AND length(canonical_sha256) >= 2
+                          AND get_byte(decode(right(canonical_sha256, 2), 'hex'), 0) >= %s
                           AND get_byte(decode(right(canonical_sha256, 2), 'hex'), 0) < %s
                         """,
-                        [ids, collimator_data.TEST_BUCKET_MAX],
+                        [ids, lower_bound, upper_bound],
                     )
-                    test_ids = {int(row_id) for (row_id,) in cur}
-                if test_ids:
+                    bucket_ids = {int(row_id) for (row_id,) in cur}
+                if bucket_ids:
                     mask[start:start + chunk] = np.fromiter(
-                        (int(rid) in test_ids for rid in row_ids[start:start + chunk]),
+                        (int(rid) in bucket_ids for rid in row_ids[start:start + chunk]),
                         dtype=bool,
                         count=len(ids),
                     )
@@ -618,19 +634,32 @@ def _load_test_mask(
                     if not csha or len(csha) < 2:
                         missing += 1
                         continue
-                    mask[start + offset] = collimator_data.is_test_sample(csha)
+                    mask[start + offset] = py_test(csha)
                 if missing:
-                    LOG.warning("missing canonical_sha256 for %d/%d rows in chunk; treated as not-in-test",
-                                missing, len(ids))
-    LOG.info("test bucket: %d/%d rows (%.2f%%)",
-             int(mask.sum()), len(row_ids), 100.0 * mask.sum() / len(row_ids))
+                    LOG.warning(
+                        "missing canonical_sha256 for %d/%d rows in chunk; treated as not-in-%s",
+                        missing, len(ids), partition,
+                    )
+    LOG.info("%s bucket: %d/%d rows (%.2f%%)",
+             partition, int(mask.sum()), len(row_ids),
+             100.0 * mask.sum() / len(row_ids))
     if cache_path is not None:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         tmp = cache_path.with_suffix(".tmp.npz")
         np.savez(tmp, mask=mask)
         tmp.replace(cache_path)
-        LOG.info("cached test bucket mask: %s", cache_path)
+        LOG.info("cached %s bucket mask: %s", partition, cache_path)
     return mask
+
+
+# Back-compat alias — callers that explicitly want test-only.
+def _load_test_mask(
+    db_path: str,
+    row_ids: np.ndarray,
+    *,
+    cache_dir: Path | None = None,
+) -> np.ndarray:
+    return _load_partition_mask(db_path, row_ids, "test", cache_dir=cache_dir)
 
 
 def compute_per_filetype_metrics(
@@ -639,6 +668,7 @@ def compute_per_filetype_metrics(
     *,
     db_path: str | None = None,
     test_mask_cache_dir: Path | None = None,
+    partition: str = "test",
     level: int = DEFAULT_LEVEL,
     severity: str = "hostile",
     with_ci: bool = True,
@@ -653,21 +683,20 @@ def compute_per_filetype_metrics(
     row_ids: np.ndarray = score_table["row_ids"]
     idx = _route_idx(route_names)
 
-    # EMBER 2024 reports strict train→test split metrics; our calibration
-    # corpus mixes both halves (see _fetch_rows in azoth_calibrate_ensemble).
-    # When db_path is provided, restrict to the deterministic 12.5% test
-    # bucket so the resulting numbers are apples-to-apples.
-    test_mask: np.ndarray | None = None
+    # Restrict to one of the SHA256-deterministic partitions. test is
+    # the locked reporting partition; dev is used for honest strategy
+    # selection (see compute_per_filetype_metrics_honest below).
+    partition_mask: np.ndarray | None = None
     if db_path:
         if test_mask_cache_dir is None:
             test_mask_cache_dir = _default_test_mask_cache_dir(score_table_path)
-        test_mask = _load_test_mask(
-            db_path, row_ids, cache_dir=test_mask_cache_dir,
+        partition_mask = _load_partition_mask(
+            db_path, row_ids, partition, cache_dir=test_mask_cache_dir,
         )
-        scores = scores[:, test_mask]
-        labels = labels[test_mask]
-        file_types = file_types[test_mask]
-        file_groups = file_groups[test_mask]
+        scores = scores[:, partition_mask]
+        labels = labels[partition_mask]
+        file_types = file_types[partition_mask]
+        file_groups = file_groups[partition_mask]
 
     # Per-route isotonic calibration via 5-fold CV on the (possibly test-only)
     # row population.  Result is a parallel array of probability-domain scores
@@ -687,7 +716,7 @@ def compute_per_filetype_metrics(
         "calibration_snapshot_id": policies.get("calibration_snapshot_id"),
         "operating_level": level,
         "severity": severity,
-        "evaluated_on": "test_bucket_only" if test_mask is not None else "full_corpus",
+        "evaluated_on": f"{partition}_bucket_only" if partition_mask is not None else "full_corpus",
         "n_rows_evaluated": int(labels.size),
         "with_ci": with_ci,
         "stacked_diagnostics": include_stacked,
@@ -856,15 +885,115 @@ def compute_per_filetype_metrics(
     return out
 
 
+def compute_per_filetype_metrics_honest(
+    score_table_path: Path,
+    route_policies_path: Path,
+    *,
+    db_path: str,
+    test_mask_cache_dir: Path | None = None,
+    level: int = DEFAULT_LEVEL,
+    severity: str = "hostile",
+    with_ci: bool = True,
+    include_stacked: bool = True,
+) -> dict[str, Any]:
+    """Run the metric pipeline twice — once on the dev bucket, once on
+    the test bucket — and merge so that ensemble-strategy selection
+    uses dev metrics while the reported numbers come from test.
+
+    Without this split, `compute_per_filetype_metrics` selects the best
+    ensemble strategy by ROC AUC on the same test partition it then
+    reports, which is a textbook selection-on-test leak (small in
+    magnitude, but still a leak). Picking on dev removes it.
+
+    Filegroups and the all-files view are reported on test as-is — those
+    paths don't do strategy selection.
+    """
+    LOG.info("computing test-partition metrics (reporting)")
+    test_out = compute_per_filetype_metrics(
+        score_table_path,
+        route_policies_path,
+        db_path=db_path,
+        test_mask_cache_dir=test_mask_cache_dir,
+        partition="test",
+        level=level,
+        severity=severity,
+        with_ci=with_ci,
+        include_stacked=include_stacked,
+    )
+    LOG.info("computing dev-partition metrics (strategy selection)")
+    dev_out = compute_per_filetype_metrics(
+        score_table_path,
+        route_policies_path,
+        db_path=db_path,
+        test_mask_cache_dir=test_mask_cache_dir,
+        partition="dev",
+        level=level,
+        severity=severity,
+        with_ci=False,                # CIs unused for selection; faster.
+        include_stacked=include_stacked,
+    )
+
+    test_out["schema"] = "azoth.per_filetype_metrics.v2"
+    test_out["evaluated_on"] = "test_bucket_only"
+    test_out["strategy_selected_on"] = "dev_bucket"
+    test_out["dev_rows_used_for_selection"] = dev_out.get("n_rows_evaluated", 0)
+
+    for ft, test_entry in test_out.get("filetypes", {}).items():
+        dev_entry = (dev_out.get("filetypes") or {}).get(ft) or {}
+        dev_strategies = dev_entry.get("ensemble_strategies") or {}
+        test_strategies = test_entry.get("ensemble_strategies") or {}
+        # Pick the strategy with the best dev ROC AUC, restricting to
+        # strategies that produced a usable metric in BOTH partitions.
+        candidates = [
+            (name, dev_metric)
+            for name, dev_metric in dev_strategies.items()
+            if name != "naive_max"
+            and dev_metric.get("n_evaluated", 0) > 0
+            and name in test_strategies
+            and test_strategies[name].get("n_evaluated", 0) > 0
+        ]
+        if not candidates:
+            continue  # leave whatever test-only selection picked
+        # Selection criterion: PR AUC primary, recall@3FP/M tiebreak.
+        # Why this and not ROC AUC: on the heavy class imbalance here
+        # (benigns >> malware), ROC AUC's FPR denominator is dominated
+        # by easy negatives and barely moves when tail behavior shifts.
+        # Two strategies can have identical ROC AUC while one has 4×
+        # the recall at our actual FP budget (observed for PE between
+        # stacked_xgb and calibrated_max). PR AUC tracks the high-
+        # precision tail that matters here; recall@3FP/M nails the
+        # exact operating point. NaN recall (filetype slice too thin
+        # to resolve 3 FP/M empirically) maps to 0 for ordering.
+        def _sel_key(m: dict[str, Any]) -> tuple[float, float]:
+            pr = m.get("pr_auc") or 0.0
+            r3 = m.get("recall_at_3fp_per_million")
+            r3 = 0.0 if r3 is None or (isinstance(r3, float) and math.isnan(r3)) else r3
+            return (pr, r3)
+
+        best_name, dev_metric = max(
+            candidates, key=lambda kv: _sel_key(kv[1]),
+        )
+        test_entry["ensemble"] = test_strategies[best_name]
+        test_entry["ensemble_strategy"] = best_name
+        test_entry["ensemble_strategy_dev_roc_auc"] = dev_metric.get("roc_auc")
+        test_entry["ensemble_strategy_dev_pr_auc"] = dev_metric.get("pr_auc")
+        test_entry["ensemble_strategy_dev_n_evaluated"] = dev_metric.get("n_evaluated")
+
+    return test_out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--azoth-root", type=Path, default=Path("out/models/azoth"))
     parser.add_argument("--db", default=None,
                         help="Hopper DSN for canonical_sha256 lookup. When set, "
-                             "metrics are computed only on the SHA256-deterministic "
-                             "12.5%% test bucket (apples-to-apples vs EMBER 2024). "
-                             "When omitted, metrics include training rows too — "
-                             "honest reporting requires this flag.")
+                             "the pipeline runs on both the dev and test "
+                             "SHA256-deterministic buckets: ensemble strategy "
+                             "is picked by ROC AUC on dev, then the chosen "
+                             "strategy's metrics on the locked test bucket are "
+                             "reported. When omitted, metrics include training "
+                             "rows and strategy selection is on the same data "
+                             "it reports — honest reporting requires this flag.")
     parser.add_argument("--level", type=int, default=DEFAULT_LEVEL,
                         help="Operating level to use for ensemble routing (default 5).")
     parser.add_argument("--severity", default="hostile",
@@ -888,16 +1017,33 @@ def main() -> int:
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format="%(message)s")
     root = args.azoth_root
-    metrics = compute_per_filetype_metrics(
-        root / "score_table.npz",
-        root / "route_policies.json",
-        db_path=args.db,
-        test_mask_cache_dir=None if args.no_test_mask_cache else args.test_mask_cache_dir,
-        level=args.level,
-        severity=args.severity,
-        with_ci=not args.no_ci,
-        include_stacked=not args.no_stacked,
-    )
+    cache_dir = None if args.no_test_mask_cache else args.test_mask_cache_dir
+    if args.db:
+        # Honest: pick ensemble strategy on dev, report on test.
+        metrics = compute_per_filetype_metrics_honest(
+            root / "score_table.npz",
+            root / "route_policies.json",
+            db_path=args.db,
+            test_mask_cache_dir=cache_dir,
+            level=args.level,
+            severity=args.severity,
+            with_ci=not args.no_ci,
+            include_stacked=not args.no_stacked,
+        )
+    else:
+        # Full-corpus mode (no partition split available). Strategy is
+        # selected on the same data it's reported on; documented limit
+        # of running without --db.
+        metrics = compute_per_filetype_metrics(
+            root / "score_table.npz",
+            root / "route_policies.json",
+            db_path=None,
+            test_mask_cache_dir=cache_dir,
+            level=args.level,
+            severity=args.severity,
+            with_ci=not args.no_ci,
+            include_stacked=not args.no_stacked,
+        )
     out_path = root / "per_filetype_metrics.json"
     with open(out_path, "w") as f:
         json.dump(metrics, f, indent=2)

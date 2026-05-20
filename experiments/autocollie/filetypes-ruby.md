@@ -141,3 +141,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260519T203540-filetypes-ruby` — 2026-05-19T20:35:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d67562d564145a15` | ruby_control_extra_trees_reg | ok | 0.8449 | 0.9941 | 0.8889 | 9 | [log](out/autocollie/runs/2026-05-19T20-39-09_20260519T203540-filetypes-ruby_ruby_control_extra_trees_reg.log) |
+| `dc114d6b8b6f8ea8` | ruby_feat_textenc_metrics_full | ok | 0.8894 | 0.9961 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-19T20-39-18_20260519T203540-filetypes-ruby_ruby_feat_textenc_metrics_full.log) |
+| `cc7d40246bf0ac5c` | ruby_feat_low_freq_bigrams_kv | ok | 0.9060 | 0.9971 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-19T20-39-23_20260519T203540-filetypes-ruby_ruby_feat_low_freq_bigrams_kv.log) |
+| `7f7ea6bb19cd46f6` | ruby_transfer_symbol_vocab_extra | ok | 0.7626 | 0.9941 | 0.8421 | 6 | [log](out/autocollie/runs/2026-05-19T20-39-28_20260519T203540-filetypes-ruby_ruby_transfer_symbol_vocab_extra.log) |
+| `708b0ce564832d39` | ruby_generalize_seed_search_3 | ok | 0.8412 | 0.9961 | 0.9474 | 9 | [log](out/autocollie/runs/2026-05-19T20-39-34_20260519T203540-filetypes-ruby_ruby_generalize_seed_search_3.log) |
+| `13521e76a5eb0c0a` | ruby_ablate_blindfold_hard_neg | ok | 0.8412 | 0.9961 | 0.8889 | 11 | [log](out/autocollie/runs/2026-05-19T20-39-42_20260519T203540-filetypes-ruby_ruby_ablate_blindfold_hard_neg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_control_extra_trees_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Copy best feature env and apply extra_trees + higher reg_lambda to reduce overfitting on the small corpus, targeting PR_AUC improvement.
+- **`ruby_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture Ruby script obfuscation and structural patterns, targeting PR_AUC gain.
+- **`ruby_feat_low_freq_bigrams_kv`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 100 and expand kv_vocab_max to capture rarer Ruby-specific patterns, targeting recall@3FPM improvement.
+- **`ruby_transfer_symbol_vocab_extra`** `EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Port perl route's symbol_vocab + extra_trees combo to leverage Ruby symbol co-occurrence signals, targeting PR_AUC.
+- **`ruby_generalize_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 with save_all_seeds=true on the best config to average out seed variance and stabilize PR_AUC.
+- **`ruby_ablate_blindfold_hard_neg`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout and apply hard_negative upweighting to sharpen the decision boundary for the 9 malware samples, targeting recall@3FPM.
+
+</details>
+

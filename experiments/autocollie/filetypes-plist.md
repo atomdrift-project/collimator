@@ -118,3 +118,25 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260519T202206-filetypes-plist` — 2026-05-19T20:22:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c03ab58dca531aac` | plist_baseline_leaves128_reg2 | ok | 0.2000 | 0.5000 | 0.3333 | 5 | [log](out/autocollie/runs/2026-05-19T20-26-52_20260519T202206-filetypes-plist_plist_baseline_leaves128_reg2.log) |
+| `d92707f31b1d21be` | plist_baseline_hardneg_tail | ok | 0.2000 | 0.5000 | 0.3333 | 1 | [log](out/autocollie/runs/2026-05-19T20-26-58_20260519T202206-filetypes-plist_plist_baseline_hardneg_tail.log) |
+| `6b85d6358a1f06e3` | plist_kv_vocab_5k | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-19T20-26-59_20260519T202206-filetypes-plist_plist_kv_vocab_5k.log) |
+| `aee70f94f1706ee8` | plist_textenc_metrics_full | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-19T20-27-01_20260519T202206-filetypes-plist_plist_textenc_metrics_full.log) |
+| `44bb38936577d75a` | plist_baseline_seedsearch3 | ok | 0.2000 | 0.5000 | 0.3333 | 2 | [log](out/autocollie/runs/2026-05-19T20-27-04_20260519T202206-filetypes-plist_plist_baseline_seedsearch3.log) |
+| `6d677b174fac9d5b` | plist_ablate_blindfold | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-19T20-27-06_20260519T202206-filetypes-plist_plist_ablate_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`plist_baseline_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env; increase num_leaves to 128 and reg_lambda to 2.0 to improve PR_AUC by capturing finer decision boundaries while regularizing against overfit on the small plist corpus.
+- **`plist_baseline_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env; add hard_negative_fraction=0.1 and hard_negative_weight=12.0 to push recall@3 FP/M by forcing the model to better separate borderline benigns from malware.
+- **`plist_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with kv_vocab_max=5000 to capture structured plist key-value patterns; aims to lift PR_AUC by adding high-signal lexical features absent from the baseline.
+- **`plist_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding and text_metrics_full to extract obfuscation and structural text signals common in malicious plists; targets PR_AUC and ROC_AUC gains by enriching the feature surface.
+- **`plist_baseline_seedsearch3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply seed_search_k=3 on the best feature_env to average out seed variance; aims to stabilize recall@3 FP/M and confirm the baseline's PR_AUC win is robust.
+- **`plist_ablate_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold dropout to reduce feature noise on this small corpus; aims to maintain or improve PR_AUC by giving the model consistent access to all baseline signals.
+
+</details>
+
