@@ -300,3 +300,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T184735-filetypes-data` — 2026-05-21T18:47:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `da471f82dcd9aba1` | data_ctrl_baseline_train_tune | ok | 1.0000 | 1.0000 | 1.0000 | 5 | [log](out/autocollie/runs/2026-05-21T18-51-17_20260521T184735-filetypes-data_data_ctrl_baseline_train_tune.log) |
+| `2f42118d6d77a0e0` | data_feat_kv_vocab_10k | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T18-51-23_20260521T184735-filetypes-data_data_feat_kv_vocab_10k.log) |
+| `79435c5cf94ef12b` | data_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T18-51-26_20260521T184735-filetypes-data_data_feat_text_metrics_enc.log) |
+| `4964457fdea7471f` | data_abl_blindfold_off | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T18-51-30_20260521T184735-filetypes-data_data_abl_blindfold_off.log) |
+| `` | data_transfer_hardneg_scale | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-51-33_20260521T184735-filetypes-data_data_transfer_hardneg_scale.log) |
+| `` | data_gen_seed_search_3 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-51-35_20260521T184735-filetypes-data_data_gen_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_ctrl_baseline_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline feature set with hard-negative tuning to improve recall@3FPM while preserving PR_AUC guardrails.
+- **`data_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocabulary to capture rare key-value patterns, targeting PR_AUC gains from finer-grained structural signal.
+- **`data_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds full text metrics and encoding features to capture document obfuscation signals, aiming to boost recall@3FPM on malformed data files.
+- **`data_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Removes blindfold dropout to reduce feature noise, targeting stable PR_AUC and ROC_AUC by simplifying the feature surface.
+- **`data_transfer_hardneg_scale`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Transfers perl route's hard-negative scaling to suppress benign tail noise, targeting improved recall@3FPM at low FPR.
+- **`data_gen_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Averages predictions across 3 seeds to reduce variance, targeting robust recall@3FPM and stable PR_AUC across corpus splits.
+
+</details>
+

@@ -306,3 +306,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T183422-filetypes-pe` — 2026-05-21T18:34:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `96d0dfc535f3df65` | pe_control_hardneg_01_16_v2 | ok | 0.9997 | 0.9997 | 0.9934 | 136 | [log](out/autocollie/runs/2026-05-21T18-39-33_20260521T183422-filetypes-pe_pe_control_hardneg_01_16_v2.log) |
+| `b4a087185e8c8f71` | pe_feat_kv_vocab_15k | ok | 0.9997 | 0.9997 | 0.9911 | 89 | [log](out/autocollie/runs/2026-05-21T18-42-19_20260521T183422-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `083743a1db3b7fc0` | pe_feat_symbol_vocab_bigrams | ok | 0.9997 | 0.9997 | 0.9918 | 96 | [log](out/autocollie/runs/2026-05-21T18-43-49_20260521T183422-filetypes-pe_pe_feat_symbol_vocab_bigrams.log) |
+| `b354fca6dd12abba` | pe_feat_pe_flags_overlay | ok | 0.9997 | 0.9997 | 0.9920 | 80 | [log](out/autocollie/runs/2026-05-21T18-45-25_20260521T183422-filetypes-pe_pe_feat_pe_flags_overlay.log) |
+| `` | pe_train_hardneg_02_18 | fail | — | — | — | 33 | [log](out/autocollie/runs/2026-05-21T18-46-46_20260521T183422-filetypes-pe_pe_train_hardneg_02_18.log) |
+| `` | pe_train_scalepos05_reg1 | fail | — | — | — | 16 | [log](out/autocollie/runs/2026-05-21T18-47-19_20260521T183422-filetypes-pe_pe_train_scalepos05_reg1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_control_hardneg_01_16_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best feature_env with hard_negative_fraction=0.01 and weight=16 to stabilize PR_AUC and recall@3FPM via matrix cache hit.
+- **`pe_feat_kv_vocab_15k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 15000 to capture key-value pair signals in PE headers/sections, aiming to lift PR_AUC by distinguishing benign config patterns from malicious payloads.
+- **`pe_feat_symbol_vocab_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 …` — Enable symbol_vocab and symbol_bigrams to model import co-occurrence patterns, targeting ROC_AUC and PR_AUC gains by catching kernel32->WriteProcessMemory style chains.
+- **`pe_feat_pe_flags_overlay`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 …` — Activate pe_format_flags, pe_temporal_anomaly, overlay_signal, and nonstandard_section_signal to add structural PE metadata, aiming to improve recall@3FPM by isolating packer/dropper artifacts.
+- **`pe_train_hardneg_02_18`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Sweep hard_negative_fraction=0.02 and weight=18 to aggressively penalize hard benigns, targeting recall@3FPM improvement at the deployed low-FPR operating point.
+- **`pe_train_scalepos05_reg1`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives with scale_pos_weight_mult=0.5 and reg_lambda=1.0 to suppress false positives on borderline benigns, aiming to boost recall@3FPM while keeping PR_AUC flat.
+
+</details>
+

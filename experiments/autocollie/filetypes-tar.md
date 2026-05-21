@@ -298,3 +298,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T185554-filetypes-tar` — 2026-05-21T18:55:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8878254354ec93e0` | tar_control_baseline_train | ok | 0.9994 | 0.9944 | 0.9932 | 15 | [log](out/autocollie/runs/2026-05-21T19-01-06_20260521T185554-filetypes-tar_tar_control_baseline_train.log) |
+| `` | tar_train_hardneg_tail | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T19-01-22_20260521T185554-filetypes-tar_tar_train_hardneg_tail.log) |
+| `` | tar_train_dart_reg | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T19-01-24_20260521T185554-filetypes-tar_tar_train_dart_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature env to establish a stable baseline; tweaks estimators and reg_lambda to improve PR_AUC without changing matrix cache.
+- **`tar_train_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard negative mining with moderate weight to push recall@3FPM higher while keeping PR_AUC flat.
+- **`tar_train_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switches to DART boosting with higher regularization to reduce overfitting on rare tar patterns, targeting PR_AUC and ROC_AUC stability.
+
+</details>
+

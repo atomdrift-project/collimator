@@ -12,7 +12,10 @@ Kinds:
   false-negatives — malware missed (no route in scope ≥ its threshold).
                     Ranked by max-margin asc (most-deeply-missed first).
 
-Scopes (apply identically to FP and FN):
+Scopes (apply identically to FP and FN). ``--scope`` accepts a
+comma-separated list; rows are deduped by row_id across scopes and the
+``scopes`` field on each output row lists which scopes flagged it.
+
   ensemble    — the deployed OR-rule for each row's filetype (= what
                 ``litmus`` would flag in production).
   specialists — restrict the OR to routes whose name starts with
@@ -26,6 +29,14 @@ Scopes (apply identically to FP and FN):
   route:<name> — single named route, e.g. ``route:filetypes/jpeg``.
                 Uses the threshold from that route's home filetype
                 policy (e.g. ``filetypes/jpeg``) at (level, severity).
+
+Common combined-pool invocation:
+  --scope ensemble,specialists,filegroups
+This unions errors visible to each of the three deploy-relevant scopes
+into one deduped triage list — captures (a) what production flags,
+(b) what any specialist alone would flag (sometimes broader than
+ensemble when the deployed policy is a blend), and (c) what any
+filegroup route would flag.
 """
 
 from __future__ import annotations
@@ -153,7 +164,13 @@ def main() -> None:
     p.add_argument(
         "--scope",
         required=True,
-        help="ensemble | specialists | filegroups | any | route:<name>",
+        help=(
+            "Comma-separated list of scopes. Each one of: ensemble | "
+            "specialists | filegroups | any | route:<name>. Rows are "
+            "deduped across scopes; ``scopes`` field on each output row "
+            "lists which scope(s) flagged it. Single scope (no comma) "
+            "preserves legacy behavior."
+        ),
     )
     p.add_argument("--level", type=int, default=3, help="Severity level [0..20] (default 3)")
     p.add_argument(
@@ -177,13 +194,20 @@ def main() -> None:
     )
     args = p.parse_args()
 
-    scope = args.scope
-    explicit_route: str | None = None
-    if scope.startswith("route:"):
-        explicit_route = scope.split(":", 1)[1]
-        scope = "route"
-    if scope not in {"ensemble", "specialists", "filegroups", "any", "route"}:
-        raise SystemExit(f"invalid --scope: {args.scope}")
+    raw_scopes = [s.strip() for s in str(args.scope).split(",") if s.strip()]
+    if not raw_scopes:
+        raise SystemExit("--scope must list at least one scope")
+    # Parse each scope into (canonical_name, explicit_route_or_None).
+    scope_specs: list[tuple[str, str, str | None]] = []  # (raw, canonical, explicit_route)
+    for raw in raw_scopes:
+        canon = raw
+        explicit: str | None = None
+        if canon.startswith("route:"):
+            explicit = canon.split(":", 1)[1]
+            canon = "route"
+        if canon not in {"ensemble", "specialists", "filegroups", "any", "route"}:
+            raise SystemExit(f"invalid --scope entry: {raw}")
+        scope_specs.append((raw, canon, explicit))
 
     is_fp = args.kind == "false-positives"
     target_label = 0 if is_fp else 1
@@ -207,79 +231,95 @@ def main() -> None:
         file=sys.stderr,
     )
 
+    # Per-row aggregated state across scopes:
+    #   row_i -> {
+    #     "margin": best-margin (max for FP, min for FN),
+    #     "scopes": set of scope names that flagged this row,
+    #     "trigs": {(route, score, threshold)} — union across scopes,
+    #   }
+    agg: dict[int, dict[str, Any]] = {}
     unique_fts = np.unique(file_types[target_mask])
-    triggers: list[tuple[float, int, list[tuple[str, float, float]]]] = []
-    # FP: (margin, row_index, [routes ≥ threshold])  — sort margin desc, want margin≥0
-    # FN: (margin, row_index, [])                    — sort margin asc, want margin<0
 
-    for ft in unique_fts:
-        ft_str = str(ft)
-        thresholds = _row_thresholds_for_scope(
-            scope, ft_str, per_ft, global_min, explicit_route
-        )
-        if not thresholds:
-            continue
-        contributing: list[tuple[int, str, float]] = []
-        for route_name, t in thresholds.items():
-            ridx = r_idx.get(route_name)
-            if ridx is None:
+    for raw_scope, canon_scope, explicit_route in scope_specs:
+        scope_flagged = 0
+        for ft in unique_fts:
+            ft_str = str(ft)
+            thresholds = _row_thresholds_for_scope(
+                canon_scope, ft_str, per_ft, global_min, explicit_route
+            )
+            if not thresholds:
                 continue
-            contributing.append((ridx, route_name, t))
-        if not contributing:
-            continue
-        ft_mask = target_mask & (file_types == ft)
-        ft_row_indices = np.flatnonzero(ft_mask)
-        if not ft_row_indices.size:
-            continue
-        # margin per row: max(score - threshold) across contributing routes.
-        # NaN scores (route didn't run / not applicable to this filetype)
-        # are excluded — they contribute neither a hit nor a deficit.
-        margins = np.full(ft_row_indices.shape, -np.inf, dtype=np.float64)
-        best_route_idx = np.full(ft_row_indices.shape, -1, dtype=np.int32)
-        any_finite = np.zeros(ft_row_indices.shape, dtype=bool)
-        for local_pos, (ridx, _, t) in enumerate(contributing):
-            row_scores = scores[ridx, ft_row_indices].astype(np.float64)
-            finite = np.isfinite(row_scores)
-            delta = np.where(finite, row_scores - t, -np.inf)
-            better = finite & (delta > margins)
-            margins = np.where(better, delta, margins)
-            best_route_idx = np.where(better, local_pos, best_route_idx)
-            any_finite |= finite
-        # FP criterion: margin ≥ 0 (some route fires on a benign).
-        # FN criterion: margin <  0 AND at least one route actually
-        #               scored the row (otherwise it's just "not evaluated",
-        #               not a real miss).
-        if is_fp:
-            hit = margins >= 0
-        else:
-            hit = any_finite & (margins < 0)
-        if not hit.any():
-            continue
-        hit_pos = np.flatnonzero(hit)
-        for pos in hit_pos:
-            row_i = int(ft_row_indices[pos])
-            margin = float(margins[pos])
-            row_trigs: list[tuple[str, float, float]] = []
+            contributing: list[tuple[int, str, float]] = []
+            for route_name, t in thresholds.items():
+                ridx = r_idx.get(route_name)
+                if ridx is None:
+                    continue
+                contributing.append((ridx, route_name, t))
+            if not contributing:
+                continue
+            ft_mask = target_mask & (file_types == ft)
+            ft_row_indices = np.flatnonzero(ft_mask)
+            if not ft_row_indices.size:
+                continue
+            # margin per row: max(score - threshold) across contributing routes.
+            # NaN scores (route didn't run / not applicable to this filetype)
+            # are excluded — they contribute neither a hit nor a deficit.
+            margins = np.full(ft_row_indices.shape, -np.inf, dtype=np.float64)
+            any_finite = np.zeros(ft_row_indices.shape, dtype=bool)
+            for ridx, _, t in contributing:
+                row_scores = scores[ridx, ft_row_indices].astype(np.float64)
+                finite = np.isfinite(row_scores)
+                delta = np.where(finite, row_scores - t, -np.inf)
+                margins = np.where(finite & (delta > margins), delta, margins)
+                any_finite |= finite
             if is_fp:
-                # Routes that actually fired (≥ threshold) on this benign.
-                for ridx, route_name, t in contributing:
-                    s = float(scores[ridx, row_i])
-                    if s >= t:
-                        row_trigs.append((route_name, s, t))
+                hit = margins >= 0
             else:
-                # No route fired; report each route's deficit instead.
-                for ridx, route_name, t in contributing:
-                    s = float(scores[ridx, row_i])
-                    row_trigs.append((route_name, s, t))
-            triggers.append((margin, row_i, row_trigs))
+                hit = any_finite & (margins < 0)
+            if not hit.any():
+                continue
+            for pos in np.flatnonzero(hit):
+                row_i = int(ft_row_indices[pos])
+                margin = float(margins[pos])
+                row_trigs: list[tuple[str, float, float]] = []
+                if is_fp:
+                    for ridx, route_name, t in contributing:
+                        s = float(scores[ridx, row_i])
+                        if s >= t:
+                            row_trigs.append((route_name, s, t))
+                else:
+                    for ridx, route_name, t in contributing:
+                        s = float(scores[ridx, row_i])
+                        row_trigs.append((route_name, s, t))
+                entry = agg.get(row_i)
+                if entry is None:
+                    agg[row_i] = {
+                        "margin": margin,
+                        "scopes": {raw_scope},
+                        "trigs": {(r, s, t) for r, s, t in row_trigs},
+                    }
+                else:
+                    if is_fp:
+                        entry["margin"] = max(entry["margin"], margin)
+                    else:
+                        entry["margin"] = min(entry["margin"], margin)
+                    entry["scopes"].add(raw_scope)
+                    entry["trigs"].update((r, s, t) for r, s, t in row_trigs)
+                scope_flagged += 1
+        print(
+            f"  scope={raw_scope}: flagged {scope_flagged:,} row-hits "
+            f"(running unique total {len(agg):,})",
+            file=sys.stderr,
+        )
 
-    # FPs: largest margin first (most-confidently flagged).
-    # FNs: smallest margin first (most-deeply missed — biggest deficit).
-    triggers.sort(key=lambda x: -x[0] if is_fp else x[0])
+    # Flatten and sort. FPs: largest margin first. FNs: smallest first.
+    flat = [(entry["margin"], row_i, entry) for row_i, entry in agg.items()]
+    flat.sort(key=lambda x: -x[0] if is_fp else x[0])
     skip = max(0, int(args.skip))
-    top = triggers[skip : skip + args.top_errors]
+    top = flat[skip : skip + args.top_errors]
     print(
-        f"flagged: {len(triggers):,}, skipping {skip}, taking {len(top)}",
+        f"flagged: {len(flat):,} (deduped across {len(scope_specs)} scope(s)), "
+        f"skipping {skip}, taking {len(top)}",
         file=sys.stderr,
     )
 
@@ -290,12 +330,12 @@ def main() -> None:
         print(f"WARN: {missing}/{len(selected_row_ids)} row_ids missing in DB", file=sys.stderr)
 
     rows_out: list[dict[str, Any]] = []
-    for margin, row_i, trigs in top:
+    for margin, row_i, entry in top:
         rid = int(row_ids[row_i])
         sha, path = paths.get(rid, ("", ""))
-        # For FPs the headline route is the one with the largest delta
-        # (already sorted that way during trigger collection's order
-        # doesn't matter — pick by max score-threshold here).
+        trigs = list(entry["trigs"])
+        # For FPs the headline route is the one with the largest delta.
+        # For FNs the same — most permissive (smallest threshold shortfall).
         headline = max(trigs, key=lambda x: x[1] - x[2]) if trigs else None
         rows_out.append({
             "row_id": rid,
@@ -306,6 +346,7 @@ def main() -> None:
             "probability": headline[1] if headline else 0.0,
             "margin": margin,
             "scope": args.scope,
+            "scopes_flagged": sorted(entry["scopes"]),
             "level": args.level,
             "severity": args.severity,
             "headline_route": headline[0] if headline else "",
@@ -322,16 +363,17 @@ def main() -> None:
         "route_policies": str(args.route_policies),
         "kind": args.kind,
         "scope": args.scope,
+        "scopes": [raw for raw, _, _ in scope_specs],
         "level": args.level,
         "severity": args.severity,
-        "raw_count": len(triggers),
+        "raw_count": len(flat),
         "skip": skip,
     }
     payload["false_positives" if is_fp else "uncaught"] = rows_out
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2))
     print(
-        f"wrote {args.output} ({len(rows_out)} rows, {len(triggers):,} total {args.kind})",
+        f"wrote {args.output} ({len(rows_out)} rows, {len(flat):,} total deduped {args.kind})",
         file=sys.stderr,
     )
 

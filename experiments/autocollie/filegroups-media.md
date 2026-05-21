@@ -174,3 +174,23 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T175606-filegroups-media` — 2026-05-21T17:56:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d53aea232ab65342` | media_control_dart_lr005_leaves128 | ok | 0.9890 | 0.9867 | 0.9286 | 6 | [log](out/autocollie/runs/2026-05-21T18-01-07_20260521T175606-filegroups-media_media_control_dart_lr005_leaves128.log) |
+| `bf90db2f4006f396` | media_feat_textmetrics_kv_vocab | ok | 0.9955 | 0.9946 | 0.9412 | 4 | [log](out/autocollie/runs/2026-05-21T18-01-18_20260521T175606-filegroups-media_media_feat_textmetrics_kv_vocab.log) |
+| `33a999659b410a9a` | media_feat_bigram_minfreq_250 | ok | 0.9943 | 0.9933 | 0.9412 | 3 | [log](out/autocollie/runs/2026-05-21T18-01-22_20260521T175606-filegroups-media_media_feat_bigram_minfreq_250.log) |
+| `` | media_transfer_hardneg_02_12 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T18-01-26_20260521T175606-filegroups-media_media_transfer_hardneg_02_12.log) |
+| `` | media_gen_seedk3_ratios | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T18-01-28_20260521T175606-filegroups-media_media_gen_seedk3_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`media_control_dart_lr005_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control run on best feature surface; tweak LR and leaves to improve PR_AUC via better tree complexity.
+- **`media_feat_textmetrics_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and kv_vocab to capture document obfuscation and KV patterns, targeting PR_AUC gain.
+- **`media_feat_bigram_minfreq_250`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 250 to include rarer malicious bigrams, aiming to boost recall@3FPM.
+- **`media_transfer_hardneg_02_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Transfer hard_negative_fraction=0.2 and weight=12 from perl route to sharpen decision boundary and improve recall@3FPM.
+- **`media_gen_seedk3_ratios`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use seed_search_k=3 on best config to average out seed variance and stabilize PR_AUC gains.
+
+</details>
+

@@ -614,19 +614,30 @@ def _load_autocollie_best_per_route(
     replays it.
 
     Selection key (priority order):
-      1. ``recall_at_fp_per_million_3`` — recall at the L3 hostile deploy
-         budget. The operational metric: what fraction of malware does the
-         model catch at the FP/M target we actually deploy at?
-      2. ``avg_precision`` — curve-summarized PR/recall tradeoff, tiebreak.
-      3. ``save_all_seeds`` — prefer multi-seed bundles when otherwise tied.
-      4. ``timestamp`` — most recent tied run.
+      1. ``has_apples_to_apples`` — a run with ``deployed_on_same_data``
+         (autocollie's post-screen apples-to-apples baseline) always
+         outranks a legacy run without one. Legacy runs' r@3FPM is on
+         a small training holdout the deployed model never sees, so
+         even a big "win" there can flip on the test slice.
+      2. ``delta_recall_at_3_fpm`` — when apples-to-apples is present:
+         candidate's holdout r@3FP/M minus the deployed model's
+         r@3FP/M on those same rows. The cleanest "this config beats
+         deployed on identical data" signal.
+      3. ``recall_at_fp_per_million_3`` — recall at the L3 hostile
+         deploy budget. Tiebreaker within apples-to-apples; primary
+         key for legacy runs.
+      4. ``avg_precision`` — curve-summarized PR/recall tradeoff.
+      5. ``save_all_seeds`` — prefer multi-seed bundles when otherwise tied.
+      6. ``timestamp`` — most recent tied run.
 
-    Selecting on ``avg_precision`` alone (the prior rule) misses swaps
-    where two candidates have ~identical PR AUC but several-fold
-    different recall at the deploy budget — seen in real data with
-    ``native_big_vocab_tail`` (AP=0.99999 / r@3FPM=88.89%) vs
-    ``native_kv_cross_binary`` (AP=0.99999 / r@3FPM=91.14%). The old
-    picker chose the first; the new one chooses the second.
+    Selecting on ``avg_precision`` alone misses swaps where two
+    candidates have ~identical PR AUC but several-fold different
+    recall at the deploy budget. Selecting on raw recall@3FPM (the
+    prior rule) misses the holdout-vs-test-slice gap — the picker
+    used to grab ``filegroups/native`` configs with 88.89% holdout
+    recall that scored 56% on the test PE slice. Apples-to-apples
+    delta closes that gap by comparing the candidate and the
+    deployed model on identical rows.
 
     Routes with no historical runs in ``runs_dir`` get empty overrides
     and fall through to the suite's CLI defaults. Runs missing
@@ -654,9 +665,10 @@ def _load_autocollie_best_per_route(
                 promoted_runs[route] = run
 
     # Track best per route as
-    # (recall_at_3fp, avg_precision, save_all_seeds, timestamp, run_dict).
+    # (has_apples, delta_r3, r3, avg_precision, save_all_seeds, timestamp, run_dict).
     # Skip routes that already have a promoted baseline — those win.
-    best: dict[str, tuple[float, float, bool, str, dict[str, Any]]] = {}
+    best: dict[str, tuple[bool, float, float, float, bool, str, dict[str, Any]]] = {}
+    apples_counts: dict[str, list[int]] = {}  # route -> [apples, legacy]
     for path in runs_dir.glob("*.json"):
         # Skip the *_feature_spec.json sidecars and the multi-seed dirs.
         if path.name.endswith("_feature_spec.json"):
@@ -680,15 +692,37 @@ def _load_autocollie_best_per_route(
             r3 = float(recall_at_3)
         else:
             r3 = 0.0
+        # Apples-to-apples tier: a run carrying deployed_on_same_data
+        # outranks one without, regardless of raw r@3FPM. See
+        # azoth_train_best._select_best_run for the rationale.
+        deployed = run.get("deployed_on_same_data") or {}
+        deployed_r3_raw = deployed.get("recall_at_fp_per_million_3")
+        n_mal = deployed.get("n_malware", 0) or 0
+        n_ben = deployed.get("n_benign", 0) or 0
+        has_apples = (
+            isinstance(deployed_r3_raw, (int, float))
+            and not math.isnan(float(deployed_r3_raw))
+            and n_mal >= 1 and n_ben >= 1
+        )
+        delta_r3 = (r3 - float(deployed_r3_raw)) if has_apples else 0.0
+        counts = apples_counts.setdefault(route, [0, 0])
+        counts[0 if has_apples else 1] += 1
         save_all = bool(run.get("save_all_seeds"))
         timestamp = str(run.get("timestamp") or "")
-        # Tuple ordering: recall@3FPM first (operational), then PR AUC
-        # (curve summary), then save_all_seeds, then timestamp. Python
-        # tuple comparison gives a total ordering.
-        candidate = (r3, float(ap), save_all, timestamp, run)
+        candidate = (has_apples, delta_r3, r3, float(ap), save_all, timestamp, run)
         prev = best.get(route)
-        if prev is None or candidate[:4] > prev[:4]:
+        if prev is None or candidate[:6] > prev[:6]:
             best[route] = candidate
+    for route, (n_apples, n_legacy) in apples_counts.items():
+        if route in best:
+            winner = best[route]
+            LOG.info(
+                "autocollie-best (fallback) %s: scanned %d apples-to-apples + "
+                "%d legacy runs; winner=%s delta_r3=%+.4f r3=%.4f",
+                route, n_apples, n_legacy,
+                "apples-to-apples" if winner[0] else "legacy",
+                winner[1], winner[2],
+            )
 
     valid_train_fields = _train_config_field_names()
     train_overrides: dict[str, dict[str, Any]] = {}
@@ -729,10 +763,11 @@ def _load_autocollie_best_per_route(
     # Fallback: best raw screen run by operational metric. Logs the
     # source explicitly so the human sees which routes need a promote
     # cycle to graduate off the brittle path.
-    for route, (_r3, _ap, _save_all, _ts, run) in best.items():
+    for route, (has_apples, _delta, _r3, _ap, _save_all, _ts, run) in best.items():
         if route in promoted_runs:
             continue
-        _record(route, run, source="screen_runs_fallback")
+        source = "screen_runs_apples_to_apples" if has_apples else "screen_runs_legacy"
+        _record(route, run, source=source)
 
     if best and not promoted_runs:
         LOG.warning(

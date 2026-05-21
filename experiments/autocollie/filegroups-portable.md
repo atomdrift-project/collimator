@@ -226,3 +226,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T185854-filegroups-portable` — 2026-05-21T18:58:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ace50bbd82597b9` | control_baseline_train_tweak | ok | 0.9965 | 0.9991 | 0.9521 | 8 | [log](out/autocollie/runs/2026-05-21T19-03-12_20260521T185854-filegroups-portable_control_baseline_train_tweak.log) |
+| `a990e07a733f3dee` | feat_kv_vocab_expanded_split | ok | 0.9962 | 0.9991 | 0.9448 | 6 | [log](out/autocollie/runs/2026-05-21T19-03-25_20260521T185854-filegroups-portable_feat_kv_vocab_expanded_split.log) |
+| `4ecd83180ed0d83f` | feat_text_metrics_enc_full | ok | 0.9962 | 0.9991 | 0.9448 | 5 | [log](out/autocollie/runs/2026-05-21T19-03-31_20260521T185854-filegroups-portable_feat_text_metrics_enc_full.log) |
+| `241ff65a86ad198b` | feat_tiered_crit_trigrams | ok | 0.9957 | 0.9990 | 0.9485 | 5 | [log](out/autocollie/runs/2026-05-21T19-03-37_20260521T185854-filegroups-portable_feat_tiered_crit_trigrams.log) |
+| `` | train_hardneg_gbdt_01_12 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T19-03-43_20260521T185854-filegroups-portable_train_hardneg_gbdt_01_12.log) |
+| `` | train_scale_pos_05_fpr_target | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T19-03-45_20260521T185854-filegroups-portable_train_scale_pos_05_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_train_tweak`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env to hit matrix cache; test deeper trees and lower LR to improve PR_AUC ranking stability.
+- **`feat_kv_vocab_expanded_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 20k and enable value splitting to capture finer-grained key-value signals, targeting PR_AUC gain.
+- **`feat_text_metrics_enc_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable full text metrics and text encoding features to capture document/script obfuscation patterns, aiming for PR_AUC improvement.
+- **`feat_tiered_crit_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enable tiered critical trigrams and lower bigram min freq to capture rare but high-severity n-gram patterns, targeting recall@3FPM.
+- **`train_hardneg_gbdt_01_12`** `EXP_BOOSTING_TYPE=gbdt EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative sampling with GBDT boosting to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`train_scale_pos_05_fpr_target`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Down-weight positives and optimize threshold at 3e-6 FPR to directly maximize deployed recall@3FPM.
+
+</details>
+

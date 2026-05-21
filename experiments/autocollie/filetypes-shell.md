@@ -264,3 +264,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T182229-filetypes-shell` — 2026-05-21T18:22:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1b1c6209f887cffb` | shell_ctrl_scalepos_075 | ok | 0.9964 | 0.9978 | 0.9540 | 17 | [log](out/autocollie/runs/2026-05-21T18-26-30_20260521T182229-filetypes-shell_shell_ctrl_scalepos_075.log) |
+| `2e69d17d685527b1` | shell_feat_kv_vocab_25k | ok | 0.9964 | 0.9978 | 0.9295 | 14 | [log](out/autocollie/runs/2026-05-21T18-26-51_20260521T182229-filetypes-shell_shell_feat_kv_vocab_25k.log) |
+| `700c03c6af08def9` | shell_feat_text_metrics_full | ok | 0.9962 | 0.9977 | 0.9609 | 14 | [log](out/autocollie/runs/2026-05-21T18-27-06_20260521T182229-filetypes-shell_shell_feat_text_metrics_full.log) |
+| `14b1e0b52ec2f474` | shell_feat_obj_trigrams_freq30 | ok | 0.9962 | 0.9977 | 0.9611 | 14 | [log](out/autocollie/runs/2026-05-21T18-27-20_20260521T182229-filetypes-shell_shell_feat_obj_trigrams_freq30.log) |
+| `` | shell_train_hardneg_01_w12 | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-21T18-27-34_20260521T182229-filetypes-shell_shell_train_hardneg_01_w12.log) |
+| `` | shell_train_dart_lr004 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-21T18-27-42_20260521T182229-filetypes-shell_shell_train_dart_lr004.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_ctrl_scalepos_075`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.75 to down-weight positives and reduce FPs at low FPR, targeting recall@3 FP/M.
+- **`shell_feat_kv_vocab_25k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=3 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 25000 and lower min_freq to capture rare key-value patterns in shell scripts, targeting PR_AUC.
+- **`shell_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture structural text anomalies in shell scripts, targeting recall@3 FP/M.
+- **`shell_feat_obj_trigrams_freq30`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=30` — Enable objective_trigrams with min_freq 30 to capture mid-frequency objective co-occurrences, targeting PR_AUC.
+- **`shell_train_hardneg_01_w12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction=0.1 with weight=12 to focus model on difficult benigns, targeting recall@3 FP/M.
+- **`shell_train_dart_lr004`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Switch to dart boosting with lower LR and more estimators to regularize trees and improve tail ranking, targeting PR_AUC.
+
+</details>
+

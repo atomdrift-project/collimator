@@ -228,3 +228,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T181022-filetypes-applescript` — 2026-05-21T18:10:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `576989ecae837356` | control_train_reg_leaves32 | ok | 0.4000 | 0.5000 | 0.5714 | 5 | [log](out/autocollie/runs/2026-05-21T18-14-10_20260521T181022-filetypes-applescript_control_train_reg_leaves32.log) |
+| `66912183a7cbdee2` | feat_kv_vocab_max2k | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T18-14-15_20260521T181022-filetypes-applescript_feat_kv_vocab_max2k.log) |
+| `473d6511e4ecf5a9` | feat_text_metrics_encoding | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T18-14-18_20260521T181022-filetypes-applescript_feat_text_metrics_encoding.log) |
+| `9d6452304dbfd0ca` | ablation_textenc_off_bigram1k | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T18-14-21_20260521T181022-filetypes-applescript_ablation_textenc_off_bigram1k.log) |
+| `0c91b2b4ddaafb02` | gen_seed_search_kv_vocab | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T18-14-23_20260521T181022-filetypes-applescript_gen_seed_search_kv_vocab.log) |
+| `` | retry_hardneg_scalepos075 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-14-26_20260521T181022-filetypes-applescript_retry_hardneg_scalepos075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_train_reg_leaves32`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env and reduce tree capacity with higher L2 regularization to prevent overfitting on the tiny holdout, aiming to stabilize PR_AUC and improve generalization.
+- **`feat_kv_vocab_max2k`** `EXP_KV_MIN_FREQ=2 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=2000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture key-value patterns in AppleScript dictionaries and properties, targeting PR_AUC improvement by adding structured signal.
+- **`feat_text_metrics_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote text metrics and encoding features to capture obfuscation and structural patterns in scripts, aiming to boost recall@3 FP/M by distinguishing malicious script formatting.
+- **`ablation_textenc_off_bigram1k`** `EXP_BIGRAM_MAX=1000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=0 EXP_TRAIN_SAMPLES=30000` — Disable text encoding features and shrink bigram vocab to reduce noise on the tiny corpus, aiming to keep PR_AUC flat while lowering overfit risk and stabilizing ROC_AUC.
+- **`gen_seed_search_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Port KV vocab from sister script routes with seed search to average out variance on the small holdout, targeting stable recall@3 FP/M gains.
+- **`retry_hardneg_scalepos075`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Retry hard-negative mining with moderate weighting to sharpen the decision boundary for the few malware samples, aiming to lift recall@3 FP/M without tanking PR_AUC.
+
+</details>
+

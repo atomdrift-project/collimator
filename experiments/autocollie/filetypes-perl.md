@@ -216,3 +216,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T180129-filetypes-perl` — 2026-05-21T18:01:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `33f8836d3cde36f5` | ctrl_scale_pos_075_leaves128 | ok | 0.9869 | 0.9983 | 0.9231 | 7 | [log](out/autocollie/runs/2026-05-21T18-05-16_20260521T180129-filetypes-perl_ctrl_scale_pos_075_leaves128.log) |
+| `a0febbcd5647afed` | feat_kv_vocab_5000 | ok | 0.9881 | 0.9985 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-21T18-05-27_20260521T180129-filetypes-perl_feat_kv_vocab_5000.log) |
+| `91e7eaf0b710afbf` | feat_text_metrics_full | ok | 0.9894 | 0.9987 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-21T18-05-32_20260521T180129-filetypes-perl_feat_text_metrics_full.log) |
+| `087468720b58f7bc` | feat_text_encoding | ok | 0.9894 | 0.9987 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-21T18-05-37_20260521T180129-filetypes-perl_feat_text_encoding.log) |
+| `` | train_hardneg_01_10 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T18-05-41_20260521T180129-filetypes-perl_train_hardneg_01_10.log) |
+| `` | train_extra_trees_seed3 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T18-05-43_20260521T180129-filetypes-perl_train_extra_trees_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ctrl_scale_pos_075_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control baseline with scale_pos_weight_mult=0.75 and num_leaves=128 to improve recall@3FPM while keeping PR_AUC flat.
+- **`feat_kv_vocab_5000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 5000 to capture key-value signals in perl scripts, targeting PR_AUC improvement.
+- **`feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to extract structural text features from perl scripts, aiming to boost PR_AUC.
+- **`feat_text_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding to capture character encoding patterns common in obfuscated perl, targeting recall@3FPM.
+- **`train_hardneg_01_10`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining (fraction=0.1, weight=10) to sharpen decision boundary, targeting PR_AUC and recall@3FPM.
+- **`train_extra_trees_seed3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use extra_trees and seed_search_k=3 to reduce variance and improve robust recall@3FPM across seeds.
+
+</details>
+

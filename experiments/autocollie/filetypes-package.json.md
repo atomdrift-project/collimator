@@ -306,3 +306,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T185043-filetypes-package.json` — 2026-05-21T18:50:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `146d129607b6b562` | pkg_json_ctrl_baseline_train | ok | 0.9998 | 0.9996 | 0.9960 | 13 | [log](out/autocollie/runs/2026-05-21T18-54-56_20260521T185043-filetypes-package.json_pkg_json_ctrl_baseline_train.log) |
+| `ae5dcfee61678d25` | pkg_json_feat_kv_vocab_split | ok | 0.9998 | 0.9995 | 0.9962 | 11 | [log](out/autocollie/runs/2026-05-21T18-55-14_20260521T185043-filetypes-package.json_pkg_json_feat_kv_vocab_split.log) |
+| `53758451723a01d6` | pkg_json_feat_text_metrics_full | ok | 0.9998 | 0.9995 | 0.9962 | 10 | [log](out/autocollie/runs/2026-05-21T18-55-25_20260521T185043-filetypes-package.json_pkg_json_feat_text_metrics_full.log) |
+| `5a5b66f60d2938d4` | pkg_json_feat_bigram_rare_expanded | ok | 0.9998 | 0.9996 | 0.9962 | 10 | [log](out/autocollie/runs/2026-05-21T18-55-36_20260521T185043-filetypes-package.json_pkg_json_feat_bigram_rare_expanded.log) |
+| `` | pkg_json_train_hardneg_moderate | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-21T18-55-47_20260521T185043-filetypes-package.json_pkg_json_train_hardneg_moderate.log) |
+| `` | pkg_json_train_scalepos_fpr_target | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-21T18-55-51_20260521T185043-filetypes-package.json_pkg_json_train_scalepos_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_ctrl_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control spec replicating recent best feature_env to establish baseline PR_AUC and ROC_AUC while tuning num_leaves and learning_rate for stable ranking.
+- **`pkg_json_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to capture granular dependency and config field signals, aiming to improve PR_AUC by resolving ambiguous package names.
+- **`pkg_json_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full to extract structural JSON formatting and obfuscation cues, targeting recall@3 FP/M gains on minimally modified malicious manifests.
+- **`pkg_json_feat_bigram_rare_expanded`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 50 and increase bigram_max to 15000 to capture rarer dependency co-occurrences, aiming to boost PR_AUC on niche attack patterns.
+- **`pkg_json_train_hardneg_moderate`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply moderate hard_negative_fraction and weight to sharpen decision boundary at low FPR, targeting recall@3 FP/M improvement without triggering previous FP crashes.
+- **`pkg_json_train_scalepos_fpr_target`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives with scale_pos_weight_mult=0.75 and optimize threshold for max_recall_at_fpr to directly maximize recall@3 FP/M at the deployed operating point.
+
+</details>
+

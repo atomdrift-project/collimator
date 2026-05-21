@@ -90,7 +90,11 @@ EMBER_2024 = {
 
 
 def _delta(ours: float | None, theirs: float | None) -> str:
-    """Format `ours - theirs` with sign (+ / -) for direct comparison."""
+    """Format `ours - theirs` with sign (+ / -) for direct comparison.
+
+    6 decimals so saturated-curve deltas (e.g. +0.000018 PR AUC over
+    EMBER) don't round to +0.0000 and read as "no improvement."
+    """
     if ours is None or theirs is None:
         return "-"
     try:
@@ -100,7 +104,7 @@ def _delta(ours: float | None, theirs: float | None) -> str:
     if math.isnan(d):
         return "-"
     sign = "+" if d >= 0 else ""
-    return f"{sign}{d:.4f}"
+    return f"{sign}{d:.6f}"
 
 
 def _ember_for(filetype: str, view: str) -> dict[str, float] | None:
@@ -243,8 +247,12 @@ def _metric_cell(
 
     ``as_percent=True`` formats as a percentage (e.g., recall: 0.9355 →
     "93.55%"). Used for recall, F1 — proportions that are easier to scan
-    than 4-decimal floats. AUCs stay as 4-decimal floats since the
-    interesting variation is in the third+ decimal.
+    than 4-decimal floats.
+
+    AUCs use 6 decimals so saturated-curve values like 0.999981 don't
+    round to 1.0000 and obscure how much headroom is left. Most routes
+    sit at 0.99x where 6 decimals is just trailing zeros; the few that
+    hit the four-nines tail are exactly where the extra precision matters.
     """
     if point is None:
         return "—"
@@ -254,7 +262,7 @@ def _metric_cell(
         return "—"
     if math.isnan(numeric):
         return "—"
-    fmt = (lambda v: f"{float(v) * 100:.2f}%") if as_percent else (lambda v: _num(v, 4))
+    fmt = (lambda v: f"{float(v) * 100:.2f}%") if as_percent else (lambda v: _num(v, 6))
     base = fmt(numeric)
     if not include_ci or low is None or high is None:
         return base
@@ -344,9 +352,9 @@ def _three_way_table(metrics: dict[str, Any], filetypes: tuple[str, ...]) -> lis
         strategy = entry.get("ensemble_strategy", "—")
         lines.append(
             f"| `{ft}` | {_int(entry.get('n_files'))} | "
-            f"{_num(g.get('roc_auc'), 4)} | "
-            f"{_num(s.get('roc_auc'), 4)} | "
-            f"{_num(e.get('roc_auc'), 4)} | "
+            f"{_num(g.get('roc_auc'), 6)} | "
+            f"{_num(s.get('roc_auc'), 6)} | "
+            f"{_num(e.get('roc_auc'), 6)} | "
             f"`{strategy}` | "
             f"`{entry.get('ensemble_policy', '—')}` |"
         )
@@ -370,8 +378,8 @@ def _generalist_table(metrics: dict[str, Any], filetypes: tuple[str, ...]) -> li
     d_pr = _delta(all_g.get("pr_auc"), ember.get("pr_auc") if ember else None)
     lines.append(
         f"| **all files** | {all_n} | "
-        f"{_num(all_g.get('roc_auc'), 4)} | "
-        f"{_num(all_g.get('pr_auc'), 4)} | "
+        f"{_num(all_g.get('roc_auc'), 6)} | "
+        f"{_num(all_g.get('pr_auc'), 6)} | "
         f"{_num(all_g.get('f1'), 4)} | "
         f"{ember_roc} | {d_roc} | {ember_pr} | {d_pr} |"
     )
@@ -387,8 +395,8 @@ def _generalist_table(metrics: dict[str, Any], filetypes: tuple[str, ...]) -> li
         d_pr = _delta(g.get("pr_auc"), ember.get("pr_auc") if ember else None)
         lines.append(
             f"| `{ft}` | {_int(entry.get('n_files'))} | "
-            f"{_num(g.get('roc_auc'), 4)} | "
-            f"{_num(g.get('pr_auc'), 4)} | "
+            f"{_num(g.get('roc_auc'), 6)} | "
+            f"{_num(g.get('pr_auc'), 6)} | "
             f"{_num(g.get('f1'), 4)} | "
             f"{ember_roc} | {d_roc} | {ember_pr} | {d_pr} |"
         )
@@ -773,8 +781,8 @@ def _write_route(root: Path, path: Path) -> None:
             f"## Performance",
             "",
             f"Training-time benchmark only (no test-partition rows for `{name}`). "
-            f"ROC {_num(metrics.get('roc_auc'), 4)}, "
-            f"PR {_num(metrics.get('avg_precision'), 4)}, "
+            f"ROC {_num(metrics.get('roc_auc'), 6)}, "
+            f"PR {_num(metrics.get('avg_precision'), 6)}, "
             f"F1 {_num(metrics.get('max_f1'), 4)} on "
             f"{_int(data.get('benchmark_rows'))} rows "
             f"({_int(data.get('benchmark_malware'))} mal / "
@@ -1115,8 +1123,8 @@ def _write_generalist_card(root: Path) -> None:
         "",
         f"- Accuracy: {_pct(eval_metrics.get('accuracy'))}",
         f"- F1: {_num(eval_metrics.get('f1'), 4)}",
-        f"- ROC AUC: {_num(eval_metrics.get('roc_auc'), 4)}",
-        f"- Average Precision: {_num(eval_metrics.get('avg_precision'), 4)}",
+        f"- ROC AUC: {_num(eval_metrics.get('roc_auc'), 6)}",
+        f"- Average Precision: {_num(eval_metrics.get('avg_precision'), 6)}",
         f"- Brier: {_num(eval_metrics.get('brier'), 4)}",
     ]
     _write(root / "GENERALIST_MODEL.md", "\n".join(lines))

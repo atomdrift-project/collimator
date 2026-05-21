@@ -193,14 +193,11 @@ FALSE_POSITIVES_ARCHIVE ?= /tmp/false-positives.tgz
 FALSE_NEGATIVES_ARCHIVE ?= /tmp/false-negatives.tgz
 NEAR_FALSE_POSITIVES_ARCHIVE ?= /tmp/near-false-positives.tgz
 NEAR_FALSE_NEGATIVES_ARCHIVE ?= /tmp/near-false-negatives.tgz
-FALSE_POSITIVES_TRIAGE_DIR ?= /tmp/false-positives
-FALSE_NEGATIVES_TRIAGE_DIR ?= /tmp/false-negatives
 NEAR_FALSE_POSITIVES_TRIAGE_DIR ?= /tmp/near-false-positives
-FALSE_POSITIVES_TRIAGE_JSON ?= /tmp/false-positives.json
-FALSE_NEGATIVES_TRIAGE_JSON ?= /tmp/false-negatives.json
 NEAR_FALSE_POSITIVES_TRIAGE_JSON ?= /tmp/near-false-positives.json
-MISLABELED_TRIAGE_DIR ?= /tmp/mislabeled
-MISLABELED_TRIAGE_JSON ?= /tmp/mislabeled.json
+# {FALSE_POSITIVES,FALSE_NEGATIVES,MISLABELED}_TRIAGE_DIR are now derived
+# inside the mislabeled-triage target block from SCOPE/LEVEL/SEVERITY so
+# parallel triages under different scopes don't collide on /tmp paths.
 SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
@@ -556,7 +553,7 @@ azoth-publish-train: venv check-db
 # multi-hour wasted pass for fold builds.
 azoth-general: venv check-db azoth-clean-bundle
 	$(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 		--route general \
 		--set DB=$(DB) \
 		--set EXP_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES) \
@@ -680,7 +677,7 @@ _azoth-train: azoth-general
 # wall of TRAIN_* vars that drifted from reality.
 fixture: venv check-db
 	$(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 		--route general \
 		--exec $(PYTHON) -m collimator fixture --db $(DB) --output $(OUT_DIR) \
 			$(if $(wildcard $(OUT_DIR)/$(MODEL_FILE)),--model $(OUT_DIR)/$(MODEL_FILE),) \
@@ -806,7 +803,7 @@ filetype-matrix: venv check-db
 # same features the production pipeline does.
 elf-model-benchmark: venv check-db
 	$(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 		--route general \
 		--exec $(PYTHON) scripts/elf_model_benchmark.py \
 		--db $(DB) \
@@ -847,7 +844,7 @@ elf-route-optimization: venv check-db
 azoth-specialists: venv check-db
 	$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),\
 		$(PYTHON) scripts/azoth_train_best.py \
-			--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+			--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 			--route general \
 			--exec ,) \
 	$(PYTHON) scripts/azoth_specialist_suite.py \
@@ -889,7 +886,7 @@ azoth-specialists: venv check-db
 # only to feed honest score merging downstream.
 azoth-specialists-fold-a: venv check-db
 	EXP_OOF_FOLD_EXCLUDE=0 $(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 		--route general \
 		--exec $(PYTHON) scripts/azoth_specialist_suite.py \
 		--db $(DB) \
@@ -923,7 +920,7 @@ azoth-specialists-fold-a: venv check-db
 
 azoth-specialists-fold-b: venv check-db
 	EXP_OOF_FOLD_EXCLUDE=1 $(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 		--route general \
 		--exec $(PYTHON) scripts/azoth_specialist_suite.py \
 		--db $(DB) \
@@ -1105,7 +1102,7 @@ azoth-validate: azoth-calibrate
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
-		--fail-on-budget
+		--fail-on-budget --max-budget-multiplier 30
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_VALIDATE_ROUTED_METRICS_ARGS) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/azoth_route_policy_eval.py \
 		--score-table $(AZOTH_ROOT)/score_table.npz \
@@ -1169,6 +1166,25 @@ azoth-run-new:
 azoth-publish: venv
 	$(PYTHON) scripts/azoth_publish_run.py $(AZOTH_ROOT) --link $(OUT_ROOT)/azoth
 
+# Apples-to-apples baseline scoring for autocollie. Given a route, an optional
+# row-ids file, and a deploy-root (defaults to AZOTH_ROOT, i.e. the currently
+# trained bundle), score the deployed model on those rows and write metrics to
+# OUTPUT. First call per (route, model_hash) populates a cache under
+# out/cache/autocollie-baseline; subsequent calls hit the cache.
+#
+# Usage:
+#   make azoth-score-route ROUTE=filetypes/pe \
+#       ROW_IDS_FILE=/tmp/rows.txt OUTPUT=/tmp/baseline.json
+azoth-score-route: venv
+	@test -n "$(ROUTE)"  || { echo "error: ROUTE= is required"; exit 2; }
+	@test -n "$(OUTPUT)" || { echo "error: OUTPUT= is required"; exit 2; }
+	$(PYTHON) scripts/azoth_score_deployed.py \
+		--route $(ROUTE) \
+		--db $(DB) \
+		--deploy-root $(AZOTH_ROOT) \
+		$(if $(ROW_IDS_FILE),--row-ids-file $(ROW_IDS_FILE),) \
+		--output $(OUTPUT)
+
 # Convenience: full deploy into a fresh run dir, then publish.
 azoth-publish-deploy: venv
 	@echo "publish-deploy: allocating $(AZOTH_RUN_DIR)"
@@ -1205,7 +1221,7 @@ azoth-deploy: azoth-calibrate
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
-		--fail-on-budget
+		--fail-on-budget --max-budget-multiplier 30
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/azoth_route_policy_eval.py \
 		--score-table $(AZOTH_ROOT)/score_table.npz \
@@ -1341,128 +1357,105 @@ near-false-negatives-archive: near-false-negatives
 		--kind near-false-negatives \
 		--top $(TOP_ERRORS)
 
-false-positives-triage: false-positives
-	$(PYTHON) scripts/triage_error_samples.py \
-		--report $(OUT_DIR)/false_positives.json \
-		--output-dir $(FALSE_POSITIVES_TRIAGE_DIR) \
-		--samples-dir $(SAMPLES_DIR) \
-		--kind false-positives \
-		--skip $(SKIP) \
-		--top $(TOP_ERRORS)
-	@echo "samples staged in $(FALSE_POSITIVES_TRIAGE_DIR); run 'cleave --format=json $(FALSE_POSITIVES_TRIAGE_DIR)' manually if needed."
-
-false-negatives-triage: false-negatives
-	$(PYTHON) scripts/triage_error_samples.py \
-		--report $(OUT_DIR)/false_negatives.json \
-		--output-dir $(FALSE_NEGATIVES_TRIAGE_DIR) \
-		--samples-dir $(SAMPLES_DIR) \
-		--kind false-negatives \
-		--skip $(SKIP) \
-		--top $(TOP_ERRORS)
-	@echo "samples staged in $(FALSE_NEGATIVES_TRIAGE_DIR); run 'cleave --format=json $(FALSE_NEGATIVES_TRIAGE_DIR)' manually if needed."
-
-# mislabeled-triage: both FPs and FNs into a single tree for joint review.
-# Layout:
-#   $(MISLABELED_TRIAGE_DIR)/false-positives/...
-#   $(MISLABELED_TRIAGE_DIR)/false-negatives/...
-# Run cleave manually over the parent dir when you want one JSON with both
-# kinds (relative paths show which bucket each sample came from).
-mislabeled-triage: false-positives false-negatives
-	$(PYTHON) scripts/triage_error_samples.py \
-		--report $(OUT_DIR)/false_positives.json \
-		--output-dir $(MISLABELED_TRIAGE_DIR)/false-positives \
-		--samples-dir $(SAMPLES_DIR) \
-		--kind false-positives \
-		--skip $(SKIP) \
-		--top $(TOP_ERRORS)
-	$(PYTHON) scripts/triage_error_samples.py \
-		--report $(OUT_DIR)/false_negatives.json \
-		--output-dir $(MISLABELED_TRIAGE_DIR)/false-negatives \
-		--samples-dir $(SAMPLES_DIR) \
-		--kind false-negatives \
-		--skip $(SKIP) \
-		--top $(TOP_ERRORS)
-	@echo "samples:  $(MISLABELED_TRIAGE_DIR)/{false-positives,false-negatives}/"
-	@echo "to cleave: cleave --format=json $(MISLABELED_TRIAGE_DIR) > $(MISLABELED_TRIAGE_JSON)"
-
-# Scope-aware mislabeled triage. Uses the score table + route policies
-# (no model rescore) to pick top-N benigns flagged or malware missed by
-# a specific subset of routes.
+# mislabeled-triage: unified deploy-aware error triage.
+#
+# Uses the score table + route policies (no model rescore) to pull
+# benigns flagged AND malware missed by any combination of scopes,
+# deduped by sample. Output: one directory with two subtrees ready
+# to feed cleave. Layout:
+#   $(MIS_TRIAGE_DIR)/false-positives/...
+#   $(MIS_TRIAGE_DIR)/false-negatives/...
 #
 # Usage:
-#   make false-positives-scope-triage SCOPE=ensemble    LEVEL=3 SEVERITY=hostile
-#   make false-negatives-scope-triage SCOPE=specialists LEVEL=3 SEVERITY=hostile
-#   make mislabeled-scope-triage      SCOPE=ensemble    LEVEL=3 SEVERITY=hostile
-#   make mislabeled-scope-triage      SCOPE=route:filetypes/jpeg LEVEL=3
-SCOPE ?= ensemble
+#   make mislabeled-triage                                                  # default: SCOPE=ensemble,specialists,filegroups LEVEL=3 SEVERITY=hostile
+#   make mislabeled-triage SCOPE=ensemble                                   # what litmus would flag in production
+#   make mislabeled-triage SCOPE=route:filetypes/jpeg LEVEL=3
+#   make mislabeled-triage SCOPE=specialists LEVEL=5 SEVERITY=suspicious
+#
+# Granular variants surface only one side of the pool:
+#   make false-positives-triage SCOPE=ensemble
+#   make false-negatives-triage SCOPE=ensemble
+#
+# Default SCOPE combines ensemble+specialists+filegroups so the pool
+# captures every error mode worth triaging in one pass — they overlap
+# heavily and dedup-by-row keeps the list manageable.
+# COMMA / SPACE: make doesn't let you put a literal comma in a function
+# expansion since it's the argument separator, so we capture it here.
+# Must be defined BEFORE MIS_TAG because := evaluates immediately.
+COMMA := ,
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+
+SCOPE ?= ensemble,specialists,filegroups
 LEVEL ?= 3
 SEVERITY ?= hostile
-MIS_SCOPE_TAG := $(subst :,-,$(subst /,-,$(SCOPE)))-L$(LEVEL)-$(SEVERITY)
-FP_SCOPE_REPORT ?= $(AZOTH_ROOT)/false_positives_$(MIS_SCOPE_TAG).json
-FN_SCOPE_REPORT ?= $(AZOTH_ROOT)/false_negatives_$(MIS_SCOPE_TAG).json
-FP_SCOPE_TRIAGE_DIR ?= /tmp/false-positives-$(MIS_SCOPE_TAG)
-FN_SCOPE_TRIAGE_DIR ?= /tmp/false-negatives-$(MIS_SCOPE_TAG)
-FP_SCOPE_TRIAGE_JSON ?= /tmp/false-positives-$(MIS_SCOPE_TAG).json
-FN_SCOPE_TRIAGE_JSON ?= /tmp/false-negatives-$(MIS_SCOPE_TAG).json
-MIS_SCOPE_TRIAGE_DIR ?= /tmp/mislabeled-$(MIS_SCOPE_TAG)
-MIS_SCOPE_TRIAGE_JSON ?= /tmp/mislabeled-$(MIS_SCOPE_TAG).json
+MIS_TAG := $(subst $(SPACE),_,$(subst $(COMMA),-,$(subst :,-,$(subst /,-,$(SCOPE)))))-L$(LEVEL)-$(SEVERITY)
+FP_REPORT ?= $(AZOTH_ROOT)/false_positives_$(MIS_TAG).json
+FN_REPORT ?= $(AZOTH_ROOT)/false_negatives_$(MIS_TAG).json
+FP_TRIAGE_DIR ?= /tmp/false-positives-$(MIS_TAG)
+FN_TRIAGE_DIR ?= /tmp/false-negatives-$(MIS_TAG)
+FP_TRIAGE_JSON ?= /tmp/false-positives-$(MIS_TAG).json
+FN_TRIAGE_JSON ?= /tmp/false-negatives-$(MIS_TAG).json
+MIS_TRIAGE_DIR ?= /tmp/mislabeled-$(MIS_TAG)
+MIS_TRIAGE_JSON ?= /tmp/mislabeled-$(MIS_TAG).json
 
-.PHONY: false-positives-scope false-negatives-scope \
-        false-positives-scope-triage false-negatives-scope-triage \
-        mislabeled-scope-triage
+.PHONY: mislabeled-fp-report mislabeled-fn-report \
+        false-positives-triage false-negatives-triage \
+        mislabeled-triage
 
-false-positives-scope: venv
+mislabeled-fp-report: venv
 	$(PYTHON) scripts/mislabeled_by_scope.py \
 		--kind false-positives \
 		--score-table $(AZOTH_ROOT)/score_table.npz \
 		--route-policies $(AZOTH_ROOT)/route_policies.json \
 		--scope $(SCOPE) --level $(LEVEL) --severity $(SEVERITY) \
 		--skip $(SKIP) --top-errors $(TOP_ERRORS) --db $(DB) \
-		--output $(FP_SCOPE_REPORT)
+		--output $(FP_REPORT)
 
-false-negatives-scope: venv
+mislabeled-fn-report: venv
 	$(PYTHON) scripts/mislabeled_by_scope.py \
 		--kind false-negatives \
 		--score-table $(AZOTH_ROOT)/score_table.npz \
 		--route-policies $(AZOTH_ROOT)/route_policies.json \
 		--scope $(SCOPE) --level $(LEVEL) --severity $(SEVERITY) \
 		--skip $(SKIP) --top-errors $(TOP_ERRORS) --db $(DB) \
-		--output $(FN_SCOPE_REPORT)
+		--output $(FN_REPORT)
 
-false-positives-scope-triage: false-positives-scope
+false-positives-triage: mislabeled-fp-report
 	$(PYTHON) scripts/triage_error_samples.py \
-		--report $(FP_SCOPE_REPORT) \
-		--output-dir $(FP_SCOPE_TRIAGE_DIR) \
+		--report $(FP_REPORT) \
+		--output-dir $(FP_TRIAGE_DIR) \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-positives --db $(DB) --top $(TOP_ERRORS)
-	@echo "report:   $(FP_SCOPE_REPORT)"
-	@echo "samples:  $(FP_SCOPE_TRIAGE_DIR)"
-	@echo "to cleave: cleave --format=json $(FP_SCOPE_TRIAGE_DIR) > $(FP_SCOPE_TRIAGE_JSON)"
+	@echo "report:   $(FP_REPORT)"
+	@echo "samples:  $(FP_TRIAGE_DIR)"
+	@echo "to cleave: cleave --format=json $(FP_TRIAGE_DIR) > $(FP_TRIAGE_JSON)"
 
-false-negatives-scope-triage: false-negatives-scope
+false-negatives-triage: mislabeled-fn-report
 	$(PYTHON) scripts/triage_error_samples.py \
-		--report $(FN_SCOPE_REPORT) \
-		--output-dir $(FN_SCOPE_TRIAGE_DIR) \
+		--report $(FN_REPORT) \
+		--output-dir $(FN_TRIAGE_DIR) \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
-	@echo "report:   $(FN_SCOPE_REPORT)"
-	@echo "samples:  $(FN_SCOPE_TRIAGE_DIR)"
-	@echo "to cleave: cleave --format=json $(FN_SCOPE_TRIAGE_DIR) > $(FN_SCOPE_TRIAGE_JSON)"
+	@echo "report:   $(FN_REPORT)"
+	@echo "samples:  $(FN_TRIAGE_DIR)"
+	@echo "to cleave: cleave --format=json $(FN_TRIAGE_DIR) > $(FN_TRIAGE_JSON)"
 
-mislabeled-scope-triage: false-positives-scope false-negatives-scope
+mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 	$(PYTHON) scripts/triage_error_samples.py \
-		--report $(FP_SCOPE_REPORT) \
-		--output-dir $(MIS_SCOPE_TRIAGE_DIR)/false-positives \
+		--report $(FP_REPORT) \
+		--output-dir $(MIS_TRIAGE_DIR)/false-positives \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-positives --db $(DB) --top $(TOP_ERRORS)
 	$(PYTHON) scripts/triage_error_samples.py \
-		--report $(FN_SCOPE_REPORT) \
-		--output-dir $(MIS_SCOPE_TRIAGE_DIR)/false-negatives \
+		--report $(FN_REPORT) \
+		--output-dir $(MIS_TRIAGE_DIR)/false-negatives \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
-	@echo "reports:  $(FP_SCOPE_REPORT) + $(FN_SCOPE_REPORT)"
-	@echo "samples:  $(MIS_SCOPE_TRIAGE_DIR)/{false-positives,false-negatives}/"
-	@echo "to cleave: cleave --format=json $(MIS_SCOPE_TRIAGE_DIR) > $(MIS_SCOPE_TRIAGE_JSON)"
+	@echo "scope:    $(SCOPE) | level: L$(LEVEL) | severity: $(SEVERITY)"
+	@echo "reports:  $(FP_REPORT) + $(FN_REPORT)"
+	@echo "samples:  $(MIS_TRIAGE_DIR)/{false-positives,false-negatives}/"
+	@echo "to cleave: cleave --format=json $(MIS_TRIAGE_DIR) > $(MIS_TRIAGE_JSON)"
 
 near-false-positives-triage: near-false-positives
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -1614,7 +1607,7 @@ experiment: venv check-db
 # table here.
 ablate: venv check-db
 	$(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 		--route general \
 		--exec $(PYTHON) -m collimator ablate --db $(DB) $(WORKERS_ARG) --seed $(SEED) \
 			--model-name $(MODEL) --learner $(LEARNER) \
@@ -1778,7 +1771,7 @@ azoth-augment-small-routes: venv check-db
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
-		--fail-on-budget
+		--fail-on-budget --max-budget-multiplier 30
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 
@@ -1798,7 +1791,7 @@ BACKFILL_LIMIT ?= 0
 BACKFILL_ALL_MISSING ?= 0
 autocollie-backfill-l3: venv check-db
 	$(PYTHON) scripts/autocollie_backfill_l3.py \
-		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 		--makefile Makefile \
 		--db $(DB) \
 		--workers $(or $(WORKERS),64) \

@@ -1095,35 +1095,108 @@ def _mark_dominated_by_specialist(
                 candidates.append(blend)
 
 
+# Reject candidates whose realized slice FPR is well above the
+# calibration target. "Roughly 3 FP/M per pool" tolerates the noise
+# inherent in finite-sample quantile estimation:
+#
+#   slice with N benigns at target r FP/M -> expected count = rN/1e6
+#   95% Poisson CI -> realized count up to ~3× expected for large N
+#
+# At a 3 FP/M target on a 100K-benign slice that's a realized FPR of
+# up to ~30 FP/M. We accept up to 10× target as plausible noise. Beyond
+# that the candidate is operating at a *different* target (e.g. the
+# `_at_fp_25` policies are blend pareto operating points at ~190 FP/M
+# on python's slice, not noisy 3 FP/M realizations) and gets filtered.
+#
+# Small-benign slices (xlsx with 144 benigns) often produce a
+# candidate that fires on every benign in the slice. That's a broken
+# calibration, not a deployable operating point, and gets filtered
+# whether the multiplier is 10× or 100×.
+_CHOOSE_BEST_FPR_OVER_TARGET_MULTIPLIER = 10.0
+
+
+def _is_over_target(item: dict[str, Any]) -> bool:
+    """A candidate's realized slice FPR is too far above its level's
+    calibration target to count as "roughly the target rate." Used to
+    filter candidates labeled with one target but operating at a
+    different one (e.g. ``learned_blend_at_fp_25`` candidates whose
+    realized FPR is ~50× target — they're pareto operating points the
+    blend explored, not noisy 3 FP/M realizations), and to filter
+    broken calibrations on tiny-benign slices (e.g. xlsx candidates
+    that fire on every benign in the slice).
+
+    L0 (target=0 FP/M) is special: any non-zero realized FP is
+    over-target. Multiplier can't help — 0 × anything = 0. So strict
+    fp==0 is the gate at L0.
+    """
+    realized_fp = int(item.get("fp") or 0)
+    target = float(item.get("target_per_million") or 0.0)
+    realized_fpm = float(item.get("fp_per_million") or 0.0)
+    if target <= 0:
+        # L0 hostile / "true zero FP" levels.  Strict: any benign hit
+        # in the slice disqualifies the candidate.
+        return realized_fp > 0
+    if math.isnan(realized_fpm):
+        return False
+    return realized_fpm > target * _CHOOSE_BEST_FPR_OVER_TARGET_MULTIPLIER
+
+
 def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
     """Pick the per-filetype policy strategy that gives the best
-    detection-vs-FP balance at this level's FP/M target.
+    detection-vs-FP balance at this level's per-route 3 FP/M target.
 
-    Primary key is recall (catch more malware at the fixed FP target —
-    the deployment goal). F1 captures the recall/precision balance. -fp
-    is the next tiebreaker so we don't prefer a gratuitously aggressive
-    policy when a quieter one matches on the headline metrics.
+    Selection key (lex, max wins):
+      1. recall — catch more malware at the calibration target. The
+         deployment goal.
+      2. f1 — recall/precision balance.
+      3. -fp — when other metrics tie, prefer the quieter policy.
+      4. len(allowed_routes) — tiebreaker that keeps inclusive policies
+         (naming multiple routes) over single-route ones. Litmus uses
+         the route NAMES in route_policies.json to decide whether to
+         load each specialist; preserving inclusive names keeps every
+         specialist loadable even when below-resolution slices have
+         identical metrics across policies.
+      5. policy — alphabetic, just for determinism.
 
-    Below-resolution levels collapse all candidate policies to identical
-    metrics (each picks the loosest 0-FP threshold). We then prefer the
-    MORE INCLUSIVE policy on the remaining tiebreaker — i.e., a policy
-    naming three routes (`specialist_primary_with_escape`) wins over one
-    naming a single route (`general_only`) when both tie. That preserves
-    the specialist's name in route_policies.json's thresholds map, which
-    is what litmus uses to decide whether to load the specialist at all.
+    Filters (applied before the max):
+      * ``dominated_by_specialist=True`` — spending more FP than the
+        specialist alone needs for the same recall.
+      * realized FPR > 10× target. See ``_is_over_target``. Filters
+        two distinct pathologies in one rule:
+        (a) candidates labeled with the level target but actually
+            operating at a different one (e.g. ``learned_blend_at_fp_25``
+            candidates run at ~190 FP/M on python's slice — not noisy
+            3 FP/M but a different operating point the blend search
+            explored), and
+        (b) broken small-slice calibration where the candidate fires on
+            every benign because the (1 - r×10⁻⁶) quantile fell below
+            the smallest observed prob (xlsx with 144 benigns is the
+            canonical case).
 
-    Candidates annotated with ``dominated_by_specialist`` are filtered
-    out: spending more FP than the specialist alone needs for the same
-    recall is a waste of global FP budget that buys nothing.
-
-    Accuracy is intentionally not used: with the corpus's ~76% benign /
-    24% malware split, accuracy is dominated by the benign class and
+    Accuracy is intentionally not used: with the corpus's ~64% benign /
+    36% malware split, accuracy is dominated by the benign class and
     tracks recall most of the way at strict FP budgets.
     """
-    eligible = [c for c in candidates if not c.get("dominated_by_specialist")]
-    pool = eligible if eligible else candidates
+    eligible = [
+        c for c in candidates
+        if not c.get("dominated_by_specialist") and not _is_over_target(c)
+    ]
+    if not eligible:
+        # Fall back to the no-policy candidate (fp=0, tp=0) if every
+        # candidate failed the filters — better to deploy a
+        # known-inert candidate than to deploy a catastrophe.
+        no_policy = next(
+            (c for c in candidates if c.get("policy") == "no_policy"),
+            None,
+        )
+        if no_policy is not None:
+            return no_policy
+        # Last resort: original candidates without filter. Should not
+        # be reachable for any well-formed candidate list since
+        # _candidate_lists always includes a no_policy entry.
+        eligible = list(candidates)
     return max(
-        pool,
+        eligible,
         key=lambda item: (
             float(item["recall"]) if not math.isnan(float(item["recall"])) else -1.0,
             float(item["f1"]) if not math.isnan(float(item["f1"])) else -1.0,
@@ -1648,6 +1721,22 @@ def main() -> int:
             "the filetype count. Set to 1 to force serial."
         ),
     )
+    parser.add_argument(
+        "--global-fp-budget",
+        action="store_true",
+        default=False,
+        help=(
+            "Legacy semantic: enforce a single corpus-wide FP budget "
+            "(target_per_million × total_corpus_benign) across all "
+            "filetypes via knapsack, replacing per-filetype "
+            "_choose_best picks. The default (omit this flag) is the "
+            "per-route per-filetype 'L3 = roughly 3 FP per 1M scans "
+            "of this filetype/group/pool' semantic — each route's "
+            "threshold is calibrated to its own pool's 3 FP/M and we "
+            "deploy whatever per-filetype combination maximizes recall "
+            "at that calibration."
+        ),
+    )
     args = parser.parse_args()
 
     with open(args.config) as f:
@@ -1708,7 +1797,16 @@ def main() -> int:
         "benign": total_benign,
         "routes": route_payload,
     }
-    _apply_global_budget_selection(payload, config)
+    if args.global_fp_budget:
+        # Legacy semantic — reinterpret per-level target_per_million as
+        # a CORPUS-WIDE rate (target × total_corpus_benign = budget),
+        # then knapsack across filetypes to maximize TP within that
+        # single global budget. Caps total FPs aggressively (~9 for
+        # L3 at 3 FP/M on a 3M-benign corpus) but distorts the
+        # per-pool calibration since most filetypes end up forced to
+        # at_fp_0 candidates regardless of their slice's own 3 FP/M
+        # threshold.
+        _apply_global_budget_selection(payload, config)
     payload = _json_clean(payload)
     # route_policies.json is loaded by litmus; a partial write would crash
     # bundle load. Atomic temp+rename guards against process kill.

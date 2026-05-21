@@ -246,3 +246,23 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T175531-filetypes-xml` — 2026-05-21T17:55:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0213d6fb98c8849c` | xml_control_baseline_train | ok | 1.0000 | 1.0000 | 0.9630 | 7 | [log](out/autocollie/runs/2026-05-21T18-01-32_20260521T175531-filetypes-xml_xml_control_baseline_train.log) |
+| `dbcde1dba923cda9` | xml_feat_kv_textmetrics | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-21T18-01-43_20260521T175531-filetypes-xml_xml_feat_kv_textmetrics.log) |
+| `5560f5a2dbdfcb9b` | xml_feat_lowbigram_objtrigrams | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-21T18-01-48_20260521T175531-filetypes-xml_xml_feat_lowbigram_objtrigrams.log) |
+| `` | xml_train_hardneg_mining | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-01-52_20260521T175531-filetypes-xml_xml_train_hardneg_mining.log) |
+| `` | xml_train_dart_regularized | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-01-53_20260521T175531-filetypes-xml_xml_train_dart_regularized.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xml_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline replicating recent best feature_env with adjusted training knobs to verify matrix cache hit and establish PR_AUC/ROC_AUC variance floor.
+- **`xml_feat_kv_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and text_metrics_full to capture XML attribute structures and text obfuscation signals, aiming to improve PR_AUC by adding discriminative features for malicious payloads.
+- **`xml_feat_lowbigram_objtrigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq and enable objective_trigrams to capture rare attack patterns in XML, targeting recall@3 FP/M by improving ranking of subtle malicious samples.
+- **`xml_train_hardneg_mining`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard-negative mining to push benign XML further from malware boundary, aiming to boost recall@3 FP/M by tightening the decision boundary at low FPR.
+- **`xml_train_dart_regularized`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to DART boosting with higher L2 regularization to reduce overfitting on the small XML corpus, targeting stable PR_AUC and ROC_AUC while preserving tail recall.
+
+</details>
+

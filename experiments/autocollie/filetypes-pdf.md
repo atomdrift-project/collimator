@@ -294,3 +294,25 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260521T180155-filetypes-pdf` — 2026-05-21T18:01:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4c2d2e747daa408f` | pdf_ctrl_train_scalepos075 | ok | 1.0000 | 0.9969 | 0.9976 | 9 | [log](out/autocollie/runs/2026-05-21T18-06-37_20260521T180155-filetypes-pdf_pdf_ctrl_train_scalepos075.log) |
+| `2e65060a35274441` | pdf_feat_text_metrics_obfuscation | ok | 1.0000 | 0.9975 | 0.9938 | 6 | [log](out/autocollie/runs/2026-05-21T18-06-51_20260521T180155-filetypes-pdf_pdf_feat_text_metrics_obfuscation.log) |
+| `23ccd35d9ec7b72a` | pdf_feat_kv_vocab_split | ok | 1.0000 | 0.9976 | 0.9946 | 7 | [log](out/autocollie/runs/2026-05-21T18-06-58_20260521T180155-filetypes-pdf_pdf_feat_kv_vocab_split.log) |
+| `bdcf98410fbd132e` | pdf_transfer_xml_kv_vocab | ok | 1.0000 | 0.9976 | 0.9946 | 7 | [log](out/autocollie/runs/2026-05-21T18-07-06_20260521T180155-filetypes-pdf_pdf_transfer_xml_kv_vocab.log) |
+| `2457b5d4b110c29c` | pdf_gen_seed_search_kv | ok | 1.0000 | 0.9988 | 0.9986 | 7 | [log](out/autocollie/runs/2026-05-21T18-07-14_20260521T180155-filetypes-pdf_pdf_gen_seed_search_kv.log) |
+| `f7e9fee3e000b894` | pdf_abl_crit_cat_ngrams | ok | 1.0000 | 0.9977 | 0.9938 | 6 | [log](out/autocollie/runs/2026-05-21T18-07-22_20260521T180155-filetypes-pdf_pdf_abl_crit_cat_ngrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_train_scalepos075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3 FP/M by down-weighting positives to reduce false positives at the deployed operating point.
+- **`pdf_feat_text_metrics_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing PDF-specific obfuscation patterns and text metrics that trees can split on.
+- **`pdf_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by recovering per-element signal in PDF metadata KV pairs.
+- **`pdf_transfer_xml_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by transferring XML's successful KV vocab strategy to PDF metadata with conservative frequency floors.
+- **`pdf_gen_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3 FP/M gains by averaging over seed variance on the KV vocab config.
+- **`pdf_abl_crit_cat_ngrams`** `EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to keep PR_AUC flat while reducing training noise by removing criticality-category ngrams.
+
+</details>
+

@@ -236,3 +236,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T174937-filetypes-pptx` — 2026-05-21T17:49:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a8f5cb9c83cf4800` | pptx_control_train_tune_v2 | ok | 0.9231 | 0.5000 | 0.9600 | 5 | [log](out/autocollie/runs/2026-05-21T17-55-39_20260521T174937-filetypes-pptx_pptx_control_train_tune_v2.log) |
+| `b365bb3c28956fe5` | pptx_feat_text_metrics_full | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T17-55-48_20260521T174937-filetypes-pptx_pptx_feat_text_metrics_full.log) |
+| `bd465075a65d4d07` | pptx_feat_rare_bigrams_expanded | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T17-55-53_20260521T174937-filetypes-pptx_pptx_feat_rare_bigrams_expanded.log) |
+| `10176bb8797f54a1` | pptx_feat_kv_vocab_enabled | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T17-55-58_20260521T174937-filetypes-pptx_pptx_feat_kv_vocab_enabled.log) |
+| `` | pptx_train_hardneg_moderate | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T17-56-03_20260521T174937-filetypes-pptx_pptx_train_hardneg_moderate.log) |
+| `` | pptx_train_scale_pos_down | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T17-56-05_20260521T174937-filetypes-pptx_pptx_train_scale_pos_down.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pptx_control_train_tune_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env with conservative training tweaks (num_leaves=112, lr=0.05) to stabilize PR_AUC and ROC_AUC while avoiding recent crash configs.
+- **`pptx_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full to capture document obfuscation signals, aiming to boost PR_AUC by adding structural text features specific to PPTX.
+- **`pptx_feat_rare_bigrams_expanded`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 200 and raises bigram_max to 15000 to capture rarer malicious patterns, aiming to improve recall@3 FP/M.
+- **`pptx_feat_kv_vocab_enabled`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with max 5000 to extract key-value metadata patterns, aiming to lift PR_AUC by adding structured document metadata signal.
+- **`pptx_train_hardneg_moderate`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies moderate hard-negative mining (fraction=0.1, weight=5) to focus on difficult benigns, aiming to improve recall@3 FP/M without overfitting.
+- **`pptx_train_scale_pos_down`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weights positives (scale_pos_weight_mult=0.75) to suppress false positives at the tail, aiming to boost recall@3 FP/M while keeping PR_AUC flat.
+
+</details>
+

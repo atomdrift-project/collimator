@@ -230,3 +230,23 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T174937-filetypes-groovy` — 2026-05-21T17:49:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cec657b715b58485` | groovy_control_small_trees | ok | 0.6667 | 0.5000 | 0.8000 | 5 | [log](out/autocollie/runs/2026-05-21T17-55-11_20260521T174937-filetypes-groovy_groovy_control_small_trees.log) |
+| `5fc0d5c6dc80d6ed` | groovy_kv_vocab_low_freq | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T17-55-21_20260521T174937-filetypes-groovy_groovy_kv_vocab_low_freq.log) |
+| `61a83671a7212c27` | groovy_text_metrics_encoding | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T17-55-25_20260521T174937-filetypes-groovy_groovy_text_metrics_encoding.log) |
+| `` | groovy_hard_neg_tail | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T17-55-29_20260521T174937-filetypes-groovy_groovy_hard_neg_tail.log) |
+| `` | groovy_threshold_fpr_opt | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T17-55-30_20260521T174937-filetypes-groovy_groovy_threshold_fpr_opt.log) |
+
+<details><summary>Spec details</summary>
+
+- **`groovy_control_small_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with reduced tree capacity and lower LR to prevent overfitting on the tiny 6-sample holdout, aiming to stabilize PR_AUC.
+- **`groovy_kv_vocab_low_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with low min_freq to capture sparse key-value signals in Groovy scripts, targeting PR_AUC improvement by adding discriminative lexical features.
+- **`groovy_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activate text_metrics_full and text_encoding to extract structural and encoding signals from Groovy source, aiming to boost recall@3 FP/M by capturing obfuscation patterns.
+- **`groovy_hard_neg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard negative mining and down-weight positives to sharpen the decision boundary at low FPR, targeting recall@3 FP/M gains.
+- **`groovy_threshold_fpr_opt`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Directly optimize threshold for deployed operating point to maximize recall@3 FP/M, compensating for poor default threshold calibration on small data.
+
+</details>
+

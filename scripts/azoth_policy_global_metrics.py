@@ -163,6 +163,22 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=Path("out/models/azoth/global_policy_metrics.json"))
     parser.add_argument("--markdown", type=Path, default=Path("out/models/azoth/global_policy_metrics.md"))
     parser.add_argument("--fail-on-budget", action="store_true")
+    parser.add_argument(
+        "--max-budget-multiplier",
+        type=float,
+        default=1.0,
+        help=(
+            "Scale the strict corpus-wide FP budget by this factor before "
+            "the --fail-on-budget check. Default 1.0 = legacy strict "
+            "semantic (deploy fails if aggregate FP > target_per_million × "
+            "corpus_benign / 1e6). Per-pool deploy semantics naturally "
+            "produce aggregate FPRs ~10-20× higher than the strict cap "
+            "because each filetype is calibrated to its own slice's 3 "
+            "FP/M; pass --max-budget-multiplier 30 to keep the deploy-time "
+            "sanity check (would catch a 30× regression) while accepting "
+            "the expected per-pool aggregate overshoot."
+        ),
+    )
     args = parser.parse_args()
 
     config = _load_json(args.config)
@@ -175,6 +191,7 @@ def main() -> int:
 
     levels: list[dict[str, Any]] = []
     failed = False
+    multiplier = max(1.0, float(args.max_budget_multiplier))
     for level_item in config.get("levels", []):
         level = int(level_item["level"])
         out: dict[str, Any] = {"level": level}
@@ -192,7 +209,14 @@ def main() -> int:
             )
             m = _metrics(labels, hit, target)
             m["route_hits"] = route_hits
-            failed = failed or not bool(m["within_budget"])
+            # Strict within_budget vs slack version. The strict flag
+            # stays on the per-level record for observability; the
+            # slack flag is what --fail-on-budget gates on.
+            scaled_budget = int(math.floor(int(m["budget"]) * multiplier))
+            m["scaled_budget"] = scaled_budget
+            m["scaled_budget_multiplier"] = multiplier
+            m["within_scaled_budget"] = bool(int(m["fp"]) <= scaled_budget)
+            failed = failed or not bool(m["within_scaled_budget"])
             out[severity] = m
         levels.append(out)
 

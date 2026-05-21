@@ -63,6 +63,10 @@ DEFAULT_DEPLOY_ROOT = (
 )
 DEFAULT_CACHE_ROOT = Path("out/cache/autocollie-baseline")
 
+# Bump when the cache layout changes incompatibly. Mismatching caches are
+# invalidated on load and rebuilt from scratch.
+CACHE_SCHEMA_VERSION = 2  # v2: labels are live-from-DB, not cached. Sidecar carries max_id.
+
 
 def _resolve_route_dir(deploy_root: Path, route: str) -> Path:
     """``filetypes/pe`` → ``<deploy_root>/filetypes/pe``;
@@ -134,45 +138,211 @@ def _file_types_for_route(route: str, route_dir: Path, deploy_root: Path) -> lis
     raise SystemExit(f"unhandled route: {route}")
 
 
-def _test_partition_rows(db_path: str, file_types: list[str]) -> list[tuple[int, int]]:
-    """Test partition rows for the given filetypes — labeled, non-skip,
-    SHA256 bucket < TEST_BUCKET_MAX. Returns [(row_id, label_int), ...]."""
+def _test_partition_row_ids(
+    db_path: str,
+    file_types: list[str],
+    *,
+    min_id_exclusive: int = 0,
+) -> list[int]:
+    """Test partition row IDs for the given filetypes — non-skip,
+    SHA256 bucket < TEST_BUCKET_MAX. When ``min_id_exclusive`` > 0,
+    only returns rows with ``id > min_id_exclusive`` (used for
+    append-mode cache extension).
+
+    Labels are NOT returned here. They're fetched live at metric time
+    via ``_fetch_labels`` so the cache survives label corrections /
+    reclassifications without producing stale comparisons.
+    """
     is_pg = collimator_data._is_pg(db_path)  # noqa: SLF001
-    rows: list[tuple[int, int]] = []
+    row_ids: list[int] = []
     with collimator_data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
         if is_pg:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT id, label
+                    SELECT id
                     FROM samples
                     WHERE label IN ('bad', 'good')
                       AND cleave_result IS NOT NULL
                       AND skip = ''
                       AND file_type = ANY(%s)
+                      AND id > %s
                       AND canonical_sha256 IS NOT NULL
                       AND length(canonical_sha256) >= 2
                       AND get_byte(decode(right(canonical_sha256, 2), 'hex'), 0) < %s
                     ORDER BY id
                     """,
-                    [file_types, collimator_data.TEST_BUCKET_MAX],
+                    [file_types, int(min_id_exclusive), collimator_data.TEST_BUCKET_MAX],
                 )
-                for row_id, label in cur:
-                    rows.append((int(row_id), 1 if str(label) == "bad" else 0))
+                for (row_id,) in cur:
+                    row_ids.append(int(row_id))
         else:
             placeholders = ",".join("?" for _ in file_types)
-            for row_id, label, csha in conn.execute(
-                f"SELECT id, label, canonical_sha256 FROM samples "  # noqa: S608
+            for row_id, csha in conn.execute(
+                f"SELECT id, canonical_sha256 FROM samples "  # noqa: S608
                 f"WHERE label IN ('bad','good') AND cleave_result IS NOT NULL "
-                f"AND skip = '' AND file_type IN ({placeholders}) "
+                f"AND skip = '' AND file_type IN ({placeholders}) AND id > ? "
                 f"AND canonical_sha256 IS NOT NULL ORDER BY id",
-                file_types,
+                [*file_types, int(min_id_exclusive)],
             ):
                 if not csha or len(csha) < 2:
                     continue
                 if collimator_data.is_test_sample(csha):
-                    rows.append((int(row_id), 1 if str(label) == "bad" else 0))
-    return rows
+                    row_ids.append(int(row_id))
+    return row_ids
+
+
+def _fetch_labels(db_path: str, row_ids: np.ndarray) -> np.ndarray:
+    """Fetch current labels (1=bad, 0=good) for ``row_ids`` from the DB,
+    aligned to input order. Rows whose current label is neither 'bad'
+    nor 'good' (relabelled to 'unknown', deleted, etc) get -1, and
+    callers should drop them before computing metrics.
+
+    Live-fetching labels closes a drift channel the previous cache
+    layout left open: a cache populated months ago might hold a
+    'bad' label that has since been corrected to 'good' (or vice
+    versa), and the deployed-on-same-data metrics would silently
+    score against stale truth. The probs themselves are a function
+    of model bytes + row features, both stable, so they're safe to
+    cache long-term.
+    """
+    n = int(row_ids.shape[0])
+    if n == 0:
+        return np.array([], dtype=np.int8)
+    is_pg = collimator_data._is_pg(db_path)  # noqa: SLF001
+    label_map: dict[int, int] = {}
+    ids_int = [int(x) for x in row_ids.tolist()]
+    with collimator_data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
+        if is_pg:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT id, label FROM samples "
+                    "WHERE id = ANY(%s) AND label IN ('bad','good')",
+                    [ids_int],
+                )
+                for row_id, label in cur:
+                    label_map[int(row_id)] = 1 if str(label) == "bad" else 0
+        else:
+            chunk = 5000
+            for i in range(0, n, chunk):
+                batch = ids_int[i : i + chunk]
+                placeholders = ",".join("?" for _ in batch)
+                for row_id, label in conn.execute(
+                    f"SELECT id, label FROM samples "  # noqa: S608
+                    f"WHERE id IN ({placeholders}) AND label IN ('bad','good')",
+                    batch,
+                ):
+                    label_map[int(row_id)] = 1 if str(label) == "bad" else 0
+    return np.asarray(
+        [label_map.get(int(r), -1) for r in row_ids.tolist()],
+        dtype=np.int8,
+    )
+
+
+def _db_max_test_partition_id(db_path: str, file_types: list[str]) -> int:
+    """Return ``max(id)`` over test-partition rows for ``file_types``,
+    or 0 if no rows match. Used to detect DB rollbacks (replica rebuild
+    that restored an older snapshot, table truncate-and-restore, etc.):
+    if the DB's current max is *less than* the sidecar's
+    ``max_id_at_populate``, the cache references rows that no longer
+    exist, and append-mode can't fix it — we must invalidate.
+
+    Normally we'd retrain after such a reset (which would change the
+    model hash and invalidate the cache anyway), but the check is
+    near-free and turns a silent stale-cache failure into an obvious
+    log line.
+    """
+    is_pg = collimator_data._is_pg(db_path)  # noqa: SLF001
+    with collimator_data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
+        if is_pg:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT max(id) FROM samples "
+                    "WHERE label IN ('bad','good') AND file_type = ANY(%s)",
+                    [file_types],
+                )
+                row = cur.fetchone()
+                return int(row[0]) if row and row[0] is not None else 0
+        placeholders = ",".join("?" for _ in file_types)
+        row = conn.execute(
+            f"SELECT max(id) FROM samples WHERE label IN ('bad','good') "  # noqa: S608
+            f"AND file_type IN ({placeholders})",
+            file_types,
+        ).fetchone()
+        return int(row[0]) if row and row[0] is not None else 0
+
+
+def _sidecar_path(cache_path: Path) -> Path:
+    return cache_path.with_suffix(".json")
+
+
+def _load_sidecar(sidecar_path: Path) -> dict | None:
+    if not sidecar_path.is_file():
+        return None
+    try:
+        return json.loads(sidecar_path.read_text())
+    except (OSError, ValueError):
+        return None
+
+
+def _save_sidecar(sidecar_path: Path, data: dict) -> None:
+    sidecar_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = sidecar_path.parent / (sidecar_path.name + ".tmp")
+    tmp.write_text(json.dumps(data, indent=2, sort_keys=True))
+    tmp.rename(sidecar_path)
+
+
+def _save_cache(cache_path: Path, row_ids: np.ndarray, probs: np.ndarray) -> None:
+    """Atomic write of a v2 cache file: (row_ids, probs) only — labels
+    are pulled live at metric time. ``np.savez`` auto-appends '.npz'
+    to string/path arguments, so write to a file handle to force the
+    exact tmp filename, then rename onto the final path.
+    """
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = cache_path.parent / (cache_path.name + ".tmp")
+    with open(tmp, "wb") as f:
+        np.savez(f, row_ids=row_ids, probs=probs)
+    tmp.rename(cache_path)
+
+
+def _is_v2_cache(npz: np.lib.npyio.NpzFile) -> bool:
+    """v1 caches carry a 'labels' array; v2 does not. Used to detect
+    old-schema caches and force a fresh populate."""
+    return "labels" not in npz.files
+
+
+def _extract_and_predict(
+    *,
+    route_dir: Path,
+    db_path: str,
+    row_ids: list[int],
+    workers: int,
+) -> np.ndarray:
+    """Feature-extract + predict for a list of row IDs. Labels are
+    not relevant here (predictions are label-independent); we pass
+    dummy zeros to ``extract_labeled_from_db_batches`` and discard the
+    label array."""
+    if not row_ids:
+        return np.array([], dtype=np.float32)
+    spec_path = route_dir / "feature_spec.json"
+    if not spec_path.is_file():
+        raise SystemExit(f"{spec_path} missing; cannot score deployed model")
+    spec = features.FeatureSpec.load(spec_path)
+    clf = bundle.Ensemble.load_bundle(route_dir)
+    rows_with_dummy_labels = [(rid, 0) for rid in row_ids]
+    t0 = time.perf_counter()
+    batches = list(features.extract_labeled_from_db_batches(
+        db_path, rows_with_dummy_labels, spec, n_workers=workers,
+    ))
+    if batches:
+        x_matrix = sp.vstack([batch[0] for batch in batches], format="csr")
+    else:
+        x_matrix = sp.csr_matrix((0, spec.total_features), dtype=np.float32)
+    LOG.info("  feature extract %.1fs (nnz=%d)", time.perf_counter() - t0, x_matrix.nnz)
+    t0 = time.perf_counter()
+    probs = clf.predict_proba(x_matrix).astype(np.float32)
+    LOG.info("  predict %.1fs", time.perf_counter() - t0)
+    return probs
 
 
 def _populate_cache(
@@ -182,65 +352,124 @@ def _populate_cache(
     file_types: list[str],
     workers: int,
     cache_path: Path,
-) -> None:
-    """Extract test-partition features for the route, score with the
-    deployed model, write predictions to the cache file. One-time cost
-    per deployed model identity per route."""
-    spec_path = route_dir / "feature_spec.json"
-    if not spec_path.is_file():
-        raise SystemExit(f"{spec_path} missing; cannot score deployed model")
-    spec = features.FeatureSpec.load(spec_path)
-    clf = bundle.Ensemble.load_bundle(route_dir)
-
+    model_hash: str,
+) -> dict:
+    """Full populate: extract+predict every test-partition row for the
+    route, write a fresh v2 cache and sidecar. Returns the sidecar
+    dict the caller should persist. One-time cost per deployed model
+    identity per route; subsequent calls reuse via ``_extend_cache``."""
     LOG.info("populating cache for %s (filetypes=%s)", route_dir, file_types)
     t0 = time.perf_counter()
-    rows = _test_partition_rows(db_path, file_types)
-    LOG.info("  %d test-partition rows fetched in %.1fs", len(rows), time.perf_counter() - t0)
-    if not rows:
+    row_ids_list = _test_partition_row_ids(db_path, file_types)
+    LOG.info("  %d test-partition rows fetched in %.1fs", len(row_ids_list), time.perf_counter() - t0)
+    if not row_ids_list:
         raise SystemExit(f"no test-partition rows for filetypes={file_types}")
 
-    t0 = time.perf_counter()
-    batches = list(features.extract_labeled_from_db_batches(
-        db_path, rows, spec, n_workers=workers,
-    ))
-    if batches:
-        x_matrix = sp.vstack([batch[0] for batch in batches], format="csr")
-    else:
-        x_matrix = sp.csr_matrix((0, spec.total_features), dtype=np.float32)
-    LOG.info("  feature extract %.1fs (nnz=%d)", time.perf_counter() - t0, x_matrix.nnz)
-
-    t0 = time.perf_counter()
-    probs = clf.predict_proba(x_matrix).astype(np.float32)
-    LOG.info("  predict %.1fs", time.perf_counter() - t0)
-
-    row_ids = np.asarray([rid for rid, _ in rows], dtype=np.int64)
-    labels = np.asarray([lbl for _, lbl in rows], dtype=np.int8)
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
-    # np.savez auto-appends '.npz' to string/path arguments, which mangles
-    # our '<x>.npz.tmp' rename pattern. Open a file handle to force the
-    # exact filename, then atomic-rename onto the final cache path.
-    tmp = cache_path.parent / (cache_path.name + ".tmp")
-    with open(tmp, "wb") as f:
-        np.savez(f, row_ids=row_ids, labels=labels, probs=probs)
-    tmp.rename(cache_path)
+    probs = _extract_and_predict(
+        route_dir=route_dir, db_path=db_path,
+        row_ids=row_ids_list, workers=workers,
+    )
+    row_ids = np.asarray(row_ids_list, dtype=np.int64)
+    _save_cache(cache_path, row_ids, probs)
+    sidecar = {
+        "schema_version": CACHE_SCHEMA_VERSION,
+        "model_hash": model_hash,
+        "file_types": sorted(file_types),
+        "max_id_at_populate": int(row_ids.max()) if len(row_ids) else 0,
+        "n_rows": int(len(row_ids)),
+        "populated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    _save_sidecar(_sidecar_path(cache_path), sidecar)
     LOG.info("  cached %d predictions → %s", len(row_ids), cache_path)
+    return sidecar
+
+
+def _extend_cache(
+    *,
+    cache_path: Path,
+    route_dir: Path,
+    db_path: str,
+    file_types: list[str],
+    workers: int,
+    sidecar: dict,
+) -> dict:
+    """Append-mode update: query the DB for test-partition rows added
+    since ``sidecar.max_id_at_populate``, extract+predict only those,
+    concatenate onto the existing cache, atomic-rewrite. Returns the
+    updated sidecar (caller persists)."""
+    max_id = int(sidecar.get("max_id_at_populate", 0))
+    t0 = time.perf_counter()
+    new_row_ids_list = _test_partition_row_ids(
+        db_path, file_types, min_id_exclusive=max_id,
+    )
+    LOG.info(
+        "  cache extend: %d new test-partition rows since id=%d (%.1fs)",
+        len(new_row_ids_list), max_id, time.perf_counter() - t0,
+    )
+    if not new_row_ids_list:
+        return sidecar
+    new_probs = _extract_and_predict(
+        route_dir=route_dir, db_path=db_path,
+        row_ids=new_row_ids_list, workers=workers,
+    )
+    with np.load(cache_path) as cached:
+        existing_row_ids = np.asarray(cached["row_ids"], dtype=np.int64)
+        existing_probs = np.asarray(cached["probs"], dtype=np.float32)
+    new_row_ids = np.asarray(new_row_ids_list, dtype=np.int64)
+    # Defensive: drop any new_row_ids already present in the cache.
+    # Shouldn't happen given the id > max_id filter, but DB ID reuse or
+    # races aren't impossible.
+    if existing_row_ids.size:
+        mask = ~np.isin(new_row_ids, existing_row_ids)
+        if not mask.all():
+            LOG.warning(
+                "  cache extend: dropped %d row IDs already in cache (DB ID reuse?)",
+                int((~mask).sum()),
+            )
+            new_row_ids = new_row_ids[mask]
+            new_probs = new_probs[mask]
+    if new_row_ids.size == 0:
+        return sidecar
+    combined_row_ids = np.concatenate([existing_row_ids, new_row_ids])
+    combined_probs = np.concatenate([existing_probs, new_probs])
+    _save_cache(cache_path, combined_row_ids, combined_probs)
+    sidecar = {**sidecar}
+    sidecar["max_id_at_populate"] = int(combined_row_ids.max())
+    sidecar["n_rows"] = int(len(combined_row_ids))
+    sidecar["last_extended_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    _save_sidecar(_sidecar_path(cache_path), sidecar)
+    return sidecar
 
 
 def _metrics(
     row_ids: np.ndarray,
-    labels: np.ndarray,
     probs: np.ndarray,
     *,
+    db_path: str,
     subset_ids: np.ndarray | None,
 ) -> dict[str, Any]:
-    """Compute PR AUC, ROC AUC, F1, and recall at FP/M targets. When
-    ``subset_ids`` is given, restrict to rows present in both the cache
-    and the subset."""
+    """Compute PR AUC, ROC AUC, F1, and recall at FP/M targets on the
+    rows that survive the (cache ∩ subset) intersection. Labels are
+    fetched LIVE from the DB for that intersection so the metric uses
+    current truth, not a snapshot from cache-populate time.
+
+    Rows whose current DB label is neither 'bad' nor 'good' (relabelled
+    to unknown, deleted, etc) get -1 from ``_fetch_labels`` and are
+    dropped here so they don't pollute the metric.
+    """
     if subset_ids is not None and subset_ids.size:
         keep = np.isin(row_ids, subset_ids)
         row_ids = row_ids[keep]
-        labels = labels[keep]
         probs = probs[keep]
+    labels = _fetch_labels(db_path, row_ids)
+    valid = labels >= 0
+    if not valid.all():
+        n_dropped = int((~valid).sum())
+        if n_dropped:
+            LOG.info("  dropped %d rows with non-{bad,good} current labels", n_dropped)
+        row_ids = row_ids[valid]
+        labels = labels[valid]
+        probs = probs[valid]
     n = len(labels)
     n_mal = int(np.sum(labels == 1))
     n_ben = int(np.sum(labels == 0))
@@ -319,36 +548,100 @@ def main() -> int:
 
     model_hash = _deployed_model_hash(route_dir)
     cache_path = args.cache_root / _route_slug(args.route) / f"{model_hash[:16]}.npz"
+    sidecar_path = _sidecar_path(cache_path)
+    file_types = args.file_type or _file_types_for_route(
+        args.route, route_dir, args.deploy_root,
+    )
 
+    # Cache state machine, in order of preference:
+    #   1. v2 cache + sidecar present → check sidecar.max_id_at_populate
+    #      against the DB. If new rows exist, append-extract them
+    #      (cheap, O(delta)); otherwise reuse as-is.
+    #   2. v1 cache present (labels stored, no sidecar) → invalidate.
+    #      The drift channels v2 closes (label drift, repin staleness)
+    #      are exactly why we don't trust v1 long-term.
+    #   3. No cache → full populate.
+    sidecar = _load_sidecar(sidecar_path) if cache_path.is_file() else None
+    needs_full_populate = False
     if cache_path.is_file():
-        LOG.info("cache hit: %s", cache_path)
+        with np.load(cache_path) as cached_check:
+            cache_is_v2 = _is_v2_cache(cached_check)
+        schema = (sidecar or {}).get("schema_version")
+        if not cache_is_v2 or sidecar is None or schema != CACHE_SCHEMA_VERSION:
+            LOG.info(
+                "cache at %s is pre-v%d schema (v2=%s, sidecar=%s, schema=%s); "
+                "invalidating and repopulating",
+                cache_path, CACHE_SCHEMA_VERSION, cache_is_v2,
+                "present" if sidecar else "missing", schema,
+            )
+            cache_path.unlink(missing_ok=True)
+            sidecar_path.unlink(missing_ok=True)
+            needs_full_populate = True
+        else:
+            # Rollback guard: if the DB's current max(id) is *below*
+            # the sidecar's max_id_at_populate, the DB has gone
+            # backward (replica rebuild from an older snapshot, table
+            # truncate-and-restore, full DB reset). Append-mode is
+            # unsalvageable in that case — extracting id >
+            # max_id_at_populate yields nothing, but the cache still
+            # references row IDs that may no longer exist or now
+            # belong to different content. Invalidate and repopulate.
+            db_max = _db_max_test_partition_id(args.db, file_types)
+            sidecar_max = int(sidecar.get("max_id_at_populate", 0))
+            if db_max < sidecar_max:
+                LOG.warning(
+                    "DB max(id)=%d < sidecar max_id_at_populate=%d for "
+                    "%s: DB appears to have rolled back. Invalidating "
+                    "cache and repopulating from scratch.",
+                    db_max, sidecar_max, args.route,
+                )
+                cache_path.unlink(missing_ok=True)
+                sidecar_path.unlink(missing_ok=True)
+                needs_full_populate = True
     else:
+        needs_full_populate = True
+
+    if needs_full_populate:
         LOG.info("cache miss: %s", cache_path)
-        file_types = args.file_type or _file_types_for_route(
-            args.route, route_dir, args.deploy_root,
-        )
-        _populate_cache(
+        sidecar = _populate_cache(
             route_dir=route_dir,
             db_path=args.db,
             file_types=file_types,
             workers=args.workers,
             cache_path=cache_path,
+            model_hash=model_hash,
+        )
+    else:
+        LOG.info(
+            "cache hit: %s (max_id=%d, n_rows=%d)",
+            cache_path,
+            int(sidecar.get("max_id_at_populate", 0)),
+            int(sidecar.get("n_rows", 0)),
+        )
+        sidecar = _extend_cache(
+            cache_path=cache_path,
+            route_dir=route_dir,
+            db_path=args.db,
+            file_types=file_types,
+            workers=args.workers,
+            sidecar=sidecar,
         )
 
-    cached = np.load(cache_path)
-    row_ids = cached["row_ids"]
-    labels = cached["labels"]
-    probs = cached["probs"]
+    with np.load(cache_path) as cached:
+        row_ids = np.asarray(cached["row_ids"], dtype=np.int64)
+        probs = np.asarray(cached["probs"], dtype=np.float32)
 
     subset_ids: np.ndarray | None = None
     if args.row_ids_file is not None:
         raw = args.row_ids_file.read_text().split()
         subset_ids = np.asarray([int(x) for x in raw if x.strip()], dtype=np.int64)
 
-    metrics = _metrics(row_ids, labels, probs, subset_ids=subset_ids)
+    metrics = _metrics(row_ids, probs, db_path=args.db, subset_ids=subset_ids)
     metrics["model_hash_used"] = model_hash
     metrics["route"] = args.route
     metrics["cache_path"] = str(cache_path)
+    metrics["cache_max_id_at_populate"] = int(sidecar.get("max_id_at_populate", 0))
+    metrics["cache_n_rows"] = int(sidecar.get("n_rows", 0))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(metrics, indent=2, default=str))
     LOG.info("wrote %s", args.output)

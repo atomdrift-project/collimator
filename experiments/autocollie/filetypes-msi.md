@@ -226,3 +226,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T185136-filetypes-msi` — 2026-05-21T18:51:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `097e7da5fcd65e42` | msi_control_threshold_3e6 | ok | 0.9999 | 0.9961 | 0.9781 | 17 | [log](out/autocollie/runs/2026-05-21T18-57-27_20260521T185136-filetypes-msi_msi_control_threshold_3e6.log) |
+| `` | msi_train_hardneg_012_12 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-21T18-57-48_20260521T185136-filetypes-msi_msi_train_hardneg_012_12.log) |
+| `d3d406ada74703cf` | msi_feat_kv_vocab_split | ok | 0.9999 | 0.9965 | 0.9922 | 15 | [log](out/autocollie/runs/2026-05-21T18-57-51_20260521T185136-filetypes-msi_msi_feat_kv_vocab_split.log) |
+| `4ea3f64bdf7c9ea5` | msi_feat_bigram_freq_lower | ok | 0.9999 | 0.9957 | 0.9941 | 15 | [log](out/autocollie/runs/2026-05-21T18-58-06_20260521T185136-filetypes-msi_msi_feat_bigram_freq_lower.log) |
+| `f6e3018af590391b` | msi_seed_search_kv_vocab | ok | 0.9998 | 0.9935 | 0.9922 | 16 | [log](out/autocollie/runs/2026-05-21T18-58-23_20260521T185136-filetypes-msi_msi_seed_search_kv_vocab.log) |
+| `5e9929af1687d7d5` | msi_transfer_scale_pos_textenc | ok | 0.9662 | 0.5000 | 0.9828 | 14 | [log](out/autocollie/runs/2026-05-21T18-58-39_20260521T185136-filetypes-msi_msi_transfer_scale_pos_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`msi_control_threshold_3e6`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by aligning threshold tuning with the deployed 3e-6 FPR operating point while preserving the baseline feature surface.
+- **`msi_train_hardneg_012_12`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by upweighting hard negatives to sharpen the decision boundary around benign MSI templates without overfitting.
+- **`msi_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by extracting granular key-value pairs from MSI tables, capturing malicious payload signatures that aggregate features miss.
+- **`msi_feat_bigram_freq_lower`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by lowering the bigram frequency floor to capture rare but highly indicative malicious patterns in MSI scripts.
+- **`msi_seed_search_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets stable recall@3FPM by averaging across 3 seeds to reduce variance and confirm the KV vocab signal generalizes beyond a single RNG split.
+- **`msi_transfer_scale_pos_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by down-weighting the malware-heavy class to reduce false positives at low FPR, combined with text encoding features to better distinguish benign MSI text blocks.
+
+</details>
+

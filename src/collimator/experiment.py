@@ -1123,6 +1123,13 @@ def run_experiment(
         "train_config": train_config,
         "train_metrics": result.metrics,
         "sampled_test_metrics": sampled_test_metrics,
+        # Row IDs that produced `sampled_test_metrics` above. autocollie
+        # uses this to score the *deployed* bundle on the same rows
+        # (azoth_score_deployed.py --row-ids-file), so promote decisions
+        # compare apples-to-apples instead of comparing the candidate's
+        # screen holdout against the deployed model's larger test
+        # partition slice.
+        "test_sample_row_ids": [int(s.row_id) for s in sorted_test],
         # When deploy_averaged, this is the threshold re-picked on the
         # AVERAGED ensemble's probabilities (matches what the deployment
         # would actually classify at). Otherwise it's the single trained

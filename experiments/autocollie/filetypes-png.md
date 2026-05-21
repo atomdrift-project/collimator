@@ -278,3 +278,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T181944-filetypes-png` — 2026-05-21T18:19:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4bebbba4f96f53f7` | png_control_scalepos075 | ok | 0.9871 | 0.9733 | 0.9524 | 6 | [log](out/autocollie/runs/2026-05-21T18-24-47_20260521T181944-filetypes-png_png_control_scalepos075.log) |
+| `1292e984877b1755` | png_kv_vocab_split | ok | 0.9850 | 0.9717 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-21T18-24-57_20260521T181944-filetypes-png_png_kv_vocab_split.log) |
+| `d515a81a736f351f` | png_text_overlay_metrics | ok | 0.9866 | 0.9724 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-21T18-25-01_20260521T181944-filetypes-png_png_text_overlay_metrics.log) |
+| `f7ff02dd4f14012f` | png_ablate_attack_ngrams | ok | 0.9868 | 0.9731 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-21T18-25-05_20260521T181944-filetypes-png_png_ablate_attack_ngrams.log) |
+| `fbf56cd200f6eb01` | png_transfer_hardneg | ok | 0.9877 | 0.9780 | 0.9268 | 3 | [log](out/autocollie/runs/2026-05-21T18-25-08_20260521T181944-filetypes-png_png_transfer_hardneg.log) |
+| `9c67ce7a9d061a41` | png_seed_search_ensemble | ok | 0.9832 | 0.9688 | 0.8516 | 6 | [log](out/autocollie/runs/2026-05-21T18-25-12_20260521T181944-filetypes-png_png_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`png_control_scalepos075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3FPM by down-weighting positives to tighten the score distribution at the deployed operating point, while keeping PR_AUC flat.
+- **`png_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by capturing structured PNG metadata via KV vocab and value splitting, with regularization to guard ROC_AUC on the small corpus.
+- **`png_text_overlay_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_GAMMA=0.5 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_OVERLAY_SIGNAL=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by surfacing steganographic text anomalies and overlay packing artifacts common in malicious PNGs, with stronger regularization to preserve ROC_AUC.
+- **`png_ablate_attack_ngrams`** `EXP_ATTACK_CODE_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by ablating attack_code_ngrams which may be sparse/noisy for image files, reducing overfitting while maintaining tail recall.
+- **`png_transfer_hardneg`** `EXP_ATTACK_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard benign PNGs that mimic malware structure, borrowing a proven transfer strategy to sharpen the decision boundary.
+- **`png_seed_search_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Targets PR_AUC stability by averaging across 3 seeds to distinguish real signal from seed noise on this small corpus, aiming to sustain the 0.987+ PR_AUC baseline.
+
+</details>
+

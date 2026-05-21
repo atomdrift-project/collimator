@@ -164,18 +164,33 @@ def _select_best_run(
 
       B. **Best raw screen run** (fallback when no promoted entry).
          Sort key, in priority order:
-           1. ``recall_at_fp_per_million_3`` — operational metric matching
-              the L3 hostile deploy budget.
-           2. ``avg_precision`` — curve-summarized PR/recall tradeoff.
-           3. ``save_all_seeds`` — prefer multi-seed bundles.
-           4. ``timestamp`` — most recent tied run.
+           1. ``has_apples_to_apples`` — a run with ``deployed_on_same_data``
+              (autocollie's post-screen apples-to-apples baseline; see
+              ``azoth_score_deployed.py``) always outranks a legacy run
+              without one. Even a slim apples-to-apples win is more
+              trustworthy than a big raw-holdout win, because the
+              former's metric is on the *same rows* the deployed model
+              is also scoring.
+           2. ``delta_recall_at_3_fpm`` — when apples-to-apples is
+              present: candidate's holdout r@3FP/M minus the deployed
+              model's r@3FP/M on those same rows. Maximizing this
+              ranks "biggest beat over deployed on identical data."
+           3. ``recall_at_fp_per_million_3`` — operational metric
+              matching the L3 hostile deploy budget. Tiebreaker within
+              apples-to-apples; primary key for legacy runs.
+           4. ``avg_precision`` — curve-summarized PR/recall tradeoff.
+           5. ``save_all_seeds`` — prefer multi-seed bundles.
+           6. ``timestamp`` — most recent tied run.
 
-         This path is brittle: screen runs haven't been verified at the
-         deploy slice, so the picker may grab configs that look great on
-         the route's small training holdout but degrade the test slice
-         (observed: ``filegroups/native`` AP=0.9999/r@3FPM=88.89% holdout
-         → 56% on test PE slice). A warning is logged when this path
-         fires so the human knows the route needs a promote cycle.
+         The has_apples gate exists because legacy screen runs are
+         brittle: their r@3FPM is on the route's small training
+         holdout, not the deployed test slice, so a high holdout
+         number doesn't reliably translate (observed:
+         ``filegroups/native`` AP=0.9999/r@3FPM=88.89% holdout → 56%
+         on test PE slice). When apples-to-apples runs exist they're
+         always picked over legacy regardless of raw recall. A
+         warning logs when this whole fallback fires so the human
+         knows the route needs a promote cycle.
 
     Runs without ``avg_precision`` are skipped entirely. Runs without
     ``recall_at_fp_per_million_3`` get sorted with fallback recall 0.0.
@@ -197,7 +212,9 @@ def _select_best_run(
     if not runs_dir.is_dir():
         LOG.error("runs dir %s does not exist", runs_dir)
         return None
-    best: tuple[float, float, bool, str, dict[str, Any]] | None = None
+    best: tuple[bool, float, float, float, bool, str, dict[str, Any]] | None = None
+    apples_to_apples_count = 0
+    legacy_count = 0
     for path in runs_dir.glob("*.json"):
         if path.name.endswith("_feature_spec.json"):
             continue
@@ -217,16 +234,47 @@ def _select_best_run(
             r3 = float(recall_at_3)
         else:
             r3 = 0.0
+        # Apples-to-apples tier: when autocollie's post-screen hook
+        # populated deployed_on_same_data with a valid r@3FP/M, rank
+        # by delta vs the deployed model's score on the *same rows*.
+        # That's the only honest comparison — legacy runs' raw r@3FP/M
+        # is on a holdout the deployed model never sees, so a "win"
+        # there can flip on the test slice.
+        deployed = run.get("deployed_on_same_data") or {}
+        deployed_r3_raw = deployed.get("recall_at_fp_per_million_3")
+        n_mal = deployed.get("n_malware", 0) or 0
+        n_ben = deployed.get("n_benign", 0) or 0
+        has_apples = (
+            isinstance(deployed_r3_raw, (int, float))
+            and not math.isnan(float(deployed_r3_raw))
+            and n_mal >= 1 and n_ben >= 1
+        )
+        if has_apples:
+            delta_r3 = r3 - float(deployed_r3_raw)
+            apples_to_apples_count += 1
+        else:
+            delta_r3 = 0.0
+            legacy_count += 1
         candidate = (
+            has_apples,
+            delta_r3,
             r3,
             float(ap),
             bool(run.get("save_all_seeds")),
             str(run.get("timestamp") or ""),
             run,
         )
-        if best is None or candidate[:4] > best[:4]:
+        if best is None or candidate[:6] > best[:6]:
             best = candidate
-    return best[4] if best is not None else None
+    if best is not None:
+        LOG.info(
+            "fallback picker for route %s scanned %d apples-to-apples + %d "
+            "legacy runs; winner is %s (delta_r3=%+.4f, r3=%.4f)",
+            route, apples_to_apples_count, legacy_count,
+            "apples-to-apples" if best[0] else "legacy",
+            best[1], best[2],
+        )
+    return best[6] if best is not None else None
 
 
 def _resolve_env(run: dict[str, Any], extra: dict[str, str]) -> dict[str, str]:
@@ -279,7 +327,17 @@ def _parse_extra(values: list[str]) -> dict[str, str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--runs-dir", type=Path, default=Path("out/experiments/azoth/runs"))
+    parser.add_argument(
+        "--runs-dir", type=str,
+        default="out/experiments/azoth/runs",
+        help=(
+            "Directory of autocollie run JSONs to pick from. Pass an "
+            "empty string to skip the picker entirely and replay only "
+            "the --set values (no historical config injected). Use the "
+            "empty form when retraining from Makefile defaults without "
+            "autocollie tunings."
+        ),
+    )
     parser.add_argument(
         "--promoted-baselines",
         type=Path,
@@ -328,31 +386,48 @@ def main() -> int:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    baselines_path = args.promoted_baselines if str(args.promoted_baselines) else None
-    run = _select_best_run(args.runs_dir, args.route, baselines_path=baselines_path)
-    if run is None:
-        LOG.error("no historical run found for route %r in %s", args.route, args.runs_dir)
-        return 1
-    metrics = run.get("sampled_test_metrics") or {}
-    LOG.info(
-        "best for route %s: key=%s recall@3FP/M=%.4f avg_precision=%.4f save_all=%s idea=%s",
-        args.route,
-        run.get("experiment_key", "?"),
-        metrics.get("recall_at_fp_per_million_3", float("nan")),
-        metrics.get("avg_precision", float("nan")),
-        bool(run.get("save_all_seeds")),
-        run.get("idea", "?"),
-    )
+    # Empty --runs-dir means "skip the picker, just replay the --set values
+    # straight through to make experiment." Used by azoth-publish-train
+    # when AZOTH_AUTOCOLLIE_RUNS_DIR="" to retrain from Makefile defaults
+    # without any autocollie history.
+    runs_dir_str = str(args.runs_dir or "").strip()
+    skip_picker = not runs_dir_str
+    run: dict[str, Any] | None = None
+    if not skip_picker:
+        baselines_path = args.promoted_baselines if str(args.promoted_baselines) else None
+        run = _select_best_run(Path(runs_dir_str), args.route, baselines_path=baselines_path)
+        if run is None:
+            LOG.error("no historical run found for route %r in %s", args.route, runs_dir_str)
+            return 1
+        metrics = run.get("sampled_test_metrics") or {}
+        LOG.info(
+            "best for route %s: key=%s recall@3FP/M=%.4f avg_precision=%.4f save_all=%s idea=%s",
+            args.route,
+            run.get("experiment_key", "?"),
+            metrics.get("recall_at_fp_per_million_3", float("nan")),
+            metrics.get("avg_precision", float("nan")),
+            bool(run.get("save_all_seeds")),
+            run.get("idea", "?"),
+        )
+    else:
+        LOG.info(
+            "defaults-only mode for route %s (no --runs-dir): replaying --set "
+            "values without autocollie history",
+            args.route,
+        )
 
     extra = _parse_extra(args.set)
     extra.setdefault("EXP_ROUTE", args.route)
-    # Tag the replay so it's distinguishable in run JSONs from the original.
-    extra.setdefault("EXP_IDEA", f"{run.get('idea') or 'best'}_replay")
-    # Multi-seed averaging on by default for replays — that's the whole point
-    # of running this rather than a single-seed retrain.
-    extra.setdefault("EXP_SEED_SEARCH_K", "3")
-    extra.setdefault("EXP_SAVE_ALL_SEEDS", "1")
-    env = _resolve_env(run, extra)
+    if run is not None:
+        # Tag the replay so it's distinguishable in run JSONs from the original.
+        extra.setdefault("EXP_IDEA", f"{run.get('idea') or 'best'}_replay")
+        # Multi-seed averaging on by default for replays — that's the whole point
+        # of running this rather than a single-seed retrain.
+        extra.setdefault("EXP_SEED_SEARCH_K", "3")
+        extra.setdefault("EXP_SAVE_ALL_SEEDS", "1")
+    else:
+        extra.setdefault("EXP_IDEA", f"{args.route}_defaults")
+    env = _resolve_env(run, extra) if run is not None else dict(extra)
 
     if args.print_env:
         for k in sorted(env):

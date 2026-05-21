@@ -262,3 +262,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T181427-filegroups-config` — 2026-05-21T18:14:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e724d2b50a60313b` | config_ctrl_baseline_posweight | ok | 0.9997 | 0.9994 | 0.9911 | 14 | [log](out/autocollie/runs/2026-05-21T18-19-18_20260521T181427-filegroups-config_config_ctrl_baseline_posweight.log) |
+| `` | config_train_dart_reg_lambda | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-21T18-19-37_20260521T181427-filegroups-config_config_train_dart_reg_lambda.log) |
+| `` | config_train_hardneg_posweight05 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-21T18-19-39_20260521T181427-filegroups-config_config_train_hardneg_posweight05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`config_ctrl_baseline_posweight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature_env with scale_pos_weight_mult=0.75 to stabilize PR_AUC baseline for comparison.
+- **`config_train_dart_reg_lambda`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Uses dart boosting with higher reg_lambda to reduce overfitting on rare config patterns, targeting PR_AUC improvement while preserving ROC_AUC.
+- **`config_train_hardneg_posweight05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard negative mining with moderate weight and lower pos weight to sharpen decision boundary at low FPR, targeting recall@3FPM.
+
+</details>
+

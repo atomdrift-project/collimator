@@ -164,3 +164,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T182518-filetypes-github-actions` — 2026-05-21T18:25:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e88f30f6b0684401` | ga_control_scalepos | ok | 0.0273 | 0.5000 | 0.0531 | 6 | [log](out/autocollie/runs/2026-05-21T18-28-58_20260521T182518-filetypes-github-actions_ga_control_scalepos.log) |
+| `a6eb03782cdc339a` | ga_feat_kv_vocab_split | ok | 0.0273 | 0.5000 | 0.0531 | 4 | [log](out/autocollie/runs/2026-05-21T18-29-04_20260521T182518-filetypes-github-actions_ga_feat_kv_vocab_split.log) |
+| `8a305f265a570e95` | ga_feat_text_metrics_full | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-21T18-29-08_20260521T182518-filetypes-github-actions_ga_feat_text_metrics_full.log) |
+| `9889ba047c7bbc15` | ga_feat_bigram_lower_freq_trigrams | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-21T18-29-12_20260521T182518-filetypes-github-actions_ga_feat_bigram_lower_freq_trigrams.log) |
+| `` | ga_train_hardneg_focus | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-29-16_20260521T182518-filetypes-github-actions_ga_train_hardneg_focus.log) |
+| `` | ga_profile_seed_search_3 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-29-17_20260521T182518-filetypes-github-actions_ga_profile_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ga_control_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.5 to downweight positives and reduce FPs, targeting recall@3 FP/M.
+- **`ga_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture YAML key-value structure, targeting PR_AUC and recall@3 FP/M.
+- **`ga_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture structural text patterns in YAML, targeting PR_AUC.
+- **`ga_feat_bigram_lower_freq_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 and enable objective_trigrams to capture rarer attack patterns in small corpus, targeting recall@3 FP/M.
+- **`ga_train_hardneg_focus`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use hard_negative_fraction=0.1 and weight=10 to focus model on difficult benigns, targeting PR_AUC and recall@3 FP/M.
+- **`ga_profile_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on control features to mitigate high variance from tiny malware count, targeting stable recall@3 FP/M.
+
+</details>
+

@@ -319,3 +319,25 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T182746-filetypes-javascript` — 2026-05-21T18:27:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `af4ff910084150e6` | js_control_deeper_trees | ok | 0.9993 | 0.9988 | 0.9857 | 41 | [log](out/autocollie/runs/2026-05-21T18-33-00_20260521T182746-filetypes-javascript_js_control_deeper_trees.log) |
+| `` | js_hn_stricter_boundary | fail | — | — | — | 23 | [log](out/autocollie/runs/2026-05-21T18-33-49_20260521T182746-filetypes-javascript_js_hn_stricter_boundary.log) |
+| `d7c6920aadabb505` | js_kv_vocab_12k | ok | 0.9993 | 0.9989 | 0.9872 | 38 | [log](out/autocollie/runs/2026-05-21T18-34-12_20260521T182746-filetypes-javascript_js_kv_vocab_12k.log) |
+| `5d84d69fb657ca3e` | js_textenc_obfuscation | ok | 0.9993 | 0.9989 | 0.9874 | 36 | [log](out/autocollie/runs/2026-05-21T18-34-50_20260521T182746-filetypes-javascript_js_textenc_obfuscation.log) |
+| `562f040ffff5ee36` | js_symbol_vocab_8k | ok | 0.9993 | 0.9989 | 0.9874 | 37 | [log](out/autocollie/runs/2026-05-21T18-35-26_20260521T182746-filetypes-javascript_js_symbol_vocab_8k.log) |
+| `3144621d465656c5` | js_bigram500_seedsearch3 | ok | 0.9993 | 0.9989 | 0.9871 | 48 | [log](out/autocollie/runs/2026-05-21T18-36-04_20260521T182746-filetypes-javascript_js_bigram500_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_control_deeper_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env with deeper trees and slower learning to stabilize PR_AUC and improve ranking quality without overfitting.
+- **`js_hn_stricter_boundary`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2.5 EXP_TRAIN_SAMPLES=30000` — Increase hard-negative weight and fraction to push borderline benigns lower, targeting recall@3FPM by sharpening the decision boundary at low FPR.
+- **`js_kv_vocab_12k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with higher cap to capture structured JS object patterns, aiming to lift PR_AUC by adding discriminative key-value signal.
+- **`js_textenc_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_encoding and text_metrics_full to detect obfuscation and encoding anomalies in JS, targeting recall@3FPM for evasive malware.
+- **`js_symbol_vocab_8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Introduce symbol_vocab to model function/import co-occurrence in JS, aiming to improve PR_AUC by capturing behavioral clusters.
+- **`js_bigram500_seedsearch3`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 500 and run seed_search_k=3 to capture rarer patterns and reduce seed variance, targeting stable PR_AUC gains.
+
+</details>
+

@@ -222,3 +222,23 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T181339-general` — 2026-05-21T18:13:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `13b3d104ed1bacc4` | general_control_baseline_train | ok | 0.9990 | 0.9990 | 0.9820 | 79 | [log](out/autocollie/runs/2026-05-21T18-17-50_20260521T181339-general_general_control_baseline_train.log) |
+| `9dd67625cdbe35d5` | general_feat_kv_vocab_10k | ok | 0.9989 | 0.9989 | 0.9817 | 83 | [log](out/autocollie/runs/2026-05-21T18-19-09_20260521T181339-general_general_feat_kv_vocab_10k.log) |
+| `4dcf5d72f282263c` | general_feat_text_metrics_enc_full | ok | 0.9989 | 0.9989 | 0.9813 | 70 | [log](out/autocollie/runs/2026-05-21T18-20-31_20260521T181339-general_general_feat_text_metrics_enc_full.log) |
+| `` | general_train_hardneg_01_10 | fail | — | — | — | 34 | [log](out/autocollie/runs/2026-05-21T18-21-42_20260521T181339-general_general_train_hardneg_01_10.log) |
+| `` | general_train_goss_subsample | fail | — | — | — | 13 | [log](out/autocollie/runs/2026-05-21T18-22-16_20260521T181339-general_general_train_goss_subsample.log) |
+
+<details><summary>Spec details</summary>
+
+- **`general_control_baseline_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env to establish a stable baseline for PR_AUC and ROC_AUC while slightly increasing estimators to 300 to ensure convergence without overfitting.
+- **`general_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with max 10000 to capture structured key-value patterns, aiming to boost PR_AUC by adding discriminative signal for malware configuration artifacts.
+- **`general_feat_text_metrics_enc_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to detect obfuscation and encoding anomalies, targeting improved recall@3FPM by surfacing subtle document/script evasion tactics.
+- **`general_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard_negative_fraction 0.1 and weight 10 to focus the model on difficult benign samples, aiming to increase recall@3FPM by reducing false positives in the tail.
+- **`general_train_goss_subsample`** `EXP_BOOSTING_TYPE=goss EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Switches to goss boosting with subsample 0.8 to improve generalization and ROC_AUC by reducing variance on the large benign class.
+
+</details>
+

@@ -264,3 +264,23 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T180729-filetypes-chrome-manifest` — 2026-05-21T18:07:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b948d5d09c832ccb` | control_baseline_reg_tune | ok | 0.7944 | 0.9641 | 0.6000 | 5 | [log](out/autocollie/runs/2026-05-21T18-13-25_20260521T180729-filetypes-chrome-manifest_control_baseline_reg_tune.log) |
+| `3e8725fb0c23ae75` | feat_kv_vocab_split | ok | 0.7944 | 0.9641 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-21T18-13-30_20260521T180729-filetypes-chrome-manifest_feat_kv_vocab_split.log) |
+| `049b54a3638489ec` | feat_text_metrics_encoding | ok | 0.7944 | 0.9641 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-21T18-13-33_20260521T180729-filetypes-chrome-manifest_feat_text_metrics_encoding.log) |
+| `` | train_hardneg_015_12 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-13-37_20260521T180729-filetypes-chrome-manifest_train_hardneg_015_12.log) |
+| `` | train_seed_search_ensemble | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T18-13-38_20260521T180729-filetypes-chrome-manifest_train_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_reg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature_env to hit matrix cache; tunes reg_lambda and num_leaves to reduce overfitting on small corpus, aiming to stabilize PR_AUC and improve recall@3FPM.
+- **`feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab and kv_value_split to capture JSON key-value structure in manifests, aiming to boost PR_AUC by adding high-signal structural features.
+- **`feat_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full and text_encoding to detect obfuscation and format anomalies in manifest text, aiming to improve PR_AUC and recall@3FPM.
+- **`train_hardneg_015_12`** `EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Applies hard_negative_fraction=0.15 and weight=12 to focus model capacity on difficult benigns, aiming to lift recall@3FPM without hurting PR_AUC.
+- **`train_seed_search_ensemble`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 and save_all_seeds=true to average out RNG variance on this tiny corpus, aiming to stabilize recall@3FPM and PR_AUC.
+
+</details>
+
