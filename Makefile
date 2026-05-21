@@ -50,6 +50,12 @@ ELF_BENCHMARK_EARLY_STOPPING ?= 50
 ELF_BENCHMARK_NUM_LEAVES ?= 96
 ELF_BENCHMARK_MIN_CHILD_SAMPLES ?= 100
 AZOTH_ROOT ?= $(OUT_ROOT)/azoth
+# Run-isolation layout. Each fresh train allocates a directory under
+# $(AZOTH_RUNS_ROOT)/ and writes the entire bundle there; on success
+# azoth-publish atomically updates $(OUT_ROOT)/azoth to point at it.
+# See scripts/azoth_publish_run.py and the azoth-run-new / azoth-publish
+# targets below.
+AZOTH_RUNS_ROOT ?= $(OUT_ROOT)/azoth-runs
 AZOTH_SPECIALISTS_SUMMARY ?= $(AZOTH_ROOT)/specialists.json
 AZOTH_GENERAL_DIR ?= $(AZOTH_ROOT)/general
 AZOTH_GENERAL_SCORES ?= $(AZOTH_GENERAL_DIR)/threshold_scores.npz
@@ -201,6 +207,12 @@ CLEAVE ?= cleave
 DEMO_DB ?= out/demo.db
 WORKERS ?=
 EXP_WORKERS ?= $(WORKERS)
+# Hard cap on the LightGBM thread pool a single `make experiment`
+# invocation may grab. Without this, LightGBM uses every host core
+# (n_jobs=-1) and concurrent screens thrash. Wired to COLLIMATOR_NUM_THREADS
+# in the experiment recipe; collimator.train reads that env var and
+# passes it through to LightGBM. Unset = no cap (host default).
+EXP_LGBM_THREADS ?=
 WORKERS_ARG := $(if $(WORKERS),--workers $(WORKERS),)
 EXP_WORKERS_ARG := $(if $(EXP_WORKERS),--workers $(EXP_WORKERS),)
 SEED ?= 42
@@ -833,10 +845,12 @@ elf-route-optimization: venv check-db
 # come in via --autocollie-best-runs-dir (read from the suite, see the flag
 # in scripts/azoth_specialist_suite.py).
 azoth-specialists: venv check-db
-	$(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
-		--route general \
-		--exec $(PYTHON) scripts/azoth_specialist_suite.py \
+	$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),\
+		$(PYTHON) scripts/azoth_train_best.py \
+			--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+			--route general \
+			--exec ,) \
+	$(PYTHON) scripts/azoth_specialist_suite.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
@@ -1120,6 +1134,49 @@ azoth-validate: azoth-calibrate
 	  echo "azoth-validate: all gates passed for $(AZOTH_ROOT)" \
 	|| { ec=$$?; rm -rf "$$_STAGE"; exit $$ec; }
 
+# Run isolation. Each fresh train picks a unique RUN_ID and writes its
+# entire bundle into $(AZOTH_RUNS_ROOT)/$(RUN_ID)/, then atomically
+# updates $(AZOTH_ROOT) (the canonical symlink) on success. Failed or
+# in-flight runs leave the canonical bundle untouched.
+#
+# Typical usage from a shell:
+#   RUN_DIR=$$(make -s azoth-run-new)
+#   make azoth-specialists AZOTH_ROOT="$$RUN_DIR"   # if retraining
+#   make azoth-deploy      AZOTH_ROOT="$$RUN_DIR"
+#   make azoth-publish     AZOTH_ROOT="$$RUN_DIR"
+#
+# Or with the chained convenience target:
+#   make azoth-publish-deploy
+#     # allocates a run dir, runs azoth-deploy into it, publishes on success
+#
+# Resume an existing run by exporting AZOTH_RUN_ID=<id> before make,
+# which freezes the timestamped path used by these targets.
+ifeq ($(origin AZOTH_RUN_ID), undefined)
+AZOTH_RUN_ID := $(shell date -u +%Y%m%dT%H%M%SZ)-$(shell openssl rand -hex 4 2>/dev/null || hexdump -n4 -e '4/1 "%02x"' /dev/urandom)
+endif
+AZOTH_RUN_DIR := $(AZOTH_RUNS_ROOT)/$(AZOTH_RUN_ID)
+
+.PHONY: azoth-run-new azoth-publish azoth-publish-deploy
+
+# Create (if needed) and print the path to the run dir for AZOTH_RUN_ID.
+# Capture it with $(shell …) or make -s.
+azoth-run-new:
+	@mkdir -p $(AZOTH_RUN_DIR)
+	@echo $(AZOTH_RUN_DIR)
+
+# Validate that AZOTH_ROOT looks like a complete bundle, then atomically
+# point $(OUT_ROOT)/azoth at it. Errors out if the bundle is incomplete.
+azoth-publish: venv
+	$(PYTHON) scripts/azoth_publish_run.py $(AZOTH_ROOT) --link $(OUT_ROOT)/azoth
+
+# Convenience: full deploy into a fresh run dir, then publish.
+azoth-publish-deploy: venv
+	@echo "publish-deploy: allocating $(AZOTH_RUN_DIR)"
+	@mkdir -p $(AZOTH_RUN_DIR)
+	$(MAKE) azoth-deploy AZOTH_ROOT=$(AZOTH_RUN_DIR)
+	$(MAKE) azoth-publish AZOTH_ROOT=$(AZOTH_RUN_DIR)
+	@echo "publish-deploy: $(OUT_ROOT)/azoth now points to $(AZOTH_RUN_DIR)"
+
 azoth-deploy: azoth-calibrate
 	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
@@ -1292,7 +1349,7 @@ false-positives-triage: false-positives
 		--kind false-positives \
 		--skip $(SKIP) \
 		--top $(TOP_ERRORS)
-	$(CLEAVE) --format=json $(FALSE_POSITIVES_TRIAGE_DIR) > $(FALSE_POSITIVES_TRIAGE_JSON)
+	@echo "samples staged in $(FALSE_POSITIVES_TRIAGE_DIR); run 'cleave --format=json $(FALSE_POSITIVES_TRIAGE_DIR)' manually if needed."
 
 false-negatives-triage: false-negatives
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -1302,14 +1359,14 @@ false-negatives-triage: false-negatives
 		--kind false-negatives \
 		--skip $(SKIP) \
 		--top $(TOP_ERRORS)
-	$(CLEAVE) --format=json $(FALSE_NEGATIVES_TRIAGE_DIR) > $(FALSE_NEGATIVES_TRIAGE_JSON)
+	@echo "samples staged in $(FALSE_NEGATIVES_TRIAGE_DIR); run 'cleave --format=json $(FALSE_NEGATIVES_TRIAGE_DIR)' manually if needed."
 
 # mislabeled-triage: both FPs and FNs into a single tree for joint review.
 # Layout:
 #   $(MISLABELED_TRIAGE_DIR)/false-positives/...
 #   $(MISLABELED_TRIAGE_DIR)/false-negatives/...
-# cleave is run once over the parent dir so both kinds appear in the same
-# JSON, with their relative path indicating which bucket each sample came from.
+# Run cleave manually over the parent dir when you want one JSON with both
+# kinds (relative paths show which bucket each sample came from).
 mislabeled-triage: false-positives false-negatives
 	$(PYTHON) scripts/triage_error_samples.py \
 		--report $(OUT_DIR)/false_positives.json \
@@ -1325,9 +1382,8 @@ mislabeled-triage: false-positives false-negatives
 		--kind false-negatives \
 		--skip $(SKIP) \
 		--top $(TOP_ERRORS)
-	$(CLEAVE) --format=json $(MISLABELED_TRIAGE_DIR) > $(MISLABELED_TRIAGE_JSON)
 	@echo "samples:  $(MISLABELED_TRIAGE_DIR)/{false-positives,false-negatives}/"
-	@echo "cleave:   $(MISLABELED_TRIAGE_JSON)"
+	@echo "to cleave: cleave --format=json $(MISLABELED_TRIAGE_DIR) > $(MISLABELED_TRIAGE_JSON)"
 
 # Scope-aware mislabeled triage. Uses the score table + route policies
 # (no model rescore) to pick top-N benigns flagged or malware missed by
@@ -1379,10 +1435,9 @@ false-positives-scope-triage: false-positives-scope
 		--output-dir $(FP_SCOPE_TRIAGE_DIR) \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-positives --db $(DB) --top $(TOP_ERRORS)
-	$(CLEAVE) --format=json $(FP_SCOPE_TRIAGE_DIR) > $(FP_SCOPE_TRIAGE_JSON)
 	@echo "report:   $(FP_SCOPE_REPORT)"
 	@echo "samples:  $(FP_SCOPE_TRIAGE_DIR)"
-	@echo "cleave:   $(FP_SCOPE_TRIAGE_JSON)"
+	@echo "to cleave: cleave --format=json $(FP_SCOPE_TRIAGE_DIR) > $(FP_SCOPE_TRIAGE_JSON)"
 
 false-negatives-scope-triage: false-negatives-scope
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -1390,10 +1445,9 @@ false-negatives-scope-triage: false-negatives-scope
 		--output-dir $(FN_SCOPE_TRIAGE_DIR) \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
-	$(CLEAVE) --format=json $(FN_SCOPE_TRIAGE_DIR) > $(FN_SCOPE_TRIAGE_JSON)
 	@echo "report:   $(FN_SCOPE_REPORT)"
 	@echo "samples:  $(FN_SCOPE_TRIAGE_DIR)"
-	@echo "cleave:   $(FN_SCOPE_TRIAGE_JSON)"
+	@echo "to cleave: cleave --format=json $(FN_SCOPE_TRIAGE_DIR) > $(FN_SCOPE_TRIAGE_JSON)"
 
 mislabeled-scope-triage: false-positives-scope false-negatives-scope
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -1406,10 +1460,9 @@ mislabeled-scope-triage: false-positives-scope false-negatives-scope
 		--output-dir $(MIS_SCOPE_TRIAGE_DIR)/false-negatives \
 		--samples-dir $(SAMPLES_DIR) \
 		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
-	$(CLEAVE) --format=json $(MIS_SCOPE_TRIAGE_DIR) > $(MIS_SCOPE_TRIAGE_JSON)
 	@echo "reports:  $(FP_SCOPE_REPORT) + $(FN_SCOPE_REPORT)"
 	@echo "samples:  $(MIS_SCOPE_TRIAGE_DIR)/{false-positives,false-negatives}/"
-	@echo "cleave:   $(MIS_SCOPE_TRIAGE_JSON)"
+	@echo "to cleave: cleave --format=json $(MIS_SCOPE_TRIAGE_DIR) > $(MIS_SCOPE_TRIAGE_JSON)"
 
 near-false-positives-triage: near-false-positives
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -1419,7 +1472,7 @@ near-false-positives-triage: near-false-positives
 		--kind near-false-positives \
 		--skip $(SKIP) \
 		--top $(TOP_ERRORS)
-	$(CLEAVE) --format=json $(NEAR_FALSE_POSITIVES_TRIAGE_DIR) > $(NEAR_FALSE_POSITIVES_TRIAGE_JSON)
+	@echo "samples staged in $(NEAR_FALSE_POSITIVES_TRIAGE_DIR); run 'cleave --format=json $(NEAR_FALSE_POSITIVES_TRIAGE_DIR)' manually if needed."
 
 benchmark: venv check-db
 	$(PYTHON) -m collimator benchmark --db $(DB) $(WORKERS_ARG) \
@@ -1431,6 +1484,7 @@ build-splits: venv check-db
 
 experiment: venv check-db
 	@mkdir -p $(EXP_LOG_DIR)
+	COLLIMATOR_NUM_THREADS=$(EXP_LGBM_THREADS) \
 	COLLIMATOR_ALLOWED_FEATURES_FILE=$(EXP_ALLOWED_FEATURES_FILE) \
 	COLLIMATOR_SILENT_PACKER_SIGNAL=$(EXP_SILENT_PACKER_SIGNAL) \
 	COLLIMATOR_MTIME_KURTOSIS=$(EXP_MTIME_KURTOSIS) \
@@ -1676,6 +1730,13 @@ AUTOCOLLIE_BIN := $(AUTOCOLLIE_DIR)/bin/autocollie
 EXPERIMENTS ?= 12
 AUTOCOLLIE_LLM_TIMEOUT ?= 15m
 AUTOCOLLIE_SCREEN_TIMEOUT ?= 90m
+# Parallel route processing for autocollie auto/loop modes. Two routes
+# run cycles concurrently by default; promotes serialize internally.
+# EXP_WORKERS and EXP_LGBM_THREADS are auto-derived from MAX_CPU_THREADS /
+# ROUTE_CONCURRENCY in autocollie so concurrent screens don't fight for
+# the host's full CPU. Set ROUTE_CONCURRENCY=1 to force sequential.
+ROUTE_CONCURRENCY ?= 2
+MAX_CPU_THREADS ?= 128
 # Autocollie defaults to the local Hopper replica. Using the bare `hopper`
 # hostname can resolve through public DNS and burn screen slots on timeouts.
 AUTOCOLLIE_DB ?= postgres://hopper@localhost:5432/hopper
@@ -1826,7 +1887,9 @@ autocollie: venv check-db autocollie-build
 		--llm-timeout $(AUTOCOLLIE_LLM_TIMEOUT) \
 		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
 		--promote-timeout 180m \
-		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
+		--route-concurrency $(ROUTE_CONCURRENCY) \
+		--max-cpu-threads $(MAX_CPU_THREADS) \
+		--make-args "DB=$(DB) $(if $(WORKERS),EXP_WORKERS=$(WORKERS) ,)EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
 # autocollie-loop is the same target with PASSES=0 — loops the screen+promote
 # ladder over the route list until Ctrl-C.

@@ -216,3 +216,81 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260520T064941-filetypes-pdf` — 2026-05-20T06:49:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `132787998a61231a` | pdf_ctrl_baseline_lr_depth | ok | 1.0000 | 0.9974 | 0.9945 | 10 | [log](out/autocollie/runs/2026-05-20T06-54-21_20260520T064941-filetypes-pdf_pdf_ctrl_baseline_lr_depth.log) |
+| `4075a97f736090db` | pdf_train_hardneg_tail | ok | 1.0000 | 0.9979 | 0.9982 | 4 | [log](out/autocollie/runs/2026-05-20T06-54-31_20260520T064941-filetypes-pdf_pdf_train_hardneg_tail.log) |
+| `6540b96c9123cd02` | pdf_train_scalepos_tail | ok | 0.9999 | 0.9961 | 0.9934 | 3 | [log](out/autocollie/runs/2026-05-20T06-54-35_20260520T064941-filetypes-pdf_pdf_train_scalepos_tail.log) |
+| `1069d2fdd2115ab5` | pdf_feat_textmetrics_encoding | ok | 1.0000 | 0.9973 | 0.9943 | 8 | [log](out/autocollie/runs/2026-05-20T06-54-38_20260520T064941-filetypes-pdf_pdf_feat_textmetrics_encoding.log) |
+| `9bdfcf0efa77b6e8` | pdf_feat_kv_vocab_split | ok | 1.0000 | 0.9973 | 0.9943 | 9 | [log](out/autocollie/runs/2026-05-20T06-54-45_20260520T064941-filetypes-pdf_pdf_feat_kv_vocab_split.log) |
+| `b1e7efddb21db954` | pdf_feat_doc_obsf_buckets | ok | 1.0000 | 0.9972 | 0.9944 | 7 | [log](out/autocollie/runs/2026-05-20T06-54-54_20260520T064941-filetypes-pdf_pdf_feat_doc_obsf_buckets.log) |
+| `e45a596fb1957724` | pdf_feat_trigrams_objective | ok | 1.0000 | 0.9973 | 0.9933 | 7 | [log](out/autocollie/runs/2026-05-20T06-55-01_20260520T064941-filetypes-pdf_pdf_feat_trigrams_objective.log) |
+| `2ff4798a0dd26efe` | pdf_abl_remove_blindfold | ok | 1.0000 | 0.9973 | 0.9943 | 7 | [log](out/autocollie/runs/2026-05-20T06-55-08_20260520T064941-filetypes-pdf_pdf_abl_remove_blindfold.log) |
+| `d7bc6fb4000e65a4` | pdf_transfer_xml_kv_full | ok | 1.0000 | 0.9973 | 0.9943 | 7 | [log](out/autocollie/runs/2026-05-20T06-55-15_20260520T064941-filetypes-pdf_pdf_transfer_xml_kv_full.log) |
+| `8b1f2fc200294d6a` | pdf_transfer_pkginfo_extreme | ok | 1.0000 | 0.9973 | 0.9943 | 2 | [log](out/autocollie/runs/2026-05-20T06-55-22_20260520T064941-filetypes-pdf_pdf_transfer_pkginfo_extreme.log) |
+| `d7e3f1d4907fbddb` | pdf_gen_seed_search_best | ok | 1.0000 | 0.9991 | 0.9979 | 6 | [log](out/autocollie/runs/2026-05-20T06-55-23_20260520T064941-filetypes-pdf_pdf_gen_seed_search_best.log) |
+| `fdfaf2e5b7e8c305` | pdf_retry_hardneg_tail_v3 | ok | 0.9999 | 0.9940 | 0.9953 | 3 | [log](out/autocollie/runs/2026-05-20T06-55-29_20260520T064941-filetypes-pdf_pdf_retry_hardneg_tail_v3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_baseline_lr_depth`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicate best feature_env to hit matrix cache; tune learning_rate and max_depth to stabilize PR_AUC while probing recall@3 FP/M gains.
+- **`pdf_train_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Apply hard_negative_fraction and weight to push benign tail down, targeting recall@3 FP/M improvement without hurting PR_AUC.
+- **`pdf_train_scalepos_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Down-weight positives via scale_pos_weight_mult=0.5 to reduce FP pressure at low FPR, directly optimizing recall@3 FP/M.
+- **`pdf_feat_textmetrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture PDF-specific obfuscation and encoding artifacts, aiming to lift PR_AUC and recall@3 FP/M.
+- **`pdf_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activate kv_vocab and kv_value_split to parse PDF metadata/structure tokens, targeting PR_AUC gains from finer-grained key-value signals.
+- **`pdf_feat_doc_obsf_buckets`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Turn on document_obfuscation_features and line_length_buckets to isolate PDF-specific anti-static patterns, aiming to improve recall@3 FP/M on obfuscated malware.
+- **`pdf_feat_trigrams_objective`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Enable objective_trigrams and suspicious_trigrams to capture longer behavioral sequences in PDFs, targeting PR_AUC lift from richer context.
+- **`pdf_abl_remove_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove blindfold dropout features to reduce noise and training variance, aiming to stabilize ROC_AUC and maintain PR_AUC while improving recall@3 FP/M consistency.
+- **`pdf_transfer_xml_kv_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port XML route's successful kv_vocab config to PDF, adjusting kv_vocab_max conservatively to capture document metadata signals for PR_AUC gain.
+- **`pdf_transfer_pkginfo_extreme`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer pkg-info's extended_metrics and extreme_features combo to PDF to capture tail-distribution structural anomalies, targeting recall@3 FP/M.
+- **`pdf_gen_seed_search_best`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the best feature set to average out seed variance and confirm recall@3 FP/M signal stability.
+- **`pdf_retry_hardneg_tail_v3`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry prior hard-negative tail config with updated daily corpus to verify if recall@3 FP/M gains persist and PR_AUC guardrails hold.
+
+</details>
+
+## Cycle `20260521T031206-filetypes-pdf` — 2026-05-21T03:12:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1c1e509f33a295bd` | pdf_ctrl_capacity_boost | ok | 1.0000 | 0.9991 | 0.9959 | 10 | [log](out/autocollie/runs/2026-05-21T03-15-52_20260521T031206-filetypes-pdf_pdf_ctrl_capacity_boost.log) |
+| `c8740e444e04ee37` | pdf_train_hardneg_sharp | ok | 0.9999 | 0.9949 | 0.9953 | 2 | [log](out/autocollie/runs/2026-05-21T03-16-02_20260521T031206-filetypes-pdf_pdf_train_hardneg_sharp.log) |
+| `4188f254f174bbd1` | pdf_feat_textenc_metrics | ok | 1.0000 | 0.9991 | 0.9956 | 6 | [log](out/autocollie/runs/2026-05-21T03-16-04_20260521T031206-filetypes-pdf_pdf_feat_textenc_metrics.log) |
+| `3a23d31b40f48448` | pdf_feat_kv_vocab_split | ok | 1.0000 | 0.9991 | 0.9956 | 7 | [log](out/autocollie/runs/2026-05-21T03-16-10_20260521T031206-filetypes-pdf_pdf_feat_kv_vocab_split.log) |
+| `27d361621f26cf59` | pdf_transfer_rtf_extreme | ok | 1.0000 | 0.9991 | 0.9956 | 2 | [log](out/autocollie/runs/2026-05-21T03-16-18_20260521T031206-filetypes-pdf_pdf_transfer_rtf_extreme.log) |
+| `0f9342d43adda60f` | pdf_gen_seed_avg_ensemble | ok | 1.0000 | 0.9992 | 0.9982 | 2 | [log](out/autocollie/runs/2026-05-21T03-16-19_20260521T031206-filetypes-pdf_pdf_gen_seed_avg_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_capacity_boost`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Control baseline features with increased tree capacity to capture finer PDF structure patterns, targeting PR_AUC stability and recall@3 FP/M improvement.
+- **`pdf_train_hardneg_sharp`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Focus model on hard negatives to sharpen decision boundary at low FPR, aiming to boost recall@3 FP/M without hurting ROC_AUC.
+- **`pdf_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — PDFs contain rich text streams; full text metrics and encoding features capture obfuscation and structure, targeting PR_AUC and recall@3 FP/M gains.
+- **`pdf_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Key-value pairs in PDF metadata and objects carry strong signal; splitting values recovers per-element signal, targeting PR_AUC improvement.
+- **`pdf_transfer_rtf_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Transfer strong document-route features (extended metrics and extreme/tail features) to capture rare PDF artifacts, targeting recall@3 FP/M.
+- **`pdf_gen_seed_avg_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Average over 3 seeds to reduce variance and confirm signal stability, targeting robust recall@3 FP/M and PR_AUC.
+
+</details>
+
+## Cycle `20260521T070629-filetypes-pdf` — 2026-05-21T07:06:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3a943a3de86a6516` | pdf_ctrl_train_leaves128_lr003 | ok | 1.0000 | 0.9973 | 0.9979 | 1 | [log](out/autocollie/runs/2026-05-21T07-10-41_20260521T070629-filetypes-pdf_pdf_ctrl_train_leaves128_lr003.log) |
+| `34ef60d0e159c27f` | pdf_ctrl_train_hardneg_scalepos | ok | 1.0000 | 0.9976 | 0.9978 | 2 | [log](out/autocollie/runs/2026-05-21T07-10-42_20260521T070629-filetypes-pdf_pdf_ctrl_train_hardneg_scalepos.log) |
+| `4188f254f174bbd1` | pdf_feat_textenc_metrics_full | dup | 1.0000 | 0.9991 | 0.9956 | 1 | [log](out/autocollie/runs/2026-05-21T07-10-44_20260521T070629-filetypes-pdf_pdf_feat_textenc_metrics_full.log) |
+| `ec8c15f0b4da9cd0` | pdf_feat_kv_vocab_split_expanded | ok | 1.0000 | 0.9991 | 0.9956 | 7 | [log](out/autocollie/runs/2026-05-21T07-10-44_20260521T070629-filetypes-pdf_pdf_feat_kv_vocab_split_expanded.log) |
+| `8c2da1468c354787` | pdf_feat_doc_obfuscation_transfer | ok | 1.0000 | 0.9991 | 0.9950 | 6 | [log](out/autocollie/runs/2026-05-21T07-10-51_20260521T070629-filetypes-pdf_pdf_feat_doc_obfuscation_transfer.log) |
+| `0f9342d43adda60f` | pdf_gen_seed_search_ensemble | dup | 1.0000 | 0.9992 | 0.9982 | 1 | [log](out/autocollie/runs/2026-05-21T07-10-58_20260521T070629-filetypes-pdf_pdf_gen_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_train_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with deeper trees and lower LR to improve recall@3FPM by capturing complex PDF structures while preserving PR_AUC.
+- **`pdf_ctrl_train_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard negatives and lower scale_pos_weight to sharpen tail recall@3FPM by focusing on difficult benign PDFs, targeting PR_AUC stability.
+- **`pdf_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, aiming to boost PR_AUC and recall@3FPM via richer text representation.
+- **`pdf_feat_kv_vocab_split_expanded`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and enable value splitting to recover per-element signal in PDF metadata, targeting PR_AUC improvement through finer-grained feature discrimination.
+- **`pdf_feat_doc_obfuscation_transfer`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer document obfuscation features from sister routes to capture PDF-specific anti-static patterns, aiming to increase recall@3FPM by highlighting evasion techniques.
+- **`pdf_gen_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds to average variance and stabilize recall@3FPM gains across data drift, preserving PR_AUC.
+
+</details>
+

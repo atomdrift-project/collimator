@@ -130,3 +130,137 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T071828-filetypes-chrome-manifest` — 2026-05-20T07:18:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b3f5d4e9c25b9a54` | control_baseline_reg | ok | 0.7944 | 0.9641 | 0.6000 | 6 | [log](out/autocollie/runs/2026-05-20T07-23-58_20260520T071828-filetypes-chrome-manifest_control_baseline_reg.log) |
+| `74ff15b9fd1736cf` | exploit_hard_neg_tail | ok | 0.8100 | 0.9641 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-20T07-24-04_20260520T071828-filetypes-chrome-manifest_exploit_hard_neg_tail.log) |
+| `14c95599555e6673` | exploit_dart_extra_trees | ok | 0.7958 | 0.9333 | 0.7500 | 2 | [log](out/autocollie/runs/2026-05-20T07-24-06_20260520T071828-filetypes-chrome-manifest_exploit_dart_extra_trees.log) |
+| `18e8906be9529280` | feat_kv_vocab_manifest | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T07-24-08_20260520T071828-filetypes-chrome-manifest_feat_kv_vocab_manifest.log) |
+| `a43958bdf7649125` | feat_text_metrics_full | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T07-24-11_20260520T071828-filetypes-chrome-manifest_feat_text_metrics_full.log) |
+| `3559e10564fdc233` | feat_ngram_freq_tune | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T07-24-14_20260520T071828-filetypes-chrome-manifest_feat_ngram_freq_tune.log) |
+| `3e7d2167198260b9` | ablation_blindfold_airgap | ok | 0.8444 | 0.9692 | 0.7500 | 4 | [log](out/autocollie/runs/2026-05-20T07-24-17_20260520T071828-filetypes-chrome-manifest_ablation_blindfold_airgap.log) |
+| `edcd4bdc12e8d972` | transfer_kv_value_split | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T07-24-20_20260520T071828-filetypes-chrome-manifest_transfer_kv_value_split.log) |
+| `b92481c3bc9d3b0c` | transfer_attack_ngrams_crit | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T07-24-23_20260520T071828-filetypes-chrome-manifest_transfer_attack_ngrams_crit.log) |
+| `4311be98d39d589a` | gen_kv_seed_ensemble | ok | 0.8333 | 0.9641 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-20T07-24-26_20260520T071828-filetypes-chrome-manifest_gen_kv_seed_ensemble.log) |
+| `9b75ff23f8a1a8e0` | retry_metric_ratios_v2 | ok | 0.8769 | 0.9590 | 0.8000 | 4 | [log](out/autocollie/runs/2026-05-20T07-24-30_20260520T071828-filetypes-chrome-manifest_retry_metric_ratios_v2.log) |
+| `fefef12bbbc2e79d` | wildcard_structural_coverage | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T07-24-34_20260520T071828-filetypes-chrome-manifest_wildcard_structural_coverage.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to stabilize PR_AUC by applying conservative regularization (lower leaves, higher lambda) on the best recent feature set to establish a matrix-cache baseline.
+- **`exploit_hard_neg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost recall@3FPM by upweighting hard negatives and downweighting positives to tighten score separation at the deployed low-FPR operating point.
+- **`exploit_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve ROC_AUC by switching to dart boosting with extra_trees to add dropout regularization and reduce overfitting on the tiny holdout.
+- **`feat_kv_vocab_manifest`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to increase PR_AUC by enabling kv_vocab to capture manifest-specific key-value patterns like permissions and background scripts that drive malicious behavior.
+- **`feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM by enabling text_metrics_full and text_encoding to leverage structural text features common in obfuscated or packed manifests.
+- **`feat_ngram_freq_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost PR_AUC by lowering bigram/trigram frequency floors to capture rarer but highly indicative manifest permission combinations.
+- **`ablation_blindfold_airgap`** `EXP_AIR_GAP_SIGNAL=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve ROC_AUC by removing noisy blindfold and air_gap_signal features to reduce variance on the small corpus while keeping core attack signals.
+- **`transfer_kv_value_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to increase PR_AUC by transferring kv_value_split from XML routes to isolate permission tokens in manifest arrays and reduce feature collision.
+- **`transfer_attack_ngrams_crit`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 …` — Aims to boost recall@3FPM by porting attack_ngrams and confidence_weighted_ngrams from PHP routes to focus on high-crit malicious permission sequences.
+- **`gen_kv_seed_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to stabilize PR_AUC by using seed_search_k=3 and save_all_seeds to average out RNG variance and verify KV signal robustness.
+- **`retry_metric_ratios_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to recover PR_AUC gains from metric_ratio_features after corpus drift by pairing it with extended_metrics and higher min_child_samples to control overfit.
+- **`wildcard_structural_coverage`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve ROC_AUC by adding format_hints, struct_file_risk_coverage, and size_normalized_metrics to better separate benign config bloat from malicious payloads.
+
+</details>
+
+## Cycle `20260520T161921-filetypes-chrome-manifest` — 2026-05-20T16:19:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0c61253bb6780de3` | control_best_env_leaves128 | ok | 0.8444 | 0.9692 | 0.7500 | 5 | [log](out/autocollie/runs/2026-05-20T16-24-29_20260520T161921-filetypes-chrome-manifest_control_best_env_leaves128.log) |
+| `e395bf47731efe6d` | exploit_hard_negatives | ok | 0.8600 | 0.9692 | 0.6667 | 1 | [log](out/autocollie/runs/2026-05-20T16-24-35_20260520T161921-filetypes-chrome-manifest_exploit_hard_negatives.log) |
+| `47116f8cd1658816` | exploit_pos_weight_fpr_target | ok | 0.8333 | 0.9641 | 0.6000 | 3 | [log](out/autocollie/runs/2026-05-20T16-24-36_20260520T161921-filetypes-chrome-manifest_exploit_pos_weight_fpr_target.log) |
+| `108d3454383ec80e` | feat_kv_vocab_split | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T16-24-39_20260520T161921-filetypes-chrome-manifest_feat_kv_vocab_split.log) |
+| `adbab5fe5c1617b1` | feat_text_metrics_encoding | ok | 0.8444 | 0.9692 | 0.7500 | 4 | [log](out/autocollie/runs/2026-05-20T16-24-42_20260520T161921-filetypes-chrome-manifest_feat_text_metrics_encoding.log) |
+| `887ebebba25fdc3c` | feat_tiered_crit_trigrams | ok | 0.8333 | 0.9641 | 0.7500 | 4 | [log](out/autocollie/runs/2026-05-20T16-24-46_20260520T161921-filetypes-chrome-manifest_feat_tiered_crit_trigrams.log) |
+| `675b957af2221874` | feat_metric_ratios_normalized | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T16-24-51_20260520T161921-filetypes-chrome-manifest_feat_metric_ratios_normalized.log) |
+| `b9886f07e3aff32a` | ablation_blindfold_airgap | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T16-24-53_20260520T161921-filetypes-chrome-manifest_ablation_blindfold_airgap.log) |
+| `ef735e8726ce5df3` | transfer_xlsx_ember_extended | ok | 0.8444 | 0.9692 | 0.6667 | 5 | [log](out/autocollie/runs/2026-05-20T16-24-56_20260520T161921-filetypes-chrome-manifest_transfer_xlsx_ember_extended.log) |
+| `d7fb910a6556564b` | transfer_objective_trigrams | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T16-25-01_20260520T161921-filetypes-chrome-manifest_transfer_objective_trigrams.log) |
+| `ec357de6df519cf6` | gen_seed_ensemble_k3 | ok | 0.8333 | 0.9641 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-20T16-25-04_20260520T161921-filetypes-chrome-manifest_gen_seed_ensemble_k3.log) |
+| `17d85b2eca71c054` | retry_kv_value_split_v2 | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-20T16-25-07_20260520T161921-filetypes-chrome-manifest_retry_kv_value_split_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_best_env_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.08 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature env and increase tree capacity to improve PR_AUC ranking without changing feature surface.
+- **`exploit_hard_negatives`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use hard negatives on baseline features to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`exploit_pos_weight_fpr_target`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Down-weight positives and tune threshold directly for deployed operating point to maximize recall@3FPM.
+- **`feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture fine-grained key-value signal in manifests, targeting PR_AUC.
+- **`feat_text_metrics_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_metrics_full and text_encoding to capture structural text anomalies in manifest files, targeting PR_AUC.
+- **`feat_tiered_crit_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Enable tiered critical trigrams with lower min_crit to capture subtle malicious path combinations, targeting PR_AUC.
+- **`feat_metric_ratios_normalized`** `EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Add metric_ratio_features and size_normalized_metrics to improve density-based ranking on small corpus, targeting PR_AUC.
+- **`ablation_blindfold_airgap`** `EXP_AIR_GAP_SIGNAL=0 EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove blindfold and air_gap_signal to reduce noise on small corpus, aiming to keep PR_AUC flat or higher while improving ROC_AUC.
+- **`transfer_xlsx_ember_extended`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_EMBER_LITE_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port xlsx route's ember_lite and extended_metrics with score/clusters disabled to isolate structural signals, targeting PR_AUC.
+- **`transfer_objective_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Port objective trigram pool from sister routes to capture high-level malicious intent patterns, targeting PR_AUC.
+- **`gen_seed_ensemble_k3`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search with k=3 and average ensemble to reduce variance and stabilize recall@3FPM gains.
+- **`retry_kv_value_split_v2`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry prior kv_value_split idea on updated daily corpus to capture data drift signal, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260521T052134-filetypes-chrome-manifest` — 2026-05-21T05:21:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9bfa8f0582a4ca34` | exploit_hard_neg_reg | ok | 0.8083 | 0.9692 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-21T05-25-01_20260521T052134-filetypes-chrome-manifest_exploit_hard_neg_reg.log) |
+| `09e08ec7f974c41c` | exploit_dart_lr003 | ok | 0.7958 | 0.9333 | 0.6667 | 1 | [log](out/autocollie/runs/2026-05-21T05-25-05_20260521T052134-filetypes-chrome-manifest_exploit_dart_lr003.log) |
+| `797ddd854c62bd28` | feat_kv_vocab_split | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-21T05-25-06_20260521T052134-filetypes-chrome-manifest_feat_kv_vocab_split.log) |
+| `35b89d9b85693cca` | feat_textenc_metrics | ok | 0.8444 | 0.9692 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-21T05-25-09_20260521T052134-filetypes-chrome-manifest_feat_textenc_metrics.log) |
+| `1e88a76260cb7753` | ablation_blindfold_off | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-21T05-25-11_20260521T052134-filetypes-chrome-manifest_ablation_blindfold_off.log) |
+| `1f83aca43939f806` | retry_metric_ratios_ensemble | ok | 0.8333 | 0.9641 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-21T05-25-14_20260521T052134-filetypes-chrome-manifest_retry_metric_ratios_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`exploit_hard_neg_reg`** `EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=3 EXP_TRAIN_SAMPLES=30000` — Test hard-negative upweighting with stronger L2 regularization to improve PR_AUC on the tiny 5-malware holdout without overfitting.
+- **`exploit_dart_lr003`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=20 EXP_TRAIN_SAMPLES=30000` — Use DART boosting with lower learning rate to regularize the small corpus and stabilize recall@3 FP/M.
+- **`feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured JSON key-value patterns in chrome-manifests, targeting PR_AUC gains.
+- **`feat_textenc_metrics`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text encoding and full text metrics to capture obfuscation and structural signals in manifest text, aiming to boost recall@3 FP/M.
+- **`ablation_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout features to reduce noise on the small dataset, expecting flat or improved PR_AUC with less variance.
+- **`retry_metric_ratios_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Retry top PR_AUC metric ratios config with seed ensemble to verify signal stability and reduce seed-driven variance.
+
+</details>
+
+## Cycle `20260521T084351-filetypes-chrome-manifest` — 2026-05-21T08:43:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `418aedf898345b4c` | control_scale_pos_reg | ok | 0.8242 | 0.9590 | 0.7500 | 1 | [log](out/autocollie/runs/2026-05-21T08-48-12_20260521T084351-filetypes-chrome-manifest_control_scale_pos_reg.log) |
+| `09288e656b3562d9` | feat_kv_vocab_split | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-21T08-48-13_20260521T084351-filetypes-chrome-manifest_feat_kv_vocab_split.log) |
+| `8a875a8a57bf7a15` | feat_obj_susp_trigrams | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-21T08-48-16_20260521T084351-filetypes-chrome-manifest_feat_obj_susp_trigrams.log) |
+| `ddaf82db2b164c7b` | transfer_hardneg_015_12 | ok | 0.8711 | 0.9744 | 0.6667 | 1 | [log](out/autocollie/runs/2026-05-21T08-48-19_20260521T084351-filetypes-chrome-manifest_transfer_hardneg_015_12.log) |
+| `bee69c9157a9e302` | gen_seed_search_ensemble | ok | 0.8333 | 0.9641 | 0.6667 | 1 | [log](out/autocollie/runs/2026-05-21T08-48-20_20260521T084351-filetypes-chrome-manifest_gen_seed_search_ensemble.log) |
+| `112fb784208b5fa9` | feat_textenc_metrics_full | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-21T08-48-21_20260521T084351-filetypes-chrome-manifest_feat_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_scale_pos_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting the benign class (scale_pos_weight_mult=0.5) and adding L2 regularization to reduce false positives on this small corpus.
+- **`feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling kv_vocab and kv_value_split to capture granular key-value patterns specific to manifest structures.
+- **`feat_obj_susp_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=2` — Aims to boost PR_AUC by enabling objective and suspicious trigrams with low min_freq to capture malicious intent sequences in manifest payloads.
+- **`transfer_hardneg_015_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to maximize recall@3FPM by transferring a hard-negative strategy (fraction=0.15, weight=12.0) proven on sister routes to better separate benign manifests from malware.
+- **`gen_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by using seed_search_k=3 and averaging models to reduce variance on this small, imbalanced corpus.
+- **`feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_encoding and text_metrics_full to extract structural and encoding signals from manifest string fields.
+
+</details>
+
+## Cycle `20260521T090400-filetypes-chrome-manifest` — 2026-05-21T09:04:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5b86c06b610a5921` | control_hardneg_reg_tune | ok | 0.1136 | 0.5000 | 0.2041 | 1 | [log](out/autocollie/runs/2026-05-21T09-08-16_20260521T090400-filetypes-chrome-manifest_control_hardneg_reg_tune.log) |
+| `112fb784208b5fa9` | feat_textenc_metrics_full | dup | 0.8444 | 0.9692 | 0.7500 | 1 | [log](out/autocollie/runs/2026-05-21T09-08-18_20260521T090400-filetypes-chrome-manifest_feat_textenc_metrics_full.log) |
+| `2211158bb0fa5ce9` | feat_obj_susp_trigrams_v2 | ok | 0.7644 | 0.9590 | 0.6000 | 3 | [log](out/autocollie/runs/2026-05-21T09-08-19_20260521T090400-filetypes-chrome-manifest_feat_obj_susp_trigrams_v2.log) |
+| `4e405839d128a475` | ablation_blindfold_off | ok | 0.7944 | 0.9641 | 0.6000 | 1 | [log](out/autocollie/runs/2026-05-21T09-08-21_20260521T090400-filetypes-chrome-manifest_ablation_blindfold_off.log) |
+| `4cb0030094b96c3a` | gen_seed_search_ensemble | ok | 0.8583 | 0.9744 | 0.7692 | 1 | [log](out/autocollie/runs/2026-05-21T09-08-22_20260521T090400-filetypes-chrome-manifest_gen_seed_search_ensemble.log) |
+| `6d49a17ff6c1ad7e` | retry_scale_pos_threshold | ok | 0.8333 | 0.9641 | 0.6000 | 2 | [log](out/autocollie/runs/2026-05-21T09-08-24_20260521T090400-filetypes-chrome-manifest_retry_scale_pos_threshold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_hardneg_reg_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicate best feature env but increase reg_lambda and min_child_samples to reduce overfitting on the tiny 5-malware corpus, targeting stable PR_AUC while preserving recall@3 FP/M.
+- **`feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture structural document obfuscation signals in manifest files, targeting PR_AUC improvement by adding high-signal features for the small corpus.
+- **`feat_obj_susp_trigrams_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Enable objective_trigrams and suspicious_trigrams with higher trigram_min_freq to filter noise on the small dataset, aiming to boost recall@3 FP/M by capturing rare malicious path combinations.
+- **`ablation_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold features to remove dropout-style noise that may hurt ranking on a tiny corpus, targeting flat or higher PR_AUC with reduced variance.
+- **`gen_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds=true on the best feature set to average out seed-driven variance, targeting stable recall@3 FP/M across different random splits.
+- **`retry_scale_pos_threshold`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Retry a strong configuration with scale_pos_weight_mult=0.5 and threshold_mode=max_recall_at_fpr to directly optimize the deployed operating point, targeting higher recall@3 FP/M while keeping ROC_AUC flat.
+
+</details>
+

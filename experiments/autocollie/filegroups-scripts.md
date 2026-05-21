@@ -86,3 +86,81 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260520T184818-filegroups-scripts` — 2026-05-20T18:48:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1a96d7322733ad97` | scripts_control_leaves128_lr003 | ok | 0.9976 | 0.9973 | 0.9736 | 65 | [log](out/autocollie/runs/2026-05-20T18-53-32_20260520T184818-filegroups-scripts_scripts_control_leaves128_lr003.log) |
+| `53add0202015ad51` | scripts_control_hardneg_tail | ok | 0.9978 | 0.9976 | 0.9760 | 75 | [log](out/autocollie/runs/2026-05-20T18-54-37_20260520T184818-filegroups-scripts_scripts_control_hardneg_tail.log) |
+| `e374ffd234434d2f` | scripts_control_posweight05 | ok | 0.9977 | 0.9975 | 0.9754 | 69 | [log](out/autocollie/runs/2026-05-20T18-55-52_20260520T184818-filegroups-scripts_scripts_control_posweight05.log) |
+| `ba7dd862c00e586d` | scripts_kv_vocab_15k | ok | 0.9978 | 0.9976 | 0.9743 | 91 | [log](out/autocollie/runs/2026-05-20T18-57-02_20260520T184818-filegroups-scripts_scripts_kv_vocab_15k.log) |
+| `6fa907282ab70170` | scripts_textenc_metrics_full | ok | 0.9978 | 0.9976 | 0.9766 | 125 | [log](out/autocollie/runs/2026-05-20T18-58-32_20260520T184818-filegroups-scripts_scripts_textenc_metrics_full.log) |
+| `4bad25364578e7e4` | scripts_low_freq_bigrams_trigrams | ok | 0.9978 | 0.9976 | 0.9725 | 71 | [log](out/autocollie/runs/2026-05-20T19-00-37_20260520T184818-filegroups-scripts_scripts_low_freq_bigrams_trigrams.log) |
+| `02d24d84c88c4b68` | scripts_symbol_vocab_bigrams | ok | 0.9979 | 0.9977 | 0.9756 | 78 | [log](out/autocollie/runs/2026-05-20T19-01-48_20260520T184818-filegroups-scripts_scripts_symbol_vocab_bigrams.log) |
+| `d94c416ec7f95339` | scripts_abl_blindfold | ok | 0.9978 | 0.9976 | 0.9764 | 81 | [log](out/autocollie/runs/2026-05-20T19-03-06_20260520T184818-filegroups-scripts_scripts_abl_blindfold.log) |
+| `881db3b118f4f9b6` | scripts_transfer_docx_kv_textenc | ok | 0.9978 | 0.9976 | 0.9730 | 79 | [log](out/autocollie/runs/2026-05-20T19-04-27_20260520T184818-filegroups-scripts_scripts_transfer_docx_kv_textenc.log) |
+| `67d389578dbf2ace` | scripts_seed_search_best | ok | 0.9979 | 0.9977 | 0.9705 | 270 | [log](out/autocollie/runs/2026-05-20T19-05-46_20260520T184818-filegroups-scripts_scripts_seed_search_best.log) |
+| `d950f805d3192c1d` | scripts_retry_symbol_kv_combo | ok | 0.9978 | 0.9976 | 0.9750 | 101 | [log](out/autocollie/runs/2026-05-20T19-10-16_20260520T184818-filegroups-scripts_scripts_retry_symbol_kv_combo.log) |
+| `0e2184c8a06f4a85` | scripts_tiered_crit_trigrams | ok | 0.9979 | 0.9977 | 0.9730 | 134 | [log](out/autocollie/runs/2026-05-20T19-11-57_20260520T184818-filegroups-scripts_scripts_tiered_crit_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`scripts_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity with more leaves and lower learning rate to better separate tail malware.
+- **`scripts_control_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`scripts_control_posweight05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives to reduce false positives at the deployed operating point.
+- **`scripts_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling key-value vocabulary to capture structured script metadata patterns missed by n-grams.
+- **`scripts_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text encoding and full text metrics to capture obfuscation and structural script signals.
+- **`scripts_low_freq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by lowering bigram frequency floor and enabling objective trigrams to capture rare but high-signal script patterns.
+- **`scripts_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling symbol vocabulary and bigrams to detect malicious import co-occurrences in compiled-script hybrids.
+- **`scripts_abl_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to maintain PR_AUC while reducing noise by disabling blindfold dropout features that may dilute strong script signals.
+- **`scripts_transfer_docx_kv_textenc`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by porting the strong docx route configuration combining kv vocab and text encoding for script obfuscation detection.
+- **`scripts_seed_search_best`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM by averaging predictions across 3 seeds to reduce variance in tail recall.
+- **`scripts_retry_symbol_kv_combo`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to recover PR_AUC gains from the prior strong combo run by retraining on the updated daily corpus to account for data drift.
+- **`scripts_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling severity-prefixed trigrams to capture high-crit script execution chains without noise from low-crit paths.
+
+</details>
+
+## Cycle `20260521T044754-filegroups-scripts` — 2026-05-21T04:47:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6b5a87399b0b1fad` | scripts_control_scale_pos_075 | ok | 0.9978 | 0.9976 | 0.9730 | 37 | [log](out/autocollie/runs/2026-05-21T04-52-17_20260521T044754-filegroups-scripts_scripts_control_scale_pos_075.log) |
+| `622a68fccefb32b2` | scripts_kv_textenc_vocab | ok | 0.9977 | 0.9975 | 0.9716 | 37 | [log](out/autocollie/runs/2026-05-21T04-52-53_20260521T044754-filegroups-scripts_scripts_kv_textenc_vocab.log) |
+| `36303458ea7c441b` | scripts_low_freq_ngrams_textmetrics | ok | 0.9977 | 0.9975 | 0.9711 | 33 | [log](out/autocollie/runs/2026-05-21T04-53-30_20260521T044754-filegroups-scripts_scripts_low_freq_ngrams_textmetrics.log) |
+| `9a7be1f9a60b84dc` | scripts_transfer_pkginfo_kv_extreme | ok | 0.9977 | 0.9975 | 0.9730 | 34 | [log](out/autocollie/runs/2026-05-21T04-54-03_20260521T044754-filegroups-scripts_scripts_transfer_pkginfo_kv_extreme.log) |
+| `0bdb3cb6b3db0e08` | scripts_seed_search_k3_control | ok | 0.9978 | 0.9976 | 0.9730 | 29 | [log](out/autocollie/runs/2026-05-21T04-54-37_20260521T044754-filegroups-scripts_scripts_seed_search_k3_control.log) |
+| `e8e04310df48e883` | scripts_abl_blindfold_off | ok | 0.9977 | 0.9975 | 0.9724 | 35 | [log](out/autocollie/runs/2026-05-21T04-55-07_20260521T044754-filegroups-scripts_scripts_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`scripts_control_scale_pos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with reduced positive weight to lower FP rate and improve recall@3FPM
+- **`scripts_kv_textenc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and text encoding to capture script-specific string patterns, targeting PR_AUC improvement
+- **`scripts_low_freq_ngrams_textmetrics`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Lower n-gram frequency floors and enable full text metrics to capture obfuscation signals, aiming for higher recall@3FPM
+- **`scripts_transfer_pkginfo_kv_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer pkg-info route's strong KV and extreme features combo to scripts, expecting PR_AUC gain from structural outlier detection
+- **`scripts_seed_search_k3_control`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run best-of-3 seed search on control features to distinguish real signal from seed variance, targeting stable recall@3FPM
+- **`scripts_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout features to reduce training noise and stabilize PR_AUC without losing recall
+
+</details>
+
+## Cycle `20260521T055650-filegroups-scripts` — 2026-05-21T05:56:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cb238c5bbb57d910` | scripts_control_train_opt | ok | 0.9975 | 0.9973 | 0.9735 | 11 | [log](out/autocollie/runs/2026-05-21T06-01-33_20260521T055650-filegroups-scripts_scripts_control_train_opt.log) |
+| `84e1c54bfadc311e` | scripts_train_hardneg_scalepos | ok | 0.9979 | 0.9977 | 0.9783 | 24 | [log](out/autocollie/runs/2026-05-21T06-01-43_20260521T055650-filegroups-scripts_scripts_train_hardneg_scalepos.log) |
+| `0c19eb29414d2540` | scripts_feat_kv_vocab_split | ok | 0.9979 | 0.9977 | 0.9759 | 35 | [log](out/autocollie/runs/2026-05-21T06-02-07_20260521T055650-filegroups-scripts_scripts_feat_kv_vocab_split.log) |
+| `76a9c5fcf6801323` | scripts_feat_textmetrics_lowfreq | ok | 0.9978 | 0.9976 | 0.9755 | 10 | [log](out/autocollie/runs/2026-05-21T06-02-42_20260521T055650-filegroups-scripts_scripts_feat_textmetrics_lowfreq.log) |
+| `61a642af6c847180` | scripts_feat_textenc_tieredcrit | ok | 0.9979 | 0.9977 | 0.9739 | 45 | [log](out/autocollie/runs/2026-05-21T06-02-52_20260521T055650-filegroups-scripts_scripts_feat_textenc_tieredcrit.log) |
+| `fbe24f67c113d4e4` | scripts_seed_search_kv_textenc | ok | 0.9978 | 0.9976 | 0.9746 | 51 | [log](out/autocollie/runs/2026-05-21T06-03-37_20260521T055650-filegroups-scripts_scripts_seed_search_kv_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`scripts_control_train_opt`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature set with optimized training knobs (higher estimators, lower LR) to improve PR_AUC via better convergence without changing features.
+- **`scripts_train_hardneg_scalepos`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Uses hard negatives and reduced positive weight to sharpen low-FPR ranking, targeting recall@3 FP/M improvement while preserving ROC_AUC.
+- **`scripts_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture granular key-value signals in scripts, aiming to boost PR_AUC by resolving ambiguous benign/malware KV patterns.
+- **`scripts_feat_textmetrics_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=320 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Activates text_metrics_full and lowers bigram_min_freq to capture obfuscation and rare script patterns, targeting recall@3 FP/M gains on evasive samples.
+- **`scripts_feat_textenc_tieredcrit`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Combines text_encoding with tiered_crit_trigrams to leverage severity-weighted n-grams and encoding anomalies, aiming to improve PR_AUC on complex script payloads.
+- **`scripts_seed_search_kv_textenc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=0 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 …` — Runs seed_search_k=3 on a combined kv_vocab and text_encoding surface to filter out seed noise and stabilize recall@3 FP/M improvements.
+
+</details>
+

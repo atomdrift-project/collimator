@@ -152,3 +152,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T070729-filetypes-groovy` — 2026-05-20T07:07:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1655c29d089c7ae0` | groovy_control_baseline_train | ok | 0.6667 | 0.5000 | 0.8000 | 5 | [log](out/autocollie/runs/2026-05-20T07-11-53_20260520T070729-filetypes-groovy_groovy_control_baseline_train.log) |
+| `eeba57eb47ec5763` | groovy_train_scalepos_down | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-20T07-11-58_20260520T070729-filetypes-groovy_groovy_train_scalepos_down.log) |
+| `c2f094da4da6ddbb` | groovy_train_dart_regularized | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-20T07-12-00_20260520T070729-filetypes-groovy_groovy_train_dart_regularized.log) |
+| `351c9a3599dd1981` | groovy_kv_vocab_split | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-20T07-12-02_20260520T070729-filetypes-groovy_groovy_kv_vocab_split.log) |
+| `1a0e548210216782` | groovy_text_metrics_full | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-20T07-12-04_20260520T070729-filetypes-groovy_groovy_text_metrics_full.log) |
+| `520ec007dc34f47f` | groovy_tiered_trigrams_low_freq | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-20T07-12-07_20260520T070729-filetypes-groovy_groovy_tiered_trigrams_low_freq.log) |
+| `326d18a8c9755709` | groovy_obj_trigrams_depth | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-20T07-12-09_20260520T070729-filetypes-groovy_groovy_obj_trigrams_depth.log) |
+| `60577c84df792e16` | groovy_ablation_blindfold | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-20T07-12-11_20260520T070729-filetypes-groovy_groovy_ablation_blindfold.log) |
+| `bcfb46a3f44bdf4a` | groovy_transfer_xml_kv_vocab | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-20T07-12-14_20260520T070729-filetypes-groovy_groovy_transfer_xml_kv_vocab.log) |
+| `63984d2610431f9d` | groovy_seed_search_ensemble | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-20T07-12-17_20260520T070729-filetypes-groovy_groovy_seed_search_ensemble.log) |
+| `b02f78be5f41ff29` | groovy_retry_baseline_holdout | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-20T07-12-18_20260520T070729-filetypes-groovy_groovy_retry_baseline_holdout.log) |
+| `fba9a92603af5453` | groovy_hard_negative_weight | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-20T07-12-20_20260520T070729-filetypes-groovy_groovy_hard_negative_weight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`groovy_control_baseline_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature_env to establish a stable baseline for PR_AUC and recall@3FPM comparison.
+- **`groovy_train_scalepos_down`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weights positives via scale_pos_weight_mult to reduce false positives at low FPR, targeting recall@3FPM improvement.
+- **`groovy_train_dart_regularized`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Switches to dart boosting with dropout regularization to improve tail behavior and PR_AUC without overfitting.
+- **`groovy_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to recover per-element signal in Groovy config strings, targeting PR_AUC gain.
+- **`groovy_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promotes full text metrics to capture obfuscation patterns in Groovy scripts, aiming to boost recall@3FPM.
+- **`groovy_tiered_trigrams_low_freq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Lowers tiered trigram min_freq to capture rarer malicious patterns in Groovy, targeting PR_AUC improvement.
+- **`groovy_obj_trigrams_depth`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NGRAM_PATH_DEPTH=6 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enables objective trigrams with deeper path depth to capture multi-step attack chains, targeting recall@3FPM.
+- **`groovy_ablation_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout features to reduce noise and stabilize PR_AUC while maintaining recall@3FPM.
+- **`groovy_transfer_xml_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports XML route's successful kv_vocab configuration to Groovy, expecting similar structural signal for PR_AUC gain.
+- **`groovy_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 with save_all_seeds to average variance and stabilize recall@3FPM across different RNG splits.
+- **`groovy_retry_baseline_holdout`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EARLY_STOPPING=30 EXP_HOLDOUT_FRACTION=0.15 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retries baseline with adjusted holdout_fraction to better calibrate early stopping on daily corpus shifts, targeting PR_AUC.
+- **`groovy_hard_negative_weight`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Introduces hard_negative_weight to focus model on difficult benign Groovy files, improving recall@3FPM at low FPR.
+
+</details>
+
+## Cycle `20260521T024941-filetypes-groovy` — 2026-05-21T02:49:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `144a7c1bf40300b0` | groovy_control_baseline_lr | ok | 0.6667 | 0.5000 | 0.8000 | 5 | [log](out/autocollie/runs/2026-05-21T02-54-18_20260521T024941-filetypes-groovy_groovy_control_baseline_lr.log) |
+| `4a0770eb44ec4044` | groovy_kv_vocab_expand | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T02-54-23_20260521T024941-filetypes-groovy_groovy_kv_vocab_expand.log) |
+| `a028e68b4f514365` | groovy_text_metrics_full | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T02-54-25_20260521T024941-filetypes-groovy_groovy_text_metrics_full.log) |
+| `5133477b35283785` | groovy_obj_trigrams_tiered | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T02-54-28_20260521T024941-filetypes-groovy_groovy_obj_trigrams_tiered.log) |
+| `1c6fd6c3972e5e63` | groovy_hard_neg_upweight | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-21T02-54-30_20260521T024941-filetypes-groovy_groovy_hard_neg_upweight.log) |
+| `7b923e887ebdc300` | groovy_seed_ensemble_kv | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T02-54-31_20260521T024941-filetypes-groovy_groovy_seed_ensemble_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`groovy_control_baseline_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to stabilize PR_AUC by replicating the best recent feature_env while testing a lower learning rate for better convergence on the small holdout.
+- **`groovy_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab to capture structured configuration patterns in Groovy scripts without heavy n-gram noise.
+- **`groovy_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by activating text_metrics_full to extract line-length and character distribution stats that catch obfuscated Groovy scripts.
+- **`groovy_obj_trigrams_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_DEPTH=10 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=3000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by combining objective_trigrams with tiered_crit_trigrams to capture multi-step attack chains in Groovy.
+- **`groovy_hard_neg_upweight`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by applying hard_negative_fraction and weight to focus the model on difficult benign Groovy files and reduce tail false positives.
+- **`groovy_seed_ensemble_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC and recall@3FPM by using seed_search_k=3 with save_all_seeds=true on a kv_vocab config to average out seed variance.
+
+</details>
+
+## Cycle `20260521T084037-filetypes-groovy` — 2026-05-21T08:40:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5ea5fd34c8a2ed82` | groovy_control_lr_decay | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-21T08-44-25_20260521T084037-filetypes-groovy_groovy_control_lr_decay.log) |
+| `a8ec9b1386228b52` | groovy_kv_vocab_split | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T08-44-26_20260521T084037-filetypes-groovy_groovy_kv_vocab_split.log) |
+| `509afd8891e86610` | groovy_text_metrics_full | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-21T08-44-28_20260521T084037-filetypes-groovy_groovy_text_metrics_full.log) |
+| `f2f00d6adcb628ef` | groovy_hard_neg_transfer | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-21T08-44-30_20260521T084037-filetypes-groovy_groovy_hard_neg_transfer.log) |
+| `86a879dc3983b310` | groovy_seed_search_ensemble | ok | 0.6667 | 0.5000 | 0.8000 | 1 | [log](out/autocollie/runs/2026-05-21T08-44-31_20260521T084037-filetypes-groovy_groovy_seed_search_ensemble.log) |
+| `4f6f017db56094ef` | groovy_ablate_blindfold | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T08-44-32_20260521T084037-filetypes-groovy_groovy_ablate_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`groovy_control_lr_decay`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best feature_env while tuning learning_rate and estimators to stabilize PR_AUC and improve recall@3 FP/M.
+- **`groovy_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to recover per-element signal in Groovy strings, aiming to boost PR_AUC by capturing finer-grained malicious patterns.
+- **`groovy_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote text_metrics_full to capture obfuscation and entropy signals in Groovy scripts, targeting PR_AUC improvement via richer structural features.
+- **`groovy_hard_neg_transfer`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer hard-negative upweighting from high-performing sister routes to sharpen ranking of borderline malware, targeting recall@3 FP/M gains.
+- **`groovy_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 with save_all_seeds to average predictions and reduce variance, stabilizing recall@3 FP/M across different RNG splits.
+- **`groovy_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Ablate blindfold dropout features to test if removing stochastic noise improves PR_AUC without sacrificing recall@3 FP/M.
+
+</details>
+

@@ -122,3 +122,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T040312-filetypes-objc` — 2026-05-21T04:03:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `976b3e30d90c1191` | objc_control_baseline_lr003 | ok | 0.0000 | 0.0000 | 0.0000 | 5 | [log](out/autocollie/runs/2026-05-21T04-07-51_20260521T040312-filetypes-objc_objc_control_baseline_lr003.log) |
+| `a1ada094453c4bec` | objc_kv_vocab_expansion | ok | 0.0000 | 0.0000 | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-21T04-07-56_20260521T040312-filetypes-objc_objc_kv_vocab_expansion.log) |
+| `abfabefbb48bd11b` | objc_text_metrics_full | ok | 0.0000 | 0.0000 | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-21T04-07-59_20260521T040312-filetypes-objc_objc_text_metrics_full.log) |
+| `09e2f20acdb1f860` | objc_symbol_vocab_bigrams | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-21T04-08-02_20260521T040312-filetypes-objc_objc_symbol_vocab_bigrams.log) |
+| `6e6b45199bb83e50` | objc_hard_negatives_boost | ok | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-21T04-08-04_20260521T040312-filetypes-objc_objc_hard_negatives_boost.log) |
+| `c93109ca1898b403` | objc_scale_pos_05_threshold | ok | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-21T04-08-05_20260521T040312-filetypes-objc_objc_scale_pos_05_threshold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_control_baseline_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Replicates best feature set to establish baseline; lowers learning_rate to 0.03 to improve PR_AUC by reducing overfitting on the small holdout.
+- **`objc_kv_vocab_expansion`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with higher cap to capture more key-value patterns, aiming to boost PR_AUC by adding discriminative signal for malicious configs.
+- **`objc_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to extract structural text features, targeting PR_AUC improvement by capturing obfuscation patterns common in ObjC scripts.
+- **`objc_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and symbol_bigrams to model API co-occurrence, aiming to lift ROC_AUC by distinguishing benign framework calls from malicious chains.
+- **`objc_hard_negatives_boost`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Introduces hard_negative_fraction and weight to focus model on difficult benigns, aiming to improve recall@3FPM by sharpening the decision boundary near zero FPR.
+- **`objc_scale_pos_05_threshold`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Lowers scale_pos_weight_mult to 0.5 to penalize false positives more heavily, targeting recall@3FPM improvement at the deployed operating point.
+
+</details>
+
+## Cycle `20260521T060919-filetypes-objc` — 2026-05-21T06:09:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5245b2e8d4644de8` | objc_control_baseline_lr003 | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-21T06-13-53_20260521T060919-filetypes-objc_objc_control_baseline_lr003.log) |
+| `a1ada094453c4bec` | objc_kv_vocab_expansion | dup | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-21T06-13-55_20260521T060919-filetypes-objc_objc_kv_vocab_expansion.log) |
+| `09e2f20acdb1f860` | objc_symbol_vocab_bigrams | dup | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-21T06-13-56_20260521T060919-filetypes-objc_objc_symbol_vocab_bigrams.log) |
+| `939056d638c045a8` | objc_transfer_xml_kv_full | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-21T06-13-57_20260521T060919-filetypes-objc_objc_transfer_xml_kv_full.log) |
+| `637d1a0cbe2d0643` | objc_ablation_blindfold_off | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-21T06-13-59_20260521T060919-filetypes-objc_objc_ablation_blindfold_off.log) |
+| `fcfd304e1019a4a4` | objc_seed_search_k3 | ok | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-21T06-14-02_20260521T060919-filetypes-objc_objc_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_control_baseline_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env to establish matrix cache baseline; tune learning_rate and num_leaves to stabilize PR_AUC.
+- **`objc_kv_vocab_expansion`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with higher cap to capture key-value patterns in objc source, aiming to improve PR_AUC.
+- **`objc_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and symbol_bigrams to capture import/symbol co-occurrence, targeting recall@3 FP/M gains.
+- **`objc_transfer_xml_kv_full`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port strong xml kv_vocab config to objc; adjust vocab limits conservatively to boost PR_AUC.
+- **`objc_ablation_blindfold_off`** `EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce noise in small corpus, aiming to stabilize ROC_AUC and PR_AUC.
+- **`objc_seed_search_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on baseline features to distinguish real signal from seed noise, targeting stable recall@3 FP/M.
+
+</details>
+

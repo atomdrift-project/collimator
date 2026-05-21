@@ -222,3 +222,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T161239-filetypes-data` — 2026-05-20T16:12:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3f77a56fe7d84ba7` | data_ctrl_scalepos075 | ok | 1.0000 | 1.0000 | 1.0000 | 5 | [log](out/autocollie/runs/2026-05-20T16-18-46_20260520T161239-filetypes-data_data_ctrl_scalepos075.log) |
+| `2e01b3b7cd999370` | data_ctrl_dart_extra_trees | ok | 1.0000 | 1.0000 | 0.9630 | 2 | [log](out/autocollie/runs/2026-05-20T16-18-51_20260520T161239-filetypes-data_data_ctrl_dart_extra_trees.log) |
+| `b9f87ae55692ff0b` | data_ctrl_hard_negatives | ok | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-20T16-18-53_20260520T161239-filetypes-data_data_ctrl_hard_negatives.log) |
+| `cc257d211869fc2b` | data_feat_kv_vocab_split | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-20T16-18-54_20260520T161239-filetypes-data_data_feat_kv_vocab_split.log) |
+| `ba40a2d3a51e67c7` | data_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-20T16-18-57_20260520T161239-filetypes-data_data_feat_text_metrics_enc.log) |
+| `27247be2fa308964` | data_feat_tiered_trigrams | ok | 1.0000 | 1.0000 | 1.0000 | 4 | [log](out/autocollie/runs/2026-05-20T16-19-00_20260520T161239-filetypes-data_data_feat_tiered_trigrams.log) |
+| `fc7b58ed7737f64f` | data_feat_metric_ratios_norm | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-20T16-19-04_20260520T161239-filetypes-data_data_feat_metric_ratios_norm.log) |
+| `288d2b826fcc2bab` | data_ablation_blindfold_off | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-20T16-19-07_20260520T161239-filetypes-data_data_ablation_blindfold_off.log) |
+| `42d1ad5e68cfbcf5` | data_transfer_gz_kv_seed | ok | 1.0000 | 1.0000 | 1.0000 | 4 | [log](out/autocollie/runs/2026-05-20T16-19-10_20260520T161239-filetypes-data_data_transfer_gz_kv_seed.log) |
+| `16e7b3c1207bc39b` | data_transfer_xml_kv_full | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-20T16-19-14_20260520T161239-filetypes-data_data_transfer_xml_kv_full.log) |
+| `5142ea36cfc7ffd8` | data_gen_ensemble_seeds | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-20T16-19-18_20260520T161239-filetypes-data_data_gen_ensemble_seeds.log) |
+| `ba40a2d3a51e67c7` | data_retry_text_metrics_v2 | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-20T16-19-20_20260520T161239-filetypes-data_data_retry_text_metrics_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_ctrl_scalepos075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by down-weighting positives to reduce false positives at the deployed operating point.
+- **`data_ctrl_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve PR_AUC by using dart boosting with extra trees to regularize and improve tail ranking.
+- **`data_ctrl_hard_negatives`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by upweighting hard negatives to sharpen the decision boundary near the threshold.
+- **`data_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling KV vocab with value splitting to capture structured metadata signals in data files.
+- **`data_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling full text metrics and encoding features to detect obfuscation patterns in data payloads.
+- **`data_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling tiered critical trigrams to capture higher-order malicious trait co-occurrences.
+- **`data_feat_metric_ratios_norm`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling metric ratios and size-normalized metrics to better scale structural counts across file sizes.
+- **`data_ablation_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by disabling blindfold dropout to test if it removes useful signal on this small corpus.
+- **`data_transfer_gz_kv_seed`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by transferring gz route's KV config and using seed search to stabilize performance.
+- **`data_transfer_xml_kv_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by transferring xml route's full KV vocab config to capture broader metadata signals.
+- **`data_gen_ensemble_seeds`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by averaging predictions across multiple seeds to reduce variance and stabilize tail recall.
+- **`data_retry_text_metrics_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by retrying a previously strong text metrics config on the updated daily corpus.
+
+</details>
+
+## Cycle `20260521T043255-filetypes-data` — 2026-05-21T04:32:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `314f2ef11c8994ff` | data_ctrl_extra_trees_tail | ok | 1.0000 | 1.0000 | 0.9880 | 3 | [log](out/autocollie/runs/2026-05-21T04-37-15_20260521T043255-filetypes-data_data_ctrl_extra_trees_tail.log) |
+| `9bbb2a32a9a7cefb` | data_feat_kv_vocab_5k | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T04-37-18_20260521T043255-filetypes-data_data_feat_kv_vocab_5k.log) |
+| `2eb091e90afd04bd` | data_feat_text_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T04-37-21_20260521T043255-filetypes-data_data_feat_text_metrics_full.log) |
+| `e430d374b6da90d1` | data_ablation_blindfold_off | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T04-37-24_20260521T043255-filetypes-data_data_ablation_blindfold_off.log) |
+| `04a936697b7e3f2f` | data_transfer_seed_ensemble | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-21T04-37-27_20260521T043255-filetypes-data_data_transfer_seed_ensemble.log) |
+| `c42c6fe26d5964c8` | data_exploit_hard_neg_scale | ok | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-21T04-37-28_20260521T043255-filetypes-data_data_exploit_hard_neg_scale.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_ctrl_extra_trees_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 …` — Aims to improve recall@3 FP/M by adding ensemble noise via extra_trees to stabilize ranking on this saturated small corpus.
+- **`data_feat_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by capturing structured key-value patterns in data files via kv_vocab with a 5k cap.
+- **`data_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by adding detailed text structural metrics that capture obfuscation in data payloads.
+- **`data_ablation_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to preserve PR_AUC while reducing overfit noise by disabling blindfold dropout features on this small holdout.
+- **`data_transfer_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3 FP/M across seeds by averaging 3 models, reducing variance on this tiny corpus.
+- **`data_exploit_hard_neg_scale`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to lift recall@3 FP/M by upweighting hard negatives to sharpen the decision boundary at low FPR.
+
+</details>
+
+## Cycle `20260521T073218-filetypes-data` — 2026-05-21T07:32:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `346c1c1e8dfb3967` | data_ctrl_hard_neg_tune | ok | 1.0000 | 1.0000 | 0.9545 | 1 | [log](out/autocollie/runs/2026-05-21T07-37-32_20260521T073218-filetypes-data_data_ctrl_hard_neg_tune.log) |
+| `2ebf898660991337` | data_feat_kv_vocab_split | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T07-37-33_20260521T073218-filetypes-data_data_feat_kv_vocab_split.log) |
+| `bc0506be842a0beb` | data_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T07-37-36_20260521T073218-filetypes-data_data_feat_text_metrics_enc.log) |
+| `a24432fa75d9bfac` | data_transfer_metric_ratios | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T07-37-39_20260521T073218-filetypes-data_data_transfer_metric_ratios.log) |
+| `ab02d6ad7a2149b8` | data_gen_seed_search_3 | ok | 1.0000 | 1.0000 | 0.9880 | 6 | [log](out/autocollie/runs/2026-05-21T07-37-41_20260521T073218-filetypes-data_data_gen_seed_search_3.log) |
+| `f4fdafaa381567d7` | data_feat_tiered_crit_ngrams | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-21T07-37-47_20260521T073218-filetypes-data_data_feat_tiered_crit_ngrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_ctrl_hard_neg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by tuning hard_negative_weight and fraction on the proven feature set, keeping PR AUC flat.
+- **`data_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to boost PR AUC by capturing structured key-value patterns in data files, using kv_vocab and kv_value_split to recover per-element signal.
+- **`data_feat_text_metrics_enc`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to improve recall@3 FP/M by adding document obfuscation and encoding signals that often separate benign data from malicious payloads.
+- **`data_transfer_metric_ratios`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=128 …` — Aims to lift PR AUC by leveraging cross-metric ratios and extended metrics to capture structural anomalies in data files.
+- **`data_gen_seed_search_3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 …` — Aims to stabilize recall@3 FP/M gains by averaging over 3 seeds, reducing variance while maintaining PR AUC.
+- **`data_feat_tiered_crit_ngrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TIERED_CRIT_BIGRAMS=1 …` — Aims to improve PR AUC by focusing n-gram signal on high-criticality paths, reducing noise from benign metadata.
+
+</details>
+

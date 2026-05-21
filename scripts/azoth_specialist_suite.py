@@ -415,7 +415,7 @@ def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str,
     best_idx = int(np.argmax(f1_values))
     best_threshold = 1.0 if best_idx >= len(thresholds) else float(thresholds[best_idx])
     y_pred = (y_prob >= best_threshold).astype(int)
-    return {
+    out = {
         "roc_auc": (
             float(roc_auc_score(y_true, y_prob))
             if len(np.unique(y_true)) > 1
@@ -431,6 +431,23 @@ def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str,
         "precision_at_max_f1": float(precision_score(y_true, y_pred, zero_division=0)),
         "recall_at_max_f1": float(recall_score(y_true, y_pred, zero_division=0)),
     }
+    # Operating-point recall at the FP/M budgets autocollie's gate reads.
+    # Without these, autocollie's promote gate falls into the legacy
+    # PR-AUC-only path (its baseline loader sees no tail-recall and gives
+    # up on the operationally-aware comparison). Recording them here
+    # closes the loop: training writes them → autocollie reads them →
+    # the gate compares operational metrics, not just PR AUC.
+    for fpm in (0, 1, 3, 5, 9):
+        op = _operating_point(y_true, y_prob, float(fpm))
+        rec = op.get("recall")
+        thr = op.get("threshold")
+        out[f"recall_at_fp_per_million_{fpm}"] = (
+            float(rec) if isinstance(rec, (int, float)) else math.nan
+        )
+        out[f"threshold_at_fp_per_million_{fpm}"] = (
+            float(thr) if isinstance(thr, (int, float)) else math.nan
+        )
+    return out
 
 
 def _fp_budget(n_benign: int, target_per_million: float) -> int:
@@ -543,43 +560,103 @@ def _route_key_for_target(target: dict[str, Any]) -> str:
     return f"filetypes/{name}"
 
 
+def _load_promoted_baseline_run(
+    baselines_path: Path, runs_dir: Path, route: str,
+) -> dict[str, Any] | None:
+    """Return the run JSON for a route's promoted baseline, or None.
+
+    Mirrors azoth_train_best._load_promoted_baseline. promoted baselines
+    have passed the full screen → confirm → promote chain (including the
+    regression check against the deployed bundle), so they're the only
+    operationally-verified historical source. Prefer them over raw
+    screen runs whenever an entry exists.
+    """
+    if not baselines_path.is_file():
+        return None
+    try:
+        with open(baselines_path) as f:
+            baselines = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    entry = (baselines.get("routes") or {}).get(route)
+    if not isinstance(entry, dict):
+        return None
+    for key_field in ("full_train_key", "promote_key"):
+        key = entry.get(key_field)
+        if not isinstance(key, str) or not key:
+            continue
+        run_path = runs_dir / f"{key}.json"
+        if not run_path.is_file():
+            continue
+        try:
+            with open(run_path) as f:
+                run = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if run.get("route") == route:
+            return run
+    return None
+
+
 def _load_autocollie_best_per_route(
     runs_dir: Path,
     targets: list[dict[str, Any]],
+    baselines_path: Path | None = None,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, str]]]:
-    """Scan ``runs_dir/*.json`` for each target's highest-F1 historical run and
-    return its train_config + feature_env as per-route override dicts.
+    """Scan ``runs_dir/*.json`` for each target's best historical run by
+    operational metric and return its train_config + feature_env as
+    per-route override dicts.
 
     This is how autocollie's discovered wins flow into ``make
     azoth-specialist-suite`` retrains: instead of every retrain reverting to
     the Makefile's hardcoded defaults (which predate autocollie), the suite
-    picks each route's deployed-best-quality-of-fit experiment and replays
-    its config.
+    picks each route's best-known config from autocollie's history and
+    replays it.
 
-    Selection rule: highest avg_precision (PR AUC) in
-    ``sampled_test_metrics``.  When multiple runs tie, the most recent
-    timestamp wins (replay-stable across re-runs).  Save-all-seeds (item-A
-    averaged) runs are preferred over single-seed when they exist for a
-    route, since those are the legitimate multi-seed baselines and produce
-    honest comparisons.
+    Selection key (priority order):
+      1. ``recall_at_fp_per_million_3`` — recall at the L3 hostile deploy
+         budget. The operational metric: what fraction of malware does the
+         model catch at the FP/M target we actually deploy at?
+      2. ``avg_precision`` — curve-summarized PR/recall tradeoff, tiebreak.
+      3. ``save_all_seeds`` — prefer multi-seed bundles when otherwise tied.
+      4. ``timestamp`` — most recent tied run.
 
-    PR AUC is the headline ranking metric for malware classification: it
-    summarizes recall vs precision across the operating range and isn't
-    swamped by benign mass the way ROC AUC is on this imbalanced corpus.
+    Selecting on ``avg_precision`` alone (the prior rule) misses swaps
+    where two candidates have ~identical PR AUC but several-fold
+    different recall at the deploy budget — seen in real data with
+    ``native_big_vocab_tail`` (AP=0.99999 / r@3FPM=88.89%) vs
+    ``native_kv_cross_binary`` (AP=0.99999 / r@3FPM=91.14%). The old
+    picker chose the first; the new one chooses the second.
 
-    Routes with no historical runs in ``runs_dir`` get empty overrides and
-    fall through to the suite's CLI defaults — same as before.
+    Routes with no historical runs in ``runs_dir`` get empty overrides
+    and fall through to the suite's CLI defaults. Runs missing
+    ``recall_at_fp_per_million_3`` get sorted with a fallback recall of
+    0.0 — penalized vs runs that recorded the operational metric, but
+    not excluded.
 
-    Returns ``(train_overrides_by_route, feature_envs_by_route)``.  Both maps
-    are keyed by the canonical route name (e.g. ``filetypes/perl``).
+    Returns ``(train_overrides_by_route, feature_envs_by_route)``. Both
+    maps are keyed by the canonical route name (e.g. ``filetypes/perl``).
     """
     if not runs_dir.is_dir():
         LOG.info("autocollie-best: %s is not a directory; skipping", runs_dir)
         return {}, {}
 
     targeted_routes = {_route_key_for_target(t) for t in targets}
-    # Track best per route as (f1, save_all_seeds, timestamp, run_dict).
-    best: dict[str, tuple[float, bool, str, dict[str, Any]]] = {}
+
+    # First pass: pull any route that has a promoted baseline. Those are
+    # the operationally-verified historical configs; we always prefer
+    # them over raw screen runs when present.
+    promoted_runs: dict[str, dict[str, Any]] = {}
+    if baselines_path is not None and baselines_path.is_file():
+        for route in targeted_routes:
+            run = _load_promoted_baseline_run(baselines_path, runs_dir, route)
+            if run is not None:
+                promoted_runs[route] = run
+
+    # Track best per route as
+    # (recall_at_3fp, avg_precision, save_all_seeds, timestamp, run_dict).
+    # Skip routes that already have a promoted baseline — those win.
+    best: dict[str, tuple[float, float, bool, str, dict[str, Any]]] = {}
     for path in runs_dir.glob("*.json"):
         # Skip the *_feature_spec.json sidecars and the multi-seed dirs.
         if path.name.endswith("_feature_spec.json"):
@@ -592,24 +669,32 @@ def _load_autocollie_best_per_route(
         route = run.get("route")
         if route not in targeted_routes:
             continue
+        if route in promoted_runs:
+            continue  # promoted baseline wins; don't bother evaluating screens
         metrics = run.get("sampled_test_metrics") or {}
         ap = metrics.get("avg_precision")
         if not isinstance(ap, (int, float)):
             continue
+        recall_at_3 = metrics.get("recall_at_fp_per_million_3")
+        if isinstance(recall_at_3, (int, float)) and not math.isnan(float(recall_at_3)):
+            r3 = float(recall_at_3)
+        else:
+            r3 = 0.0
         save_all = bool(run.get("save_all_seeds"))
         timestamp = str(run.get("timestamp") or "")
-        # Tuple ordering: avg_precision first (max), then save_all_seeds
-        # (prefer True), then timestamp (prefer newer).  Python tuple comparison
-        # is stable so this gives a total ordering.
-        candidate = (float(ap), save_all, timestamp, run)
+        # Tuple ordering: recall@3FPM first (operational), then PR AUC
+        # (curve summary), then save_all_seeds, then timestamp. Python
+        # tuple comparison gives a total ordering.
+        candidate = (r3, float(ap), save_all, timestamp, run)
         prev = best.get(route)
-        if prev is None or candidate[:3] > prev[:3]:
+        if prev is None or candidate[:4] > prev[:4]:
             best[route] = candidate
 
     valid_train_fields = _train_config_field_names()
     train_overrides: dict[str, dict[str, Any]] = {}
     feature_envs: dict[str, dict[str, str]] = {}
-    for route, (ap, save_all, _ts, run) in best.items():
+
+    def _record(route: str, run: dict[str, Any], source: str) -> None:
         train_cfg = run.get("train_config") or {}
         # Filter to TrainConfig fields the suite knows about; drop unknown
         # keys silently rather than raising — tolerates schema drift.
@@ -621,15 +706,41 @@ def _load_autocollie_best_per_route(
             train_overrides[route] = cfg_overrides
 
         env = run.get("feature_env") or {}
-        # feature_env in run JSONs is already namespaced (COLLIMATOR_*).
         env_overrides = {str(k): str(v) for k, v in env.items() if str(k).startswith("COLLIMATOR_")}
         if env_overrides:
             feature_envs[route] = env_overrides
 
+        metrics = run.get("sampled_test_metrics") or {}
+        r3 = metrics.get("recall_at_fp_per_million_3")
+        ap = metrics.get("avg_precision")
         LOG.info(
-            "autocollie-best: %s -> key=%s avg_precision=%.4f save_all=%s overrides=%d env=%d",
-            route, run.get("experiment_key", "?"), ap, save_all,
+            "autocollie-best: %s -> key=%s source=%s recall@3FP/M=%s avg_precision=%s save_all=%s overrides=%d env=%d",
+            route, run.get("experiment_key", "?"), source,
+            "%.4f" % r3 if isinstance(r3, (int, float)) else "?",
+            "%.4f" % ap if isinstance(ap, (int, float)) else "?",
+            bool(run.get("save_all_seeds")),
             len(cfg_overrides), len(env_overrides),
+        )
+
+    # Promoted baselines win when present — they've been operationally
+    # validated by the screen → confirm → promote chain.
+    for route, run in promoted_runs.items():
+        _record(route, run, source="promoted_baseline")
+    # Fallback: best raw screen run by operational metric. Logs the
+    # source explicitly so the human sees which routes need a promote
+    # cycle to graduate off the brittle path.
+    for route, (_r3, _ap, _save_all, _ts, run) in best.items():
+        if route in promoted_runs:
+            continue
+        _record(route, run, source="screen_runs_fallback")
+
+    if best and not promoted_runs:
+        LOG.warning(
+            "no promoted_baselines.json entries for any of %d target routes; "
+            "all overrides come from raw screen runs and may not generalize to "
+            "the deployed slice. Run autocollie promote cycles on the affected "
+            "routes to graduate them to the operationally-verified path.",
+            len(best),
         )
 
     return train_overrides, feature_envs
@@ -1224,11 +1335,25 @@ def main() -> int:
         help=(
             "Optional directory of autocollie experiment run JSONs (typically "
             "out/experiments/azoth/runs). When set, the suite picks each "
-            "route's highest-F1 historical run and applies its train_config + "
+            "route's best historical run and applies its train_config + "
             "feature_env as automatic per-route overrides. Without this flag, "
             "every retrain reverts to Makefile defaults — autocollie's wins are "
             "lost. Explicit --train-override / --feature-env still take "
-            "precedence over auto-discovered values."
+            "precedence over auto-discovered values. The picker prefers entries "
+            "from --promoted-baselines (operationally-validated) over raw "
+            "screen runs when both exist for a route."
+        ),
+    )
+    parser.add_argument(
+        "--promoted-baselines",
+        type=Path,
+        default=None,
+        help=(
+            "Path to autocollie's promoted_baselines.json. When set together "
+            "with --autocollie-best-runs-dir, routes with a promoted entry "
+            "pull their config from the verified promote-chain rather than "
+            "raw screen runs. Strongly recommended: skipping it makes the "
+            "picker brittle for routes where bad screen-only candidates exist."
         ),
     )
     parser.add_argument("--skip-existing", action="store_true")
@@ -1314,8 +1439,17 @@ def main() -> int:
     targets = _targets(args)
 
     if args.autocollie_best_runs_dir is not None:
+        # Fall back to the conventional path if --promoted-baselines wasn't
+        # given but the file exists under the output root. Operators who
+        # never pass this flag still get the verified-baseline preference.
+        baselines_path = args.promoted_baselines
+        if baselines_path is None:
+            default_baselines = args.output_root / ".autocollie" / "promoted_baselines.json"
+            if default_baselines.is_file():
+                baselines_path = default_baselines
         auto_train, auto_env = _load_autocollie_best_per_route(
-            args.autocollie_best_runs_dir, targets
+            args.autocollie_best_runs_dir, targets,
+            baselines_path=baselines_path,
         )
         # Operator overrides (CLI --train-override / --feature-env) win on
         # collisions, so the merge order is auto-first then CLI on top.

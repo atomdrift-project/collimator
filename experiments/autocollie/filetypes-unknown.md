@@ -130,3 +130,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T191934-filetypes-unknown` — 2026-05-20T19:19:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_kv_textenc_v3 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-20T19-24-13_20260520T191934-filetypes-unknown_unknown_control_kv_textenc_v3.log) |
+| `` | unknown_train_lr003_est400 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-20T19-24-18_20260520T191934-filetypes-unknown_unknown_train_lr003_est400.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_kv_textenc_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best PR AUC feature set with slightly deeper trees to capture complex unknown-file patterns while keeping PR AUC flat.
+- **`unknown_train_lr003_est400`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Lower LR with more estimators to refine decision boundaries and improve PR AUC without overfitting.
+
+</details>
+
+## Cycle `20260521T053555-filetypes-unknown` — 2026-05-21T05:35:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_kv_textenc_lr005 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-21T05-41-14_20260521T053555-filetypes-unknown_unknown_control_kv_textenc_lr005.log) |
+| `` | unknown_train_hardneg_hsn10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T05-41-16_20260521T053555-filetypes-unknown_unknown_train_hardneg_hsn10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_kv_textenc_lr005`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best PR AUC feature set with conservative training knobs to establish baseline and cache hit, aiming to maintain PR AUC.
+- **`unknown_train_hardneg_hsn10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Test hard-negative mining to push tail recall@3 FP/M higher while keeping PR AUC flat via targeted loss weighting.
+
+</details>
+
+## Cycle `20260521T074851-filetypes-unknown` — 2026-05-21T07:48:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_kv_textenc_reg | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T07-52-58_20260521T074851-filetypes-unknown_unknown_control_kv_textenc_reg.log) |
+| `` | unknown_feat_textmetrics_kv | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T07-53-00_20260521T074851-filetypes-unknown_unknown_feat_textmetrics_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_kv_textenc_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Replicates best PR_AUC feature set with mild L2 regularization to stabilize predictions and improve recall@3FPM without overfitting.
+- **`unknown_feat_textmetrics_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full to capture document obfuscation signals alongside kv_vocab, targeting PR_AUC gains on unknown filetypes with embedded text.
+
+</details>
+

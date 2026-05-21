@@ -124,3 +124,115 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T101633-filetypes-pptx` — 2026-05-20T10:16:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b5e927edfa4390f6` | pptx_control_baseline | ok | 0.9231 | 0.5000 | 0.9600 | 5 | [log](out/autocollie/runs/2026-05-20T10-22-06_20260520T101633-filetypes-pptx_pptx_control_baseline.log) |
+| `5eb841f8ded3e140` | pptx_train_dart_reg | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-20T10-22-11_20260520T101633-filetypes-pptx_pptx_train_dart_reg.log) |
+| `e678900c9ba25ad4` | pptx_train_scale_pos_05 | ok | 0.9231 | 0.5000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-20T10-22-12_20260520T101633-filetypes-pptx_pptx_train_scale_pos_05.log) |
+| `c98f19af928be622` | pptx_feat_text_metrics_full | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T10-22-14_20260520T101633-filetypes-pptx_pptx_feat_text_metrics_full.log) |
+| `57916152d1bb1f83` | pptx_feat_kv_vocab_expand | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T10-22-17_20260520T101633-filetypes-pptx_pptx_feat_kv_vocab_expand.log) |
+| `d2e74c6acd97d167` | pptx_feat_rare_bigrams | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T10-22-20_20260520T101633-filetypes-pptx_pptx_feat_rare_bigrams.log) |
+| `fe4af10b7d5481bf` | pptx_feat_doc_obfuscation | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T10-22-23_20260520T101633-filetypes-pptx_pptx_feat_doc_obfuscation.log) |
+| `c1f413de3aab0bf6` | pptx_feat_tiered_trigrams | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-20T10-22-26_20260520T101633-filetypes-pptx_pptx_feat_tiered_trigrams.log) |
+| `18a98284816b8565` | pptx_ablate_extreme | ok | 0.9231 | 0.5000 | 0.9600 | 4 | [log](out/autocollie/runs/2026-05-20T10-22-29_20260520T101633-filetypes-pptx_pptx_ablate_extreme.log) |
+| `caf1e3cc1e2e07c5` | pptx_transfer_extended_metrics | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T10-22-32_20260520T101633-filetypes-pptx_pptx_transfer_extended_metrics.log) |
+| `fb3e604fca331b3b` | pptx_gen_seed_search_3 | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T10-22-35_20260520T101633-filetypes-pptx_pptx_gen_seed_search_3.log) |
+| `2469704f4d71458a` | pptx_drift_hard_neg_safe | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-20T10-22-38_20260520T101633-filetypes-pptx_pptx_drift_hard_neg_safe.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pptx_control_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to maintain PR_AUC and ROC_AUC as a control baseline for comparison.
+- **`pptx_train_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve recall@3 FP/M by using DART boosting and L2 regularization to reduce overfitting on rare benign patterns.
+- **`pptx_train_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to increase recall@3 FP/M by down-weighting positives to shift the decision threshold, while monitoring PR_AUC guardrails.
+- **`pptx_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost PR_AUC by enabling text_metrics_full to capture document obfuscation signals specific to PPTX macros.
+- **`pptx_feat_kv_vocab_expand`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling kv_vocab with an expanded cap to capture rare key-value patterns in PPTX XML structures.
+- **`pptx_feat_rare_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by lowering bigram_min_freq to 50, capturing rare malicious co-occurrences missed by the baseline.
+- **`pptx_feat_doc_obfuscation`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost PR_AUC by enabling document_obfuscation_features and line_length_buckets to target PPTX macro obfuscation patterns.
+- **`pptx_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling tiered_crit_trigrams to capture higher-order malicious path sequences in PPTX XML.
+- **`pptx_ablate_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to stabilize PR_AUC and improve ROC_AUC by disabling extreme_features to reduce noise from tail metrics.
+- **`pptx_transfer_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost PR_AUC by porting extended_metrics and metric_ratio_features from sister routes to capture structural PPTX ratios.
+- **`pptx_gen_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to stabilize recall@3 FP/M by running seed_search_k=3 to average out seed variance on the baseline configuration.
+- **`pptx_drift_hard_neg_safe`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to recover recall@3 FP/M by retrying hard-negative mining with conservative fraction/weight to avoid previous crashes.
+
+</details>
+
+## Cycle `20260520T174131-filetypes-pptx` — 2026-05-20T17:41:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a169b6873643f172` | pptx_ctrl_leaves_lr | ok | 0.9231 | 0.5000 | 0.9600 | 5 | [log](out/autocollie/runs/2026-05-20T17-47-40_20260520T174131-filetypes-pptx_pptx_ctrl_leaves_lr.log) |
+| `fe93d604dc6b49ee` | pptx_ctrl_reg_mcs | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-20T17-47-45_20260520T174131-filetypes-pptx_pptx_ctrl_reg_mcs.log) |
+| `a034a15a75e35c07` | pptx_ctrl_hard_neg | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-20T17-47-46_20260520T174131-filetypes-pptx_pptx_ctrl_hard_neg.log) |
+| `f74262e7585e6e5a` | pptx_feat_text_metrics_enc | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-20T17-47-48_20260520T174131-filetypes-pptx_pptx_feat_text_metrics_enc.log) |
+| `5c9a87a4479169aa` | pptx_feat_kv_vocab | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T17-47-50_20260520T174131-filetypes-pptx_pptx_feat_kv_vocab.log) |
+| `d2e23705c988b458` | pptx_feat_doc_obfuscation | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-20T17-47-53_20260520T174131-filetypes-pptx_pptx_feat_doc_obfuscation.log) |
+| `70a672448dbdcacc` | pptx_feat_extended_metrics | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-20T17-47-56_20260520T174131-filetypes-pptx_pptx_feat_extended_metrics.log) |
+| `2bd5caa79a1b3a10` | pptx_feat_tiered_trigrams | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T17-47-57_20260520T174131-filetypes-pptx_pptx_feat_tiered_trigrams.log) |
+| `c5a65494bcb7f7af` | pptx_feat_obj_trigrams | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T17-48-00_20260520T174131-filetypes-pptx_pptx_feat_obj_trigrams.log) |
+| `70a672448dbdcacc` | pptx_transfer_rtf_metrics | dup | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-20T17-48-02_20260520T174131-filetypes-pptx_pptx_transfer_rtf_metrics.log) |
+| `2f2ed74fb3171cdc` | pptx_gen_seed_search | ok | 0.9231 | 0.5000 | 0.9600 | 3 | [log](out/autocollie/runs/2026-05-20T17-48-03_20260520T174131-filetypes-pptx_pptx_gen_seed_search.log) |
+| `e7a93bca63827aa0` | pptx_profile_min_malware | ok | 0.9231 | 0.5000 | 0.9600 | 5 | [log](out/autocollie/runs/2026-05-20T17-48-07_20260520T174131-filetypes-pptx_pptx_profile_min_malware.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pptx_ctrl_leaves_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Baseline features with increased capacity (num_leaves=128, learning_rate=0.03) to improve PR_AUC by better fitting complex document patterns.
+- **`pptx_ctrl_reg_mcs`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Baseline features with stronger regularization (reg_lambda=2.0, min_child_samples=150) to reduce overfitting and stabilize PR_AUC.
+- **`pptx_ctrl_hard_neg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Baseline features with hard-negative mining (hard_negative_fraction=0.1, hard_negative_weight=5.0) to sharpen decision boundary and boost recall@3FPM.
+- **`pptx_feat_text_metrics_enc`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, targeting PR_AUC improvement on PPTX payloads.
+- **`pptx_feat_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with kv_vocab_max=10000 to extract key-value pair signals from PPTX XML structures, targeting PR_AUC.
+- **`pptx_feat_doc_obfuscation`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable document_obfuscation_features and line_length_buckets to detect anti-static analysis patterns, targeting recall@3FPM.
+- **`pptx_feat_extended_metrics`** `EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable extended_metrics to incorporate additional structural metrics, targeting PR_AUC by enriching feature space.
+- **`pptx_feat_tiered_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams with tiered_trigram_max=5000 to capture severity-weighted path co-occurrences, targeting PR_AUC.
+- **`pptx_feat_obj_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Enable objective_trigrams with trigram_max=2000 to model attack objective sequences, targeting recall@3FPM.
+- **`pptx_transfer_rtf_metrics`** `EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port strong RTF config with extended_metrics and extreme_features enabled, targeting PR_AUC via cross-document signal transfer.
+- **`pptx_gen_seed_search`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed_search_k=3 on baseline features to average out seed variance and stabilize PR_AUC gains.
+- **`pptx_profile_min_malware`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Raise min_malware_score to 3 to focus training on high-severity malware, targeting recall@3FPM by reducing noise from low-crit samples.
+
+</details>
+
+## Cycle `20260521T044754-filetypes-pptx` — 2026-05-21T04:47:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `779bf4f0d01399df` | pptx_control_capacity_up | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T04-53-02_20260521T044754-filetypes-pptx_pptx_control_capacity_up.log) |
+| `bc163972f4eb23f8` | pptx_feat_text_metrics_full | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T04-53-04_20260521T044754-filetypes-pptx_pptx_feat_text_metrics_full.log) |
+| `a1794d57cf23262c` | pptx_feat_kv_vocab | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T04-53-07_20260521T044754-filetypes-pptx_pptx_feat_kv_vocab.log) |
+| `6050e38f08a1d687` | pptx_feat_lower_bigram_freq | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T04-53-09_20260521T044754-filetypes-pptx_pptx_feat_lower_bigram_freq.log) |
+| `02fc570ae72da4b0` | pptx_train_dart_reg | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-21T04-53-11_20260521T044754-filetypes-pptx_pptx_train_dart_reg.log) |
+| `45bec189b1dbad6c` | pptx_seed_search_ensemble | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-21T04-53-13_20260521T044754-filetypes-pptx_pptx_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pptx_control_capacity_up`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env with higher tree capacity to capture complex PPTX patterns, targeting PR_AUC improvement.
+- **`pptx_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_metrics_full to capture obfuscation signals in PPTX XML streams, targeting PR_AUC and recall@3 FP/M.
+- **`pptx_feat_kv_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 …` — Activates kv_vocab to extract malicious metadata and XML attributes from PPTX files, targeting PR_AUC.
+- **`pptx_feat_lower_bigram_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 500 and enables objective_trigrams to capture rarer malicious patterns, targeting recall@3 FP/M.
+- **`pptx_train_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Uses DART boosting to reduce overfitting on noisy benign PPTX files, targeting PR_AUC stability and recall@3 FP/M.
+- **`pptx_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Averages over 3 seeds to reduce variance in small PPTX holdout, targeting stable PR_AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260521T082143-filetypes-pptx` — 2026-05-21T08:21:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7cd3c1ad601cd034` | pptx_control_train_tune | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-21T08-25-19_20260521T082143-filetypes-pptx_pptx_control_train_tune.log) |
+| `82ed4e384c8e8e03` | pptx_feat_kv_vocab_split | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T08-25-21_20260521T082143-filetypes-pptx_pptx_feat_kv_vocab_split.log) |
+| `0c4718563977665d` | pptx_feat_text_metrics | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T08-25-23_20260521T082143-filetypes-pptx_pptx_feat_text_metrics.log) |
+| `3cc7b367a7fe8310` | pptx_feat_rare_bigrams | ok | 0.9231 | 0.5000 | 0.9600 | 2 | [log](out/autocollie/runs/2026-05-21T08-25-25_20260521T082143-filetypes-pptx_pptx_feat_rare_bigrams.log) |
+| `42a2a930d5b2cf23` | pptx_train_hardneg_safe | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-21T08-25-28_20260521T082143-filetypes-pptx_pptx_train_hardneg_safe.log) |
+| `35d03c5f35fa7beb` | pptx_seed_search_ensemble | ok | 0.9231 | 0.5000 | 0.9600 | 1 | [log](out/autocollie/runs/2026-05-21T08-25-29_20260521T082143-filetypes-pptx_pptx_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pptx_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env with increased tree capacity and L2 regularization to improve PR_AUC while keeping ROC_AUC flat.
+- **`pptx_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and value splitting to capture structured metadata signals in PPTX, targeting PR_AUC gains.
+- **`pptx_feat_text_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates full text metrics and line length buckets to detect document obfuscation patterns, aiming to boost recall@3 FP/M.
+- **`pptx_feat_rare_bigrams`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor to include rarer but potentially malicious patterns, targeting PR_AUC improvement.
+- **`pptx_train_hardneg_safe`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Conservative hard-negative mining to sharpen decision boundary at low FPR, improving recall@3 FP/M.
+- **`pptx_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ensembles 3 seeds to stabilize tail recall and reduce variance, targeting consistent recall@3 FP/M gains.
+
+</details>
+

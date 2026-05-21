@@ -124,3 +124,69 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T041746-filetypes-jar` — 2026-05-21T04:17:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0225fa355834fddc` | jar_control_deeper_trees | ok | 0.9984 | 0.9971 | 0.9681 | 10 | [log](out/autocollie/runs/2026-05-21T04-21-31_20260521T041746-filetypes-jar_jar_control_deeper_trees.log) |
+| `e091e1191bee76a0` | jar_hardneg_tail_recall | ok | 0.9988 | 0.9977 | 0.9657 | 2 | [log](out/autocollie/runs/2026-05-21T04-21-42_20260521T041746-filetypes-jar_jar_hardneg_tail_recall.log) |
+| `8383aba2f887af35` | jar_kv_vocab_manifest | ok | 0.9984 | 0.9972 | 0.9632 | 9 | [log](out/autocollie/runs/2026-05-21T04-21-44_20260521T041746-filetypes-jar_jar_kv_vocab_manifest.log) |
+| `8fd6f445540a3e1c` | jar_symbol_vocab_classes | ok | 0.9984 | 0.9972 | 0.9632 | 9 | [log](out/autocollie/runs/2026-05-21T04-21-53_20260521T041746-filetypes-jar_jar_symbol_vocab_classes.log) |
+| `ec498842857ffc25` | jar_ablate_score_transfer | ok | 0.9988 | 0.9978 | 0.9632 | 8 | [log](out/autocollie/runs/2026-05-21T04-22-02_20260521T041746-filetypes-jar_jar_ablate_score_transfer.log) |
+| `d7155ea904615528` | jar_seed_search_robustness | ok | 0.9984 | 0.9970 | 0.9739 | 3 | [log](out/autocollie/runs/2026-05-21T04-22-09_20260521T041746-filetypes-jar_jar_seed_search_robustness.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jar_control_deeper_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with increased num_leaves and estimators to capture complex JAR patterns, targeting PR_AUC improvement.
+- **`jar_hardneg_tail_recall`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Hard negative weighting to sharpen decision boundary at low FPR, targeting recall@3 FP/M improvement.
+- **`jar_kv_vocab_manifest`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture manifest and attribute key-value pairs, targeting PR_AUC gain from structured metadata signals.
+- **`jar_symbol_vocab_classes`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Enable symbol vocab to capture class and method name distributions, targeting recall@3 FP/M via structural code signals.
+- **`jar_ablate_score_transfer`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Transfer from pdf route by disabling score features to reduce noise, targeting PR_AUC improvement by focusing on structural signals.
+- **`jar_seed_search_robustness`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Seed search on best config to verify signal robustness against RNG variance, targeting stable recall@3 FP/M.
+
+</details>
+
+## Cycle `20260521T083016-filetypes-jar` — 2026-05-21T08:30:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aa9486ea8ab0c6e2` | jar_control_train_lr003_leaves128 | ok | 0.9984 | 0.9970 | 0.9767 | 2 | [log](out/autocollie/runs/2026-05-21T08-34-53_20260521T083016-filetypes-jar_jar_control_train_lr003_leaves128.log) |
+| `279bdb615a89ba26` | jar_kv_vocab_manifest_split | ok | 0.9984 | 0.9971 | 0.9681 | 9 | [log](out/autocollie/runs/2026-05-21T08-34-54_20260521T083016-filetypes-jar_jar_kv_vocab_manifest_split.log) |
+| `5b79eaf20edfd7b9` | jar_symbol_vocab_bigrams | ok | 0.9984 | 0.9971 | 0.9681 | 9 | [log](out/autocollie/runs/2026-05-21T08-35-03_20260521T083016-filetypes-jar_jar_symbol_vocab_bigrams.log) |
+| `1fc016a7534727f3` | jar_hardneg_weight12_frac02 | ok | 0.9989 | 0.9980 | 0.9497 | 2 | [log](out/autocollie/runs/2026-05-21T08-35-13_20260521T083016-filetypes-jar_jar_hardneg_weight12_frac02.log) |
+| `2a9af266befeca1d` | jar_ablate_score_group | ok | 0.9988 | 0.9978 | 0.9632 | 8 | [log](out/autocollie/runs/2026-05-21T08-35-15_20260521T083016-filetypes-jar_jar_ablate_score_group.log) |
+| `bacea60b962fd887` | jar_seed_search_k3_kv | ok | 0.9983 | 0.9968 | 0.9714 | 3 | [log](out/autocollie/runs/2026-05-21T08-35-23_20260521T083016-filetypes-jar_jar_seed_search_k3_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jar_control_train_lr003_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env to hit matrix cache; tune LR and leaves to stabilize PR_AUC and improve recall@3FPM without overfitting.
+- **`jar_kv_vocab_manifest_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture manifest/properties signal, targeting PR_AUC and recall@3FPM by resolving opaque string blobs in JAR metadata.
+- **`jar_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and symbol_bigrams to capture Java class/method co-occurrence patterns, aiming to lift recall@3FPM and PR_AUC on packed JARs.
+- **`jar_hardneg_weight12_frac02`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Increase hard_negative_weight and fraction to sharpen decision boundary at low FPR, targeting recall@3FPM while preserving PR_AUC.
+- **`jar_ablate_score_group`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable the score feature group to reduce noise from derived aggregates, aiming to improve ROC_AUC and stabilize PR_AUC by focusing on raw structural signals.
+- **`jar_seed_search_k3_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the kv_vocab config to distinguish real signal from seed noise, targeting stable recall@3FPM gains across seeds.
+
+</details>
+
+## Cycle `20260521T093126-filetypes-jar` — 2026-05-21T09:31:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d7a66d043054601d` | jar_control_hardneg_lr003 | ok | 0.9987 | 0.9975 | 0.9796 | 3 | [log](out/autocollie/runs/2026-05-21T09-36-45_20260521T093126-filetypes-jar_jar_control_hardneg_lr003.log) |
+| `4fae5769dde62e05` | jar_kv_vocab_5000 | ok | 0.9985 | 0.9972 | 0.9521 | 9 | [log](out/autocollie/runs/2026-05-21T09-36-48_20260521T093126-filetypes-jar_jar_kv_vocab_5000.log) |
+| `12af87a2d2f5021a` | jar_textenc_metrics_full | ok | 0.9988 | 0.9977 | 0.9685 | 8 | [log](out/autocollie/runs/2026-05-21T09-36-57_20260521T093126-filetypes-jar_jar_textenc_metrics_full.log) |
+| `1edc5fa47f4575af` | jar_tiered_crit_trigrams | ok | 0.9983 | 0.9968 | 0.9713 | 10 | [log](out/autocollie/runs/2026-05-21T09-37-06_20260521T093126-filetypes-jar_jar_tiered_crit_trigrams.log) |
+| `503e62be90620231` | jar_ablate_blindfold | ok | 0.9986 | 0.9973 | 0.9792 | 8 | [log](out/autocollie/runs/2026-05-21T09-37-16_20260521T093126-filetypes-jar_jar_ablate_blindfold.log) |
+| `cf1692aae8182f19` | jar_seed_search_k3_hardneg | ok | 0.9986 | 0.9973 | 0.9853 | 5 | [log](out/autocollie/runs/2026-05-21T09-37-24_20260521T093126-filetypes-jar_jar_seed_search_k3_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jar_control_hardneg_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by lowering learning rate and increasing estimators to better fit the hard-negative signal without overfitting.
+- **`jar_kv_vocab_5000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost recall@3FPM by adding KV vocab features to capture manifest and property file patterns specific to JAR malware.
+- **`jar_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by adding text encoding and full text metrics to detect obfuscated resources and embedded scripts within JAR archives.
+- **`jar_tiered_crit_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to increase recall@3FPM by enabling tiered critical trigrams to capture multi-step attack chains in JAR trait paths.
+- **`jar_ablate_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to stabilize PR_AUC by removing blindfold dropout features that may be discarding consistent JAR-specific signals.
+- **`jar_seed_search_k3_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM consistency by averaging predictions across 3 seeds to mitigate seed-driven variance in the hard-negative training regime.
+
+</details>
+

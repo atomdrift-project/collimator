@@ -224,3 +224,85 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T115220-filetypes-c` — 2026-05-20T11:52:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b55dcac112ff5438` | c_control_baseline_train | ok | 0.9915 | 0.9956 | 0.9519 | 567 | [log](out/autocollie/runs/2026-05-20T11-57-35_20260520T115220-filetypes-c_c_control_baseline_train.log) |
+| `0a9f9aff24e3efca` | c_exploit_scale_pos_075 | ok | 0.9916 | 0.9956 | 0.9520 | 531 | [log](out/autocollie/runs/2026-05-20T12-07-02_20260520T115220-filetypes-c_c_exploit_scale_pos_075.log) |
+| `` | c_exploit_hardneg_tuned | fail | — | — | — | 160 | [log](out/autocollie/runs/2026-05-20T12-15-53_20260520T115220-filetypes-c_c_exploit_hardneg_tuned.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_control_baseline_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature set with conservative training knobs to establish a stable PR_AUC baseline.
+- **`c_exploit_scale_pos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weights positives to reduce false positives at low FPR, targeting improved recall@3 FP/M.
+- **`c_exploit_hardneg_tuned`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Applies moderate hard-negative weighting to focus on difficult benigns, aiming to boost tail recall@3 FP/M without crashing.
+
+</details>
+
+## Cycle `20260521T031639-filetypes-c` — 2026-05-21T03:16:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1cd2139f046013f3` | c_control_threshold_fpr | ok | 0.9915 | 0.9956 | 0.9045 | 10 | [log](out/autocollie/runs/2026-05-21T03-20-27_20260521T031639-filetypes-c_c_control_threshold_fpr.log) |
+| `8cb7994e38d351ca` | c_feat_kv_symbol_vocab_split | ok | 0.9924 | 0.9961 | 0.9518 | 12 | [log](out/autocollie/runs/2026-05-21T03-20-38_20260521T031639-filetypes-c_c_feat_kv_symbol_vocab_split.log) |
+| `7376d3f5644925e3` | c_feat_text_metrics_encoding | ok | 0.9909 | 0.9952 | 0.9438 | 10 | [log](out/autocollie/runs/2026-05-21T03-20-50_20260521T031639-filetypes-c_c_feat_text_metrics_encoding.log) |
+| `4533d725ea6dd1cb` | c_feat_bigram_freq_trigrams | ok | 0.9912 | 0.9954 | 0.9390 | 11 | [log](out/autocollie/runs/2026-05-21T03-21-00_20260521T031639-filetypes-c_c_feat_bigram_freq_trigrams.log) |
+| `8f79cf058ce19a5e` | c_train_hardneg_mild_reg | ok | 0.9918 | 0.9957 | 0.9486 | 3 | [log](out/autocollie/runs/2026-05-21T03-21-10_20260521T031639-filetypes-c_c_train_hardneg_mild_reg.log) |
+| `275d9f613acaacf9` | c_profile_seed_search_scalepos | ok | 0.9918 | 0.9957 | 0.9453 | 4 | [log](out/autocollie/runs/2026-05-21T03-21-14_20260521T031639-filetypes-c_c_profile_seed_search_scalepos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_control_threshold_fpr`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by switching threshold tuning to max_recall_at_fpr at the deployed operating point while keeping the proven baseline feature surface.
+- **`c_feat_kv_symbol_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling key-value and symbol vocabs with value splitting to capture fine-grained C API usage and library linkage patterns.
+- **`c_feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by promoting full text metrics and encoding features to detect obfuscation and anomalous string patterns in malicious C sources.
+- **`c_feat_bigram_freq_trigrams`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by lowering the bigram frequency floor to capture rare malicious sequences and adding severity-prefixed trigrams for stronger ranking signal.
+- **`c_train_hardneg_mild_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=4 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by upweighting hard negatives to sharpen the low-FPR decision boundary, using conservative weights and L2 regularization to maintain stability.
+- **`c_profile_seed_search_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM gains by averaging predictions across three seeds to reduce variance, paired with positive down-weighting to suppress benign false positives.
+
+</details>
+
+## Cycle `20260521T070629-filetypes-c` — 2026-05-21T07:06:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `50b802f9f0224661` | c_control_extra_trees | ok | 0.9880 | 0.9936 | 0.9270 | 3 | [log](out/autocollie/runs/2026-05-21T07-11-52_20260521T070629-filetypes-c_c_control_extra_trees.log) |
+| `9975fb3029496799` | c_exploit_hardneg_safe | ok | 0.9915 | 0.9955 | 0.9497 | 4 | [log](out/autocollie/runs/2026-05-21T07-11-55_20260521T070629-filetypes-c_c_exploit_hardneg_safe.log) |
+| `7c4c26ea00437a31` | c_feat_kv_symbol_split_tuned | ok | 0.9923 | 0.9960 | 0.9512 | 12 | [log](out/autocollie/runs/2026-05-21T07-11-58_20260521T070629-filetypes-c_c_feat_kv_symbol_split_tuned.log) |
+| `d6f5e0df340e1f1b` | c_feat_text_metrics_bigrams | ok | 0.9915 | 0.9955 | 0.9406 | 10 | [log](out/autocollie/runs/2026-05-21T07-12-10_20260521T070629-filetypes-c_c_feat_text_metrics_bigrams.log) |
+| `1e2dfa4800fb460a` | c_ablation_blindfold_crit | ok | 0.9915 | 0.9956 | 0.9439 | 9 | [log](out/autocollie/runs/2026-05-21T07-12-20_20260521T070629-filetypes-c_c_ablation_blindfold_crit.log) |
+| `3fe44e33bb5de9f6` | c_seed_search_kv_symbols | ok | 0.9925 | 0.9961 | 0.9443 | 5 | [log](out/autocollie/runs/2026-05-21T07-12-29_20260521T070629-filetypes-c_c_seed_search_kv_symbols.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_control_extra_trees`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test extra_trees regularization to improve generalization at low FPR, targeting recall@3FPM.
+- **`c_exploit_hardneg_safe`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Mild hard-negative upweighting to sharpen decision boundary for tail recall@3FPM without OOM risk.
+- **`c_feat_kv_symbol_split_tuned`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 …` — Enable kv_vocab, symbol_vocab, and kv_value_split to capture fine-grained C API and config signals, targeting PR_AUC.
+- **`c_feat_text_metrics_bigrams`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_metrics_full and text_encoding with lower bigram_min_freq to capture obfuscation and rare string patterns, targeting PR_AUC.
+- **`c_ablation_blindfold_crit`** `EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable blindfold and crit_category_ngrams to reduce noise and overfitting, aiming to stabilize PR_AUC.
+- **`c_seed_search_kv_symbols`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 …` — Run seed_search_k=3 on the strong kv/symbol feature set to distinguish real signal from seed variance, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260521T092611-filetypes-c` — 2026-05-21T09:26:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `072a183424f16f8c` | c_control_pos_weight_075 | ok | 0.9916 | 0.9956 | 0.9520 | 3 | [log](out/autocollie/runs/2026-05-21T09-31-02_20260521T092611-filetypes-c_c_control_pos_weight_075.log) |
+| `82ef2842f5e1949f` | c_feat_kv_symbol_expanded_split | ok | 0.9924 | 0.9961 | 0.9518 | 2 | [log](out/autocollie/runs/2026-05-21T09-31-04_20260521T092611-filetypes-c_c_feat_kv_symbol_expanded_split.log) |
+| `2d4f29d4f2c4f81b` | c_feat_text_metrics_encoding | ok | 0.9909 | 0.9952 | 0.9438 | 2 | [log](out/autocollie/runs/2026-05-21T09-31-07_20260521T092611-filetypes-c_c_feat_text_metrics_encoding.log) |
+| `61a9474a86db348b` | c_ablation_blindfold_off | ok | 0.9916 | 0.9956 | 0.9519 | 10 | [log](out/autocollie/runs/2026-05-21T09-31-09_20260521T092611-filetypes-c_c_ablation_blindfold_off.log) |
+| `775c302aa0313647` | c_transfer_html_extreme_metrics | ok | 0.9916 | 0.9956 | 0.9519 | 2 | [log](out/autocollie/runs/2026-05-21T09-31-19_20260521T092611-filetypes-c_c_transfer_html_extreme_metrics.log) |
+| `3ad3ba46c41e0da6` | c_generalize_seed_search_3 | ok | 0.9920 | 0.9958 | 0.9352 | 5 | [log](out/autocollie/runs/2026-05-21T09-31-22_20260521T092611-filetypes-c_c_generalize_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`c_control_pos_weight_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by down-weighting benigns to lower the decision threshold, keeping PR/ROC AUC flat.
+- **`c_feat_kv_symbol_expanded_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 …` — Aims to improve PR AUC by capturing more granular key-value and symbol co-occurrence signals via expanded vocabs and value splitting.
+- **`c_feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR AUC by adding structural text metrics and encoding features that capture obfuscation patterns in C code.
+- **`c_ablation_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR AUC by removing blindfold dropout noise, potentially stabilizing ranking at low FPR.
+- **`c_transfer_html_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by transferring extreme tail features and extended metrics that succeeded on HTML/script routes.
+- **`c_generalize_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR AUC and recall@3 FP/M gains by averaging over 3 seeds to mitigate seed-driven variance.
+
+</details>
+

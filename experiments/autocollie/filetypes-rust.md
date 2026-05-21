@@ -144,3 +144,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T173625-filetypes-rust` — 2026-05-20T17:36:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b98e32f1e97620ce` | rust_control_baseline_lr003 | ok | 0.8029 | 0.9867 | 0.2500 | 8 | [log](out/autocollie/runs/2026-05-20T17-40-39_20260520T173625-filetypes-rust_rust_control_baseline_lr003.log) |
+| `389315cc8294fe00` | rust_exploit_hardneg_weight10 | ok | 0.9225 | 0.9916 | 0.3750 | 4 | [log](out/autocollie/runs/2026-05-20T17-40-47_20260520T173625-filetypes-rust_rust_exploit_hardneg_weight10.log) |
+| `7b04091f68cc044e` | rust_feat_kv_vocab_15k | ok | 0.8943 | 0.9902 | 0.2667 | 4 | [log](out/autocollie/runs/2026-05-20T17-40-50_20260520T173625-filetypes-rust_rust_feat_kv_vocab_15k.log) |
+| `2379dbb3cc4a1268` | rust_feat_symbol_bigrams_5k | ok | 0.8750 | 0.9895 | 0.2667 | 4 | [log](out/autocollie/runs/2026-05-20T17-40-54_20260520T173625-filetypes-rust_rust_feat_symbol_bigrams_5k.log) |
+| `a97733d7182698fe` | rust_feat_textenc_metrics | ok | 0.8721 | 0.9867 | 0.2667 | 4 | [log](out/autocollie/runs/2026-05-20T17-40-58_20260520T173625-filetypes-rust_rust_feat_textenc_metrics.log) |
+| `6713f91a8044cce9` | rust_ablation_blindfold_off | ok | 0.8750 | 0.9895 | 0.2667 | 4 | [log](out/autocollie/runs/2026-05-20T17-41-02_20260520T173625-filetypes-rust_rust_ablation_blindfold_off.log) |
+| `b331fbb585a9ee65` | rust_transfer_source_metrics | ok | 0.8750 | 0.9895 | 0.2667 | 2 | [log](out/autocollie/runs/2026-05-20T17-41-05_20260520T173625-filetypes-rust_rust_transfer_source_metrics.log) |
+| `57f85aac5a975df6` | rust_transfer_archive_ngrams | ok | 0.8848 | 0.9888 | 0.2667 | 4 | [log](out/autocollie/runs/2026-05-20T17-41-07_20260520T173625-filetypes-rust_rust_transfer_archive_ngrams.log) |
+| `4e5f9512b9e4f014` | rust_gen_seed_search_k3 | ok | 0.8741 | 0.9874 | 0.7273 | 3 | [log](out/autocollie/runs/2026-05-20T17-41-11_20260520T173625-filetypes-rust_rust_gen_seed_search_k3.log) |
+| `712a0e5db0699042` | rust_gen_seed_k3_reg_lambda | ok | 0.8570 | 0.9839 | 0.7742 | 8 | [log](out/autocollie/runs/2026-05-20T17-41-14_20260520T173625-filetypes-rust_rust_gen_seed_k3_reg_lambda.log) |
+| `f33d6718889b3e1d` | rust_retry_simpler_leaves64 | ok | 0.8750 | 0.9895 | 0.2667 | 5 | [log](out/autocollie/runs/2026-05-20T17-41-22_20260520T173625-filetypes-rust_rust_retry_simpler_leaves64.log) |
+| `5643a13d6b9b05df` | rust_retry_scalepos05 | ok | 0.8776 | 0.9874 | 0.3750 | 4 | [log](out/autocollie/runs/2026-05-20T17-41-27_20260520T173625-filetypes-rust_rust_retry_scalepos05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rust_control_baseline_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by fine-tuning learning rate on the best recent feature set to stabilize convergence without altering the matrix cache.
+- **`rust_exploit_hardneg_weight10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, leveraging the existing feature matrix.
+- **`rust_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by expanding the KV vocabulary to 15k to capture more granular configuration and dependency signals specific to Rust crates.
+- **`rust_feat_symbol_bigrams_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling symbol bigrams with a 5k cap to capture co-occurrence patterns in Rust standard library and crate imports.
+- **`rust_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by enabling text encoding and full text metrics to detect obfuscation patterns in Rust source files and build scripts.
+- **`rust_ablation_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by removing blindfold dropout features to reduce noise and improve ranking stability on the small Rust corpus.
+- **`rust_transfer_source_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by transferring extended metrics and extreme features from successful source-code routes to capture structural Rust patterns.
+- **`rust_transfer_archive_ngrams`** `EXP_ATTACK_NGRAMS=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by adopting attack ngrams and crit category ngrams from archive routes to better flag malicious Rust payloads in archives.
+- **`rust_gen_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by running a 3-seed search on the best feature set to distinguish true signal from seed-driven variance.
+- **`rust_gen_seed_k3_reg_lambda`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by combining seed search with L2 regularization to prevent overfitting across different random splits.
+- **`rust_retry_simpler_leaves64`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=8 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by retrying the historical best simpler leaves configuration with metric ratios to check for data-drift improvements on the updated corpus.
+- **`rust_retry_scalepos05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by retrying a lower positive weight multiplier with size-normalized metrics to suppress false positives on benign Rust crates while maintaining malware recall.
+
+</details>
+
+## Cycle `20260521T053555-filetypes-rust` — 2026-05-21T05:35:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `63609cd78f2c1166` | rust_control_hardneg12_leaves128 | ok | 0.8750 | 0.9895 | 0.2667 | 3 | [log](out/autocollie/runs/2026-05-21T05-41-25_20260521T053555-filetypes-rust_rust_control_hardneg12_leaves128.log) |
+| `9ea30d2919069a09` | rust_exploit_dart_reg2 | ok | 0.8341 | 0.9818 | 0.3750 | 1 | [log](out/autocollie/runs/2026-05-21T05-41-28_20260521T053555-filetypes-rust_rust_exploit_dart_reg2.log) |
+| `88367cf25d53bde3` | rust_feat_kv_vocab_5000 | ok | 0.8943 | 0.9902 | 0.2667 | 4 | [log](out/autocollie/runs/2026-05-21T05-41-29_20260521T053555-filetypes-rust_rust_feat_kv_vocab_5000.log) |
+| `3cf59b4b999e01c4` | rust_feat_symbol_bigrams_2000 | ok | 0.8700 | 0.9888 | 0.2500 | 4 | [log](out/autocollie/runs/2026-05-21T05-41-32_20260521T053555-filetypes-rust_rust_feat_symbol_bigrams_2000.log) |
+| `52a9fa9af05c1c38` | rust_transfer_text_metrics | ok | 0.8721 | 0.9867 | 0.2667 | 3 | [log](out/autocollie/runs/2026-05-21T05-41-36_20260521T053555-filetypes-rust_rust_transfer_text_metrics.log) |
+| `ef03ab713232706b` | rust_retry_hardneg10_seedk3 | ok | 0.8741 | 0.9874 | 0.7273 | 1 | [log](out/autocollie/runs/2026-05-21T05-41-40_20260521T053555-filetypes-rust_rust_retry_hardneg10_seedk3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rust_control_hardneg12_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Exploit baseline feature surface with higher hard-negative weight and more leaves to improve PR_AUC and recall@3 FP/M.
+- **`rust_exploit_dart_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Test DART boosting with L2 regularization to reduce overfitting and improve ROC_AUC while maintaining PR_AUC.
+- **`rust_feat_kv_vocab_5000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture structured metadata patterns in Rust files, aiming to boost PR_AUC.
+- **`rust_feat_symbol_bigrams_2000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Add symbol bigrams to capture co-occurrence of imports and traits, targeting recall@3 FP/M improvement.
+- **`rust_transfer_text_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Transfer text metrics strategy from XML route to capture Rust source formatting anomalies, aiming for PR_AUC gain.
+- **`rust_retry_hardneg10_seedk3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry top historical hard-negative config with seed search to verify signal stability and improve recall@3 FP/M.
+
+</details>
+
+## Cycle `20260521T071234-filetypes-rust` — 2026-05-21T07:12:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7320fc40e3c16df8` | rust_control_baseline_tuning | ok | 0.8554 | 0.9860 | 0.2500 | 1 | [log](out/autocollie/runs/2026-05-21T07-17-17_20260521T071234-filetypes-rust_rust_control_baseline_tuning.log) |
+| `b4ea03fec2de0663` | rust_feat_symbol_vocab_3000 | ok | 0.8700 | 0.9888 | 0.2500 | 4 | [log](out/autocollie/runs/2026-05-21T07-17-18_20260521T071234-filetypes-rust_rust_feat_symbol_vocab_3000.log) |
+| `57844173fc775b34` | rust_feat_kv_vocab_8000_freq50 | ok | 0.8943 | 0.9902 | 0.2667 | 4 | [log](out/autocollie/runs/2026-05-21T07-17-22_20260521T071234-filetypes-rust_rust_feat_kv_vocab_8000_freq50.log) |
+| `375a954851abbc97` | rust_feat_text_metrics_encoding | ok | 0.8534 | 0.9860 | 0.2667 | 1 | [log](out/autocollie/runs/2026-05-21T07-17-26_20260521T071234-filetypes-rust_rust_feat_text_metrics_encoding.log) |
+| `fc1141e9bc1a860b` | rust_seed_search_kv_vocab | ok | 0.8943 | 0.9902 | 0.2667 | 1 | [log](out/autocollie/runs/2026-05-21T07-17-27_20260521T071234-filetypes-rust_rust_seed_search_kv_vocab.log) |
+| `287f16d00ff4c57b` | rust_exploit_hardneg_scalepos | ok | 0.8996 | 0.9895 | 0.4706 | 1 | [log](out/autocollie/runs/2026-05-21T07-17-28_20260521T071234-filetypes-rust_rust_exploit_hardneg_scalepos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rust_control_baseline_tuning`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env to hit matrix cache, tweak num_leaves and reg_lambda to stabilize PR_AUC while preserving ROC_AUC.
+- **`rust_feat_symbol_vocab_3000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=3000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab to capture Rust-specific crate and function patterns, targeting PR_AUC improvement by adding high-signal lexical features.
+- **`rust_feat_kv_vocab_8000_freq50`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — Expand kv_vocab_max and lower kv_min_freq to capture rarer but high-value Rust configuration keys, targeting PR_AUC.
+- **`rust_feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to detect obfuscation and structural anomalies in Rust source, targeting recall@3FPM.
+- **`rust_seed_search_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Apply seed_search_k to the strong KV vocab configuration to average out seed variance and stabilize PR_AUC.
+- **`rust_exploit_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Tune hard_negative_fraction and scale_pos_weight_mult to focus on the imbalanced tail, targeting recall@3FPM without hurting PR_AUC.
+
+</details>
+

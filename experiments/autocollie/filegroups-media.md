@@ -130,3 +130,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T024941-filegroups-media` — 2026-05-21T02:49:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6a400eee2772fd85` | media_control_leaves128_est300 | ok | 0.9955 | 0.9946 | 0.9412 | 5 | [log](out/autocollie/runs/2026-05-21T02-54-31_20260521T024941-filegroups-media_media_control_leaves128_est300.log) |
+| `de5620e4e5924a74` | media_exploit_dart_hardneg | ok | 0.9956 | 0.9949 | 0.9718 | 1 | [log](out/autocollie/runs/2026-05-21T02-54-36_20260521T024941-filegroups-media_media_exploit_dart_hardneg.log) |
+| `d95074b3968fe324` | media_feat_kv_vocab_10k | ok | 0.9955 | 0.9946 | 0.9412 | 3 | [log](out/autocollie/runs/2026-05-21T02-54-38_20260521T024941-filegroups-media_media_feat_kv_vocab_10k.log) |
+| `0745a6019a8968ac` | media_feat_text_metrics_obf | ok | 0.9955 | 0.9946 | 0.9412 | 3 | [log](out/autocollie/runs/2026-05-21T02-54-41_20260521T024941-filegroups-media_media_feat_text_metrics_obf.log) |
+| `dcacdd5fd0344519` | media_transfer_rtf_extreme | ok | 0.9955 | 0.9946 | 0.9412 | 1 | [log](out/autocollie/runs/2026-05-21T02-54-44_20260521T024941-filegroups-media_media_transfer_rtf_extreme.log) |
+| `520ea2dc6cb92f86` | media_generalize_seed_k3 | ok | 0.9952 | 0.9943 | 0.9341 | 1 | [log](out/autocollie/runs/2026-05-21T02-54-46_20260521T024941-filegroups-media_media_generalize_seed_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`media_control_leaves128_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with increased leaves and estimators to improve PR_AUC and recall@3FPM via better tree capacity on the proven feature set.
+- **`media_exploit_dart_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Test dart boosting with hard negatives to sharpen recall@3FPM at low FPR while preserving ROC_AUC.
+- **`media_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture structured metadata patterns in media files, targeting PR_AUC gains from new rank signal.
+- **`media_feat_text_metrics_obf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text_metrics_full and document_obfuscation_features to detect obfuscated payloads in media containers, aiming for recall@3FPM improvement.
+- **`media_transfer_rtf_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port rtf route's extended_metrics and extreme_features to capture tail-distribution signals in media, targeting PR_AUC.
+- **`media_generalize_seed_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed_search_k=3 on the best feature set to verify signal stability and reduce variance in recall@3FPM.
+
+</details>
+
+## Cycle `20260521T083944-filegroups-media` — 2026-05-21T08:39:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `62d06d1c2ef4c16e` | media_control_dart_hardneg_lr003 | ok | 0.9938 | 0.9923 | 0.9670 | 2 | [log](out/autocollie/runs/2026-05-21T08-43-33_20260521T083944-filegroups-media_media_control_dart_hardneg_lr003.log) |
+| `511e92d2044c87a4` | media_feat_text_metrics_obf | ok | 0.9955 | 0.9946 | 0.9412 | 3 | [log](out/autocollie/runs/2026-05-21T08-43-35_20260521T083944-filegroups-media_media_feat_text_metrics_obf.log) |
+| `366dbdaea4c65e26` | media_feat_kv_vocab_split | ok | 0.9955 | 0.9946 | 0.9412 | 3 | [log](out/autocollie/runs/2026-05-21T08-43-38_20260521T083944-filegroups-media_media_feat_kv_vocab_split.log) |
+| `53a52a9f44e13c37` | media_abl_blindfold_extreme | ok | 0.9947 | 0.9937 | 0.9412 | 3 | [log](out/autocollie/runs/2026-05-21T08-43-41_20260521T083944-filegroups-media_media_abl_blindfold_extreme.log) |
+| `bcec642fe660a275` | media_transfer_rtf_extreme_metrics | ok | 0.9955 | 0.9946 | 0.9412 | 3 | [log](out/autocollie/runs/2026-05-21T08-43-45_20260521T083944-filegroups-media_media_transfer_rtf_extreme_metrics.log) |
+| `668cb06ffc36226f` | media_retry_kv_split_seedk3 | ok | 0.9955 | 0.9946 | 0.9468 | 3 | [log](out/autocollie/runs/2026-05-21T08-43-48_20260521T083944-filegroups-media_media_retry_kv_split_seedk3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`media_control_dart_hardneg_lr003`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to hit matrix cache; lowers learning_rate to 0.03 and increases estimators to 350 to improve PR_AUC via smoother tree ensembles.
+- **`media_feat_text_metrics_obf`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture PDF/RTF obfuscation patterns, targeting PR_AUC gains on document-heavy media samples.
+- **`media_feat_kv_vocab_split`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with kv_value_split to recover per-element signal in metadata blobs, aiming to lift PR_AUC by distinguishing benign vs malicious document properties.
+- **`media_abl_blindfold_extreme`** `EXP_BLINDFOLD=0 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold and extreme_features to reduce high-variance noise in the tail, targeting stable PR_AUC and ROC_AUC without recall degradation.
+- **`media_transfer_rtf_extreme_metrics`** `EXP_BETA=2 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports RTF's extended_metrics and extreme_features combo to media, targeting recall@3 FP/M by surfacing subtle structural anomalies in packed documents.
+- **`media_retry_kv_split_seedk3`** `EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Retries historical kv_value_split winner with seed_search_k=3 to average out seed variance, targeting robust PR_AUC and recall@3 FP/M stability.
+
+</details>
+

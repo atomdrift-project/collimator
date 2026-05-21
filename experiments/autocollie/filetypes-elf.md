@@ -246,3 +246,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T091330-filetypes-elf` — 2026-05-20T09:13:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3f6ed289fa4e0eb9` | elf_control_baseline_train | ok | 1.0000 | 1.0000 | 0.9980 | 55 | [log](out/autocollie/runs/2026-05-20T09-18-52_20260520T091330-filetypes-elf_elf_control_baseline_train.log) |
+| `b45721e8541139f9` | elf_hardneg_001_12 | ok | 1.0000 | 1.0000 | 0.9985 | 54 | [log](out/autocollie/runs/2026-05-20T09-19-47_20260520T091330-filetypes-elf_elf_hardneg_001_12.log) |
+| `f02ebef880b1cd34` | elf_threshold_fpr3e6 | ok | 1.0000 | 1.0000 | 0.9959 | 30 | [log](out/autocollie/runs/2026-05-20T09-20-41_20260520T091330-filetypes-elf_elf_threshold_fpr3e6.log) |
+| `021d1ffe865406c6` | elf_kv_vocab_20k | ok | 1.0000 | 1.0000 | 0.9967 | 60 | [log](out/autocollie/runs/2026-05-20T09-21-11_20260520T091330-filetypes-elf_elf_kv_vocab_20k.log) |
+| `b0b8625012ce3b63` | elf_sym_vocab_15k_bigrams | ok | 1.0000 | 1.0000 | 0.9966 | 56 | [log](out/autocollie/runs/2026-05-20T09-22-11_20260520T091330-filetypes-elf_elf_sym_vocab_15k_bigrams.log) |
+| `aa31927c006298c1` | elf_bigram_minfreq_200 | ok | 1.0000 | 1.0000 | 0.9967 | 56 | [log](out/autocollie/runs/2026-05-20T09-23-07_20260520T091330-filetypes-elf_elf_bigram_minfreq_200.log) |
+| `6c23d6d33cd2ab73` | elf_overlay_silent_packer | ok | 1.0000 | 1.0000 | 0.9983 | 51 | [log](out/autocollie/runs/2026-05-20T09-24-04_20260520T091330-filetypes-elf_elf_overlay_silent_packer.log) |
+| `d6ee3c94c551023e` | elf_abl_no_blindfold | ok | 1.0000 | 1.0000 | 0.9980 | 47 | [log](out/autocollie/runs/2026-05-20T09-24-55_20260520T091330-filetypes-elf_elf_abl_no_blindfold.log) |
+| `8da27c2ec31d4eb0` | elf_transfer_gz_kv_seed | ok | 1.0000 | 1.0000 | 0.9981 | 54 | [log](out/autocollie/runs/2026-05-20T09-25-42_20260520T091330-filetypes-elf_elf_transfer_gz_kv_seed.log) |
+| `691780f244bb81a1` | elf_seed_search_kv | ok | 1.0000 | 1.0000 | 0.9984 | 101 | [log](out/autocollie/runs/2026-05-20T09-26-36_20260520T091330-filetypes-elf_elf_seed_search_kv.log) |
+| `46aef0c7196af42c` | elf_retry_mbc_trait_moments | ok | 1.0000 | 1.0000 | 0.9971 | 58 | [log](out/autocollie/runs/2026-05-20T09-28-17_20260520T091330-filetypes-elf_elf_retry_mbc_trait_moments.log) |
+| `74049f1f16e9fe8e` | elf_extra_trees_reg2 | ok | 1.0000 | 1.0000 | 0.9979 | 67 | [log](out/autocollie/runs/2026-05-20T09-29-16_20260520T091330-filetypes-elf_elf_extra_trees_reg2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_control_baseline_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating recent best feature_env to cache-hit matrices and measure training variance on PR_AUC and recall@3FPM.
+- **`elf_hardneg_001_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives to sharpen the low-FPR decision boundary.
+- **`elf_threshold_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes the deployed operating point to maximize recall@3FPM while keeping PR_AUC flat.
+- **`elf_kv_vocab_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab to capture rare ELF metadata patterns, aiming to lift PR_AUC and recall@3FPM.
+- **`elf_sym_vocab_15k_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Adds symbol co-occurrence signal to catch malicious import chains, targeting PR_AUC improvement.
+- **`elf_bigram_minfreq_200`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor to include rarer but high-signal ELF patterns, aiming to boost recall@3FPM.
+- **`elf_overlay_silent_packer`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_SILENT_PACKER_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Enables packer/overlay metrics to better separate packed malware from benign binaries, targeting recall@3FPM.
+- **`elf_abl_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Removes blindfold dropout features to reduce noise and stabilize PR_AUC while preserving recall@3FPM.
+- **`elf_transfer_gz_kv_seed`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfers successful KV vocab config from gz route to test cross-format generalization for PR_AUC.
+- **`elf_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Averages 3 seeds to reduce variance and confirm robustness of recall@3FPM gains.
+- **`elf_retry_mbc_trait_moments`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_CONFIDENCE_MOMENTS=1` — Retries high-performing MBC/trait moments config from historical runs to check for data-drift recovery in PR_AUC.
+- **`elf_extra_trees_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Combines size-normalized metrics with extra trees and L2 regularization to improve generalization at the tail, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260521T021934-filetypes-elf` — 2026-05-21T02:19:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a69ca19fc59e4682` | elf_control_train300 | ok | 1.0000 | 1.0000 | 0.9983 | 38 | [log](out/autocollie/runs/2026-05-21T02-25-09_20260521T021934-filetypes-elf_elf_control_train300.log) |
+| `940d5ac522b1cdfb` | elf_hardneg_001_16 | ok | 1.0000 | 1.0000 | 0.9982 | 14 | [log](out/autocollie/runs/2026-05-21T02-25-47_20260521T021934-filetypes-elf_elf_hardneg_001_16.log) |
+| `d9b5e375bba89050` | elf_tail_fpr3e6 | ok | 1.0000 | 1.0000 | 0.9913 | 8 | [log](out/autocollie/runs/2026-05-21T02-26-01_20260521T021934-filetypes-elf_elf_tail_fpr3e6.log) |
+| `63f1452f117808c6` | elf_kv_vocab_15k | ok | 1.0000 | 1.0000 | 0.9980 | 34 | [log](out/autocollie/runs/2026-05-21T02-26-09_20260521T021934-filetypes-elf_elf_kv_vocab_15k.log) |
+| `121b40879ec5076b` | elf_sym_bigrams_5k | ok | 1.0000 | 1.0000 | 0.9983 | 37 | [log](out/autocollie/runs/2026-05-21T02-26-44_20260521T021934-filetypes-elf_elf_sym_bigrams_5k.log) |
+| `7a4bd051e26e8fc0` | elf_mbc_trait_moments | ok | 1.0000 | 1.0000 | 0.9983 | 34 | [log](out/autocollie/runs/2026-05-21T02-27-21_20260521T021934-filetypes-elf_elf_mbc_trait_moments.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_control_train300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best recent feature_env with increased estimators to stabilize PR_AUC and ROC_AUC.
+- **`elf_hardneg_001_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard-negative sweep targeting recall@3 FP/M by upweighting difficult benigns to sharpen the decision boundary.
+- **`elf_tail_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Directly optimizes threshold for deployed operating point to maximize recall@3 FP/M while guarding PR_AUC.
+- **`elf_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab research family to capture fine-grained key-value patterns, aiming to lift PR_AUC and recall@3 FP/M.
+- **`elf_sym_bigrams_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol bigrams to model co-occurrence of imports/symbols, targeting PR_AUC gains on ELF binaries.
+- **`elf_mbc_trait_moments`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tests mbc_id_vocab and trait_confidence_moments to capture behavioral catalog signals and confidence distribution, aiming for PR_AUC improvement.
+
+</details>
+
+## Cycle `20260521T082116-filetypes-elf` — 2026-05-21T08:21:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4215d75b16d3cf42` | elf_control_hardneg_012_12 | ok | 1.0000 | 1.0000 | 0.9981 | 14 | [log](out/autocollie/runs/2026-05-21T08-26-27_20260521T082116-filetypes-elf_elf_control_hardneg_012_12.log) |
+| `621354484d226ec4` | elf_tail_fpr3e6_reg | ok | 1.0000 | 1.0000 | 0.9913 | 8 | [log](out/autocollie/runs/2026-05-21T08-26-42_20260521T082116-filetypes-elf_elf_tail_fpr3e6_reg.log) |
+| `b61c18ef1586bdce` | elf_overlay_signal | ok | 1.0000 | 1.0000 | 0.9984 | 34 | [log](out/autocollie/runs/2026-05-21T08-26-50_20260521T082116-filetypes-elf_elf_overlay_signal.log) |
+| `b9c92026824c480b` | elf_sym_trigrams_2k | ok | 1.0000 | 1.0000 | 0.9984 | 37 | [log](out/autocollie/runs/2026-05-21T08-27-24_20260521T082116-filetypes-elf_elf_sym_trigrams_2k.log) |
+| `b89e544e1e4c7a87` | elf_kv_vocab_20k | ok | 1.0000 | 1.0000 | 0.9983 | 35 | [log](out/autocollie/runs/2026-05-21T08-28-01_20260521T082116-filetypes-elf_elf_kv_vocab_20k.log) |
+| `ec2be4e49b7df65d` | elf_seed_search_overlay | ok | 1.0000 | 1.0000 | 0.9974 | 19 | [log](out/autocollie/runs/2026-05-21T08-28-36_20260521T082116-filetypes-elf_elf_seed_search_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_control_hardneg_012_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to focus on difficult benigns, aiming to lift recall@3 FP/M while preserving PR_AUC.
+- **`elf_tail_fpr3e6_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for deployed operating point to maximize recall@3 FP/M at 3e-6 FPR, with L2 regularization to guard PR_AUC.
+- **`elf_overlay_signal`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Enables overlay metrics to capture packer/dropper structural signals, targeting recall@3 FP/M gains on obfuscated ELF binaries.
+- **`elf_sym_trigrams_2k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Adds symbol trigram vocab to capture finer-grained import co-occurrence patterns, aiming to improve PR_AUC and tail recall.
+- **`elf_kv_vocab_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocabulary to 20k to capture rare metadata patterns, targeting PR_AUC lift from granular key-value signals.
+- **`elf_seed_search_overlay`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Applies seed search to overlay signal config to distinguish real tail-recall signal from seed noise, stabilizing recall@3 FP/M.
+
+</details>
+

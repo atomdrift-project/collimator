@@ -254,3 +254,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T042239-filetypes-batch` — 2026-05-21T04:22:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6a8759c76764ffa7` | batch_control_extra_trees | ok | 0.9995 | 0.9961 | 0.9823 | 8 | [log](out/autocollie/runs/2026-05-21T04-26-22_20260521T042239-filetypes-batch_batch_control_extra_trees.log) |
+| `aaf568e1f5e21461` | batch_kv_vocab_10k | ok | 0.9998 | 0.9986 | 0.9931 | 6 | [log](out/autocollie/runs/2026-05-21T04-26-30_20260521T042239-filetypes-batch_batch_kv_vocab_10k.log) |
+| `f668cf8fcaa76402` | batch_text_metrics_full | ok | 0.9998 | 0.9983 | 0.9850 | 6 | [log](out/autocollie/runs/2026-05-21T04-26-36_20260521T042239-filetypes-batch_batch_text_metrics_full.log) |
+| `2a8906f55f0b22ea` | batch_bigram_expand_10k | ok | 0.9997 | 0.9978 | 0.9903 | 6 | [log](out/autocollie/runs/2026-05-21T04-26-42_20260521T042239-filetypes-batch_batch_bigram_expand_10k.log) |
+| `e8f3558255b7e3b4` | batch_scale_pos_075_hardneg | ok | 0.9998 | 0.9982 | 0.9890 | 2 | [log](out/autocollie/runs/2026-05-21T04-26-47_20260521T042239-filetypes-batch_batch_scale_pos_075_hardneg.log) |
+| `3c9da9d35831f13b` | batch_symbol_vocab_5k_retry | ok | 0.9998 | 0.9986 | 0.9863 | 6 | [log](out/autocollie/runs/2026-05-21T04-26-50_20260521T042239-filetypes-batch_batch_symbol_vocab_5k_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_control_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=160 EXP_TRAIN_SAMPLES=30000` — Control feature set with extra_trees enabled to reduce overfitting and improve recall@3FPM at low FPR.
+- **`batch_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value pair signals, targeting PR_AUC improvement by adding structured metadata features.
+- **`batch_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to extract obfuscation and formatting signals, aiming to boost recall@3FPM on script-heavy batch files.
+- **`batch_bigram_expand_10k`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand bigram vocab to 10k with lower min_freq to capture rarer batch-specific patterns, targeting PR_AUC gains.
+- **`batch_scale_pos_075_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives and add hard negatives to sharpen decision boundary, targeting recall@3FPM while preserving ROC_AUC.
+- **`batch_symbol_vocab_5k_retry`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Retry strong symbol_vocab candidate on fresh corpus to check for data-drift induced PR_AUC improvements.
+
+</details>
+
+## Cycle `20260521T080734-filetypes-batch` — 2026-05-21T08:07:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58dc4c964df4659b` | batch_control_scale_pos_05 | ok | 0.9996 | 0.9967 | 0.9876 | 2 | [log](out/autocollie/runs/2026-05-21T08-12-00_20260521T080734-filetypes-batch_batch_control_scale_pos_05.log) |
+| `e83e4dfaf3a1f348` | batch_kv_split_vocab_15k | ok | 0.9999 | 0.9989 | 0.9931 | 6 | [log](out/autocollie/runs/2026-05-21T08-12-02_20260521T080734-filetypes-batch_batch_kv_split_vocab_15k.log) |
+| `97d28d988e99a59b` | batch_text_metrics_encoding | ok | 0.9998 | 0.9983 | 0.9850 | 5 | [log](out/autocollie/runs/2026-05-21T08-12-08_20260521T080734-filetypes-batch_batch_text_metrics_encoding.log) |
+| `7ec06c4ef9041d68` | batch_symbol_bigrams_8k | ok | 0.9998 | 0.9986 | 0.9863 | 6 | [log](out/autocollie/runs/2026-05-21T08-12-13_20260521T080734-filetypes-batch_batch_symbol_bigrams_8k.log) |
+| `904c8919bb2b9a42` | batch_extended_extreme_transfer | ok | 0.9998 | 0.9986 | 0.9863 | 2 | [log](out/autocollie/runs/2026-05-21T08-12-19_20260521T080734-filetypes-batch_batch_extended_extreme_transfer.log) |
+| `6005c0d283e0f612` | batch_seed_search_3_ensemble | ok | 0.9998 | 0.9981 | 0.9904 | 4 | [log](out/autocollie/runs/2026-05-21T08-12-21_20260521T080734-filetypes-batch_batch_seed_search_3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_control_scale_pos_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to 0.5 to lower the decision boundary, targeting recall@3FPM improvement while keeping PR_AUC flat.
+- **`batch_kv_split_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_value_split and expand kv_vocab_max to 15000 to recover granular key-value signals, targeting PR_AUC gain.
+- **`batch_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture structural obfuscation in batch scripts, targeting recall@3FPM.
+- **`batch_symbol_bigrams_8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and symbol_bigrams with higher caps to catch API co-occurrence patterns, targeting PR_AUC.
+- **`batch_extended_extreme_transfer`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer extended_metrics and extreme_features from sister routes to capture tail structural signals, aiming for ROC_AUC stability and PR_AUC lift.
+- **`batch_seed_search_3_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds to average out seed variance and stabilize recall@3FPM on the baseline feature set.
+
+</details>
+

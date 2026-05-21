@@ -86,3 +86,47 @@ Rejected before run:
 
 - `—` — idea is required; at least one of profile/features/training must be set
 
+## Cycle `20260521T050056-filetypes-pkg-info` — 2026-05-21T05:00:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0e1e20b34e896146` | pkginfo_control_lr003_leaves128 | ok | 0.9941 | 0.5000 | 0.9971 | 9 | [log](out/autocollie/runs/2026-05-21T05-04-55_20260521T050056-filetypes-pkg-info_pkginfo_control_lr003_leaves128.log) |
+| `d6f470b9e2562596` | pkginfo_kv_vocab_10k | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-21T05-05-04_20260521T050056-filetypes-pkg-info_pkginfo_kv_vocab_10k.log) |
+| `84c560eddf680a4f` | pkginfo_text_metrics_full | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-21T05-05-10_20260521T050056-filetypes-pkg-info_pkginfo_text_metrics_full.log) |
+| `4770803a945af5d2` | pkginfo_ablate_blindfold | ok | 0.9941 | 0.5000 | 0.9971 | 6 | [log](out/autocollie/runs/2026-05-21T05-05-17_20260521T050056-filetypes-pkg-info_pkginfo_ablate_blindfold.log) |
+| `be8e5749a9894eb4` | pkginfo_transfer_xml_kv | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-21T05-05-23_20260521T050056-filetypes-pkg-info_pkginfo_transfer_xml_kv.log) |
+| `34c169e82c842be1` | pkginfo_seed_search_k3 | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-21T05-05-30_20260521T050056-filetypes-pkg-info_pkginfo_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkginfo_control_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters …` — Aims to improve PR_AUC by fine-tuning learning rate and tree complexity on the proven feature set to better capture subtle ranking signals without overfitting.
+- **`pkginfo_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab to capture fine-grained package metadata key-value pairs that distinguish malicious payloads from benign configs.
+- **`pkginfo_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding text_metrics_full to capture structural obfuscation patterns in package info files, complementing existing n-gram features.
+- **`pkginfo_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize ROC_AUC by removing blindfold dropout features that may introduce noise in this low-sample route, while preserving ranking quality.
+- **`pkginfo_transfer_xml_kv`** `EXP_BIGRAM_MAX=3000 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to lift recall@3FPM by transferring the XML route's successful KV-heavy configuration, adapted with conservative vocab limits for pkg-info metadata.
+- **`pkginfo_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by averaging predictions across three seeds to reduce variance and ensure robust ranking stability.
+
+</details>
+
+## Cycle `20260521T060602-filetypes-pkg-info` — 2026-05-21T06:06:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6db955333951e031` | pkginfo_control_lr002_leaves64 | ok | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-21T06-10-20_20260521T060602-filetypes-pkg-info_pkginfo_control_lr002_leaves64.log) |
+| `52bbe299cf46d715` | pkginfo_kv_vocab_5k | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-21T06-10-21_20260521T060602-filetypes-pkg-info_pkginfo_kv_vocab_5k.log) |
+| `4b4fab52e20ebd68` | pkginfo_tiered_crit_trigrams | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-21T06-10-28_20260521T060602-filetypes-pkg-info_pkginfo_tiered_crit_trigrams.log) |
+| `6ca3255308c8d167` | pkginfo_ablate_score_group | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-21T06-10-35_20260521T060602-filetypes-pkg-info_pkginfo_ablate_score_group.log) |
+| `cd53d4221a5892b0` | pkginfo_hard_neg_01_10 | ok | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-21T06-10-42_20260521T060602-filetypes-pkg-info_pkginfo_hard_neg_01_10.log) |
+| `3a732616fccf633c` | pkginfo_dart_reg_lambda2 | ok | 0.9941 | 0.5000 | 0.9971 | 2 | [log](out/autocollie/runs/2026-05-21T06-10-43_20260521T060602-filetypes-pkg-info_pkginfo_dart_reg_lambda2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkginfo_control_lr002_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by using a lower learning rate and fewer leaves to reduce overfitting on the highly imbalanced corpus while keeping the proven feature surface.
+- **`pkginfo_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by capturing key-value metadata patterns specific to package info files, which often contain malicious dependencies or obfuscated configs.
+- **`pkginfo_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding severity-weighted trigram features that better distinguish malicious package metadata from benign noise.
+- **`pkginfo_ablate_score_group`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize ROC_AUC by disabling the noisy score feature group, which may be leaking or overfitting on the small benign set.
+- **`pkginfo_hard_neg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to increase recall@3FPM by upweighting hard negatives to sharpen the decision boundary near the low-FPR operating point.
+- **`pkginfo_dart_reg_lambda2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve PR_AUC by using DART boosting with L2 regularization to reduce variance and improve generalization on the tail.
+
+</details>
+

@@ -160,3 +160,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T040312-filetypes-lua` — 2026-05-21T04:03:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ea55003df4e4b21e` | lua_control_reg_stabilize_v2 | ok | 0.1481 | 0.5000 | 0.2581 | 5 | [log](out/autocollie/runs/2026-05-21T04-07-49_20260521T040312-filetypes-lua_lua_control_reg_stabilize_v2.log) |
+| `3ff790d97473012e` | lua_feat_kv_vocab_split | ok | 0.2245 | 0.6793 | 0.3750 | 3 | [log](out/autocollie/runs/2026-05-21T04-07-54_20260521T040312-filetypes-lua_lua_feat_kv_vocab_split.log) |
+| `8eb4d391677cd558` | lua_feat_text_metrics_enc | ok | 0.1481 | 0.5000 | 0.2581 | 3 | [log](out/autocollie/runs/2026-05-21T04-07-57_20260521T040312-filetypes-lua_lua_feat_text_metrics_enc.log) |
+| `c15a3f04f883c810` | lua_train_dart_extra_trees | ok | 0.6786 | 0.8478 | 0.4444 | 1 | [log](out/autocollie/runs/2026-05-21T04-08-00_20260521T040312-filetypes-lua_lua_train_dart_extra_trees.log) |
+| `3d988cc049f464a7` | lua_profile_seed_search_kv | ok | 0.5794 | 0.8043 | 0.5455 | 1 | [log](out/autocollie/runs/2026-05-21T04-08-01_20260521T040312-filetypes-lua_lua_profile_seed_search_kv.log) |
+| `61464dcf8b51dcb0` | lua_profile_min_malware_score | ok | 0.2245 | 0.6793 | 0.3750 | 5 | [log](out/autocollie/runs/2026-05-21T04-08-02_20260521T040312-filetypes-lua_lua_profile_min_malware_score.log) |
+
+<details><summary>Spec details</summary>
+
+- **`lua_control_reg_stabilize_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best PR_AUC feature set and increase regularization to stabilize ranking on the small 27-sample holdout, targeting PR_AUC preservation while reducing variance.
+- **`lua_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with kv_value_split to parse Lua table structures into discrete tokens, aiming to boost PR_AUC by capturing structural malware patterns missed by plain n-grams.
+- **`lua_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=80 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Combine text_metrics_full and text_encoding to capture obfuscation artifacts common in malicious Lua scripts, targeting recall@3FPM by improving separation of packed payloads.
+- **`lua_train_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting with extra_trees and higher reg_alpha to inject stochastic regularization, targeting ROC_AUC stability and reducing overfitting on the tiny corpus.
+- **`lua_profile_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_SAVE_ALL_SEEDS=1 …` — Run seed_search_k: 3 on the kv_vocab configuration to average out seed-driven variance on the small dataset, targeting consistent recall@3FPM gains across random splits.
+- **`lua_profile_min_malware_score`** `EXP_ATTACK_FEATURES=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2.5 EXP_TRAIN_SAMPLES=30000` — Set min_malware_score: 3 to drop low-severity noisy malware from training, forcing the model to focus on clear malicious signals and targeting PR_AUC by reducing label noise.
+
+</details>
+
+## Cycle `20260521T081702-filetypes-lua` — 2026-05-21T08:17:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8b0e8cb9d8c9575a` | lua_control_text_metrics_reg | ok | 0.2245 | 0.6793 | 0.3750 | 3 | [log](out/autocollie/runs/2026-05-21T08-21-02_20260521T081702-filetypes-lua_lua_control_text_metrics_reg.log) |
+| `6ababc42932355dc` | lua_feat_kv_vocab_split | ok | 0.2245 | 0.6793 | 0.3750 | 1 | [log](out/autocollie/runs/2026-05-21T08-21-05_20260521T081702-filetypes-lua_lua_feat_kv_vocab_split.log) |
+| `8ef1c4d4324f5d05` | lua_feat_text_enc_low_freq | ok | 0.5741 | 0.7065 | 0.4000 | 3 | [log](out/autocollie/runs/2026-05-21T08-21-07_20260521T081702-filetypes-lua_lua_feat_text_enc_low_freq.log) |
+| `ff91e5dc446416cb` | lua_train_hardneg_imbalance | ok | 0.2580 | 0.7391 | 0.3478 | 1 | [log](out/autocollie/runs/2026-05-21T08-21-09_20260521T081702-filetypes-lua_lua_train_hardneg_imbalance.log) |
+| `ce992b49234a097d` | lua_profile_seed_search_kv | ok | 0.5794 | 0.8043 | 0.5455 | 4 | [log](out/autocollie/runs/2026-05-21T08-21-11_20260521T081702-filetypes-lua_lua_profile_seed_search_kv.log) |
+| `5992ce4ad9b6fef9` | lua_train_dart_extra_trees_l1 | ok | 0.6917 | 0.8478 | 0.3529 | 1 | [log](out/autocollie/runs/2026-05-21T08-21-14_20260521T081702-filetypes-lua_lua_train_dart_extra_trees_l1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`lua_control_text_metrics_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Stabilize PR_AUC by increasing tree capacity and L2 regularization on the best feature set; cheap matrix cache hit.
+- **`lua_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Improve PR_AUC by capturing Lua table/key-value structural patterns that standard n-grams miss.
+- **`lua_feat_text_enc_low_freq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Boost recall@3FPM by including rarer bigrams and encoding features to catch obfuscated Lua payloads.
+- **`lua_train_hardneg_imbalance`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Increase recall@3FPM by upweighting hard benigns and positives to address the 23:4 benign/malware imbalance.
+- **`lua_profile_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Stabilize PR_AUC and reduce seed-driven variance on the kv_vocab surface by averaging 3 seeds.
+- **`lua_train_dart_extra_trees_l1`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_ALPHA=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Recover recall@3FPM from the dart_extra_trees run while adding L1 regularization to prevent overfitting on the small corpus.
+
+</details>
+

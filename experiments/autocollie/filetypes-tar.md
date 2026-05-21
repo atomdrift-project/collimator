@@ -254,3 +254,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T030040-filetypes-tar` — 2026-05-21T03:00:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `87612b294890b865` | tar_control_spwm075_est350 | ok | 0.9989 | 0.9905 | 0.9832 | 17 | [log](out/autocollie/runs/2026-05-21T03-04-31_20260521T030040-filetypes-tar_tar_control_spwm075_est350.log) |
+| `a4e6443785f2d54f` | tar_feat_kv_vocab_10k | ok | 0.9992 | 0.9932 | 0.9795 | 16 | [log](out/autocollie/runs/2026-05-21T03-04-48_20260521T030040-filetypes-tar_tar_feat_kv_vocab_10k.log) |
+| `a2d4613fbe81b490` | tar_feat_text_metrics_full | ok | 0.9992 | 0.9932 | 0.9795 | 13 | [log](out/autocollie/runs/2026-05-21T03-05-04_20260521T030040-filetypes-tar_tar_feat_text_metrics_full.log) |
+| `e99dcf8ef115150b` | tar_feat_bigram_minfreq250 | ok | 0.9993 | 0.9936 | 0.9795 | 13 | [log](out/autocollie/runs/2026-05-21T03-05-17_20260521T030040-filetypes-tar_tar_feat_bigram_minfreq250.log) |
+| `fbd4116cf0a57e71` | tar_train_dart_reg | ok | 0.9990 | 0.9917 | 0.9900 | 2 | [log](out/autocollie/runs/2026-05-21T03-05-30_20260521T030040-filetypes-tar_tar_train_dart_reg.log) |
+| `d255d67be77e0d6c` | tar_generalize_seedsearch3 | ok | 0.9993 | 0.9936 | 0.9801 | 3 | [log](out/autocollie/runs/2026-05-21T03-05-32_20260521T030040-filetypes-tar_tar_generalize_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_control_spwm075_est350`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives (scale_pos_weight_mult=0.75) to push benign scores lower, reusing the best feature set for cache hits.
+- **`tar_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab to capture structured metadata and header patterns unique to tar archives.
+- **`tar_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full to detect obfuscation and encoding anomalies in script/document payloads within tars.
+- **`tar_feat_bigram_minfreq250`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by lowering bigram_min_freq to 250 to capture rarer but highly indicative path/content co-occurrences.
+- **`tar_train_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and recall@3FPM by switching to dart boosting type, which adds dropout regularization to reduce overfitting on the small tar corpus.
+- **`tar_generalize_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM by averaging predictions across 3 seeds to reduce variance on this small corpus.
+
+</details>
+
+## Cycle `20260521T084824-filetypes-tar` — 2026-05-21T08:48:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `495d87daf863ddd8` | tar_control_hardneg_01_10 | ok | 0.9998 | 0.9984 | 0.9932 | 4 | [log](out/autocollie/runs/2026-05-21T08-54-19_20260521T084824-filetypes-tar_tar_control_hardneg_01_10.log) |
+| `5be589a754cd5e9b` | tar_feat_kv_vocab_8k | ok | 0.9992 | 0.9932 | 0.9795 | 19 | [log](out/autocollie/runs/2026-05-21T08-54-23_20260521T084824-filetypes-tar_tar_feat_kv_vocab_8k.log) |
+| `9036c215074eee47` | tar_feat_bigram_expand_15k | ok | 0.9992 | 0.9932 | 0.9759 | 14 | [log](out/autocollie/runs/2026-05-21T08-54-42_20260521T084824-filetypes-tar_tar_feat_bigram_expand_15k.log) |
+| `7e4d3e150a444211` | tar_train_dart_reg2_leaves128 | ok | 0.9982 | 0.9847 | 0.9769 | 14 | [log](out/autocollie/runs/2026-05-21T08-54-56_20260521T084824-filetypes-tar_tar_train_dart_reg2_leaves128.log) |
+| `a2d4613fbe81b490` | tar_feat_text_metrics_encoding | dup | 0.9992 | 0.9932 | 0.9795 | 1 | [log](out/autocollie/runs/2026-05-21T08-55-10_20260521T084824-filetypes-tar_tar_feat_text_metrics_encoding.log) |
+| `432c110f0f2736b7` | tar_train_hardneg_spwm075 | ok | 0.9992 | 0.9928 | 0.9899 | 3 | [log](out/autocollie/runs/2026-05-21T08-55-11_20260521T084824-filetypes-tar_tar_train_hardneg_spwm075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_control_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Control feature surface with hard-negative mining to boost recall@3 FP/M while preserving PR_AUC
+- **`tar_feat_kv_vocab_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enable KV vocab to capture archive metadata patterns, targeting PR_AUC improvement
+- **`tar_feat_bigram_expand_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Lower bigram min_freq and raise max to capture rare malicious patterns, aiming for PR_AUC gain
+- **`tar_train_dart_reg2_leaves128`** `EXP_BOOSTING_TYPE=dart EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — DART boosting with L2 regularization to improve tail generalization and recall@3 FP/M
+- **`tar_feat_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — Enable text metrics and encoding features to capture obfuscation signals in tar payloads, targeting PR_AUC
+- **`tar_train_hardneg_spwm075`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Combine hard-negative mining with lower positive weight to suppress FPs and boost recall@3 FP/M
+
+</details>
+

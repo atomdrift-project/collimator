@@ -174,3 +174,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T042655-filetypes-deb` — 2026-05-21T04:26:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4d5eaf6252f4e3c6` | deb_control_baseline_train | ok | 1.0000 | 1.0000 | 1.0000 | 28 | [log](out/autocollie/runs/2026-05-21T04-31-22_20260521T042655-filetypes-deb_deb_control_baseline_train.log) |
+| `bff69f7c5930351a` | deb_feat_kv_vocab_split | ok | 1.0000 | 1.0000 | 1.0000 | 28 | [log](out/autocollie/runs/2026-05-21T04-31-51_20260521T042655-filetypes-deb_deb_feat_kv_vocab_split.log) |
+| `0d5e204ca88c0f69` | deb_feat_text_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 31 | [log](out/autocollie/runs/2026-05-21T04-32-19_20260521T042655-filetypes-deb_deb_feat_text_metrics_full.log) |
+| `0f5a3f26967d369a` | deb_train_hard_neg_reg | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-21T04-32-50_20260521T042655-filetypes-deb_deb_train_hard_neg_reg.log) |
+| `6c4a49b0bba29f46` | deb_train_dart_extra_trees | ok | 1.0000 | 1.0000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T04-32-51_20260521T042655-filetypes-deb_deb_train_dart_extra_trees.log) |
+| `4179820123efed2c` | deb_profile_seed_search_ensemble | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-21T04-32-53_20260521T042655-filetypes-deb_deb_profile_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`deb_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature_env to establish a stable PR_AUC and recall@3 FP/M baseline while testing slightly lower learning rate for smoother convergence.
+- **`deb_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Enables kv_vocab with value splitting to capture structured DEB control metadata, aiming to improve PR_AUC by isolating package dependency signals.
+- **`deb_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 …` — Activates text_metrics_full and text_encoding to detect script obfuscation in DEB payloads, targeting PR_AUC gains from structural text anomalies.
+- **`deb_train_hard_neg_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 …` — Applies hard negative mining with L2 regularization to sharpen decision boundaries, targeting recall@3 FP/M by reducing false positives on benign packages.
+- **`deb_train_dart_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.04 …` — Switches to dart boosting with extra_trees to add dropout regularization, aiming to stabilize PR_AUC and prevent overfitting on the small malware holdout.
+- **`deb_profile_seed_search_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 …` — Uses seed_search_k=3 with ensemble averaging to reduce variance, targeting stable recall@3 FP/M across different data splits.
+
+</details>
+
+## Cycle `20260521T071730-filetypes-deb` — 2026-05-21T07:17:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3db14165733abd09` | deb_control_baseline_train | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-21T07-21-59_20260521T071730-filetypes-deb_deb_control_baseline_train.log) |
+| `463a09d81382ebb3` | deb_feat_kv_vocab_split | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-21T07-22-01_20260521T071730-filetypes-deb_deb_feat_kv_vocab_split.log) |
+| `7c4c33f3a272cba7` | deb_feat_text_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 26 | [log](out/autocollie/runs/2026-05-21T07-22-02_20260521T071730-filetypes-deb_deb_feat_text_metrics_full.log) |
+| `4c4cb6e12bd5104e` | deb_feat_ngram_freq_lower | ok | 1.0000 | 1.0000 | 1.0000 | 26 | [log](out/autocollie/runs/2026-05-21T07-22-29_20260521T071730-filetypes-deb_deb_feat_ngram_freq_lower.log) |
+| `9ea03afa1ab1f7ef` | deb_train_hard_neg_mining | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-21T07-22-55_20260521T071730-filetypes-deb_deb_train_hard_neg_mining.log) |
+| `c6461eb50de7ee88` | deb_train_dart_extra_trees | ok | 1.0000 | 1.0000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-21T07-22-56_20260521T071730-filetypes-deb_deb_train_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`deb_control_baseline_train`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature surface; tests if slightly higher estimators (300) and num_leaves (128) stabilize PR_AUC on the small holdout.
+- **`deb_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to extract structured package metadata, aiming to boost PR_AUC by isolating malicious DEB control fields.
+- **`deb_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full to detect script obfuscation in DEB payloads, targeting recall@3 FP/M by improving separation of benign vs malicious content.
+- **`deb_feat_ngram_freq_lower`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=50` — Lowers bigram and trigram frequency floors to capture rarer malicious patterns, aiming to improve recall@3 FP/M without degrading ROC_AUC.
+- **`deb_train_hard_neg_mining`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Applies hard negative mining to push benign DEBs away from the boundary, targeting recall@3 FP/M by reducing false positives at low FPR.
+- **`deb_train_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Uses DART boosting with extra trees and higher L2 regularization to improve generalization on the tiny holdout, targeting PR_AUC stability and recall@3 FP/M.
+
+</details>
+

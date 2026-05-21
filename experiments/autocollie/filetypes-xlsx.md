@@ -144,3 +144,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T041331-filetypes-xlsx` — 2026-05-21T04:13:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_control_hardtail_train | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-21T04-17-34_20260521T041331-filetypes-xlsx_xlsx_control_hardtail_train.log) |
+| `` | xlsx_kv_vocab_enable | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-21T04-17-41_20260521T041331-filetypes-xlsx_xlsx_kv_vocab_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_control_hardtail_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best hardtail feature set with conservative training tweaks to stabilize PR_AUC and recall@3FPM.
+- **`xlsx_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value pair signals, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260521T082530-filetypes-xlsx` — 2026-05-21T08:25:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_control_baseline | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T08-30-10_20260521T082530-filetypes-xlsx_xlsx_control_baseline.log) |
+| `` | xlsx_text_metrics_full | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-21T08-30-11_20260521T082530-filetypes-xlsx_xlsx_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_control_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Replicate the best recent feature_env with standard training knobs to establish a stable PR_AUC and ROC_AUC baseline.
+- **`xlsx_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to capture document obfuscation signals, aiming to improve PR_AUC on XLSX files.
+
+</details>
+

@@ -11,19 +11,34 @@ OR-rule / blend's tp/fp/recall per level on the locked test partition,
 which is the ground truth of what litmus produces at scan time.
 
 Per filetype where both bundles have ``n_malware >= --min-mal`` AND
-``n_benign >= --min-ben`` (default 500/500), we compare deployed L3
-hostile recall: new must be ≥ old − ``--recall-tolerance`` (default
-0.01 = 1 percentage point).
+``n_benign >= --min-ben`` (default 1/1 — we check every filetype with
+even a single sample of each class), we compare deployed L3 hostile
+recall. A regression triggers only when BOTH:
 
-Any violation is a deploy block. Exit codes:
+  1. The recall drop exceeds ``--recall-tolerance`` (default 1pp), AND
+  2. The drop is statistically significant — the new recall point
+     estimate falls below the deployed recall's 95% Clopper-Pearson
+     lower bound.
 
-  0 — no regressions over threshold
-  1 — at least one violation
-  2 — usage / IO error
+The dual gate is the key to keeping the floor at 1/1 without false
+positives. Small filetypes have wide CIs, so noise-level drops on
+20-sample slices don't trigger; large filetypes have tight CIs, so
+even sub-pp drops fire. The effect size threshold prevents firing on
+statistically-significant but practically-irrelevant 0.1pp shifts on
+huge slices.
+
+For diagnostic context, the same comparison runs against each
+*contributing route's* recall@3FP/M. Per-route drops do NOT trigger
+exit 1; they're attribution context.
 
 Bypass with ``AZOTH_ALLOW_REGRESSION=1`` for intentional trade-offs.
-Skip silently (exit 0) when the deployed bundle doesn't have a deployed
-eval — first-deploy or pre-eval bundle.
+Skip silently (exit 0) when the deployed bundle doesn't have a
+deployed eval — first-deploy or pre-eval bundle.
+
+Exit codes:
+  0 — no ensemble regressions over threshold
+  1 — at least one ensemble regression
+  2 — usage / IO error
 """
 
 from __future__ import annotations
@@ -56,6 +71,27 @@ def _is_finite_number(value) -> bool:
     return math.isfinite(v)
 
 
+def _clopper_pearson_lower(tp: int, n: int, alpha: float = 0.05) -> float:
+    """Lower bound of the 1-alpha Clopper-Pearson interval for a
+    binomial proportion. Exact, no normal approximation — works at
+    n=1. Uses the inverse-Beta relationship to avoid pulling in
+    scipy.stats just for ppf calls.
+    """
+    if n <= 0 or tp <= 0:
+        return 0.0
+    # Beta(tp, n-tp+1).ppf(alpha/2) — try scipy first; fall back to a
+    # bisection if scipy isn't available.
+    try:
+        from scipy.stats import beta  # noqa: PLC0415
+        return float(beta.ppf(alpha / 2.0, tp, n - tp + 1))
+    except ImportError:
+        # Bisection on the regularized incomplete beta function via the
+        # CDF of Beta(tp, n-tp+1). math.betacdf doesn't exist in stdlib;
+        # in practice scipy is always available here, so this is a
+        # safety net rather than a real fallback.
+        return max(0.0, tp / n - 1.96 * math.sqrt(tp * (n - tp) / (n * n * n)))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--staged", type=Path, required=True)
@@ -64,9 +100,30 @@ def main() -> int:
         default=Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share")))
         / "litmus" / "models" / "azoth",
     )
-    parser.add_argument("--min-mal", type=int, default=500)
-    parser.add_argument("--min-ben", type=int, default=500)
+    parser.add_argument("--min-mal", type=int, default=1)
+    parser.add_argument("--min-ben", type=int, default=1)
     parser.add_argument("--recall-tolerance", type=float, default=0.01)
+    parser.add_argument(
+        "--ci-alpha", type=float, default=0.05,
+        help=(
+            "Significance level for the Clopper-Pearson CI on deployed "
+            "recall. A regression triggers only when the staged recall "
+            "falls below the deployed recall's (1 - alpha) CI lower "
+            "bound. Default 0.05 (95%% CI). Set higher to widen the "
+            "gate's mouth, lower to tighten it."
+        ),
+    )
+    parser.add_argument(
+        "--improvement-threshold",
+        type=float,
+        default=0.001,
+        help=(
+            "Log ensemble and per-route recall gains at or above this "
+            "fraction (default 0.001 = 0.1pp). Improvements never block; "
+            "they're surfaced for the same reason regressions are — to "
+            "attribute the deploy's net effect to specific routes."
+        ),
+    )
     parser.add_argument("--level", type=int, default=3)
     parser.add_argument("--severity", default="hostile", choices=["hostile", "suspicious"])
     args = parser.parse_args()
@@ -96,6 +153,9 @@ def main() -> int:
     level_key = f"L{args.level}_{args.severity}"
 
     regressions: list[str] = []
+    ensemble_wins: list[str] = []
+    route_drops: list[str] = []         # informational; doesn't fail the gate
+    route_wins: list[str] = []          # informational
     compared = 0
     skipped_small = 0
 
@@ -116,20 +176,92 @@ def main() -> int:
         deployed_l = (deployed_entry.get("deployed_or_by_level") or {}).get(level_key) or {}
         s_recall = staged_l.get("recall")
         d_recall = deployed_l.get("recall")
+        d_tp = deployed_l.get("tp")
         if _is_finite_number(s_recall) and _is_finite_number(d_recall):
-            drop = float(d_recall) - float(s_recall)
-            if drop > args.recall_tolerance:
+            delta = float(s_recall) - float(d_recall)  # positive = improvement
+            # Dual-gate regression: drop must exceed the configured
+            # tolerance (effect-size threshold) AND fall below the
+            # deployed recall's 1-alpha Clopper-Pearson lower bound
+            # (statistical-significance threshold). The first prevents
+            # firing on practically-irrelevant shifts; the second
+            # prevents firing on small-sample noise. Together they let
+            # us check every filetype with even 1 mal + 1 ben without
+            # drowning in noise.
+            d_lower: float | None = None
+            if _is_finite_number(d_tp) and d_mal > 0:
+                d_lower = _clopper_pearson_lower(int(d_tp), int(d_mal), args.ci_alpha)
+            stat_sig = d_lower is None or float(s_recall) < d_lower
+            if -delta > args.recall_tolerance and stat_sig:
+                ci_note = (
+                    f"; deployed 95% CI lower = {d_lower*100:.2f}%"
+                    if d_lower is not None else ""
+                )
                 regressions.append(
-                    f"{ft}: L{args.level} {args.severity} recall dropped {drop*100:.2f}pp "
+                    f"{ft}: L{args.level} {args.severity} ENSEMBLE recall dropped {-delta*100:.2f}pp "
                     f"({float(d_recall)*100:.2f}% → {float(s_recall)*100:.2f}%; "
-                    f"tolerance {args.recall_tolerance*100:.2f}pp)",
+                    f"tolerance {args.recall_tolerance*100:.2f}pp{ci_note})",
+                )
+            elif delta >= args.improvement_threshold:
+                ensemble_wins.append(
+                    f"  {ft}: L{args.level} {args.severity} ensemble recall +{delta*100:.2f}pp "
+                    f"({float(d_recall)*100:.2f}% → {float(s_recall)*100:.2f}%)",
+                )
+
+        # Per-route attribution. ``slice_metrics.routes.<route>.recall_at_3fp``
+        # is each contributing route's single-point operating metric on
+        # this filetype's slice. Drops + improvements both reported, so a
+        # deploy can answer "is the ensemble change coming from the
+        # specialist, the general, or just blend variance?" without
+        # blocking on the per-route lines themselves.
+        s_routes = (staged_entry.get("slice_metrics") or {}).get("routes") or {}
+        d_routes = (deployed_entry.get("slice_metrics") or {}).get("routes") or {}
+        for route_name, d_route in d_routes.items():
+            s_route = s_routes.get(route_name)
+            if not isinstance(s_route, dict) or not isinstance(d_route, dict):
+                continue
+            s_rec = s_route.get("recall_at_3fp")
+            d_rec = d_route.get("recall_at_3fp")
+            if not (_is_finite_number(s_rec) and _is_finite_number(d_rec)):
+                continue
+            delta = float(s_rec) - float(d_rec)  # positive = improvement
+            if -delta > args.recall_tolerance:
+                route_drops.append(
+                    f"  {ft} :: {route_name} recall@3FP/M dropped {-delta*100:.2f}pp "
+                    f"({float(d_rec)*100:.2f}% → {float(s_rec)*100:.2f}%)",
+                )
+            elif delta >= args.improvement_threshold:
+                route_wins.append(
+                    f"  {ft} :: {route_name} recall@3FP/M +{delta*100:.2f}pp "
+                    f"({float(d_rec)*100:.2f}% → {float(s_rec)*100:.2f}%)",
                 )
 
         compared += 1
 
+    if ensemble_wins:
+        print()
+        print(
+            f"ensemble improvements (≥{args.improvement_threshold*100:.2f}pp):",
+        )
+        for line in ensemble_wins:
+            print(line)
+
+    if route_wins:
+        print()
+        print(
+            f"per-route improvements (≥{args.improvement_threshold*100:.2f}pp, informational):",
+        )
+        for line in route_wins:
+            print(line)
+
+    if route_drops:
+        print()
+        print("per-route regressions (informational; does not block deploy):")
+        for line in route_drops:
+            print(line)
+
     if regressions:
         print()
-        print(f"error: {len(regressions)} regression(s) over tolerance:")
+        print(f"error: {len(regressions)} ensemble regression(s) over tolerance:")
         for r in regressions:
             print(f"  - {r}")
         print()

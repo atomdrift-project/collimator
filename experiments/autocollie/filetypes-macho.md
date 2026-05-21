@@ -296,3 +296,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T164848-filetypes-macho` — 2026-05-20T16:48:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5d6003f399d56cc0` | macho_control_lr_depth | ok | 0.9966 | 0.9993 | 0.9708 | 33 | [log](out/autocollie/runs/2026-05-20T16-54-23_20260520T164848-filetypes-macho_macho_control_lr_depth.log) |
+| `a9c3943010e2ce59` | macho_control_hardneg_sweep | ok | 0.9970 | 0.9994 | 0.9725 | 18 | [log](out/autocollie/runs/2026-05-20T16-54-55_20260520T164848-filetypes-macho_macho_control_hardneg_sweep.log) |
+| `20512b653cf2e79b` | macho_control_tail_fpr_mode | ok | 0.9965 | 0.9993 | 0.9622 | 9 | [log](out/autocollie/runs/2026-05-20T16-55-14_20260520T164848-filetypes-macho_macho_control_tail_fpr_mode.log) |
+| `c4e66f9b2289c05e` | macho_feat_kv_vocab | ok | 0.9969 | 0.9994 | 0.9708 | 25 | [log](out/autocollie/runs/2026-05-20T16-55-23_20260520T164848-filetypes-macho_macho_feat_kv_vocab.log) |
+| `b97ab71b8cd56096` | macho_feat_symbol_vocab_bigrams | ok | 0.9969 | 0.9994 | 0.9709 | 32 | [log](out/autocollie/runs/2026-05-20T16-55-48_20260520T164848-filetypes-macho_macho_feat_symbol_vocab_bigrams.log) |
+| `1c637f371118fb6c` | macho_feat_textenc_metrics | ok | 0.9969 | 0.9994 | 0.9689 | 29 | [log](out/autocollie/runs/2026-05-20T16-56-19_20260520T164848-filetypes-macho_macho_feat_textenc_metrics.log) |
+| `28f9c5b1c69a8447` | macho_feat_mbc_trigrams | ok | 0.9968 | 0.9993 | 0.9708 | 25 | [log](out/autocollie/runs/2026-05-20T16-56-49_20260520T164848-filetypes-macho_macho_feat_mbc_trigrams.log) |
+| `d74902f3f138b020` | macho_ablation_no_score_group | ok | 0.9970 | 0.9994 | 0.9708 | 27 | [log](out/autocollie/runs/2026-05-20T16-57-14_20260520T164848-filetypes-macho_macho_ablation_no_score_group.log) |
+| `acd152fa6445c3ff` | macho_transfer_kv_textenc_ext | ok | 0.9970 | 0.9994 | 0.9689 | 29 | [log](out/autocollie/runs/2026-05-20T16-57-41_20260520T164848-filetypes-macho_macho_transfer_kv_textenc_ext.log) |
+| `20aea3f47132b766` | macho_transfer_no_score_extreme | ok | 0.9970 | 0.9994 | 0.9708 | 25 | [log](out/autocollie/runs/2026-05-20T16-58-10_20260520T164848-filetypes-macho_macho_transfer_no_score_extreme.log) |
+| `0ae1b2bf4424c10d` | macho_gen_seedsearch_ensemble | ok | 0.9970 | 0.9994 | 0.9748 | 21 | [log](out/autocollie/runs/2026-05-20T16-58-35_20260520T164848-filetypes-macho_macho_gen_seedsearch_ensemble.log) |
+| `ce2087fe249c0b41` | macho_retry_hardtail_symbols | ok | 0.9971 | 0.9994 | 0.9690 | 71 | [log](out/autocollie/runs/2026-05-20T16-58-56_20260520T164848-filetypes-macho_macho_retry_hardtail_symbols.log) |
+
+<details><summary>Spec details</summary>
+
+- **`macho_control_lr_depth`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by deepening trees and lowering LR to better fit the tail distribution without overfitting.
+- **`macho_control_hardneg_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3 FP/M by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`macho_control_tail_fpr_mode`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3 FP/M directly by optimizing the threshold at the deployed operating point while downweighting positives to reduce FPs.
+- **`macho_feat_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by adding key-value vocabulary signal to capture structured metadata patterns unique to Mach-O binaries.
+- **`macho_feat_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3 FP/M by modeling import/symbol co-occurrence patterns that indicate malicious API chaining.
+- **`macho_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by capturing string encoding anomalies and text structural metrics common in obfuscated Mach-O payloads.
+- **`macho_feat_mbc_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3 FP/M by combining behavior catalog IDs with objective trigrams to detect multi-stage attack chains.
+- **`macho_ablation_no_score_group`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Targets PR_AUC flat or higher by removing noisy score aggregates that dilute structural signal, improving rank quality.
+- **`macho_transfer_kv_textenc_ext`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by transferring a strong sister-route feature combo that combines KV, text encoding, and extreme metrics for richer signal.
+- **`macho_transfer_no_score_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Targets recall@3 FP/M by porting a document-route strategy that emphasizes overlay/packer signals and extreme metrics while dropping score noise.
+- **`macho_gen_seedsearch_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3 FP/M stability by averaging across 3 seeds to reduce variance and confirm signal robustness.
+- **`macho_retry_hardtail_symbols`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by retrying the historical best configuration on the updated corpus to capture data drift gains.
+
+</details>
+
+## Cycle `20260521T051553-filetypes-macho` — 2026-05-21T05:15:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1eed2806dde6351b` | macho_control_hardtail_lr | ok | 0.9966 | 0.9993 | 0.9708 | 16 | [log](out/autocollie/runs/2026-05-21T05-20-02_20260521T051553-filetypes-macho_macho_control_hardtail_lr.log) |
+| `e33c25c73e531f43` | macho_hardneg_tail_recall | ok | 0.9963 | 0.9992 | 0.9688 | 5 | [log](out/autocollie/runs/2026-05-21T05-20-18_20260521T051553-filetypes-macho_macho_hardneg_tail_recall.log) |
+| `870ce974ac16c9b9` | macho_vocab_symbol_textenc | ok | 0.9969 | 0.9994 | 0.9746 | 19 | [log](out/autocollie/runs/2026-05-21T05-20-23_20260521T051553-filetypes-macho_macho_vocab_symbol_textenc.log) |
+| `4c53a1b07f8790ab` | macho_feat_trigram_metrics | ok | 0.9965 | 0.9993 | 0.9708 | 16 | [log](out/autocollie/runs/2026-05-21T05-20-41_20260521T051553-filetypes-macho_macho_feat_trigram_metrics.log) |
+| `ddfea5a2499c0076` | macho_gen_seedsearch_kv | ok | 0.9970 | 0.9994 | 0.9730 | 21 | [log](out/autocollie/runs/2026-05-21T05-20-57_20260521T051553-filetypes-macho_macho_gen_seedsearch_kv.log) |
+| `0405f32c7f114000` | macho_threshold_tail_opt | ok | 0.9965 | 0.9993 | 0.9639 | 16 | [log](out/autocollie/runs/2026-05-21T05-21-18_20260521T051553-filetypes-macho_macho_threshold_tail_opt.log) |
+
+<details><summary>Spec details</summary>
+
+- **`macho_control_hardtail_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature env to establish baseline; lowers learning_rate to 0.03 and increases estimators to 300 to improve PR_AUC via finer gradient steps without overfitting.
+- **`macho_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard-negative upweighting (fraction=0.01, weight=16) to push recall@3 FP/M by forcing the model to better separate borderline benigns from malware in the tail.
+- **`macho_vocab_symbol_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and text_encoding to capture Mach-O specific import patterns and string encoding artifacts, aiming to lift PR_AUC by adding discriminative rank signal.
+- **`macho_feat_trigram_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Enables objective_trigrams and text_metrics_full to capture longer behavioral sequences and obfuscation signals in Mach-O payloads, targeting PR_AUC improvement.
+- **`macho_gen_seedsearch_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SAVE_ALL_SEEDS=1 …` — Uses seed_search_k=3 with save_all_seeds=true on a kv_vocab-enabled config to average out seed variance and stabilize recall@3 FP/M gains from key-value metadata.
+- **`macho_threshold_tail_opt`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Sets threshold_mode=max_recall_at_fpr with target 3e-6 to directly optimize recall@3 FP/M at the deployed operating point, retrying a strong feature set with surgical threshold tuning.
+
+</details>
+
+## Cycle `20260521T071113-filetypes-macho` — 2026-05-21T07:11:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5dd7955d3b22ebdf` | macho_control_baseline_lr | ok | 0.9967 | 0.9993 | 0.9689 | 4 | [log](out/autocollie/runs/2026-05-21T07-17-09_20260521T071113-filetypes-macho_macho_control_baseline_lr.log) |
+| `1d515937248b1f7b` | macho_hardneg_sweep_01_16 | ok | 0.9966 | 0.9993 | 0.9708 | 5 | [log](out/autocollie/runs/2026-05-21T07-17-13_20260521T071113-filetypes-macho_macho_hardneg_sweep_01_16.log) |
+| `b45af427748350fe` | macho_threshold_tail_3e6 | ok | 0.9970 | 0.9994 | 0.9619 | 4 | [log](out/autocollie/runs/2026-05-21T07-17-18_20260521T071113-filetypes-macho_macho_threshold_tail_3e6.log) |
+| `73c63c35ac448262` | macho_vocab_kv_symbol_expansion | ok | 0.9971 | 0.9994 | 0.9727 | 20 | [log](out/autocollie/runs/2026-05-21T07-17-21_20260521T071113-filetypes-macho_macho_vocab_kv_symbol_expansion.log) |
+| `4457fac9a32ebd6a` | macho_feat_trigram_metrics_full | ok | 0.9968 | 0.9993 | 0.9708 | 17 | [log](out/autocollie/runs/2026-05-21T07-17-41_20260521T071113-filetypes-macho_macho_feat_trigram_metrics_full.log) |
+| `d1628986c920a690` | macho_transfer_tiered_crit_trigrams | ok | 0.9971 | 0.9994 | 0.9686 | 20 | [log](out/autocollie/runs/2026-05-21T07-17-58_20260521T071113-filetypes-macho_macho_transfer_tiered_crit_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`macho_control_baseline_lr`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicates the top PR_AUC feature surface to establish a stable baseline while tuning learning_rate to 0.03 for smoother convergence, aiming to maintain PR_AUC flat.
+- **`macho_hardneg_sweep_01_16`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard_negative_fraction=0.01 and hard_negative_weight=16 to sharpen the decision boundary at low FPR, targeting recall@3FPM improvement without degrading PR_AUC.
+- **`macho_threshold_tail_3e6`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Sets threshold_mode=max_recall_at_fpr with threshold_fpr_target=3e-6 to directly optimize the deployed operating point, targeting recall@3FPM gains.
+- **`macho_vocab_kv_symbol_expansion`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 …` — Enables kv_vocab and symbol_vocab with expanded caps to capture finer-grained Mach-O metadata and import patterns, aiming to lift PR_AUC by adding discriminative signal.
+- **`macho_feat_trigram_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=3` — Activates text_metrics_full and lowers trigram_min_freq to 3 to capture rare but high-signal Mach-O string patterns, targeting PR_AUC improvement through richer structural features.
+- **`macho_transfer_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=3000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Ports tiered_crit_trigrams from sister routes to capture severity-weighted path co-occurrences, aiming to boost PR_AUC while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260521T092910-filetypes-macho` — 2026-05-21T09:29:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1eed2806dde6351b` | macho_control_lr003_est300 | dup | 0.9966 | 0.9993 | 0.9708 | 1 | [log](out/autocollie/runs/2026-05-21T09-33-57_20260521T092910-filetypes-macho_macho_control_lr003_est300.log) |
+| `e6307421de742aa8` | macho_hardneg_01_12_tail | ok | 0.9970 | 0.9994 | 0.9725 | 5 | [log](out/autocollie/runs/2026-05-21T09-33-57_20260521T092910-filetypes-macho_macho_hardneg_01_12_tail.log) |
+| `830ccb09397c6342` | macho_threshold_3e6_opt | ok | 0.9967 | 0.9993 | 0.9514 | 3 | [log](out/autocollie/runs/2026-05-21T09-34-02_20260521T092910-filetypes-macho_macho_threshold_3e6_opt.log) |
+| `959473b42bdaf15d` | macho_kv_vocab_15k | ok | 0.9969 | 0.9994 | 0.9708 | 3 | [log](out/autocollie/runs/2026-05-21T09-34-05_20260521T092910-filetypes-macho_macho_kv_vocab_15k.log) |
+| `21872bb0a0157616` | macho_symbol_vocab_10k | ok | 0.9966 | 0.9993 | 0.9708 | 19 | [log](out/autocollie/runs/2026-05-21T09-34-09_20260521T092910-filetypes-macho_macho_symbol_vocab_10k.log) |
+| `77b28c7d7c398efa` | macho_tiered_quadgram_2k | ok | 0.9967 | 0.9993 | 0.9709 | 17 | [log](out/autocollie/runs/2026-05-21T09-34-27_20260521T092910-filetypes-macho_macho_tiered_quadgram_2k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`macho_control_lr003_est300`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by lowering learning rate to 0.03 and increasing estimators to 300 on the best feature surface to stabilize tree splits and improve rank quality.
+- **`macho_hardneg_01_12_tail`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting 1% of benigns as hard negatives with weight 12 to sharpen the decision boundary at low FPR without changing features.
+- **`macho_threshold_3e6_opt`** `EXP_ESTIMATORS=200 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by directly optimizing the threshold at the deployed operating point (0.000003 FPR) to maximize tail recall while keeping PR_AUC flat.
+- **`macho_kv_vocab_15k`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling kv_vocab with a 15000 cap to capture more Mach-O specific key-value patterns, improving rank quality.
+- **`macho_symbol_vocab_10k`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by enabling symbol_vocab with a 10000 cap to capture rare but high-signal Mach-O import patterns, boosting tail recall.
+- **`macho_tiered_quadgram_2k`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_QUADGRAMS=1 EXP_TIERED_QUADGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling tiered_crit_quadgrams with a 2000 cap to model longer dependency paths in Mach-O binaries, adding high-specificity rank signal.
+
+</details>
+

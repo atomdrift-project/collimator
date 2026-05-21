@@ -275,3 +275,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T051857-filetypes-javascript` — 2026-05-21T05:18:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c7942c860689930e` | js_control_scalepos05 | ok | 0.9993 | 0.9988 | 0.9868 | 38 | [log](out/autocollie/runs/2026-05-21T05-24-13_20260521T051857-filetypes-javascript_js_control_scalepos05.log) |
+| `0f0d44960c246161` | js_train_extra_trees_reg | ok | 0.9993 | 0.9988 | 0.9860 | 9 | [log](out/autocollie/runs/2026-05-21T05-24-51_20260521T051857-filetypes-javascript_js_train_extra_trees_reg.log) |
+| `3cb868b998ddab57` | js_kv10k_textenc | ok | 0.9993 | 0.9988 | 0.9866 | 38 | [log](out/autocollie/runs/2026-05-21T05-25-01_20260521T051857-filetypes-javascript_js_kv10k_textenc.log) |
+| `fae0ae7ebb25ddbb` | js_textmetrics_bigram25 | ok | 0.9993 | 0.9988 | 0.9866 | 31 | [log](out/autocollie/runs/2026-05-21T05-25-39_20260521T051857-filetypes-javascript_js_textmetrics_bigram25.log) |
+| `07d42cbbdf21fd84` | js_transfer_gz_seedsearch3 | ok | 0.9994 | 0.9989 | 0.9851 | 52 | [log](out/autocollie/runs/2026-05-21T05-26-09_20260521T051857-filetypes-javascript_js_transfer_gz_seedsearch3.log) |
+| `d23a9cc436ee5fe4` | js_retry_best_recall_fpr3 | ok | 0.9993 | 0.9988 | 0.0000 | 10 | [log](out/autocollie/runs/2026-05-21T05-27-01_20260521T051857-filetypes-javascript_js_retry_best_recall_fpr3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_control_scalepos05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.5 to down-weight positives and improve recall@3FPM at the deployed operating point.
+- **`js_train_extra_trees_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Enable extra_trees and increase reg_lambda to reduce overfitting and improve ROC_AUC while preserving recall@3FPM.
+- **`js_kv10k_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding with expanded vocab to capture richer lexical patterns, targeting PR_AUC improvement.
+- **`js_textmetrics_bigram25`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and lower bigram_min_freq to 25 to capture rare script obfuscation signals, aiming to boost recall@3FPM.
+- **`js_transfer_gz_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Transfer seed_search_k=3 from gz route with kv_vocab enabled to reduce variance and stabilize recall@3FPM gains.
+- **`js_retry_best_recall_fpr3`** `EXP_BETA=2 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Retry top historical recall configuration with direct FPR targeting to maximize recall@3FPM under current data drift.
+
+</details>
+
+## Cycle `20260521T062100-filetypes-javascript` — 2026-05-21T06:21:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `11c0281715dcc284` | js_control_leaves128_lr003 | ok | 0.9992 | 0.9987 | 0.9859 | 11 | [log](out/autocollie/runs/2026-05-21T06-25-16_20260521T062100-filetypes-javascript_js_control_leaves128_lr003.log) |
+| `b455f01c9611b301` | js_kv_vocab_15k_freq5 | ok | 0.9993 | 0.9989 | 0.9868 | 45 | [log](out/autocollie/runs/2026-05-21T06-25-27_20260521T062100-filetypes-javascript_js_kv_vocab_15k_freq5.log) |
+| `5653cb7ca0a60844` | js_text_metrics_full | ok | 0.9993 | 0.9988 | 0.9868 | 35 | [log](out/autocollie/runs/2026-05-21T06-26-12_20260521T062100-filetypes-javascript_js_text_metrics_full.log) |
+| `bf16243978c4ae7f` | js_textenc_bigram50 | ok | 0.9993 | 0.9988 | 0.9868 | 34 | [log](out/autocollie/runs/2026-05-21T06-26-48_20260521T062100-filetypes-javascript_js_textenc_bigram50.log) |
+| `e5c5747824a31661` | js_hn_frac01_w5_reg2 | ok | 0.9994 | 0.9990 | 0.9864 | 26 | [log](out/autocollie/runs/2026-05-21T06-27-22_20260521T062100-filetypes-javascript_js_hn_frac01_w5_reg2.log) |
+| `6fb009a02ae75dce` | js_seedsearch3_baseline | ok | 0.9993 | 0.9988 | 0.9860 | 76 | [log](out/autocollie/runs/2026-05-21T06-27-48_20260521T062100-filetypes-javascript_js_seedsearch3_baseline.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to improve PR_AUC ranking stability.
+- **`js_kv_vocab_15k_freq5`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to capture rare JS object keys, targeting PR_AUC improvement via finer-grained structural signal.
+- **`js_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add full text metrics to capture obfuscation patterns in JS, aiming to boost recall@3 FP/M by separating benign minified code from malicious obfuscation.
+- **`js_textenc_bigram50`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Text encoding features plus rarer bigrams to catch novel JS attack patterns, targeting recall@3 FP/M gains.
+- **`js_hn_frac01_w5_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Hard negative mining with moderate weight and L2 regularization to sharpen decision boundary at low FPR, improving recall@3 FP/M.
+- **`js_seedsearch3_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Multi-seed search on baseline features to reduce variance and confirm PR_AUC signal stability across RNG seeds.
+
+</details>
+

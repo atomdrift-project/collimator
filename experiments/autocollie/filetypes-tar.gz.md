@@ -76,3 +76,115 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T102239-filetypes-tar.gz` — 2026-05-20T10:22:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d8d56f9bf228fad1` | tar_gz_control_leaves128_lr003 | ok | 0.9994 | 0.9987 | 0.9920 | 281 | [log](out/autocollie/runs/2026-05-20T10-27-10_20260520T102239-filetypes-tar.gz_tar_gz_control_leaves128_lr003.log) |
+| `9c9803cc48b69933` | tar_gz_control_hardneg_tail | ok | 0.9995 | 0.9989 | 0.9863 | 494 | [log](out/autocollie/runs/2026-05-20T10-31-51_20260520T102239-filetypes-tar.gz_tar_gz_control_hardneg_tail.log) |
+| `eada322f5858444b` | tar_gz_control_extratrees_spw075 | ok | 0.9992 | 0.9985 | 0.9893 | 223 | [log](out/autocollie/runs/2026-05-20T10-40-05_20260520T102239-filetypes-tar.gz_tar_gz_control_extratrees_spw075.log) |
+| `1e45f0e3e3d85e40` | tar_gz_kv_vocab_15k_min5 | ok | 0.9994 | 0.9988 | 0.9931 | 289 | [log](out/autocollie/runs/2026-05-20T10-43-48_20260520T102239-filetypes-tar.gz_tar_gz_kv_vocab_15k_min5.log) |
+| `6c21426a42f9ca79` | tar_gz_textenc_line_buckets | ok | 0.9994 | 0.9988 | 0.9911 | 298 | [log](out/autocollie/runs/2026-05-20T10-48-37_20260520T102239-filetypes-tar.gz_tar_gz_textenc_line_buckets.log) |
+| `c27a76da4afa726a` | tar_gz_obj_susp_trigrams | ok | 0.9994 | 0.9988 | 0.9912 | 291 | [log](out/autocollie/runs/2026-05-20T10-53-34_20260520T102239-filetypes-tar.gz_tar_gz_obj_susp_trigrams.log) |
+| `001b2348cdbd091f` | tar_gz_tiered_crit_tri | ok | 0.9994 | 0.9988 | 0.9801 | 304 | [log](out/autocollie/runs/2026-05-20T10-58-26_20260520T102239-filetypes-tar.gz_tar_gz_tiered_crit_tri.log) |
+| `77f31bd722840a36` | tar_gz_abl_no_blindfold_extreme | ok | 0.9993 | 0.9987 | 0.9924 | 286 | [log](out/autocollie/runs/2026-05-20T11-03-30_20260520T102239-filetypes-tar.gz_tar_gz_abl_no_blindfold_extreme.log) |
+| `cbb4e590e2d28e61` | tar_gz_transfer_attack_ngrams_kv | ok | 0.9994 | 0.9988 | 0.9933 | 336 | [log](out/autocollie/runs/2026-05-20T11-08-15_20260520T102239-filetypes-tar.gz_tar_gz_transfer_attack_ngrams_kv.log) |
+| `08eb7494c7b914a7` | tar_gz_seed_search_ensemble | ok | 0.9994 | 0.9988 | 0.9920 | 991 | [log](out/autocollie/runs/2026-05-20T11-13-51_20260520T102239-filetypes-tar.gz_tar_gz_seed_search_ensemble.log) |
+| `60d6497176105e61` | tar_gz_retry_hardtail_kv_minsev3 | ok | 0.9994 | 0.9988 | 0.9931 | 519 | [log](out/autocollie/runs/2026-05-20T11-30-22_20260520T102239-filetypes-tar.gz_tar_gz_retry_hardtail_kv_minsev3.log) |
+| `5d0d3351ec6907b4` | tar_gz_kv_value_split | ok | 0.9994 | 0.9988 | 0.9914 | 799 | [log](out/autocollie/runs/2026-05-20T11-39-01_20260520T102239-filetypes-tar.gz_tar_gz_kv_value_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_gz_control_leaves128_lr003`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC config to establish matrix cache baseline; targets stable PR_AUC and ROC_AUC.
+- **`tar_gz_control_hardneg_tail`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Add hard negative mining to sharpen decision boundary at low FPR; targets recall@3FPM.
+- **`tar_gz_control_extratrees_spw075`** `EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Apply extra_trees and lower scale_pos_weight to reduce overfitting on rare benigns; targets PR_AUC.
+- **`tar_gz_kv_vocab_15k_min5`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Expand KV vocabulary with lower frequency floor to capture rare archive metadata patterns; targets PR_AUC.
+- **`tar_gz_textenc_line_buckets`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and line length buckets to capture obfuscation in extracted scripts; targets recall@3FPM.
+- **`tar_gz_obj_susp_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Activate objective and suspicious trigram pools to model multi-step attack chains; targets recall@3FPM.
+- **`tar_gz_tiered_crit_tri`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=3000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Use severity-prefixed trigrams to weight high-crit path co-occurrences; targets PR_AUC.
+- **`tar_gz_abl_no_blindfold_extreme`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Remove blindfold dropout and extreme tail features to reduce noise and stabilize ranking; targets ROC_AUC and PR_AUC.
+- **`tar_gz_transfer_attack_ngrams_kv`** `EXP_ATTACK_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Port attack ngrams and KV vocab from php/gz winners to capture cross-route signatures; targets PR_AUC.
+- **`tar_gz_seed_search_ensemble`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search with ensemble averaging to mitigate seed variance and stabilize tail performance; targets recall@3FPM.
+- **`tar_gz_retry_hardtail_kv_minsev3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Retry historical hardtail KV config with higher malware severity floor to focus on confident positives; targets recall@3FPM.
+- **`tar_gz_kv_value_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Split KV string values on separators to recover per-element signal in library lists; targets PR_AUC.
+
+</details>
+
+## Cycle `20260520T162510-filetypes-tar.gz` — 2026-05-20T16:25:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `14444ad84db45b54` | tar_gz_control_spw075_extratrees | ok | 0.9993 | 0.9986 | 0.9910 | 46 | [log](out/autocollie/runs/2026-05-20T16-32-23_20260520T162510-filetypes-tar.gz_tar_gz_control_spw075_extratrees.log) |
+| `176df763070ab45f` | tar_gz_exploit_hardneg_tail | ok | 0.9993 | 0.9987 | 0.9903 | 97 | [log](out/autocollie/runs/2026-05-20T16-33-09_20260520T162510-filetypes-tar.gz_tar_gz_exploit_hardneg_tail.log) |
+| `4acb47301d3fd9a8` | tar_gz_exploit_dart_reg | ok | 0.9991 | 0.9981 | 0.9897 | 46 | [log](out/autocollie/runs/2026-05-20T16-34-46_20260520T162510-filetypes-tar.gz_tar_gz_exploit_dart_reg.log) |
+| `528fe31fd300833a` | tar_gz_kv_vocab_15k_min5 | ok | 0.9994 | 0.9988 | 0.9931 | 59 | [log](out/autocollie/runs/2026-05-20T16-35-32_20260520T162510-filetypes-tar.gz_tar_gz_kv_vocab_15k_min5.log) |
+| `ddacdb4411d68d4d` | tar_gz_textenc_metrics_safe | ok | 0.9993 | 0.9986 | 0.9931 | 102 | [log](out/autocollie/runs/2026-05-20T16-36-31_20260520T162510-filetypes-tar.gz_tar_gz_textenc_metrics_safe.log) |
+| `c16e24604a126c49` | tar_gz_symbol_vocab_10k | ok | 0.9994 | 0.9988 | 0.9933 | 124 | [log](out/autocollie/runs/2026-05-20T16-38-13_20260520T162510-filetypes-tar.gz_tar_gz_symbol_vocab_10k.log) |
+| `3f636d9c9ea9eeab` | tar_gz_tiered_crit_tri_5k | ok | 0.9994 | 0.9987 | 0.9938 | 126 | [log](out/autocollie/runs/2026-05-20T16-40-17_20260520T162510-filetypes-tar.gz_tar_gz_tiered_crit_tri_5k.log) |
+| `724af9add230516d` | tar_gz_abl_no_blindfold_extreme | ok | 0.9994 | 0.9988 | 0.9931 | 33 | [log](out/autocollie/runs/2026-05-20T16-42-23_20260520T162510-filetypes-tar.gz_tar_gz_abl_no_blindfold_extreme.log) |
+| `26ba2d1ea65ae11a` | tar_gz_transfer_gz_kv_20k | ok | 0.9994 | 0.9988 | 0.9929 | 97 | [log](out/autocollie/runs/2026-05-20T16-42-57_20260520T162510-filetypes-tar.gz_tar_gz_transfer_gz_kv_20k.log) |
+| `8eb14e98355a7e37` | tar_gz_seed_search_ensemble | ok | 0.9994 | 0.9988 | 0.9936 | 122 | [log](out/autocollie/runs/2026-05-20T16-44-34_20260520T162510-filetypes-tar.gz_tar_gz_seed_search_ensemble.log) |
+| `aa04e7980a14d023` | tar_gz_retry_kv_value_split | ok | 0.9994 | 0.9987 | 0.9926 | 31 | [log](out/autocollie/runs/2026-05-20T16-46-36_20260520T162510-filetypes-tar.gz_tar_gz_retry_kv_value_split.log) |
+| `e6b10459ec190afd` | tar_gz_structural_ratios | ok | 0.9994 | 0.9987 | 0.9874 | 101 | [log](out/autocollie/runs/2026-05-20T16-47-07_20260520T162510-filetypes-tar.gz_tar_gz_structural_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_gz_control_spw075_extratrees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature_env to establish baseline; test scale_pos_weight_mult=0.75 and extra_trees=true to improve recall@3 FP/M by reducing benign overfitting.
+- **`tar_gz_exploit_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use hard negatives to sharpen decision boundary at low FPR, targeting recall@3 FP/M improvement while keeping PR AUC flat.
+- **`tar_gz_exploit_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting with higher reg_lambda to regularize tail predictions, aiming to boost recall@3 FP/M without PR AUC regression.
+- **`tar_gz_kv_vocab_15k_min5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry top PR AUC config with expanded kv_vocab_max=15000 and lower kv_min_freq=5 to capture rarer key-value patterns, targeting PR AUC gain.
+- **`tar_gz_textenc_metrics_safe`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding and text_metrics_full to capture document obfuscation inside archives, targeting PR AUC; explicitly disable extended_metrics/extreme_features to avoid prior OOM crash.
+- **`tar_gz_symbol_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol_vocab with max 10000 to detect packed binary imports inside tar.gz, targeting recall@3 FP/M by catching hidden executables.
+- **`tar_gz_tiered_crit_tri_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand tiered_crit_trigrams to 5000 max with min_freq=5 to capture longer malicious path sequences, targeting PR AUC improvement.
+- **`tar_gz_abl_no_blindfold_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Remove blindfold and extreme_features to reduce noise and training variance, aiming to maintain PR AUC while stabilizing recall@3 FP/M.
+- **`tar_gz_transfer_gz_kv_20k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port gz route's strong kv config with higher vocab cap (20000) and lower bigram_min_freq (500) to capture archive-specific metadata, targeting PR AUC.
+- **`tar_gz_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed_search_k=3 with save_all_seeds=true on control features to average out seed variance, targeting stable recall@3 FP/M gains.
+- **`tar_gz_retry_kv_value_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry recent kv_value_split idea after daily ingest drift, targeting recall@3 FP/M by recovering per-element signal in archive metadata.
+- **`tar_gz_structural_ratios`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable metric_ratio_features and size_normalized_metrics to capture archive density anomalies, targeting PR AUC by improving rank quality for packed archives.
+
+</details>
+
+## Cycle `20260521T043602-filetypes-tar.gz` — 2026-05-21T04:36:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c2458007c1ddee4b` | tar_gz_control_scale_pos_075 | ok | 0.9993 | 0.9986 | 0.9914 | 73 | [log](out/autocollie/runs/2026-05-21T04-42-08_20260521T043602-filetypes-tar.gz_tar_gz_control_scale_pos_075.log) |
+| `ce36ea3052ca8292` | tar_gz_kv_vocab_15k | ok | 0.9994 | 0.9988 | 0.9933 | 78 | [log](out/autocollie/runs/2026-05-21T04-43-21_20260521T043602-filetypes-tar.gz_tar_gz_kv_vocab_15k.log) |
+| `a375d86145f728e2` | tar_gz_obj_trigrams_2k | ok | 0.9994 | 0.9987 | 0.9929 | 72 | [log](out/autocollie/runs/2026-05-21T04-44-40_20260521T043602-filetypes-tar.gz_tar_gz_obj_trigrams_2k.log) |
+| `6fb626bfbe848ebb` | tar_gz_abl_no_blindfold | ok | 0.9994 | 0.9988 | 0.9921 | 67 | [log](out/autocollie/runs/2026-05-21T04-45-51_20260521T043602-filetypes-tar.gz_tar_gz_abl_no_blindfold.log) |
+| `8111cfe0fed28282` | tar_gz_hard_neg_upweight | ok | 0.9992 | 0.9986 | 0.9926 | 20 | [log](out/autocollie/runs/2026-05-21T04-46-58_20260521T043602-filetypes-tar.gz_tar_gz_hard_neg_upweight.log) |
+| `32b791cfcfc9eee8` | tar_gz_dart_extra_trees | ok | 0.9991 | 0.9982 | 0.9893 | 11 | [log](out/autocollie/runs/2026-05-21T04-47-18_20260521T043602-filetypes-tar.gz_tar_gz_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_gz_control_scale_pos_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM by down-weighting positives (scale_pos_weight_mult=0.75) to reduce false positives at low FPR, while keeping PR_AUC and ROC_AUC flat.
+- **`tar_gz_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling kv_vocab (max 15000) to capture structured key-value metadata in archives, adding rank signal without degrading ROC_AUC.
+- **`tar_gz_obj_trigrams_2k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM by enabling objective_trigrams (max 2000) to capture longer malicious intent sequences in archive contents, preserving PR_AUC.
+- **`tar_gz_abl_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by disabling blindfold dropout features to reduce noise and overfitting, keeping ROC_AUC flat or slightly higher.
+- **`tar_gz_hard_neg_upweight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM by upweighting hard negatives (fraction=0.1, weight=12) to better separate borderline malware from benign, preserving PR_AUC.
+- **`tar_gz_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve recall@3FPM by switching to dart boosting and enabling extra_trees for stronger regularization and ensemble noise, preserving PR_AUC.
+
+</details>
+
+## Cycle `20260521T061849-filetypes-tar.gz` — 2026-05-21T06:18:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b594177c32510b37` | tar_gz_control_scale_pos_05 | ok | 0.9994 | 0.9988 | 0.9935 | 10 | [log](out/autocollie/runs/2026-05-21T06-23-14_20260521T061849-filetypes-tar.gz_tar_gz_control_scale_pos_05.log) |
+| `9c403cbcfcf855f1` | tar_gz_textenc_kv_vocab | ok | 0.9994 | 0.9988 | 0.9920 | 78 | [log](out/autocollie/runs/2026-05-21T06-23-24_20260521T061849-filetypes-tar.gz_tar_gz_textenc_kv_vocab.log) |
+| `145fbcb0207bdbf7` | tar_gz_kv_vocab_25k_obj_tri | ok | 0.9993 | 0.9987 | 0.9933 | 89 | [log](out/autocollie/runs/2026-05-21T06-24-42_20260521T061849-filetypes-tar.gz_tar_gz_kv_vocab_25k_obj_tri.log) |
+| `96c551270a88a8c9` | tar_gz_abl_no_extreme | ok | 0.9994 | 0.9987 | 0.9931 | 97 | [log](out/autocollie/runs/2026-05-21T06-26-11_20260521T061849-filetypes-tar.gz_tar_gz_abl_no_extreme.log) |
+| `8d13e2d9a983440b` | tar_gz_kv_vocab_seed_search | ok | 0.9994 | 0.9988 | 0.9933 | 29 | [log](out/autocollie/runs/2026-05-21T06-27-47_20260521T061849-filetypes-tar.gz_tar_gz_kv_vocab_seed_search.log) |
+| `bd9d7db1201cb60f` | tar_gz_hard_neg_dart | ok | 0.9990 | 0.9982 | 0.9863 | 30 | [log](out/autocollie/runs/2026-05-21T06-28-17_20260521T061849-filetypes-tar.gz_tar_gz_hard_neg_dart.log) |
+
+<details><summary>Spec details</summary>
+
+- **`tar_gz_control_scale_pos_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Control feature set from best PR_AUC run; down-weight positives to shift threshold and improve recall@3 FP/M.
+- **`tar_gz_textenc_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding research vocab alongside kv_vocab to capture archive metadata signals for PR_AUC gain.
+- **`tar_gz_kv_vocab_25k_obj_tri`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Expand kv vocab to 25k and enable objective trigrams to capture longer behavioral sequences, targeting PR_AUC improvement.
+- **`tar_gz_abl_no_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove extreme_features to reduce tail noise and potential overfitting, aiming to keep PR_AUC flat while improving ROC_AUC stability.
+- **`tar_gz_kv_vocab_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 on the strong kv_vocab config to average out seed variance and stabilize recall@3 FP/M gains.
+- **`tar_gz_hard_neg_dart`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Combine dart boosting with hard negatives to sharpen decision boundary at low FPR, targeting recall@3 FP/M.
+
+</details>
+

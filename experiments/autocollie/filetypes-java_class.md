@@ -194,3 +194,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T043730-filetypes-java_class` — 2026-05-21T04:37:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bc3b3ecf61a982aa` | java_class_ctrl_hardneg_tail | ok | 0.9951 | 0.9988 | 0.9739 | 8 | [log](out/autocollie/runs/2026-05-21T04-42-17_20260521T043730-filetypes-java_class_java_class_ctrl_hardneg_tail.log) |
+| `12e59b02ab08aa51` | java_class_ctrl_reg_smooth | ok | 0.9957 | 0.9990 | 0.9644 | 2 | [log](out/autocollie/runs/2026-05-21T04-42-25_20260521T043730-filetypes-java_class_java_class_ctrl_reg_smooth.log) |
+| `f726744b99f497ed` | java_class_feat_kv_vocab | ok | 0.9967 | 0.9992 | 0.9585 | 5 | [log](out/autocollie/runs/2026-05-21T04-42-26_20260521T043730-filetypes-java_class_java_class_feat_kv_vocab.log) |
+| `deac31bb7e8912bc` | java_class_feat_sym_vocab | ok | 0.9967 | 0.9992 | 0.9585 | 5 | [log](out/autocollie/runs/2026-05-21T04-42-32_20260521T043730-filetypes-java_class_java_class_feat_sym_vocab.log) |
+| `c562f59cab800c45` | java_class_transfer_extreme_metrics | ok | 0.9967 | 0.9992 | 0.9585 | 2 | [log](out/autocollie/runs/2026-05-21T04-42-37_20260521T043730-filetypes-java_class_java_class_transfer_extreme_metrics.log) |
+| `d571fd6058bbc8b8` | java_class_gen_seed_avg | ok | 0.9966 | 0.9992 | 0.9740 | 2 | [log](out/autocollie/runs/2026-05-21T04-42-39_20260521T043730-filetypes-java_class_java_class_gen_seed_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_class_ctrl_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Base feature set with hard-negative upweighting to push recall@3 FP/M by focusing on difficult benigns without hurting PR_AUC.
+- **`java_class_ctrl_reg_smooth`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Tighter regularization and lower LR to stabilize ranking and improve PR_AUC guardrails while maintaining recall@3 FP/M.
+- **`java_class_feat_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture structured manifest patterns, targeting PR_AUC gain from new rank signal.
+- **`java_class_feat_sym_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Add symbol vocab to detect malicious class/method clusters, aiming to boost recall@3 FP/M via better tail separation.
+- **`java_class_transfer_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port extended_metrics and extreme_features from java_source to capture structural anomalies, targeting PR_AUC improvement.
+- **`java_class_gen_seed_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Average ensemble over 3 seeds on best feature set to reduce variance and stabilize recall@3 FP/M across data drift.
+
+</details>
+
+## Cycle `20260521T072258-filetypes-java_class` — 2026-05-21T07:22:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e9d709e83cd3839d` | java_class_ctrl_leaves128_lr003 | ok | 0.9959 | 0.9990 | 0.9703 | 2 | [log](out/autocollie/runs/2026-05-21T07-27-22_20260521T072258-filetypes-java_class_java_class_ctrl_leaves128_lr003.log) |
+| `f24b200c1b2120f3` | java_class_train_scalepos05_hardneg | ok | 0.9956 | 0.9990 | 0.9739 | 2 | [log](out/autocollie/runs/2026-05-21T07-27-24_20260521T072258-filetypes-java_class_java_class_train_scalepos05_hardneg.log) |
+| `0b2bcff1f826411e` | java_class_feat_sym_vocab_bigrams | ok | 0.9967 | 0.9992 | 0.9585 | 5 | [log](out/autocollie/runs/2026-05-21T07-27-26_20260521T072258-filetypes-java_class_java_class_feat_sym_vocab_bigrams.log) |
+| `5467bc77376e59ef` | java_class_feat_textenc_metrics | ok | 0.9967 | 0.9992 | 0.9585 | 5 | [log](out/autocollie/runs/2026-05-21T07-27-31_20260521T072258-filetypes-java_class_java_class_feat_textenc_metrics.log) |
+| `b5f10ac1f3a7948e` | java_class_transfer_scalepos_seedavg | ok | 0.9966 | 0.9992 | 0.9772 | 2 | [log](out/autocollie/runs/2026-05-21T07-27-36_20260521T072258-filetypes-java_class_java_class_transfer_scalepos_seedavg.log) |
+| `c93f30abdcefb5c4` | java_class_abl_blindfold_off | ok | 0.9967 | 0.9992 | 0.9585 | 5 | [log](out/autocollie/runs/2026-05-21T07-27-39_20260521T072258-filetypes-java_class_java_class_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_class_ctrl_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`java_class_train_scalepos05_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives and up-weight hard negatives to push benign scores lower, directly targeting recall@3FPM at the deployed operating point.
+- **`java_class_feat_sym_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Add symbol co-occurrence signal to capture malicious API call chains, aiming to lift PR_AUC by separating benign utility classes from malware loaders.
+- **`java_class_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Capture obfuscation and string packing patterns in Java class files via text metrics, targeting PR_AUC gains on heavily obfuscated malware.
+- **`java_class_transfer_scalepos_seedavg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Transfer positive class weighting strategy from ruby route with seed search to stabilize recall@3FPM gains across random splits.
+- **`java_class_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ablate blindfold dropout features to reduce training noise and stabilize PR_AUC, testing if deterministic features yield better ranking consistency.
+
+</details>
+

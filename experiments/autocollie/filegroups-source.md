@@ -144,3 +144,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T023437-filegroups-source` — 2026-05-21T02:34:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `36592990a0ce5ac2` | source_control_scale_pos_075 | ok | 0.9988 | 0.9982 | 0.9820 | 43 | [log](out/autocollie/runs/2026-05-21T02-39-48_20260521T023437-filegroups-source_source_control_scale_pos_075.log) |
+| `8f8b718794c2a223` | source_dart_extra_trees_reg | ok | 0.9974 | 0.9960 | 0.9665 | 21 | [log](out/autocollie/runs/2026-05-21T02-40-31_20260521T023437-filegroups-source_source_dart_extra_trees_reg.log) |
+| `25289ba8fe940233` | source_kv_vocab_textenc | ok | 0.9988 | 0.9981 | 0.9814 | 32 | [log](out/autocollie/runs/2026-05-21T02-40-51_20260521T023437-filegroups-source_source_kv_vocab_textenc.log) |
+| `f5b18208c9a6b978` | source_tiered_trigrams_expanded | ok | 0.9988 | 0.9982 | 0.9817 | 32 | [log](out/autocollie/runs/2026-05-21T02-41-24_20260521T023437-filegroups-source_source_tiered_trigrams_expanded.log) |
+| `b8f02ebe6b589600` | source_ablate_crit_ngrams | ok | 0.9988 | 0.9981 | 0.9823 | 25 | [log](out/autocollie/runs/2026-05-21T02-41-55_20260521T023437-filegroups-source_source_ablate_crit_ngrams.log) |
+| `44ccfb46ee33b0de` | source_seed_search_ensemble | ok | 0.9989 | 0.9983 | 0.9824 | 30 | [log](out/autocollie/runs/2026-05-21T02-42-20_20260521T023437-filegroups-source_source_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_control_scale_pos_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with scale_pos_weight_mult=0.75 to down-weight positives and improve recall@3 FP/M at low FPR.
+- **`source_dart_extra_trees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Test dart boosting and extra_trees with L2 regularization to improve tail recall@3 FP/M while preserving PR_AUC.
+- **`source_kv_vocab_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and text_encoding to capture source code structure and metadata, aiming to boost PR_AUC.
+- **`source_tiered_trigrams_expanded`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable tiered_crit_trigrams with expanded vocab to capture longer malicious patterns, targeting PR_AUC improvement.
+- **`source_ablate_crit_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable crit_category_ngrams to test if removing it reduces noise and maintains PR_AUC flat.
+- **`source_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Seed search ensemble (K=3) to reduce variance and stabilize recall@3 FP/M gains across different RNG splits.
+
+</details>
+
+## Cycle `20260521T065413-filegroups-source` — 2026-05-21T06:54:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2537e3866b05c329` | source_control_leaves128_lr003 | ok | 0.9987 | 0.9980 | 0.9694 | 9 | [log](out/autocollie/runs/2026-05-21T06-58-51_20260521T065413-filegroups-source_source_control_leaves128_lr003.log) |
+| `21e1d79b81ba49dd` | source_kv_vocab_15k_min5 | ok | 0.9988 | 0.9982 | 0.9818 | 24 | [log](out/autocollie/runs/2026-05-21T06-59-00_20260521T065413-filegroups-source_source_kv_vocab_15k_min5.log) |
+| `9f78ea8c4db4155a` | source_textenc_metrics_full | ok | 0.9988 | 0.9981 | 0.9815 | 24 | [log](out/autocollie/runs/2026-05-21T06-59-23_20260521T065413-filegroups-source_source_textenc_metrics_full.log) |
+| `fc2b3014a38f95f6` | source_transfer_strict_bigrams | ok | 0.9988 | 0.9982 | 0.9817 | 23 | [log](out/autocollie/runs/2026-05-21T06-59-47_20260521T065413-filegroups-source_source_transfer_strict_bigrams.log) |
+| `e282e68cb8457c69` | source_ablate_crit_ngrams | ok | 0.9988 | 0.9981 | 0.9815 | 8 | [log](out/autocollie/runs/2026-05-21T07-00-10_20260521T065413-filegroups-source_source_ablate_crit_ngrams.log) |
+| `ca352324cea591d0` | source_seed_ensemble_k3 | ok | 0.9989 | 0.9982 | 0.9800 | 21 | [log](out/autocollie/runs/2026-05-21T07-00-18_20260521T065413-filegroups-source_source_seed_ensemble_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with deeper trees and slower LR to improve PR_AUC ranking quality.
+- **`source_kv_vocab_15k_min5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab to capture structured metadata patterns, targeting recall@3 FP/M improvement.
+- **`source_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text encoding and full text metrics to detect obfuscation artifacts, aiming to boost recall@3 FP/M.
+- **`source_transfer_strict_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfer stricter bigram filtering from xml/data routes to reduce noise and improve PR_AUC.
+- **`source_ablate_crit_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable crit_category_ngrams to test if severity-prefixed ngrams add noise, aiming to keep PR_AUC flat.
+- **`source_seed_ensemble_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Average over 3 seeds to reduce variance and stabilize recall@3 FP/M gains on baseline features.
+
+</details>
+

@@ -126,3 +126,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T193123-filegroups-archive` — 2026-05-20T19:31:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | archive_control_baseline_lr003 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-20T19-36-03_20260520T193123-filegroups-archive_archive_control_baseline_lr003.log) |
+| `` | archive_exploit_scalepos05 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-20T19-36-04_20260520T193123-filegroups-archive_archive_exploit_scalepos05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`archive_control_baseline_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control run replicating best recent feature_env with lower LR and more estimators to establish a stable PR_AUC and recall@3FPM baseline via matrix cache hit.
+- **`archive_exploit_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Down-weight positives to reduce FPs at low FPR, targeting recall@3FPM improvement while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260521T052517-filegroups-archive` — 2026-05-21T05:25:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | archive_control_lr003_est300 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T05-29-28_20260521T052517-filegroups-archive_archive_control_lr003_est300.log) |
+| `` | archive_kv_vocab_full | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T05-29-28_20260521T052517-filegroups-archive_archive_kv_vocab_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`archive_control_lr003_est300`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control run replicating best recent feature_env with lower learning rate and more estimators to stabilize PR_AUC while maintaining ROC_AUC.
+- **`archive_kv_vocab_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals in archives, aiming to boost recall@3FPM by identifying malicious metadata patterns.
+
+</details>
+
+## Cycle `20260521T081236-filegroups-archive` — 2026-05-21T08:12:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | archive_control_baseline_train | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T08-17-00_20260521T081236-filegroups-archive_archive_control_baseline_train.log) |
+| `` | archive_kv_vocab_15k | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T08-17-01_20260521T081236-filegroups-archive_archive_kv_vocab_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`archive_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control spec replicating best recent feature surface to establish training-only baseline for PR_AUC and recall@3FPM.
+- **`archive_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=score EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value metadata patterns in archives, aiming to improve PR_AUC by adding structural signal.
+
+</details>
+

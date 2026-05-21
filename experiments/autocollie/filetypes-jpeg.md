@@ -216,3 +216,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T072437-filetypes-jpeg` — 2026-05-20T07:24:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7224b277b744c023` | jpeg_ctrl_leaves128_lr003 | ok | 0.9740 | 0.9789 | 0.8936 | 6 | [log](out/autocollie/runs/2026-05-20T07-29-27_20260520T072437-filetypes-jpeg_jpeg_ctrl_leaves128_lr003.log) |
+| `85e3993288b0eb23` | jpeg_ctrl_hardneg_scalepos | ok | 0.9444 | 0.9640 | 0.7368 | 2 | [log](out/autocollie/runs/2026-05-20T07-29-33_20260520T072437-filetypes-jpeg_jpeg_ctrl_hardneg_scalepos.log) |
+| `f36113dea8375a1f` | jpeg_ctrl_reg_lambda_dart | ok | 0.9472 | 0.9590 | 0.7843 | 2 | [log](out/autocollie/runs/2026-05-20T07-29-35_20260520T072437-filetypes-jpeg_jpeg_ctrl_reg_lambda_dart.log) |
+| `f8c733f0d9b6ddf1` | jpeg_feat_textmetrics_kv_vocab | ok | 0.9798 | 0.9839 | 0.8936 | 3 | [log](out/autocollie/runs/2026-05-20T07-29-36_20260520T072437-filetypes-jpeg_jpeg_feat_textmetrics_kv_vocab.log) |
+| `f6dfe6036a0c9d7d` | jpeg_feat_symbol_vocab_trigrams | ok | 0.9798 | 0.9839 | 0.8936 | 4 | [log](out/autocollie/runs/2026-05-20T07-29-39_20260520T072437-filetypes-jpeg_jpeg_feat_symbol_vocab_trigrams.log) |
+| `6af7ed8fe11dfee8` | jpeg_feat_bigram_freq_lower_trigrams | ok | 0.9783 | 0.9826 | 0.8936 | 3 | [log](out/autocollie/runs/2026-05-20T07-29-43_20260520T072437-filetypes-jpeg_jpeg_feat_bigram_freq_lower_trigrams.log) |
+| `c4a06027c6164c46` | jpeg_abl_blindfold_extreme | ok | 0.9798 | 0.9839 | 0.8936 | 3 | [log](out/autocollie/runs/2026-05-20T07-29-46_20260520T072437-filetypes-jpeg_jpeg_abl_blindfold_extreme.log) |
+| `ff55106efe328feb` | jpeg_transfer_gz_kv_seed | ok | 0.8743 | 0.9224 | 0.8519 | 3 | [log](out/autocollie/runs/2026-05-20T07-29-49_20260520T072437-filetypes-jpeg_jpeg_transfer_gz_kv_seed.log) |
+| `0302ea06982fa3b2` | jpeg_transfer_xml_metrics_full | ok | 0.9754 | 0.9801 | 0.2963 | 3 | [log](out/autocollie/runs/2026-05-20T07-29-52_20260520T072437-filetypes-jpeg_jpeg_transfer_xml_metrics_full.log) |
+| `f39ab628365da178` | jpeg_gen_seed_search_k3 | ok | 0.9795 | 0.9839 | 0.9167 | 5 | [log](out/autocollie/runs/2026-05-20T07-29-56_20260520T072437-filetypes-jpeg_jpeg_gen_seed_search_k3.log) |
+| `71264d6bbf0cc3c1` | jpeg_gen_seed_alt_777 | ok | 0.9703 | 0.9764 | 0.5625 | 6 | [log](out/autocollie/runs/2026-05-20T07-30-01_20260520T072437-filetypes-jpeg_jpeg_gen_seed_alt_777.log) |
+| `e4ef9e9af34ffbac` | jpeg_retry_kv_textmetrics_v2 | ok | 0.9798 | 0.9839 | 0.8936 | 4 | [log](out/autocollie/runs/2026-05-20T07-30-07_20260520T072437-filetypes-jpeg_jpeg_retry_kv_textmetrics_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jpeg_ctrl_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Tests deeper trees with lower LR on best feature set to improve PR_AUC by reducing overfit on rare JPEG artifacts.
+- **`jpeg_ctrl_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Applies hard negatives and lower positive weight to sharpen decision boundary, targeting recall@3FPM at deployed operating point.
+- **`jpeg_ctrl_reg_lambda_dart`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Uses DART boosting with L2 regularization to smooth predictions, aiming to lift PR_AUC while keeping ROC_AUC flat.
+- **`jpeg_feat_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture structural JPEG metadata patterns, targeting PR_AUC gain from richer feature surface.
+- **`jpeg_feat_symbol_vocab_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Adds symbol_vocab and objective_trigrams to model sequential trait co-occurrences in JPEG payloads, targeting recall@3FPM.
+- **`jpeg_feat_bigram_freq_lower_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and enables tiered_crit_trigrams to capture rarer but high-signal JPEG manipulation patterns, targeting PR_AUC.
+- **`jpeg_abl_blindfold_extreme`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold and extreme_features to reduce noise from synthetic perturbations, aiming to keep PR_AUC flat while improving calibration.
+- **`jpeg_transfer_gz_kv_seed`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — Ports gz route's strong kv-focused config with adjusted vocab limits for JPEG metadata, targeting PR_AUC improvement.
+- **`jpeg_transfer_xml_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_METRICS_FULL=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Adopts xml route's text_metrics_full and extended_metrics approach to capture JPEG structural anomalies, targeting recall@3FPM.
+- **`jpeg_gen_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Runs best feature set with seed_search_k=3 to average out RNG variance, targeting stable recall@3FPM across seeds.
+- **`jpeg_gen_seed_alt_777`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests alternative seed on best feature set to verify signal robustness, targeting PR_AUC consistency.
+- **`jpeg_retry_kv_textmetrics_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retries prior strong kv+textmetrics config on updated daily corpus to capture data drift, targeting PR_AUC recovery.
+
+</details>
+
+## Cycle `20260521T041441-filetypes-jpeg` — 2026-05-21T04:14:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fa9d573896050221` | jpeg_ctrl_scale_pos_075_est300 | ok | 0.9602 | 0.9671 | 0.8077 | 5 | [log](out/autocollie/runs/2026-05-21T04-18-50_20260521T041441-filetypes-jpeg_jpeg_ctrl_scale_pos_075_est300.log) |
+| `157560e9767bc1b2` | jpeg_feat_textmetrics_kv_vocab_10k | ok | 0.9513 | 0.9640 | 0.8077 | 3 | [log](out/autocollie/runs/2026-05-21T04-18-55_20260521T041441-filetypes-jpeg_jpeg_feat_textmetrics_kv_vocab_10k.log) |
+| `a876e4f369aae6bb` | jpeg_feat_obj_susp_trigrams_3k | ok | 0.9513 | 0.9640 | 0.8077 | 3 | [log](out/autocollie/runs/2026-05-21T04-18-58_20260521T041441-filetypes-jpeg_jpeg_feat_obj_susp_trigrams_3k.log) |
+| `d66cefa988f459eb` | jpeg_abl_blindfold_extreme_score | ok | 0.9476 | 0.9609 | 0.7843 | 3 | [log](out/autocollie/runs/2026-05-21T04-19-00_20260521T041441-filetypes-jpeg_jpeg_abl_blindfold_extreme_score.log) |
+| `e3ba140ef1e7cf0e` | jpeg_transfer_doc_obfuscation_extmetrics | ok | 0.9424 | 0.9578 | 0.8372 | 3 | [log](out/autocollie/runs/2026-05-21T04-19-03_20260521T041441-filetypes-jpeg_jpeg_transfer_doc_obfuscation_extmetrics.log) |
+| `9817095b82734d3c` | jpeg_gen_seed_search_k3_ensemble | ok | 0.9685 | 0.9764 | 0.8519 | 1 | [log](out/autocollie/runs/2026-05-21T04-19-06_20260521T041441-filetypes-jpeg_jpeg_gen_seed_search_k3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jpeg_ctrl_scale_pos_075_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Replicates best feature_env to hit matrix cache; lowers scale_pos_weight_mult to 0.75 and increases estimators to 300 to sharpen ranking at low FPR, targeting recall@3 FP/M.
+- **`jpeg_feat_textmetrics_kv_vocab_10k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 …` — Enables text_metrics_full and kv_vocab with max 10000 to capture JPEG metadata obfuscation and key-value patterns, targeting PR_AUC gains from richer structural signal.
+- **`jpeg_feat_obj_susp_trigrams_3k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 …` — Activates objective_trigrams and suspicious_trigrams with max 3000 to model longer metadata path sequences, targeting PR_AUC by capturing multi-step evasion patterns.
+- **`jpeg_abl_blindfold_extreme_score`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,score EXP_ESTIMATORS=200 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 …` — Disables blindfold, extreme_features, and score group to reduce noise on the small JPEG corpus, targeting PR_AUC and ROC_AUC stability by preventing overfit to tail artifacts.
+- **`jpeg_transfer_doc_obfuscation_extmetrics`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,score EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 …` — Ports PDF/RTF document obfuscation strategy by enabling extended_metrics and document_obfuscation_features while disabling score group, targeting recall@3 FP/M via structural anomaly detection.
+- **`jpeg_gen_seed_search_k3_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Retries best feature_env with seed_search_k=3 and save_all_seeds=true to average out RNG variance, targeting stable recall@3 FP/M improvements across seeds.
+
+</details>
+
+## Cycle `20260521T062847-filetypes-jpeg` — 2026-05-21T06:28:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0ff76ba0f964cd7e` | jpeg_ctrl_baseline_v1 | ok | 0.9513 | 0.9640 | 0.8077 | 4 | [log](out/autocollie/runs/2026-05-21T06-33-13_20260521T062847-filetypes-jpeg_jpeg_ctrl_baseline_v1.log) |
+| `9be2c0e8e28db371` | jpeg_exploit_dart_reg2 | ok | 0.9464 | 0.9584 | 0.7843 | 2 | [log](out/autocollie/runs/2026-05-21T06-33-17_20260521T062847-filetypes-jpeg_jpeg_exploit_dart_reg2.log) |
+| `5096ea8b4fe05673` | jpeg_exploit_scale_pos_05 | ok | 0.9400 | 0.9578 | 0.8400 | 2 | [log](out/autocollie/runs/2026-05-21T06-33-19_20260521T062847-filetypes-jpeg_jpeg_exploit_scale_pos_05.log) |
+| `c9f6af674cad2e4b` | jpeg_feat_kv_vocab_5k | ok | 0.9513 | 0.9640 | 0.8077 | 4 | [log](out/autocollie/runs/2026-05-21T06-33-21_20260521T062847-filetypes-jpeg_jpeg_feat_kv_vocab_5k.log) |
+| `aa6e79422e7285c2` | jpeg_feat_textmetrics_full | ok | 0.9513 | 0.9640 | 0.8077 | 3 | [log](out/autocollie/runs/2026-05-21T06-33-25_20260521T062847-filetypes-jpeg_jpeg_feat_textmetrics_full.log) |
+| `621edc6acf4cb05f` | jpeg_abl_extended_metrics | ok | 0.8766 | 0.8801 | 0.7111 | 3 | [log](out/autocollie/runs/2026-05-21T06-33-28_20260521T062847-filetypes-jpeg_jpeg_abl_extended_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jpeg_ctrl_baseline_v1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Control baseline replicating the best recent feature_env to establish a matrix cache hit and measure training-only improvements on PR_AUC.
+- **`jpeg_exploit_dart_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Tests DART boosting with higher L2 regularization to reduce overfitting on JPEG compression artifacts, targeting PR_AUC improvement.
+- **`jpeg_exploit_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Down-weights the positive class to suppress false positives at low FPR, aiming to boost recall@3 FP/M at the deployed operating point.
+- **`jpeg_feat_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 …` — Enables KV vocab to capture EXIF/IPTC metadata patterns common in JPEGs, targeting PR_AUC gain from structured metadata signal.
+- **`jpeg_feat_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 …` — Activates full text metrics to detect embedded comments or steganography markers in JPEGs, aiming to improve PR_AUC via document-style obfuscation signals.
+- **`jpeg_abl_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 …` — Removes extended metrics to test if they introduce noise on this route, targeting flat or higher PR_AUC with reduced feature dimensionality.
+
+</details>
+

@@ -20,11 +20,17 @@ specialist suite.
 Selection
 ---------
 - Runs are filtered to a target route (default ``general``).
-- Among matching runs we pick the highest
-  ``sampled_test_metrics.avg_precision`` (PR AUC, the security-relevant
-  ranking metric for the imbalanced malware-vs-benign classification);
-  ties broken by ``save_all_seeds`` (prefer averaged), then most recent
+- Primary key is ``sampled_test_metrics.recall_at_fp_per_million_3``,
+  the recall at the L3 hostile deploy budget. This is the operational
+  metric — what fraction of the slice's malware does the model catch
+  at the FP/M target we actually deploy at?
+- Ties on operating-point recall break on ``avg_precision`` (curve
+  summary), then ``save_all_seeds`` (prefer averaged), then most recent
   ``timestamp`` (replay-stable).
+- Selection on ``avg_precision`` alone (the prior behavior) misses
+  swaps where two candidates have identical PR AUC but several-fold
+  different recall at the deploy budget. Picking on operational metric
+  closes that gap.
 
 Usage
 -----
@@ -43,6 +49,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
 import os
 import shlex
 import subprocess
@@ -90,21 +97,107 @@ def _format_env_value(value: Any) -> str:
     return str(value)
 
 
-def _select_best_run(runs_dir: Path, route: str) -> dict[str, Any] | None:
-    """Pick the highest-PR-AUC historical run for ``route``.
+def _load_promoted_baseline(
+    baselines_path: Path, runs_dir: Path, route: str,
+) -> dict[str, Any] | None:
+    """Return the run JSON for a route's promoted baseline, or None.
 
-    Returns the parsed run dict, or None when no matching run exists. Ties on
-    avg_precision break in favor of save_all_seeds=True then later timestamp —
-    same rule azoth_specialist_suite uses for its picker, so the two stay in
-    sync. PR AUC (avg_precision) is the headline ranking metric for the
-    imbalanced malware-vs-benign classification — it captures
-    detection-vs-false-positive trade-off across the full operating range
-    without being dominated by the easy benign mass the way ROC AUC is.
+    ``promoted_baselines.json`` records every route that has passed
+    autocollie's screen → confirm → promote chain. The recorded entry
+    points at an experiment key whose run JSON sits in ``runs_dir``;
+    that run is the authoritative best-known config for the route.
+
+    A promoted baseline has been operationally validated via:
+      1. Screen's recall@3FPM-aware gate.
+      2. Confirm's K-seed PR-AUC stability check.
+      3. Promote's regression check against the deployed bundle.
+
+    So preferring this run over a raw screen-run scan eliminates the
+    failure mode where the picker grabs a screen-only candidate that
+    looked great on the route's tiny training holdout but degrades the
+    deployed slice.
     """
+    if not baselines_path.is_file():
+        return None
+    try:
+        with open(baselines_path) as f:
+            baselines = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    entry = (baselines.get("routes") or {}).get(route)
+    if not isinstance(entry, dict):
+        return None
+    # Prefer full_train_key (the post-promote full-data replay) but
+    # fall back to promote_key when full_train wasn't recorded.
+    for key_field in ("full_train_key", "promote_key"):
+        key = entry.get(key_field)
+        if not isinstance(key, str) or not key:
+            continue
+        run_path = runs_dir / f"{key}.json"
+        if not run_path.is_file():
+            continue
+        try:
+            with open(run_path) as f:
+                run = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if run.get("route") == route:
+            return run
+    return None
+
+
+def _select_best_run(
+    runs_dir: Path, route: str,
+    baselines_path: Path | None = None,
+) -> dict[str, Any] | None:
+    """Pick the historical run for ``route`` most likely to improve the
+    deployed ensemble.
+
+    Selection precedence:
+
+      A. **Promoted baseline** (when ``baselines_path`` points at a valid
+         ``promoted_baselines.json`` with an entry for the route).
+         This run has cleared autocollie's full screen → confirm → promote
+         chain, including the regression check against the deployed
+         bundle. Always preferred when available — it's the only
+         operationally-verified source.
+
+      B. **Best raw screen run** (fallback when no promoted entry).
+         Sort key, in priority order:
+           1. ``recall_at_fp_per_million_3`` — operational metric matching
+              the L3 hostile deploy budget.
+           2. ``avg_precision`` — curve-summarized PR/recall tradeoff.
+           3. ``save_all_seeds`` — prefer multi-seed bundles.
+           4. ``timestamp`` — most recent tied run.
+
+         This path is brittle: screen runs haven't been verified at the
+         deploy slice, so the picker may grab configs that look great on
+         the route's small training holdout but degrade the test slice
+         (observed: ``filegroups/native`` AP=0.9999/r@3FPM=88.89% holdout
+         → 56% on test PE slice). A warning is logged when this path
+         fires so the human knows the route needs a promote cycle.
+
+    Runs without ``avg_precision`` are skipped entirely. Runs without
+    ``recall_at_fp_per_million_3`` get sorted with fallback recall 0.0.
+    """
+    if baselines_path is not None:
+        promoted = _load_promoted_baseline(baselines_path, runs_dir, route)
+        if promoted is not None:
+            LOG.info(
+                "using promoted baseline for route %s (key=%s)",
+                route, promoted.get("experiment_key", "?"),
+            )
+            return promoted
+        LOG.warning(
+            "no promoted_baselines.json entry for route %s; falling back to "
+            "raw screen runs in %s — selection may be brittle. Consider "
+            "running an autocollie promote cycle on this route.",
+            route, runs_dir,
+        )
     if not runs_dir.is_dir():
         LOG.error("runs dir %s does not exist", runs_dir)
         return None
-    best: tuple[float, bool, str, dict[str, Any]] | None = None
+    best: tuple[float, float, bool, str, dict[str, Any]] | None = None
     for path in runs_dir.glob("*.json"):
         if path.name.endswith("_feature_spec.json"):
             continue
@@ -115,18 +208,25 @@ def _select_best_run(runs_dir: Path, route: str) -> dict[str, Any] | None:
             continue
         if run.get("route") != route:
             continue
-        ap = (run.get("sampled_test_metrics") or {}).get("avg_precision")
+        metrics = run.get("sampled_test_metrics") or {}
+        ap = metrics.get("avg_precision")
         if not isinstance(ap, (int, float)):
             continue
+        recall_at_3 = metrics.get("recall_at_fp_per_million_3")
+        if isinstance(recall_at_3, (int, float)) and not math.isnan(float(recall_at_3)):
+            r3 = float(recall_at_3)
+        else:
+            r3 = 0.0
         candidate = (
+            r3,
             float(ap),
             bool(run.get("save_all_seeds")),
             str(run.get("timestamp") or ""),
             run,
         )
-        if best is None or candidate[:3] > best[:3]:
+        if best is None or candidate[:4] > best[:4]:
             best = candidate
-    return best[3] if best is not None else None
+    return best[4] if best is not None else None
 
 
 def _resolve_env(run: dict[str, Any], extra: dict[str, str]) -> dict[str, str]:
@@ -180,6 +280,18 @@ def _parse_extra(values: list[str]) -> dict[str, str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs-dir", type=Path, default=Path("out/experiments/azoth/runs"))
+    parser.add_argument(
+        "--promoted-baselines",
+        type=Path,
+        default=Path("out/models/azoth/.autocollie/promoted_baselines.json"),
+        help=(
+            "Path to autocollie's promoted_baselines.json. When this file "
+            "has an entry for the requested route, the picker uses that "
+            "promoted run (verified by screen → confirm → promote) "
+            "instead of scanning raw screen runs. Set to '' to disable "
+            "and force the legacy raw-screen-runs path."
+        ),
+    )
     parser.add_argument("--route", default="general")
     parser.add_argument(
         "--set",
@@ -216,15 +328,18 @@ def main() -> int:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    run = _select_best_run(args.runs_dir, args.route)
+    baselines_path = args.promoted_baselines if str(args.promoted_baselines) else None
+    run = _select_best_run(args.runs_dir, args.route, baselines_path=baselines_path)
     if run is None:
         LOG.error("no historical run found for route %r in %s", args.route, args.runs_dir)
         return 1
+    metrics = run.get("sampled_test_metrics") or {}
     LOG.info(
-        "best for route %s: key=%s avg_precision=%.4f save_all=%s idea=%s",
+        "best for route %s: key=%s recall@3FP/M=%.4f avg_precision=%.4f save_all=%s idea=%s",
         args.route,
         run.get("experiment_key", "?"),
-        (run.get("sampled_test_metrics") or {}).get("avg_precision", float("nan")),
+        metrics.get("recall_at_fp_per_million_3", float("nan")),
+        metrics.get("avg_precision", float("nan")),
         bool(run.get("save_all_seeds")),
         run.get("idea", "?"),
     )

@@ -144,3 +144,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T071221-filetypes-ole` — 2026-05-20T07:12:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dd6da2ca23d9ce00` | ole_control_leaves128_reg2 | ok | 0.9831 | 0.5000 | 0.9915 | 11 | [log](out/autocollie/runs/2026-05-20T07-17-09_20260520T071221-filetypes-ole_ole_control_leaves128_reg2.log) |
+| `3b1c734b89fda111` | ole_control_dart_extra_trees | ok | 0.9831 | 0.5000 | 0.9915 | 3 | [log](out/autocollie/runs/2026-05-20T07-17-19_20260520T071221-filetypes-ole_ole_control_dart_extra_trees.log) |
+| `0742a4ef70ab6f09` | ole_control_hardneg_weight15 | ok | 0.9831 | 0.5000 | 0.9915 | 2 | [log](out/autocollie/runs/2026-05-20T07-17-22_20260520T071221-filetypes-ole_ole_control_hardneg_weight15.log) |
+| `12293517977b20ff` | ole_feat_text_metrics_full | ok | 0.9831 | 0.5000 | 0.9915 | 9 | [log](out/autocollie/runs/2026-05-20T07-17-24_20260520T071221-filetypes-ole_ole_feat_text_metrics_full.log) |
+| `ec4422239fec458c` | ole_feat_kv_vocab_10k | ok | 0.9831 | 0.5000 | 0.9915 | 7 | [log](out/autocollie/runs/2026-05-20T07-17-33_20260520T071221-filetypes-ole_ole_feat_kv_vocab_10k.log) |
+| `d0e86e877ff4908d` | ole_feat_text_encoding | ok | 0.9831 | 0.5000 | 0.9915 | 7 | [log](out/autocollie/runs/2026-05-20T07-17-40_20260520T071221-filetypes-ole_ole_feat_text_encoding.log) |
+| `7a4d18b64b95cc48` | ole_feat_symbol_vocab_bigrams | ok | 0.9831 | 0.5000 | 0.9915 | 9 | [log](out/autocollie/runs/2026-05-20T07-17-47_20260520T071221-filetypes-ole_ole_feat_symbol_vocab_bigrams.log) |
+| `3b5d0b22e5ed4790` | ole_feat_obfuscation_line_length | ok | 0.9831 | 0.5000 | 0.9915 | 6 | [log](out/autocollie/runs/2026-05-20T07-17-56_20260520T071221-filetypes-ole_ole_feat_obfuscation_line_length.log) |
+| `1770941faf116392` | ole_transfer_kv_bigram_freq250 | ok | 0.9831 | 0.5000 | 0.9915 | 8 | [log](out/autocollie/runs/2026-05-20T07-18-02_20260520T071221-filetypes-ole_ole_transfer_kv_bigram_freq250.log) |
+| `ffa1d94695a8d9a0` | ole_ablation_no_blindfold_crit | ok | 0.9831 | 0.5000 | 0.9915 | 9 | [log](out/autocollie/runs/2026-05-20T07-18-10_20260520T071221-filetypes-ole_ole_ablation_no_blindfold_crit.log) |
+| `fb6138e5f7ccbdab` | ole_gen_seed_search_ensemble | ok | 0.9831 | 0.5000 | 0.9915 | 4 | [log](out/autocollie/runs/2026-05-20T07-18-19_20260520T071221-filetypes-ole_ole_gen_seed_search_ensemble.log) |
+| `d294c41d0c8745cf` | ole_retry_text_encoding_lr005 | ok | 0.9831 | 0.5000 | 0.9915 | 4 | [log](out/autocollie/runs/2026-05-20T07-18-24_20260520T071221-filetypes-ole_ole_retry_text_encoding_lr005.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ole_control_leaves128_reg2`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_ESTIMATORS=300 …` — Replicates recent best feature_env to establish baseline PR_AUC while tuning num_leaves and reg_lambda to stabilize ranking.
+- **`ole_control_dart_extra_trees`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — Uses same feature surface as control but switches to dart boosting and extra_trees to improve recall@3FPM via ensemble regularization.
+- **`ole_control_hardneg_weight15`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_ESTIMATORS=300 …` — Applies hard negative mining to the baseline feature set to push recall@3FPM by focusing the model on difficult benign samples.
+- **`ole_feat_text_metrics_full`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 …` — Enables text_metrics_full and removes textenc from disable_groups to capture document layout signals, aiming to boost PR_AUC.
+- **`ole_feat_kv_vocab_10k`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,symbols,textenc EXP_KV_MIN_FREQ=5 …` — Enables kv_vocab with max 10000 and removes kv from disable_groups to extract key-value pair signals, targeting PR_AUC improvement.
+- **`ole_feat_text_encoding`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 …` — Enables text_encoding and removes textenc from disable_groups to leverage character encoding diversity, aiming to lift ROC_AUC.
+- **`ole_feat_symbol_vocab_bigrams`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,textenc EXP_MAX_TEST_SAMPLES=20000 …` — Enables symbol_vocab and symbol_bigrams, removing symbols from disable_groups to capture import co-occurrence patterns for PR_AUC gains.
+- **`ole_feat_obfuscation_line_length`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_DOCUMENT_OBFUSCATION_FEATURES=1 …` — Enables document_obfuscation_features and line_length_buckets to detect packed/obfuscated OLE streams, targeting recall@3FPM.
+- **`ole_transfer_kv_bigram_freq250`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,symbols,textenc EXP_KV_VOCAB=1 …` — Transfers strong xml/gz config by lowering bigram_min_freq to 250 and enabling kv_vocab, aiming to boost PR_AUC with rarer n-grams.
+- **`ole_ablation_no_blindfold_crit`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 …` — Disables blindfold and crit_category_ngrams to reduce feature noise, aiming to stabilize ROC_AUC without hurting PR_AUC.
+- **`ole_gen_seed_search_ensemble`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 …` — Uses seed_search_k=3 and save_all_seeds=true on the text_metrics config to average out seed variance, targeting stable recall@3FPM.
+- **`ole_retry_text_encoding_lr005`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols EXP_LEARNING_RATE=0.05 …` — Retries the historically strong ole_add_text_encoding config with current corpus to recover PR_AUC after recent degradation.
+
+</details>
+
+## Cycle `20260521T032723-filetypes-ole` — 2026-05-21T03:27:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `102cec0fb75a1f55` | ole_control_scale_pos_05 | ok | 0.9831 | 0.5000 | 0.9915 | 8 | [log](out/autocollie/runs/2026-05-21T03-31-54_20260521T032723-filetypes-ole_ole_control_scale_pos_05.log) |
+| `ccecd2c331ca3615` | ole_feat_text_metrics_full | ok | 0.9831 | 0.5000 | 0.9915 | 6 | [log](out/autocollie/runs/2026-05-21T03-32-02_20260521T032723-filetypes-ole_ole_feat_text_metrics_full.log) |
+| `1e255b2462ec5666` | ole_feat_kv_vocab_5k | ok | 0.9831 | 0.5000 | 0.9915 | 6 | [log](out/autocollie/runs/2026-05-21T03-32-08_20260521T032723-filetypes-ole_ole_feat_kv_vocab_5k.log) |
+| `9d6b0bf01496944f` | ole_feat_obfuscation_line_length | ok | 0.9831 | 0.5000 | 0.9915 | 8 | [log](out/autocollie/runs/2026-05-21T03-32-14_20260521T032723-filetypes-ole_ole_feat_obfuscation_line_length.log) |
+| `e1c7600fa33f194f` | ole_train_dart_extra_trees | ok | 0.9831 | 0.5000 | 0.9915 | 1 | [log](out/autocollie/runs/2026-05-21T03-32-22_20260521T032723-filetypes-ole_ole_train_dart_extra_trees.log) |
+| `c9ecdf8b60ca2bb7` | ole_gen_seed_search_3 | ok | 0.9831 | 0.5000 | 0.9915 | 2 | [log](out/autocollie/runs/2026-05-21T03-32-23_20260521T032723-filetypes-ole_ole_gen_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ole_control_scale_pos_05`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Control feature set with scale_pos_weight_mult=0.5 to down-weight positives, aiming to improve recall@3 FP/M by reducing false positives on the tiny benign set.
+- **`ole_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, targeting PR_AUC and ROC_AUC gains by better ranking benign vs malicious OLE structures.
+- **`ole_feat_kv_vocab_5k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab to extract key-value pair signals from OLE streams, aiming to improve PR_AUC by leveraging structural metadata differences.
+- **`ole_feat_obfuscation_line_length`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Add document_obfuscation_features and line_length_buckets to catch macro/structure obfuscation, targeting recall@3 FP/M improvements on packed/malicious docs.
+- **`ole_train_dart_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Use dart boosting and extra_trees to regularize the model and improve generalization at the tail, targeting recall@3 FP/M without hurting PR_AUC.
+- **`ole_gen_seed_search_3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 with save_all_seeds to average out seed variance and stabilize recall@3 FP/M gains across different random splits.
+
+</details>
+
+## Cycle `20260521T061514-filetypes-ole` — 2026-05-21T06:15:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `78bcd057849a92ac` | ole_control_baseline_train | ok | 0.9831 | 0.5000 | 0.9915 | 1 | [log](out/autocollie/runs/2026-05-21T06-20-51_20260521T061514-filetypes-ole_ole_control_baseline_train.log) |
+| `c73cb3b7c2375311` | ole_feat_kv_vocab_5k | ok | 0.9831 | 0.5000 | 0.9915 | 1 | [log](out/autocollie/runs/2026-05-21T06-20-53_20260521T061514-filetypes-ole_ole_feat_kv_vocab_5k.log) |
+| `30d69922d41823c7` | ole_feat_text_metrics_full | ok | 0.9831 | 0.5000 | 0.9915 | 1 | [log](out/autocollie/runs/2026-05-21T06-20-54_20260521T061514-filetypes-ole_ole_feat_text_metrics_full.log) |
+| `e19d073783779748` | ole_feat_extended_metrics | ok | 0.9831 | 0.5000 | 0.9915 | 2 | [log](out/autocollie/runs/2026-05-21T06-20-56_20260521T061514-filetypes-ole_ole_feat_extended_metrics.log) |
+| `19aefa0af88285e6` | ole_train_dart_extra_trees | ok | 0.9831 | 0.5000 | 0.9915 | 2 | [log](out/autocollie/runs/2026-05-21T06-20-57_20260521T061514-filetypes-ole_ole_train_dart_extra_trees.log) |
+| `725cfe1647f39f85` | ole_train_scale_pos_threshold | ok | 0.9831 | 0.5000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-21T06-20-59_20260521T061514-filetypes-ole_ole_train_scale_pos_threshold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ole_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — Replicate best feature_env to establish a stable baseline; tweak estimators and num_leaves to maintain PR_AUC while checking for minor ranking improvements.
+- **`ole_feat_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,symbols,textenc …` — Enable kv_vocab to capture key-value metadata patterns in OLE containers, aiming to lift PR_AUC by adding discriminative structural signal.
+- **`ole_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols …` — Enable text_metrics_full and text_encoding to detect document obfuscation and encoding anomalies, targeting higher recall@3 FP/M on malicious OLE payloads.
+- **`ole_feat_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — Add extended_metrics to capture cross-cutting numeric signals without heavy n-gram overhead, aiming to improve PR_AUC by enriching the feature surface.
+- **`ole_train_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Use dart boosting with extra_trees to add regularization noise, aiming to improve tail recall@3 FP/M by reducing overfitting on rare benign patterns.
+- **`ole_train_scale_pos_threshold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters,kv,symbols,textenc …` — Down-weight positives and optimize threshold for max_recall_at_fpr to directly target recall@3 FP/M at the deployed operating point.
+
+</details>
+

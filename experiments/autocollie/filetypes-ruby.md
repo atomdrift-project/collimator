@@ -163,3 +163,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T065544-filetypes-ruby` — 2026-05-20T06:55:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2544a2392951fedb` | ruby_control_baseline_reg | ok | 0.7766 | 0.9954 | 0.8889 | 7 | [log](out/autocollie/runs/2026-05-20T07-00-18_20260520T065544-filetypes-ruby_ruby_control_baseline_reg.log) |
+| `7b4fe16e1286e79b` | ruby_exploit_scale_pos_05 | ok | 0.7766 | 0.9954 | 0.8889 | 2 | [log](out/autocollie/runs/2026-05-20T07-00-25_20260520T065544-filetypes-ruby_ruby_exploit_scale_pos_05.log) |
+| `5911f7d8afbac3d5` | ruby_exploit_hardneg_tail | ok | 0.8692 | 0.9963 | 0.7500 | 4 | [log](out/autocollie/runs/2026-05-20T07-00-27_20260520T065544-filetypes-ruby_ruby_exploit_hardneg_tail.log) |
+| `495116daffee6b4b` | ruby_feat_kv_split_lowfreq | ok | 0.8692 | 0.9963 | 0.8889 | 6 | [log](out/autocollie/runs/2026-05-20T07-00-31_20260520T065544-filetypes-ruby_ruby_feat_kv_split_lowfreq.log) |
+| `bca7b38d8841d541` | ruby_feat_textenc_metrics | ok | 0.7690 | 0.9949 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-20T07-00-36_20260520T065544-filetypes-ruby_ruby_feat_textenc_metrics.log) |
+| `6165d02845bed893` | ruby_feat_kv_trigrams | ok | 0.8692 | 0.9963 | 0.8889 | 6 | [log](out/autocollie/runs/2026-05-20T07-00-41_20260520T065544-filetypes-ruby_ruby_feat_kv_trigrams.log) |
+| `f15454eb6b8c22af` | ruby_ablate_blindfold | ok | 0.8692 | 0.9963 | 0.8889 | 7 | [log](out/autocollie/runs/2026-05-20T07-00-47_20260520T065544-filetypes-ruby_ruby_ablate_blindfold.log) |
+| `f255809a872018d8` | ruby_transfer_xml_kv_full | ok | 0.8692 | 0.9963 | 0.8889 | 6 | [log](out/autocollie/runs/2026-05-20T07-00-54_20260520T065544-filetypes-ruby_ruby_transfer_xml_kv_full.log) |
+| `db71916d41fd0c1f` | ruby_transfer_gz_textenc | ok | 0.8692 | 0.9963 | 0.8889 | 7 | [log](out/autocollie/runs/2026-05-20T07-01-00_20260520T065544-filetypes-ruby_ruby_transfer_gz_textenc.log) |
+| `acf984c88d2dda8a` | ruby_gen_kv_seed3 | ok | 0.7766 | 0.9954 | 0.9000 | 5 | [log](out/autocollie/runs/2026-05-20T07-01-07_20260520T065544-filetypes-ruby_ruby_gen_kv_seed3.log) |
+| `f62cc4d1643eb711` | ruby_gen_textenc_seed3 | ok | 0.8969 | 0.9968 | 0.8889 | 7 | [log](out/autocollie/runs/2026-05-20T07-01-12_20260520T065544-filetypes-ruby_ruby_gen_textenc_seed3.log) |
+| `c16bf79969a6b5b7` | ruby_retry_lowfreq_bigrams | ok | 0.8037 | 0.9935 | 0.6923 | 8 | [log](out/autocollie/runs/2026-05-20T07-01-19_20260520T065544-filetypes-ruby_ruby_retry_lowfreq_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_control_baseline_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature surface to establish PR_AUC baseline and verify matrix cache hit.
+- **`ruby_exploit_scale_pos_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to suppress FPR at the tail, aiming to improve recall@3FPM.
+- **`ruby_exploit_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to sharpen the decision boundary, aiming to improve recall@3FPM.
+- **`ruby_feat_kv_split_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Split KV values and lower bigram frequency to capture rare malicious patterns, aiming to improve PR_AUC.
+- **`ruby_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,kv EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full metrics to capture script obfuscation signals, aiming to improve PR_AUC.
+- **`ruby_feat_kv_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Add objective and tiered trigrams to KV surface for richer sequence context, aiming to improve PR_AUC.
+- **`ruby_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove blindfold dropout to reduce feature noise and stabilize ranking, aiming to preserve PR_AUC.
+- **`ruby_transfer_xml_kv_full`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port XML route's high-performing KV-heavy config with conservative freq floors, aiming to improve PR_AUC.
+- **`ruby_transfer_gz_textenc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adapt GZ route's successful KV+textenc combo with adjusted vocab limits, aiming to improve PR_AUC.
+- **`ruby_gen_kv_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Average over 3 seeds to reduce variance and confirm KV signal stability, aiming to improve PR_AUC.
+- **`ruby_gen_textenc_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,kv EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Seed search on textenc surface to distinguish real signal from seed noise, aiming to improve PR_AUC.
+- **`ruby_retry_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry prior strong low-freq bigram config with new seed to check for data-drift recovery, aiming to improve PR_AUC.
+
+</details>
+
+## Cycle `20260521T032215-filetypes-ruby` — 2026-05-21T03:22:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7183fbf62df23882` | ruby_control_textenc_lr003 | ok | 0.9060 | 0.9972 | 0.8889 | 7 | [log](out/autocollie/runs/2026-05-21T03-26-54_20260521T032215-filetypes-ruby_ruby_control_textenc_lr003.log) |
+| `e33d3a19091e6ab0` | ruby_feat_kv_vocab_5k | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-21T03-27-01_20260521T032215-filetypes-ruby_ruby_feat_kv_vocab_5k.log) |
+| `27f491b109d10e64` | ruby_feat_text_metrics_full | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-21T03-27-06_20260521T032215-filetypes-ruby_ruby_feat_text_metrics_full.log) |
+| `a56385042f0efba7` | ruby_feat_lowfreq_bigrams_50 | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-21T03-27-10_20260521T032215-filetypes-ruby_ruby_feat_lowfreq_bigrams_50.log) |
+| `41e6325a98687f5b` | ruby_transfer_kv_textenc_seedsearch | ok | 0.8505 | 0.9963 | 0.7500 | 5 | [log](out/autocollie/runs/2026-05-21T03-27-14_20260521T032215-filetypes-ruby_ruby_transfer_kv_textenc_seedsearch.log) |
+| `1a9a84a7b366c5eb` | ruby_ablate_blindfold_off | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-21T03-27-19_20260521T032215-filetypes-ruby_ruby_ablate_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_control_textenc_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to improve PR_AUC and recall@3FPM by reducing overfitting on the small malware set via lower learning rate and fewer leaves, while replicating the best recent feature surface.
+- **`ruby_feat_kv_vocab_5k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab to capture structured Ruby configuration and dependency signals, removing kv from disable_groups to isolate the feature family.
+- **`ruby_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,kv EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by promoting unused ms.text.* fields that capture obfuscation patterns common in malicious Ruby scripts, removing textenc from disable_groups.
+- **`ruby_feat_lowfreq_bigrams_50`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,kv EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by lowering bigram_min_freq to 50 to capture rarer but highly indicative malicious code patterns in Ruby while keeping the text_encoding surface.
+- **`ruby_transfer_kv_textenc_seedsearch`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to stabilize recall@3FPM gains by combining kv_vocab and text_encoding (proven on sister routes) with seed_search_k=3 to mitigate variance on the small corpus.
+- **`ruby_ablate_blindfold_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,kv EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by disabling blindfold dropout features to reduce noise and let the model focus on consistent structural signals in the small Ruby dataset.
+
+</details>
+
+## Cycle `20260521T055156-filetypes-ruby` — 2026-05-21T05:51:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1c1921c02319ab03` | ruby_control_textenc_lr003_leaves128 | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-21T05-56-27_20260521T055156-filetypes-ruby_ruby_control_textenc_lr003_leaves128.log) |
+| `452784bd28aa7453` | ruby_control_textenc_reg_lambda2 | ok | 0.8894 | 0.9963 | 0.8235 | 1 | [log](out/autocollie/runs/2026-05-21T05-56-32_20260521T055156-filetypes-ruby_ruby_control_textenc_reg_lambda2.log) |
+| `2039f9483df3a60c` | ruby_feat_kv_vocab_10k | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-21T05-56-33_20260521T055156-filetypes-ruby_ruby_feat_kv_vocab_10k.log) |
+| `05c30a9fc26ac215` | ruby_feat_text_metrics_lowfreq_bigrams | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-21T05-56-37_20260521T055156-filetypes-ruby_ruby_feat_text_metrics_lowfreq_bigrams.log) |
+| `979abfef85b2bad9` | ruby_transfer_kv_seedsearch3 | ok | 0.8969 | 0.9968 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-21T05-56-41_20260521T055156-filetypes-ruby_ruby_transfer_kv_seedsearch3.log) |
+| `bb6c12bd33ead145` | ruby_feat_tiered_crit_trigrams | ok | 0.7766 | 0.9954 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-21T05-56-46_20260521T055156-filetypes-ruby_ruby_feat_tiered_crit_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_control_textenc_lr003_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Increase num_leaves to 128 on best feature set to improve PR_AUC by capturing more complex decision boundaries without harming ROC_AUC.
+- **`ruby_control_textenc_reg_lambda2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Add L2 regularization and higher min_child_samples to the best feature set to stabilize PR_AUC and reduce overfitting on the small Ruby corpus.
+- **`ruby_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 10k to extract key-value signal from Ruby configs/scripts, targeting PR_AUC improvement.
+- **`ruby_feat_text_metrics_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and lower bigram_min_freq to 50 to capture rare obfuscation patterns, aiming to boost recall@3FPM.
+- **`ruby_transfer_kv_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Retry strong KV feature set with seed_search_k=3 to reduce seed variance and stabilize PR_AUC gains observed in sister routes.
+- **`ruby_feat_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams to model higher-order trait co-occurrences, targeting PR_AUC improvement while keeping ROC_AUC flat.
+
+</details>
+

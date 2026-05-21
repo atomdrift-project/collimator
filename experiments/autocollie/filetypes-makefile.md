@@ -222,3 +222,137 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T090844-filetypes-makefile` — 2026-05-20T09:08:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `94e832ddfb9a016c` | makefile_control_train_tune | ok | 0.0769 | 0.5000 | 0.1429 | 5 | [log](out/autocollie/runs/2026-05-20T09-12-54_20260520T090844-filetypes-makefile_makefile_control_train_tune.log) |
+| `5385edb7c53218a8` | makefile_train_extra_trees_reg | ok | 0.2917 | 0.8333 | 0.2857 | 3 | [log](out/autocollie/runs/2026-05-20T09-12-59_20260520T090844-filetypes-makefile_makefile_train_extra_trees_reg.log) |
+| `4d3110c918dd8758` | makefile_train_scale_pos_weight | ok | 0.0769 | 0.5000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-20T09-13-02_20260520T090844-filetypes-makefile_makefile_train_scale_pos_weight.log) |
+| `596a79805b0db0e5` | makefile_text_metrics_full | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T09-13-03_20260520T090844-filetypes-makefile_makefile_text_metrics_full.log) |
+| `e3d257b6c3059857` | makefile_kv_vocab_split | ok | 0.2917 | 0.8333 | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-20T09-13-06_20260520T090844-filetypes-makefile_makefile_kv_vocab_split.log) |
+| `dc592e2b169469c9` | makefile_bigram_low_freq | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T09-13-09_20260520T090844-filetypes-makefile_makefile_bigram_low_freq.log) |
+| `9aa25818aad8063f` | makefile_ablate_metrics | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T09-13-11_20260520T090844-filetypes-makefile_makefile_ablate_metrics.log) |
+| `df71a4dfb56441ed` | makefile_transfer_xml_kv | ok | 0.0769 | 0.5000 | 0.1429 | 4 | [log](out/autocollie/runs/2026-05-20T09-13-14_20260520T090844-filetypes-makefile_makefile_transfer_xml_kv.log) |
+| `b7df8e481e5330d1` | makefile_transfer_php_textenc | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T09-13-17_20260520T090844-filetypes-makefile_makefile_transfer_php_textenc.log) |
+| `56a1b1df2352a864` | makefile_seed_search_ensemble | ok | 0.0769 | 0.5000 | 0.1429 | 4 | [log](out/autocollie/runs/2026-05-20T09-13-20_20260520T090844-filetypes-makefile_makefile_seed_search_ensemble.log) |
+| `b52f1097afb4febb` | makefile_retry_textenc_metrics | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T09-13-24_20260520T090844-filetypes-makefile_makefile_retry_textenc_metrics.log) |
+| `b7ffd9bb38d4cd5f` | makefile_tiered_bigram_crit | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T09-13-27_20260520T090844-filetypes-makefile_makefile_tiered_bigram_crit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control to establish baseline PR_AUC and ROC_AUC stability with conservative tree complexity for the tiny makefile corpus.
+- **`makefile_train_extra_trees_reg`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Improve recall@3FPM by adding ensemble noise and stronger regularization to prevent overfitting on the 2-malware holdout.
+- **`makefile_train_scale_pos_weight`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Optimize recall@3FPM directly by down-weighting positives to reduce false positives at the deployed operating point.
+- **`makefile_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=48 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Boost PR_AUC by enabling text_metrics_full to capture structural obfuscation signals specific to makefile syntax.
+- **`makefile_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,present EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=2000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=30 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Improve PR_AUC by extracting per-element KV signals from makefile variables and targets using kv_value_split.
+- **`makefile_bigram_low_freq`** `EXP_BIGRAM_MAX=3000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters,maxcrit EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Increase recall@3FPM by lowering bigram frequency floor to capture rare but malicious makefile patterns.
+- **`makefile_ablate_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,metrics,score EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Stabilize PR_AUC by removing the metrics group which may introduce noise on this tiny corpus, reducing overfit.
+- **`makefile_transfer_xml_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Port high-PR_AUC XML route config to makefile, aiming to lift PR_AUC via shared KV structure signals.
+- **`makefile_transfer_php_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Transfer PHP route text_encoding success to makefile to improve ROC_AUC by capturing encoding anomalies.
+- **`makefile_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=48 EXP_REG_LAMBDA=2 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Reduce seed variance and stabilize recall@3FPM by averaging 3 seeds on the text_metrics_full surface.
+- **`makefile_retry_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,present EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry historical best PR_AUC config to check if daily ingest drift has improved signal for makefile text features.
+- **`makefile_tiered_bigram_crit`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1 EXP_TIERED_BIGRAM_MIN_CRIT=2 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Improve PR_AUC by focusing tiered bigrams on higher-crit paths to filter noise in makefile dependency chains.
+
+</details>
+
+## Cycle `20260520T175416-filetypes-makefile` — 2026-05-20T17:54:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6f38e896b5a506cf` | makefile_control_extra_trees_reg | ok | 0.0769 | 0.5000 | 0.1429 | 5 | [log](out/autocollie/runs/2026-05-20T17-59-48_20260520T175416-filetypes-makefile_makefile_control_extra_trees_reg.log) |
+| `63e0d53278a9ef21` | makefile_exploit_hardneg_boundary | ok | 0.0769 | 0.5000 | 0.1429 | 2 | [log](out/autocollie/runs/2026-05-20T17-59-53_20260520T175416-filetypes-makefile_makefile_exploit_hardneg_boundary.log) |
+| `4f4b6a9b0ae8410d` | makefile_exploit_threshold_fpr | ok | 0.0769 | 0.5000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-20T17-59-56_20260520T175416-filetypes-makefile_makefile_exploit_threshold_fpr.log) |
+| `140f48ef3860e2ac` | makefile_feat_kv_vocab_split | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T17-59-57_20260520T175416-filetypes-makefile_makefile_feat_kv_vocab_split.log) |
+| `13cdb3dca1b4b67d` | makefile_feat_text_metrics_enc | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T18-00-00_20260520T175416-filetypes-makefile_makefile_feat_text_metrics_enc.log) |
+| `6fa7120d27e18091` | makefile_feat_bigram_low_freq | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T18-00-03_20260520T175416-filetypes-makefile_makefile_feat_bigram_low_freq.log) |
+| `8e5248612686994f` | makefile_feat_tiered_crit_bigrams | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T18-00-06_20260520T175416-filetypes-makefile_makefile_feat_tiered_crit_bigrams.log) |
+| `d85811d76477b98a` | makefile_ablate_blindfold | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T18-00-09_20260520T175416-filetypes-makefile_makefile_ablate_blindfold.log) |
+| `a576edd68f2ffd7f` | makefile_transfer_xml_kv_vocab | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T18-00-12_20260520T175416-filetypes-makefile_makefile_transfer_xml_kv_vocab.log) |
+| `aff7a439ba677a86` | makefile_transfer_rust_capacity | ok | 0.0769 | 0.5000 | 0.1429 | 2 | [log](out/autocollie/runs/2026-05-20T18-00-15_20260520T175416-filetypes-makefile_makefile_transfer_rust_capacity.log) |
+| `684686fa4bfb5d07` | makefile_gen_seed_search_3 | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T18-00-17_20260520T175416-filetypes-makefile_makefile_gen_seed_search_3.log) |
+| `dcc8657b939cc0ef` | makefile_retry_kv_split_v2 | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-20T18-00-20_20260520T175416-filetypes-makefile_makefile_retry_kv_split_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_control_extra_trees_reg`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=250 EXP_REG_LAMBDA=2.5 EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC feature set; increase min_child_samples and reg_lambda to prevent overfitting on the 2-malware holdout, stabilizing PR_AUC.
+- **`makefile_exploit_hardneg_boundary`** `EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Apply mild hard-negative weighting to push benign makefiles down in ranking, aiming to improve recall@3FPM by sharpening the low-FPR decision boundary.
+- **`makefile_exploit_threshold_fpr`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Switch threshold tuning to max_recall_at_fpr targeting 3e-6 to directly optimize recall@3FPM at the deployed operating point.
+- **`makefile_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture structured makefile variable assignments, targeting PR_AUC gains from finer-grained key-value signals.
+- **`makefile_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture obfuscation and structural text patterns in malicious makefiles, aiming to boost ROC_AUC and PR_AUC.
+- **`makefile_feat_bigram_low_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 to capture rarer but highly indicative makefile command sequences, targeting PR_AUC improvement without excessive noise.
+- **`makefile_feat_tiered_crit_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_CRIT=3 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_bigrams and tiered_crit_trigrams to focus on high-severity trait co-occurrences, reducing noise and aiming for higher PR_AUC.
+- **`makefile_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold features to reduce dropout noise on the small corpus, hypothesizing that stable feature presence will improve PR_AUC consistency.
+- **`makefile_transfer_xml_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port XML route's successful kv_vocab configuration with conservative limits, expecting structured key-value signals to transfer well to makefiles and lift PR_AUC.
+- **`makefile_transfer_rust_capacity`** `EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Adapt Rust route's capacity-boosting training knobs to better fit the sparse makefile feature space, targeting recall@3FPM gains via deeper trees.
+- **`makefile_gen_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k 3 on the baseline feature set to average out seed variance and stabilize recall@3FPM across different random splits.
+- **`makefile_retry_kv_split_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry the historically strong makefile_kv_vocab_split configuration after corpus updates, expecting renewed PR_AUC signal from refreshed training data.
+
+</details>
+
+## Cycle `20260521T033225-filetypes-makefile` — 2026-05-21T03:32:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6804e27bd19bfec4` | makefile_control_train_tweak | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T03-37-14_20260521T033225-filetypes-makefile_makefile_control_train_tweak.log) |
+| `3edc809ecfdcae9d` | makefile_feat_kv_vocab_split | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T03-37-17_20260521T033225-filetypes-makefile_makefile_feat_kv_vocab_split.log) |
+| `a7b53ba0c5bc6b20` | makefile_feat_text_metrics_full | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T03-37-19_20260521T033225-filetypes-makefile_makefile_feat_text_metrics_full.log) |
+| `0834d83677f4692a` | makefile_feat_low_freq_bigrams | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T03-37-22_20260521T033225-filetypes-makefile_makefile_feat_low_freq_bigrams.log) |
+| `a22ad4c78d675ff0` | makefile_train_scale_pos_05 | ok | 0.0769 | 0.5000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-21T03-37-25_20260521T033225-filetypes-makefile_makefile_train_scale_pos_05.log) |
+| `3d57cd5a4267429d` | makefile_train_extra_trees_reg | ok | 0.0769 | 0.5000 | 0.1429 | 1 | [log](out/autocollie/runs/2026-05-21T03-37-26_20260521T033225-filetypes-makefile_makefile_train_extra_trees_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_control_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Replicate best feature env to hit matrix cache; increase estimators and lower LR to stabilize ranking for PR_AUC on the tiny holdout.
+- **`makefile_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Enable kv_vocab and kv_value_split to capture makefile variable/target patterns; aims to boost PR_AUC by adding structured key-value signal.
+- **`makefile_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Enable text_metrics_full and text_encoding to capture structural text anomalies in makefiles; targets recall@3 FP/M by highlighting format deviations.
+- **`makefile_feat_low_freq_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Lower bigram_min_freq to 25 and enable tiered_crit_bigrams to capture rare but distinctive patterns in the small corpus; aims to improve PR_AUC without overfitting via tiered gating.
+- **`makefile_train_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Set scale_pos_weight_mult to 0.5 to down-weight positives and reduce FPR, directly optimizing recall@3 FP/M at the deployed operating point.
+- **`makefile_train_extra_trees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Enable extra_trees and increase reg_lambda to add ensemble noise and regularization, improving generalization and ROC_AUC on the tiny dataset.
+
+</details>
+
+## Cycle `20260521T060101-filetypes-makefile` — 2026-05-21T06:01:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0a9f1bf2d5586e20` | makefile_control_reg_tiny | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T06-05-48_20260521T060101-filetypes-makefile_makefile_control_reg_tiny.log) |
+| `5a9b5cba944adb2e` | makefile_feat_kv_vocab | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T06-05-50_20260521T060101-filetypes-makefile_makefile_feat_kv_vocab.log) |
+| `b819076af71a849d` | makefile_feat_text_metrics | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T06-05-53_20260521T060101-filetypes-makefile_makefile_feat_text_metrics.log) |
+| `66318c6d3f1456eb` | makefile_feat_tiered_bigrams | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T06-05-55_20260521T060101-filetypes-makefile_makefile_feat_tiered_bigrams.log) |
+| `df0ac4847fd2cd67` | makefile_feat_kv_split_seed | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T06-05-58_20260521T060101-filetypes-makefile_makefile_feat_kv_split_seed.log) |
+| `2b61dc292bfb2baa` | makefile_train_dart_extra_trees | ok | 0.0769 | 0.5000 | 0.1429 | 1 | [log](out/autocollie/runs/2026-05-21T06-06-01_20260521T060101-filetypes-makefile_makefile_train_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_control_reg_tiny`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.01 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=16 EXP_REG_LAMBDA=5 EXP_TRAIN_SAMPLES=30000` — Control feature set with heavy regularization (high reg_lambda, low num_leaves) to prevent overfitting on the tiny 26-sample holdout, aiming to stabilize PR_AUC.
+- **`makefile_feat_kv_vocab`** `EXP_KV_MIN_FREQ=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture makefile variable assignments and targets, targeting PR_AUC improvement by adding structural key-value signal.
+- **`makefile_feat_text_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture script-like formatting and obfuscation patterns in makefiles, aiming to boost recall@3 FP/M.
+- **`makefile_feat_tiered_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=2000 EXP_TIERED_BIGRAM_MIN_FREQ=1 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Switch to tiered_crit_bigrams with low min_freq to capture rare but high-criticality makefile patterns, targeting PR_AUC.
+- **`makefile_feat_kv_split_seed`** `EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Combine kv_value_split with seed_search_k=3 to recover per-element signal in makefile lists while averaging out variance, aiming to stabilize PR_AUC.
+- **`makefile_train_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use dart boosting and extra_trees to add regularization and noise robustness for the small dataset, targeting recall@3 FP/M.
+
+</details>
+
+## Cycle `20260521T092444-filetypes-makefile` — 2026-05-21T09:24:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5fb4605e55ddb48f` | makefile_control_reg_high | ok | 0.0769 | 0.5000 | 0.1429 | 1 | [log](out/autocollie/runs/2026-05-21T09-28-59_20260521T092444-filetypes-makefile_makefile_control_reg_high.log) |
+| `85e15530ff8ee9d5` | makefile_train_scale_pos_05 | ok | 0.0769 | 0.5000 | 0.1429 | 1 | [log](out/autocollie/runs/2026-05-21T09-29-00_20260521T092444-filetypes-makefile_makefile_train_scale_pos_05.log) |
+| `8c79ba56231fa063` | makefile_feat_kv_vocab_split | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T09-29-01_20260521T092444-filetypes-makefile_makefile_feat_kv_vocab_split.log) |
+| `f0680042675bf84a` | makefile_feat_text_metrics_full | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T09-29-04_20260521T092444-filetypes-makefile_makefile_feat_text_metrics_full.log) |
+| `99e3029dbfa55132` | makefile_transfer_hardneg | ok | 0.0769 | 0.5000 | 0.1429 | 1 | [log](out/autocollie/runs/2026-05-21T09-29-06_20260521T092444-filetypes-makefile_makefile_transfer_hardneg.log) |
+| `8245f3b50eda9bb8` | makefile_ablation_blindfold_seed | ok | 0.0769 | 0.5000 | 0.1429 | 3 | [log](out/autocollie/runs/2026-05-21T09-29-08_20260521T092444-filetypes-makefile_makefile_ablation_blindfold_seed.log) |
+
+<details><summary>Spec details</summary>
+
+- **`makefile_control_reg_high`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=150 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=32 EXP_REG_LAMBDA=3 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by increasing L2 regularization and reducing tree complexity to prevent overfitting on the tiny 2-malware holdout.
+- **`makefile_train_scale_pos_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Target recall@3FPM by down-weighting positives to push the decision boundary higher, reducing false positives at the deployed operating point.
+- **`makefile_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=2000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=48 EXP_REG_LAMBDA=2 …` — Target PR_AUC by enabling kv_vocab and kv_value_split to extract structured signal from makefile variables and targets, paired with conservative regularization.
+- **`makefile_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=180 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by enabling text_metrics_full to capture obfuscation and structural anomalies in makefile syntax, with higher min_child_samples to stabilize splits.
+- **`makefile_transfer_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Target recall@3FPM by applying hard_negative_fraction and weight from sister routes to focus the model on difficult benign makefiles, improving tail separation.
+- **`makefile_ablation_blindfold_seed`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2.5 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by disabling blindfold dropout features to reduce noise in the small corpus, combined with seed_search_k=3 to average out variance.
+
+</details>
+

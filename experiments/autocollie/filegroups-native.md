@@ -90,3 +90,115 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T082824-filegroups-native` — 2026-05-20T08:28:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1f78e347ae56627d` | native_control_baseline | ok | 0.9993 | 0.9994 | 0.9837 | 133 | [log](out/autocollie/runs/2026-05-20T08-33-38_20260520T082824-filegroups-native_native_control_baseline.log) |
+| `48f4ecadddb8fce1` | native_hard_neg_sweep_1 | ok | 0.9994 | 0.9995 | 0.9929 | 137 | [log](out/autocollie/runs/2026-05-20T08-35-50_20260520T082824-filegroups-native_native_hard_neg_sweep_1.log) |
+| `bfddc3c1d9f9ec7b` | native_threshold_fpr_opt | ok | 0.9993 | 0.9994 | 0.0000 | 73 | [log](out/autocollie/runs/2026-05-20T08-38-07_20260520T082824-filegroups-native_native_threshold_fpr_opt.log) |
+| `b2616de89009a347` | native_kv_vocab_expand | ok | 0.9994 | 0.9994 | 0.9932 | 135 | [log](out/autocollie/runs/2026-05-20T08-39-20_20260520T082824-filegroups-native_native_kv_vocab_expand.log) |
+| `aae22966d75fb94f` | native_symbol_vocab_bigrams | ok | 0.9993 | 0.9994 | 0.9928 | 142 | [log](out/autocollie/runs/2026-05-20T08-41-35_20260520T082824-filegroups-native_native_symbol_vocab_bigrams.log) |
+| `847d9370f2fa844f` | native_text_metrics_encoding | ok | 0.9993 | 0.9994 | 0.9856 | 137 | [log](out/autocollie/runs/2026-05-20T08-43-58_20260520T082824-filegroups-native_native_text_metrics_encoding.log) |
+| `a08599dba83cf328` | native_ablate_blindfold | ok | 0.9994 | 0.9994 | 0.9930 | 137 | [log](out/autocollie/runs/2026-05-20T08-46-15_20260520T082824-filegroups-native_native_ablate_blindfold.log) |
+| `75d70de7180c3675` | native_transfer_extreme_metrics | ok | 0.9994 | 0.9995 | 0.9930 | 69 | [log](out/autocollie/runs/2026-05-20T08-48-32_20260520T082824-filegroups-native_native_transfer_extreme_metrics.log) |
+| `de65226ae59b0267` | native_seed_ensemble_k3 | ok | 0.9994 | 0.9994 | 0.9914 | 203 | [log](out/autocollie/runs/2026-05-20T08-49-40_20260520T082824-filegroups-native_native_seed_ensemble_k3.log) |
+| `bc5f8f1b3efe41b0` | native_ngram_freq_trigram | ok | 0.9993 | 0.9994 | 0.9926 | 136 | [log](out/autocollie/runs/2026-05-20T08-53-03_20260520T082824-filegroups-native_native_ngram_freq_trigram.log) |
+| `2aeb0dd8d0ea1633` | native_overlay_packer_signal | ok | 0.9993 | 0.9994 | 0.9843 | 122 | [log](out/autocollie/runs/2026-05-20T08-55-19_20260520T082824-filegroups-native_native_overlay_packer_signal.log) |
+| `fd6078fb74d19288` | native_metric_ratios_normalized | ok | 0.9993 | 0.9994 | 0.9927 | 146 | [log](out/autocollie/runs/2026-05-20T08-57-21_20260520T082824-filegroups-native_native_metric_ratios_normalized.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_control_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature_env to establish a matrix-cache baseline and measure training-only variance on PR_AUC.
+- **`native_hard_neg_sweep_1`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`native_threshold_fpr_opt`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimize recall@3FPM at the deployed operating point by targeting FPR=3e-6.
+- **`native_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Expand PR_AUC by capturing high-signal key-value pairs from native binaries that standard n-grams miss.
+- **`native_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 …` — Boost recall@3FPM by modeling import/symbol co-occurrence patterns specific to native executables.
+- **`native_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Improve PR_AUC by adding structural text metrics and encoding features to catch obfuscated native payloads.
+- **`native_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Test if removing blindfold dropout reduces overfitting noise while preserving PR_AUC and improving recall@3FPM stability.
+- **`native_transfer_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfer extended metrics and extreme features from sister routes to improve PR_AUC on native binaries with similar structural traits.
+- **`native_seed_ensemble_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Reduce seed-driven variance to verify if recent PR_AUC gains are robust across different data splits.
+- **`native_ngram_freq_trigram`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=5` — Retry lower bigram frequency floor and add trigrams to capture rarer native patterns, targeting PR_AUC improvement.
+- **`native_overlay_packer_signal`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_NUM_LEAVES=128 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Introduce overlay and nonstandard section metrics to improve recall@3FPM by detecting packer/dropper artifacts in native files.
+- **`native_metric_ratios_normalized`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=128 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Introduce cross-metric ratios and size-normalized features to improve PR_AUC by capturing structural density signals in native files.
+
+</details>
+
+## Cycle `20260520T180023-filegroups-native` — 2026-05-20T18:00:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ebb38b350e6b7155` | native_control_leaves128_lr003 | ok | 0.9995 | 0.9995 | 0.9928 | 163 | [log](out/autocollie/runs/2026-05-20T18-04-59_20260520T180023-filegroups-native_native_control_leaves128_lr003.log) |
+| `b07610f30b3a1ac3` | native_hn_sweep_01_12 | ok | 0.9995 | 0.9996 | 0.9930 | 145 | [log](out/autocollie/runs/2026-05-20T18-07-42_20260520T180023-filegroups-native_native_hn_sweep_01_12.log) |
+| `d39508737917301f` | native_threshold_fpr3e6 | ok | 0.9995 | 0.9995 | 0.0000 | 80 | [log](out/autocollie/runs/2026-05-20T18-10-07_20260520T180023-filegroups-native_native_threshold_fpr3e6.log) |
+| `a99d7ffca1cb0991` | native_kv_vocab_split | ok | 0.9995 | 0.9995 | 0.9934 | 155 | [log](out/autocollie/runs/2026-05-20T18-11-27_20260520T180023-filegroups-native_native_kv_vocab_split.log) |
+| `54b4d6b4442fa957` | native_symbol_bigrams | ok | 0.9995 | 0.9995 | 0.9914 | 163 | [log](out/autocollie/runs/2026-05-20T18-14-02_20260520T180023-filegroups-native_native_symbol_bigrams.log) |
+| `eb6db3381d23a280` | native_packer_overlay_signal | ok | 0.9995 | 0.9995 | 0.9919 | 149 | [log](out/autocollie/runs/2026-05-20T18-16-45_20260520T180023-filegroups-native_native_packer_overlay_signal.log) |
+| `bd80280ba0cc3264` | native_text_encoding_metrics | ok | 0.9995 | 0.9995 | 0.9927 | 125 | [log](out/autocollie/runs/2026-05-20T18-19-14_20260520T180023-filegroups-native_native_text_encoding_metrics.log) |
+| `47f8512f2316c1e7` | native_ablate_blindfold | ok | 0.9995 | 0.9995 | 0.9918 | 120 | [log](out/autocollie/runs/2026-05-20T18-21-19_20260520T180023-filegroups-native_native_ablate_blindfold.log) |
+| `d1b6d2f0a6bf0b31` | native_transfer_java_metrics | ok | 0.9995 | 0.9996 | 0.9927 | 138 | [log](out/autocollie/runs/2026-05-20T18-23-20_20260520T180023-filegroups-native_native_transfer_java_metrics.log) |
+| `aec4b3fd42efca22` | native_seed_ensemble_k3 | ok | 0.9995 | 0.9995 | 0.9916 | 233 | [log](out/autocollie/runs/2026-05-20T18-25-38_20260520T180023-filegroups-native_native_seed_ensemble_k3.log) |
+| `844e0a2a2d0f2f96` | native_retry_kv_hn_012_16 | ok | 0.9996 | 0.9996 | 0.9927 | 221 | [log](out/autocollie/runs/2026-05-20T18-29-31_20260520T180023-filegroups-native_native_retry_kv_hn_012_16.log) |
+| `23dcb89f53e9791c` | native_trigrams_tiered | ok | 0.9995 | 0.9995 | 0.9921 | 153 | [log](out/autocollie/runs/2026-05-20T18-33-11_20260520T180023-filegroups-native_native_trigrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_control_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec tuning tree capacity and LR to stabilize PR_AUC gains without overfitting.
+- **`native_hn_sweep_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Hard-negative sweep to sharpen decision boundary at low FPR, targeting recall@3FPM improvement.
+- **`native_threshold_fpr3e6`** `EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for deployed operating point to maximize recall@3FPM.
+- **`native_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab and splits values to capture granular library/dependency signals, targeting PR_AUC.
+- **`native_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Adds symbol co-occurrence patterns to catch API chaining, targeting PR_AUC.
+- **`native_packer_overlay_signal`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_SILENT_PACKER_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Injects structural packer/dropper indicators to catch obfuscated binaries, targeting recall@3FPM.
+- **`native_text_encoding_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Research vocab enabling text encoding and full text metrics to capture document/script obfuscation, targeting PR_AUC.
+- **`native_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Removes blindfold dropout to test if deterministic features improve PR_AUC by reducing noise.
+- **`native_transfer_java_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Transfers strong java route metric families to native to boost structural signal, targeting PR_AUC.
+- **`native_seed_ensemble_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Averages 3 seeds to reduce variance and stabilize recall@3FPM across corpus splits.
+- **`native_retry_kv_hn_012_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Data-drift retry of top PR_AUC config with adjusted hard-negative weight to recover guardrails.
+- **`native_trigrams_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Adds severity-prefixed trigrams to capture multi-step attack chains, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260521T023437-filegroups-native` — 2026-05-21T02:34:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `adab78585d32f37f` | native_control_leaves128_lr003 | ok | 0.9995 | 0.9995 | 0.9928 | 77 | [log](out/autocollie/runs/2026-05-21T02-38-51_20260521T023437-filegroups-native_native_control_leaves128_lr003.log) |
+| `8e3b73d919b0cc01` | native_hn_sweep_01_16 | ok | 0.9995 | 0.9995 | 0.9925 | 45 | [log](out/autocollie/runs/2026-05-21T02-40-08_20260521T023437-filegroups-native_native_hn_sweep_01_16.log) |
+| `669ee49fbfe55597` | native_threshold_fpr_3e6 | ok | 0.9995 | 0.9995 | 0.0000 | 14 | [log](out/autocollie/runs/2026-05-21T02-40-52_20260521T023437-filegroups-native_native_threshold_fpr_3e6.log) |
+| `b474b8e94b84c043` | native_kv_vocab_10k | ok | 0.9995 | 0.9995 | 0.9921 | 111 | [log](out/autocollie/runs/2026-05-21T02-41-06_20260521T023437-filegroups-native_native_kv_vocab_10k.log) |
+| `ecb46274bd26e271` | native_symbol_vocab_5k | ok | 0.9995 | 0.9995 | 0.9929 | 113 | [log](out/autocollie/runs/2026-05-21T02-42-57_20260521T023437-filegroups-native_native_symbol_vocab_5k.log) |
+| `6dcd5993f3e923a1` | native_textenc_trigrams | ok | 0.9995 | 0.9995 | 0.9929 | 99 | [log](out/autocollie/runs/2026-05-21T02-44-49_20260521T023437-filegroups-native_native_textenc_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env for cache hit; lower LR and increase leaves to refine ranking for PR_AUC stability.
+- **`native_hn_sweep_01_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Upweight hard negatives to push benign tail down, targeting recall@3FPM improvement without hurting PR_AUC.
+- **`native_threshold_fpr_3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Directly optimize threshold at deployed operating point to maximize recall@3FPM while keeping PR_AUC flat.
+- **`native_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture key-value pair signals in native binaries, aiming to lift PR_AUC by adding discriminative metadata features.
+- **`native_symbol_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol_vocab to capture import/export name distributions, targeting PR_AUC gains from lexical signal in native binaries.
+- **`native_textenc_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding and tiered_crit_trigrams to capture obfuscation and high-crit path co-occurrences, aiming to boost recall@3FPM via richer feature surface.
+
+</details>
+
+## Cycle `20260521T055156-filegroups-native` — 2026-05-21T05:51:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `93fc11c5c9d2a8c2` | native_control_hn_012_16 | ok | 0.9995 | 0.9996 | 0.9865 | 28 | [log](out/autocollie/runs/2026-05-21T05-55-26_20260521T055156-filegroups-native_native_control_hn_012_16.log) |
+| `2261131733fe049a` | native_control_fpr_3e6 | ok | 0.9995 | 0.9995 | 0.0000 | 14 | [log](out/autocollie/runs/2026-05-21T05-55-54_20260521T055156-filegroups-native_native_control_fpr_3e6.log) |
+| `f5e72b5c48ca6e3c` | native_kv_vocab_20k | ok | 0.9995 | 0.9995 | 0.9921 | 86 | [log](out/autocollie/runs/2026-05-21T05-56-09_20260521T055156-filegroups-native_native_kv_vocab_20k.log) |
+| `cfb22e0a8b631e3d` | native_symbol_bigrams_10k | ok | 0.9995 | 0.9996 | 0.9861 | 89 | [log](out/autocollie/runs/2026-05-21T05-57-35_20260521T055156-filegroups-native_native_symbol_bigrams_10k.log) |
+| `5592d7f3763d78af` | native_seed_search_3 | ok | 0.9995 | 0.9995 | 0.9916 | 40 | [log](out/autocollie/runs/2026-05-21T05-59-04_20260521T055156-filegroups-native_native_seed_search_3.log) |
+| `9391acf1ae51f852` | native_textenc_metrics | ok | 0.9995 | 0.9995 | 0.9927 | 76 | [log](out/autocollie/runs/2026-05-21T05-59-44_20260521T055156-filegroups-native_native_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_control_hn_012_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to reduce false positives at the tail, while keeping PR_AUC flat.
+- **`native_control_fpr_3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to maximize recall@3FPM at the deployed operating point by tuning the threshold directly to 3e-6 FPR, preserving PR_AUC.
+- **`native_kv_vocab_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC and recall@3FPM by expanding the KV vocab to 20k, capturing rarer malicious key-value patterns.
+- **`native_symbol_bigrams_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by adding symbol bigrams to detect malicious import co-occurrences in native binaries.
+- **`native_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM gains by averaging over 3 seeds, reducing variance without changing the feature surface.
+- **`native_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling text_encoding and text_metrics_full to extract structural text signals from native files.
+
+</details>
+

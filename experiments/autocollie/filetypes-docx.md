@@ -153,3 +153,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T070127-filetypes-docx` — 2026-05-20T07:01:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d0567438b9ee907b` | docx_control_train_leaves128 | ok | 0.9897 | 0.5000 | 0.9948 | 6 | [log](out/autocollie/runs/2026-05-20T07-06-47_20260520T070127-filetypes-docx_docx_control_train_leaves128.log) |
+| `7b2858128c0572ee` | docx_exploit_hardneg_tail | ok | 0.9897 | 0.5000 | 0.9948 | 2 | [log](out/autocollie/runs/2026-05-20T07-06-53_20260520T070127-filetypes-docx_docx_exploit_hardneg_tail.log) |
+| `438ea28c8ab2f04d` | docx_exploit_scalepos05 | ok | 0.9897 | 0.5000 | 0.9948 | 2 | [log](out/autocollie/runs/2026-05-20T07-06-54_20260520T070127-filetypes-docx_docx_exploit_scalepos05.log) |
+| `4a5cd0e368e357bf` | docx_feat_kv_vocab_split | ok | 0.9897 | 0.5000 | 0.9948 | 4 | [log](out/autocollie/runs/2026-05-20T07-06-56_20260520T070127-filetypes-docx_docx_feat_kv_vocab_split.log) |
+| `2bf70b3bdec3a37a` | docx_feat_textmetrics_obfuscation | ok | 0.9897 | 0.5000 | 0.9948 | 4 | [log](out/autocollie/runs/2026-05-20T07-07-00_20260520T070127-filetypes-docx_docx_feat_textmetrics_obfuscation.log) |
+| `cc7acfae6ed7d749` | docx_feat_textenc_linelength | ok | 0.9897 | 0.5000 | 0.9948 | 4 | [log](out/autocollie/runs/2026-05-20T07-07-04_20260520T070127-filetypes-docx_docx_feat_textenc_linelength.log) |
+| `515353e3961cd85d` | docx_feat_tiered_trigrams_obj | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-20T07-07-08_20260520T070127-filetypes-docx_docx_feat_tiered_trigrams_obj.log) |
+| `e33e958ec885eb92` | docx_ablation_blindfold | ok | 0.9897 | 0.5000 | 0.9948 | 4 | [log](out/autocollie/runs/2026-05-20T07-07-11_20260520T070127-filetypes-docx_docx_ablation_blindfold.log) |
+| `413342ffc3ce9982` | docx_transfer_xml_kv_vocab | ok | 0.9897 | 0.5000 | 0.9948 | 4 | [log](out/autocollie/runs/2026-05-20T07-07-15_20260520T070127-filetypes-docx_docx_transfer_xml_kv_vocab.log) |
+| `af5e9d4053d77045` | docx_gen_seed_search_3 | ok | 0.9897 | 0.5000 | 0.9948 | 4 | [log](out/autocollie/runs/2026-05-20T07-07-18_20260520T070127-filetypes-docx_docx_gen_seed_search_3.log) |
+| `05e9ecf341a8a6af` | docx_retry_kv_textenc_static | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-20T07-07-22_20260520T070127-filetypes-docx_docx_retry_kv_textenc_static.log) |
+| `a491303a87129f6d` | docx_feat_metric_ratios_norm | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-20T07-07-26_20260520T070127-filetypes-docx_docx_feat_metric_ratios_norm.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docx_control_train_leaves128`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity with num_leaves=128 while keeping the proven feature surface intact for a cache hit.
+- **`docx_exploit_hardneg_tail`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`docx_exploit_scalepos05`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives (scale_pos_weight_mult=0.5) to reduce false positives at the deployed operating point.
+- **`docx_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by enabling kv_vocab and kv_value_split to recover per-element signal in document metadata and object streams.
+- **`docx_feat_textmetrics_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_metrics_full and document_obfuscation_features to capture DOCX-specific obfuscation patterns.
+- **`docx_feat_textenc_linelength`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_encoding and line_length_buckets to detect encoding anomalies and long-line obfuscation in DOCX.
+- **`docx_feat_tiered_trigrams_obj`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling tiered_crit_trigrams and objective_trigrams to capture higher-order malicious intent sequences.
+- **`docx_ablation_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by disabling blindfold dropout features to reduce training noise and improve generalization on the small DOCX corpus.
+- **`docx_transfer_xml_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by transferring the strong XML route's kv_vocab configuration, adjusted with a conservative vocab cap for DOCX metadata.
+- **`docx_gen_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to verify recall@3FPM signal stability by running seed_search_k=3 on the strong kv/textenc surface to average out seed variance.
+- **`docx_retry_kv_textenc_static`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_PACKAGED_CAPABILITY_MODE=findings EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to recover PR_AUC by retrying the historically strong kv_textenc_package_surface configuration after daily corpus drift.
+- **`docx_feat_metric_ratios_norm`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling metric_ratio_features and size_normalized_metrics to help trees learn density signals on small DOCX files.
+
+</details>
+
+## Cycle `20260521T054605-filetypes-docx` — 2026-05-21T05:46:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `728e420e719d556d` | docx_control_leaves128_lr003 | ok | 0.9897 | 0.5000 | 0.9948 | 6 | [log](out/autocollie/runs/2026-05-21T05-49-20_20260521T054605-filetypes-docx_docx_control_leaves128_lr003.log) |
+| `72ae9c1c3fddab75` | docx_feat_text_metrics_full | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-21T05-49-26_20260521T054605-filetypes-docx_docx_feat_text_metrics_full.log) |
+| `9b45215a7d9fc77e` | docx_feat_kv_vocab_15k | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-21T05-49-29_20260521T054605-filetypes-docx_docx_feat_kv_vocab_15k.log) |
+| `3cb9a46cef80d54c` | docx_feat_doc_obfuscation | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-21T05-49-32_20260521T054605-filetypes-docx_docx_feat_doc_obfuscation.log) |
+| `8e019b6fe632aa62` | docx_train_hardneg_01_10 | ok | 0.9897 | 0.5000 | 0.9948 | 1 | [log](out/autocollie/runs/2026-05-21T05-49-34_20260521T054605-filetypes-docx_docx_train_hardneg_01_10.log) |
+| `41e94f4ccf7aee82` | docx_profile_min_malware_3 | ok | 0.9897 | 0.5000 | 0.9948 | 6 | [log](out/autocollie/runs/2026-05-21T05-49-36_20260521T054605-filetypes-docx_docx_profile_min_malware_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docx_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best feature_env with deeper trees and lower LR to improve PR_AUC ranking without changing features.
+- **`docx_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to capture document obfuscation signals (line lengths, escape density) expected to boost recall@3FPM on DOCX.
+- **`docx_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand kv_vocab to 15k to capture rare but malicious key-value patterns in DOCX metadata, targeting PR_AUC gains.
+- **`docx_feat_doc_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable document_obfuscation_features to aggregate anti-static and eval patterns specific to DOCX, aiming to improve tail recall.
+- **`docx_train_hardneg_01_10`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negatives with weight 10 to sharpen decision boundary at low FPR, targeting recall@3FPM improvement.
+- **`docx_profile_min_malware_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Filter training to malware severity >=3 to reduce noise from low-confidence samples, expected to stabilize PR_AUC and boost recall@3FPM.
+
+</details>
+
+## Cycle `20260521T075302-filetypes-docx` — 2026-05-21T07:53:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6a69c8e877def918` | docx_control_leaves128_lr002 | ok | 0.9897 | 0.5000 | 0.9948 | 1 | [log](out/autocollie/runs/2026-05-21T07-57-36_20260521T075302-filetypes-docx_docx_control_leaves128_lr002.log) |
+| `404fa1256d95b0c4` | docx_exploit_hardneg_01_12 | ok | 0.9897 | 0.5000 | 0.9948 | 1 | [log](out/autocollie/runs/2026-05-21T07-57-37_20260521T075302-filetypes-docx_docx_exploit_hardneg_01_12.log) |
+| `9b45215a7d9fc77e` | docx_feat_kv_vocab_15k_v2 | dup | 0.9897 | 0.5000 | 0.9948 | 1 | [log](out/autocollie/runs/2026-05-21T07-57-38_20260521T075302-filetypes-docx_docx_feat_kv_vocab_15k_v2.log) |
+| `47c1cf76529706a9` | docx_feat_text_metrics_full_v2 | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-21T07-57-39_20260521T075302-filetypes-docx_docx_feat_text_metrics_full_v2.log) |
+| `4b03c0eef730b6c9` | docx_feat_doc_obfuscation_v2 | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-21T07-57-42_20260521T075302-filetypes-docx_docx_feat_doc_obfuscation_v2.log) |
+| `d73e54b47a57e8f6` | docx_ablation_blindfold_off | ok | 0.9897 | 0.5000 | 0.9948 | 3 | [log](out/autocollie/runs/2026-05-21T07-57-45_20260521T075302-filetypes-docx_docx_ablation_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docx_control_leaves128_lr002`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Deeper trees with lower LR to improve ranking stability, targeting PR_AUC.
+- **`docx_exploit_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives and downweight positives to suppress FPs at low FPR, targeting recall@3 FP/M.
+- **`docx_feat_kv_vocab_15k_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture document metadata and property patterns, targeting PR_AUC.
+- **`docx_feat_text_metrics_full_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate full text metrics and encoding features to detect DOCX obfuscation, targeting recall@3 FP/M.
+- **`docx_feat_doc_obfuscation_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=250 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Leverage document-specific obfuscation aggregates and line length buckets to catch packed DOCX, targeting recall@3 FP/M.
+- **`docx_ablation_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce feature noise and stabilize ranking, targeting PR_AUC.
+
+</details>
+

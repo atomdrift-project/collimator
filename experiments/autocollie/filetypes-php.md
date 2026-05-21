@@ -122,3 +122,69 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T034755-filetypes-php` — 2026-05-21T03:47:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9d9621e2ce33eb9c` | php_control_training_tune | ok | 0.9948 | 0.9975 | 0.9685 | 16 | [log](out/autocollie/runs/2026-05-21T03-51-37_20260521T034755-filetypes-php_php_control_training_tune.log) |
+| `d0c9f8900f4458ea` | php_feat_kv_vocab_10k | ok | 0.9942 | 0.9972 | 0.9706 | 13 | [log](out/autocollie/runs/2026-05-21T03-51-53_20260521T034755-filetypes-php_php_feat_kv_vocab_10k.log) |
+| `783b3bfc7bc2059f` | php_feat_textenc_metrics | ok | 0.9941 | 0.9971 | 0.9696 | 12 | [log](out/autocollie/runs/2026-05-21T03-52-07_20260521T034755-filetypes-php_php_feat_textenc_metrics.log) |
+| `7f27412250925521` | php_feat_tiered_trigrams_kv | ok | 0.9944 | 0.9974 | 0.9758 | 15 | [log](out/autocollie/runs/2026-05-21T03-52-19_20260521T034755-filetypes-php_php_feat_tiered_trigrams_kv.log) |
+| `fc9b5e007708e1f0` | php_ablate_blindfold | ok | 0.9926 | 0.9969 | 0.9343 | 13 | [log](out/autocollie/runs/2026-05-21T03-52-34_20260521T034755-filetypes-php_php_ablate_blindfold.log) |
+| `0232bdad84b2bf86` | php_generalize_seed_search | ok | 0.9933 | 0.9968 | 0.9805 | 5 | [log](out/autocollie/runs/2026-05-21T03-52-47_20260521T034755-filetypes-php_php_generalize_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_control_training_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate recent feature_env to hit matrix cache; increase num_leaves and estimators to improve PR_AUC by capturing more complex decision boundaries.
+- **`php_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture structured key-value patterns in PHP scripts, targeting PR_AUC gain from new lexical signal.
+- **`php_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to detect obfuscation anomalies, aiming to improve recall@3FPM by surfacing hidden malicious payloads.
+- **`php_feat_tiered_trigrams_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Port tiered_crit_trigrams alongside kv_vocab to capture multi-word attack sequences, targeting PR_AUC improvement via richer n-gram context.
+- **`php_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce feature noise, aiming to stabilize ROC_AUC while maintaining PR_AUC by providing cleaner gradients.
+- **`php_generalize_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the control feature set to distinguish real signal from seed variance, targeting stable recall@3FPM across random splits.
+
+</details>
+
+## Cycle `20260521T081712-filetypes-php` — 2026-05-21T08:17:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9d9621e2ce33eb9c` | php_control_train_tune_1 | dup | 0.9948 | 0.9975 | 0.9685 | 1 | [log](out/autocollie/runs/2026-05-21T08-20-56_20260521T081712-filetypes-php_php_control_train_tune_1.log) |
+| `dd7eef7abe9afa89` | php_control_hardneg_dart | ok | 0.9930 | 0.9967 | 0.9748 | 5 | [log](out/autocollie/runs/2026-05-21T08-20-56_20260521T081712-filetypes-php_php_control_hardneg_dart.log) |
+| `3e87f87b0492b9a7` | php_feat_kv_vocab_15k | ok | 0.9942 | 0.9972 | 0.9706 | 14 | [log](out/autocollie/runs/2026-05-21T08-21-01_20260521T081712-filetypes-php_php_feat_kv_vocab_15k.log) |
+| `783b3bfc7bc2059f` | php_feat_textenc_metrics | dup | 0.9941 | 0.9971 | 0.9696 | 1 | [log](out/autocollie/runs/2026-05-21T08-21-15_20260521T081712-filetypes-php_php_feat_textenc_metrics.log) |
+| `8d7966088f6311c9` | php_transfer_kv_seed3 | ok | 0.9942 | 0.9972 | 0.9706 | 16 | [log](out/autocollie/runs/2026-05-21T08-21-16_20260521T081712-filetypes-php_php_transfer_kv_seed3.log) |
+| `852a63c3f2b207ed` | php_ablate_extended_metrics | ok | 0.9947 | 0.9971 | 0.9750 | 11 | [log](out/autocollie/runs/2026-05-21T08-21-32_20260521T081712-filetypes-php_php_ablate_extended_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_control_train_tune_1`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Exploit best feature set with deeper trees and lower LR to improve PR_AUC by better fitting complex decision boundaries.
+- **`php_control_hardneg_dart`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Improve recall@3 FP/M via hard negative upweighting and dart boosting to regularize tail predictions.
+- **`php_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 15k with lower min_freq to capture rare PHP-specific key-value patterns, targeting PR_AUC gains.
+- **`php_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to capture obfuscation and structural patterns in PHP scripts, targeting PR_AUC.
+- **`php_transfer_kv_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Transfer strong gz route KV config with seed search to stabilize PR_AUC gains and reduce seed variance.
+- **`php_ablate_extended_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_EXTENDED_METRICS=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove extended metrics to test if they add noise, aiming to keep PR_AUC flat while simplifying the feature surface.
+
+</details>
+
+## Cycle `20260521T091537-filetypes-php` — 2026-05-21T09:15:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f4757e9718f99a88` | php_control_leaves128_lr003 | ok | 0.9936 | 0.9970 | 0.9760 | 16 | [log](out/autocollie/runs/2026-05-21T09-20-14_20260521T091537-filetypes-php_php_control_leaves128_lr003.log) |
+| `1dfba89506846a6b` | php_control_dart_hardneg | ok | 0.9915 | 0.9966 | 0.9708 | 6 | [log](out/autocollie/runs/2026-05-21T09-20-31_20260521T091537-filetypes-php_php_control_dart_hardneg.log) |
+| `3260719743be1a35` | php_feat_textenc_metrics | ok | 0.9945 | 0.9973 | 0.9705 | 13 | [log](out/autocollie/runs/2026-05-21T09-20-37_20260521T091537-filetypes-php_php_feat_textenc_metrics.log) |
+| `d04e249b71ded91b` | php_feat_kv_vocab_30k_split | ok | 0.9944 | 0.9971 | 0.9737 | 13 | [log](out/autocollie/runs/2026-05-21T09-20-50_20260521T091537-filetypes-php_php_feat_kv_vocab_30k_split.log) |
+| `ff74b8653a22fe25` | php_generalize_seed_avg | ok | 0.9919 | 0.9970 | 0.9829 | 8 | [log](out/autocollie/runs/2026-05-21T09-21-03_20260521T091537-filetypes-php_php_generalize_seed_avg.log) |
+| `175ebbb0783e8a36` | php_retry_ablate_ext_metrics | ok | 0.9949 | 0.9970 | 0.9751 | 14 | [log](out/autocollie/runs/2026-05-21T09-21-11_20260521T091537-filetypes-php_php_retry_ablate_ext_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Exploit best feature set with deeper trees and lower LR to improve PR_AUC
+- **`php_control_dart_hardneg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Use DART boosting with hard negatives to sharpen tail ranking for recall@3FPM
+- **`php_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture PHP obfuscation patterns, targeting PR_AUC
+- **`php_feat_kv_vocab_30k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=3 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and split values to recover granular signal for PR_AUC
+- **`php_generalize_seed_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Average 3 seeds to reduce variance and stabilize recall@3FPM gains
+- **`php_retry_ablate_ext_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=350 EXP_EXTENDED_METRICS=0 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Retry strong extended_metrics ablation with more estimators to check if PR_AUC holds on new data
+
+</details>
+

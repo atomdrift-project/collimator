@@ -150,3 +150,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260520T191411-filetypes-applescript` — 2026-05-20T19:14:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c02f9107d7e120d9` | control_baseline_leaves128 | ok | 0.4000 | 0.5000 | 0.5714 | 5 | [log](out/autocollie/runs/2026-05-20T19-18-59_20260520T191411-filetypes-applescript_control_baseline_leaves128.log) |
+| `0091c7515cb7db7f` | exploit_hard_neg_tail | ok | 0.4000 | 0.5000 | 0.5714 | 1 | [log](out/autocollie/runs/2026-05-20T19-19-05_20260520T191411-filetypes-applescript_exploit_hard_neg_tail.log) |
+| `2233494f46d93504` | exploit_scale_pos_fpr_target | ok | 0.4000 | 0.5000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-20T19-19-06_20260520T191411-filetypes-applescript_exploit_scale_pos_fpr_target.log) |
+| `209978f8c45d9530` | research_kv_vocab_split | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-20T19-19-07_20260520T191411-filetypes-applescript_research_kv_vocab_split.log) |
+| `89d49c31c77c8983` | feature_text_metrics_encoding | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-20T19-19-10_20260520T191411-filetypes-applescript_feature_text_metrics_encoding.log) |
+| `29141d14b47aa9f7` | feature_lower_ngram_freq | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-20T19-19-13_20260520T191411-filetypes-applescript_feature_lower_ngram_freq.log) |
+| `7b4b6240d8f924ad` | feature_crit_trigrams | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-20T19-19-15_20260520T191411-filetypes-applescript_feature_crit_trigrams.log) |
+| `611d6f6d6b518206` | abl_remove_blindfold | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-20T19-19-18_20260520T191411-filetypes-applescript_abl_remove_blindfold.log) |
+| `0ca5b2c166057514` | transfer_xml_gz_kv | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-20T19-19-20_20260520T191411-filetypes-applescript_transfer_xml_gz_kv.log) |
+| `7379919040f30d12` | transfer_py_metrics_ratio | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-20T19-19-23_20260520T191411-filetypes-applescript_transfer_py_metrics_ratio.log) |
+| `d0d2caeff1109ab3` | gen_seed_ensemble_kv | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-20T19-19-26_20260520T191411-filetypes-applescript_gen_seed_ensemble_kv.log) |
+| `c61098a13743ebef` | retry_high_sev_malware | ok | 0.4000 | 0.5000 | 0.5714 | 6 | [log](out/autocollie/runs/2026-05-20T19-19-28_20260520T191411-filetypes-applescript_retry_high_sev_malware.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_leaves128`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by using deeper trees (num_leaves=128) and lower learning rate on the proven baseline feature set to better separate sparse applescript signals.
+- **`exploit_hard_neg_tail`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by upweighting hard negatives (fraction=0.3, weight=10.0) to focus the model on tricky benign applescripts that cause false positives at low FPR.
+- **`exploit_scale_pos_fpr_target`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to maximize recall@3FPM by down-weighting positives (scale_pos_weight_mult=0.5) and directly optimizing the threshold for the deployed 3e-6 FPR operating point.
+- **`research_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling kv_vocab and kv_value_split to capture applescript property/value pairs that n-grams miss, adding strong discriminative signal.
+- **`feature_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture obfuscation and encoding patterns common in malicious applescripts.
+- **`feature_lower_ngram_freq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Aims to boost recall@3FPM by lowering bigram_min_freq to 50 and trigram_min_freq to 10 while enabling objective_trigrams, capturing rare but highly indicative attack patterns in the tail.
+- **`feature_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling suspicious_trigrams and tiered_crit_trigrams with low min_freq, isolating high-crit applescript sequences to reduce noise and improve precision.
+- **`abl_remove_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by disabling blindfold dropout, which may be removing consistent applescript signals and causing ranking variance on this small corpus.
+- **`transfer_xml_gz_kv`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by porting the successful KV-heavy configuration from xml/gz sister routes, adjusted with a moderate vocab cap for applescript's corpus size.
+- **`transfer_py_metrics_ratio`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by borrowing extended_metrics and metric_ratio_features from python-bytecode to capture structural applescript anomalies and density shifts.
+- **`gen_seed_ensemble_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by averaging predictions across 3 seeds (seed_search_k=3, save_all_seeds=true) on the KV feature set, reducing variance on this small holdout.
+- **`retry_high_sev_malware`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Aims to recover recall@3FPM lost to data drift by filtering training to min_malware_score=3 and increasing estimators to 350, focusing the model on confidently malicious applescripts.
+
+</details>
+
+## Cycle `20260521T040808-filetypes-applescript` — 2026-05-21T04:08:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a20a668069c7dd62` | control_train_tweak_lr003_leaves64 | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T04-13-18_20260521T040808-filetypes-applescript_control_train_tweak_lr003_leaves64.log) |
+| `af575c4ff8e91323` | feat_kv_vocab_split_freq50 | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T04-13-21_20260521T040808-filetypes-applescript_feat_kv_vocab_split_freq50.log) |
+| `3987f2017b9fb2c5` | feat_text_metrics_full_encoding | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-21T04-13-23_20260521T040808-filetypes-applescript_feat_text_metrics_full_encoding.log) |
+| `95539ef2d70e176c` | feat_tiered_trigrams_crit2 | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T04-13-26_20260521T040808-filetypes-applescript_feat_tiered_trigrams_crit2.log) |
+| `1ead8e937bff8e44` | transfer_ruby_scalepos05_hardneg | ok | 0.4000 | 0.5000 | 0.5714 | 1 | [log](out/autocollie/runs/2026-05-21T04-13-28_20260521T040808-filetypes-applescript_transfer_ruby_scalepos05_hardneg.log) |
+| `c947632b56f752cc` | gen_seed_search_k3_kv | ok | 0.4000 | 0.5000 | 0.5714 | 1 | [log](out/autocollie/runs/2026-05-21T04-13-29_20260521T040808-filetypes-applescript_gen_seed_search_k3_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_train_tweak_lr003_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env to hit matrix cache; lowers LR and leaves to reduce overfit on tiny holdout, targeting stable PR_AUC.
+- **`feat_kv_vocab_split_freq50`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=50 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured AppleScript property assignments, aiming to lift PR_AUC via finer-grained key-value signal.
+- **`feat_text_metrics_full_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and text_encoding to capture obfuscation and encoding patterns common in malicious scripts, targeting recall@3 FP/M.
+- **`feat_tiered_trigrams_crit2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lowers tiered_trigram_min_crit to 2 and increases tiered_trigram_max to capture more script-level behavioral sequences, aiming to improve PR_AUC.
+- **`transfer_ruby_scalepos05_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Ports ruby's scale_pos_weight_mult=0.5 and adds hard_negative_fraction to suppress benign script FPs, targeting recall@3 FP/M.
+- **`gen_seed_search_k3_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=50 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 …` — Applies seed_search_k=3 to the kv_vocab config to average out seed variance on the tiny holdout, stabilizing PR_AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260521T064536-filetypes-applescript` — 2026-05-21T06:45:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1cdce1477d08b540` | control_train_tweak_lr003_leaves128 | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T06-49-12_20260521T064536-filetypes-applescript_control_train_tweak_lr003_leaves128.log) |
+| `d14d3cb8d5b13fd6` | feat_kv_vocab_split_max10k | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T06-49-13_20260521T064536-filetypes-applescript_feat_kv_vocab_split_max10k.log) |
+| `a18ae3858908cf4c` | feat_text_metrics_encoding_full | ok | 0.4000 | 0.5000 | 0.5714 | 1 | [log](out/autocollie/runs/2026-05-21T06-49-16_20260521T064536-filetypes-applescript_feat_text_metrics_encoding_full.log) |
+| `56c0eea82b702a26` | feat_obj_susp_trigrams_max2k | ok | 0.4000 | 0.5000 | 0.5714 | 3 | [log](out/autocollie/runs/2026-05-21T06-49-17_20260521T064536-filetypes-applescript_feat_obj_susp_trigrams_max2k.log) |
+| `f3678b139b45adc1` | train_hardneg_scalepos05 | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T06-49-20_20260521T064536-filetypes-applescript_train_hardneg_scalepos05.log) |
+| `3339f4e0eeea485c` | train_extra_trees_depth10 | ok | 0.4000 | 0.5000 | 0.5714 | 2 | [log](out/autocollie/runs/2026-05-21T06-49-22_20260521T064536-filetypes-applescript_train_extra_trees_depth10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_train_tweak_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Baseline control using recent best feature_env; tweaks learning_rate and num_leaves to stabilize PR_AUC while preserving ROC_AUC.
+- **`feat_kv_vocab_split_max10k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured key-value signals in applescript, aiming to lift PR_AUC by isolating malicious payload patterns.
+- **`feat_text_metrics_encoding_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and text_encoding to extract obfuscation and encoding signals common in script malware, targeting recall@3 FP/M improvement.
+- **`feat_obj_susp_trigrams_max2k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Enables objective_trigrams and suspicious_trigrams with moderate max cap to capture longer attack sequences, aiming to boost PR_AUC without overfitting.
+- **`train_hardneg_scalepos05`** `EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Applies hard_negative_fraction and reduces scale_pos_weight_mult to 0.5 to suppress benign false positives, directly optimizing recall@3 FP/M.
+- **`train_extra_trees_depth10`** `EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_DEPTH=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Uses extra_trees and reduces max_depth to 10 to add ensemble noise and prevent overfitting on small applescript corpus, targeting stable ROC_AUC and PR_AUC.
+
+</details>
+
