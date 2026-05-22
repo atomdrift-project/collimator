@@ -168,12 +168,97 @@ def validate_onnx(
     return True
 
 
+def export_lightgbm_onnx(
+    booster: object,
+    n_features: int,
+    output_path: Path,
+) -> bool:
+    """Export a LightGBM Booster to ONNX. Returns True on success, False
+    when onnxmltools is unavailable (warns + skips). Used to emit the
+    cross-language inference artifact alongside the native ``.txt``.
+
+    The exported model expects ``(n_samples, n_features)`` float32 input
+    and emits ``[label, probabilities]`` outputs, where probabilities
+    has shape ``(n, 2)``. Matches what onnxmltools' LightGBM converter
+    produces by default with ``zipmap=False``.
+    """
+    try:
+        from onnxmltools import convert_lightgbm  # noqa: PLC0415
+        from onnxmltools.convert.common.data_types import FloatTensorType  # noqa: PLC0415
+    except ImportError:
+        log.warning("onnxmltools not installed; skipping ONNX export for LightGBM")
+        return False
+
+    # Skip degenerate constant-predictor models. When LightGBM can't
+    # find ANY split worth making (typically tiny-benign filetypes
+    # like xls/xlsx where the optimizer just emits a single-leaf
+    # tree with a constant logit value), the converter generates a
+    # spec-correct ONNX graph that hits an ONNX Runtime bug in
+    # TreeEnsembleClassifier: the LOGISTIC post-transform doesn't
+    # get applied to 0-split trees and raw class_weights leak out
+    # as if they were probabilities. The model is operationally
+    # useless to convert (constant predictor = no feature-space
+    # variation = no size or speed win) so we skip rather than
+    # emit a broken .onnx. The .txt remains valid and litmus's
+    # loader picks it up.
+    try:
+        leaf_counts = [t["num_leaves"] for t in booster.dump_model().get("tree_info", [])]
+    except Exception:
+        leaf_counts = []
+    if leaf_counts and max(leaf_counts) <= 1:
+        log.info(
+            "skipping ONNX export for %s: model is a constant predictor "
+            "(every tree has ≤1 leaf — LightGBM couldn't find any split "
+            "to learn from). Trips an ONNX Runtime bug for "
+            "TreeEnsembleClassifier with 0-split trees. .txt remains "
+            "the canonical artifact.",
+            output_path,
+        )
+        return False
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    onnx_model = convert_lightgbm(
+        booster,
+        initial_types=[("input", FloatTensorType([None, int(n_features)]))],
+        zipmap=False,
+        target_opset=15,
+    )
+    # Atomic write: serialize to a sibling .tmp, then rename. A kill
+    # mid-write leaves the original alone and the .tmp gets reaped by
+    # the next training pass (it doesn't match the *.onnx glob).
+    tmp_path = output_path.parent / f".{output_path.name}.tmp"
+    tmp_path.write_bytes(onnx_model.SerializeToString())
+    import os as _os  # noqa: PLC0415
+    _os.replace(tmp_path, output_path)
+    log.info("exported LightGBM ONNX to %s", output_path)
+    return True
+
+
 def save_model(model: object, output_path: Path) -> None:
-    """Save a model in its native format."""
+    """Save a model in its native format. For LightGBM, also emit a
+    sibling ``.onnx`` so the bundle ships a cross-language inference
+    artifact (preferred at load time by ``bundle.model_files``). ONNX
+    emission is best-effort: if onnxmltools is unavailable the .txt
+    is still written and the bundle stays loadable through the legacy
+    LightGBM path."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if model.__class__.__module__.startswith("lightgbm"):
-        model.booster_.save_model(str(output_path))
+        booster = model.booster_
+        booster.save_model(str(output_path))
         log.info("saved LightGBM model to %s", output_path)
+        # Sibling .onnx with the same stem. Skip when the destination
+        # would be the .onnx itself (defensive — save_model shouldn't
+        # be called with an .onnx output path, but checked anyway).
+        if output_path.suffix == ".txt":
+            onnx_path = output_path.with_suffix(".onnx")
+            try:
+                export_lightgbm_onnx(
+                    booster, booster.num_feature(), onnx_path,
+                )
+            except Exception as e:
+                # ONNX export failure shouldn't kill training — the
+                # .txt is still the canonical artifact. Log and move on.
+                log.warning("LightGBM ONNX export failed for %s: %s", onnx_path, e)
         return
     model.save_model(str(output_path))
     log.info("saved XGBoost model to %s", output_path)

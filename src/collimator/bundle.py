@@ -37,10 +37,18 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-# Recognized model-file extensions. .txt = LightGBM Booster dump, .json =
-# XGBoost. Anything else under models/ is treated as a bystander (READMEs,
-# hashes, etc.) and ignored, mirroring the litmus loader.
-_MODEL_EXTS = (".txt", ".json")
+# Recognized model-file extensions. .onnx = portable cross-language
+# inference graph (preferred when available), .txt = LightGBM Booster
+# dump, .json = XGBoost. When both .onnx and .txt exist for the same
+# seed (transition period), .onnx wins because it loads faster, is
+# ~50% smaller, and inferences ~5× faster. Anything else under models/
+# is treated as a bystander (READMEs, hashes, etc.) and ignored,
+# mirroring the litmus loader.
+_MODEL_EXTS = (".onnx", ".txt", ".json")
+# Preference order: when multiple extensions are present for the same
+# seed (e.g. seed_42.txt AND seed_42.onnx during the ONNX migration),
+# pick the highest-priority one. Lower index = higher priority.
+_EXT_PRIORITY = {".onnx": 0, ".txt": 1, ".json": 2}
 _SEED_PREFIX = "seed_"
 
 
@@ -56,8 +64,13 @@ def model_files(bundle_dir: Path) -> list[Path]:
     and a top-level ``model.{txt,json}``, since that's an ambiguous deploy
     state and silently picking one would mask a packaging bug.
     """
+    # Multi-seed layout: collect all seed_*.{onnx,txt,json}, then dedupe
+    # per-seed by extension priority. The dedup is the ONNX-migration
+    # accommodation: when a bundle ships both seed_42.txt (legacy) and
+    # seed_42.onnx (new), we want to use the .onnx for that seed, not
+    # double-count by treating it as two ensemble members.
     multi_dir = bundle_dir / "models"
-    multi: list[Path] = []
+    multi_by_stem: dict[str, Path] = {}
     if multi_dir.is_dir():
         for entry in sorted(multi_dir.iterdir()):
             if not entry.is_file():
@@ -66,26 +79,50 @@ def model_files(bundle_dir: Path) -> list[Path]:
                 continue
             if entry.suffix not in _MODEL_EXTS:
                 continue
-            multi.append(entry)
+            existing = multi_by_stem.get(entry.stem)
+            if existing is None:
+                multi_by_stem[entry.stem] = entry
+                continue
+            # Both extensions present for the same seed — keep the
+            # higher-priority one.
+            if _EXT_PRIORITY[entry.suffix] < _EXT_PRIORITY[existing.suffix]:
+                multi_by_stem[entry.stem] = entry
+    multi = [multi_by_stem[k] for k in sorted(multi_by_stem.keys())]
 
-    legacy_xgb = bundle_dir / "model.json"
-    legacy_lgb = bundle_dir / "model.txt"
-    legacy: list[Path] = []
-    if legacy_xgb.is_file():
-        legacy.append(legacy_xgb)
-    if legacy_lgb.is_file():
-        legacy.append(legacy_lgb)
+    # Legacy layout: prefer .onnx, then .txt, then .json. Each is at most
+    # one file at the bundle root.
+    legacy_candidates: list[Path] = []
+    for ext in _MODEL_EXTS:
+        p = bundle_dir / f"model{ext}"
+        if p.is_file():
+            legacy_candidates.append(p)
+    # When multiple legacy artifacts exist, keep highest-priority and treat
+    # the others as transition-period siblings (not an error). Only multiple
+    # *different* base models (e.g. model.txt AND model.json — different
+    # backends) is ambiguous.
+    legacy_by_priority = sorted(
+        legacy_candidates, key=lambda p: _EXT_PRIORITY[p.suffix],
+    )
+    legacy_backend_kinds = {
+        ".onnx": "any", ".txt": "lightgbm", ".json": "xgboost",
+    }
+    seen_backends = set()
+    for p in legacy_candidates:
+        kind = legacy_backend_kinds[p.suffix]
+        if kind != "any":  # .onnx is backend-agnostic, doesn't conflict
+            seen_backends.add(kind)
+    legacy = legacy_by_priority[:1] if legacy_by_priority else []
+    if len(seen_backends) > 1:
+        raise ValueError(
+            f"ambiguous legacy bundle in {bundle_dir}: "
+            f"both model.json and model.txt exist; remove one to disambiguate."
+        )
 
     if multi and legacy:
         raise ValueError(
             f"ambiguous bundle layout in {bundle_dir}: "
-            f"both multi-seed (models/seed_*.{{txt,json}}) and legacy "
-            f"(model.{{txt,json}}) artifacts exist; remove one to disambiguate."
-        )
-    if len(legacy) > 1:
-        raise ValueError(
-            f"ambiguous legacy bundle in {bundle_dir}: "
-            f"both model.json and model.txt exist; remove one to disambiguate."
+            f"both multi-seed (models/seed_*.{{onnx,txt,json}}) and legacy "
+            f"(model.{{onnx,txt,json}}) artifacts exist; remove one to disambiguate."
         )
     return multi if multi else legacy
 
@@ -124,7 +161,7 @@ def write_seed_model_path(bundle_dir: Path, seed: int, ext: str) -> Path:
     if ext.startswith("."):
         ext = ext[1:]
     if ext not in {e[1:] for e in _MODEL_EXTS}:
-        raise ValueError(f"unsupported model extension {ext!r}; expected txt or json")
+        raise ValueError(f"unsupported model extension {ext!r}; expected onnx, txt, or json")
     multi_dir = bundle_dir / "models"
     multi_dir.mkdir(parents=True, exist_ok=True)
     return multi_dir / f"{_SEED_PREFIX}{int(seed)}.{ext}"

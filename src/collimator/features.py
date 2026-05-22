@@ -126,7 +126,17 @@ TOP_K_RISK_FILES = 1
 
 # Stable model ABI version shared with litmus.
 # Keep this in sync with FeatureSpec.version for a single compatibility number.
-MODEL_ABI_VERSION = 17  # v17: adds cluster:* + agg:static_* feature families
+#
+# Spec version tracks the FEATURE SCHEMA (what features each model
+# expects, which COLLIMATOR_* env knobs are honored), not the model
+# file format. Adding ONNX as an alternate serialization (.onnx
+# alongside .txt; landed with litmus 1.3.0) did NOT change the schema —
+# the same FeatureSpec is emitted regardless of which file format the
+# model is stored in. Older litmus (1.2.x) reading a v17 bundle that
+# now ships .onnx + .txt silently ignores the .onnx and uses the .txt;
+# fully forward-compatible. Bump this when feature families are added
+# or removed (last bump: v17 added cluster:* + agg:static_*).
+MODEL_ABI_VERSION = 17
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).

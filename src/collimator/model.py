@@ -213,22 +213,101 @@ def create_classifier(
     )
 
 
+class OnnxModel:
+    """Thin wrapper around an onnxruntime InferenceSession exposing the
+    same .predict_proba surface the rest of the codebase expects from
+    a LightGBM Booster.
+
+    Inference accepts dense float32 input shape ``(n_samples, n_features)``.
+    Sparse CSR/CSC inputs are dense-batched in chunks so the dense
+    materialization doesn't blow up memory on the 60k-feature azoth
+    routes (a 100k-row × 60k-feature dense matrix is 24 GB float32 —
+    chunking at 1024 rows keeps each batch under 250 MB).
+    """
+
+    # ~1024 rows × 60k features × 4 bytes ≈ 245 MB per chunk. Safe on
+    # most hosts, fast enough that chunking overhead is negligible.
+    _CHUNK_ROWS = 1024
+
+    # Module-path sentinel checked by predict_proba dispatch. Distinct
+    # from "lightgbm"/"xgboost" so the route can fork on it cleanly.
+    __module__ = "collimator.model.onnx"
+
+    def __init__(self, session: Any, input_name: str) -> None:
+        self._session = session
+        self._input_name = input_name
+
+    def predict_proba(self, X: Any) -> np.ndarray:
+        """Returns shape (n_samples, 2) probabilities for parity with
+        the LightGBM sklearn wrapper. The route .predict_proba consumer
+        in this codebase indexes column 1; matching that contract here
+        keeps the dispatch in predict_proba below simple.
+        """
+        import scipy.sparse as sp  # noqa: PLC0415 — optional dep
+
+        n_rows = X.shape[0]
+        out = np.empty((n_rows, 2), dtype=np.float32)
+        for start in range(0, n_rows, self._CHUNK_ROWS):
+            end = min(start + self._CHUNK_ROWS, n_rows)
+            chunk = X[start:end]
+            if sp.issparse(chunk):
+                chunk = chunk.toarray()
+            chunk = np.ascontiguousarray(chunk, dtype=np.float32)
+            outputs = self._session.run(None, {self._input_name: chunk})
+            # onnxmltools' lightgbm classifier emits [label, probs (n,2)].
+            probs = outputs[1]
+            if probs.ndim != 2 or probs.shape[1] != 2:
+                raise ValueError(
+                    f"unexpected ONNX output shape: {probs.shape}; "
+                    f"expected (n, 2) probabilities"
+                )
+            out[start:end] = probs
+        return out
+
+    def predict(self, X: Any) -> np.ndarray:
+        """LightGBM-Booster-compatible 1D prob output (positive class)."""
+        return self.predict_proba(X)[:, 1]
+
+
 def load_model(model_path: Path) -> Any:
-    """Load a native XGBoost or LightGBM model."""
+    """Load a native XGBoost, LightGBM, or ONNX model."""
+    path_str = str(model_path)
+    if path_str.endswith(".onnx"):
+        try:
+            import onnxruntime as ort  # noqa: PLC0415 — optional dep
+        except ImportError as e:
+            raise ImportError(
+                "onnxruntime is required to load .onnx model files; "
+                "install onnxruntime or remove .onnx artifacts from the bundle"
+            ) from e
+        session = ort.InferenceSession(
+            path_str, providers=["CPUExecutionProvider"],
+        )
+        # Resolve the input tensor name (model-dependent; onnxmltools
+        # uses 'input' by convention but we lookup defensively).
+        inputs = session.get_inputs()
+        if not inputs:
+            raise ValueError(f"ONNX model {model_path} has no inputs")
+        return OnnxModel(session, inputs[0].name)
     model = xgb.XGBClassifier()
     try:
-        model.load_model(str(model_path))
+        model.load_model(path_str)
         return model
     except Exception as xgb_exc:
         try:
             import lightgbm as lgb  # noqa: PLC0415
-            return lgb.Booster(model_file=str(model_path))
+            return lgb.Booster(model_file=path_str)
         except Exception:
             raise xgb_exc
 
 
 def predict_proba(model: Any, X: np.ndarray) -> np.ndarray:
     """Return malware probability for each sample."""
+    if isinstance(model, OnnxModel):
+        probs = np.asarray(model.predict_proba(X)[:, 1], dtype=np.float32)
+        if probs.ndim != 1:
+            raise ValueError(f"unexpected ONNX prob shape: {probs.shape}")
+        return probs
     if model.__class__.__module__.startswith("lightgbm"):
         if hasattr(model, "predict_proba"):
             best_iteration = getattr(model, "best_iteration_", None)

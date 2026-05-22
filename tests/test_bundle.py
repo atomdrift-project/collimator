@@ -91,9 +91,14 @@ def test_write_seed_model_path_accepts_dotted_extension(tmp_path: Path) -> None:
     assert p == tmp_path / "models" / "seed_42.json"
 
 
+def test_write_seed_model_path_accepts_onnx(tmp_path: Path) -> None:
+    p = write_seed_model_path(tmp_path, 42, "onnx")
+    assert p == tmp_path / "models" / "seed_42.onnx"
+
+
 def test_write_seed_model_path_rejects_unknown_extension(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="unsupported"):
-        write_seed_model_path(tmp_path, 42, "onnx")
+        write_seed_model_path(tmp_path, 42, "pkl")
 
 
 class _FakeModel:
