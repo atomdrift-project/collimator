@@ -364,3 +364,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T155613-filetypes-xml` — 2026-05-22T15:56:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f16fd22ebf9684ef` | inherit_from_filetypes_perl_271acc64 | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T16-00-47_20260522T155613-filetypes-xml_inherit_from_filetypes_perl_271acc64.log) |
+| `35c9128a864686de` | xml_control_baseline_leaves128 | dup | 1.0000 | 1.0000 | 0.9630 | 1 | [log](out/autocollie/runs/2026-05-22T16-00-51_20260522T155613-filetypes-xml_xml_control_baseline_leaves128.log) |
+| `9a45f40c8b0a3f45` | xml_feat_kv_textmetrics | ok | 1.0000 | 1.0000 | 0.9630 | 3 | [log](out/autocollie/runs/2026-05-22T16-00-52_20260522T155613-filetypes-xml_xml_feat_kv_textmetrics.log) |
+| `52eff74da2743e09` | xml_feat_lowbigram_trigrams | ok | 1.0000 | 1.0000 | 0.9630 | 5 | [log](out/autocollie/runs/2026-05-22T16-00-55_20260522T155613-filetypes-xml_xml_feat_lowbigram_trigrams.log) |
+| `d40309f64ea1f776` | xml_feat_textenc_kvsplit | ok | 1.0000 | 1.0000 | 0.9818 | 4 | [log](out/autocollie/runs/2026-05-22T16-00-59_20260522T155613-filetypes-xml_xml_feat_textenc_kvsplit.log) |
+| `f16fd22ebf9684ef` | xml_train_hardneg_01_10 | dup | 1.0000 | 1.0000 | 0.9630 | 1 | [log](out/autocollie/runs/2026-05-22T16-01-04_20260522T155613-filetypes-xml_xml_train_hardneg_01_10.log) |
+| `ac66725093527fbe` | xml_train_scalepos_05 | ok | 1.0000 | 1.0000 | 0.9818 | 2 | [log](out/autocollie/runs/2026-05-22T16-01-04_20260522T155613-filetypes-xml_xml_train_scalepos_05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_perl_271acc64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/perl (key=271acc64b3a7fd1a, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_baseline_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env with leaves=128 to establish a stable training-only baseline for PR_AUC and ROC_AUC.
+- **`xml_feat_kv_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture XML structural and text patterns, aiming to improve PR_AUC by adding discriminative signal.
+- **`xml_feat_lowbigram_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 and enable tiered_crit_trigrams to catch rarer XML tag sequences, targeting PR_AUC gains from finer-grained n-gram signal.
+- **`xml_feat_textenc_kvsplit`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and kv_value_split to parse XML attribute values and encoding quirks, aiming to boost recall@3 FP/M by isolating obfuscation patterns.
+- **`xml_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction=0.1 and weight=10 to focus on difficult benigns, targeting recall@3 FP/M improvement without hurting PR_AUC.
+- **`xml_train_scalepos_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Set scale_pos_weight_mult=0.5 to downweight positives and reduce FPs at low FPR, directly optimizing recall@3 FP/M.
+
+</details>
+

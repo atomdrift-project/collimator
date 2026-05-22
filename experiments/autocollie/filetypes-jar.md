@@ -268,3 +268,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T144436-filetypes-jar` — 2026-05-22T14:44:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de71c4e9bc8c2671` | inherit_from_filetypes_xml_051713c3 | ok | 0.9977 | 0.9960 | 0.9796 | 16 | [log](out/autocollie/runs/2026-05-22T14-48-58_20260522T144436-filetypes-jar_inherit_from_filetypes_xml_051713c3.log) |
+| `b162175f12f19b06` | jar_control_textenc_leaves128_lr004 | ok | 0.9983 | 0.9970 | 0.9767 | 3 | [log](out/autocollie/runs/2026-05-22T14-49-14_20260522T144436-filetypes-jar_jar_control_textenc_leaves128_lr004.log) |
+| `818c350c0c886daa` | jar_kv20k_value_split_textenc | ok | 0.9988 | 0.9978 | 0.9742 | 12 | [log](out/autocollie/runs/2026-05-22T14-49-17_20260522T144436-filetypes-jar_jar_kv20k_value_split_textenc.log) |
+| `d25d8593ef1e5722` | jar_textenc_bigram50_tiered_trigrams | ok | 0.9986 | 0.9975 | 0.9741 | 11 | [log](out/autocollie/runs/2026-05-22T14-49-30_20260522T144436-filetypes-jar_jar_textenc_bigram50_tiered_trigrams.log) |
+| `6d154f423eb745d6` | jar_textenc_hardneg_01_12 | ok | 0.9985 | 0.9971 | 0.9766 | 3 | [log](out/autocollie/runs/2026-05-22T14-49-41_20260522T144436-filetypes-jar_jar_textenc_hardneg_01_12.log) |
+| `af5c5c5386d5a37e` | jar_textenc_scalepos05_reg2 | ok | 0.9977 | 0.9960 | 0.9733 | 2 | [log](out/autocollie/runs/2026-05-22T14-49-43_20260522T144436-filetypes-jar_jar_textenc_scalepos05_reg2.log) |
+| `a8eb6dda4288842d` | jar_transfer_xml_bigram8k_min50 | ok | 0.9982 | 0.9967 | 0.9655 | 11 | [log](out/autocollie/runs/2026-05-22T14-49-45_20260522T144436-filetypes-jar_jar_transfer_xml_bigram8k_min50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_textenc_leaves128_lr004`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Control feature set with deeper trees and lower LR to improve tail recall@3 FP/M while keeping PR_AUC flat.
+- **`jar_kv20k_value_split_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 20k and enable value splitting to recover per-element signal, targeting PR_AUC and recall@3 FP/M.
+- **`jar_textenc_bigram50_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram min freq to 50 and enable tiered critical trigrams to capture rarer high-signal patterns, aiming to boost recall@3 FP/M.
+- **`jar_textenc_hardneg_01_12`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Hard negative mining with weight 12 to sharpen decision boundary at low FPR, targeting recall@3 FP/M.
+- **`jar_textenc_scalepos05_reg2`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1 …` — Down-weight positives and increase L2 regularization to reduce FP noise, improving recall@3 FP/M at deployed operating point.
+- **`jar_transfer_xml_bigram8k_min50`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfer low-frequency bigram strategy from XML route to capture subtle JAR obfuscation patterns, targeting PR_AUC.
+
+</details>
+

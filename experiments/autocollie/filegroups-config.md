@@ -356,3 +356,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T150219-filegroups-config` — 2026-05-22T15:02:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `81af5c05c5b62cec` | inherit_from_filetypes_xml_051713c3 | ok | 0.9997 | 0.9995 | 0.9909 | 15 | [log](out/autocollie/runs/2026-05-22T15-06-27_20260522T150219-filegroups-config_inherit_from_filetypes_xml_051713c3.log) |
+| `a9a05a93af28ae4c` | config_ctrl_train_leaves128_lr004 | ok | 0.9997 | 0.9994 | 0.9899 | 3 | [log](out/autocollie/runs/2026-05-22T15-06-43_20260522T150219-filegroups-config_config_ctrl_train_leaves128_lr004.log) |
+| `2dec4e8ed3e60474` | config_feat_kv_vocab_split | ok | 0.9997 | 0.9995 | 0.9901 | 12 | [log](out/autocollie/runs/2026-05-22T15-06-46_20260522T150219-filegroups-config_config_feat_kv_vocab_split.log) |
+| `3fe1f015bed9b615` | config_feat_textenc_lowbigram | ok | 0.9997 | 0.9995 | 0.9941 | 12 | [log](out/autocollie/runs/2026-05-22T15-06-58_20260522T150219-filegroups-config_config_feat_textenc_lowbigram.log) |
+| `2a49bf7aa7c3cfae` | config_feat_tiered_trigrams_expanded | ok | 0.9997 | 0.9995 | 0.9937 | 15 | [log](out/autocollie/runs/2026-05-22T15-07-10_20260522T150219-filegroups-config_config_feat_tiered_trigrams_expanded.log) |
+| `8d167028e2cfd9d6` | config_train_hardneg_01_10_spw075 | ok | 0.9997 | 0.9993 | 0.9898 | 7 | [log](out/autocollie/runs/2026-05-22T15-07-25_20260522T150219-filegroups-config_config_train_hardneg_01_10_spw075.log) |
+| `6d470fc35b671bee` | config_train_dart_lr003_leaves160 | ok | 0.9994 | 0.9987 | 0.9919 | 4 | [log](out/autocollie/runs/2026-05-22T15-07-32_20260522T150219-filegroups-config_config_train_dart_lr003_leaves160.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_train_leaves128_lr004`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control feature set with reduced leaves and lower LR to improve PR AUC via smoother decision boundaries.
+- **`config_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured config key-value signals, targeting PR AUC gain.
+- **`config_feat_textenc_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Add text encoding features and lower bigram min freq to 50 to catch rarer obfuscation patterns, aiming for recall@3 FP/M improvement.
+- **`config_feat_tiered_trigrams_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=15 EXP_TRAIN_SAMPLES=30000` — Expand tiered trigram vocab and lower min freq to capture longer malicious path sequences, targeting PR AUC.
+- **`config_train_hardneg_01_10_spw075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives and downweight benigns to push threshold boundary, improving recall@3 FP/M.
+- **`config_train_dart_lr003_leaves160`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=160 EXP_TRAIN_SAMPLES=30000` — Switch to DART boosting with lower LR and higher leaves to improve generalization and PR AUC via dropout regularization.
+
+</details>
+

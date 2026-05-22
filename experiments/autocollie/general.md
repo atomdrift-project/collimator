@@ -336,3 +336,41 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T152146-general` — 2026-05-22T15:21:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5efba7edc939fa88` | inherit_from_filetypes_xml_051713c3 | ok | 0.9990 | 0.9991 | 0.9823 | 88 | [log](out/autocollie/runs/2026-05-22T15-25-12_20260522T152146-general_inherit_from_filetypes_xml_051713c3.log) |
+| `360307f00efcf465` | general_control_train_leaves128_lr003 | dup | 0.9989 | 0.9989 | 0.9835 | 1 | [log](out/autocollie/runs/2026-05-22T15-26-40_20260522T152146-general_general_control_train_leaves128_lr003.log) |
+| `e855b86230097590` | general_train_reg_lambda2_mcs200 | dup | 0.9990 | 0.9990 | 0.9689 | 1 | [log](out/autocollie/runs/2026-05-22T15-26-41_20260522T152146-general_general_train_reg_lambda2_mcs200.log) |
+| `b103804bfabcafc3` | general_train_dart_regularized | ok | 0.9982 | 0.9982 | 0.9747 | 21 | [log](out/autocollie/runs/2026-05-22T15-26-41_20260522T152146-general_general_train_dart_regularized.log) |
+| `fd654198369c4696` | general_feat_kv_vocab_10k | ok | 0.9990 | 0.9990 | 0.9830 | 74 | [log](out/autocollie/runs/2026-05-22T15-27-03_20260522T152146-general_general_feat_kv_vocab_10k.log) |
+| `e618b43b5326c009` | general_feat_text_metrics_full | ok | 0.9990 | 0.9990 | 0.9840 | 16 | [log](out/autocollie/runs/2026-05-22T15-28-16_20260522T152146-general_general_feat_text_metrics_full.log) |
+| `463e8c28ed1c7aea` | general_feat_lowbigram_tieredtrigrams | ok | 0.9990 | 0.9990 | 0.9838 | 86 | [log](out/autocollie/runs/2026-05-22T15-28-33_20260522T152146-general_general_feat_lowbigram_tieredtrigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`general_control_train_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Baseline feature set with deeper trees and lower LR to improve PR_AUC by capturing more complex decision boundaries.
+- **`general_train_reg_lambda2_mcs200`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increase L2 regularization and min child samples to reduce overfitting on rare benigns, targeting higher recall@3FPM.
+- **`general_train_dart_regularized`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Switch to DART boosting to add dropout-style regularization, aiming to improve tail recall@3FPM without hurting PR_AUC.
+- **`general_feat_kv_vocab_10k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with 10k cap to capture structured key-value patterns, targeting PR_AUC gain.
+- **`general_feat_text_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document/script obfuscation signals, aiming to boost recall@3FPM.
+- **`general_feat_lowbigram_tieredtrigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and enable tiered_crit_trigrams to capture rarer malicious sequences, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260522T174025-general` — 2026-05-22T17:40:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5efba7edc939fa88` | inherit_from_filetypes_xml_051713c3 | dup | 0.9990 | 0.9991 | 0.9823 | 1 | [log](out/autocollie/runs/2026-05-22T17-45-24_20260522T174025-general_inherit_from_filetypes_xml_051713c3.log) |
+| `` | general_control_deeper_trees | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T17-45-24_20260522T174025-general_general_control_deeper_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`general_control_deeper_trees`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with increased num_leaves and estimators to improve PR_AUC and recall@3FPM via better ranking capacity.
+
+</details>
+

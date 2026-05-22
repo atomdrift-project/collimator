@@ -266,3 +266,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T142629-filetypes-python-bytecode` — 2026-05-22T14:26:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8095ca1dd390b9fb` | inherit_from_filetypes_xml_051713c3 | ok | 0.9994 | 0.9977 | 0.9835 | 5 | [log](out/autocollie/runs/2026-05-22T14-31-32_20260522T142629-filetypes-python-bytecode_inherit_from_filetypes_xml_051713c3.log) |
+| `eaccb8fb23425ced` | pybc_ctrl_bigram200_leaves128 | ok | 0.9994 | 0.9976 | 0.9856 | 2 | [log](out/autocollie/runs/2026-05-22T14-31-37_20260522T142629-filetypes-python-bytecode_pybc_ctrl_bigram200_leaves128.log) |
+| `19354b0e94c22dcc` | pybc_feat_kv_vocab_split | ok | 0.9994 | 0.9977 | 0.9877 | 5 | [log](out/autocollie/runs/2026-05-22T14-31-39_20260522T142629-filetypes-python-bytecode_pybc_feat_kv_vocab_split.log) |
+| `58d3a9280338892e` | pybc_feat_textenc_metrics | ok | 0.9995 | 0.9982 | 0.9877 | 5 | [log](out/autocollie/runs/2026-05-22T14-31-44_20260522T142629-filetypes-python-bytecode_pybc_feat_textenc_metrics.log) |
+| `ecd2bd5abb7a6350` | pybc_feat_tiered_trigrams | ok | 0.9994 | 0.9977 | 0.9877 | 5 | [log](out/autocollie/runs/2026-05-22T14-31-49_20260522T142629-filetypes-python-bytecode_pybc_feat_tiered_trigrams.log) |
+| `a1e959ad30b2908c` | pybc_train_hardneg_01_10 | ok | 0.9995 | 0.9981 | 0.9793 | 2 | [log](out/autocollie/runs/2026-05-22T14-31-54_20260522T142629-filetypes-python-bytecode_pybc_train_hardneg_01_10.log) |
+| `c75237ce58e90b1c` | pybc_train_reg_depth10 | ok | 0.9993 | 0.9970 | 0.9857 | 2 | [log](out/autocollie/runs/2026-05-22T14-31-56_20260522T142629-filetypes-python-bytecode_pybc_train_reg_depth10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_bigram200_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env to hit matrix cache; tests if num_leaves=128 improves recall@3FPM by allowing finer decision boundaries without overfitting.
+- **`pybc_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab and kv_value_split to capture structured bytecode metadata; aims to boost PR_AUC by adding high-signal categorical features that complement bigrams.
+- **`pybc_feat_textenc_metrics`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to detect obfuscation in bytecode strings; aims to improve recall@3FPM by catching low-FPR obfuscated payloads that bigrams miss.
+- **`pybc_feat_tiered_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 …` — Adds tiered_crit_trigrams to model longer malicious sequences; aims to increase PR_AUC by reducing false positives on benign code that shares short bigrams with malware.
+- **`pybc_train_hardneg_01_10`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard negative mining to push benign samples further from the decision boundary; aims to improve recall@3FPM by tightening the score distribution at low FPR.
+- **`pybc_train_reg_depth10`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=350 EXP_MAX_DEPTH=10 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2 …` — Increases regularization and reduces depth to prevent overfitting on rare bytecode patterns; aims to stabilize ROC_AUC and maintain PR_AUC while improving generalization.
+
+</details>
+

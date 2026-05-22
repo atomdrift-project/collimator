@@ -480,3 +480,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T150916-filetypes-macho` — 2026-05-22T15:09:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `74571b507963163b` | inherit_from_filetypes_xml_051713c3 | ok | 0.9967 | 0.9993 | 0.9708 | 21 | [log](out/autocollie/runs/2026-05-22T15-14-44_20260522T150916-filetypes-macho_inherit_from_filetypes_xml_051713c3.log) |
+| `1cd1b42dba463bb4` | macho_control_train_tune | ok | 0.9968 | 0.9993 | 0.9727 | 3 | [log](out/autocollie/runs/2026-05-22T15-15-05_20260522T150916-filetypes-macho_macho_control_train_tune.log) |
+| `4a086b24a1d657c8` | macho_hardneg_sweep_01_16 | ok | 0.9970 | 0.9994 | 0.9727 | 5 | [log](out/autocollie/runs/2026-05-22T15-15-09_20260522T150916-filetypes-macho_macho_hardneg_sweep_01_16.log) |
+| `2fb7e50ae2224c16` | macho_threshold_3e6_tail_opt | ok | 0.9968 | 0.9993 | 0.9556 | 3 | [log](out/autocollie/runs/2026-05-22T15-15-14_20260522T150916-filetypes-macho_macho_threshold_3e6_tail_opt.log) |
+| `8006ad5456daa73d` | macho_kv_vocab_expansion | ok | 0.9971 | 0.9994 | 0.9708 | 3 | [log](out/autocollie/runs/2026-05-22T15-15-18_20260522T150916-filetypes-macho_macho_kv_vocab_expansion.log) |
+| `7e8ef6b7630d7db7` | macho_symbol_bigrams_vocab | ok | 0.9969 | 0.9994 | 0.9728 | 21 | [log](out/autocollie/runs/2026-05-22T15-15-21_20260522T150916-filetypes-macho_macho_symbol_bigrams_vocab.log) |
+| `94862f1a039d7e05` | macho_tiered_crit_trigrams_boost | ok | 0.9970 | 0.9994 | 0.9708 | 4 | [log](out/autocollie/runs/2026-05-22T15-15-42_20260522T150916-filetypes-macho_macho_tiered_crit_trigrams_boost.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with increased capacity (num_leaves=128, estimators=300) to improve PR_AUC while keeping ROC_AUC flat.
+- **`macho_hardneg_sweep_01_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Test hard-negative upweighting (fraction=0.01, weight=16) to push recall@3 FP/M by focusing on difficult benigns.
+- **`macho_threshold_3e6_tail_opt`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Directly optimize deployed operating point with threshold_mode=max_recall_at_fpr and target=3e-6 to maximize recall@3 FP/M.
+- **`macho_kv_vocab_expansion`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with max=15000 to capture more key-value signal, aiming to lift PR_AUC and recall@3 FP/M.
+- **`macho_symbol_bigrams_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol_bigrams and increase symbol_vocab_max to 10000 to capture import co-occurrence patterns, targeting PR_AUC gain.
+- **`macho_tiered_crit_trigrams_boost`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable tiered_crit_trigrams to capture severity-prefixed path trigrams, aiming to improve PR_AUC and tail recall.
+
+</details>
+

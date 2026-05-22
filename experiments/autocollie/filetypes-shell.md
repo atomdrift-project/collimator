@@ -386,3 +386,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T134952-filetypes-shell` — 2026-05-22T13:49:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c895ec9350590096` | inherit_from_filetypes_xml_051713c3 | ok | 0.9966 | 0.9980 | 0.9618 | 19 | [log](out/autocollie/runs/2026-05-22T13-54-35_20260522T134952-filetypes-shell_inherit_from_filetypes_xml_051713c3.log) |
+| `654ba319e083776b` | shell_ctrl_leaves128_lr004_est350 | ok | 0.9963 | 0.9977 | 0.9042 | 5 | [log](out/autocollie/runs/2026-05-22T13-54-55_20260522T134952-filetypes-shell_shell_ctrl_leaves128_lr004_est350.log) |
+| `bb349a869ff6f40c` | shell_feat_kv_vocab_20k_split | ok | 0.9964 | 0.9978 | 0.9637 | 16 | [log](out/autocollie/runs/2026-05-22T13-55-00_20260522T134952-filetypes-shell_shell_feat_kv_vocab_20k_split.log) |
+| `7597daa06a071b03` | shell_feat_text_metrics_lowfreq_bigrams | ok | 0.9963 | 0.9978 | 0.9590 | 16 | [log](out/autocollie/runs/2026-05-22T13-55-16_20260522T134952-filetypes-shell_shell_feat_text_metrics_lowfreq_bigrams.log) |
+| `9e75eb43732a9b9d` | shell_feat_hardneg_obj_trigrams | ok | 0.9962 | 0.9976 | 0.9658 | 8 | [log](out/autocollie/runs/2026-05-22T13-55-32_20260522T134952-filetypes-shell_shell_feat_hardneg_obj_trigrams.log) |
+| `8dc88ea976ba34ec` | shell_gen_dart_boosting | ok | 0.9943 | 0.9965 | 0.9431 | 5 | [log](out/autocollie/runs/2026-05-22T13-55-40_20260522T134952-filetypes-shell_shell_gen_dart_boosting.log) |
+| `3064043821cb96e3` | shell_abl_no_blindfold_lr004 | ok | 0.9963 | 0.9977 | 0.9042 | 15 | [log](out/autocollie/runs/2026-05-22T13-55-44_20260522T134952-filetypes-shell_shell_abl_no_blindfold_lr004.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_ctrl_leaves128_lr004_est350`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with optimized training hyperparameters to stabilize PR_AUC and improve recall@3FPM by reducing variance.
+- **`shell_feat_kv_vocab_20k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Expand KV vocab and enable value splitting to capture finer-grained shell script patterns, targeting PR_AUC and recall@3FPM gains.
+- **`shell_feat_text_metrics_lowfreq_bigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enable full text metrics and lower bigram frequency floor to capture rare obfuscation patterns, aiming for PR_AUC improvement.
+- **`shell_feat_hardneg_obj_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 …` — Combine objective trigrams with hard negative mining to sharpen decision boundaries at low FPR, targeting recall@3FPM.
+- **`shell_gen_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Test DART boosting to reduce overfitting on noisy features, aiming to improve ROC_AUC and stabilize PR_AUC.
+- **`shell_abl_no_blindfold_lr004`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Ablate blindfold dropout to retain full feature signal, aiming to improve recall@3FPM without hurting PR_AUC.
+
+</details>
+
+## Cycle `20260522T173639-filetypes-shell` — 2026-05-22T17:36:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c895ec9350590096` | inherit_from_filetypes_xml_051713c3 | dup | 0.9966 | 0.9980 | 0.9618 | 1 | [log](out/autocollie/runs/2026-05-22T17-41-53_20260522T173639-filetypes-shell_inherit_from_filetypes_xml_051713c3.log) |
+| `a441b0544de02d56` | shell_ctrl_leaves128_lr004_est300 | dup | 0.9962 | 0.9977 | 0.9658 | 1 | [log](out/autocollie/runs/2026-05-22T17-41-54_20260522T173639-filetypes-shell_shell_ctrl_leaves128_lr004_est300.log) |
+| `26272d2ee0207e2f` | shell_feat_textenc_metrics_full | ok | 0.9963 | 0.9977 | 0.9665 | 4 | [log](out/autocollie/runs/2026-05-22T17-41-55_20260522T173639-filetypes-shell_shell_feat_textenc_metrics_full.log) |
+| `9d451dcbbf88665c` | shell_feat_kv_vocab_25k_lowfreq | ok | 0.9963 | 0.9978 | 0.9593 | 15 | [log](out/autocollie/runs/2026-05-22T17-41-59_20260522T173639-filetypes-shell_shell_feat_kv_vocab_25k_lowfreq.log) |
+| `f7b052a0ac322c52` | shell_feat_ngram_lowfreq_obj_tri | ok | 0.9966 | 0.9980 | 0.9594 | 14 | [log](out/autocollie/runs/2026-05-22T17-42-14_20260522T173639-filetypes-shell_shell_feat_ngram_lowfreq_obj_tri.log) |
+| `348d223afca9d7de` | shell_train_hardneg_01_10 | ok | 0.9961 | 0.9976 | 0.9635 | 6 | [log](out/autocollie/runs/2026-05-22T17-42-28_20260522T173639-filetypes-shell_shell_train_hardneg_01_10.log) |
+| `aa78614329e7af0d` | shell_train_dart_extratrees_lr003 | ok | 0.9906 | 0.9941 | 0.8787 | 4 | [log](out/autocollie/runs/2026-05-22T17-42-35_20260522T173639-filetypes-shell_shell_train_dart_extratrees_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_ctrl_leaves128_lr004_est300`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to stabilize ranking and maintain PR AUC while probing recall@3 FP/M.
+- **`shell_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture shell obfuscation patterns, targeting PR AUC improvement.
+- **`shell_feat_kv_vocab_25k_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 …` — Expand KV vocab to 25k with lower min_freq to capture rare malicious shell variables, aiming to boost recall@3 FP/M.
+- **`shell_feat_ngram_lowfreq_obj_tri`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 …` — Lower bigram/trigram min_freq and enable objective_trigrams to capture rare attack sequences, targeting PR AUC gain.
+- **`shell_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to sharpen the decision boundary at low FPR, directly optimizing recall@3 FP/M.
+- **`shell_train_dart_extratrees_lr003`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Use DART boosting with extra trees and lower LR to reduce overfitting and improve tail recall@3 FP/M.
+
+</details>
+

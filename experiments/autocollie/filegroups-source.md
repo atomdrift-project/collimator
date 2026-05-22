@@ -310,3 +310,75 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T155352-filegroups-source` — 2026-05-22T15:53:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b346b3205083e50b` | inherit_from_filetypes_xml_051713c3 | ok | 0.9988 | 0.9981 | 0.9815 | 28 | [log](out/autocollie/runs/2026-05-22T15-59-02_20260522T155352-filegroups-source_inherit_from_filetypes_xml_051713c3.log) |
+| `3f653acb0360208e` | source_control_lr003_leaves128 | dup | 0.9988 | 0.9981 | 0.9788 | 1 | [log](out/autocollie/runs/2026-05-22T15-59-31_20260522T155352-filegroups-source_source_control_lr003_leaves128.log) |
+| `82ce51affad1e629` | source_kv_vocab_20k_split | ok | 0.9988 | 0.9982 | 0.9794 | 23 | [log](out/autocollie/runs/2026-05-22T15-59-32_20260522T155352-filegroups-source_source_kv_vocab_20k_split.log) |
+| `e6bc4b42f34b5ee2` | source_textenc_metrics_full | ok | 0.9988 | 0.9981 | 0.9826 | 8 | [log](out/autocollie/runs/2026-05-22T15-59-54_20260522T155352-filegroups-source_source_textenc_metrics_full.log) |
+| `b2684b7fa93c86b2` | source_tiered_trigrams_rare | ok | 0.9988 | 0.9982 | 0.9822 | 22 | [log](out/autocollie/runs/2026-05-22T16-00-02_20260522T155352-filegroups-source_source_tiered_trigrams_rare.log) |
+| `879a180ffaa0600c` | source_hardneg_005_10 | ok | 0.9989 | 0.9983 | 0.9829 | 13 | [log](out/autocollie/runs/2026-05-22T16-00-24_20260522T155352-filegroups-source_source_hardneg_005_10.log) |
+| `e07b30d98670ba91` | source_seed_search_k3 | ok | 0.9988 | 0.9981 | 0.9809 | 21 | [log](out/autocollie/runs/2026-05-22T16-00-37_20260522T155352-filegroups-source_source_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_lr003_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control feature set with lower LR and more leaves to refine ranking and improve PR_AUC.
+- **`source_kv_vocab_20k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and enable value splitting to capture finer-grained key-value signals, aiming to boost PR_AUC.
+- **`source_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture structural text anomalies, targeting recall@3 FP/M gains.
+- **`source_tiered_trigrams_rare`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Lower tiered trigram min freq and increase max to capture rare attack patterns, aiming to improve PR_AUC.
+- **`source_hardneg_005_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Introduce hard negatives with moderate weight to sharpen decision boundary at low FPR, targeting recall@3 FP/M.
+- **`source_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run best-of-3 seed search on strong feature set to reduce variance and stabilize recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260522T161442-filegroups-source` — 2026-05-22T16:14:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b346b3205083e50b` | inherit_from_filetypes_xml_051713c3 | dup | 0.9988 | 0.9981 | 0.9815 | 1 | [log](out/autocollie/runs/2026-05-22T16-19-56_20260522T161442-filegroups-source_inherit_from_filetypes_xml_051713c3.log) |
+| `3f653acb0360208e` | source_control_baseline_lr003 | dup | 0.9988 | 0.9981 | 0.9788 | 1 | [log](out/autocollie/runs/2026-05-22T16-19-57_20260522T161442-filegroups-source_source_control_baseline_lr003.log) |
+| `b744e692f010d2eb` | source_kv_vocab_15k_split | ok | 0.9988 | 0.9982 | 0.9794 | 8 | [log](out/autocollie/runs/2026-05-22T16-19-57_20260522T161442-filegroups-source_source_kv_vocab_15k_split.log) |
+| `fe66877803128635` | source_obj_trigrams_rare | ok | 0.9989 | 0.9982 | 0.9747 | 23 | [log](out/autocollie/runs/2026-05-22T16-20-05_20260522T161442-filegroups-source_source_obj_trigrams_rare.log) |
+| `0b68590cf9a43a72` | source_text_metrics_full | ok | 0.9988 | 0.9981 | 0.9826 | 8 | [log](out/autocollie/runs/2026-05-22T16-20-28_20260522T161442-filegroups-source_source_text_metrics_full.log) |
+| `dd38b24a71555596` | source_extra_trees_reg | ok | 0.9985 | 0.9976 | 0.9741 | 8 | [log](out/autocollie/runs/2026-05-22T16-20-36_20260522T161442-filegroups-source_source_extra_trees_reg.log) |
+| `69b8d20be38f7168` | source_reg_minchild_alpha | ok | 0.9988 | 0.9980 | 0.9809 | 7 | [log](out/autocollie/runs/2026-05-22T16-20-44_20260522T161442-filegroups-source_source_reg_minchild_alpha.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_baseline_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature set with lower learning rate and more estimators to stabilize PR_AUC and improve tail recall.
+- **`source_kv_vocab_15k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to capture structured key-value patterns in source files, targeting PR_AUC gain.
+- **`source_obj_trigrams_rare`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable objective_trigrams with low min_freq to capture rare attack objective sequences, aiming to boost recall@3FPM.
+- **`source_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and text_encoding to add structural code layout features, targeting PR_AUC improvement.
+- **`source_extra_trees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Use extra_trees with subsampling to reduce overfitting on rare patterns, aiming to improve PR_AUC and ROC_AUC stability.
+- **`source_reg_minchild_alpha`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Increase min_child_samples and add L1 regularization to prune noisy splits, targeting PR_AUC gain with flat ROC_AUC.
+
+</details>
+
+## Cycle `20260522T172857-filegroups-source` — 2026-05-22T17:28:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b346b3205083e50b` | inherit_from_filetypes_xml_051713c3 | dup | 0.9988 | 0.9981 | 0.9815 | 1 | [log](out/autocollie/runs/2026-05-22T17-33-42_20260522T172857-filegroups-source_inherit_from_filetypes_xml_051713c3.log) |
+| `3f653acb0360208e` | source_control_lr003_leaves128 | dup | 0.9988 | 0.9981 | 0.9788 | 1 | [log](out/autocollie/runs/2026-05-22T17-33-43_20260522T172857-filegroups-source_source_control_lr003_leaves128.log) |
+| `1975953174b9d4f4` | source_kv_vocab_15k_split | ok | 0.9988 | 0.9982 | 0.9794 | 11 | [log](out/autocollie/runs/2026-05-22T17-33-43_20260522T172857-filegroups-source_source_kv_vocab_15k_split.log) |
+| `4efe1dceb9ac3af5` | source_obj_trigrams_rare_bigrams | ok | 0.9988 | 0.9982 | 0.9827 | 34 | [log](out/autocollie/runs/2026-05-22T17-33-54_20260522T172857-filegroups-source_source_obj_trigrams_rare_bigrams.log) |
+| `68d2664a251aff13` | source_text_metrics_full_buckets | ok | 0.9989 | 0.9983 | 0.9824 | 22 | [log](out/autocollie/runs/2026-05-22T17-34-28_20260522T172857-filegroups-source_source_text_metrics_full_buckets.log) |
+| `69b00ac0f7f0ec69` | source_reg_minchild_subsample | ok | 0.9988 | 0.9981 | 0.9822 | 8 | [log](out/autocollie/runs/2026-05-22T17-34-50_20260522T172857-filegroups-source_source_reg_minchild_subsample.log) |
+| `039d08964361b2c2` | source_transfer_xml_lowbigram | ok | 0.9989 | 0.9982 | 0.9815 | 24 | [log](out/autocollie/runs/2026-05-22T17-34-58_20260522T172857-filegroups-source_source_transfer_xml_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_lr003_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Control feature set with lower LR and more leaves to improve PR_AUC ranking stability.
+- **`source_kv_vocab_15k_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enable KV vocab and value splitting to capture structured config patterns, targeting PR_AUC gain.
+- **`source_obj_trigrams_rare_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Lower bigram freq floor and add objective trigrams to capture rare attack patterns, aiming for recall@3FPM.
+- **`source_text_metrics_full_buckets`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add full text metrics and line length buckets to model source code structure, targeting PR_AUC.
+- **`source_reg_minchild_subsample`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_ALPHA=0.5 EXP_SUBSAMPLE=0.8 …` — Increase min_child_samples and subsample to reduce overfitting on benign noise, improving recall@3FPM.
+- **`source_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer XML route's low bigram freq floor to source to capture rarer code patterns, targeting PR_AUC.
+
+</details>
+

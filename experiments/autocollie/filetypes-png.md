@@ -378,3 +378,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T145602-filetypes-png` — 2026-05-22T14:56:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d0c6636d75dc0b9` | inherit_from_filetypes_xml_051713c3 | ok | 0.9867 | 0.9731 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-22T15-02-01_20260522T145602-filetypes-png_inherit_from_filetypes_xml_051713c3.log) |
+| `500ab07b7570f190` | png_control_baseline_v3 | ok | 0.9850 | 0.9726 | 0.9524 | 1 | [log](out/autocollie/runs/2026-05-22T15-02-05_20260522T145602-filetypes-png_png_control_baseline_v3.log) |
+| `72fb3de6860d0bc5` | png_feat_text_metrics_lowfreq | ok | 0.9859 | 0.9731 | 0.9268 | 3 | [log](out/autocollie/runs/2026-05-22T15-02-06_20260522T145602-filetypes-png_png_feat_text_metrics_lowfreq.log) |
+| `f67a928dcf7025ab` | png_feat_kv_split_vocab | ok | 0.9850 | 0.9726 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-22T15-02-09_20260522T145602-filetypes-png_png_feat_kv_split_vocab.log) |
+| `1a91e93660fd6581` | png_feat_tiered_trigrams | ok | 0.9847 | 0.9719 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-22T15-02-13_20260522T145602-filetypes-png_png_feat_tiered_trigrams.log) |
+| `107b63391db95681` | png_exploit_hardneg_02_12 | ok | 0.9847 | 0.9715 | 0.8319 | 2 | [log](out/autocollie/runs/2026-05-22T15-02-16_20260522T145602-filetypes-png_png_exploit_hardneg_02_12.log) |
+| `2476181723fd01c5` | png_exploit_extratrees_scalepos | ok | 0.9817 | 0.9634 | 0.9355 | 1 | [log](out/autocollie/runs/2026-05-22T15-02-17_20260522T145602-filetypes-png_png_exploit_extratrees_scalepos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_control_baseline_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best PR_AUC feature set with slightly higher estimators and leaves to stabilize ranking and improve recall@3FPM.
+- **`png_feat_text_metrics_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and text_encoding with lower bigram_min_freq to capture obfuscation and metadata signals in PNG chunks, targeting PR_AUC gain.
+- **`png_feat_kv_split_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand KV vocab and enable kv_value_split to recover per-element signal in metadata strings, aiming for recall@3FPM improvement.
+- **`png_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add tiered_crit_trigrams to capture higher-order trait co-occurrences, targeting PR_AUC and recall@3FPM.
+- **`png_exploit_hardneg_02_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard negative mining with moderate weight to sharpen decision boundary at low FPR, improving recall@3FPM.
+- **`png_exploit_extratrees_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use extra_trees for ensemble noise regularization and scale_pos_weight_mult=0.75 to reduce benign overfitting, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260522T165511-filetypes-png` — 2026-05-22T16:55:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d0c6636d75dc0b9` | inherit_from_filetypes_xml_051713c3 | dup | 0.9867 | 0.9731 | 0.9524 | 1 | [log](out/autocollie/runs/2026-05-22T17-00-06_20260522T165511-filetypes-png_inherit_from_filetypes_xml_051713c3.log) |
+| `438c21515d07d2c6` | png_control_baseline_v4 | ok | 0.9850 | 0.9726 | 0.9524 | 2 | [log](out/autocollie/runs/2026-05-22T17-00-06_20260522T165511-filetypes-png_png_control_baseline_v4.log) |
+| `6a1da4f8308e2304` | png_exploit_hardneg_02_10 | ok | 0.9865 | 0.9764 | 0.8319 | 2 | [log](out/autocollie/runs/2026-05-22T17-00-08_20260522T165511-filetypes-png_png_exploit_hardneg_02_10.log) |
+| `52e14183b8b9037e` | png_feat_text_metrics_full | ok | 0.9850 | 0.9726 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-22T17-00-10_20260522T165511-filetypes-png_png_feat_text_metrics_full.log) |
+| `e23909cb152eff48` | png_feat_kv_vocab_10k | ok | 0.9850 | 0.9726 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-22T17-00-13_20260522T165511-filetypes-png_png_feat_kv_vocab_10k.log) |
+| `f577dbb2e5899c7b` | png_feat_overlay_signal | ok | 0.9850 | 0.9726 | 0.9524 | 3 | [log](out/autocollie/runs/2026-05-22T17-00-16_20260522T165511-filetypes-png_png_feat_overlay_signal.log) |
+| `62f108ee36e39500` | png_gen_seed_search_3 | ok | 0.9850 | 0.9726 | 0.9524 | 2 | [log](out/autocollie/runs/2026-05-22T17-00-19_20260522T165511-filetypes-png_png_gen_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_control_baseline_v4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with deeper trees to capture complex PNG structure patterns, aiming to stabilize PR_AUC while maintaining recall@3FPM.
+- **`png_exploit_hardneg_02_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Upweight hard negatives to sharpen decision boundary at low FPR, targeting recall@3FPM improvement without regressing PR_AUC.
+- **`png_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full to capture obfuscation signals in PNG metadata, aiming to increase PR_AUC via new rank signal.
+- **`png_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand KV vocab and lower min_freq to capture rarer high-signal PNG metadata keys, targeting PR_AUC gain.
+- **`png_feat_overlay_signal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add overlay_signal to detect packed PNGs with appended data, aiming to boost recall@3FPM on tail malware.
+- **`png_gen_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed search on best feature set to reduce variance, targeting stable PR_AUC across seeds.
+
+</details>
+

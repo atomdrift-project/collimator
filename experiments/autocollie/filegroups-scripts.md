@@ -256,3 +256,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T154101-filegroups-scripts` — 2026-05-22T15:41:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `52e83002600c671b` | inherit_from_filetypes_xml_051713c3 | ok | 0.9980 | 0.9979 | 0.9735 | 67 | [log](out/autocollie/runs/2026-05-22T15-44-44_20260522T154101-filegroups-scripts_inherit_from_filetypes_xml_051713c3.log) |
+| `7f6374622adb3749` | scripts_control_train_est350_reg1 | ok | 0.9980 | 0.9979 | 0.9696 | 12 | [log](out/autocollie/runs/2026-05-22T15-45-51_20260522T154101-filegroups-scripts_scripts_control_train_est350_reg1.log) |
+| `365b997cedf45742` | scripts_feat_kv_vocab_split | ok | 0.9981 | 0.9979 | 0.9783 | 11 | [log](out/autocollie/runs/2026-05-22T15-46-03_20260522T154101-filegroups-scripts_scripts_feat_kv_vocab_split.log) |
+| `f369fc6af0bdf68a` | scripts_feat_textenc_metrics | dup | 0.9981 | 0.9979 | 0.9770 | 1 | [log](out/autocollie/runs/2026-05-22T15-46-14_20260522T154101-filegroups-scripts_scripts_feat_textenc_metrics.log) |
+| `e88e582ea3b71240` | scripts_feat_lowfreq_bigrams | ok | 0.9981 | 0.9980 | 0.9750 | 38 | [log](out/autocollie/runs/2026-05-22T15-46-15_20260522T154101-filegroups-scripts_scripts_feat_lowfreq_bigrams.log) |
+| `c9143f30f20d9d4c` | scripts_train_hardneg_tuned | ok | 0.9982 | 0.9980 | 0.9778 | 22 | [log](out/autocollie/runs/2026-05-22T15-46-53_20260522T154101-filegroups-scripts_scripts_train_hardneg_tuned.log) |
+| `a4927a5c320598ee` | scripts_train_extratrees_reg | ok | 0.9979 | 0.9978 | 0.9737 | 20 | [log](out/autocollie/runs/2026-05-22T15-47-15_20260522T154101-filegroups-scripts_scripts_train_extratrees_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_train_est350_reg1`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control feature set with increased estimators and mild L2 regularization to stabilize PR_AUC and improve tail recall.
+- **`scripts_feat_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture granular key-value signal, targeting PR_AUC improvement via better malware trait resolution.
+- **`scripts_feat_textenc_metrics`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture script obfuscation patterns, aiming to boost recall@3 FP/M and PR_AUC.
+- **`scripts_feat_lowfreq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and increase bigram_max to 8000 to capture rarer script patterns, targeting PR_AUC gains.
+- **`scripts_train_hardneg_tuned`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction and weight to focus model on difficult benign samples, improving recall@3 FP/M.
+- **`scripts_train_extratrees_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Use extra_trees with higher reg_lambda to reduce overfitting on rare script patterns, aiming for stable PR_AUC and better tail recall.
+
+</details>
+

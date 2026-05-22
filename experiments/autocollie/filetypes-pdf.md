@@ -426,3 +426,51 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260522T143158-filetypes-pdf` — 2026-05-22T14:31:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `26b7669fb29fdb1c` | inherit_from_filetypes_xml_051713c3 | ok | 1.0000 | 0.9971 | 0.9975 | 7 | [log](out/autocollie/runs/2026-05-22T14-36-56_20260522T143158-filetypes-pdf_inherit_from_filetypes_xml_051713c3.log) |
+| `df79909d5e976dcd` | pdf_ctrl_hardneg_05_8 | ok | 1.0000 | 0.9993 | 0.9986 | 2 | [log](out/autocollie/runs/2026-05-22T14-37-03_20260522T143158-filetypes-pdf_pdf_ctrl_hardneg_05_8.log) |
+| `81d81f388ff08511` | pdf_feat_textmetrics_full | ok | 1.0000 | 0.9976 | 0.9982 | 7 | [log](out/autocollie/runs/2026-05-22T14-37-05_20260522T143158-filetypes-pdf_pdf_feat_textmetrics_full.log) |
+| `4ebc490b492f63b7` | pdf_feat_kv_vocab_split | ok | 1.0000 | 0.9976 | 0.9982 | 2 | [log](out/autocollie/runs/2026-05-22T14-37-12_20260522T143158-filetypes-pdf_pdf_feat_kv_vocab_split.log) |
+| `348decae1084b08e` | pdf_feat_obfus_linebuckets | ok | 1.0000 | 0.9971 | 0.9938 | 7 | [log](out/autocollie/runs/2026-05-22T14-37-13_20260522T143158-filetypes-pdf_pdf_feat_obfus_linebuckets.log) |
+| `f99f2975385b536b` | pdf_transfer_lowfreq_bigrams | ok | 1.0000 | 0.9975 | 0.9982 | 6 | [log](out/autocollie/runs/2026-05-22T14-37-20_20260522T143158-filetypes-pdf_pdf_transfer_lowfreq_bigrams.log) |
+| `0b3d941df1100a44` | pdf_gen_seed_search_3 | ok | 1.0000 | 0.9992 | 0.9978 | 2 | [log](out/autocollie/runs/2026-05-22T14-37-26_20260522T143158-filetypes-pdf_pdf_gen_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_hardneg_05_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the benign-malware boundary at low FPR, keeping PR_AUC flat.
+- **`pdf_feat_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to boost PR_AUC by adding rich document obfuscation signals (line lengths, escape density) specific to PDFs, while keeping ROC_AUC stable.
+- **`pdf_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve recall@3FPM by capturing fine-grained key-value token splits in PDF metadata/streams, adding discriminative signal for malicious payloads.
+- **`pdf_feat_obfus_linebuckets`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to increase PR_AUC by explicitly modeling PDF obfuscation patterns (eval lures, anti-static) that are diluted in general taxonomy features.
+- **`pdf_transfer_lowfreq_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to lift PR_AUC by capturing rarer but highly specific PDF structural bigrams, transferring a successful low-frequency bigram strategy from the XML route.
+- **`pdf_gen_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to stabilize recall@3FPM by averaging across 3 seeds to reduce variance, ensuring the high PR_AUC generalizes beyond a single RNG seed.
+
+</details>
+
+## Cycle `20260522T171041-filetypes-pdf` — 2026-05-22T17:10:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `26b7669fb29fdb1c` | inherit_from_filetypes_xml_051713c3 | dup | 1.0000 | 0.9971 | 0.9975 | 1 | [log](out/autocollie/runs/2026-05-22T17-16-29_20260522T171041-filetypes-pdf_inherit_from_filetypes_xml_051713c3.log) |
+| `f4f4f77db1d175a2` | pdf_ctrl_baseline_tune | ok | 1.0000 | 0.9976 | 0.9982 | 2 | [log](out/autocollie/runs/2026-05-22T17-16-30_20260522T171041-filetypes-pdf_pdf_ctrl_baseline_tune.log) |
+| `e47774d1840535c9` | pdf_feat_kv_vocab_10k | ok | 1.0000 | 0.9976 | 0.9982 | 2 | [log](out/autocollie/runs/2026-05-22T17-16-32_20260522T171041-filetypes-pdf_pdf_feat_kv_vocab_10k.log) |
+| `72ccc8c7372601d8` | pdf_feat_obfus_buckets | ok | 1.0000 | 0.9971 | 0.9938 | 2 | [log](out/autocollie/runs/2026-05-22T17-16-33_20260522T171041-filetypes-pdf_pdf_feat_obfus_buckets.log) |
+| `3f70f00d194f6e63` | pdf_train_hardneg_scalepos | ok | 0.9999 | 0.9960 | 0.9955 | 2 | [log](out/autocollie/runs/2026-05-22T17-16-35_20260522T171041-filetypes-pdf_pdf_train_hardneg_scalepos.log) |
+| `0caf8d452edeaf6f` | pdf_train_extra_trees | ok | 1.0000 | 0.9992 | 0.9948 | 2 | [log](out/autocollie/runs/2026-05-22T17-16-37_20260522T171041-filetypes-pdf_pdf_train_extra_trees.log) |
+| `c016adb6c91b54b7` | pdf_transfer_lowfreq_seed3 | ok | 1.0000 | 0.9992 | 0.9979 | 3 | [log](out/autocollie/runs/2026-05-22T17-16-39_20260522T171041-filetypes-pdf_pdf_transfer_lowfreq_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_baseline_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicate best feature env with conservative training tweaks to establish a stable baseline for PR_AUC and recall@3 FP/M.
+- **`pdf_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enable kv_vocab to capture structured PDF metadata patterns, aiming to lift PR_AUC by adding high-signal key-value features.
+- **`pdf_feat_obfus_buckets`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Add document_obfuscation_features and line_length_buckets to target PDF-specific obfuscation tactics, aiming to improve recall@3 FP/M on stealthy samples.
+- **`pdf_train_hardneg_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Tune hard_negative_weight and scale_pos_weight_mult to sharpen the decision boundary at low FPR, targeting recall@3 FP/M gains.
+- **`pdf_train_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Enable extra_trees to inject split randomness and reduce overfitting, aiming to stabilize ROC_AUC and improve tail recall.
+- **`pdf_transfer_lowfreq_seed3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Transfer low-frequency bigram strategy from XML route and use seed_search_k=3 to average out variance, targeting robust PR_AUC gains.
+
+</details>
+

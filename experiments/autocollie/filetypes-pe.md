@@ -426,3 +426,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T153631-filetypes-pe` — 2026-05-22T15:36:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ce6786b82897b75d` | inherit_from_filetypes_xml_051713c3 | ok | 0.9996 | 0.9996 | 0.9896 | 95 | [log](out/autocollie/runs/2026-05-22T15-41-18_20260522T153631-filetypes-pe_inherit_from_filetypes_xml_051713c3.log) |
+| `c7c6b45aef82db69` | pe_control_train_lr004_est350 | ok | 0.9996 | 0.9996 | 0.9922 | 38 | [log](out/autocollie/runs/2026-05-22T15-42-54_20260522T153631-filetypes-pe_pe_control_train_lr004_est350.log) |
+| `d3075bce63b58850` | pe_feat_symbol_kv_vocab_15k | ok | 0.9997 | 0.9997 | 0.9922 | 137 | [log](out/autocollie/runs/2026-05-22T15-43-32_20260522T153631-filetypes-pe_pe_feat_symbol_kv_vocab_15k.log) |
+| `a21496bbd13dea8f` | pe_feat_pe_struct_packer_signals | ok | 0.9997 | 0.9997 | 0.9914 | 123 | [log](out/autocollie/runs/2026-05-22T15-45-49_20260522T153631-filetypes-pe_pe_feat_pe_struct_packer_signals.log) |
+| `c6ebdb4b934f879f` | pe_train_hardneg_02_16 | ok | 0.9997 | 0.9997 | 0.9927 | 34 | [log](out/autocollie/runs/2026-05-22T15-47-52_20260522T153631-filetypes-pe_pe_train_hardneg_02_16.log) |
+| `cdf025f3b5f28d32` | pe_seed_search_k3_hardneg | dup | 0.9997 | 0.9997 | 0.9919 | 1 | [log](out/autocollie/runs/2026-05-22T15-48-26_20260522T153631-filetypes-pe_pe_seed_search_k3_hardneg.log) |
+| `87a624861af0e38d` | pe_ablate_extreme_features | ok | 0.9997 | 0.9997 | 0.9923 | 92 | [log](out/autocollie/runs/2026-05-22T15-48-27_20260522T153631-filetypes-pe_pe_ablate_extreme_features.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_train_lr004_est350`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env while tuning LR and estimators to stabilize PR_AUC and improve recall@3 FP/M.
+- **`pe_feat_symbol_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 …` — Expands symbol and KV vocab caps to 15k to capture rarer PE import/section patterns, targeting PR_AUC gain.
+- **`pe_feat_pe_struct_packer_signals`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 …` — Enables PE-format, temporal, and overlay signals to improve recall@3 FP/M on packed/obfuscated binaries.
+- **`pe_train_hardneg_02_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Sweeps hard-negative fraction to 0.02 with weight 16 to push recall@3 FP/M while guarding PR_AUC.
+- **`pe_seed_search_k3_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 on the strong hard-negative config to average out seed variance and stabilize recall@3 FP/M.
+- **`pe_ablate_extreme_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce noise and potential overfitting, aiming to keep PR_AUC flat or higher while improving calibration.
+
+</details>
+

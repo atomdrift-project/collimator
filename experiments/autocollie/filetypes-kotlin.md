@@ -362,3 +362,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T152959-filetypes-kotlin` — 2026-05-22T15:29:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `68121587955e2336` | inherit_from_filetypes_xml_051713c3 | ok | 0.9871 | 0.5000 | 0.9935 | 22 | [log](out/autocollie/runs/2026-05-22T15-34-57_20260522T152959-filetypes-kotlin_inherit_from_filetypes_xml_051713c3.log) |
+| `87b006f0c25e55bf` | kotlin_ctrl_scalepos075_reg2 | dup | 0.9871 | 0.5000 | 0.9935 | 1 | [log](out/autocollie/runs/2026-05-22T15-35-18_20260522T152959-filetypes-kotlin_kotlin_ctrl_scalepos075_reg2.log) |
+| `bf8f6591bd898cf1` | kotlin_train_dart_lr003_est400 | ok | 0.9871 | 0.5000 | 0.9935 | 3 | [log](out/autocollie/runs/2026-05-22T15-35-19_20260522T152959-filetypes-kotlin_kotlin_train_dart_lr003_est400.log) |
+| `26197926486358ca` | kotlin_feat_kv_vocab_5k | ok | 0.9871 | 0.5000 | 0.9935 | 18 | [log](out/autocollie/runs/2026-05-22T15-35-22_20260522T152959-filetypes-kotlin_kotlin_feat_kv_vocab_5k.log) |
+| `f7118a494c4c8a47` | kotlin_feat_text_metrics_full | ok | 0.9871 | 0.5000 | 0.9935 | 17 | [log](out/autocollie/runs/2026-05-22T15-35-40_20260522T152959-filetypes-kotlin_kotlin_feat_text_metrics_full.log) |
+| `fb9b8137409e4832` | kotlin_feat_lowbigram_trigrams | ok | 0.9871 | 0.5000 | 0.9935 | 24 | [log](out/autocollie/runs/2026-05-22T15-35-57_20260522T152959-filetypes-kotlin_kotlin_feat_lowbigram_trigrams.log) |
+| `ed944bd354c8dbe9` | kotlin_seed_search_k3_avg | ok | 0.9871 | 0.5000 | 0.9935 | 4 | [log](out/autocollie/runs/2026-05-22T15-36-21_20260522T152959-filetypes-kotlin_kotlin_seed_search_k3_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_scalepos075_reg2`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set with scale_pos_weight_mult=0.75 and reg_lambda=2.0 to stabilize PR_AUC and recall@3 FP/M while avoiding recent crash configs.
+- **`kotlin_train_dart_lr003_est400`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=400 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Test DART boosting with lower learning rate and more estimators to improve PR_AUC generalization without hard-negative weighting that caused crashes.
+- **`kotlin_feat_kv_vocab_5k`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 5000 to capture Kotlin manifest/metadata patterns, aiming to lift PR_AUC by adding structured signal.
+- **`kotlin_feat_text_metrics_full`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to better separate obfuscated malicious Kotlin from benign, targeting recall@3 FP/M improvement.
+- **`kotlin_feat_lowbigram_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and enable tiered_crit_trigrams to capture rarer malicious patterns, aiming to boost PR_AUC.
+- **`kotlin_seed_search_k3_avg`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds=true to average predictions and reduce variance, stabilizing recall@3 FP/M on this imbalanced route.
+
+</details>
+

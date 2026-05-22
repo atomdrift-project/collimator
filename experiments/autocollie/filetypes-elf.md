@@ -388,3 +388,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T150111-filetypes-elf` — 2026-05-22T15:01:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0ff9552c5df355b1` | inherit_from_filetypes_xml_051713c3 | ok | 1.0000 | 1.0000 | 0.9966 | 51 | [log](out/autocollie/runs/2026-05-22T15-07-26_20260522T150111-filetypes-elf_inherit_from_filetypes_xml_051713c3.log) |
+| `6efd5d58071ea2cf` | elf_control_lr003_leaves128 | ok | 1.0000 | 1.0000 | 0.9947 | 9 | [log](out/autocollie/runs/2026-05-22T15-08-17_20260522T150111-filetypes-elf_elf_control_lr003_leaves128.log) |
+| `0c8515b9f0731e0f` | elf_hardneg_01_12_tail | dup | 1.0000 | 1.0000 | 0.9981 | 1 | [log](out/autocollie/runs/2026-05-22T15-08-26_20260522T150111-filetypes-elf_elf_hardneg_01_12_tail.log) |
+| `1c55a3c9303613da` | elf_dart_fpr3e6_threshold | ok | 0.9999 | 0.9999 | 0.9967 | 8 | [log](out/autocollie/runs/2026-05-22T15-08-26_20260522T150111-filetypes-elf_elf_dart_fpr3e6_threshold.log) |
+| `1bd288b2a4cd1968` | elf_sym_vocab_bigrams_10k | ok | 1.0000 | 1.0000 | 0.9942 | 40 | [log](out/autocollie/runs/2026-05-22T15-08-34_20260522T150111-filetypes-elf_elf_sym_vocab_bigrams_10k.log) |
+| `4a8fc645b7ea86b9` | elf_kv_vocab_15k_split | dup | 1.0000 | 1.0000 | 0.9962 | 1 | [log](out/autocollie/runs/2026-05-22T15-09-14_20260522T150111-filetypes-elf_elf_kv_vocab_15k_split.log) |
+| `5f1bf2af06a4015c` | elf_overlay_extended_metrics | dup | 1.0000 | 1.0000 | 0.9939 | 1 | [log](out/autocollie/runs/2026-05-22T15-09-15_20260522T150111-filetypes-elf_elf_overlay_extended_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with lower LR and higher leaves to stabilize ranking and improve PR_AUC without changing features.
+- **`elf_hardneg_01_12_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard-negative upweighting to push benign tail down, targeting recall@3 FP/M improvement.
+- **`elf_dart_fpr3e6_threshold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — DART boosting with max_recall_at_fpr thresholding to directly optimize deployed tail recall@3 FP/M.
+- **`elf_sym_vocab_bigrams_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol vocab and bigrams to capture import co-occurrence patterns, aiming to lift PR_AUC.
+- **`elf_kv_vocab_15k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expands KV vocab and splits values to recover per-element metadata signal, targeting recall@3 FP/M.
+- **`elf_overlay_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables overlay and extended metrics to detect packers/droppers, improving tail recall@3 FP/M.
+
+</details>
+

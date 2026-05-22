@@ -280,3 +280,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T160058-filetypes-tar.gz` — 2026-05-22T16:00:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ff15c7b0a851505` | inherit_from_filetypes_xml_051713c3 | ok | 0.9994 | 0.9987 | 0.9922 | 82 | [log](out/autocollie/runs/2026-05-22T16-05-22_20260522T160058-filetypes-tar.gz_inherit_from_filetypes_xml_051713c3.log) |
+| `af749053f5d464ff` | tar_gz_ctrl_baseline_lr003_leaves128 | dup | 0.9994 | 0.9988 | 0.9917 | 1 | [log](out/autocollie/runs/2026-05-22T16-06-44_20260522T160058-filetypes-tar.gz_tar_gz_ctrl_baseline_lr003_leaves128.log) |
+| `ae4649afcb584854` | tar_gz_feat_kv_vocab_split | ok | 0.9993 | 0.9986 | 0.9896 | 11 | [log](out/autocollie/runs/2026-05-22T16-06-44_20260522T160058-filetypes-tar.gz_tar_gz_feat_kv_vocab_split.log) |
+| `1ca9ab6329f5627f` | tar_gz_feat_text_metrics_full | ok | 0.9993 | 0.9986 | 0.9920 | 69 | [log](out/autocollie/runs/2026-05-22T16-06-55_20260522T160058-filetypes-tar.gz_tar_gz_feat_text_metrics_full.log) |
+| `c04b184a69366bb3` | tar_gz_feat_extended_metrics | ok | 0.9993 | 0.9986 | 0.9889 | 64 | [log](out/autocollie/runs/2026-05-22T16-08-04_20260522T160058-filetypes-tar.gz_tar_gz_feat_extended_metrics.log) |
+| `3fae2ba095b0d986` | tar_gz_train_hardneg_005_8 | ok | 0.9993 | 0.9986 | 0.9914 | 20 | [log](out/autocollie/runs/2026-05-22T16-09-08_20260522T160058-filetypes-tar.gz_tar_gz_train_hardneg_005_8.log) |
+| `4a192b1b9d146f5b` | tar_gz_train_reg_lambda2_leaves64 | ok | 0.9993 | 0.9986 | 0.9929 | 10 | [log](out/autocollie/runs/2026-05-22T16-09-28_20260522T160058-filetypes-tar.gz_tar_gz_train_reg_lambda2_leaves64.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_gz_ctrl_baseline_lr003_leaves128`** `EXP_BOOSTING_TYPE=gbdt EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env with conservative LR and leaves to stabilize PR_AUC and maintain high recall@3FPM.
+- **`tar_gz_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture archive metadata signals, targeting PR_AUC improvement.
+- **`tar_gz_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and text_encoding to detect obfuscated payloads inside archives, aiming to boost recall@3FPM.
+- **`tar_gz_feat_extended_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Enables extended_metrics and size_normalized_metrics to capture structural archive anomalies, targeting PR_AUC.
+- **`tar_gz_train_hardneg_005_8`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies mild hard-negative upweighting to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`tar_gz_train_reg_lambda2_leaves64`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increases L2 regularization and reduces leaves to curb overfitting on rare archive patterns, aiming to preserve ROC_AUC while maintaining PR_AUC.
+
+</details>
+

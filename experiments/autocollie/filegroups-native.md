@@ -286,3 +286,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T153035-filegroups-native` — 2026-05-22T15:30:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `35ba79e0af16173c` | inherit_from_filetypes_xml_051713c3 | ok | 0.9995 | 0.9995 | 0.9919 | 101 | [log](out/autocollie/runs/2026-05-22T15-36-00_20260522T153035-filegroups-native_inherit_from_filetypes_xml_051713c3.log) |
+| `87ac1824487db0ba` | native_control_leaves128_lr003 | ok | 0.9994 | 0.9995 | 0.7712 | 17 | [log](out/autocollie/runs/2026-05-22T15-37-41_20260522T153035-filegroups-native_native_control_leaves128_lr003.log) |
+| `1b61e1c5f016b13f` | native_hn_01_16_tail | ok | 0.9995 | 0.9996 | 0.0000 | 29 | [log](out/autocollie/runs/2026-05-22T15-37-58_20260522T153035-filegroups-native_native_hn_01_16_tail.log) |
+| `096f72b33e78d49e` | native_kv_vocab_15k_tail | ok | 0.9994 | 0.9995 | 0.8630 | 15 | [log](out/autocollie/runs/2026-05-22T15-38-27_20260522T153035-filegroups-native_native_kv_vocab_15k_tail.log) |
+| `445cffb70207bbfb` | native_sym_bigrams_10k_tail | ok | 0.9995 | 0.9995 | 0.0000 | 18 | [log](out/autocollie/runs/2026-05-22T15-38-42_20260522T153035-filegroups-native_native_sym_bigrams_10k_tail.log) |
+| `c0f3cbcc84b1d443` | native_overlay_textmetrics_tail | ok | 0.9994 | 0.9995 | 0.0000 | 73 | [log](out/autocollie/runs/2026-05-22T15-39-00_20260522T153035-filegroups-native_native_overlay_textmetrics_tail.log) |
+| `b77d8a7c58fcbd1d` | native_seed_search_k3_tail | ok | 0.9995 | 0.9995 | 0.0000 | 41 | [log](out/autocollie/runs/2026-05-22T15-40-13_20260522T153035-filegroups-native_native_seed_search_k3_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to stabilize ranking and improve PR_AUC while targeting recall@3FPM.
+- **`native_hn_01_16_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Hard-negative sweep with fraction 0.01 and weight 16 to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`native_kv_vocab_15k_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 15000 to capture key-value structural signals, aiming to lift PR_AUC and recall@3FPM.
+- **`native_sym_bigrams_10k_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Enable symbol_bigrams with max 10000 to catch co-occurrence patterns in imports, targeting PR_AUC improvement.
+- **`native_overlay_textmetrics_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_TEXT_METRICS_FULL=1 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Combine overlay_signal and text_metrics_full to capture packer/dropper and obfuscation traits, aiming to boost recall@3FPM.
+- **`native_seed_search_k3_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Seed search k=3 on baseline features to reduce variance and find a robust configuration for recall@3FPM.
+
+</details>
+

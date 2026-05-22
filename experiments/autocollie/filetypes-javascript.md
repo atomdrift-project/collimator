@@ -441,3 +441,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T140107-filetypes-javascript` — 2026-05-22T14:01:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `52b06fb4f8b60886` | inherit_from_filetypes_xml_051713c3 | ok | 0.9994 | 0.9990 | 0.9876 | 44 | [log](out/autocollie/runs/2026-05-22T14-06-02_20260522T140107-filetypes-javascript_inherit_from_filetypes_xml_051713c3.log) |
+| `c8761161dcf57012` | js_control_est300_seed42 | ok | 0.9994 | 0.9990 | 0.9871 | 11 | [log](out/autocollie/runs/2026-05-22T14-06-46_20260522T140107-filetypes-javascript_js_control_est300_seed42.log) |
+| `50e4386de0d51384` | js_kv_vocab_25k_split | ok | 0.9994 | 0.9990 | 0.9861 | 36 | [log](out/autocollie/runs/2026-05-22T14-06-57_20260522T140107-filetypes-javascript_js_kv_vocab_25k_split.log) |
+| `947d4d66d85569a0` | js_textenc_metrics_full | ok | 0.9994 | 0.9990 | 0.9870 | 35 | [log](out/autocollie/runs/2026-05-22T14-07-33_20260522T140107-filetypes-javascript_js_textenc_metrics_full.log) |
+| `6a05839da6794f9e` | js_bigram50_objtrigrams | ok | 0.9994 | 0.9989 | 0.9873 | 33 | [log](out/autocollie/runs/2026-05-22T14-08-08_20260522T140107-filetypes-javascript_js_bigram50_objtrigrams.log) |
+| `86df6672367590a1` | js_tiered_trigrams_bigram100 | ok | 0.9994 | 0.9989 | 0.9867 | 41 | [log](out/autocollie/runs/2026-05-22T14-08-41_20260522T140107-filetypes-javascript_js_tiered_trigrams_bigram100.log) |
+| `f099efb57393c16a` | js_train_scalepos05_leaves128 | ok | 0.9994 | 0.9989 | 0.9871 | 36 | [log](out/autocollie/runs/2026-05-22T14-09-22_20260522T140107-filetypes-javascript_js_train_scalepos05_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_est300_seed42`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best recent feature_env to establish baseline PR_AUC and ROC_AUC while increasing estimators to 300 for stable ranking.
+- **`js_kv_vocab_25k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding KV vocab to 25k and enabling value splitting to capture finer-grained key-value signal in JS payloads.
+- **`js_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC gain by enabling text_encoding and text_metrics_full to capture obfuscation and structural text patterns common in JS malware.
+- **`js_bigram50_objtrigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Seeks recall@3 FP/M improvement by lowering bigram_min_freq to 50 and adding objective_trigrams to capture rarer attack patterns without overfitting.
+- **`js_tiered_trigrams_bigram100`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfers tiered_crit_trigrams from sister routes to boost PR_AUC by capturing severity-prefixed co-occurrences, paired with bigram_min_freq=100 for balanced signal.
+- **`js_train_scalepos05_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3 FP/M by down-weighting positives (scale_pos_weight_mult=0.5) to reduce FPs at the tail, with deeper trees (leaves=128) for better separation.
+
+</details>
+

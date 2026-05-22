@@ -355,3 +355,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T135600-filetypes-powershell` — 2026-05-22T13:56:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b8ad12966984426d` | inherit_from_filetypes_xml_051713c3 | ok | 0.9985 | 0.9963 | 0.9799 | 8 | [log](out/autocollie/runs/2026-05-22T14-00-16_20260522T135600-filetypes-powershell_inherit_from_filetypes_xml_051713c3.log) |
+| `d0a60bb8f23888eb` | ps_control_kv20k_train | ok | 0.9981 | 0.9956 | 0.9821 | 8 | [log](out/autocollie/runs/2026-05-22T14-00-23_20260522T135600-filetypes-powershell_ps_control_kv20k_train.log) |
+| `8095fa5606bd52b0` | ps_feat_textenc_metrics | ok | 0.9981 | 0.9956 | 0.9764 | 2 | [log](out/autocollie/runs/2026-05-22T14-00-31_20260522T135600-filetypes-powershell_ps_feat_textenc_metrics.log) |
+| `6adf688e10a9a618` | ps_feat_rare_bigrams_trigrams | ok | 0.9984 | 0.9961 | 0.9821 | 9 | [log](out/autocollie/runs/2026-05-22T14-00-34_20260522T135600-filetypes-powershell_ps_feat_rare_bigrams_trigrams.log) |
+| `693ea0bc6982e515` | ps_train_scalepos05_reg | ok | 0.9976 | 0.9941 | 0.9706 | 2 | [log](out/autocollie/runs/2026-05-22T14-00-43_20260522T135600-filetypes-powershell_ps_train_scalepos05_reg.log) |
+| `7609a2f2e29da9cc` | ps_train_dart_extratrees | ok | 0.9949 | 0.9872 | 0.9552 | 3 | [log](out/autocollie/runs/2026-05-22T14-00-45_20260522T135600-filetypes-powershell_ps_train_dart_extratrees.log) |
+| `9a0c1601904fd569` | ps_feat_kv30k_split | ok | 0.9980 | 0.9953 | 0.9801 | 8 | [log](out/autocollie/runs/2026-05-22T14-00-48_20260522T135600-filetypes-powershell_ps_feat_kv30k_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_control_kv20k_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set with conservative training tweaks to establish a stable baseline for PR_AUC.
+- **`ps_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture script obfuscation signals, aiming to lift PR_AUC.
+- **`ps_feat_rare_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq and enable tiered_crit_trigrams to capture rarer malicious patterns, targeting recall@3FPM gains.
+- **`ps_train_scalepos05_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight benigns with scale_pos_weight_mult=0.5 to reduce low-FPR false positives, targeting recall@3FPM.
+- **`ps_train_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use dart boosting and extra_trees to add regularization noise, aiming to improve PR_AUC generalization.
+- **`ps_feat_kv30k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand kv_vocab_max and enable kv_value_split to recover finer-grained key-value signals, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260522T172246-filetypes-powershell` — 2026-05-22T17:22:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b8ad12966984426d` | inherit_from_filetypes_xml_051713c3 | dup | 0.9985 | 0.9963 | 0.9799 | 1 | [log](out/autocollie/runs/2026-05-22T17-27-26_20260522T172246-filetypes-powershell_inherit_from_filetypes_xml_051713c3.log) |
+| `553101a2e4f0fa97` | ps_control_kv20k_scalepos075 | ok | 0.9978 | 0.9947 | 0.9783 | 2 | [log](out/autocollie/runs/2026-05-22T17-27-27_20260522T172246-filetypes-powershell_ps_control_kv20k_scalepos075.log) |
+| `9a0c1601904fd569` | ps_feat_kv30k_split | dup | 0.9980 | 0.9953 | 0.9801 | 1 | [log](out/autocollie/runs/2026-05-22T17-27-29_20260522T172246-filetypes-powershell_ps_feat_kv30k_split.log) |
+| `75126f20ccda8a3e` | ps_feat_textenc_metrics | ok | 0.9978 | 0.9949 | 0.9783 | 2 | [log](out/autocollie/runs/2026-05-22T17-27-30_20260522T172246-filetypes-powershell_ps_feat_textenc_metrics.log) |
+| `77702c1bd231dd1b` | ps_feat_tiered_crit_trigrams | ok | 0.9981 | 0.9955 | 0.9801 | 7 | [log](out/autocollie/runs/2026-05-22T17-27-32_20260522T172246-filetypes-powershell_ps_feat_tiered_crit_trigrams.log) |
+| `2e752771570f5e2b` | ps_transfer_xml_lowbigram | ok | 0.9985 | 0.9963 | 0.9839 | 2 | [log](out/autocollie/runs/2026-05-22T17-27-38_20260522T172246-filetypes-powershell_ps_transfer_xml_lowbigram.log) |
+| `da20249e79f2077d` | ps_control_seed123 | ok | 0.9987 | 0.9967 | 0.9520 | 10 | [log](out/autocollie/runs/2026-05-22T17-27-41_20260522T172246-filetypes-powershell_ps_control_seed123.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_control_kv20k_scalepos075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.75 to down-weight positives, reducing FPs at low FPR and targeting recall@3FPM.
+- **`ps_feat_kv30k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 30k and enable kv_value_split to recover per-element signal in script arguments, aiming to boost PR_AUC.
+- **`ps_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation and structural text patterns in PowerShell, targeting PR_AUC and recall@3FPM.
+- **`ps_feat_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Add tiered critical trigrams with low min_freq to catch rare malicious sequences, aiming to improve PR_AUC.
+- **`ps_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer XML route's low-frequency bigram config (max=8000, min_freq=50) to capture rarer PowerShell patterns, targeting PR_AUC.
+- **`ps_control_seed123`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retest control feature set with seed=123 to verify signal stability and rule out seed noise, targeting PR_AUC.
+
+</details>
+

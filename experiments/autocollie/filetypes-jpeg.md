@@ -372,3 +372,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T140958-filetypes-jpeg` — 2026-05-22T14:09:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `191080283bc8a3ea` | inherit_from_filetypes_xml_051713c3 | ok | 0.9806 | 0.9863 | 0.9091 | 3 | [log](out/autocollie/runs/2026-05-22T14-15-06_20260522T140958-filetypes-jpeg_inherit_from_filetypes_xml_051713c3.log) |
+| `5bac894ae89f7bb8` | jpeg_ctrl_kv8k_leaves112_lr004 | ok | 0.9774 | 0.9826 | 0.8837 | 2 | [log](out/autocollie/runs/2026-05-22T14-15-09_20260522T140958-filetypes-jpeg_jpeg_ctrl_kv8k_leaves112_lr004.log) |
+| `bee0b773189b503c` | jpeg_feat_textenc_metrics_full | ok | 0.9809 | 0.9863 | 0.8500 | 3 | [log](out/autocollie/runs/2026-05-22T14-15-10_20260522T140958-filetypes-jpeg_jpeg_feat_textenc_metrics_full.log) |
+| `3e21663493f49930` | jpeg_feat_kv15k_objtri | ok | 0.9785 | 0.9839 | 0.8636 | 3 | [log](out/autocollie/runs/2026-05-22T14-15-13_20260522T140958-filetypes-jpeg_jpeg_feat_kv15k_objtri.log) |
+| `ae0602e4d75f9a10` | jpeg_transfer_ember_extmetrics | ok | 0.9785 | 0.9839 | 0.8636 | 3 | [log](out/autocollie/runs/2026-05-22T14-15-16_20260522T140958-filetypes-jpeg_jpeg_transfer_ember_extmetrics.log) |
+| `5d94ec35cc4f1cd3` | jpeg_gen_seedsearch_kv8k | ok | 0.9805 | 0.9851 | 0.9130 | 2 | [log](out/autocollie/runs/2026-05-22T14-15-19_20260522T140958-filetypes-jpeg_jpeg_gen_seedsearch_kv8k.log) |
+| `ab03a0a05824ce27` | jpeg_abl_no_blindfold | ok | 0.9785 | 0.9839 | 0.8636 | 3 | [log](out/autocollie/runs/2026-05-22T14-15-21_20260522T140958-filetypes-jpeg_jpeg_abl_no_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_ctrl_kv8k_leaves112_lr004`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1 …` — Control feature set with adjusted tree depth and LR to improve PR_AUC by refining splits on the baseline surface.
+- **`jpeg_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to capture steganographic obfuscation patterns, targeting PR_AUC gain.
+- **`jpeg_feat_kv15k_objtri`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 15k and add objective trigrams to capture rare malicious metadata, aiming for PR_AUC improvement.
+- **`jpeg_transfer_ember_extmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_EMBER_LITE_FEATURES=1 EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port EMBER-lite and extended metrics from xlsx route to detect structural JPEG anomalies, targeting PR_AUC.
+- **`jpeg_gen_seedsearch_kv8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed search on the strong kv_vocab_8k config to reduce variance and stabilize recall@3 FP/M.
+- **`jpeg_abl_no_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce feature noise and test if PR_AUC improves with full signal retention.
+
+</details>
+
+## Cycle `20260522T162051-filetypes-jpeg` — 2026-05-22T16:20:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `191080283bc8a3ea` | inherit_from_filetypes_xml_051713c3 | dup | 0.9806 | 0.9863 | 0.9091 | 1 | [log](out/autocollie/runs/2026-05-22T16-24-41_20260522T162051-filetypes-jpeg_inherit_from_filetypes_xml_051713c3.log) |
+| `62dbb9188b767c2a` | jpeg_ctrl_textenc_metrics_lr004 | ok | 0.9768 | 0.9826 | 0.9048 | 2 | [log](out/autocollie/runs/2026-05-22T16-24-42_20260522T162051-filetypes-jpeg_jpeg_ctrl_textenc_metrics_lr004.log) |
+| `b53aa826a1c8e15b` | jpeg_feat_kv10k_textenc | ok | 0.9760 | 0.9826 | 0.8500 | 3 | [log](out/autocollie/runs/2026-05-22T16-24-43_20260522T162051-filetypes-jpeg_jpeg_feat_kv10k_textenc.log) |
+| `1669c951219d7023` | jpeg_feat_obj_susp_trigrams | ok | 0.9760 | 0.9826 | 0.8500 | 3 | [log](out/autocollie/runs/2026-05-22T16-24-46_20260522T162051-filetypes-jpeg_jpeg_feat_obj_susp_trigrams.log) |
+| `257e67ab81e3e77f` | jpeg_research_kv_split_vocab | ok | 0.9760 | 0.9826 | 0.8500 | 3 | [log](out/autocollie/runs/2026-05-22T16-24-49_20260522T162051-filetypes-jpeg_jpeg_research_kv_split_vocab.log) |
+| `d5649280e9d0e155` | jpeg_train_hardneg_005_5 | ok | 0.9544 | 0.9665 | 0.7692 | 2 | [log](out/autocollie/runs/2026-05-22T16-24-52_20260522T162051-filetypes-jpeg_jpeg_train_hardneg_005_5.log) |
+| `66104b5a43579c37` | jpeg_retry_kv8k_seed123 | ok | 0.9753 | 0.9814 | 0.8837 | 5 | [log](out/autocollie/runs/2026-05-22T16-24-54_20260522T162051-filetypes-jpeg_jpeg_retry_kv8k_seed123.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_ctrl_textenc_metrics_lr004`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best PR_AUC feature set with slightly lower LR and more leaves to stabilize ranking and improve PR_AUC.
+- **`jpeg_feat_kv10k_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds KV vocab to capture EXIF/metadata signals alongside text metrics, aiming to boost PR_AUC by resolving ambiguous benign JPEGs.
+- **`jpeg_feat_obj_susp_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables objective and suspicious trigrams to capture longer structural/metadata patterns in JPEGs, targeting recall@3FPM gains.
+- **`jpeg_research_kv_split_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Tests kv_value_split to recover per-element signal in JPEG metadata fields, aiming to improve PR_AUC by reducing feature noise.
+- **`jpeg_train_hardneg_005_5`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Applies mild hard-negative weighting to focus on borderline benign JPEGs, aiming to lift recall@3FPM while keeping PR_AUC flat.
+- **`jpeg_retry_kv8k_seed123`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retries prior strong KV config with a new seed to check for data drift or seed variance, targeting stable PR_AUC.
+
+</details>
+

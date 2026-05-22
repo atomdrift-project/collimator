@@ -286,3 +286,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T145110-filegroups-media` — 2026-05-22T14:51:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9815edda241ba29c` | inherit_from_filetypes_xml_051713c3 | ok | 0.9957 | 0.9950 | 0.9286 | 3 | [log](out/autocollie/runs/2026-05-22T14-55-41_20260522T145110-filegroups-media_inherit_from_filetypes_xml_051713c3.log) |
+| `e71a9643435b33f7` | media_control_scalepos05_lr003 | ok | 0.9902 | 0.9882 | 0.9294 | 3 | [log](out/autocollie/runs/2026-05-22T14-55-45_20260522T145110-filegroups-media_media_control_scalepos05_lr003.log) |
+| `9db71d6e10995069` | media_feat_textmetrics_encoding | dup | 0.9976 | 0.9972 | 0.9341 | 1 | [log](out/autocollie/runs/2026-05-22T14-55-48_20260522T145110-filegroups-media_media_feat_textmetrics_encoding.log) |
+| `5c34b4f223dbd4aa` | media_feat_kv_split_expand | ok | 0.9955 | 0.9947 | 0.9474 | 3 | [log](out/autocollie/runs/2026-05-22T14-55-49_20260522T145110-filegroups-media_media_feat_kv_split_expand.log) |
+| `25f2fe6f4166ac33` | media_exploit_hardneg_mild | ok | 0.9990 | 0.9988 | 0.9651 | 2 | [log](out/autocollie/runs/2026-05-22T14-55-52_20260522T145110-filegroups-media_media_exploit_hardneg_mild.log) |
+| `50fd559bf1feade6` | media_transfer_lowbigram_tiered | ok | 0.9957 | 0.9950 | 0.9286 | 3 | [log](out/autocollie/runs/2026-05-22T14-55-54_20260522T145110-filegroups-media_media_transfer_lowbigram_tiered.log) |
+| `a5b9a361e9a5b7ab` | media_gen_seedsearch_ensemble | ok | 0.9956 | 0.9949 | 0.9519 | 2 | [log](out/autocollie/runs/2026-05-22T14-55-57_20260522T145110-filegroups-media_media_gen_seedsearch_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_scalepos05_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives to reduce FPs at low FPR, aiming to boost recall@3 FP/M while keeping PR_AUC flat.
+- **`media_feat_textmetrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add document obfuscation and encoding signals to capture hidden payloads in media, targeting PR_AUC gain.
+- **`media_feat_kv_split_expand`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Split KV values to recover per-element signal in metadata, aiming to improve PR_AUC by capturing subtle malicious patterns.
+- **`media_exploit_hardneg_mild`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Mild hard-negative upweighting to sharpen decision boundary near benigns, targeting recall@3 FP/M improvement.
+- **`media_transfer_lowbigram_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram freq floor and add tiered crit trigrams to capture rarer malicious sequences, aiming for PR_AUC lift.
+- **`media_gen_seedsearch_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ensemble 3 seeds to stabilize recall@3 FP/M gains and reduce seed-driven variance.
+
+</details>
+
+## Cycle `20260522T162459-filegroups-media` — 2026-05-22T16:24:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9815edda241ba29c` | inherit_from_filetypes_xml_051713c3 | dup | 0.9957 | 0.9950 | 0.9286 | 1 | [log](out/autocollie/runs/2026-05-22T16-29-50_20260522T162459-filegroups-media_inherit_from_filetypes_xml_051713c3.log) |
+| `cbceaaab424d5d69` | media_control_scalepos_tune | ok | 0.9945 | 0.9936 | 0.9474 | 1 | [log](out/autocollie/runs/2026-05-22T16-29-50_20260522T162459-filegroups-media_media_control_scalepos_tune.log) |
+| `a0180c6a4b21095b` | media_exploit_dart_reg | ok | 0.9847 | 0.9821 | 0.9371 | 2 | [log](out/autocollie/runs/2026-05-22T16-29-52_20260522T162459-filegroups-media_media_exploit_dart_reg.log) |
+| `868c8c4f241822a7` | media_feat_kv_vocab_expand | ok | 0.9955 | 0.9947 | 0.9474 | 2 | [log](out/autocollie/runs/2026-05-22T16-29-54_20260522T162459-filegroups-media_media_feat_kv_vocab_expand.log) |
+| `b4d8e12a1b4dc1b7` | media_feat_text_metrics_full | ok | 0.9976 | 0.9972 | 0.9341 | 2 | [log](out/autocollie/runs/2026-05-22T16-29-55_20260522T162459-filegroups-media_media_feat_text_metrics_full.log) |
+| `158b4969e70c1dbf` | media_transfer_xml_lowbigram_tiered | ok | 0.9957 | 0.9950 | 0.9286 | 1 | [log](out/autocollie/runs/2026-05-22T16-29-57_20260522T162459-filegroups-media_media_transfer_xml_lowbigram_tiered.log) |
+| `75f9f89b5db9b2f8` | media_gen_seedsearch_ensemble_v2 | ok | 0.9956 | 0.9949 | 0.9519 | 2 | [log](out/autocollie/runs/2026-05-22T16-29-58_20260522T162459-filegroups-media_media_gen_seedsearch_ensemble_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_scalepos_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature env; tune scale_pos_weight_mult to optimize recall@3 FP/M at deployed operating point.
+- **`media_exploit_dart_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 …` — Test DART boosting with L2 regularization to improve tail recall@3 FP/M and reduce overfitting.
+- **`media_feat_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value pair signals in media metadata, targeting PR_AUC improvement.
+- **`media_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_metrics_full and text_encoding to detect obfuscation in media documents, aiming for higher recall@3 FP/M.
+- **`media_transfer_xml_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Port low-freq bigram and tiered trigram config from XML route to capture rarer media patterns, targeting PR_AUC gain.
+- **`media_gen_seedsearch_ensemble_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed search and ensemble averaging to stabilize recall@3 FP/M gains and reduce variance.
+
+</details>
+

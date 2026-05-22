@@ -282,3 +282,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T142643-filetypes-plist` — 2026-05-22T14:26:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f879350b835ff899` | inherit_from_filetypes_xml_051713c3 | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T14-32-50_20260522T142643-filetypes-plist_inherit_from_filetypes_xml_051713c3.log) |
+| `05fcd9bb70cc5617` | plist_control_kv_split_lr002 | ok | 0.2000 | 0.5000 | 0.3333 | 1 | [log](out/autocollie/runs/2026-05-22T14-32-52_20260522T142643-filetypes-plist_plist_control_kv_split_lr002.log) |
+| `736efbdd790a1528` | plist_feat_text_metrics_enc | ok | 0.2000 | 0.5000 | 0.3333 | 1 | [log](out/autocollie/runs/2026-05-22T14-32-54_20260522T142643-filetypes-plist_plist_feat_text_metrics_enc.log) |
+| `b977d06a7e9505f5` | plist_feat_kv_vocab_expanded | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T14-32-55_20260522T142643-filetypes-plist_plist_feat_kv_vocab_expanded.log) |
+| `db1522769f599db9` | plist_feat_bigram_lowfreq_trigrams | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T14-32-58_20260522T142643-filetypes-plist_plist_feat_bigram_lowfreq_trigrams.log) |
+| `e19efb01249c1d34` | plist_train_reg_alpha1_subsample08 | ok | 0.2000 | 0.5000 | 0.3333 | 1 | [log](out/autocollie/runs/2026-05-22T14-33-00_20260522T142643-filetypes-plist_plist_train_reg_alpha1_subsample08.log) |
+| `50ce26da8777eb23` | plist_seed_search_ensemble | ok | 0.2000 | 0.5000 | 0.3333 | 2 | [log](out/autocollie/runs/2026-05-22T14-33-02_20260522T142643-filetypes-plist_plist_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_control_kv_split_lr002`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 …` — Replicate best feature set with lower learning rate and higher leaves to reduce variance, targeting PR_AUC improvement.
+- **`plist_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture XML structure anomalies in plists, targeting PR_AUC gain.
+- **`plist_feat_kv_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand kv_vocab_max and lower kv_min_freq to capture rare malicious key-value pairs, targeting recall@3 FP/M.
+- **`plist_feat_bigram_lowfreq_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq and enable objective_trigrams to capture subtle intent patterns, targeting PR_AUC.
+- **`plist_train_reg_alpha1_subsample08`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_ALPHA=1 EXP_SUBSAMPLE=0.8 …` — Increase L1 regularization and row subsampling to prevent overfitting on small corpus, targeting ROC_AUC stability and PR_AUC.
+- **`plist_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds to average predictions and reduce variance, targeting recall@3 FP/M stability.
+
+</details>
+
+## Cycle `20260522T160938-filetypes-plist` — 2026-05-22T16:09:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f879350b835ff899` | inherit_from_filetypes_xml_051713c3 | dup | 0.2000 | 0.5000 | 0.3333 | 1 | [log](out/autocollie/runs/2026-05-22T16-14-29_20260522T160938-filetypes-plist_inherit_from_filetypes_xml_051713c3.log) |
+| `abd44d5284ab65d0` | plist_control_reg_leaves32 | ok | 0.2000 | 0.5000 | 0.3333 | 2 | [log](out/autocollie/runs/2026-05-22T16-14-30_20260522T160938-filetypes-plist_plist_control_reg_leaves32.log) |
+| `6cadea6ced348e44` | plist_feat_kv_vocab_split | ok | 0.2000 | 0.5000 | 0.3333 | 2 | [log](out/autocollie/runs/2026-05-22T16-14-31_20260522T160938-filetypes-plist_plist_feat_kv_vocab_split.log) |
+| `0460389c899c62d7` | plist_feat_text_metrics_enc | ok | 0.2000 | 0.5000 | 0.3333 | 1 | [log](out/autocollie/runs/2026-05-22T16-14-33_20260522T160938-filetypes-plist_plist_feat_text_metrics_enc.log) |
+| `197b84131b7dc6c6` | plist_feat_lowfreq_bigrams_trigrams | ok | 0.2000 | 0.5000 | 0.3333 | 4 | [log](out/autocollie/runs/2026-05-22T16-14-35_20260522T160938-filetypes-plist_plist_feat_lowfreq_bigrams_trigrams.log) |
+| `05e3a53942e03ab0` | plist_train_dart_scalepos075 | ok | 0.2000 | 0.5000 | 0.3333 | 2 | [log](out/autocollie/runs/2026-05-22T16-14-39_20260522T160938-filetypes-plist_plist_train_dart_scalepos075.log) |
+| `0364c59121b083c8` | plist_seed_search_ensemble_k3 | ok | 0.2000 | 0.5000 | 0.3333 | 1 | [log](out/autocollie/runs/2026-05-22T16-14-40_20260522T160938-filetypes-plist_plist_seed_search_ensemble_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_control_reg_leaves32`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=32 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and PR_AUC by reducing tree complexity (num_leaves=32, min_child_samples=200) to prevent overfitting on the tiny 5-malware holdout.
+- **`plist_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and kv_value_split to capture structured plist key-value patterns that generic n-grams miss.
+- **`plist_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC by adding text_metrics_full and text_encoding features to differentiate benign config plists from malicious payloads via structural text signals.
+- **`plist_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Aims to increase recall@3 FP/M by lowering bigram_min_freq to 50 and enabling tiered_crit_trigrams to capture rare malicious n-gram combinations.
+- **`plist_train_dart_scalepos075`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by using DART boosting for better tail generalization and scale_pos_weight_mult=0.75 to reduce false positives at low FPR.
+- **`plist_seed_search_ensemble_k3`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by using seed_search_k=3 and save_all_seeds=true to average predictions across seeds, reducing variance on the tiny dataset.
+
+</details>
+

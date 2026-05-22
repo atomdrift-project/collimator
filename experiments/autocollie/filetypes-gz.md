@@ -298,3 +298,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T141404-filetypes-gz` — 2026-05-22T14:14:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `72ee1c45de759098` | inherit_from_filetypes_xml_051713c3 | ok | 0.9988 | 0.9985 | 0.9774 | 7 | [log](out/autocollie/runs/2026-05-22T14-20-20_20260522T141404-filetypes-gz_inherit_from_filetypes_xml_051713c3.log) |
+| `30f766c513051dda` | gz_control_leaves128_reg1 | dup | 0.9987 | 0.9983 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T14-20-27_20260522T141404-filetypes-gz_gz_control_leaves128_reg1.log) |
+| `fd858c240069ae7b` | gz_feat_kv_vocab_split | dup | 0.9986 | 0.9982 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T14-20-28_20260522T141404-filetypes-gz_gz_feat_kv_vocab_split.log) |
+| `05911dcfdcdb4c15` | gz_feat_textmetrics_encoding | dup | 0.9987 | 0.9983 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T14-20-29_20260522T141404-filetypes-gz_gz_feat_textmetrics_encoding.log) |
+| `416b35789bf0c3f2` | gz_feat_lowfreq_bigrams_trigrams | ok | 0.9987 | 0.9983 | 0.9774 | 7 | [log](out/autocollie/runs/2026-05-22T14-20-30_20260522T141404-filetypes-gz_gz_feat_lowfreq_bigrams_trigrams.log) |
+| `a3f9e8093b887f19` | gz_train_hardneg_05_5 | ok | 0.9990 | 0.9988 | 0.9865 | 2 | [log](out/autocollie/runs/2026-05-22T14-20-36_20260522T141404-filetypes-gz_gz_train_hardneg_05_5.log) |
+| `e6d0ac4bf5c34b11` | gz_train_dart_scalepos06_leaves128 | ok | 0.9981 | 0.9974 | 0.9820 | 2 | [log](out/autocollie/runs/2026-05-22T14-20-39_20260522T141404-filetypes-gz_gz_train_dart_scalepos06_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_leaves128_reg1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with increased tree capacity and mild L2 regularization to improve PR_AUC ranking.
+- **`gz_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds KV vocab and value splitting to extract structured metadata signal, targeting PR_AUC improvement.
+- **`gz_feat_textmetrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables full text metrics and encoding features to capture obfuscation patterns, aiming to boost recall@3 FP/M.
+- **`gz_feat_lowfreq_bigrams_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram frequency floor and adds tiered trigrams to capture rare malicious sequences, targeting PR_AUC.
+- **`gz_train_hardneg_05_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Conservative hard-negative weighting to sharpen decision boundary at low FPR, improving recall@3 FP/M.
+- **`gz_train_dart_scalepos06_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — DART boosting with moderate positive weight reduction and higher capacity to improve PR_AUC ranking.
+
+</details>
+
+## Cycle `20260522T172857-filetypes-gz` — 2026-05-22T17:28:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `72ee1c45de759098` | inherit_from_filetypes_xml_051713c3 | dup | 0.9988 | 0.9985 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T17-33-33_20260522T172857-filetypes-gz_inherit_from_filetypes_xml_051713c3.log) |
+| `31b8a4003bc0eb01` | gz_control_cap300_lr004 | ok | 0.9988 | 0.9984 | 0.9774 | 2 | [log](out/autocollie/runs/2026-05-22T17-33-34_20260522T172857-filetypes-gz_gz_control_cap300_lr004.log) |
+| `bba8b70151c4dacd` | gz_feat_kv_vocab_8k | ok | 0.9988 | 0.9984 | 0.9774 | 2 | [log](out/autocollie/runs/2026-05-22T17-33-36_20260522T172857-filetypes-gz_gz_feat_kv_vocab_8k.log) |
+| `31067544df815862` | gz_feat_lowfreq_ngrams | ok | 0.9988 | 0.9984 | 0.9774 | 6 | [log](out/autocollie/runs/2026-05-22T17-33-38_20260522T172857-filetypes-gz_gz_feat_lowfreq_ngrams.log) |
+| `6cefecc4af224c5f` | gz_feat_text_metrics_full | dup | 0.9987 | 0.9983 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T17-33-44_20260522T172857-filetypes-gz_gz_feat_text_metrics_full.log) |
+| `96029e39ba5b17e0` | gz_train_hardneg_01_10 | ok | 0.9993 | 0.9992 | 0.9911 | 5 | [log](out/autocollie/runs/2026-05-22T17-33-45_20260522T172857-filetypes-gz_gz_train_hardneg_01_10.log) |
+| `ff26ec9d2bf4505a` | gz_train_scalepos05 | dup | 0.9987 | 0.9982 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T17-33-50_20260522T172857-filetypes-gz_gz_train_scalepos05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_cap300_lr004`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature env with higher capacity and lower LR to stabilize PR_AUC while keeping matrix cache hits.
+- **`gz_feat_kv_vocab_8k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture key-value metadata patterns in gz archives, aiming to improve PR_AUC by adding structural signal.
+- **`gz_feat_lowfreq_ngrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=3000 EXP_TRIGRAM_MIN_FREQ=50` — Expand n-gram coverage with lower frequency floors to capture rare malicious patterns, targeting PR_AUC gain.
+- **`gz_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote text metrics to detect obfuscation or payload characteristics in gzipped text, aiming to boost recall@3 FP/M.
+- **`gz_train_hardneg_01_10`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Increase hard negative weight to sharpen decision boundary at low FPR, targeting recall@3 FP/M improvement.
+- **`gz_train_scalepos05`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to reduce false positives at the tail, directly optimizing recall@3 FP/M.
+
+</details>
+

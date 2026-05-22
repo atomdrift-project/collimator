@@ -596,3 +596,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T145001-filetypes-go` — 2026-05-22T14:50:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `437dbec2bdfb2a98` | inherit_from_filetypes_xml_051713c3 | ok | 0.9623 | 0.9877 | 0.8907 | 9 | [log](out/autocollie/runs/2026-05-22T14-56-07_20260522T145001-filetypes-go_inherit_from_filetypes_xml_051713c3.log) |
+| `ca670513f6fa0a3a` | go_control_kv15k_lr003 | ok | 0.9591 | 0.9862 | 0.8710 | 2 | [log](out/autocollie/runs/2026-05-22T14-56-16_20260522T145001-filetypes-go_go_control_kv15k_lr003.log) |
+| `fc366d5ef867d3ed` | go_feat_textmetrics_kv12k | ok | 0.9576 | 0.9857 | 0.8840 | 8 | [log](out/autocollie/runs/2026-05-22T14-56-18_20260522T145001-filetypes-go_go_feat_textmetrics_kv12k.log) |
+| `31dcf3230017e6dc` | go_feat_lowbigram_freq200 | ok | 0.9604 | 0.9869 | 0.8787 | 9 | [log](out/autocollie/runs/2026-05-22T14-56-27_20260522T145001-filetypes-go_go_feat_lowbigram_freq200.log) |
+| `1ee5f3155aa7d60f` | go_feat_symbol_vocab_bigrams | dup | 0.9587 | 0.9867 | 0.8798 | 1 | [log](out/autocollie/runs/2026-05-22T14-56-35_20260522T145001-filetypes-go_go_feat_symbol_vocab_bigrams.log) |
+| `7f65380fc29e7407` | go_train_hardneg_01_10 | ok | 0.9601 | 0.9864 | 0.8802 | 3 | [log](out/autocollie/runs/2026-05-22T14-56-36_20260522T145001-filetypes-go_go_train_hardneg_01_10.log) |
+| `5a8505f32f1abb5a` | go_gen_seedsearch_textmetrics_kv | ok | 0.9594 | 0.9864 | 0.8913 | 9 | [log](out/autocollie/runs/2026-05-22T14-56-39_20260522T145001-filetypes-go_go_gen_seedsearch_textmetrics_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_kv15k_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Control run replicating best recent feature surface; lowers learning rate to 0.03 to refine tree splits and improve PR_AUC while keeping ROC_AUC flat.
+- **`go_feat_textmetrics_kv12k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 …` — Combines top PR_AUC feature text_metrics_full with kv_vocab to capture structural and key-value signals, aiming to boost PR_AUC and recall@3 FP/M.
+- **`go_feat_lowbigram_freq200`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 …` — Lowers bigram frequency floor to 200 to include rarer code patterns, targeting improved recall@3 FP/M without sacrificing PR_AUC.
+- **`go_feat_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 …` — Adds symbol vocab and bigrams to capture Go-specific import co-occurrences, aiming to improve PR_AUC and tail recall.
+- **`go_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Applies hard negative mining to push benign scores down, directly targeting recall@3 FP/M improvement while maintaining PR_AUC.
+- **`go_gen_seedsearch_textmetrics_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 …` — Uses seed search on the strong text_metrics+kv config to reduce variance and stabilize recall@3 FP/M gains across seeds.
+
+</details>
+

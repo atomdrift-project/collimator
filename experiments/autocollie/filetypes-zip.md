@@ -322,3 +322,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T140559-filetypes-zip` — 2026-05-22T14:05:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9684f0d96da27540` | inherit_from_filetypes_xml_051713c3 | ok | 0.9998 | 0.9963 | 0.9937 | 91 | [log](out/autocollie/runs/2026-05-22T14-10-23_20260522T140559-filetypes-zip_inherit_from_filetypes_xml_051713c3.log) |
+| `ec79b08f7dbcf947` | zip_control_leaves128_lr004 | ok | 0.9998 | 0.9962 | 0.9930 | 12 | [log](out/autocollie/runs/2026-05-22T14-11-54_20260522T140559-filetypes-zip_zip_control_leaves128_lr004.log) |
+| `a8eee85d7f9c78e6` | zip_train_dart_et_300 | dup | 0.9996 | 0.9932 | 0.9897 | 1 | [log](out/autocollie/runs/2026-05-22T14-12-07_20260522T140559-filetypes-zip_zip_train_dart_et_300.log) |
+| `1c8b2cb86e402f82` | zip_feat_kv_vocab_15k | dup | 0.9998 | 0.9963 | 0.9937 | 1 | [log](out/autocollie/runs/2026-05-22T14-12-07_20260522T140559-filetypes-zip_zip_feat_kv_vocab_15k.log) |
+| `897bcee579ee0b74` | zip_feat_text_metrics_full | dup | 0.9998 | 0.9961 | 0.9933 | 1 | [log](out/autocollie/runs/2026-05-22T14-12-08_20260522T140559-filetypes-zip_zip_feat_text_metrics_full.log) |
+| `c856f926e6d83516` | zip_transfer_lowbigram_tieredtri | ok | 0.9997 | 0.9958 | 0.9917 | 81 | [log](out/autocollie/runs/2026-05-22T14-12-09_20260522T140559-filetypes-zip_zip_transfer_lowbigram_tieredtri.log) |
+| `31aa87e12ebe14a3` | zip_generalize_seed_ensemble | ok | 0.9998 | 0.9965 | 0.9942 | 29 | [log](out/autocollie/runs/2026-05-22T14-13-30_20260522T140559-filetypes-zip_zip_generalize_seed_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_leaves128_lr004`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) with a slightly lower learning rate (0.04) to reduce overfitting on the tail while reusing the matrix cache.
+- **`zip_train_dart_et_300`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3 FP/M by adding DART dropout and extra_trees ensemble noise to improve generalization at low FPR without changing features.
+- **`zip_feat_kv_vocab_15k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling kv_vocab (max 15000) to capture archive metadata and internal file naming patterns that bigrams miss.
+- **`zip_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and PR_AUC by enabling text_metrics_full to extract structural text signals from scripts and documents packed inside zips.
+- **`zip_transfer_lowbigram_tieredtri`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by transferring xml/gz success: lowering bigram_min_freq to 100 and enabling tiered_crit_trigrams to capture rarer but high-signal zip structure co-occurrences.
+- **`zip_generalize_seed_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3 FP/M and PR_AUC by training a 3-seed ensemble (seed_search_k=3, save_all_seeds=true) to average out seed-driven variance on the best feature set.
+
+</details>
+
+## Cycle `20260522T165528-filetypes-zip` — 2026-05-22T16:55:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9684f0d96da27540` | inherit_from_filetypes_xml_051713c3 | dup | 0.9998 | 0.9963 | 0.9937 | 1 | [log](out/autocollie/runs/2026-05-22T17-00-36_20260522T165528-filetypes-zip_inherit_from_filetypes_xml_051713c3.log) |
+| `ec79b08f7dbcf947` | zip_control_baseline_lr004 | dup | 0.9998 | 0.9962 | 0.9930 | 1 | [log](out/autocollie/runs/2026-05-22T17-00-37_20260522T165528-filetypes-zip_zip_control_baseline_lr004.log) |
+| `b6914ce1042c34c3` | zip_research_kv_vocab_10k | ok | 0.9998 | 0.9962 | 0.9936 | 84 | [log](out/autocollie/runs/2026-05-22T17-00-38_20260522T165528-filetypes-zip_zip_research_kv_vocab_10k.log) |
+| `4948398741a5c1cb` | zip_feat_text_metrics_full | ok | 0.9998 | 0.9961 | 0.9930 | 12 | [log](out/autocollie/runs/2026-05-22T17-02-02_20260522T165528-filetypes-zip_zip_feat_text_metrics_full.log) |
+| `a89f5d555251660b` | zip_feat_lowbigram_200_10k | ok | 0.9998 | 0.9961 | 0.9940 | 77 | [log](out/autocollie/runs/2026-05-22T17-02-15_20260522T165528-filetypes-zip_zip_feat_lowbigram_200_10k.log) |
+| `94356626fc32ae85` | zip_train_hardneg_005_8 | ok | 0.9998 | 0.9965 | 0.9931 | 24 | [log](out/autocollie/runs/2026-05-22T17-03-31_20260522T165528-filetypes-zip_zip_train_hardneg_005_8.log) |
+| `6af51e774b7f9dd7` | zip_train_scalepos_05 | ok | 0.9997 | 0.9956 | 0.9895 | 12 | [log](out/autocollie/runs/2026-05-22T17-03-55_20260522T165528-filetypes-zip_zip_train_scalepos_05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_baseline_lr004`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Baseline control replicating best feature_env with stable training knobs to establish matrix cache hit and PR_AUC floor.
+- **`zip_research_kv_vocab_10k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab to capture key-value pair signals in zip metadata, targeting PR_AUC improvement via richer structural features.
+- **`zip_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_encoding and text_metrics_full to capture obfuscation and document-like signals inside zips, aiming to boost recall@3 FP/M.
+- **`zip_feat_lowbigram_200_10k`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 200 and raises bigram_max to 10000 to capture rarer path co-occurrences, targeting tail recall@3 FP/M gains.
+- **`zip_train_hardneg_005_8`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 …` — Applies moderate hard-negative weighting (0.05 fraction, 8.0 weight) to sharpen decision boundary at low FPR, improving recall@3 FP/M.
+- **`zip_train_scalepos_05`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Down-weights positive class (0.5 multiplier) to reduce false positives at the deployed operating point, directly targeting recall@3 FP/M.
+
+</details>
+

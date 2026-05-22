@@ -276,3 +276,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T143303-filetypes-zst` — 2026-05-22T14:33:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `57613381b4093205` | inherit_from_filetypes_xml_051713c3 | ok | 1.0000 | 1.0000 | 1.0000 | 9 | [log](out/autocollie/runs/2026-05-22T14-38-03_20260522T143303-filetypes-zst_inherit_from_filetypes_xml_051713c3.log) |
+| `9fac33e4f7498f7a` | zst_control_train_stable | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-22T14-38-12_20260522T143303-filetypes-zst_zst_control_train_stable.log) |
+| `cb1fba693bd93acf` | zst_feat_kv_vocab | ok | 1.0000 | 1.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-05-22T14-38-13_20260522T143303-filetypes-zst_zst_feat_kv_vocab.log) |
+| `1c4bd51aa38bd004` | zst_feat_text_metrics | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-22T14-38-21_20260522T143303-filetypes-zst_zst_feat_text_metrics.log) |
+| `ab85002511b2d849` | zst_feat_bigram_rare | dup | 1.0000 | 1.0000 | 0.9996 | 1 | [log](out/autocollie/runs/2026-05-22T14-38-22_20260522T143303-filetypes-zst_zst_feat_bigram_rare.log) |
+| `a2fa1aceb6c74201` | zst_train_hardneg | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-22T14-38-22_20260522T143303-filetypes-zst_zst_train_hardneg.log) |
+| `92a4c91a44a5ec1e` | zst_train_subsample_reg | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-22T14-38-23_20260522T143303-filetypes-zst_zst_train_subsample_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_train_stable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicate best feature_env with conservative training knobs to establish a stable baseline for PR_AUC and recall@3FPM.
+- **`zst_feat_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enable kv_vocab to capture key-value metadata patterns in zst archives, aiming to improve PR_AUC by adding structural signal.
+- **`zst_feat_text_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enable text_metrics_full to extract line-length and entropy features from zst payloads, targeting recall@3FPM gains on obfuscated scripts.
+- **`zst_feat_bigram_rare`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Lower bigram_min_freq to 250 and raise bigram_max to 10000 to capture rarer n-gram patterns, aiming to boost PR_AUC on tail malware.
+- **`zst_train_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Apply hard_negative_fraction=0.1 and hard_negative_weight=10 to focus model capacity on difficult benigns, targeting recall@3FPM improvement.
+- **`zst_train_subsample_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Use subsample=0.8 and reg_lambda=2.0 to reduce overfitting on the small corpus, aiming to stabilize PR_AUC and improve generalization.
+
+</details>
+

@@ -228,3 +228,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T141526-filetypes-pkg-info` — 2026-05-22T14:15:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `271eaf7ea20c18ba` | inherit_from_filetypes_xml_051713c3 | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-22T14-20-42_20260522T141526-filetypes-pkg-info_inherit_from_filetypes_xml_051713c3.log) |
+| `1e59d4a91b81b3c4` | pkginfo_ctrl_scalepos05 | ok | 0.9941 | 0.5000 | 0.9971 | 6 | [log](out/autocollie/runs/2026-05-22T14-20-49_20260522T141526-filetypes-pkg-info_pkginfo_ctrl_scalepos05.log) |
+| `5b1cff21c0d3b924` | pkginfo_ctrl_extratrees_lr003 | ok | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-22T14-20-56_20260522T141526-filetypes-pkg-info_pkginfo_ctrl_extratrees_lr003.log) |
+| `7d3848047f7c2ca6` | pkginfo_feat_kv_vocab_8k | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-22T14-20-57_20260522T141526-filetypes-pkg-info_pkginfo_feat_kv_vocab_8k.log) |
+| `39854b504dfb6809` | pkginfo_feat_textmetrics_full | ok | 0.9941 | 0.5000 | 0.9971 | 6 | [log](out/autocollie/runs/2026-05-22T14-21-04_20260522T141526-filetypes-pkg-info_pkginfo_feat_textmetrics_full.log) |
+| `86c1a2651df4193d` | pkginfo_feat_tiered_trigrams | ok | 0.9941 | 0.5000 | 0.9971 | 6 | [log](out/autocollie/runs/2026-05-22T14-21-10_20260522T141526-filetypes-pkg-info_pkginfo_feat_tiered_trigrams.log) |
+| `9da977253cce8b58` | pkginfo_abl_crit_ngrams_off | ok | 0.9941 | 0.5000 | 0.9971 | 6 | [log](out/autocollie/runs/2026-05-22T14-21-17_20260522T141526-filetypes-pkg-info_pkginfo_abl_crit_ngrams_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_ctrl_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Downweight positives to reduce false positives on the 8 benigns, aiming to improve recall@3 FP/M while keeping PR_AUC flat.
+- **`pkginfo_ctrl_extratrees_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use extra_trees regularization and lower LR to smooth score distribution, aiming to improve PR_AUC and recall@3 FP/M by reducing overconfident FP predictions.
+- **`pkginfo_feat_kv_vocab_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab to capture discriminative package metadata tokens, aiming to improve PR_AUC by adding high-signal features for pkg-info structure.
+- **`pkginfo_feat_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Promote full text metrics to capture structural anomalies in package manifests, aiming to improve PR_AUC by adding orthogonal signal to n-grams.
+- **`pkginfo_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port tiered trigrams from sister routes to capture longer dependency chains in pkg-info, aiming to improve PR_AUC with controlled vocab size.
+- **`pkginfo_abl_crit_ngrams_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable crit_category_ngrams to reduce noise from severity-prefixed tokens, aiming to improve ROC_AUC and recall@3 FP/M by simplifying the feature space.
+
+</details>
+
+## Cycle `20260522T163525-filetypes-pkg-info` — 2026-05-22T16:35:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `271eaf7ea20c18ba` | inherit_from_filetypes_xml_051713c3 | dup | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-22T16-41-17_20260522T163525-filetypes-pkg-info_inherit_from_filetypes_xml_051713c3.log) |
+| `6d369d62af7f6fd6` | pkginfo_ctrl_baseline_v2 | ok | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-22T16-41-18_20260522T163525-filetypes-pkg-info_pkginfo_ctrl_baseline_v2.log) |
+| `7d3848047f7c2ca6` | pkginfo_feat_kv_vocab_8k | dup | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-22T16-41-20_20260522T163525-filetypes-pkg-info_pkginfo_feat_kv_vocab_8k.log) |
+| `39854b504dfb6809` | pkginfo_feat_textmetrics_full | dup | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-22T16-41-21_20260522T163525-filetypes-pkg-info_pkginfo_feat_textmetrics_full.log) |
+| `df7e43ec1fd69c9a` | pkginfo_feat_obj_trigrams | ok | 0.9941 | 0.5000 | 0.9971 | 6 | [log](out/autocollie/runs/2026-05-22T16-41-22_20260522T163525-filetypes-pkg-info_pkginfo_feat_obj_trigrams.log) |
+| `1e59d4a91b81b3c4` | pkginfo_train_scalepos05 | dup | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-22T16-41-28_20260522T163525-filetypes-pkg-info_pkginfo_train_scalepos05.log) |
+| `a2960491310f2631` | pkginfo_train_dart_boosting | ok | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-22T16-41-29_20260522T163525-filetypes-pkg-info_pkginfo_train_dart_boosting.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_ctrl_baseline_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating the best recent feature surface with default training knobs to establish a stable baseline for PR_AUC.
+- **`pkginfo_feat_kv_vocab_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab to capture structured metadata patterns in pkg-info files, aiming to improve PR_AUC by isolating malicious package traits.
+- **`pkginfo_feat_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full to capture obfuscation and formatting anomalies in package manifests, targeting PR_AUC gains.
+- **`pkginfo_feat_obj_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables objective_trigrams to model longer-range malicious intent sequences in package metadata, aiming to boost PR_AUC.
+- **`pkginfo_train_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weights the positive class via scale_pos_weight_mult to reduce overconfidence on malware, potentially improving score calibration and PR_AUC stability.
+- **`pkginfo_train_dart_boosting`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switches to dart boosting for dropout-style regularization to improve generalization on the highly imbalanced dataset, targeting PR_AUC.
+
+</details>
+

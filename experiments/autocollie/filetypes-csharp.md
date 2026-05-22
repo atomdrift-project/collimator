@@ -346,3 +346,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T143835-filetypes-csharp` — 2026-05-22T14:38:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c5a2291f38f884ae` | inherit_from_filetypes_xml_051713c3 | ok | 0.9865 | 0.9924 | 0.9635 | 4 | [log](out/autocollie/runs/2026-05-22T14-44-20_20260522T143835-filetypes-csharp_inherit_from_filetypes_xml_051713c3.log) |
+| `9b6b86222eab50d0` | csharp_control_baseline_v3 | ok | 0.9819 | 0.9891 | 0.9286 | 2 | [log](out/autocollie/runs/2026-05-22T14-44-25_20260522T143835-filetypes-csharp_csharp_control_baseline_v3.log) |
+| `1d73bff6fe7636ac` | csharp_kv_vocab_10k | ok | 0.9823 | 0.9898 | 0.9286 | 2 | [log](out/autocollie/runs/2026-05-22T14-44-26_20260522T143835-filetypes-csharp_csharp_kv_vocab_10k.log) |
+| `3eca742c017012f8` | csharp_text_metrics_full | dup | 0.9822 | 0.9896 | 0.9420 | 1 | [log](out/autocollie/runs/2026-05-22T14-44-28_20260522T143835-filetypes-csharp_csharp_text_metrics_full.log) |
+| `9f4093cab0b61613` | csharp_symbol_bigrams_vocab | ok | 0.9823 | 0.9898 | 0.9286 | 4 | [log](out/autocollie/runs/2026-05-22T14-44-28_20260522T143835-filetypes-csharp_csharp_symbol_bigrams_vocab.log) |
+| `9f88eceff9801914` | csharp_hn_mild_weight | ok | 0.9845 | 0.9916 | 0.9275 | 2 | [log](out/autocollie/runs/2026-05-22T14-44-33_20260522T143835-filetypes-csharp_csharp_hn_mild_weight.log) |
+| `6c89801874781908` | csharp_deep_lr003_reg1 | ok | 0.9829 | 0.9902 | 0.9353 | 2 | [log](out/autocollie/runs/2026-05-22T14-44-35_20260522T143835-filetypes-csharp_csharp_deep_lr003_reg1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_baseline_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature surface to establish a stable baseline for PR_AUC and ROC_AUC comparison.
+- **`csharp_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture metadata key-value patterns, aiming to improve PR_AUC by adding discriminative signal for C# assemblies.
+- **`csharp_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and text_encoding to detect obfuscation in scripts, targeting higher recall@3 FP/M by surfacing hidden malicious patterns.
+- **`csharp_symbol_bigrams_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_bigrams and symbol_vocab to model import co-occurrences, aiming to boost PR_AUC by capturing structural malware signatures.
+- **`csharp_hn_mild_weight`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Applies mild hard-negative upweighting to focus on difficult benigns, targeting improved recall@3 FP/M without degrading ROC_AUC.
+- **`csharp_deep_lr003_reg1`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=160 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Increases tree depth with lower learning rate and L2 regularization to capture complex interactions, aiming to lift PR_AUC while maintaining ROC_AUC.
+
+</details>
+
