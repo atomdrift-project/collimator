@@ -155,6 +155,25 @@ DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
 }
 
 
+def _strip_nan(value: Any) -> Any:
+    """Replace non-finite floats (NaN, ±inf) with None recursively.
+
+    JSON written via ``json.dump(..., allow_nan=True)`` emits the literal
+    token ``NaN`` (Python convention) which is not valid JSON and breaks
+    strict parsers — including Go's ``encoding/json`` used by autocollie's
+    ``loadDeployedRouteMetrics``. Pre-sanitizing the payload here lets
+    us write with ``allow_nan=False`` and produces standards-compliant
+    JSON that every consumer can parse.
+    """
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: _strip_nan(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_strip_nan(v) for v in value]
+    return value
+
+
 def _label_int(label: str) -> int:
     return 1 if label == "bad" else 0
 
@@ -1204,7 +1223,7 @@ def _train_one(
         ),
     }
     with open(output_dir / "benchmark.json", "w") as f:
-        json.dump(payload, f, indent=2)
+        json.dump(_strip_nan(payload), f, indent=2, allow_nan=False)
     return payload
 
 
@@ -1634,7 +1653,7 @@ def main() -> int:
         }
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     with open(args.summary, "w") as f:
-        json.dump(payload, f, indent=2)
+        json.dump(_strip_nan(payload), f, indent=2, allow_nan=False)
     print(f"wrote {args.summary}")
     return 0
 

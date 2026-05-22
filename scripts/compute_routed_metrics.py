@@ -30,6 +30,20 @@ import sys
 from pathlib import Path
 from typing import Any
 
+
+def _strip_nan(value: Any) -> Any:
+    """Replace non-finite floats (NaN, ±inf) with None recursively so
+    ``json.dump(..., allow_nan=False)`` produces standards-compliant JSON.
+    Strict parsers (Go's encoding/json — used by autocollie) reject the
+    literal ``NaN`` Python writes with ``allow_nan=True``."""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: _strip_nan(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_strip_nan(v) for v in value]
+    return value
+
 # Make sibling scripts importable (e.g., azoth_calibrate_ensemble for GPD tail).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -1083,7 +1097,7 @@ def main() -> int:
         )
     out_path = root / "per_filetype_metrics.json"
     with open(out_path, "w") as f:
-        json.dump(metrics, f, indent=2)
+        json.dump(_strip_nan(metrics), f, indent=2, allow_nan=False)
     LOG.info("wrote %s (filetypes: %d, filegroups: %d)",
              out_path,
              len(metrics["filetypes"]),
