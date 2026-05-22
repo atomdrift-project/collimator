@@ -284,3 +284,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T034907-filetypes-chrome-manifest` — 2026-05-22T03:49:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6157493f3f066233` | control_baseline_train_tune | ok | 0.8444 | 0.9692 | 0.7500 | 6 | [log](out/autocollie/runs/2026-05-22T03-53-38_20260522T034907-filetypes-chrome-manifest_control_baseline_train_tune.log) |
+| `443cbdc6164052d5` | feat_textenc_metrics_full | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-22T03-53-44_20260522T034907-filetypes-chrome-manifest_feat_textenc_metrics_full.log) |
+| `6507f79e025b91f6` | feat_kv_vocab_split | ok | 0.8444 | 0.9692 | 0.7500 | 4 | [log](out/autocollie/runs/2026-05-22T03-53-47_20260522T034907-filetypes-chrome-manifest_feat_kv_vocab_split.log) |
+| `33846836f901ea6e` | feat_lower_bigram_trigrams | ok | 0.8444 | 0.9692 | 0.7500 | 4 | [log](out/autocollie/runs/2026-05-22T03-53-50_20260522T034907-filetypes-chrome-manifest_feat_lower_bigram_trigrams.log) |
+| `` | train_scalepos05_extra_trees | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-53-54_20260522T034907-filetypes-chrome-manifest_train_scalepos05_extra_trees.log) |
+| `` | train_dart_reg3 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-53-56_20260522T034907-filetypes-chrome-manifest_train_dart_reg3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Baseline feature set with increased leaves and estimators to improve PR_AUC by allowing deeper decision boundaries.
+- **`feat_textenc_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Adds text encoding and full text metrics to capture obfuscation patterns, aiming to boost PR_AUC.
+- **`feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Expands KV vocabulary and splits values to recover per-element signal, targeting recall@3 FP/M improvement.
+- **`feat_lower_bigram_trigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 …` — Lowers bigram frequency floor and adds objective trigrams to capture rarer high-signal patterns, aiming to improve PR_AUC.
+- **`train_scalepos05_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Down-weights positives and uses extra trees to reduce false positives at low FPR, targeting recall@3 FP/M.
+- **`train_dart_reg3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=3 …` — Uses DART boosting with higher L2 regularization to improve tail behavior and PR_AUC.
+
+</details>
+
+## Cycle `20260522T063142-filetypes-chrome-manifest` — 2026-05-22T06:31:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | control_train_leaves128_lr003 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-36-34_20260522T063142-filetypes-chrome-manifest_control_train_leaves128_lr003.log) |
+| `6507f79e025b91f6` | feat_kv_vocab_split_10k | dup | 0.8444 | 0.9692 | 0.7500 | 1 | [log](out/autocollie/runs/2026-05-22T06-36-36_20260522T063142-filetypes-chrome-manifest_feat_kv_vocab_split_10k.log) |
+| `443cbdc6164052d5` | feat_text_metrics_encoding | dup | 0.8444 | 0.9692 | 0.7500 | 1 | [log](out/autocollie/runs/2026-05-22T06-36-36_20260522T063142-filetypes-chrome-manifest_feat_text_metrics_encoding.log) |
+| `5b0e8f0bc3919002` | feat_lower_bigram_obj_trigrams | ok | 0.8444 | 0.9692 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-22T06-36-37_20260522T063142-filetypes-chrome-manifest_feat_lower_bigram_obj_trigrams.log) |
+| `` | train_hardneg_015_12 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T06-36-40_20260522T063142-filetypes-chrome-manifest_train_hardneg_015_12.log) |
+| `` | train_scalepos075_reg15 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-36-41_20260522T063142-filetypes-chrome-manifest_train_scalepos075_reg15.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_train_leaves128_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate recent best feature env while tuning tree complexity and LR to stabilize PR_AUC and improve recall@3FPM.
+- **`feat_kv_vocab_split_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured manifest key-value pairs, targeting PR_AUC gain.
+- **`feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add full text metrics and encoding features to capture obfuscation/structure in manifests, aiming for PR_AUC improvement.
+- **`feat_lower_bigram_obj_trigrams`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and enable objective trigrams to catch rarer malicious patterns, targeting recall@3FPM.
+- **`train_hardneg_015_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining to focus on difficult benigns, recovering the historical PR_AUC win of 0.8711.
+- **`train_scalepos075_reg15`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=1.5 EXP_SCALE_POS_WEIGHT_MULT=0.75 …` — Down-weight positives and increase L2 regularization to suppress FP at low FPR, boosting recall@3FPM.
+
+</details>
+
+## Cycle `20260522T093406-filetypes-chrome-manifest` — 2026-05-22T09:34:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `813f3c05a0bd9552` | feat_kv_vocab_bigram50 | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-22T09-36-57_20260522T093406-filetypes-chrome-manifest_feat_kv_vocab_bigram50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`feat_kv_vocab_bigram50`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to improve PR_AUC by enabling kv_vocab to capture manifest key-value structures and lowering bigram_min_freq to 50 to retain rarer informative patterns.
+
+</details>
+
+## Cycle `20260522T100707-filetypes-chrome-manifest` — 2026-05-22T10:07:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c22003c635c48232` | control_baseline_train_tune_v2 | ok | 0.8444 | 0.9692 | 0.6667 | 3 | [log](out/autocollie/runs/2026-05-22T10-11-45_20260522T100707-filetypes-chrome-manifest_control_baseline_train_tune_v2.log) |
+| `a53b8707f35806db` | feat_kv_vocab_split_8k | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-22T10-11-48_20260522T100707-filetypes-chrome-manifest_feat_kv_vocab_split_8k.log) |
+| `e066e04c0d7feb63` | feat_textenc_metrics_full | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-22T10-11-51_20260522T100707-filetypes-chrome-manifest_feat_textenc_metrics_full.log) |
+| `6e3ea94404a09309` | feat_obj_trigrams_suspicious | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-22T10-11-54_20260522T100707-filetypes-chrome-manifest_feat_obj_trigrams_suspicious.log) |
+| `f43df1192e0c2170` | train_dart_extra_trees_reg | ok | 0.8000 | 0.9385 | 0.7500 | 2 | [log](out/autocollie/runs/2026-05-22T10-11-56_20260522T100707-filetypes-chrome-manifest_train_dart_extra_trees_reg.log) |
+| `b09a5043c1fdb414` | train_scalepos05_fpr_target | ok | 0.8242 | 0.9590 | 0.7500 | 1 | [log](out/autocollie/runs/2026-05-22T10-11-58_20260522T100707-filetypes-chrome-manifest_train_scalepos05_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_train_tune_v2`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Replicate best recent feature surface with conservative training hyperparameter sweep to establish a stable matrix-cache baseline for PR_AUC comparison.
+- **`feat_kv_vocab_split_8k`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab and kv_value_split to recover per-element signal in manifest key-value pairs, targeting PR_AUC improvement via finer-grained feature discrimination.
+- **`feat_textenc_metrics_full`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Activate text_encoding and text_metrics_full to capture structural obfuscation and encoding anomalies in manifest text, aiming to boost recall@3 FP/M without hurting ROC_AUC.
+- **`feat_obj_trigrams_suspicious`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 …` — Enable objective_trigrams and suspicious_trigrams with low min_freq to capture multi-step attack patterns in manifests, targeting PR_AUC gains from higher-order co-occurrences.
+- **`train_dart_extra_trees_reg`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=380 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Switch to dart boosting with extra_trees and higher reg_lambda to reduce overfitting on small holdout, aiming to stabilize ROC_AUC and improve generalization for recall@3 FP/M.
+- **`train_scalepos05_fpr_target`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Down-weight positives with scale_pos_weight_mult=0.5 and optimize threshold for max_recall_at_fpr to directly target the deployed operating point, improving recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T125156-filetypes-chrome-manifest` — 2026-05-22T12:51:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ca8d379e33627b21` | control_baseline_train_tune_v3 | ok | 0.8444 | 0.9692 | 0.7500 | 1 | [log](out/autocollie/runs/2026-05-22T12-56-56_20260522T125156-filetypes-chrome-manifest_control_baseline_train_tune_v3.log) |
+| `63f245e14e2254e0` | train_dart_reg_lambda2 | ok | 0.8103 | 0.9487 | 0.6000 | 1 | [log](out/autocollie/runs/2026-05-22T12-56-57_20260522T125156-filetypes-chrome-manifest_train_dart_reg_lambda2.log) |
+| `d957f1537461c53a` | feat_textenc_metrics_full | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-22T12-56-59_20260522T125156-filetypes-chrome-manifest_feat_textenc_metrics_full.log) |
+| `f0b78e39d46f6b12` | feat_kv_vocab_split_10k | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-22T12-57-01_20260522T125156-filetypes-chrome-manifest_feat_kv_vocab_split_10k.log) |
+| `88d1d160179e4a76` | feat_obj_trigrams_suspicious | ok | 0.8444 | 0.9692 | 0.7500 | 3 | [log](out/autocollie/runs/2026-05-22T12-57-04_20260522T125156-filetypes-chrome-manifest_feat_obj_trigrams_suspicious.log) |
+| `58ad3363e7c605c8` | feat_textenc_seed_search_k3 | ok | 0.8444 | 0.9692 | 0.7143 | 1 | [log](out/autocollie/runs/2026-05-22T12-57-07_20260522T125156-filetypes-chrome-manifest_feat_textenc_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_baseline_train_tune_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature env to establish baseline; tweak num_leaves to 128 and estimators to 300 to improve PR_AUC without changing features.
+- **`train_dart_reg_lambda2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Test dart boosting with higher L2 regularization to reduce overfitting and improve tail recall@3 FP/M.
+- **`feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding and text_metrics_full to capture document obfuscation signals, aiming to boost PR_AUC.
+- **`feat_kv_vocab_split_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand kv_vocab to 10k with value splitting to recover per-element signal in manifest keys, targeting PR_AUC gain.
+- **`feat_obj_trigrams_suspicious`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable objective_trigrams and suspicious_trigrams to capture higher-order attack patterns, aiming to improve recall@3 FP/M.
+- **`feat_textenc_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply seed_search_k=3 to text_metrics config to average out seed variance and stabilize PR_AUC gains.
+
+</details>
+

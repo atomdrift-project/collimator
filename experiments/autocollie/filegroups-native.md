@@ -202,3 +202,87 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T035358-filegroups-native` — 2026-05-22T03:53:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d1e86907071a4656` | native_control_hn_fpr3e6 | ok | 0.9995 | 0.9996 | 0.9149 | 93 | [log](out/autocollie/runs/2026-05-22T03-59-40_20260522T035358-filegroups-native_native_control_hn_fpr3e6.log) |
+| `` | native_train_deeper_lr003 | fail | — | — | — | 17 | [log](out/autocollie/runs/2026-05-22T04-01-13_20260522T035358-filegroups-native_native_train_deeper_lr003.log) |
+| `b151e6e00d3924f2` | native_kv_vocab_15k | ok | 0.9994 | 0.9995 | 0.9922 | 82 | [log](out/autocollie/runs/2026-05-22T04-01-29_20260522T035358-filegroups-native_native_kv_vocab_15k.log) |
+| `1c0130c605db4552` | native_symbol_bigrams_8k | ok | 0.9994 | 0.9995 | 0.9922 | 91 | [log](out/autocollie/runs/2026-05-22T04-02-51_20260522T035358-filegroups-native_native_symbol_bigrams_8k.log) |
+| `18283b95cf2b5088` | native_abl_no_blindfold | ok | 0.9995 | 0.9995 | 0.9931 | 75 | [log](out/autocollie/runs/2026-05-22T04-04-22_20260522T035358-filegroups-native_native_abl_no_blindfold.log) |
+| `` | native_seed_search_3_retry | fail | — | — | — | 79 | [log](out/autocollie/runs/2026-05-22T04-05-37_20260522T035358-filegroups-native_native_seed_search_3_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_control_hn_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3 FP/M by applying hard-negative upweighting and direct FPR thresholding on the best feature set.
+- **`native_train_deeper_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR AUC by increasing tree capacity and slowing learning rate for better ranking calibration.
+- **`native_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab to capture richer structural key-value signals, targeting PR AUC gains from expanded feature surface.
+- **`native_symbol_bigrams_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tests symbol_bigrams with relaxed frequency floor to improve tail recall@3 FP/M via co-occurrence patterns.
+- **`native_abl_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disables blindfold dropout to test if removing stochastic noise improves PR AUC stability and ranking quality.
+- **`native_seed_search_3_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Uses seed_search_k=3 on the top configuration to distinguish real PR AUC signal from seed variance.
+
+</details>
+
+## Cycle `20260522T071552-filegroups-native` — 2026-05-22T07:15:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | native_control_fpr3e6_tail | fail | — | — | — | 16 | [log](out/autocollie/runs/2026-05-22T07-20-55_20260522T071552-filegroups-native_native_control_fpr3e6_tail.log) |
+| `` | native_hn_012_16_tail | fail | — | — | — | 34 | [log](out/autocollie/runs/2026-05-22T07-21-11_20260522T071552-filegroups-native_native_hn_012_16_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_control_fpr3e6_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Control feature set with max_recall_at_fpr thresholding to directly optimize recall@3FPM at the deployed operating point.
+- **`native_hn_012_16_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Hard-negative upweighting to sharpen decision boundary and improve PR_AUC while preserving ROC_AUC.
+
+</details>
+
+## Cycle `20260522T082412-filegroups-native` — 2026-05-22T08:24:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | native_control_train_tweak | fail | — | — | — | 17 | [log](out/autocollie/runs/2026-05-22T08-28-38_20260522T082412-filegroups-native_native_control_train_tweak.log) |
+| `` | native_hn_01_12 | fail | — | — | — | 31 | [log](out/autocollie/runs/2026-05-22T08-28-55_20260522T082412-filegroups-native_native_hn_01_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_control_train_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Baseline feature set with increased estimators and leaves to improve PR_AUC without changing matrix.
+- **`native_hn_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Sweep hard-negative fraction and weight to improve recall@3FPM by focusing on difficult benigns.
+
+</details>
+
+## Cycle `20260522T094511-filegroups-native` — 2026-05-22T09:45:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c161f80fce5a1f1e` | native_kv_vocab_20k_hn_fpr3e6 | ok | 0.9995 | 0.9996 | 0.0000 | 108 | [log](out/autocollie/runs/2026-05-22T09-48-02_20260522T094511-filegroups-native_native_kv_vocab_20k_hn_fpr3e6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_kv_vocab_20k_hn_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Aims to improve recall@3 FP/M by expanding KV vocab to capture rare key-value patterns in native binaries, while hard-negative weighting and FPR-targeted thresholding focus the model on the deployed tail.
+
+</details>
+
+## Cycle `20260522T121744-filegroups-native` — 2026-05-22T12:17:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `25aed7a69366a250` | native_control_fpr3e6_leaves128 | ok | 0.9995 | 0.9995 | 0.7879 | 16 | [log](out/autocollie/runs/2026-05-22T12-24-31_20260522T121744-filegroups-native_native_control_fpr3e6_leaves128.log) |
+| `b5b6888bbbe3e24f` | native_hn_015_18_fpr3e6 | ok | 0.9996 | 0.9996 | 0.7613 | 44 | [log](out/autocollie/runs/2026-05-22T12-24-47_20260522T121744-filegroups-native_native_hn_015_18_fpr3e6.log) |
+| `17b7b7353db6f4d1` | native_kv_vocab_15k_fpr3e6 | ok | 0.9995 | 0.9995 | 0.8431 | 19 | [log](out/autocollie/runs/2026-05-22T12-25-31_20260522T121744-filegroups-native_native_kv_vocab_15k_fpr3e6.log) |
+| `981abe3f48a4e54b` | native_sym_bigrams_10k_fpr3e6 | ok | 0.9994 | 0.9995 | 0.7773 | 110 | [log](out/autocollie/runs/2026-05-22T12-25-50_20260522T121744-filegroups-native_native_sym_bigrams_10k_fpr3e6.log) |
+| `ca91d678da5493bd` | native_text_metrics_full_fpr3e6 | ok | 0.9995 | 0.9996 | 0.0000 | 75 | [log](out/autocollie/runs/2026-05-22T12-27-40_20260522T121744-filegroups-native_native_text_metrics_full_fpr3e6.log) |
+| `cb7d24ed3d98ae0c` | native_seed_search_k3_overlay_fpr3e6 | ok | 0.9995 | 0.9996 | 0.6912 | 103 | [log](out/autocollie/runs/2026-05-22T12-28-55_20260522T121744-filegroups-native_native_seed_search_k3_overlay_fpr3e6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`native_control_fpr3e6_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with max_recall_at_fpr thresholding and increased leaves to improve recall@3 FP/M while preserving PR_AUC.
+- **`native_hn_015_18_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard-negative sweep with fraction 0.015 and weight 18 to sharpen decision boundary at low FPR, targeting recall@3 FP/M gains.
+- **`native_kv_vocab_15k_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with max 15000 to capture key-value pair signals for native binaries, aiming to boost PR_AUC and recall@3 FP/M.
+- **`native_sym_bigrams_10k_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables symbol_bigrams with max 10000 to capture co-occurrence patterns in imports, targeting PR_AUC improvement via richer structural signal.
+- **`native_text_metrics_full_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full and extended_metrics to add entropy/line-length signals, aiming to improve recall@3 FP/M on obfuscated native payloads.
+- **`native_seed_search_k3_overlay_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Uses seed_search_k=3 with save_all_seeds to average out seed variance, paired with overlay_signal to capture packer/dropper traits, targeting stable recall@3 FP/M.
+
+</details>
+

@@ -246,3 +246,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T031517-filetypes-csharp` — 2026-05-22T03:15:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b70e88ea23932e3d` | csharp_control_hn_lr_leaves_v2 | ok | 0.9828 | 0.9901 | 0.9420 | 7 | [log](out/autocollie/runs/2026-05-22T03-20-00_20260522T031517-filetypes-csharp_csharp_control_hn_lr_leaves_v2.log) |
+| `29d4e5a34b842cf8` | csharp_kv_vocab_split_max | ok | 0.9828 | 0.9902 | 0.9343 | 5 | [log](out/autocollie/runs/2026-05-22T03-20-07_20260522T031517-filetypes-csharp_csharp_kv_vocab_split_max.log) |
+| `b584e07df08a3890` | csharp_symbol_bigrams_cooccurrence | ok | 0.9818 | 0.9892 | 0.9353 | 5 | [log](out/autocollie/runs/2026-05-22T03-20-11_20260522T031517-filetypes-csharp_csharp_symbol_bigrams_cooccurrence.log) |
+| `3eca742c017012f8` | csharp_text_encoding_metrics | ok | 0.9822 | 0.9896 | 0.9420 | 4 | [log](out/autocollie/runs/2026-05-22T03-20-16_20260522T031517-filetypes-csharp_csharp_text_encoding_metrics.log) |
+| `` | csharp_hardneg_upweight_reg | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-20-20_20260522T031517-filetypes-csharp_csharp_hardneg_upweight_reg.log) |
+| `` | csharp_dart_fpr_target | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-20-22_20260522T031517-filetypes-csharp_csharp_dart_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`csharp_control_hn_lr_leaves_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline using recent top feature_env; tweak leaves/LR/lambda to stabilize PR_AUC while leveraging matrix cache.
+- **`csharp_kv_vocab_split_max`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to recover per-element signal in C# metadata/strings, targeting PR_AUC improvement by capturing finer-grained key-value patterns.
+- **`csharp_symbol_bigrams_cooccurrence`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol_bigrams to catch import/trait co-occurrence patterns in C# assemblies, targeting recall@3FPM by surfacing low-FPR malicious combinations.
+- **`csharp_text_encoding_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding and text_metrics_full to capture obfuscation and structural text signals in C# scripts, targeting PR_AUC by adding discriminative document-level features.
+- **`csharp_hardneg_upweight_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Upweight hard negatives with moderate regularization to sharpen decision boundaries at the tail, targeting recall@3FPM without sacrificing PR_AUC.
+- **`csharp_dart_fpr_target`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to DART boosting and optimize threshold directly at 3e-6 FPR to maximize recall@3FPM at the deployed operating point.
+
+</details>
+
+## Cycle `20260522T071416-filetypes-csharp` — 2026-05-22T07:14:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | csharp_control_hn_reg_v3 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-18-39_20260522T071416-filetypes-csharp_csharp_control_hn_reg_v3.log) |
+| `141e9e7063e29f97` | csharp_kv_vocab_split | ok | 0.9828 | 0.9902 | 0.9343 | 5 | [log](out/autocollie/runs/2026-05-22T07-18-41_20260522T071416-filetypes-csharp_csharp_kv_vocab_split.log) |
+| `857c892b87c56ca7` | csharp_symbol_bigrams_vocab | ok | 0.9818 | 0.9892 | 0.9353 | 5 | [log](out/autocollie/runs/2026-05-22T07-18-45_20260522T071416-filetypes-csharp_csharp_symbol_bigrams_vocab.log) |
+| `1c9107a394a7f904` | csharp_extended_metrics_ratios | ok | 0.9818 | 0.9892 | 0.9353 | 4 | [log](out/autocollie/runs/2026-05-22T07-18-50_20260522T071416-filetypes-csharp_csharp_extended_metrics_ratios.log) |
+| `` | csharp_transfer_hn_reg | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-18-54_20260522T071416-filetypes-csharp_csharp_transfer_hn_reg.log) |
+| `592aa2fa3b6aa9cb` | csharp_seed_search_kv | ok | 0.9835 | 0.9908 | 0.9296 | 5 | [log](out/autocollie/runs/2026-05-22T07-18-56_20260522T071416-filetypes-csharp_csharp_seed_search_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`csharp_control_hn_reg_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control feature set with tuned regularization and leaves to stabilize PR AUC by reducing overfit on rare patterns.
+- **`csharp_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured metadata signal, targeting PR AUC improvement via better feature discrimination.
+- **`csharp_symbol_bigrams_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Add symbol bigrams and vocab to capture API co-occurrence patterns in compiled C# binaries, aiming for PR AUC gain.
+- **`csharp_extended_metrics_ratios`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Enable extended metrics and ratio features to provide structural density signals, targeting recall@3 FP/M improvement by highlighting packer artifacts.
+- **`csharp_transfer_hn_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Transfer hard-negative weighting strategy from perl route to sharpen decision boundary and boost PR AUC.
+- **`csharp_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Run seed search on KV-enhanced feature set to average out variance and stabilize recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260522T093925-filetypes-csharp` — 2026-05-22T09:39:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb3735783552f542` | csharp_kv_vocab_reg_tweak | ok | 0.9828 | 0.9903 | 0.9286 | 2 | [log](out/autocollie/runs/2026-05-22T09-42-06_20260522T093925-filetypes-csharp_csharp_kv_vocab_reg_tweak.log) |
+
+<details><summary>Spec details</summary>
+
+- **`csharp_kv_vocab_reg_tweak`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab to 10000 on the top PR_AUC feature set with moderate L2 regularization to boost PR_AUC while preserving ROC_AUC.
+
+</details>
+
+## Cycle `20260522T095448-filetypes-csharp` — 2026-05-22T09:54:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `20951a10cac1949d` | csharp_control_lr_leaves_reg | ok | 0.9818 | 0.9894 | 0.9353 | 2 | [log](out/autocollie/runs/2026-05-22T09-59-37_20260522T095448-filetypes-csharp_csharp_control_lr_leaves_reg.log) |
+| `cbe780a3d5ab2eeb` | csharp_kv_vocab_expanded | ok | 0.9823 | 0.9898 | 0.9286 | 5 | [log](out/autocollie/runs/2026-05-22T09-59-38_20260522T095448-filetypes-csharp_csharp_kv_vocab_expanded.log) |
+| `f20540ff4e946413` | csharp_symbol_bigrams_vocab | ok | 0.9818 | 0.9892 | 0.9353 | 5 | [log](out/autocollie/runs/2026-05-22T09-59-43_20260522T095448-filetypes-csharp_csharp_symbol_bigrams_vocab.log) |
+| `e9237cf46a441547` | csharp_ablate_blindfold | ok | 0.9818 | 0.9892 | 0.9353 | 4 | [log](out/autocollie/runs/2026-05-22T09-59-48_20260522T095448-filetypes-csharp_csharp_ablate_blindfold.log) |
+| `bbf96d222ef90d44` | csharp_transfer_hardneg_reg | ok | 0.9831 | 0.9906 | 0.9286 | 2 | [log](out/autocollie/runs/2026-05-22T09-59-52_20260522T095448-filetypes-csharp_csharp_transfer_hardneg_reg.log) |
+| `0584c39722983c80` | csharp_seed_search_kv_retry | ok | 0.9823 | 0.9898 | 0.9286 | 30 | [log](out/autocollie/runs/2026-05-22T09-59-54_20260522T095448-filetypes-csharp_csharp_seed_search_kv_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`csharp_control_lr_leaves_reg`** `EXP_ESTIMATORS=320 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=0.8 EXP_TRAIN_SAMPLES=30000` — Control baseline with tuned LR and leaves to maximize PR_AUC by improving rank calibration while keeping ROC_AUC flat.
+- **`csharp_kv_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 20k with lower min_freq to capture rare assembly metadata, aiming to boost PR_AUC.
+- **`csharp_symbol_bigrams_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=15000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Enable symbol bigrams to detect malicious API call sequences, targeting recall@3FPM by improving separation at low FPR.
+- **`csharp_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce feature noise and stabilize ranking, aiming to improve PR_AUC.
+- **`csharp_transfer_hardneg_reg`** `EXP_ESTIMATORS=280 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Apply moderate hard-negative weighting to sharpen low-FPR boundary, targeting recall@3FPM.
+- **`csharp_seed_search_kv_retry`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Retry expanded KV vocab with seed search k=3 to average variance and confirm signal, targeting stable PR_AUC.
+
+</details>
+
+## Cycle `20260522T124604-filetypes-csharp` — 2026-05-22T12:46:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b31f579aa4935925` | csharp_control_baseline_v2 | ok | 0.9844 | 0.9912 | 0.9286 | 2 | [log](out/autocollie/runs/2026-05-22T12-51-33_20260522T124604-filetypes-csharp_csharp_control_baseline_v2.log) |
+| `c22d10609db4ee2e` | csharp_kv_vocab_expanded | ok | 0.9822 | 0.9896 | 0.9286 | 6 | [log](out/autocollie/runs/2026-05-22T12-51-35_20260522T124604-filetypes-csharp_csharp_kv_vocab_expanded.log) |
+| `895a1f557073ab4e` | csharp_symbol_bigrams_vocab | ok | 0.9819 | 0.9891 | 0.9286 | 5 | [log](out/autocollie/runs/2026-05-22T12-51-41_20260522T124604-filetypes-csharp_csharp_symbol_bigrams_vocab.log) |
+| `e9b309951fade533` | csharp_textenc_metrics_full | ok | 0.9816 | 0.9889 | 0.9353 | 4 | [log](out/autocollie/runs/2026-05-22T12-51-46_20260522T124604-filetypes-csharp_csharp_textenc_metrics_full.log) |
+| `a8f9fd851fab4099` | csharp_hn_moderate_weight | ok | 0.9823 | 0.9904 | 0.9286 | 3 | [log](out/autocollie/runs/2026-05-22T12-51-50_20260522T124604-filetypes-csharp_csharp_hn_moderate_weight.log) |
+| `4632049407719ff5` | csharp_scale_pos_downweight | ok | 0.9810 | 0.9888 | 0.9353 | 2 | [log](out/autocollie/runs/2026-05-22T12-51-54_20260522T124604-filetypes-csharp_csharp_scale_pos_downweight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`csharp_control_baseline_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates the best recent feature_env to establish a stable baseline; aims to keep PR_AUC flat while verifying training stability.
+- **`csharp_kv_vocab_expanded`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with a higher cap to capture assembly metadata patterns; aims to boost PR_AUC by adding discriminative key-value signals.
+- **`csharp_symbol_bigrams_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol_bigrams to catch import and function co-occurrence patterns; aims to improve recall@3 FP/M by highlighting malicious API chains.
+- **`csharp_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_encoding and text_metrics_full to extract string and resource obfuscation signals; aims to lift PR_AUC by capturing document-like malware traits in C# payloads.
+- **`csharp_hn_moderate_weight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies moderate hard-negative weighting to focus on borderline benigns; aims to increase recall@3 FP/M by sharpening the decision boundary at low FPR.
+- **`csharp_scale_pos_downweight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weights the positive class to suppress false positives on benign C# files; aims to improve recall@3 FP/M by optimizing the deployed low-FPR operating point.
+
+</details>
+

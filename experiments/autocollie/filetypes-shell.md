@@ -286,3 +286,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T040230-filetypes-shell` — 2026-05-22T04:02:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `95cd1491ed2a3994` | shell_ctrl_scalepos_075 | ok | 0.9962 | 0.9977 | 0.9655 | 18 | [log](out/autocollie/runs/2026-05-22T04-07-18_20260522T040230-filetypes-shell_shell_ctrl_scalepos_075.log) |
+| `f4049fc776b6d25d` | shell_feat_textenc_metrics | ok | 0.9964 | 0.9978 | 0.9599 | 14 | [log](out/autocollie/runs/2026-05-22T04-07-36_20260522T040230-filetypes-shell_shell_feat_textenc_metrics.log) |
+| `09926a0dbdc4657b` | shell_feat_kv_30k_freq10 | ok | 0.9961 | 0.9976 | 0.9057 | 15 | [log](out/autocollie/runs/2026-05-22T04-07-50_20260522T040230-filetypes-shell_shell_feat_kv_30k_freq10.log) |
+| `2cb1a2da22d81c1b` | shell_feat_textenc_lowfreq_ngrams | ok | 0.9965 | 0.9979 | 0.9629 | 15 | [log](out/autocollie/runs/2026-05-22T04-08-05_20260522T040230-filetypes-shell_shell_feat_textenc_lowfreq_ngrams.log) |
+| `baf9ff44db4e21bd` | shell_transfer_kv_seedavg | ok | 0.9965 | 0.9979 | 0.9598 | 19 | [log](out/autocollie/runs/2026-05-22T04-08-20_20260522T040230-filetypes-shell_shell_transfer_kv_seedavg.log) |
+| `8753a74bd30386dc` | shell_retry_obj_trigrams_seed123 | ok | 0.9961 | 0.9976 | 0.9553 | 17 | [log](out/autocollie/runs/2026-05-22T04-08-38_20260522T040230-filetypes-shell_shell_retry_obj_trigrams_seed123.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_ctrl_scalepos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with reduced positive weight to lower FP rate, targeting recall@3 FP/M improvement.
+- **`shell_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to capture script obfuscation patterns, targeting PR_AUC and recall@3 FP/M gains.
+- **`shell_feat_kv_30k_freq10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and lower frequency floor to capture rare shell key-value patterns, aiming for PR_AUC gain.
+- **`shell_feat_textenc_lowfreq_ngrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Combine text encoding with low-frequency n-grams to catch rare malicious constructs, targeting recall@3 FP/M.
+- **`shell_transfer_kv_seedavg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Port sister-route KV vocab + seed averaging to reduce variance and stabilize recall@3 FP/M.
+- **`shell_retry_obj_trigrams_seed123`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=30` — Retry strong objective trigrams config with new seed to verify signal generalization and target PR_AUC stability.
+
+</details>
+
+## Cycle `20260522T055703-filetypes-shell` — 2026-05-22T05:57:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a441b0544de02d56` | shell_ctrl_leaves128_lr004 | ok | 0.9962 | 0.9977 | 0.9658 | 14 | [log](out/autocollie/runs/2026-05-22T06-01-32_20260522T055703-filetypes-shell_shell_ctrl_leaves128_lr004.log) |
+| `664dcb48f1674cbd` | shell_feat_kv_vocab_15k | ok | 0.9962 | 0.9977 | 0.9642 | 15 | [log](out/autocollie/runs/2026-05-22T06-01-46_20260522T055703-filetypes-shell_shell_feat_kv_vocab_15k.log) |
+| `` | shell_feat_textenc_metrics_full | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-22T06-02-01_20260522T055703-filetypes-shell_shell_feat_textenc_metrics_full.log) |
+| `c59a1860de5d9b6a` | shell_feat_lowfreq_ngrams | ok | 0.9965 | 0.9979 | 0.9627 | 15 | [log](out/autocollie/runs/2026-05-22T06-02-05_20260522T055703-filetypes-shell_shell_feat_lowfreq_ngrams.log) |
+| `` | shell_train_hardneg_005_w8 | fail | — | — | — | 6 | [log](out/autocollie/runs/2026-05-22T06-02-20_20260522T055703-filetypes-shell_shell_train_hardneg_005_w8.log) |
+| `` | shell_train_extratrees_subsample | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T06-02-26_20260522T055703-filetypes-shell_shell_train_extratrees_subsample.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_ctrl_leaves128_lr004`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec using best feature env; increases num_leaves and lowers LR to improve PR_AUC by capturing finer decision boundaries without overfitting.
+- **`shell_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture shell variable assignments and command structures, targeting PR_AUC gains from structured key-value patterns in scripts.
+- **`shell_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full to extract obfuscation and formatting signals, aiming to boost recall@3FPM by distinguishing malicious script formatting from benign.
+- **`shell_feat_lowfreq_ngrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=1` — Lowers bigram and trigram frequency floors to include rarer patterns, targeting PR_AUC improvement by capturing niche attack signatures in shell scripts.
+- **`shell_train_hardneg_005_w8`** `EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Tunes hard negative sampling with conservative fraction and weight to sharpen the decision boundary at low FPR, targeting recall@3FPM gains while preserving ROC_AUC.
+- **`shell_train_extratrees_subsample`** `EXP_COLSAMPLE_BYTREE=0.8 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Uses extra_trees and subsampling to add ensemble noise and reduce overfitting, aiming to stabilize PR_AUC and improve generalization on the dev set.
+
+</details>
+
+## Cycle `20260522T083720-filetypes-shell` — 2026-05-22T08:37:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ebfbdf802a327e1` | shell_ctrl_leaves128_lr004 | ok | 0.9966 | 0.9979 | 0.9616 | 15 | [log](out/autocollie/runs/2026-05-22T08-42-46_20260522T083720-filetypes-shell_shell_ctrl_leaves128_lr004.log) |
+| `664dcb48f1674cbd` | shell_feat_kv_vocab_15k | dup | 0.9962 | 0.9977 | 0.9642 | 1 | [log](out/autocollie/runs/2026-05-22T08-43-01_20260522T083720-filetypes-shell_shell_feat_kv_vocab_15k.log) |
+| `` | shell_feat_textenc_full | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-22T08-43-02_20260522T083720-filetypes-shell_shell_feat_textenc_full.log) |
+| `a4e229c46874eba0` | shell_feat_bigram_max10k | ok | 0.9965 | 0.9979 | 0.9643 | 15 | [log](out/autocollie/runs/2026-05-22T08-43-06_20260522T083720-filetypes-shell_shell_feat_bigram_max10k.log) |
+| `` | shell_train_spw05_leaves64 | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-22T08-43-21_20260522T083720-filetypes-shell_shell_train_spw05_leaves64.log) |
+| `` | shell_gen_kv_seedsearch3 | fail | — | — | — | 8 | [log](out/autocollie/runs/2026-05-22T08-43-25_20260522T083720-filetypes-shell_shell_gen_kv_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_ctrl_leaves128_lr004`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with tuned leaves/LR to improve PR_AUC without overfitting.
+- **`shell_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture shell-specific key-value patterns, targeting PR_AUC gain.
+- **`shell_feat_textenc_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full metrics to capture obfuscation signals, targeting recall@3FPM.
+- **`shell_feat_bigram_max10k`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand bigram vocab cap to capture longer shell command sequences, targeting PR_AUC.
+- **`shell_train_spw05_leaves64`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to reduce FPs at low FPR, improving recall@3FPM.
+- **`shell_gen_kv_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Seed search on KV vocab config to stabilize recall@3FPM gains across random seeds.
+
+</details>
+
+## Cycle `20260522T094929-filetypes-shell` — 2026-05-22T09:49:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a441b0544de02d56` | shell_ctrl_baseline_leaves128 | dup | 0.9962 | 0.9977 | 0.9658 | 1 | [log](out/autocollie/runs/2026-05-22T09-54-13_20260522T094929-filetypes-shell_shell_ctrl_baseline_leaves128.log) |
+| `81521aa03c9e9a8f` | shell_exploit_hardneg_01_12 | ok | 0.9958 | 0.9974 | 0.9636 | 6 | [log](out/autocollie/runs/2026-05-22T09-54-13_20260522T094929-filetypes-shell_shell_exploit_hardneg_01_12.log) |
+| `c037d921fbff2290` | shell_feat_kv_vocab_15k | ok | 0.9964 | 0.9978 | 0.9613 | 4 | [log](out/autocollie/runs/2026-05-22T09-54-20_20260522T094929-filetypes-shell_shell_feat_kv_vocab_15k.log) |
+| `f0d8c6fa7c666d60` | shell_feat_bigram_15k_freq50 | ok | 0.9962 | 0.9977 | 0.9545 | 16 | [log](out/autocollie/runs/2026-05-22T09-54-24_20260522T094929-filetypes-shell_shell_feat_bigram_15k_freq50.log) |
+| `496226795ce446e8` | shell_feat_obj_trigrams_2k | ok | 0.9961 | 0.9976 | 0.9279 | 15 | [log](out/autocollie/runs/2026-05-22T09-54-40_20260522T094929-filetypes-shell_shell_feat_obj_trigrams_2k.log) |
+| `f8cc50399eea7676` | shell_gen_seed7_est350 | ok | 0.9962 | 0.9977 | 0.9598 | 18 | [log](out/autocollie/runs/2026-05-22T09-54-55_20260522T094929-filetypes-shell_shell_gen_seed7_est350.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_ctrl_baseline_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best PR AUC feature set with leaves128/lr004 to establish matrix cache baseline and verify stability for PR AUC.
+- **`shell_exploit_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Add hard negative mining to baseline features to improve recall@3 FP/M by focusing model capacity on difficult benign samples while preserving PR AUC.
+- **`shell_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with 15k cap to capture shell-specific key-value patterns, targeting PR AUC gain from structured script signals.
+- **`shell_feat_bigram_15k_freq50`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Expand bigram vocab to 15k with freq floor 50 to capture rarer malicious shell constructs, aiming for recall@3 FP/M improvement.
+- **`shell_feat_obj_trigrams_2k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Introduce objective_trigrams with 2k cap to model longer attack sequences in scripts, targeting PR AUC via richer context.
+- **`shell_gen_seed7_est350`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Vary seed to 7 and increase estimators to 350 on baseline features to distinguish real signal from seed noise and test generalization for PR AUC.
+
+</details>
+
+## Cycle `20260522T101720-filetypes-shell` — 2026-05-22T10:17:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `21eac9ca0065a8a8` | shell_feat_kv_vocab_split_20k | ok | 0.9962 | 0.9977 | 0.9631 | 15 | [log](out/autocollie/runs/2026-05-22T10-19-53_20260522T101720-filetypes-shell_shell_feat_kv_vocab_split_20k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`shell_feat_kv_vocab_split_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 …` — Enables KV vocab with value splitting and expands cap to 20k to capture structured shell script signals, aiming to lift PR_AUC by adding high-signal features while keeping ROC_AUC flat.
+
+</details>
+

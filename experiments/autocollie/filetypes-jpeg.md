@@ -294,3 +294,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T021948-filetypes-jpeg` — 2026-05-22T02:19:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `674a475fd5ccd7db` | jpeg_ctrl_exploit_leaves128_lr003 | ok | 0.9738 | 0.9801 | 0.8636 | 5 | [log](out/autocollie/runs/2026-05-22T02-24-16_20260522T021948-filetypes-jpeg_jpeg_ctrl_exploit_leaves128_lr003.log) |
+| `` | jpeg_ctrl_exploit_dart_hardneg | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T02-24-22_20260522T021948-filetypes-jpeg_jpeg_ctrl_exploit_dart_hardneg.log) |
+| `64cb8f0d0830f4b9` | jpeg_feat_kv_textmetrics_vocab8k | ok | 0.9785 | 0.9839 | 0.8636 | 3 | [log](out/autocollie/runs/2026-05-22T02-24-23_20260522T021948-filetypes-jpeg_jpeg_feat_kv_textmetrics_vocab8k.log) |
+| `5ea3cb54d88afef5` | jpeg_feat_textenc_objtrigrams | ok | 0.9795 | 0.9851 | 0.8780 | 3 | [log](out/autocollie/runs/2026-05-22T02-24-26_20260522T021948-filetypes-jpeg_jpeg_feat_textenc_objtrigrams.log) |
+| `` | jpeg_transfer_seedsearch_ensemble | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T02-24-29_20260522T021948-filetypes-jpeg_jpeg_transfer_seedsearch_ensemble.log) |
+| `624f86c1f9750e15` | jpeg_abl_extended_metrics_off | ok | 0.7457 | 0.7845 | 0.5679 | 3 | [log](out/autocollie/runs/2026-05-22T02-24-31_20260522T021948-filetypes-jpeg_jpeg_abl_extended_metrics_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jpeg_ctrl_exploit_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Exploit best feature surface with deeper trees and lower LR to improve PR_AUC and recall@3 FP/M by reducing overfitting on rare JPEG artifacts.
+- **`jpeg_ctrl_exploit_dart_hardneg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 …` — Use DART boosting with hard negatives to sharpen decision boundaries at low FPR, targeting recall@3 FP/M gains while preserving ROC_AUC.
+- **`jpeg_feat_kv_textmetrics_vocab8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab cap and combine with full text metrics to capture more JPEG metadata/exif patterns, aiming to lift PR_AUC by adding discriminative rank signal.
+- **`jpeg_feat_textenc_objtrigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Swap KV for text encoding and objective trigrams to capture structural JPEG payload patterns, targeting PR_AUC improvement via complementary n-gram signal.
+- **`jpeg_transfer_seedsearch_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 …` — Port gz route's seed-search strategy to average out RNG variance, stabilizing recall@3 FP/M and PR_AUC across different data splits.
+- **`jpeg_abl_extended_metrics_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_EXTENDED_METRICS=0 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Ablate extended_metrics which recently dragged PR_AUC down to 0.87; removing it should recover ranking quality and improve PR_AUC while keeping recall@3 FP/M flat.
+
+</details>
+
+## Cycle `20260522T071901-filetypes-jpeg` — 2026-05-22T07:19:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | jpeg_ctrl_exploit_leaves128_lr003 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T07-23-18_20260522T071901-filetypes-jpeg_jpeg_ctrl_exploit_leaves128_lr003.log) |
+| `485c07723a660ec2` | jpeg_feat_kv_vocab_8k | ok | 0.9809 | 0.9863 | 0.8500 | 3 | [log](out/autocollie/runs/2026-05-22T07-23-19_20260522T071901-filetypes-jpeg_jpeg_feat_kv_vocab_8k.log) |
+| `41a41726893bfbc6` | jpeg_feat_textmetrics_full | ok | 0.9809 | 0.9863 | 0.8500 | 3 | [log](out/autocollie/runs/2026-05-22T07-23-22_20260522T071901-filetypes-jpeg_jpeg_feat_textmetrics_full.log) |
+| `b78da7583719180d` | jpeg_feat_bigram_freq250_max10k | ok | 0.9809 | 0.9863 | 0.8500 | 3 | [log](out/autocollie/runs/2026-05-22T07-23-25_20260522T071901-filetypes-jpeg_jpeg_feat_bigram_freq250_max10k.log) |
+| `` | jpeg_train_hardneg_01_10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T07-23-28_20260522T071901-filetypes-jpeg_jpeg_train_hardneg_01_10.log) |
+| `dff590c07b2248a4` | jpeg_gen_seed13_bestfeat | ok | 0.9781 | 0.9839 | 0.9048 | 5 | [log](out/autocollie/runs/2026-05-22T07-23-29_20260522T071901-filetypes-jpeg_jpeg_gen_seed13_bestfeat.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jpeg_ctrl_exploit_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Exploit best feature set with deeper trees and lower LR to improve PR_AUC while maintaining ROC AUC.
+- **`jpeg_feat_kv_vocab_8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture structured metadata patterns, targeting PR_AUC gain.
+- **`jpeg_feat_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=0 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote full text metrics to capture obfuscation signals in JPEG payloads, aiming for higher recall@3 FP/M.
+- **`jpeg_feat_bigram_freq250_max10k`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and increase cap to capture rarer metadata patterns, targeting tail recall@3 FP/M.
+- **`jpeg_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Apply hard-negative weighting from sister routes to sharpen boundary and improve PR_AUC without feature changes.
+- **`jpeg_gen_seed13_bestfeat`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Vary seed on best feature set to verify PR_AUC stability and rule out seed noise.
+
+</details>
+
+## Cycle `20260522T093409-filetypes-jpeg` — 2026-05-22T09:34:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `31f4b38370e8292c` | jpeg_feat_textenc_kv15k_objtri | ok | 0.9720 | 0.9789 | 0.8500 | 3 | [log](out/autocollie/runs/2026-05-22T09-36-32_20260522T093409-filetypes-jpeg_jpeg_feat_textenc_kv15k_objtri.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jpeg_feat_textenc_kv15k_objtri`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by combining text encoding and expanded KV vocab with objective trigrams to capture richer structural and semantic signals in JPEG metadata.
+
+</details>
+
+## Cycle `20260522T105636-filetypes-jpeg` — 2026-05-22T10:56:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dcf03beea276679a` | jpeg_ctrl_kv8k_leaves128_lr003 | ok | 0.9712 | 0.9776 | 0.8889 | 3 | [log](out/autocollie/runs/2026-05-22T11-01-44_20260522T105636-filetypes-jpeg_jpeg_ctrl_kv8k_leaves128_lr003.log) |
+| `fe26c9b866761ebe` | jpeg_feat_textenc_metrics_full | ok | 0.9760 | 0.9826 | 0.8500 | 1 | [log](out/autocollie/runs/2026-05-22T11-01-47_20260522T105636-filetypes-jpeg_jpeg_feat_textenc_metrics_full.log) |
+| `ce2b86ac659504a2` | jpeg_feat_bigram15k_trigram2k | ok | 0.9785 | 0.9839 | 0.8636 | 3 | [log](out/autocollie/runs/2026-05-22T11-01-48_20260522T105636-filetypes-jpeg_jpeg_feat_bigram15k_trigram2k.log) |
+| `76e91ab70cbc56d5` | jpeg_feat_kv12k_objtri | ok | 0.9785 | 0.9839 | 0.8636 | 3 | [log](out/autocollie/runs/2026-05-22T11-01-51_20260522T105636-filetypes-jpeg_jpeg_feat_kv12k_objtri.log) |
+| `f22bcfbaa12afe9b` | jpeg_train_hardneg_05_5 | ok | 0.9558 | 0.9640 | 0.8571 | 1 | [log](out/autocollie/runs/2026-05-22T11-01-54_20260522T105636-filetypes-jpeg_jpeg_train_hardneg_05_5.log) |
+| `e11cec117d148136` | jpeg_gen_seed7_kv8k | ok | 0.9657 | 0.9702 | 0.8780 | 5 | [log](out/autocollie/runs/2026-05-22T11-01-55_20260522T105636-filetypes-jpeg_jpeg_gen_seed7_kv8k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jpeg_ctrl_kv8k_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Replicate best KV feature set with deeper trees and lower LR to improve PR_AUC and recall@3FPM.
+- **`jpeg_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to capture document obfuscation patterns, targeting PR_AUC gain.
+- **`jpeg_feat_bigram15k_trigram2k`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=50` — Expand n-gram vocab with lower frequency floors to capture rare malicious patterns, aiming to boost recall@3FPM.
+- **`jpeg_feat_kv12k_objtri`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Combine expanded KV vocab with objective trigrams to improve structural malware signal, targeting PR_AUC.
+- **`jpeg_train_hardneg_05_5`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Introduce mild hard-negative weighting to sharpen decision boundary at low FPR, improving recall@3FPM.
+- **`jpeg_gen_seed7_kv8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Vary seed on top feature set to distinguish real signal from seed noise, targeting stable PR_AUC.
+
+</details>
+

@@ -172,3 +172,69 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T042221-filetypes-xlsx` — 2026-05-22T04:22:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_control_kv_shape_lr005 | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-22T04-26-26_20260522T042221-filetypes-xlsx_xlsx_control_kv_shape_lr005.log) |
+| `` | xlsx_kv_vocab_5k | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-22T04-26-34_20260522T042221-filetypes-xlsx_xlsx_kv_vocab_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_control_kv_shape_lr005`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best feature env; tuning learning_rate and num_leaves to stabilize PR_AUC while preserving recall@3 FP/M.
+- **`xlsx_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value metadata patterns in XLSX; aims to boost PR_AUC by adding structural signal.
+
+</details>
+
+## Cycle `20260522T075716-filetypes-xlsx` — 2026-05-22T07:57:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_control_hardneg_01_10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-01-18_20260522T075716-filetypes-xlsx_xlsx_control_hardneg_01_10.log) |
+| `` | xlsx_text_metrics_full_reg | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-22T08-01-19_20260522T075716-filetypes-xlsx_xlsx_text_metrics_full_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_control_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Control feature set with hard-negative mining to improve recall@3 FP/M by focusing on difficult benigns without degrading PR_AUC.
+- **`xlsx_text_metrics_full_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, aiming to boost PR_AUC while using reg_lambda to prevent overfitting.
+
+</details>
+
+## Cycle `20260522T080559-filetypes-xlsx` — 2026-05-22T08:05:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_control_leaves128_mcs50 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-22T08-11-06_20260522T080559-filetypes-xlsx_xlsx_control_leaves128_mcs50.log) |
+| `` | xlsx_text_metrics_full_enc | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-11-11_20260522T080559-filetypes-xlsx_xlsx_text_metrics_full_enc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_control_leaves128_mcs50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,kv,textenc EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Control baseline with increased leaves and estimators to stabilize PR_AUC and improve recall@3 FP/M ranking granularity.
+- **`xlsx_text_metrics_full_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=20 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, targeting PR_AUC gains on XLSX macro/structure patterns.
+
+</details>
+
+## Cycle `20260522T100504-filetypes-xlsx` — 2026-05-22T10:05:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_kv_vocab_enable_leaves128 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-22T10-07-22_20260522T100504-filetypes-xlsx_xlsx_kv_vocab_enable_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_kv_vocab_enable_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=present,maxcrit,elements,bigrams,trigrams,score,clusters,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value signal in XLSX metadata, aiming to improve PR_AUC while maintaining ROC_AUC.
+
+</details>
+
+## Cycle `20260522T114452-filetypes-xlsx` — 2026-05-22T11:44:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xlsx_control_baseline | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T11-50-18_20260522T114452-filetypes-xlsx_xlsx_control_baseline.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xlsx_control_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Control spec replicating best recent feature_env to verify matrix cache hit and establish training-only baseline for PR_AUC.
+
+</details>
+

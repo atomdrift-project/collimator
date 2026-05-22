@@ -316,3 +316,113 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260522T025405-filetypes-pdf` — 2026-05-22T02:54:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6d7046ccff7536e2` | pdf_ctrl_train_deeper_lr | ok | 1.0000 | 0.9978 | 0.9982 | 9 | [log](out/autocollie/runs/2026-05-22T02-58-21_20260522T025405-filetypes-pdf_pdf_ctrl_train_deeper_lr.log) |
+| `` | pdf_exploit_hardneg_scalepos | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T02-58-31_20260522T025405-filetypes-pdf_pdf_exploit_hardneg_scalepos.log) |
+| `01e58a2bf5990872` | pdf_feat_kv_vocab_split | ok | 1.0000 | 0.9976 | 0.9982 | 7 | [log](out/autocollie/runs/2026-05-22T02-58-32_20260522T025405-filetypes-pdf_pdf_feat_kv_vocab_split.log) |
+| `304cf9a612294083` | pdf_feat_text_metrics_obfus | ok | 1.0000 | 0.9971 | 0.9938 | 7 | [log](out/autocollie/runs/2026-05-22T02-58-39_20260522T025405-filetypes-pdf_pdf_feat_text_metrics_obfus.log) |
+| `2839f16c7c27fc99` | pdf_gen_seed_search_kv | ok | 1.0000 | 0.9993 | 0.9983 | 7 | [log](out/autocollie/runs/2026-05-22T02-58-45_20260522T025405-filetypes-pdf_pdf_gen_seed_search_kv.log) |
+| `b1c9400203fe23f7` | pdf_abl_crit_cat_ngrams | ok | 1.0000 | 0.9974 | 0.9943 | 6 | [log](out/autocollie/runs/2026-05-22T02-58-53_20260522T025405-filetypes-pdf_pdf_abl_crit_cat_ngrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_train_deeper_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve PR_AUC by using deeper trees and slower learning rate to better separate borderline PDF malware from benign documents without overfitting.
+- **`pdf_exploit_hardneg_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Targets recall@3 FP/M by upweighting hard negatives and downweighting positives to tighten the score distribution at the deployed low-FPR operating point.
+- **`pdf_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to boost PR_AUC by capturing fine-grained key-value metadata patterns in PDFs that are currently aggregated or missed by bigrams.
+- **`pdf_feat_text_metrics_obfus`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Targets recall@3 FP/M by adding structural text and obfuscation signals specific to PDF document malware, improving separation of obfuscated payloads from benign PDFs.
+- **`pdf_gen_seed_search_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to stabilize PR_AUC gains from the KV vocab by averaging over seed variance, ensuring the improvement is robust rather than a lucky split.
+- **`pdf_abl_crit_cat_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to maintain PR_AUC while reducing overfit risk by removing crit_category_ngrams, testing if the model generalizes better with fewer high-cardinality n-gram features.
+
+</details>
+
+## Cycle `20260522T064808-filetypes-pdf` — 2026-05-22T06:48:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6d7046ccff7536e2` | pdf_ctrl_deeper_lr003 | dup | 1.0000 | 0.9978 | 0.9982 | 1 | [log](out/autocollie/runs/2026-05-22T06-54-08_20260522T064808-filetypes-pdf_pdf_ctrl_deeper_lr003.log) |
+| `c9e2578d09656c20` | pdf_feat_text_metrics_obfus | ok | 1.0000 | 0.9971 | 0.9938 | 7 | [log](out/autocollie/runs/2026-05-22T06-54-08_20260522T064808-filetypes-pdf_pdf_feat_text_metrics_obfus.log) |
+| `` | pdf_feat_kv_vocab_split_expanded | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-54-15_20260522T064808-filetypes-pdf_pdf_feat_kv_vocab_split_expanded.log) |
+| `` | pdf_train_dart_reg | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T06-54-17_20260522T064808-filetypes-pdf_pdf_train_dart_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_deeper_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Control baseline with deeper trees and lower LR to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`pdf_feat_text_metrics_obfus`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Adds document obfuscation and full text metrics to capture PDF-specific evasion tactics, aiming to boost recall@3 FP/M by separating obfuscated malware from benign docs.
+- **`pdf_feat_kv_vocab_split_expanded`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Expands KV vocab and splits values to recover granular signal from PDF metadata/streams, targeting PR_AUC improvement via better malware separation.
+- **`pdf_train_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switches to DART boosting with higher L2 regularization to reduce overfitting on the imbalanced PDF corpus, targeting ROC_AUC stability and PR_AUC gains.
+
+</details>
+
+## Cycle `20260522T090618-filetypes-pdf` — 2026-05-22T09:06:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pdf_ctrl_best_env_train_tune | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T09-12-14_20260522T090618-filetypes-pdf_pdf_ctrl_best_env_train_tune.log) |
+| `` | pdf_feat_text_metrics_full | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T09-12-16_20260522T090618-filetypes-pdf_pdf_feat_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_best_env_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicate best recent feature_env to cache-hit matrix, tuning num_leaves and learning_rate to improve ROC_AUC and recall@3FPM by better capturing decision boundaries.
+- **`pdf_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enable text_metrics_full to capture document obfuscation signals, aiming to boost PR_AUC and recall@3FPM via richer text structure features.
+
+</details>
+
+## Cycle `20260522T101713-filetypes-pdf` — 2026-05-22T10:17:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f3146faecf637719` | pdf_ctrl_train_deeper_lr | ok | 1.0000 | 0.9977 | 0.9935 | 2 | [log](out/autocollie/runs/2026-05-22T10-22-56_20260522T101713-filetypes-pdf_pdf_ctrl_train_deeper_lr.log) |
+| `8c05c10c7a14bb5e` | pdf_feat_kv_vocab_10k | ok | 1.0000 | 0.9976 | 0.9982 | 2 | [log](out/autocollie/runs/2026-05-22T10-22-58_20260522T101713-filetypes-pdf_pdf_feat_kv_vocab_10k.log) |
+| `332efc3735748e10` | pdf_feat_obfus_textenc | ok | 1.0000 | 0.9971 | 0.9938 | 6 | [log](out/autocollie/runs/2026-05-22T10-22-59_20260522T101713-filetypes-pdf_pdf_feat_obfus_textenc.log) |
+| `468986353185391a` | pdf_feat_bigram_500_obj_tri | ok | 1.0000 | 0.9972 | 0.9977 | 7 | [log](out/autocollie/runs/2026-05-22T10-23-06_20260522T101713-filetypes-pdf_pdf_feat_bigram_500_obj_tri.log) |
+| `098a0d82c19e1099` | pdf_train_hardneg_01_10 | ok | 0.9999 | 0.9961 | 0.9963 | 2 | [log](out/autocollie/runs/2026-05-22T10-23-12_20260522T101713-filetypes-pdf_pdf_train_hardneg_01_10.log) |
+| `8e91a4a0f8fde6ad` | pdf_gen_seed_search_3 | ok | 1.0000 | 0.9992 | 0.9978 | 2 | [log](out/autocollie/runs/2026-05-22T10-23-14_20260522T101713-filetypes-pdf_pdf_gen_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_train_deeper_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicate best feature set and tune training knobs (deeper trees, lower LR) to improve PR_AUC while keeping ROC_AUC flat.
+- **`pdf_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enable KV vocab features to capture key-value pair signals in PDF metadata, aiming to boost PR_AUC.
+- **`pdf_feat_obfus_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Add document obfuscation and text encoding features to catch PDF-specific evasion patterns, targeting recall@3 FP/M.
+- **`pdf_feat_bigram_500_obj_tri`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Lower bigram min freq and add objective trigrams to capture rare malicious patterns, aiming for PR_AUC gain.
+- **`pdf_train_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Apply hard negative mining to reduce false positives at low FPR, improving recall@3 FP/M.
+- **`pdf_gen_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Run seed search to average out variance and stabilize recall@3 FP/M gains on the best feature set.
+
+</details>
+
+## Cycle `20260522T102208-filetypes-pdf` — 2026-05-22T10:22:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a04532c2e80cdea1` | pdf_feat_textenc_doc_obfus_kv | ok | 1.0000 | 0.9977 | 0.9935 | 7 | [log](out/autocollie/runs/2026-05-22T10-25-09_20260522T102208-filetypes-pdf_pdf_feat_textenc_doc_obfus_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_feat_textenc_doc_obfus_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 …` — Enables text_encoding and document_obfuscation_features alongside kv_vocab to capture PDF-specific structural and obfuscation signals, aiming to improve PR_AUC and ROC_AUC by better separating benign document artifacts from malicious payloads.
+
+</details>
+
+## Cycle `20260522T132728-filetypes-pdf` — 2026-05-22T13:27:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `90eecc4b9aa882d4` | pdf_ctrl_best_env_train_tune2 | ok | 1.0000 | 0.9977 | 0.9935 | 2 | [log](out/autocollie/runs/2026-05-22T13-33-01_20260522T132728-filetypes-pdf_pdf_ctrl_best_env_train_tune2.log) |
+| `86a27b9810c25d5c` | pdf_feat_kv_split_20k | ok | 1.0000 | 0.9976 | 0.9982 | 7 | [log](out/autocollie/runs/2026-05-22T13-33-03_20260522T132728-filetypes-pdf_pdf_feat_kv_split_20k.log) |
+| `1a70bd23989fde39` | pdf_feat_textenc_obfus | ok | 1.0000 | 0.9971 | 0.9938 | 8 | [log](out/autocollie/runs/2026-05-22T13-33-10_20260522T132728-filetypes-pdf_pdf_feat_textenc_obfus.log) |
+| `3617cdbe5f561cb9` | pdf_feat_tri_obj_crit | ok | 1.0000 | 0.9977 | 0.9935 | 7 | [log](out/autocollie/runs/2026-05-22T13-33-18_20260522T132728-filetypes-pdf_pdf_feat_tri_obj_crit.log) |
+| `a92de79c88f4d569` | pdf_train_hardneg_01_12 | ok | 0.9999 | 0.9946 | 0.9953 | 2 | [log](out/autocollie/runs/2026-05-22T13-33-25_20260522T132728-filetypes-pdf_pdf_train_hardneg_01_12.log) |
+| `17d6d8425a29cbf7` | pdf_gen_seed_search_textenc | ok | 1.0000 | 0.9993 | 0.9986 | 2 | [log](out/autocollie/runs/2026-05-22T13-33-26_20260522T132728-filetypes-pdf_pdf_gen_seed_search_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pdf_ctrl_best_env_train_tune2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Replicates best PR_AUC feature set while tuning tree complexity and regularization to stabilize ROC_AUC and improve recall@3FPM.
+- **`pdf_feat_kv_split_20k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.05 …` — Expands KV vocab and enables value splitting to capture granular PDF metadata signals, targeting PR_AUC and recall@3FPM gains.
+- **`pdf_feat_textenc_obfus`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LEARNING_RATE=0.05 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables text_encoding and document obfuscation features to detect PDF-specific evasion tactics, aiming to boost recall@3FPM without hurting ROC_AUC.
+- **`pdf_feat_tri_obj_crit`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Adds objective trigrams and tiered critical trigrams to capture longer malicious path sequences in PDFs, targeting PR_AUC improvement.
+- **`pdf_train_hardneg_01_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 …` — Applies hard negative mining to focus model capacity on difficult benign PDFs, aiming to improve recall@3FPM at low FPR.
+- **`pdf_gen_seed_search_textenc`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LEARNING_RATE=0.05 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Runs seed search on the text_encoding config to verify signal robustness and reduce variance, targeting stable recall@3FPM.
+
+</details>
+

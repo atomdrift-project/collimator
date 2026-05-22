@@ -255,3 +255,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T025552-filetypes-powershell` — 2026-05-22T02:55:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c75b88cfac8fb54b` | ps_control_train_tune_v2 | ok | 0.9977 | 0.9946 | 0.9801 | 9 | [log](out/autocollie/runs/2026-05-22T03-01-16_20260522T025552-filetypes-powershell_ps_control_train_tune_v2.log) |
+| `f7a45d6196306c54` | ps_feat_kv_textmetrics_full | ok | 0.9980 | 0.9951 | 0.9763 | 7 | [log](out/autocollie/runs/2026-05-22T03-01-25_20260522T025552-filetypes-powershell_ps_feat_kv_textmetrics_full.log) |
+| `14d096641b4696f8` | ps_feat_lowfreq_bigrams_trigrams | ok | 0.9981 | 0.9955 | 0.9840 | 7 | [log](out/autocollie/runs/2026-05-22T03-01-31_20260522T025552-filetypes-powershell_ps_feat_lowfreq_bigrams_trigrams.log) |
+| `e8d4cd2498caf4c4` | ps_abl_no_extended_metrics | ok | 0.9966 | 0.9916 | 0.9819 | 6 | [log](out/autocollie/runs/2026-05-22T03-01-38_20260522T025552-filetypes-powershell_ps_abl_no_extended_metrics.log) |
+| `` | ps_train_hardneg_01_12 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T03-01-44_20260522T025552-filetypes-powershell_ps_train_hardneg_01_12.log) |
+| `` | ps_train_dart_extratrees | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-01-46_20260522T025552-filetypes-powershell_ps_train_dart_extratrees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ps_control_train_tune_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Control feature set with deeper trees and lower LR to improve PR_AUC and recall@3FPM by reducing underfitting on complex script patterns.
+- **`ps_feat_kv_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture structural key-value pairs and detailed text statistics, targeting PR_AUC gains from richer script surface signals.
+- **`ps_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 and enable tiered_crit_trigrams to capture rarer malicious sequences, aiming to boost recall@3FPM without hurting PR_AUC.
+- **`ps_abl_no_extended_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable extended_metrics to reduce noisy aggregate features, targeting flat PR_AUC with improved ROC_AUC and tail recall by simplifying the feature space.
+- **`ps_train_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction 0.1 and weight 12.0 to force better separation of deceptive benign scripts, targeting recall@3FPM improvement.
+- **`ps_train_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Switch to dart boosting with extra_trees and subsampling to add ensemble diversity, targeting PR_AUC and ROC_AUC gains via better generalization at the tail.
+
+</details>
+
+## Cycle `20260522T070732-filetypes-powershell` — 2026-05-22T07:07:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b95a9cc0fe3e1dde` | ps_control_lowfreq_bigrams_train | ok | 0.9985 | 0.9963 | 0.9839 | 6 | [log](out/autocollie/runs/2026-05-22T07-13-47_20260522T070732-filetypes-powershell_ps_control_lowfreq_bigrams_train.log) |
+| `0ed85c6608c2d74e` | ps_feat_kv_vocab_10k | ok | 0.9981 | 0.9954 | 0.9801 | 7 | [log](out/autocollie/runs/2026-05-22T07-13-53_20260522T070732-filetypes-powershell_ps_feat_kv_vocab_10k.log) |
+| `a31df946f2724e02` | ps_feat_textmetrics_encoding | ok | 0.9978 | 0.9949 | 0.9802 | 6 | [log](out/autocollie/runs/2026-05-22T07-14-00_20260522T070732-filetypes-powershell_ps_feat_textmetrics_encoding.log) |
+| `251bf156ef777c79` | ps_feat_lowfreq_trigrams | ok | 0.9985 | 0.9962 | 0.9821 | 7 | [log](out/autocollie/runs/2026-05-22T07-14-06_20260522T070732-filetypes-powershell_ps_feat_lowfreq_trigrams.log) |
+| `` | ps_train_scalepos_regalpha | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-14-13_20260522T070732-filetypes-powershell_ps_train_scalepos_regalpha.log) |
+| `` | ps_train_lr003_childweight | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-14-15_20260522T070732-filetypes-powershell_ps_train_lr003_childweight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ps_control_lowfreq_bigrams_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature surface with slightly increased num_leaves to capture complex patterns, targeting stable PR_AUC.
+- **`ps_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab to extract key-value metadata signals from PowerShell scripts, aiming to improve PR_AUC by capturing obfuscated parameters.
+- **`ps_feat_textmetrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds text_metrics_full and text_encoding to detect structural obfuscation and encoding tricks in scripts, targeting recall@3FPM and PR_AUC.
+- **`ps_feat_lowfreq_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers trigram frequency floor and expands vocab to capture rare malicious command sequences, aiming to boost tail recall@3FPM.
+- **`ps_train_scalepos_regalpha`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weights positives and adds L1 regularization to sharpen decision boundary, targeting improved recall@3FPM while preserving PR_AUC.
+- **`ps_train_lr003_childweight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Slower learning rate with higher min_child_weight and gamma to regularize splits, targeting stable PR_AUC and better tail recall by reducing overfitting.
+
+</details>
+
+## Cycle `20260522T090003-filetypes-powershell` — 2026-05-22T09:00:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b95a9cc0fe3e1dde` | ps_control_baseline_train | dup | 0.9985 | 0.9963 | 0.9839 | 1 | [log](out/autocollie/runs/2026-05-22T09-04-52_20260522T090003-filetypes-powershell_ps_control_baseline_train.log) |
+| `6f9c15db75441968` | ps_feat_kv_vocab_15k | ok | 0.9984 | 0.9961 | 0.9801 | 9 | [log](out/autocollie/runs/2026-05-22T09-04-54_20260522T090003-filetypes-powershell_ps_feat_kv_vocab_15k.log) |
+| `4d1e8c5010cab793` | ps_feat_text_metrics_encoding | ok | 0.9984 | 0.9961 | 0.9801 | 8 | [log](out/autocollie/runs/2026-05-22T09-05-03_20260522T090003-filetypes-powershell_ps_feat_text_metrics_encoding.log) |
+| `c349302cafb5b632` | ps_feat_rare_trigrams | ok | 0.9983 | 0.9958 | 0.9820 | 9 | [log](out/autocollie/runs/2026-05-22T09-05-10_20260522T090003-filetypes-powershell_ps_feat_rare_trigrams.log) |
+| `` | ps_train_hardneg_01_10 | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-22T09-05-19_20260522T090003-filetypes-powershell_ps_train_hardneg_01_10.log) |
+| `` | ps_profile_seed_search_3 | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-22T09-05-23_20260522T090003-filetypes-powershell_ps_profile_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ps_control_baseline_train`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Replicate best feature env to establish training-only baseline for PR_AUC and recall@3 FP/M.
+- **`ps_feat_kv_vocab_15k`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value pair patterns in PowerShell, targeting PR_AUC improvement.
+- **`ps_feat_text_metrics_encoding`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture obfuscation signals, aiming to boost recall@3 FP/M.
+- **`ps_feat_rare_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=2` — Lower trigram_min_freq and increase trigram_max to capture rarer script patterns, targeting PR_AUC gain.
+- **`ps_train_hardneg_01_10`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative sampling to sharpen decision boundary and improve recall@3 FP/M without feature changes.
+- **`ps_profile_seed_search_3`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 and save_all_seeds to reduce variance and stabilize recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260522T102215-filetypes-powershell` — 2026-05-22T10:22:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c44addd19ce012da` | ps_feat_textmetrics_full_encoding | ok | 0.9981 | 0.9956 | 0.9764 | 7 | [log](out/autocollie/runs/2026-05-22T10-24-29_20260522T102215-filetypes-powershell_ps_feat_textmetrics_full_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ps_feat_textmetrics_full_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and text_encoding to capture script obfuscation and encoding patterns, aiming to improve PR_AUC by adding discriminative signal for PowerShell malware.
+
+</details>
+
+## Cycle `20260522T120126-filetypes-powershell` — 2026-05-22T12:01:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b48318c85fc225d0` | ps_control_baseline_train | ok | 0.9983 | 0.9960 | 0.9782 | 6 | [log](out/autocollie/runs/2026-05-22T12-07-53_20260522T120126-filetypes-powershell_ps_control_baseline_train.log) |
+| `c415afac4cc71022` | ps_feat_kv_vocab_20k | ok | 0.9987 | 0.9967 | 0.9744 | 7 | [log](out/autocollie/runs/2026-05-22T12-08-00_20260522T120126-filetypes-powershell_ps_feat_kv_vocab_20k.log) |
+| `9c07260273d4a1af` | ps_feat_lowfreq_bigrams_textenc | ok | 0.9983 | 0.9960 | 0.9782 | 8 | [log](out/autocollie/runs/2026-05-22T12-08-06_20260522T120126-filetypes-powershell_ps_feat_lowfreq_bigrams_textenc.log) |
+| `633efe70ba1f7059` | ps_feat_rare_trigrams | ok | 0.9985 | 0.9962 | 0.9821 | 9 | [log](out/autocollie/runs/2026-05-22T12-08-14_20260522T120126-filetypes-powershell_ps_feat_rare_trigrams.log) |
+| `c637aedd907cf6fe` | ps_train_reg_lambda2_mcs200 | ok | 0.9982 | 0.9955 | 0.9724 | 2 | [log](out/autocollie/runs/2026-05-22T12-08-23_20260522T120126-filetypes-powershell_ps_train_reg_lambda2_mcs200.log) |
+| `2d64da6edde591b6` | ps_train_scalepos075_regalpha | ok | 0.9981 | 0.9952 | 0.9744 | 4 | [log](out/autocollie/runs/2026-05-22T12-08-24_20260522T120126-filetypes-powershell_ps_train_scalepos075_regalpha.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ps_control_baseline_train`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Replicate best recent feature env to establish training baseline and verify matrix cache hit, targeting stable PR_AUC.
+- **`ps_feat_kv_vocab_20k`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.05 …` — Expand KV vocab to 20k to capture more script-specific key-value patterns, aiming for PR_AUC gain.
+- **`ps_feat_lowfreq_bigrams_textenc`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Lower bigram freq floor to 25 and expand max to 10k alongside text_encoding/metrics to capture rare obfuscation patterns, targeting PR_AUC.
+- **`ps_feat_rare_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enable low-frequency trigrams (min_freq=1, max=2000) to detect novel malicious command sequences, aiming for recall@3 FP/M gain.
+- **`ps_train_reg_lambda2_mcs200`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 …` — Increase reg_lambda to 2.0 and min_child_samples to 200 to reduce overfitting on rare patterns, targeting stable ROC_AUC and PR_AUC.
+- **`ps_train_scalepos075_regalpha`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Down-weight positives (scale_pos_weight_mult=0.75) and add L1 regularization to sharpen low-FPR boundary, targeting recall@3 FP/M.
+
+</details>
+

@@ -328,3 +328,101 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T025859-filetypes-pe` — 2026-05-22T02:58:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2153b6451817dcee` | pe_control_hardneg_01_16 | ok | 0.9997 | 0.9997 | 0.9895 | 98 | [log](out/autocollie/runs/2026-05-22T03-04-00_20260522T025859-filetypes-pe_pe_control_hardneg_01_16.log) |
+| `f67539b0304f2f61` | pe_feat_kv_symbol_vocab | ok | 0.9996 | 0.9996 | 0.9904 | 95 | [log](out/autocollie/runs/2026-05-22T03-05-38_20260522T025859-filetypes-pe_pe_feat_kv_symbol_vocab.log) |
+| `b6b4bea5886de0cf` | pe_feat_pe_packer_signals | ok | 0.9997 | 0.9997 | 0.9926 | 112 | [log](out/autocollie/runs/2026-05-22T03-07-13_20260522T025859-filetypes-pe_pe_feat_pe_packer_signals.log) |
+| `d94797bfd94eef73` | pe_train_hardneg_02_20 | ok | 0.9997 | 0.9997 | 0.9927 | 111 | [log](out/autocollie/runs/2026-05-22T03-09-05_20260522T025859-filetypes-pe_pe_train_hardneg_02_20.log) |
+| `` | pe_train_dart_reg2 | fail | — | — | — | 14 | [log](out/autocollie/runs/2026-05-22T03-10-56_20260522T025859-filetypes-pe_pe_train_dart_reg2.log) |
+| `2c8c2d275bd9ec0f` | pe_seed_search_kv12k | ok | 0.9997 | 0.9997 | 0.9906 | 160 | [log](out/autocollie/runs/2026-05-22T03-11-10_20260522T025859-filetypes-pe_pe_seed_search_kv12k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_control_hardneg_01_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env with hard-negative tuning to improve recall@3 FP/M while keeping PR AUC flat.
+- **`pe_feat_kv_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 …` — Enable KV and symbol vocabs to capture PE structural signal, targeting PR AUC and recall@3 FP/M gains.
+- **`pe_feat_pe_packer_signals`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 …` — Add PE temporal anomaly, nonstandard sections, and silent packer signals to improve tail recall@3 FP/M by separating packed benigns from malware.
+- **`pe_train_hardneg_02_20`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aggressive hard-negative weighting to push recall@3 FP/M higher by focusing on difficult benign/malware boundaries.
+- **`pe_train_dart_reg2`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Use DART boosting with stronger regularization to reduce overfitting and improve ROC AUC and PR AUC stability.
+- **`pe_seed_search_kv12k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 …` — Ensemble 3 seeds to reduce variance and stabilize recall@3 FP/M gains from the KV vocab expansion.
+
+</details>
+
+## Cycle `20260522T064221-filetypes-pe` — 2026-05-22T06:42:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pe_control_hardneg_015_16 | fail | — | — | — | 33 | [log](out/autocollie/runs/2026-05-22T06-47-22_20260522T064221-filetypes-pe_pe_control_hardneg_015_16.log) |
+| `b092337ab44fbca0` | pe_feat_kv_vocab_20k | ok | 0.9996 | 0.9996 | 0.9914 | 88 | [log](out/autocollie/runs/2026-05-22T06-47-55_20260522T064221-filetypes-pe_pe_feat_kv_vocab_20k.log) |
+| `b6dc437995f0e2dd` | pe_feat_symbol_bigrams_10k | ok | 0.9996 | 0.9996 | 0.9916 | 97 | [log](out/autocollie/runs/2026-05-22T06-49-23_20260522T064221-filetypes-pe_pe_feat_symbol_bigrams_10k.log) |
+| `` | pe_feat_packer_overlay_flags | fail | — | — | — | 16 | [log](out/autocollie/runs/2026-05-22T06-51-00_20260522T064221-filetypes-pe_pe_feat_packer_overlay_flags.log) |
+| `` | pe_train_hardneg_01_12 | fail | — | — | — | 35 | [log](out/autocollie/runs/2026-05-22T06-51-16_20260522T064221-filetypes-pe_pe_train_hardneg_01_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_control_hardneg_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with tuned hard negatives to improve recall@3 FP/M by focusing on borderline benigns without overfitting.
+- **`pe_feat_kv_vocab_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 20k with lower min_freq to capture rare but high-signal PE metadata patterns, targeting PR_AUC gain.
+- **`pe_feat_symbol_bigrams_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enable symbol bigrams with 10k cap to catch co-occurrence patterns in PE imports, aiming to boost PR_AUC.
+- **`pe_feat_packer_overlay_flags`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_SILENT_PACKER_SIGNAL=1 …` — Combine PE format flags, temporal anomalies, overlay metrics, and packer signals to isolate packed/dropper binaries, targeting recall@3 FP/M.
+- **`pe_train_hardneg_01_12`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Softer hard-negative weighting to stabilize ranking and improve PR_AUC while maintaining tail recall.
+
+</details>
+
+## Cycle `20260522T092416-filetypes-pe` — 2026-05-22T09:24:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e7547db0cbb646d5` | pe_feat_symbol_vocab_15k_hardneg | ok | 0.9997 | 0.9997 | 0.9923 | 120 | [log](out/autocollie/runs/2026-05-22T09-26-54_20260522T092416-filetypes-pe_pe_feat_symbol_vocab_15k_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_feat_symbol_vocab_15k_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 …` — Expands symbol vocab to capture finer-grained PE import patterns for PR_AUC gain, while hard-negative training sharpens score separation to boost recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T113321-filetypes-pe` — 2026-05-22T11:33:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `30d75f2f624c0641` | pe_control_hardneg_01_18 | ok | 0.9996 | 0.9996 | 0.9911 | 33 | [log](out/autocollie/runs/2026-05-22T11-38-14_20260522T113321-filetypes-pe_pe_control_hardneg_01_18.log) |
+| `717f49ab195b5510` | pe_feat_symbol_vocab_20k | ok | 0.9996 | 0.9996 | 0.9906 | 87 | [log](out/autocollie/runs/2026-05-22T11-38-47_20260522T113321-filetypes-pe_pe_feat_symbol_vocab_20k.log) |
+| `28a62b99efaa93c1` | pe_feat_kv_vocab_split_15k | ok | 0.9996 | 0.9996 | 0.9917 | 89 | [log](out/autocollie/runs/2026-05-22T11-40-14_20260522T113321-filetypes-pe_pe_feat_kv_vocab_split_15k.log) |
+| `3e3de0620ac8a777` | pe_feat_pe_overlay_packer | ok | 0.9996 | 0.9996 | 0.9893 | 78 | [log](out/autocollie/runs/2026-05-22T11-41-42_20260522T113321-filetypes-pe_pe_feat_pe_overlay_packer.log) |
+| `869d91e8f609aa92` | pe_train_dart_extra_trees | ok | 0.9985 | 0.9986 | 0.9718 | 18 | [log](out/autocollie/runs/2026-05-22T11-43-00_20260522T113321-filetypes-pe_pe_train_dart_extra_trees.log) |
+| `cdf025f3b5f28d32` | pe_seed_search_hardneg_012_16 | ok | 0.9997 | 0.9997 | 0.9919 | 94 | [log](out/autocollie/runs/2026-05-22T11-43-18_20260522T113321-filetypes-pe_pe_seed_search_hardneg_012_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_control_hardneg_01_18`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative weight 18 with fraction 0.01 to improve recall@3 FP/M by focusing on difficult benigns, keeping PR_AUC flat.
+- **`pe_feat_symbol_vocab_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 EXP_TRAIN_SAMPLES=30000` — Expands symbol vocab to 20k to capture rarer PE imports, aiming to boost PR_AUC and recall@3 FP/M via finer-grained malicious API detection.
+- **`pe_feat_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab with value splitting to recover per-element signal in PE metadata, targeting PR_AUC gains from structured metadata patterns.
+- **`pe_feat_pe_overlay_packer`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_SILENT_PACKER_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Adds PE format flags and overlay signal to detect packers/droppers, aiming to improve recall@3 FP/M on obfuscated binaries while maintaining ROC_AUC.
+- **`pe_train_dart_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Switches to DART boosting with extra_trees to add regularization noise, targeting better generalization and recall@3 FP/M at low FPR.
+- **`pe_seed_search_hardneg_012_16`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 …` — Uses seed_search_k=3 on a strong hard-negative config to reduce seed variance and stabilize recall@3 FP/M gains across different RNG splits.
+
+</details>
+
+## Cycle `20260522T133329-filetypes-pe` — 2026-05-22T13:33:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `980e27808a010bea` | pe_control_hardneg_01_20 | ok | 0.9996 | 0.9996 | 0.9915 | 36 | [log](out/autocollie/runs/2026-05-22T13-39-02_20260522T133329-filetypes-pe_pe_control_hardneg_01_20.log) |
+| `cd0cba18c0da4004` | pe_train_scalepos_075 | ok | 0.9996 | 0.9996 | 0.9897 | 27 | [log](out/autocollie/runs/2026-05-22T13-39-38_20260522T133329-filetypes-pe_pe_train_scalepos_075.log) |
+| `aec73b6bd6417a4a` | pe_feat_kv_vocab_split_15k | ok | 0.9996 | 0.9996 | 0.9915 | 85 | [log](out/autocollie/runs/2026-05-22T13-40-06_20260522T133329-filetypes-pe_pe_feat_kv_vocab_split_15k.log) |
+| `c98f1d41c6ef0892` | pe_feat_symbol_vocab_bigrams_20k | ok | 0.9996 | 0.9996 | 0.9901 | 96 | [log](out/autocollie/runs/2026-05-22T13-41-30_20260522T133329-filetypes-pe_pe_feat_symbol_vocab_bigrams_20k.log) |
+| `7d2dc8288a94d708` | pe_feat_pe_struct_overlay | ok | 0.9996 | 0.9996 | 0.9901 | 77 | [log](out/autocollie/runs/2026-05-22T13-43-06_20260522T133329-filetypes-pe_pe_feat_pe_struct_overlay.log) |
+| `e070653bfb41bf17` | pe_seed_search_bigram_freq_500 | ok | 0.9996 | 0.9996 | 0.9895 | 107 | [log](out/autocollie/runs/2026-05-22T13-44-23_20260522T133329-filetypes-pe_pe_seed_search_bigram_freq_500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pe_control_hardneg_01_20`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; tests hard-negative weighting to improve recall@3FPM by focusing on difficult benigns.
+- **`pe_train_scalepos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weights positives to reduce false positives at low FPR, targeting improved recall@3FPM and PR_AUC.
+- **`pe_feat_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and value splitting to capture structured PE metadata, aiming to boost PR_AUC with new rank signal.
+- **`pe_feat_symbol_vocab_bigrams_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 EXP_TRAIN_SAMPLES=30000` — Enables symbol vocab and bigrams to capture import co-occurrence patterns, targeting higher recall@3FPM for packed malware.
+- **`pe_feat_pe_struct_overlay`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Adds PE format flags, temporal anomaly, and overlay signal to distinguish packed/malicious binaries, aiming to improve PR_AUC.
+- **`pe_seed_search_bigram_freq_500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor to capture rarer patterns while using seed search to stabilize recall@3FPM gains.
+
+</details>
+

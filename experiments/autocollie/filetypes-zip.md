@@ -222,3 +222,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T034512-filetypes-zip` — 2026-05-22T03:45:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7c9b169a92aa6416` | zip_control_train_tweak | ok | 0.9998 | 0.9960 | 0.9928 | 78 | [log](out/autocollie/runs/2026-05-22T03-49-56_20260522T034512-filetypes-zip_zip_control_train_tweak.log) |
+| `5c45f19e258df807` | zip_feat_kv_vocab_split | ok | 0.9998 | 0.9961 | 0.9938 | 84 | [log](out/autocollie/runs/2026-05-22T03-51-14_20260522T034512-filetypes-zip_zip_feat_kv_vocab_split.log) |
+| `91fa4e837f1ca697` | zip_feat_text_metrics | ok | 0.9998 | 0.9963 | 0.9910 | 80 | [log](out/autocollie/runs/2026-05-22T03-52-39_20260522T034512-filetypes-zip_zip_feat_text_metrics.log) |
+| `8ff3e23bdde0eff7` | zip_transfer_gz_kv_trigrams | ok | 0.9998 | 0.9964 | 0.9899 | 92 | [log](out/autocollie/runs/2026-05-22T03-53-58_20260522T034512-filetypes-zip_zip_transfer_gz_kv_trigrams.log) |
+| `c448860f5c1828b7` | zip_ablate_crit_ngrams | ok | 0.9998 | 0.9962 | 0.9947 | 62 | [log](out/autocollie/runs/2026-05-22T03-55-30_20260522T034512-filetypes-zip_zip_ablate_crit_ngrams.log) |
+| `` | zip_generalize_seed_search | fail | — | — | — | 33 | [log](out/autocollie/runs/2026-05-22T03-56-32_20260522T034512-filetypes-zip_zip_generalize_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zip_control_train_tweak`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 …` — Baseline feature set with deeper trees and lower LR to improve PR_AUC and recall@3 FP/M via better gradient descent.
+- **`zip_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Expands KV vocab and splits values to capture granular archive metadata, targeting PR_AUC gains.
+- **`zip_feat_text_metrics`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text encoding and full text metrics to capture obfuscation signals in zip contents, aiming for recall@3 FP/M improvement.
+- **`zip_transfer_gz_kv_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Transfers gz/xml strong KV vocab and adds tiered crit trigrams to boost PR_AUC via richer path co-occurrence signals.
+- **`zip_ablate_crit_ngrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables crit-category ngrams to reduce feature noise and potentially improve ROC_AUC and PR_AUC stability.
+- **`zip_generalize_seed_search`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Runs best-of-3 seed search with ensemble averaging to reduce variance and stabilize recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260522T062234-filetypes-zip` — 2026-05-22T06:22:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | zip_control_leaves128_lr003 | fail | — | — | — | 12 | [log](out/autocollie/runs/2026-05-22T06-27-01_20260522T062234-filetypes-zip_zip_control_leaves128_lr003.log) |
+| `1c8b2cb86e402f82` | zip_feat_kv_vocab_15k | ok | 0.9998 | 0.9963 | 0.9937 | 82 | [log](out/autocollie/runs/2026-05-22T06-27-14_20260522T062234-filetypes-zip_zip_feat_kv_vocab_15k.log) |
+| `897bcee579ee0b74` | zip_feat_text_metrics_full | ok | 0.9998 | 0.9961 | 0.9933 | 74 | [log](out/autocollie/runs/2026-05-22T06-28-36_20260522T062234-filetypes-zip_zip_feat_text_metrics_full.log) |
+| `94a7e699eef43331` | zip_feat_tiered_crit_tri | ok | 0.9998 | 0.9965 | 0.9913 | 79 | [log](out/autocollie/runs/2026-05-22T06-29-50_20260522T062234-filetypes-zip_zip_feat_tiered_crit_tri.log) |
+| `` | zip_train_hardneg_01_10 | fail | — | — | — | 22 | [log](out/autocollie/runs/2026-05-22T06-31-09_20260522T062234-filetypes-zip_zip_train_hardneg_01_10.log) |
+| `` | zip_train_scale_pos_075 | fail | — | — | — | 11 | [log](out/autocollie/runs/2026-05-22T06-31-31_20260522T062234-filetypes-zip_zip_train_scale_pos_075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zip_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature set to hit matrix cache; tweak num_leaves and lr to stabilize PR_AUC and improve ranking.
+- **`zip_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with higher cap to capture more key-value signal, targeting PR_AUC improvement.
+- **`zip_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to extract structural text features from zip contents, aiming for PR_AUC gains.
+- **`zip_feat_tiered_crit_tri`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams to capture severity-weighted path co-occurrences, targeting PR_AUC.
+- **`zip_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply moderate hard-negative mining to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`zip_train_scale_pos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to reduce false positives at the deployed operating point, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260522T092854-filetypes-zip` — 2026-05-22T09:28:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b994a88cf6d5fc5b` | zip_feat_textenc_leaves128 | ok | 0.9998 | 0.9963 | 0.9932 | 113 | [log](out/autocollie/runs/2026-05-22T09-32-16_20260522T092854-filetypes-zip_zip_feat_textenc_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zip_feat_textenc_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Enables text_encoding research vocab and increases num_leaves to 128 to capture finer-grained structural signals, aiming to improve PR_AUC by better separating malicious archive contents from benign ones.
+
+</details>
+
+## Cycle `20260522T102417-filetypes-zip` — 2026-05-22T10:24:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a63117f8b4027d97` | zip_control_tiered_crit_tri_train | ok | 0.9998 | 0.9964 | 0.9925 | 35 | [log](out/autocollie/runs/2026-05-22T10-28-59_20260522T102417-filetypes-zip_zip_control_tiered_crit_tri_train.log) |
+| `8bf700b4533e77ca` | zip_feat_kv_vocab_25k_split | ok | 0.9998 | 0.9961 | 0.9938 | 99 | [log](out/autocollie/runs/2026-05-22T10-29-35_20260522T102417-filetypes-zip_zip_feat_kv_vocab_25k_split.log) |
+| `96da1605d3c90b88` | zip_feat_text_metrics_enc_full | ok | 0.9998 | 0.9963 | 0.9910 | 12 | [log](out/autocollie/runs/2026-05-22T10-31-13_20260522T102417-filetypes-zip_zip_feat_text_metrics_enc_full.log) |
+| `5d2bb951104dccc2` | zip_research_mbc_symbol_vocab | ok | 0.9998 | 0.9964 | 0.9928 | 90 | [log](out/autocollie/runs/2026-05-22T10-31-26_20260522T102417-filetypes-zip_zip_research_mbc_symbol_vocab.log) |
+| `54fa2f63ab6d76ec` | zip_train_hardneg_scalepos | ok | 0.9998 | 0.9960 | 0.9876 | 29 | [log](out/autocollie/runs/2026-05-22T10-32-56_20260522T102417-filetypes-zip_zip_train_hardneg_scalepos.log) |
+| `8a03eaaf4e3f6b4c` | zip_train_dart_extratrees | ok | 0.9995 | 0.9915 | 0.9860 | 17 | [log](out/autocollie/runs/2026-05-22T10-33-24_20260522T102417-filetypes-zip_zip_train_dart_extratrees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zip_control_tiered_crit_tri_train`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=160 EXP_REG_LAMBDA=1.5 …` — Control run using best PR_AUC feature set; tweaks tree capacity and LR to stabilize PR_AUC and improve recall@3 FP/M.
+- **`zip_feat_kv_vocab_25k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Expands KV vocab and enables value splitting to capture finer-grained archive metadata signal, targeting PR_AUC gain.
+- **`zip_feat_text_metrics_enc_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Adds full text metrics and encoding features to better characterize obfuscated payloads inside zips, aiming to lift recall@3 FP/M.
+- **`zip_research_mbc_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Tests MBC ID and symbol vocabs to capture behavioral and import patterns in extracted contents, targeting PR_AUC improvement.
+- **`zip_train_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Upweights hard negatives and downweights positives to sharpen decision boundary at low FPR, targeting recall@3 FP/M.
+- **`zip_train_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=400 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Uses DART boosting and extra trees to add regularization and reduce overfitting, aiming to maintain PR_AUC while improving ROC_AUC and tail recall.
+
+</details>
+
+## Cycle `20260522T123603-filetypes-zip` — 2026-05-22T12:36:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a8eee85d7f9c78e6` | zip_control_dart_et_300 | ok | 0.9996 | 0.9932 | 0.9897 | 14 | [log](out/autocollie/runs/2026-05-22T12-41-15_20260522T123603-filetypes-zip_zip_control_dart_et_300.log) |
+| `ba3b544b75ecdaa6` | zip_feat_kv_vocab_15k | ok | 0.9998 | 0.9963 | 0.9911 | 12 | [log](out/autocollie/runs/2026-05-22T12-41-29_20260522T123603-filetypes-zip_zip_feat_kv_vocab_15k.log) |
+| `2b7ebed367c9369a` | zip_feat_text_metrics_full | ok | 0.9998 | 0.9962 | 0.9932 | 72 | [log](out/autocollie/runs/2026-05-22T12-41-41_20260522T123603-filetypes-zip_zip_feat_text_metrics_full.log) |
+| `0fdc478b4a2e07a6` | zip_feat_tiered_crit_tri | ok | 0.9998 | 0.9963 | 0.9925 | 83 | [log](out/autocollie/runs/2026-05-22T12-42-53_20260522T123603-filetypes-zip_zip_feat_tiered_crit_tri.log) |
+| `a6de0cc01b7b5bb6` | zip_transfer_low_bigram_freq | ok | 0.9998 | 0.9961 | 0.9932 | 72 | [log](out/autocollie/runs/2026-05-22T12-44-16_20260522T123603-filetypes-zip_zip_transfer_low_bigram_freq.log) |
+| `f205815ce008f72b` | zip_seed_search_ensemble | ok | 0.9998 | 0.9966 | 0.9946 | 36 | [log](out/autocollie/runs/2026-05-22T12-45-28_20260522T123603-filetypes-zip_zip_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`zip_control_dart_et_300`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with dart boosting and extra_trees to improve tail recall@3FPM via ensemble regularization.
+- **`zip_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture archive metadata and file-entry key-value patterns, targeting PR_AUC improvement.
+- **`zip_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to detect obfuscation and encoding anomalies in extracted zip contents, aiming for higher recall@3FPM.
+- **`zip_feat_tiered_crit_tri`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams to model high-severity path co-occurrences in archive structures, targeting PR_AUC gains.
+- **`zip_transfer_low_bigram_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer xml/gz low bigram_min_freq strategy to capture rarer malicious archive patterns, aiming to boost recall@3FPM.
+- **`zip_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds to average out seed variance and stabilize recall@3FPM on the control feature set.
+
+</details>
+

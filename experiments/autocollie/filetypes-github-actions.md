@@ -186,3 +186,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T033212-filetypes-github-actions` — 2026-05-22T03:32:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `72268c7c93b15b9d` | ga_control_train_deeper | ok | 0.0273 | 0.5000 | 0.0531 | 6 | [log](out/autocollie/runs/2026-05-22T03-35-56_20260522T033212-filetypes-github-actions_ga_control_train_deeper.log) |
+| `3e5025895ecc0252` | ga_feat_kv_vocab_split | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T03-36-02_20260522T033212-filetypes-github-actions_ga_feat_kv_vocab_split.log) |
+| `0d47afe99e6cac16` | ga_feat_text_metrics_full | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T03-36-05_20260522T033212-filetypes-github-actions_ga_feat_text_metrics_full.log) |
+| `3154a46acb933a68` | ga_feat_bigram_low_freq_trigrams | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T03-36-08_20260522T033212-filetypes-github-actions_ga_feat_bigram_low_freq_trigrams.log) |
+| `` | ga_train_reg_subsample | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T03-36-12_20260522T033212-filetypes-github-actions_ga_train_reg_subsample.log) |
+| `` | ga_train_gamma_depth | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T03-36-13_20260522T033212-filetypes-github-actions_ga_train_gamma_depth.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ga_control_train_deeper`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with increased estimators and leaves to improve PR_AUC by allowing the model to fit the sparse malware signals better.
+- **`ga_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured YAML key-value pairs, targeting PR_AUC gains from explicit workflow configuration signals.
+- **`ga_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add full text metrics and encoding features to detect obfuscation and structural anomalies in YAML scripts, aiming to boost recall@3FPM.
+- **`ga_feat_bigram_low_freq_trigrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and enable objective trigrams to capture rare malicious YAML patterns, targeting PR_AUC improvement.
+- **`ga_train_reg_subsample`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_REG_LAMBDA=2 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Increase L2 regularization and row subsampling to prevent overfitting on the 4 training malware samples, targeting stable ROC_AUC and PR_AUC.
+- **`ga_train_gamma_depth`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_GAMMA=1 EXP_MAX_DEPTH=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Raise gamma and reduce max depth to force splits only on high-gain signals, aiming to lift ROC_AUC above chance by reducing noise.
+
+</details>
+
+## Cycle `20260522T065151-filetypes-github-actions` — 2026-05-22T06:51:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1b774f59c4cb80f7` | ga_control_dart_lr003 | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T06-57-24_20260522T065151-filetypes-github-actions_ga_control_dart_lr003.log) |
+| `0423bca6ebea2ba3` | ga_feat_kv_vocab_split | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T06-57-27_20260522T065151-filetypes-github-actions_ga_feat_kv_vocab_split.log) |
+| `5dedeedde6d7dcab` | ga_feat_text_metrics_enc | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T06-57-30_20260522T065151-filetypes-github-actions_ga_feat_text_metrics_enc.log) |
+| `2543d487639a58a9` | ga_feat_tiered_trigrams | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T06-57-33_20260522T065151-filetypes-github-actions_ga_feat_tiered_trigrams.log) |
+| `330f3c8507e99f71` | ga_abl_no_blindfold | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T06-57-36_20260522T065151-filetypes-github-actions_ga_abl_no_blindfold.log) |
+| `a434f4bef3dcecd7` | ga_train_hardneg_005_8 | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T06-57-39_20260522T065151-filetypes-github-actions_ga_train_hardneg_005_8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ga_control_dart_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Replicates best feature_env with dart boosting and lower LR to reduce overfitting on tiny malware set, aiming to stabilize PR_AUC.
+- **`ga_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables KV vocab and value splitting to capture YAML key-value structures in workflows, aiming to improve PR_AUC.
+- **`ga_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text metrics and encoding features to detect obfuscated scripts in workflows, aiming to boost recall@3 FP/M.
+- **`ga_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables tiered critical trigrams to capture co-occurring malicious objectives, aiming to improve PR_AUC.
+- **`ga_abl_no_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disables blindfold dropout to reduce noise on the small corpus, aiming to stabilize PR_AUC and ROC_AUC.
+- **`ga_train_hardneg_005_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfers hard-negative weighting from perl route to better separate benign workflows from malicious ones, aiming to improve recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T095457-filetypes-github-actions` — 2026-05-22T09:54:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `702f61ceae1c0193` | ga_feat_kv_vocab_split | ok | 0.0273 | 0.5000 | 0.0531 | 1 | [log](out/autocollie/runs/2026-05-22T09-57-48_20260522T095457-filetypes-github-actions_ga_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ga_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing YAML key-value structure in GitHub Actions workflows via kv_vocab and kv_value_split.
+
+</details>
+
+## Cycle `20260522T111502-filetypes-github-actions` — 2026-05-22T11:15:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f1f3d720140f2fb3` | ga_train_scale_pos_025 | ok | 0.0273 | 0.5000 | 0.0531 | 1 | [log](out/autocollie/runs/2026-05-22T11-19-38_20260522T111502-filetypes-github-actions_ga_train_scale_pos_025.log) |
+| `ca43b9f40078a7ea` | ga_train_hardneg_01_10 | ok | 0.0273 | 0.5000 | 0.0531 | 1 | [log](out/autocollie/runs/2026-05-22T11-19-39_20260522T111502-filetypes-github-actions_ga_train_hardneg_01_10.log) |
+| `cce2ebfef77d8424` | ga_train_dart_extra_trees | ok | 0.0273 | 0.5000 | 0.0531 | 1 | [log](out/autocollie/runs/2026-05-22T11-19-41_20260522T111502-filetypes-github-actions_ga_train_dart_extra_trees.log) |
+| `39340436b24166e0` | ga_feat_kv_vocab_5k | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T11-19-42_20260522T111502-filetypes-github-actions_ga_feat_kv_vocab_5k.log) |
+| `d886ee477c8c7bc4` | ga_feat_text_metrics_enc | ok | 0.0273 | 0.5000 | 0.0531 | 1 | [log](out/autocollie/runs/2026-05-22T11-19-46_20260522T111502-filetypes-github-actions_ga_feat_text_metrics_enc.log) |
+| `a2d6724e76576f97` | ga_feat_lowbigram_tiered | ok | 0.0273 | 0.5000 | 0.0531 | 3 | [log](out/autocollie/runs/2026-05-22T11-19-47_20260522T111502-filetypes-github-actions_ga_feat_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ga_train_scale_pos_025`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.25 EXP_TRAIN_SAMPLES=30000` — Downweight positives to counter extreme class imbalance and reduce FP, aiming to lift ROC_AUC and PR_AUC from the all-malware baseline.
+- **`ga_train_hardneg_01_10`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Focus model on hard benign examples to improve separation at low FPR, targeting PR_AUC and recall@3FPM.
+- **`ga_train_dart_extra_trees`** `EXP_BIGRAM_MIN_FREQ=100 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use dropout-style boosting and random splits to reduce overfitting on the tiny malware set, aiming for better ROC_AUC and tail recall.
+- **`ga_feat_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture YAML key-value structure in GitHub Actions, aiming to boost PR_AUC with new structural signal.
+- **`ga_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Leverage text metrics and encoding features tailored for script/YAML routes to improve PR_AUC and ranking quality.
+- **`ga_feat_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add tiered trigrams to capture rarer but malicious patterns in Actions workflows, targeting PR_AUC gains.
+
+</details>
+

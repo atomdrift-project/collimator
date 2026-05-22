@@ -267,17 +267,30 @@ def _save_matrix_cache(
     X_test: sp.csr_matrix,
     y_test: np.ndarray,
     train_file_types: np.ndarray,
+    test_row_ids: np.ndarray | None = None,
 ) -> None:
+    """Persist the (X_train, X_test, spec, …) bundle plus the test
+    partition's row IDs. test_row_ids is the sorted-by-row_id sequence
+    that produced X_test, so it lines up index-for-index with the
+    matrix. The matrix cache used to omit row IDs, which meant a
+    cache hit at run_experiment time left ``sorted_test`` unbound and
+    crashed on autocollie's `test_sample_row_ids` emission. New
+    caches always include test_row_ids; old caches load with
+    test_row_ids=None and the caller treats that as "row IDs not
+    available — drop test_sample_row_ids from the run JSON."
+    """
     cache_dir.mkdir(parents=True, exist_ok=True)
     npz_path = cache_dir / f"matrix_{matrix_hash}.npz"
     sp.save_npz(str(cache_dir / f"matrix_{matrix_hash}_Xtrain.npz"), X_train, compressed=False)
     sp.save_npz(str(cache_dir / f"matrix_{matrix_hash}_Xtest.npz"), X_test, compressed=False)
-    np.savez_compressed(
-        str(npz_path),
-        y_train=y_train,
-        y_test=y_test,
-        train_file_types=train_file_types,
-    )
+    extras: dict[str, np.ndarray] = {
+        "y_train": y_train,
+        "y_test": y_test,
+        "train_file_types": train_file_types,
+    }
+    if test_row_ids is not None:
+        extras["test_row_ids"] = np.asarray(test_row_ids, dtype=np.int64)
+    np.savez_compressed(str(npz_path), **extras)
     spec.save(cache_dir / f"matrix_{matrix_hash}_spec.json")
     log.info("cached matrices: %s (%d train, %d test, %d features)",
              npz_path, X_train.shape[0], X_test.shape[0], spec.total_features)
@@ -286,7 +299,7 @@ def _save_matrix_cache(
 def _load_matrix_cache(
     cache_dir: Path,
     matrix_hash: str,
-) -> "tuple[features.FeatureSpec, sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray, np.ndarray] | None":
+) -> "tuple[features.FeatureSpec, sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray, np.ndarray, np.ndarray | None] | None":
     npz_path = cache_dir / f"matrix_{matrix_hash}.npz"
     spec_path = cache_dir / f"matrix_{matrix_hash}_spec.json"
     xtrain_path = cache_dir / f"matrix_{matrix_hash}_Xtrain.npz"
@@ -300,9 +313,15 @@ def _load_matrix_cache(
     y_train = arrays["y_train"]
     y_test = arrays["y_test"]
     train_file_types = arrays["train_file_types"]
+    # Pre-row_ids caches won't have this key; tolerate the absence so
+    # we don't have to mass-invalidate the existing cache pool. The
+    # caller falls back to dropping test_sample_row_ids from the run
+    # JSON when this is None — autocollie's apples-to-apples scoring
+    # gracefully degrades when row IDs are missing.
+    test_row_ids = arrays["test_row_ids"] if "test_row_ids" in arrays.files else None
     log.info("loaded cached matrices: %d train, %d test, %d features",
              X_train.shape[0], X_test.shape[0], spec.total_features)
-    return spec, X_train, y_train, X_test, y_test, train_file_types
+    return spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids
 
 
 @dataclass(frozen=True, slots=True)
@@ -806,9 +825,15 @@ def run_experiment(
     )
     matrix_hash = _matrix_cache_key(corpus_hash, feature_cfg, feature_env) if cache_dir else ""
 
+    # test_row_ids carries the per-row identity for the test partition.
+    # Path 1 (cache miss): computed below from sorted_test and saved.
+    # Path 2 (cache hit, new schema): loaded out of the matrix cache.
+    # Path 3 (cache hit, old pre-row_ids schema): None — test_sample_row_ids
+    # gets dropped from the run JSON gracefully.
+    test_row_ids: np.ndarray | None = None
     cached_matrices = _load_matrix_cache(cache_dir, matrix_hash) if cache_dir else None
     if cached_matrices is not None:
-        spec, X_train, y_train, X_test, y_test, train_file_types = cached_matrices
+        spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids = cached_matrices
         print(f"\nEXPERIMENT (cached matrices: {X_train.shape[0]} train, {X_test.shape[0]} test)")
     else:
         # --- Cache level 1: corpus row selections + file types ----------------
@@ -839,6 +864,9 @@ def run_experiment(
         # Sort corpus to match DB extraction order (by row_id).
         sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
         sorted_test = sorted(corpus.test_samples, key=lambda s: s.row_id)
+        test_row_ids = np.asarray(
+            [int(s.row_id) for s in sorted_test], dtype=np.int64,
+        )
 
         log.info("pass 1: building vocabulary (worker-local DB fetching)")
         spec = features.build_vocab_from_db(
@@ -857,7 +885,10 @@ def run_experiment(
         )
 
         if cache_dir:
-            _save_matrix_cache(cache_dir, matrix_hash, spec, X_train, y_train, X_test, y_test, train_file_types)
+            _save_matrix_cache(
+                cache_dir, matrix_hash, spec, X_train, y_train, X_test, y_test,
+                train_file_types, test_row_ids=test_row_ids,
+            )
 
     # Experiment 38: Semantic Clustering.
     if "clusters" in features.feature_config_from_env().enabled_groups:
@@ -1128,8 +1159,13 @@ def run_experiment(
         # (azoth_score_deployed.py --row-ids-file), so promote decisions
         # compare apples-to-apples instead of comparing the candidate's
         # screen holdout against the deployed model's larger test
-        # partition slice.
-        "test_sample_row_ids": [int(s.row_id) for s in sorted_test],
+        # partition slice. Falls back to [] when the matrix cache is
+        # pre-row_ids schema (autocollie will degrade to legacy
+        # baseline rather than crash).
+        "test_sample_row_ids": (
+            [int(x) for x in test_row_ids.tolist()]
+            if test_row_ids is not None else []
+        ),
         # When deploy_averaged, this is the threshold re-picked on the
         # AVERAGED ensemble's probabilities (matches what the deployment
         # would actually classify at). Otherwise it's the single trained

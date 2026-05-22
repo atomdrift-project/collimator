@@ -241,3 +241,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T032609-filetypes-ruby` — 2026-05-22T03:26:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f655d27af0ab3c36` | ruby_control_lr003_leaves128 | ok | 0.9060 | 0.9972 | 0.8889 | 7 | [log](out/autocollie/runs/2026-05-22T03-30-23_20260522T032609-filetypes-ruby_ruby_control_lr003_leaves128.log) |
+| `` | ruby_train_hardneg_scalepos075 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T03-30-29_20260522T032609-filetypes-ruby_ruby_train_hardneg_scalepos075.log) |
+| `8b1fdbd3b2e44dc9` | ruby_feat_kv_vocab_15k | ok | 0.8616 | 0.9958 | 0.8889 | 6 | [log](out/autocollie/runs/2026-05-22T03-30-31_20260522T032609-filetypes-ruby_ruby_feat_kv_vocab_15k.log) |
+| `1a383b25740f85b8` | ruby_feat_text_metrics_full | ok | 0.7951 | 0.9954 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-22T03-30-37_20260522T032609-filetypes-ruby_ruby_feat_text_metrics_full.log) |
+| `` | ruby_gen_textenc_seedsearch3 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-30-42_20260522T032609-filetypes-ruby_ruby_gen_textenc_seedsearch3.log) |
+| `8315a7741c6a9575` | ruby_ablate_blindfold_retry | ok | 0.8969 | 0.9968 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-22T03-30-44_20260522T032609-filetypes-ruby_ruby_ablate_blindfold_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_control_lr003_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with lower LR and more leaves to improve PR_AUC by capturing finer decision boundaries without overfitting.
+- **`ruby_train_hardneg_scalepos075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Hard negatives and reduced positive weight target recall@3 FP/M by suppressing benign FPs at the deployed operating point.
+- **`ruby_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enabling KV vocab with higher cap captures Ruby gem/dependency metadata, aiming to boost PR_AUC via structural signal.
+- **`ruby_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Text metrics and encoding features target script obfuscation patterns, aiming to improve tail recall and PR_AUC.
+- **`ruby_gen_textenc_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Seed search on best PR_AUC config reduces variance, targeting stable recall@3 FP/M gains.
+- **`ruby_ablate_blindfold_retry`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disabling blindfold dropout reduces noise in the small Ruby corpus, aiming to recover PR_AUC while maintaining tail recall.
+
+</details>
+
+## Cycle `20260522T054254-filetypes-ruby` — 2026-05-22T05:42:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f655d27af0ab3c36` | ruby_ctrl_lr003_leaves128_v2 | dup | 0.9060 | 0.9972 | 0.8889 | 1 | [log](out/autocollie/runs/2026-05-22T05-47-39_20260522T054254-filetypes-ruby_ruby_ctrl_lr003_leaves128_v2.log) |
+| `bed8ef4855d84983` | ruby_feat_kv_vocab_20k | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-22T05-47-40_20260522T054254-filetypes-ruby_ruby_feat_kv_vocab_20k.log) |
+| `89e8bc9118666820` | ruby_feat_text_encoding | ok | 0.7690 | 0.9949 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-22T05-47-45_20260522T054254-filetypes-ruby_ruby_feat_text_encoding.log) |
+| `2e19d4266e1b9002` | ruby_feat_bigram_min_freq_50 | ok | 0.8692 | 0.9963 | 0.8889 | 4 | [log](out/autocollie/runs/2026-05-22T05-47-49_20260522T054254-filetypes-ruby_ruby_feat_bigram_min_freq_50.log) |
+| `` | ruby_train_scalepos05 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-47-53_20260522T054254-filetypes-ruby_ruby_train_scalepos05.log) |
+| `` | ruby_train_extra_trees | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-47-55_20260522T054254-filetypes-ruby_ruby_train_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_ctrl_lr003_leaves128_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env with slightly more estimators to verify baseline PR_AUC stability.
+- **`ruby_feat_kv_vocab_20k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals, aiming to improve PR_AUC by adding discriminative feature surface.
+- **`ruby_feat_text_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding to capture character-level signals, targeting PR_AUC gain without repeating failed text_metrics_full.
+- **`ruby_feat_bigram_min_freq_50`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 to include rarer but potentially malicious patterns, aiming to boost recall@3FPM.
+- **`ruby_train_scalepos05`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weights positives with scale_pos_weight_mult=0.5 to reduce FPs at low FPR, targeting recall@3FPM improvement.
+- **`ruby_train_extra_trees`** `EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Uses extra_trees for ensemble noise to improve generalization at the tail, targeting ROC_AUC and PR_AUC stability.
+
+</details>
+
+## Cycle `20260522T102706-filetypes-ruby` — 2026-05-22T10:27:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6a3a8774e9784849` | ruby_feat_kv_textmetrics_lr003 | ok | 0.8321 | 0.9958 | 0.6667 | 5 | [log](out/autocollie/runs/2026-05-22T10-29-49_20260522T102706-filetypes-ruby_ruby_feat_kv_textmetrics_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_feat_kv_textmetrics_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full to capture script-level structural and key-value patterns, aiming to improve PR_AUC by adding discriminative signal for Ruby malware while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260522T103342-filetypes-ruby` — 2026-05-22T10:33:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f655d27af0ab3c36` | ruby_control_lr003_leaves128_v2 | dup | 0.9060 | 0.9972 | 0.8889 | 1 | [log](out/autocollie/runs/2026-05-22T10-39-24_20260522T103342-filetypes-ruby_ruby_control_lr003_leaves128_v2.log) |
+| `05d238eaf229daff` | ruby_feat_kv_vocab_30k | ok | 0.8321 | 0.9958 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-22T10-39-25_20260522T103342-filetypes-ruby_ruby_feat_kv_vocab_30k.log) |
+| `bcecbe5b0c191593` | ruby_feat_text_metrics_encoding | ok | 0.7690 | 0.9949 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-22T10-39-30_20260522T103342-filetypes-ruby_ruby_feat_text_metrics_encoding.log) |
+| `377d48b16c8e4ebb` | ruby_feat_obj_trigrams | ok | 0.8692 | 0.9963 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-22T10-39-34_20260522T103342-filetypes-ruby_ruby_feat_obj_trigrams.log) |
+| `75f7883692963cc4` | ruby_train_hardneg_01_10 | ok | 0.8692 | 0.9963 | 0.8889 | 2 | [log](out/autocollie/runs/2026-05-22T10-39-39_20260522T103342-filetypes-ruby_ruby_train_hardneg_01_10.log) |
+| `3fcdd01136582e21` | ruby_train_dart_boosting | ok | 0.9468 | 0.9981 | 0.8889 | 2 | [log](out/autocollie/runs/2026-05-22T10-39-41_20260522T103342-filetypes-ruby_ruby_train_dart_boosting.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ruby_control_lr003_leaves128_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best feature set with higher estimators and tuned reg_lambda to stabilize PR_AUC.
+- **`ruby_feat_kv_vocab_30k`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 30k to capture rarer key-value patterns, aiming to improve PR_AUC.
+- **`ruby_feat_text_metrics_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture obfuscation signals, targeting PR_AUC gain.
+- **`ruby_feat_obj_trigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Add objective trigrams to capture multi-step attack patterns, aiming for recall@3FPM improvement.
+- **`ruby_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Introduce hard negative mining to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`ruby_train_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Switch to DART boosting for dropout regularization, aiming to improve PR_AUC.
+
+</details>
+

@@ -206,3 +206,79 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T035705-filetypes-plist` — 2026-05-22T03:57:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bcd794ceeaae38bf` | plist_control_lr003_reg2 | ok | 0.8909 | 0.9400 | 0.8000 | 5 | [log](out/autocollie/runs/2026-05-22T04-02-14_20260522T035705-filetypes-plist_plist_control_lr003_reg2.log) |
+| `` | plist_exploit_dart_scalepos05 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T04-02-18_20260522T035705-filetypes-plist_plist_exploit_dart_scalepos05.log) |
+| `7873dc9044396d28` | plist_feat_kv_vocab_split | ok | 0.9250 | 0.9700 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-22T04-02-19_20260522T035705-filetypes-plist_plist_feat_kv_vocab_split.log) |
+| `db0e5a7f2f359f9f` | plist_feat_text_metrics_enc | ok | 0.2000 | 0.5000 | 0.3333 | 4 | [log](out/autocollie/runs/2026-05-22T04-02-22_20260522T035705-filetypes-plist_plist_feat_text_metrics_enc.log) |
+| `03c34c4bbc089268` | plist_transfer_xml_kv_tiered | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T04-02-26_20260522T035705-filetypes-plist_plist_transfer_xml_kv_tiered.log) |
+| `` | plist_gen_seed_search_k3 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-02-29_20260522T035705-filetypes-plist_plist_gen_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`plist_control_lr003_reg2`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=10 EXP_NUM_LEAVES=32 EXP_REG_LAMBDA=2 …` — Replicate best feature_env to hit matrix cache; lower tree complexity and increase L2 regularization to reduce overfitting on the tiny holdout, targeting PR_AUC and recall@3 FP/M.
+- **`plist_exploit_dart_scalepos05`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=32 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Use DART boosting and down-weight positives to suppress false positives in the tail, aiming to improve recall@3 FP/M while stabilizing PR_AUC.
+- **`plist_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=10 EXP_NUM_LEAVES=32 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with value splitting to capture granular plist key-value patterns, targeting PR_AUC gains from finer-grained structural signal.
+- **`plist_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=32 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_metrics_full and text_encoding to capture XML/plist formatting anomalies and encoding quirks, aiming to boost PR_AUC via document-level obfuscation signals.
+- **`plist_transfer_xml_kv_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=32 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 …` — Port XML sister route's strong kv_vocab and tiered trigram config, adjusting vocab caps conservatively for plist to improve PR_AUC via cross-route pattern transfer.
+- **`plist_gen_seed_search_k3`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=10 EXP_NUM_LEAVES=32 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Run seed search on the best feature set to average out variance from the tiny holdout, targeting stable recall@3 FP/M and PR_AUC across seeds.
+
+</details>
+
+## Cycle `20260522T052126-filetypes-plist` — 2026-05-22T05:21:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | plist_control_kv_split_lr003 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-26-44_20260522T052126-filetypes-plist_plist_control_kv_split_lr003.log) |
+| `042ecf5eb1f4ea6f` | plist_feat_text_metrics_enc | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T05-26-46_20260522T052126-filetypes-plist_plist_feat_text_metrics_enc.log) |
+| `023886bd0cbdec0a` | plist_feat_obj_trigrams_lowfreq | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T05-26-49_20260522T052126-filetypes-plist_plist_feat_obj_trigrams_lowfreq.log) |
+| `` | plist_train_hardneg_01_10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-26-52_20260522T052126-filetypes-plist_plist_train_hardneg_01_10.log) |
+| `` | plist_train_reg_lambda15_leaves64 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-26-53_20260522T052126-filetypes-plist_plist_train_reg_lambda15_leaves64.log) |
+
+<details><summary>Spec details</summary>
+
+- **`plist_control_kv_split_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env with lower LR and more leaves to stabilize PR_AUC and improve ranking.
+- **`plist_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture XML structure and encoding anomalies, aiming to boost PR_AUC.
+- **`plist_feat_obj_trigrams_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Adds objective trigrams with low min_freq to capture longer malicious path patterns, targeting recall@3 FP/M.
+- **`plist_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard negative mining to focus on difficult benigns, aiming to improve recall@3 FP/M without PR_AUC regression.
+- **`plist_train_reg_lambda15_leaves64`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1.5 …` — Increases L2 regularization and reduces leaves to prevent overfitting on the small corpus, targeting stable PR_AUC.
+
+</details>
+
+## Cycle `20260522T103050-filetypes-plist` — 2026-05-22T10:30:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `269d27042ac4477e` | plist_control_kv_vocab_reg2 | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T10-35-19_20260522T103050-filetypes-plist_plist_control_kv_vocab_reg2.log) |
+| `e560601060391ed8` | plist_feat_text_metrics_enc | ok | 0.2000 | 0.5000 | 0.3333 | 2 | [log](out/autocollie/runs/2026-05-22T10-35-22_20260522T103050-filetypes-plist_plist_feat_text_metrics_enc.log) |
+| `0ec7f735aaf251c1` | plist_feat_kv_vocab_expanded | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T10-35-24_20260522T103050-filetypes-plist_plist_feat_kv_vocab_expanded.log) |
+| `4437c09cca872cd6` | plist_feat_obj_tiered_trigrams | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T10-35-27_20260522T103050-filetypes-plist_plist_feat_obj_tiered_trigrams.log) |
+| `2d85662672a85870` | plist_train_scalepos05_reg1 | ok | 0.2000 | 0.5000 | 0.3333 | 2 | [log](out/autocollie/runs/2026-05-22T10-35-29_20260522T103050-filetypes-plist_plist_train_scalepos05_reg1.log) |
+| `4ae101d40c6c583d` | plist_seed_search_kv_text | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T10-35-31_20260522T103050-filetypes-plist_plist_seed_search_kv_text.log) |
+
+<details><summary>Spec details</summary>
+
+- **`plist_control_kv_vocab_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — control replicating best feature surface with conservative training tweaks to stabilize PR_AUC
+- **`plist_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — enables research text metrics and encoding vocabs to capture plist XML structure and obfuscation signals, targeting PR_AUC gain
+- **`plist_feat_kv_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — expands KV vocab capacity and lowers frequency floor to capture rare plist keys, aiming to improve recall@3 FP/M
+- **`plist_feat_obj_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — focuses on objective and tiered trigrams to capture malicious intent patterns in plist payloads, targeting PR_AUC
+- **`plist_train_scalepos05_reg1`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=1 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — down-weights positives and increases regularization to reduce false positives at low FPR, targeting recall@3 FP/M
+- **`plist_seed_search_kv_text`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — combines KV and text metrics with seed search to average out variance and stabilize recall@3 FP/M
+
+</details>
+
+## Cycle `20260522T103633-filetypes-plist` — 2026-05-22T10:36:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a077c670ca3f7546` | plist_feat_kv_vocab_expanded | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-05-22T10-39-17_20260522T103633-filetypes-plist_plist_feat_kv_vocab_expanded.log) |
+
+<details><summary>Spec details</summary>
+
+- **`plist_feat_kv_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with higher max and lower min_freq to capture more plist key-value patterns, aiming to improve PR_AUC by leveraging structured data signal.
+
+</details>
+

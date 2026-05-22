@@ -238,3 +238,79 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T044428-filetypes-perl` — 2026-05-22T04:44:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `98a9e48132dfe09a` | ctrl_capacity_lr003 | ok | 0.9881 | 0.9985 | 0.9231 | 7 | [log](out/autocollie/runs/2026-05-22T04-49-27_20260522T044428-filetypes-perl_ctrl_capacity_lr003.log) |
+| `59e25afcfe8d4f80` | feat_kv_vocab_15k | ok | 0.9908 | 0.9989 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T04-49-34_20260522T044428-filetypes-perl_feat_kv_vocab_15k.log) |
+| `a67fd00e3cecda6f` | feat_textenc_metrics_full | ok | 0.9908 | 0.9989 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T04-49-38_20260522T044428-filetypes-perl_feat_textenc_metrics_full.log) |
+| `` | train_scale_pos_05 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-49-42_20260522T044428-filetypes-perl_train_scale_pos_05.log) |
+| `` | train_reg2_mcs200 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-49-44_20260522T044428-filetypes-perl_train_reg2_mcs200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ctrl_capacity_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env with increased leaves and lower LR to stabilize PR_AUC and improve ranking granularity.
+- **`feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab to 15k with lower min_freq to capture rare Perl-specific key-value patterns, targeting recall@3 FP/M gains.
+- **`feat_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Combines text encoding and full text metrics with lower bigram floor to capture obfuscation signals, aiming to boost PR_AUC and recall@3 FP/M.
+- **`train_scale_pos_05`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weights positives to reduce false positives at low FPR, directly optimizing recall@3 FP/M at the deployed operating point.
+- **`train_reg2_mcs200`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increases L2 regularization and min_child_samples to reduce overfitting on rare patterns, targeting PR_AUC stability and recall@3 FP/M improvement.
+
+</details>
+
+## Cycle `20260522T053935-filetypes-perl` — 2026-05-22T05:39:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | ctrl_hardneg_01_12 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-43-17_20260522T053935-filetypes-perl_ctrl_hardneg_01_12.log) |
+| `7bc66e4f603c519c` | feat_kv_vocab_10k | ok | 0.9881 | 0.9985 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T05-43-18_20260522T053935-filetypes-perl_feat_kv_vocab_10k.log) |
+| `3a3088c935f2a210` | feat_text_metrics_full | ok | 0.9894 | 0.9987 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T05-43-23_20260522T053935-filetypes-perl_feat_text_metrics_full.log) |
+| `900e37868402bdf3` | feat_text_encoding | ok | 0.9894 | 0.9987 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T05-43-27_20260522T053935-filetypes-perl_feat_text_encoding.log) |
+| `` | train_leaves128_lr003 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-43-31_20260522T053935-filetypes-perl_train_leaves128_lr003.log) |
+| `` | train_reg2_mcs150 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-43-33_20260522T053935-filetypes-perl_train_reg2_mcs150.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ctrl_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with increased hard-negative weight to sharpen ranking and improve PR_AUC at low FPR.
+- **`feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value structural patterns in perl scripts, targeting PR_AUC gain.
+- **`feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote text metrics to detect obfuscation and encoding anomalies in perl, aiming to boost recall@3 FP/M.
+- **`feat_text_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding features to identify obfuscated payloads, targeting PR_AUC improvement.
+- **`train_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Deeper trees with lower learning rate and more estimators to better fit complex perl patterns, targeting PR_AUC.
+- **`train_reg2_mcs150`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Stronger L2 regularization and higher min_child_samples to reduce overfitting on rare patterns, stabilizing PR_AUC and improving recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T095558-filetypes-perl` — 2026-05-22T09:55:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d84e2337ef08d5b9` | feat_textenc_kv_vocab_20k | ok | 0.9924 | 0.9992 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T09-58-27_20260522T095558-filetypes-perl_feat_textenc_kv_vocab_20k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`feat_textenc_kv_vocab_20k`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding, text_metrics_full, and expands kv_vocab to 20k with lower bigram_min_freq to capture Perl script obfuscation patterns, aiming to improve PR_AUC by adding discriminative signal for malicious payloads.
+
+</details>
+
+## Cycle `20260522T111950-filetypes-perl` — 2026-05-22T11:19:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9a68b1a3de662386` | ctrl_scale_pos_075 | ok | 0.9924 | 0.9992 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T11-25-03_20260522T111950-filetypes-perl_ctrl_scale_pos_075.log) |
+| `78dbb091924f9605` | feat_textmetrics_kv25k | ok | 0.9924 | 0.9992 | 0.8947 | 4 | [log](out/autocollie/runs/2026-05-22T11-25-07_20260522T111950-filetypes-perl_feat_textmetrics_kv25k.log) |
+| `c66c373443fc3ac6` | feat_lowfreq_bigrams_trigrams | ok | 0.9940 | 0.9994 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T11-25-11_20260522T111950-filetypes-perl_feat_lowfreq_bigrams_trigrams.log) |
+| `73b96033eebe1ee3` | feat_kv_split | ok | 0.9894 | 0.9987 | 0.9231 | 4 | [log](out/autocollie/runs/2026-05-22T11-25-16_20260522T111950-filetypes-perl_feat_kv_split.log) |
+| `46df6294b42fb698` | gen_seed_search_3 | ok | 0.9881 | 0.9985 | 0.9231 | 2 | [log](out/autocollie/runs/2026-05-22T11-25-20_20260522T111950-filetypes-perl_gen_seed_search_3.log) |
+| `d2a9c5b50191e3f9` | train_dart_leaves112 | ok | 0.9924 | 0.9992 | 0.9756 | 2 | [log](out/autocollie/runs/2026-05-22T11-25-22_20260522T111950-filetypes-perl_train_dart_leaves112.log) |
+
+<details><summary>Spec details</summary>
+
+- **`ctrl_scale_pos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with tuned class weight to improve recall@3 FP/M by down-weighting benigns.
+- **`feat_textmetrics_kv25k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and expand KV vocab to capture Perl script obfuscation patterns, targeting PR_AUC gain.
+- **`feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add tiered trigrams to capture rare malicious patterns, aiming for PR_AUC improvement.
+- **`feat_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Split KV values on separators to recover granular signal in Perl data structures, targeting PR_AUC.
+- **`gen_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Seed search on best feature set to distinguish real signal from seed noise, stabilizing recall@3 FP/M.
+- **`train_dart_leaves112`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — DART boosting with moderate leaves to reduce overfitting and improve tail recall@3 FP/M.
+
+</details>
+

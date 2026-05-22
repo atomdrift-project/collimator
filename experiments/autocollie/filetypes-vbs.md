@@ -192,3 +192,93 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T041214-filetypes-vbs` — 2026-05-22T04:12:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6fd3c6d14003185e` | vbs_control_training_tune | ok | 0.9971 | 0.9827 | 0.9847 | 9 | [log](out/autocollie/runs/2026-05-22T04-16-16_20260522T041214-filetypes-vbs_vbs_control_training_tune.log) |
+| `79360e563c567e7d` | vbs_textmetrics_kv_vocab | ok | 0.9974 | 0.9836 | 0.9845 | 7 | [log](out/autocollie/runs/2026-05-22T04-16-24_20260522T041214-filetypes-vbs_vbs_textmetrics_kv_vocab.log) |
+| `c3c49a0f51d1d615` | vbs_relaxed_trigrams | ok | 0.9971 | 0.9823 | 0.9858 | 6 | [log](out/autocollie/runs/2026-05-22T04-16-31_20260522T041214-filetypes-vbs_vbs_relaxed_trigrams.log) |
+| `` | vbs_hardneg_tail_recall | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-16-37_20260522T041214-filetypes-vbs_vbs_hardneg_tail_recall.log) |
+| `1b8705baed54dc2f` | vbs_ablate_blindfold | ok | 0.9971 | 0.9823 | 0.9858 | 6 | [log](out/autocollie/runs/2026-05-22T04-16-39_20260522T041214-filetypes-vbs_vbs_ablate_blindfold.log) |
+| `` | vbs_seed_ensemble | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-16-45_20260522T041214-filetypes-vbs_vbs_seed_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`vbs_control_training_tune`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by using deeper trees and stronger regularization to reduce overfitting on rare VBS patterns while maintaining ranking quality.
+- **`vbs_textmetrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by capturing structural obfuscation signals in VBS scripts via text metrics and expanding KV vocab to catch rare malicious key-value pairs.
+- **`vbs_relaxed_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MIN_CRIT=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=2` — Aims to improve recall@3FPM by lowering frequency/crit thresholds for trigrams, allowing rarer but highly indicative VBS attack patterns to enter the model.
+- **`vbs_hardneg_tail_recall`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by upweighting hard benign VBS scripts that mimic malware, pushing the decision boundary to better separate true positives from tricky false positives.
+- **`vbs_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by removing blindfold dropout noise, testing if consistent feature presence improves ranking stability for VBS.
+- **`vbs_seed_ensemble`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM robustness by averaging over 3 seeds, reducing variance in tail recall for this small VBS corpus.
+
+</details>
+
+## Cycle `20260522T070258-filetypes-vbs` — 2026-05-22T07:02:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | vbs_control_leaves128_lr003 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T07-07-27_20260522T070258-filetypes-vbs_vbs_control_leaves128_lr003.log) |
+| `` | vbs_scalepos05_reglambda | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T07-07-30_20260522T070258-filetypes-vbs_vbs_scalepos05_reglambda.log) |
+
+<details><summary>Spec details</summary>
+
+- **`vbs_control_leaves128_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Replicate best recent feature set, increase leaves and lower LR to improve PR_AUC ranking without changing features.
+- **`vbs_scalepos05_reglambda`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 …` — Lower scale_pos_weight_mult to 0.5 and increase reg_lambda to 1.5 to suppress benign noise, targeting recall@3FPM gains while preserving PR_AUC.
+
+</details>
+
+## Cycle `20260522T084835-filetypes-vbs` — 2026-05-22T08:48:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | vbs_control_train_tune | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T08-53-42_20260522T084835-filetypes-vbs_vbs_control_train_tune.log) |
+| `66f0fd3007cb4e11` | vbs_textmetrics_kv10k | ok | 0.9975 | 0.9843 | 0.9735 | 7 | [log](out/autocollie/runs/2026-05-22T08-53-44_20260522T084835-filetypes-vbs_vbs_textmetrics_kv10k.log) |
+| `a25d044aeb5a4238` | vbs_textenc_relaxed_bigrams | ok | 0.9974 | 0.9833 | 0.9872 | 6 | [log](out/autocollie/runs/2026-05-22T08-53-51_20260522T084835-filetypes-vbs_vbs_textenc_relaxed_bigrams.log) |
+| `` | vbs_hardneg_tune | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T08-53-57_20260522T084835-filetypes-vbs_vbs_hardneg_tune.log) |
+| `` | vbs_dart_extra_trees | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T08-53-59_20260522T084835-filetypes-vbs_vbs_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`vbs_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature surface to establish baseline; tweaks num_leaves and learning_rate to improve PR_AUC via better tree complexity control.
+- **`vbs_textmetrics_kv10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full and kv_vocab to capture script-specific obfuscation and key-value patterns, targeting PR_AUC gains.
+- **`vbs_textenc_relaxed_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds text_encoding features and lowers bigram_min_freq to 500 to capture rarer script n-grams, aiming to boost recall@3FPM.
+- **`vbs_hardneg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard negative sampling to focus model on difficult benigns, targeting improved recall@3FPM without PR_AUC regression.
+- **`vbs_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switches to dart boosting with extra_trees to add regularization noise, aiming to improve generalization and ROC_AUC.
+
+</details>
+
+## Cycle `20260522T104138-filetypes-vbs` — 2026-05-22T10:41:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `084853ca1fb9035f` | vbs_textmetrics_kv10k_relaxed_bigrams | ok | 0.9980 | 0.9857 | 0.9822 | 7 | [log](out/autocollie/runs/2026-05-22T10-44-28_20260522T104138-filetypes-vbs_vbs_textmetrics_kv10k_relaxed_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`vbs_textmetrics_kv10k_relaxed_bigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables text_metrics_full and kv_vocab with bigram_min_freq=100 to capture finer script obfuscation and KV patterns, aiming to improve PR_AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T103943-filetypes-vbs` — 2026-05-22T10:39:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c82ef89e11c94e61` | vbs_control_kv10k_train_tune | ok | 0.9973 | 0.9829 | 0.9760 | 2 | [log](out/autocollie/runs/2026-05-22T10-45-46_20260522T103943-filetypes-vbs_vbs_control_kv10k_train_tune.log) |
+| `f1703b5f7022eec6` | vbs_textmetrics_kv_vocab | ok | 0.9974 | 0.9836 | 0.9845 | 2 | [log](out/autocollie/runs/2026-05-22T10-45-48_20260522T103943-filetypes-vbs_vbs_textmetrics_kv_vocab.log) |
+| `a1e67da50fd0f1c3` | vbs_relaxed_bigrams_trigrams | ok | 0.9983 | 0.9878 | 0.9846 | 6 | [log](out/autocollie/runs/2026-05-22T10-45-50_20260522T103943-filetypes-vbs_vbs_relaxed_bigrams_trigrams.log) |
+| `8cc318556e535255` | vbs_ablate_blindfold_textenc | ok | 0.9965 | 0.9813 | 0.9847 | 6 | [log](out/autocollie/runs/2026-05-22T10-45-56_20260522T103943-filetypes-vbs_vbs_ablate_blindfold_textenc.log) |
+| `bf367fed73cf1bec` | vbs_hardneg_01_8 | ok | 0.9970 | 0.9829 | 0.9834 | 2 | [log](out/autocollie/runs/2026-05-22T10-46-02_20260522T103943-filetypes-vbs_vbs_hardneg_01_8.log) |
+| `98bea8089cb67de4` | vbs_scalepos075_extratrees | ok | 0.9945 | 0.9759 | 0.9809 | 2 | [log](out/autocollie/runs/2026-05-22T10-46-04_20260522T103943-filetypes-vbs_vbs_scalepos075_extratrees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`vbs_control_kv10k_train_tune`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best PR_AUC feature set while increasing num_leaves and estimators to improve recall@3 FP/M via better tree capacity.
+- **`vbs_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture script obfuscation and key-value patterns, targeting PR_AUC gains from richer feature surface.
+- **`vbs_relaxed_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 250 and enables objective_trigrams to capture rarer malicious sequences, aiming to boost recall@3 FP/M.
+- **`vbs_ablate_blindfold_textenc`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout and enables text_encoding to reduce noise and add encoding signal, targeting stable PR_AUC with lower variance.
+- **`vbs_hardneg_01_8`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Applies hard negative mining with weight 8 to sharpen decision boundary at low FPR, targeting recall@3 FP/M improvement.
+- **`vbs_scalepos075_extratrees`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weights positives and enables extra_trees to reduce false positives at the tail, targeting recall@3 FP/M and ROC_AUC stability.
+
+</details>
+

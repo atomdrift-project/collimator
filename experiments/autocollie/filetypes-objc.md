@@ -166,3 +166,123 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T020645-filetypes-objc` — 2026-05-22T02:06:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `37505b9e1e08af5b` | objc_control_baseline_lr005 | ok | 0.0000 | 0.0000 | 0.0000 | 6 | [log](out/autocollie/runs/2026-05-22T02-10-57_20260522T020645-filetypes-objc_objc_control_baseline_lr005.log) |
+| `bad4650b0dd213b4` | objc_kv_vocab_5000 | ok | 0.0000 | 0.0000 | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-22T02-11-03_20260522T020645-filetypes-objc_objc_kv_vocab_5000.log) |
+| `8862d22fde44513a` | objc_text_encoding_on | ok | 0.0000 | 0.0000 | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-22T02-11-06_20260522T020645-filetypes-objc_objc_text_encoding_on.log) |
+| `75eec1e994a9df08` | objc_transfer_ember_lite | ok | 0.0000 | 0.0000 | 0.0000 | 4 | [log](out/autocollie/runs/2026-05-22T02-11-09_20260522T020645-filetypes-objc_objc_transfer_ember_lite.log) |
+| `` | objc_hard_neg_02_10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T02-11-13_20260522T020645-filetypes-objc_objc_hard_neg_02_10.log) |
+| `` | objc_scale_pos_05_fpr | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T02-11-14_20260522T020645-filetypes-objc_objc_scale_pos_05_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_control_baseline_lr005`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Replicate recent feature env to establish matrix cache baseline; tweak learning_rate to stabilize tree growth, aiming to stabilize PR_AUC by reducing variance.
+- **`objc_kv_vocab_5000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 5000 to capture key-value pair signals in ObjC metadata, aiming to improve PR_AUC by adding discriminative features for malware classification.
+- **`objc_text_encoding_on`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding to extract character-level patterns from ObjC source, aiming to boost recall@3FPM by better distinguishing obfuscated malicious scripts.
+- **`objc_transfer_ember_lite`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port ember_lite from sister routes to add structural metrics, aiming to increase ROC_AUC by capturing broader file structure anomalies.
+- **`objc_hard_neg_02_10`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction 0.2 and weight 10 to focus on difficult benigns, aiming to improve recall@3FPM by suppressing false positives in the tail.
+- **`objc_scale_pos_05_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Down-weight positives with scale_pos_weight_mult 0.5 and use max_recall_at_fpr threshold mode, aiming to maximize recall@3FPM at the deployed operating point.
+
+</details>
+
+## Cycle `20260522T061448-filetypes-objc` — 2026-05-22T06:14:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | objc_control_conservative_trees | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-19-08_20260522T061448-filetypes-objc_objc_control_conservative_trees.log) |
+| `a3ca218544b64ade` | objc_kv_vocab_3000 | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T06-19-09_20260522T061448-filetypes-objc_objc_kv_vocab_3000.log) |
+| `63a335d9d94d6f73` | objc_text_encoding_metrics | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T06-19-12_20260522T061448-filetypes-objc_objc_text_encoding_metrics.log) |
+| `c676db047b92fba9` | objc_symbol_bigrams_4000 | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T06-19-14_20260522T061448-filetypes-objc_objc_symbol_bigrams_4000.log) |
+| `` | objc_dart_extra_trees_reg | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-19-16_20260522T061448-filetypes-objc_objc_dart_extra_trees_reg.log) |
+| `` | objc_kv_seed_search_k3 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-19-18_20260522T061448-filetypes-objc_objc_kv_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_control_conservative_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=32 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — control baseline with reduced tree capacity and higher regularization to stabilize on tiny corpus, targeting PR_AUC
+- **`objc_kv_vocab_3000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — enable KV vocab to capture ObjC property and method name patterns, aiming to improve PR_AUC
+- **`objc_text_encoding_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — add text encoding and full metrics to detect string obfuscation common in ObjC malware, aiming to boost recall@3FPM
+- **`objc_symbol_bigrams_4000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=4000 EXP_TRAIN_SAMPLES=30000` — leverage symbol bigrams for framework call co-occurrence patterns, aiming to improve ROC_AUC
+- **`objc_dart_extra_trees_reg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — apply dart boosting and extra-trees regularization to prevent overfitting on 2 malware samples, targeting PR_AUC stability
+- **`objc_kv_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — seed search on KV features to mitigate variance on tiny dataset, aiming to reliably capture PR_AUC
+
+</details>
+
+## Cycle `20260522T082926-filetypes-objc` — 2026-05-22T08:29:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | objc_control_lr003_depth8 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-34-18_20260522T082926-filetypes-objc_objc_control_lr003_depth8.log) |
+| `98dd22cf501f392e` | objc_kv_vocab_2000_lowfreq | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T08-34-19_20260522T082926-filetypes-objc_objc_kv_vocab_2000_lowfreq.log) |
+| `b1f473cc931a24f4` | objc_symbol_bigrams_2000_trigrams | ok | 0.0000 | 0.0000 | 0.0000 | 3 | [log](out/autocollie/runs/2026-05-22T08-34-21_20260522T082926-filetypes-objc_objc_symbol_bigrams_2000_trigrams.log) |
+| `` | objc_text_metrics_full_encoding | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-34-24_20260522T082926-filetypes-objc_objc_text_metrics_full_encoding.log) |
+| `` | objc_transfer_hardneg_005_10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-34-25_20260522T082926-filetypes-objc_objc_transfer_hardneg_005_10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_control_lr003_depth8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with lower learning rate and reduced depth to prevent overfitting on the tiny train set, aiming to stabilize PR_AUC.
+- **`objc_kv_vocab_2000_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=2000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with lower min_freq to capture rare key-value patterns in ObjC files, targeting PR_AUC improvement.
+- **`objc_symbol_bigrams_2000_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=500 …` — Add symbol bigrams and trigrams to capture import co-occurrence patterns specific to ObjC frameworks, aiming to boost recall@3FPM.
+- **`objc_text_metrics_full_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to extract structural text features from ObjC source/comments, targeting ROC_AUC and PR_AUC gains.
+- **`objc_transfer_hardneg_005_10`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 …` — Transfer hard-negative training strategy from perl route to focus model on difficult benign ObjC files, aiming to improve recall@3FPM.
+
+</details>
+
+## Cycle `20260522T103905-filetypes-objc` — 2026-05-22T10:39:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89f20027939aaeca` | objc_kv_textenc_vocab | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T10-41-36_20260522T103905-filetypes-objc_objc_kv_textenc_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_kv_textenc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture lexical and structural signals in ObjC source, aiming to improve PR_AUC by distinguishing malicious patterns from benign code.
+
+</details>
+
+## Cycle `20260522T113054-filetypes-objc` — 2026-05-22T11:30:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6e2c050d64e715b1` | objc_control_baseline_lr005 | ok | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-22T11-35-15_20260522T113054-filetypes-objc_objc_control_baseline_lr005.log) |
+| `9da2e2ea0f8ccdb1` | objc_kv_vocab_5000_lowfreq | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T11-35-16_20260522T113054-filetypes-objc_objc_kv_vocab_5000_lowfreq.log) |
+| `6511217a63218484` | objc_symbol_bigrams_3000 | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T11-35-18_20260522T113054-filetypes-objc_objc_symbol_bigrams_3000.log) |
+| `63a335d9d94d6f73` | objc_textenc_metrics_full | dup | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-22T11-35-21_20260522T113054-filetypes-objc_objc_textenc_metrics_full.log) |
+| `0618630432ab51ad` | objc_transfer_xml_lowbigram | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T11-35-22_20260522T113054-filetypes-objc_objc_transfer_xml_lowbigram.log) |
+| `ac4eed4ab09c8037` | objc_seed_search_k3 | ok | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-22T11-35-24_20260522T113054-filetypes-objc_objc_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_control_baseline_lr005`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature set to establish a stable baseline for PR_AUC and ROC_AUC while tuning learning_rate and num_leaves for better convergence on the small corpus.
+- **`objc_kv_vocab_5000_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with higher cap and lower min_freq to capture rare ObjC key-value patterns, aiming to improve PR_AUC by adding discriminative signal.
+- **`objc_symbol_bigrams_3000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=3000 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_TRAIN_SAMPLES=30000` — Enable symbol_bigrams with moderate vocab cap to capture import/symbol co-occurrences in ObjC binaries, targeting PR_AUC gains from structural malware patterns.
+- **`objc_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation and text layout signals, aiming to boost recall@3FPM by identifying document/script-like malware traits.
+- **`objc_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer xml route's successful low bigram_min_freq and higher bigram_max to capture finer-grained n-gram patterns, aiming to improve PR_AUC by reducing noise while retaining signal.
+- **`objc_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the baseline feature set to average out seed-driven variance, aiming to stabilize ROC_AUC and PR_AUC across different random splits.
+
+</details>
+
+## Cycle `20260522T130445-filetypes-objc` — 2026-05-22T13:04:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a74f959016460ce5` | objc_control_lr01_leaves64 | ok | 0.0000 | 0.0000 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-22T13-10-52_20260522T130445-filetypes-objc_objc_control_lr01_leaves64.log) |
+| `03a0116af7fcddd6` | objc_kv_vocab_2000 | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T13-10-53_20260522T130445-filetypes-objc_objc_kv_vocab_2000.log) |
+| `4daea2fcaaa58a25` | objc_symbol_bigrams_1000 | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T13-10-56_20260522T130445-filetypes-objc_objc_symbol_bigrams_1000.log) |
+| `a6c0f8c6b1d73b62` | objc_text_metrics_full | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T13-10-58_20260522T130445-filetypes-objc_objc_text_metrics_full.log) |
+| `137c13bb04b315d9` | objc_tiered_crit_trigrams | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T13-11-00_20260522T130445-filetypes-objc_objc_tiered_crit_trigrams.log) |
+| `8b8f845c8b127838` | objc_seed_search_k3_reg | ok | 0.0000 | 0.0000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-22T13-11-03_20260522T130445-filetypes-objc_objc_seed_search_k3_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`objc_control_lr01_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env to hit matrix cache; lowers LR and reduces leaves to stabilize training on small dataset, aiming to preserve PR_AUC.
+- **`objc_kv_vocab_2000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=2000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals common in ObjC metadata, targeting PR_AUC improvement by adding discriminative features.
+- **`objc_symbol_bigrams_1000`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=1000 EXP_SYMBOL_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigrams to catch co-occurring import patterns in ObjC binaries, aiming to boost recall@3FPM and PR_AUC.
+- **`objc_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to extract structural text features from ObjC source/binary strings, targeting PR_AUC gain via richer text signal.
+- **`objc_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enables tiered_crit_trigrams to capture severity-weighted trait sequences, aiming to improve PR_AUC by focusing on high-crit patterns.
+- **`objc_seed_search_k3_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=2 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 with added L2 regularization to reduce variance and stabilize metrics on small holdout, targeting consistent PR_AUC.
+
+</details>
+

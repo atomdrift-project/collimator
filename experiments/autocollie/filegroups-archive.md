@@ -168,3 +168,69 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T191709-filegroups-archive` — 2026-05-21T19:17:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | archive_control_train_tweak | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T19-23-27_20260521T191709-filegroups-archive_archive_control_train_tweak.log) |
+| `` | archive_kv_vocab_10k | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T19-23-28_20260521T191709-filegroups-archive_archive_kv_vocab_10k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`archive_control_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Replicate best feature_env to hit matrix cache; increase num_leaves and estimators to improve PR_AUC ranking.
+- **`archive_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Enable kv_vocab to capture key-value pair signals in archives, aiming to boost PR_AUC by distinguishing malicious payloads.
+
+</details>
+
+## Cycle `20260522T022647-filegroups-archive` — 2026-05-22T02:26:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | archive_control_train_tweak_v2 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T02-32-30_20260522T022647-filegroups-archive_archive_control_train_tweak_v2.log) |
+| `` | archive_kv_vocab_20k | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T02-32-30_20260522T022647-filegroups-archive_archive_kv_vocab_20k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`archive_control_train_tweak_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Replicate best feature_env to hit matrix cache; test higher num_leaves and lower LR to improve PR_AUC by capturing finer decision boundaries without overfitting.
+- **`archive_kv_vocab_20k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Enable kv_vocab with higher cap to capture archive metadata patterns, aiming to boost PR_AUC while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260522T063643-filegroups-archive` — 2026-05-22T06:36:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | archive_control_train_tweak | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-42-20_20260522T063643-filegroups-archive_archive_control_train_tweak.log) |
+| `` | archive_kv_vocab_15k | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-42-20_20260522T063643-filegroups-archive_archive_kv_vocab_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`archive_control_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicate best recent feature_env and adjust training knobs to maintain PR_AUC and ROC_AUC guardrails.
+- **`archive_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enable kv_vocab to capture key-value metadata patterns in archive entries, aiming to improve PR_AUC.
+
+</details>
+
+## Cycle `20260522T101107-filegroups-archive` — 2026-05-22T10:11:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | archive_control_kv_vocab_train_tweak | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T10-14-16_20260522T101107-filegroups-archive_archive_control_kv_vocab_train_tweak.log) |
+
+<details><summary>Spec details</summary>
+
+- **`archive_control_kv_vocab_train_tweak`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env with kv_vocab enabled to test key-value signal on PR_AUC while tuning num_leaves and reg_lambda to stabilize ranking.
+
+</details>
+
+## Cycle `20260522T123038-filegroups-archive` — 2026-05-22T12:30:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | archive_control_train_v2 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T12-36-03_20260522T123038-filegroups-archive_archive_control_train_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`archive_control_train_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control baseline replicating best feature_env with conservative training tweaks to stabilize PR_AUC while reusing matrix cache.
+
+</details>
+

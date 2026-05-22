@@ -172,3 +172,69 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T022926-filetypes-unknown` — 2026-05-22T02:29:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_kv_textenc_leaves128 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-22T02-33-45_20260522T022926-filetypes-unknown_unknown_control_kv_textenc_leaves128.log) |
+| `` | unknown_feat_kv_textmetrics_full | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T02-33-50_20260522T022926-filetypes-unknown_unknown_feat_kv_textmetrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_kv_textenc_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with increased tree capacity to capture complex unknown-file patterns, targeting PR_AUC stability.
+- **`unknown_feat_kv_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full to capture structural obfuscation in unknown files, aiming to boost PR_AUC by surfacing hidden malicious patterns.
+
+</details>
+
+## Cycle `20260522T061115-filetypes-unknown` — 2026-05-22T06:11:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_hn_01_10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-16-32_20260522T061115-filetypes-unknown_unknown_control_hn_01_10.log) |
+| `` | unknown_feat_kv20k_textenc | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T06-16-33_20260522T061115-filetypes-unknown_unknown_feat_kv20k_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_hn_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 …` — Control replicates best feature set and adds hard negatives to boost recall@3 FP/M by focusing on difficult benigns.
+- **`unknown_feat_kv20k_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab_max to 20000 to capture rarer key-value patterns, targeting PR_AUC improvement via finer-grained signal.
+
+</details>
+
+## Cycle `20260522T080124-filetypes-unknown` — 2026-05-22T08:01:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_kv_textenc | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-05-54_20260522T080124-filetypes-unknown_unknown_control_kv_textenc.log) |
+| `` | unknown_feat_kv_vocab_5k | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-22T08-05-55_20260522T080124-filetypes-unknown_unknown_feat_kv_vocab_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_kv_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=20 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — replicate best PR_AUC feature set to establish baseline matrix cache hit, targeting stable PR_AUC
+- **`unknown_feat_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=20 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — isolate kv_vocab signal with conservative cap to avoid constant predictor crash, aiming for PR_AUC gain
+
+</details>
+
+## Cycle `20260522T093314-filetypes-unknown` — 2026-05-22T09:33:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_control_baseline_train | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T09-37-48_20260522T093314-filetypes-unknown_unknown_control_baseline_train.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_control_baseline_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_ENCODING_FEATURES=1 …` — Replicates the best feature surface to establish a stable PR_AUC baseline while tuning num_leaves and learning_rate for better rank calibration.
+
+</details>
+
+## Cycle `20260522T102516-filetypes-unknown` — 2026-05-22T10:25:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | unknown_kv_textenc_robust | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T10-27-34_20260522T102516-filetypes-unknown_unknown_kv_textenc_robust.log) |
+
+<details><summary>Spec details</summary>
+
+- **`unknown_kv_textenc_robust`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=64 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Re-enable kv_vocab and text_encoding to recover historical PR_AUC signal while raising min_child_samples to 100 to prevent constant-predictor crashes on imbalanced splits.
+
+</details>
+

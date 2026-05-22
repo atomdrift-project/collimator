@@ -322,3 +322,73 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T025005-filetypes-data` — 2026-05-22T02:50:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `68f2328fba84dcbc` | data_ctrl_extra_trees | ok | 1.0000 | 1.0000 | 0.9880 | 5 | [log](out/autocollie/runs/2026-05-22T02-53-47_20260522T025005-filetypes-data_data_ctrl_extra_trees.log) |
+| `` | data_train_hardneg_mild | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T02-53-52_20260522T025005-filetypes-data_data_train_hardneg_mild.log) |
+| `704730baef9232e7` | data_feat_kv_vocab_5k | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-22T02-53-53_20260522T025005-filetypes-data_data_feat_kv_vocab_5k.log) |
+| `4367bd0edcd8529f` | data_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-22T02-53-56_20260522T025005-filetypes-data_data_feat_text_metrics_enc.log) |
+| `bca671c95a93ecb2` | data_abl_ext_metrics_off | ok | 1.0000 | 1.0000 | 0.9880 | 3 | [log](out/autocollie/runs/2026-05-22T02-53-59_20260522T025005-filetypes-data_data_abl_ext_metrics_off.log) |
+| `d7bbbd67f7edded4` | data_feat_trigram_pools | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-22T02-54-02_20260522T025005-filetypes-data_data_feat_trigram_pools.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_ctrl_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with extra_trees to add ensemble noise, aiming to stabilize recall@3FPM on the tiny corpus.
+- **`data_train_hardneg_mild`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Mild hard-negative upweighting to sharpen the decision boundary, targeting PR_AUC improvement without triggering calibration degeneration.
+- **`data_feat_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture structured key-value patterns in data files, targeting PR_AUC gain from new rank signal.
+- **`data_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_metrics_full and text_encoding to extract structural text features, aiming to boost recall@3FPM on embedded text payloads.
+- **`data_abl_ext_metrics_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extended_metrics to test if removing noisy numeric aggregates preserves PR_AUC while reducing overfit risk on the small dataset.
+- **`data_feat_trigram_pools`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enable objective and suspicious trigram pools to capture longer sequential patterns, targeting ROC_AUC stability and PR_AUC improvement.
+
+</details>
+
+## Cycle `20260522T065743-filetypes-data` — 2026-05-22T06:57:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | data_ctrl_baseline_train | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T07-02-55_20260522T065743-filetypes-data_data_ctrl_baseline_train.log) |
+| `` | data_feat_kv_vocab_5k | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T07-02-57_20260522T065743-filetypes-data_data_feat_kv_vocab_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_ctrl_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env to cache-hit matrix, tuning estimators/leaves to stabilize PR_AUC and ROC_AUC.
+- **`data_feat_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture structured key-value patterns in data files, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260522T094748-filetypes-data` — 2026-05-22T09:47:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a731e97e935cdc3f` | data_feat_text_metrics_enc_tune | ok | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-22T09-50-47_20260522T094748-filetypes-data_data_feat_text_metrics_enc_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_feat_text_metrics_enc_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=64 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding research vocabs to capture structural text signals in data files, aiming to improve PR_AUC while using conservative tree capacity to prevent overfitting on the small corpus.
+
+</details>
+
+## Cycle `20260522T103534-filetypes-data` — 2026-05-22T10:35:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f20041fa3a244200` | data_ctrl_dart_boosting | ok | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-22T10-39-31_20260522T103534-filetypes-data_data_ctrl_dart_boosting.log) |
+| `4e962437a9bb1e36` | data_feat_text_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-22T10-39-33_20260522T103534-filetypes-data_data_feat_text_metrics_full.log) |
+| `785ca42d2ae8e6d1` | data_feat_kv_vocab_split | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-22T10-39-34_20260522T103534-filetypes-data_data_feat_kv_vocab_split.log) |
+| `1c20b88cd8ade14e` | data_feat_tiered_trigrams | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-22T10-39-37_20260522T103534-filetypes-data_data_feat_tiered_trigrams.log) |
+| `38184ebfdeb552c3` | data_abl_extreme_off | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-22T10-39-40_20260522T103534-filetypes-data_data_abl_extreme_off.log) |
+| `bbdcd8db2263845a` | data_gen_seed_ensemble | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-22T10-39-44_20260522T103534-filetypes-data_data_gen_seed_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`data_ctrl_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env and switch to dart boosting to improve recall@3 FP/M via dropout regularization at the tail.
+- **`data_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture structural obfuscation signals, targeting PR_AUC improvement.
+- **`data_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=4000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with value splitting to recover per-element signal in opaque blobs, aiming for higher recall@3 FP/M.
+- **`data_feat_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=3000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams to capture severity-prefixed path co-occurrences, targeting PR_AUC gains.
+- **`data_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce noise on the small corpus, aiming to stabilize PR_AUC and improve recall@3 FP/M.
+- **`data_gen_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 with save_all_seeds to average out variance and robustly estimate recall@3 FP/M.
+
+</details>
+

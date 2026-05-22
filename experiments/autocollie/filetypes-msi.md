@@ -248,3 +248,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T045358-filetypes-msi` — 2026-05-22T04:53:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dc109279e4e7dc33` | msi_control_hardneg_01_16 | ok | 0.9999 | 0.9970 | 0.9922 | 18 | [log](out/autocollie/runs/2026-05-22T04-59-20_20260522T045358-filetypes-msi_msi_control_hardneg_01_16.log) |
+| `` | msi_threshold_fpr_3e6_scalepos | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-59-38_20260522T045358-filetypes-msi_msi_threshold_fpr_3e6_scalepos.log) |
+| `bf6fcd9fb7ba6c56` | msi_feat_kv_vocab_split | ok | 0.9999 | 0.9957 | 0.9942 | 16 | [log](out/autocollie/runs/2026-05-22T04-59-40_20260522T045358-filetypes-msi_msi_feat_kv_vocab_split.log) |
+| `1af03514ab14e3bd` | msi_feat_text_metrics_full | ok | 0.9999 | 0.9965 | 0.9922 | 15 | [log](out/autocollie/runs/2026-05-22T04-59-55_20260522T045358-filetypes-msi_msi_feat_text_metrics_full.log) |
+| `1ef73c3fbd98d36b` | msi_ablation_crit_ngrams | ok | 0.9999 | 0.9965 | 0.9922 | 13 | [log](out/autocollie/runs/2026-05-22T05-00-10_20260522T045358-filetypes-msi_msi_ablation_crit_ngrams.log) |
+| `` | msi_seed_search_ensemble_hardneg | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-22T05-00-24_20260522T045358-filetypes-msi_msi_seed_search_ensemble_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`msi_control_hardneg_01_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to improve recall@3FPM by upweighting difficult benigns, while preserving PR_AUC.
+- **`msi_threshold_fpr_3e6_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM directly via FPR-targeted thresholding and positive down-weighting to optimize the deployed operating point.
+- **`msi_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV feature surface with value splitting to capture MSI-specific metadata patterns, aiming to boost PR_AUC.
+- **`msi_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text and obfuscation metrics to detect embedded payloads in MSI files, targeting PR_AUC gain.
+- **`msi_ablation_crit_ngrams`** `EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ablates crit_category_ngrams to reduce noise and improve ROC_AUC stability without hurting PR_AUC.
+- **`msi_seed_search_ensemble_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Seed search ensemble with hard negatives to verify signal robustness and reduce variance in recall@3FPM.
+
+</details>
+
+## Cycle `20260522T073254-filetypes-msi` — 2026-05-22T07:32:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | msi_control_hardneg_01_18 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T07-39-04_20260522T073254-filetypes-msi_msi_control_hardneg_01_18.log) |
+| `cf48b3652b15b477` | msi_feat_kv_vocab_tuned | ok | 0.9999 | 0.9965 | 0.9922 | 17 | [log](out/autocollie/runs/2026-05-22T07-39-07_20260522T073254-filetypes-msi_msi_feat_kv_vocab_tuned.log) |
+| `3c88f29aab6b8223` | msi_feat_tiered_trigrams | ok | 0.9999 | 0.9965 | 0.9922 | 16 | [log](out/autocollie/runs/2026-05-22T07-39-23_20260522T073254-filetypes-msi_msi_feat_tiered_trigrams.log) |
+| `` | msi_train_threshold_fpr_3e6 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-39-39_20260522T073254-filetypes-msi_msi_train_threshold_fpr_3e6.log) |
+| `` | msi_train_reg_leaves64 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-39-41_20260522T073254-filetypes-msi_msi_train_reg_leaves64.log) |
+
+<details><summary>Spec details</summary>
+
+- **`msi_control_hardneg_01_18`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with hard-negative sweep (frac=0.01, weight=18) to improve recall@3FPM by focusing on difficult benigns.
+- **`msi_feat_kv_vocab_tuned`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with tuned max=8000 and min_freq=5 to capture rare key-value patterns, targeting PR_AUC gain.
+- **`msi_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add tiered_crit_trigrams (max=2000) to capture higher-order trait co-occurrences, aiming for PR_AUC improvement.
+- **`msi_train_threshold_fpr_3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Optimize threshold directly for deployed operating point (max_recall_at_fpr, target=3e-6) to maximize recall@3FPM.
+- **`msi_train_reg_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Reduce model complexity (leaves=64, reg_lambda=1.5, min_child=200) to curb overfitting and stabilize ROC_AUC/PR_AUC.
+
+</details>
+
+## Cycle `20260522T100727-filetypes-msi` — 2026-05-22T10:07:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0c0a56c8c699cdaf` | msi_feat_kv_vocab_split_hardneg | ok | 0.9999 | 0.9970 | 0.9922 | 16 | [log](out/autocollie/runs/2026-05-22T10-10-12_20260522T100727-filetypes-msi_msi_feat_kv_vocab_split_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`msi_feat_kv_vocab_split_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab and kv_value_split to capture structured MSI table keys/values, paired with hard-negative training to improve recall@3 FP/M while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260522T111200-filetypes-msi` — 2026-05-22T11:12:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c5204a0c533176ae` | msi_ctrl_hardneg_01_12 | ok | 0.9999 | 0.9970 | 0.9942 | 3 | [log](out/autocollie/runs/2026-05-22T11-16-24_20260522T111200-filetypes-msi_msi_ctrl_hardneg_01_12.log) |
+| `0c82a04870105bad` | msi_feat_kv_vocab_10k | ok | 0.9999 | 0.9965 | 0.9922 | 15 | [log](out/autocollie/runs/2026-05-22T11-16-27_20260522T111200-filetypes-msi_msi_feat_kv_vocab_10k.log) |
+| `56b8901351802124` | msi_feat_text_metrics_full | ok | 0.9999 | 0.9965 | 0.9922 | 14 | [log](out/autocollie/runs/2026-05-22T11-16-42_20260522T111200-filetypes-msi_msi_feat_text_metrics_full.log) |
+| `2208fdba13db694d` | msi_feat_tiered_crit_trigrams | ok | 0.9999 | 0.9965 | 0.9922 | 15 | [log](out/autocollie/runs/2026-05-22T11-16-56_20260522T111200-filetypes-msi_msi_feat_tiered_crit_trigrams.log) |
+| `95452950a8abad40` | msi_feat_lowbigram_transfer | ok | 0.9998 | 0.9935 | 0.9922 | 16 | [log](out/autocollie/runs/2026-05-22T11-17-12_20260522T111200-filetypes-msi_msi_feat_lowbigram_transfer.log) |
+
+Rejected before run:
+
+- `msi_ctrl_thresh_fpr_3e6` — training.seed: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`msi_ctrl_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative weight 12 to improve tail recall@3 FP/M while preserving PR AUC.
+- **`msi_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocabulary to 10k to capture granular key-value patterns, targeting PR AUC and recall@3 FP/M gains.
+- **`msi_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable full text metrics to detect obfuscation in MSI scripts, aiming to boost PR AUC.
+- **`msi_feat_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Add tiered critical trigrams to capture high-severity co-occurrences, targeting PR AUC improvement.
+- **`msi_feat_lowbigram_transfer`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer low-frequency bigram strategy from XML route to capture rarer MSI patterns, targeting PR AUC.
+
+</details>
+

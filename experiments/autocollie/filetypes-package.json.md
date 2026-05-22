@@ -328,3 +328,73 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T041423-filetypes-package.json` — 2026-05-22T04:14:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `60707cedad040538` | pkg_json_ctrl_bigram_rare_train | ok | 0.9998 | 0.9995 | 0.9962 | 14 | [log](out/autocollie/runs/2026-05-22T04-18-46_20260522T041423-filetypes-package.json_pkg_json_ctrl_bigram_rare_train.log) |
+| `1756993efacb0e17` | pkg_json_feat_kv_textenc | ok | 0.9998 | 0.9996 | 0.9962 | 11 | [log](out/autocollie/runs/2026-05-22T04-19-00_20260522T041423-filetypes-package.json_pkg_json_feat_kv_textenc.log) |
+| `d0d1d0747da1ea66` | pkg_json_feat_tiered_trigrams | ok | 0.9998 | 0.9996 | 0.9960 | 12 | [log](out/autocollie/runs/2026-05-22T04-19-11_20260522T041423-filetypes-package.json_pkg_json_feat_tiered_trigrams.log) |
+| `a4a3d6ce1dba2db9` | pkg_json_train_extra_trees_reg | ok | 0.9998 | 0.9995 | 0.9953 | 10 | [log](out/autocollie/runs/2026-05-22T04-19-23_20260522T041423-filetypes-package.json_pkg_json_train_extra_trees_reg.log) |
+| `` | pkg_json_train_dart_lr003 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T04-19-33_20260522T041423-filetypes-package.json_pkg_json_train_dart_lr003.log) |
+| `` | pkg_json_train_scalepos075_fbeta | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T04-19-36_20260522T041423-filetypes-package.json_pkg_json_train_scalepos075_fbeta.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_ctrl_bigram_rare_train`** `EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with expanded bigram vocab; tests deeper trees (leaves=128) to improve PR_AUC ranking without changing features.
+- **`pkg_json_feat_kv_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adds KV vocab and text encoding features to capture structural JSON keys/values and encoding anomalies, aiming to boost recall@3FPM.
+- **`pkg_json_feat_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Enables severity-prefixed trigrams to capture longer malicious path sequences in package.json, targeting PR_AUC gains.
+- **`pkg_json_train_extra_trees_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Adds extra-trees randomness and L2 regularization to reduce overfitting on rare bigrams, aiming to stabilize ROC_AUC while preserving recall@3FPM.
+- **`pkg_json_train_dart_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Switches to DART boosting with lower LR to improve tail behavior and generalization, targeting recall@3FPM gains.
+- **`pkg_json_train_scalepos075_fbeta`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weights positives to reduce FPs at low FPR, targeting recall@3FPM improvement while avoiding the crashed threshold_mode combo.
+
+</details>
+
+## Cycle `20260522T075023-filetypes-package.json` — 2026-05-22T07:50:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | pkg_json_ctrl_train_leaves128 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T07-54-34_20260522T075023-filetypes-package.json_pkg_json_ctrl_train_leaves128.log) |
+| `` | pkg_json_train_hardneg_01_12 | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-22T07-54-37_20260522T075023-filetypes-package.json_pkg_json_train_hardneg_01_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_ctrl_train_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with increased leaves to 128 to improve PR_AUC ranking without changing features.
+- **`pkg_json_train_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Introduce hard negative mining to push benign package.jsons lower in ranking, targeting recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T094950-filetypes-package.json` — 2026-05-22T09:49:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `97028ef3005c44d4` | pkg_json_feat_kv_vocab | ok | 0.9998 | 0.9995 | 0.9960 | 11 | [log](out/autocollie/runs/2026-05-22T09-52-15_20260522T094950-filetypes-package.json_pkg_json_feat_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_feat_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured JSON key-value patterns, aiming to improve PR_AUC by adding discriminative signal for package dependencies and scripts.
+
+</details>
+
+## Cycle `20260522T120241-filetypes-package.json` — 2026-05-22T12:02:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bccf8e1dacb9084c` | pkg_json_ctrl_kv_textenc_train | ok | 0.9998 | 0.9996 | 0.9965 | 12 | [log](out/autocollie/runs/2026-05-22T12-08-07_20260522T120241-filetypes-package.json_pkg_json_ctrl_kv_textenc_train.log) |
+| `3b83cf2e7bf4ff30` | pkg_json_feat_textmetrics_full | ok | 0.9998 | 0.9996 | 0.9965 | 11 | [log](out/autocollie/runs/2026-05-22T12-08-20_20260522T120241-filetypes-package.json_pkg_json_feat_textmetrics_full.log) |
+| `ff9df220a26852b4` | pkg_json_feat_kv_vocab_expanded | ok | 0.9998 | 0.9995 | 0.9962 | 11 | [log](out/autocollie/runs/2026-05-22T12-08-31_20260522T120241-filetypes-package.json_pkg_json_feat_kv_vocab_expanded.log) |
+| `b6c8cbda6fe1221f` | pkg_json_feat_ngram_rare_bounds | ok | 0.9998 | 0.9996 | 0.9962 | 12 | [log](out/autocollie/runs/2026-05-22T12-08-42_20260522T120241-filetypes-package.json_pkg_json_feat_ngram_rare_bounds.log) |
+| `bce4272e59d542f6` | pkg_json_train_dart_extra_trees | ok | 0.9994 | 0.9987 | 0.9947 | 3 | [log](out/autocollie/runs/2026-05-22T12-08-54_20260522T120241-filetypes-package.json_pkg_json_train_dart_extra_trees.log) |
+| `ab59b3b1b76106f5` | pkg_json_train_hardneg_scalepos | ok | 0.9998 | 0.9996 | 0.9965 | 4 | [log](out/autocollie/runs/2026-05-22T12-08-57_20260522T120241-filetypes-package.json_pkg_json_train_hardneg_scalepos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pkg_json_ctrl_kv_textenc_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature_env to establish baseline PR_AUC while tuning estimators and learning_rate for stable recall@3FPM.
+- **`pkg_json_feat_textmetrics_full`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and text_encoding to capture structural text anomalies in package.json, aiming to boost PR_AUC by adding discriminative document-level signals.
+- **`pkg_json_feat_kv_vocab_expanded`** `EXP_BIGRAM_MIN_FREQ=800 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab_max and lowers kv_min_freq to capture rarer key-value patterns in package manifests, targeting recall@3FPM gains from fine-grained dependency signals.
+- **`pkg_json_feat_ngram_rare_bounds`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Lowers bigram_min_freq and trigram_min_freq to include rarer but high-signal n-grams, aiming to improve PR_AUC by capturing subtle malicious patterns.
+- **`pkg_json_train_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 …` — Switches to dart boosting with extra_trees to add ensemble noise and regularization, targeting recall@3FPM improvements at the low-FPR tail.
+- **`pkg_json_train_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1 …` — Applies moderate hard_negative_weight and scale_pos_weight_mult to focus on difficult benigns and slightly down-weight positives, aiming to lift recall@3FPM by reducing false positives.
+
+</details>
+

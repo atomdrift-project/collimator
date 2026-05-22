@@ -190,3 +190,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T031004-filetypes-jar` — 2026-05-22T03:10:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `71167cfbbf5e3131` | jar_control_leaves128_lr003 | ok | 0.9985 | 0.9973 | 0.9709 | 11 | [log](out/autocollie/runs/2026-05-22T03-14-37_20260522T031004-filetypes-jar_jar_control_leaves128_lr003.log) |
+| `12c542386a3108df` | jar_kv_vocab_8k | ok | 0.9988 | 0.9977 | 0.9742 | 8 | [log](out/autocollie/runs/2026-05-22T03-14-48_20260522T031004-filetypes-jar_jar_kv_vocab_8k.log) |
+| `441375f0bc21b713` | jar_bigram_freq250_textmetrics | ok | 0.9985 | 0.9972 | 0.9738 | 8 | [log](out/autocollie/runs/2026-05-22T03-14-56_20260522T031004-filetypes-jar_jar_bigram_freq250_textmetrics.log) |
+| `86e772860b105575` | jar_symbol_vocab_ablate_blindfold | ok | 0.9985 | 0.9973 | 0.9683 | 9 | [log](out/autocollie/runs/2026-05-22T03-15-04_20260522T031004-filetypes-jar_jar_symbol_vocab_ablate_blindfold.log) |
+| `` | jar_hardneg_frac015_w10 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-15-13_20260522T031004-filetypes-jar_jar_hardneg_frac015_w10.log) |
+| `` | jar_dart_reg2_leaves64 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-15-15_20260522T031004-filetypes-jar_jar_dart_reg2_leaves64.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jar_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with deeper trees and slower learning rate to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`jar_kv_vocab_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture structured metadata in JAR manifests and properties, targeting PR_AUC gains from finer-grained benign/malware separation.
+- **`jar_bigram_freq250_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq and enable text_metrics_full to capture obfuscation signals in JAR resources, aiming to boost recall@3FPM without hurting PR_AUC.
+- **`jar_symbol_vocab_ablate_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Swap blindfold for symbol_vocab to extract Java class/method signatures, targeting PR_AUC improvement by replacing noisy dropout features with structural signal.
+- **`jar_hardneg_frac015_w10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Increase hard negative weighting to sharpen decision boundary at low FPR, directly targeting recall@3FPM gains while maintaining PR_AUC.
+- **`jar_dart_reg2_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Use DART boosting with stronger L2 regularization to improve generalization and stabilize ROC_AUC while preserving PR_AUC.
+
+</details>
+
+## Cycle `20260522T052713-filetypes-jar` — 2026-05-22T05:27:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | jar_control_kv8k_leaves128_lr003 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-33-00_20260522T052713-filetypes-jar_jar_control_kv8k_leaves128_lr003.log) |
+| `74bf2d6a2d867912` | jar_symbol_vocab_10k | ok | 0.9988 | 0.9977 | 0.9742 | 8 | [log](out/autocollie/runs/2026-05-22T05-33-02_20260522T052713-filetypes-jar_jar_symbol_vocab_10k.log) |
+| `652e3091df146d0f` | jar_textenc_bigram200 | ok | 0.9988 | 0.9978 | 0.9767 | 8 | [log](out/autocollie/runs/2026-05-22T05-33-11_20260522T052713-filetypes-jar_jar_textenc_bigram200.log) |
+| `8cd09e6ffa80ee4c` | jar_ablate_blindfold | ok | 0.9985 | 0.9973 | 0.9683 | 8 | [log](out/autocollie/runs/2026-05-22T05-33-19_20260522T052713-filetypes-jar_jar_ablate_blindfold.log) |
+| `` | jar_kv8k_seed_search_3 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T05-33-26_20260522T052713-filetypes-jar_jar_kv8k_seed_search_3.log) |
+| `` | jar_scale_pos_075_leaves128 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-33-29_20260522T052713-filetypes-jar_jar_scale_pos_075_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jar_control_kv8k_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to improve PR AUC and ranking stability.
+- **`jar_symbol_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol vocab to capture import co-occurrence patterns, aiming to boost PR AUC.
+- **`jar_textenc_bigram200`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and lower bigram freq to capture obfuscation signals, targeting recall@3 FP/M.
+- **`jar_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to test if consistent feature presence improves ROC AUC and PR AUC.
+- **`jar_kv8k_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Average over 3 seeds to reduce variance and stabilize recall@3 FP/M, transferring from gz/xml routes.
+- **`jar_scale_pos_075_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to shift score distribution and improve recall@3 FP/M at deployed operating point.
+
+</details>
+
+## Cycle `20260522T100017-filetypes-jar` — 2026-05-22T10:00:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0594b8971a63cf11` | jar_kv_vocab_15k_bigram200 | ok | 0.9978 | 0.9960 | 0.9711 | 9 | [log](out/autocollie/runs/2026-05-22T10-02-53_20260522T100017-filetypes-jar_jar_kv_vocab_15k_bigram200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jar_kv_vocab_15k_bigram200`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with expanded cap to 15k to capture more key-value signal for JAR manifests/properties, aiming to improve PR_AUC while maintaining ROC_AUC.
+
+</details>
+
+## Cycle `20260522T100218-filetypes-jar` — 2026-05-22T10:02:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e4e388f689bf315e` | jar_control_textenc_bigram200_leaves128 | ok | 0.9988 | 0.9978 | 0.9767 | 2 | [log](out/autocollie/runs/2026-05-22T10-06-34_20260522T100218-filetypes-jar_jar_control_textenc_bigram200_leaves128.log) |
+| `9ad7cc843e39f8b4` | jar_kv_vocab_15k_textenc | ok | 0.9988 | 0.9978 | 0.9742 | 9 | [log](out/autocollie/runs/2026-05-22T10-06-36_20260522T100218-filetypes-jar_jar_kv_vocab_15k_textenc.log) |
+| `de6a50faabb33f3b` | jar_bigram50_trigram5_textenc | ok | 0.9984 | 0.9971 | 0.9714 | 9 | [log](out/autocollie/runs/2026-05-22T10-06-45_20260522T100218-filetypes-jar_jar_bigram50_trigram5_textenc.log) |
+| `75df036307b12862` | jar_textenc_hardneg_01_10 | ok | 0.9983 | 0.9966 | 0.9821 | 3 | [log](out/autocollie/runs/2026-05-22T10-06-54_20260522T100218-filetypes-jar_jar_textenc_hardneg_01_10.log) |
+| `79d160127c5d92a7` | jar_textenc_scalepos_05_reg2 | ok | 0.9977 | 0.9960 | 0.9733 | 2 | [log](out/autocollie/runs/2026-05-22T10-06-56_20260522T100218-filetypes-jar_jar_textenc_scalepos_05_reg2.log) |
+| `39bb9866193f34d8` | jar_symbol12k_metrics_full | ok | 0.9985 | 0.9973 | 0.9742 | 9 | [log](out/autocollie/runs/2026-05-22T10-06-58_20260522T100218-filetypes-jar_jar_symbol12k_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`jar_control_textenc_bigram200_leaves128`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Replicate best PR AUC feature set with increased num_leaves to capture finer decision boundaries, targeting PR AUC stability and recall@3 FP/M.
+- **`jar_kv_vocab_15k_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 15k alongside text_encoding to capture rare key-value patterns, aiming to boost PR AUC via new rank signal.
+- **`jar_bigram50_trigram5_textenc`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Lower bigram and trigram frequency floors to 50 and 5 respectively to include rarer co-occurrences, targeting recall@3 FP/M gains.
+- **`jar_textenc_hardneg_01_10`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining (10% fraction, weight 10) to the best feature set to sharpen the decision boundary at low FPR, improving recall@3 FP/M.
+- **`jar_textenc_scalepos_05_reg2`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Down-weight positives (0.5x) with L2 regularization to suppress false positives in the tail, directly optimizing recall@3 FP/M.
+- **`jar_symbol12k_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=12000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Combine expanded symbol vocab (12k) with full text metrics to capture structural and lexical signals, targeting PR AUC improvement.
+
+</details>
+

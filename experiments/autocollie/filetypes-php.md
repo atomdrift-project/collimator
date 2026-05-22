@@ -188,3 +188,97 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T022139-filetypes-php` — 2026-05-22T02:21:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9a90b9cd79ffed9d` | php_control_baseline_tune | ok | 0.9929 | 0.9969 | 0.9782 | 15 | [log](out/autocollie/runs/2026-05-22T02-26-23_20260522T022139-filetypes-php_php_control_baseline_tune.log) |
+| `` | php_exploit_hardneg_scalepos | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-05-22T02-26-38_20260522T022139-filetypes-php_php_exploit_hardneg_scalepos.log) |
+| `` | php_exploit_dart_extra_trees | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-22T02-26-43_20260522T022139-filetypes-php_php_exploit_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_control_baseline_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by increasing estimators and lowering learning rate on the best feature set to improve convergence without overfitting.
+- **`php_exploit_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives and reducing positive scale to suppress benign false positives at the deployed operating point.
+- **`php_exploit_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets ROC_AUC by using DART boosting with extra trees to add regularization and improve generalization on rare PHP patterns.
+
+</details>
+
+## Cycle `20260522T052126-filetypes-php` — 2026-05-22T05:21:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | php_control_train_tune | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T05-26-21_20260522T052126-filetypes-php_php_control_train_tune.log) |
+| `452d68d4e32bcc9d` | php_feat_kv_vocab_15k | ok | 0.9934 | 0.9972 | 0.9696 | 13 | [log](out/autocollie/runs/2026-05-22T05-26-24_20260522T052126-filetypes-php_php_feat_kv_vocab_15k.log) |
+| `534752326be18ccf` | php_feat_textenc_metrics | ok | 0.9937 | 0.9971 | 0.9708 | 12 | [log](out/autocollie/runs/2026-05-22T05-26-37_20260522T052126-filetypes-php_php_feat_textenc_metrics.log) |
+| `cdbb6192b9a6c39e` | php_feat_trigrams_lowfreq | ok | 0.9923 | 0.9972 | 0.9761 | 13 | [log](out/autocollie/runs/2026-05-22T05-26-49_20260522T052126-filetypes-php_php_feat_trigrams_lowfreq.log) |
+| `` | php_train_hardneg_mild | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-05-22T05-27-02_20260522T052126-filetypes-php_php_train_hardneg_mild.log) |
+| `` | php_generalize_seed_avg | fail | — | — | — | 6 | [log](out/autocollie/runs/2026-05-22T05-27-06_20260522T052126-filetypes-php_php_generalize_seed_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Baseline feature set with increased tree complexity to capture finer-grained PHP patterns, targeting PR_AUC improvement.
+- **`php_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Adds key-value vocabulary to capture PHP-specific config/variable patterns, aiming to boost recall@3 FP/M.
+- **`php_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text encoding and full text metrics to detect obfuscation in PHP scripts, targeting PR_AUC gains.
+- **`php_feat_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor and adds objective trigrams to catch rare malicious sequences, aiming for recall@3 FP/M gains.
+- **`php_train_hardneg_mild`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Mild hard-negative upweighting to sharpen decision boundary at low FPR, targeting recall@3 FP/M without overfitting.
+- **`php_generalize_seed_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Averages over 3 seeds to reduce variance and stabilize tail recall, targeting consistent recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T092623-filetypes-php` — 2026-05-22T09:26:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0e453ecfc31ac067` | php_feat_textenc_metrics_full | ok | 0.9940 | 0.9974 | 0.9739 | 30 | [log](out/autocollie/runs/2026-05-22T09-28-16_20260522T092623-filetypes-php_php_feat_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_feat_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture script obfuscation and structural text signals, aiming to improve PR_AUC and recall@3FPM by adding high-signal features for PHP files.
+
+</details>
+
+## Cycle `20260522T104436-filetypes-php` — 2026-05-22T10:44:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `800e44ee99f17435` | php_control_train_tune_v2 | ok | 0.9949 | 0.9972 | 0.9710 | 11 | [log](out/autocollie/runs/2026-05-22T10-49-16_20260522T104436-filetypes-php_php_control_train_tune_v2.log) |
+| `5fdbd8928d9a040c` | php_feat_textenc_metrics_full_v2 | ok | 0.9939 | 0.9971 | 0.9708 | 13 | [log](out/autocollie/runs/2026-05-22T10-49-28_20260522T104436-filetypes-php_php_feat_textenc_metrics_full_v2.log) |
+| `603f5ce33ea51655` | php_feat_kv_vocab_20k | ok | 0.9939 | 0.9972 | 0.9685 | 13 | [log](out/autocollie/runs/2026-05-22T10-49-41_20260522T104436-filetypes-php_php_feat_kv_vocab_20k.log) |
+| `6ea4f69294c5d085` | php_feat_lowfreq_trigrams | ok | 0.9939 | 0.9970 | 0.9738 | 12 | [log](out/autocollie/runs/2026-05-22T10-49-54_20260522T104436-filetypes-php_php_feat_lowfreq_trigrams.log) |
+| `37afebd0feb8fc57` | php_train_hardneg_tail | ok | 0.9944 | 0.9974 | 0.9805 | 5 | [log](out/autocollie/runs/2026-05-22T10-50-06_20260522T104436-filetypes-php_php_train_hardneg_tail.log) |
+| `cf2487fd952c43ca` | php_seed_search_k3 | ok | 0.9950 | 0.9972 | 0.9773 | 7 | [log](out/autocollie/runs/2026-05-22T10-50-12_20260522T104436-filetypes-php_php_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_control_train_tune_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=0 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set with deeper trees and lower LR to improve PR_AUC ranking quality without overfitting.
+- **`php_feat_textenc_metrics_full_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation signals, targeting PR_AUC gain.
+- **`php_feat_kv_vocab_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand kv_vocab to 20k to capture more PHP-specific key-value patterns, targeting PR_AUC.
+- **`php_feat_lowfreq_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Lower trigram_min_freq to 10 to capture rare malicious PHP constructs, targeting recall@3FPM.
+- **`php_train_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=0 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining to push benign PHP scripts lower in ranking, targeting recall@3FPM.
+- **`php_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=0 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search K=3 on baseline features to average out RNG variance and stabilize PR_AUC.
+
+</details>
+
+## Cycle `20260522T124650-filetypes-php` — 2026-05-22T12:46:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3f54a0e81a945903` | php_control_train_tune_v3 | ok | 0.9944 | 0.9971 | 0.9685 | 12 | [log](out/autocollie/runs/2026-05-22T12-50-58_20260522T124650-filetypes-php_php_control_train_tune_v3.log) |
+| `4ffbddc92f6943a6` | php_feat_kv_vocab_15k | ok | 0.9934 | 0.9972 | 0.9696 | 13 | [log](out/autocollie/runs/2026-05-22T12-51-09_20260522T124650-filetypes-php_php_feat_kv_vocab_15k.log) |
+| `ae63eb26e3a0284b` | php_feat_textenc_metrics_full | ok | 0.9937 | 0.9971 | 0.9708 | 3 | [log](out/autocollie/runs/2026-05-22T12-51-22_20260522T124650-filetypes-php_php_feat_textenc_metrics_full.log) |
+| `8e520f9beb0b2c7e` | php_feat_lowfreq_ngrams | ok | 0.9941 | 0.9975 | 0.9685 | 13 | [log](out/autocollie/runs/2026-05-22T12-51-25_20260522T124650-filetypes-php_php_feat_lowfreq_ngrams.log) |
+| `354826540201ad10` | php_train_hardneg_tail_v2 | ok | 0.9948 | 0.9973 | 0.9851 | 7 | [log](out/autocollie/runs/2026-05-22T12-51-38_20260522T124650-filetypes-php_php_train_hardneg_tail_v2.log) |
+| `52dc0c1c1b2522e9` | php_generalize_seed_avg_v2 | ok | 0.9939 | 0.9972 | 0.9851 | 10 | [log](out/autocollie/runs/2026-05-22T12-51-45_20260522T124650-filetypes-php_php_generalize_seed_avg_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`php_control_train_tune_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and slightly lower LR to improve PR_AUC by better fitting complex PHP patterns without overfitting.
+- **`php_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture PHP superglobal and config variable patterns, targeting PR_AUC gain from structured key-value signals.
+- **`php_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to detect obfuscation and encoding artifacts common in malicious PHP, targeting recall@3 FP/M.
+- **`php_feat_lowfreq_ngrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=50` — Lower bigram/trigram min_freq and raise max caps to capture rarer malicious PHP n-gram patterns, targeting PR_AUC improvement.
+- **`php_train_hardneg_tail_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives and downweight positives to suppress FPs at low FPR, directly targeting recall@3 FP/M gains.
+- **`php_generalize_seed_avg_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed search with averaged ensemble to reduce variance and stabilize tail recall, targeting consistent recall@3 FP/M.
+
+</details>
+

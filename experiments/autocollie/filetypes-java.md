@@ -144,3 +144,93 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T043757-filetypes-java` — 2026-05-22T04:37:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `737d547c6b3387d3` | java_control_dart_extra_trees | ok | 0.5667 | 0.8542 | 0.3333 | 5 | [log](out/autocollie/runs/2026-05-22T04-42-37_20260522T043757-filetypes-java_java_control_dart_extra_trees.log) |
+| `5bea4482280914f2` | java_kv_textenc_vocab | ok | 0.4389 | 0.8021 | 0.4000 | 3 | [log](out/autocollie/runs/2026-05-22T04-42-43_20260522T043757-filetypes-java_java_kv_textenc_vocab.log) |
+| `bd12c08c0ad9fb06` | java_text_metrics_symbol_vocab | ok | 0.4389 | 0.8021 | 0.4000 | 3 | [log](out/autocollie/runs/2026-05-22T04-42-46_20260522T043757-filetypes-java_java_text_metrics_symbol_vocab.log) |
+| `` | java_transfer_hardneg_01_12 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-42-49_20260522T043757-filetypes-java_java_transfer_hardneg_01_12.log) |
+| `` | java_seed_search_best_config | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T04-42-50_20260522T043757-filetypes-java_java_seed_search_best_config.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_control_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test dart boosting and extra_trees to improve tail recall@3 FP/M while keeping PR AUC flat.
+- **`java_kv_textenc_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture Java string patterns and encoding anomalies, aiming to boost PR AUC.
+- **`java_text_metrics_symbol_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_metrics_full and symbol_vocab to capture structural Java metrics and symbol co-occurrences, targeting PR AUC improvement.
+- **`java_transfer_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer hard-negative training from perl/data routes to suppress benign Java noise and improve recall@3 FP/M.
+- **`java_seed_search_best_config`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SEED_SEARCH_K=3 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 on the best PR AUC config to reduce seed variance and stabilize recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260522T053803-filetypes-java` — 2026-05-22T05:38:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | java_control_scale05_leaves128 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-42-52_20260522T053803-filetypes-java_java_control_scale05_leaves128.log) |
+| `` | java_hardneg_01_8_scale075 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-42-53_20260522T053803-filetypes-java_java_hardneg_01_8_scale075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_control_scale05_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best PR AUC feature set, increases num_leaves to 128 to capture tail signal while keeping scale_pos_weight_mult=0.5 to optimize recall@3 FP/M.
+- **`java_hardneg_01_8_scale075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tests hard-negative upweighting to push benign tail down, aiming to improve recall@3 FP/M without tanking PR AUC.
+
+</details>
+
+## Cycle `20260522T080559-filetypes-java` — 2026-05-22T08:05:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | java_control_dart_leaves128 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-10-59_20260522T080559-filetypes-java_java_control_dart_leaves128.log) |
+| `c9e5e114fb9241cb` | java_kv_vocab_10k | ok | 0.4389 | 0.8021 | 0.4000 | 3 | [log](out/autocollie/runs/2026-05-22T08-11-01_20260522T080559-filetypes-java_java_kv_vocab_10k.log) |
+| `0a1ee7fc7f87c47c` | java_text_metrics_encoding | ok | 0.4389 | 0.8021 | 0.4000 | 3 | [log](out/autocollie/runs/2026-05-22T08-11-03_20260522T080559-filetypes-java_java_text_metrics_encoding.log) |
+| `9f32ba30309db0e1` | java_symbol_bigrams_vocab | ok | 0.4389 | 0.8021 | 0.4000 | 4 | [log](out/autocollie/runs/2026-05-22T08-11-06_20260522T080559-filetypes-java_java_symbol_bigrams_vocab.log) |
+| `` | java_hardneg_scale075 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-11-10_20260522T080559-filetypes-java_java_hardneg_scale075.log) |
+| `` | java_goss_reg_lambda | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-11-12_20260522T080559-filetypes-java_java_goss_reg_lambda.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_control_dart_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Replicate recent strong feature set with dart boosting and extra_trees to stabilize tail recall@3FPM while preserving PR_AUC.
+- **`java_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture key-value pair signals in Java manifests/configs, aiming to boost PR_AUC.
+- **`java_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and text_encoding to capture obfuscation patterns in Java source, targeting recall@3FPM.
+- **`java_symbol_bigrams_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable symbol_vocab and symbol_bigrams to catch import/class co-occurrence patterns, aiming to improve PR_AUC.
+- **`java_hardneg_scale075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use hard negatives and lower scale_pos_weight_mult to focus on difficult benigns, improving recall@3FPM without hurting ROC_AUC.
+- **`java_goss_reg_lambda`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=goss EXP_CRIT_CATEGORY_NGRAMS=1 …` — Test Goss boosting with L2 regularization to improve generalization on small Java corpus, targeting stable PR_AUC.
+
+</details>
+
+## Cycle `20260522T101028-filetypes-java` — 2026-05-22T10:10:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `751b4d1e263ca200` | java_kv_textmetrics_vocab | ok | 0.4389 | 0.8021 | 0.4000 | 3 | [log](out/autocollie/runs/2026-05-22T10-12-45_20260522T101028-filetypes-java_java_kv_textmetrics_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_kv_textmetrics_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture structural and textual obfuscation signals in Java source, aiming to improve PR_AUC and recall@3 FP/M by adding discriminative features for the small corpus.
+
+</details>
+
+## Cycle `20260522T120828-filetypes-java` — 2026-05-22T12:08:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `39cf58ce48bd9c2e` | java_control_scale05_fpr3e6 | ok | 0.6056 | 0.8125 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-22T12-12-49_20260522T120828-filetypes-java_java_control_scale05_fpr3e6.log) |
+| `c9e5e114fb9241cb` | java_kv_vocab_10k | dup | 0.4389 | 0.8021 | 0.4000 | 1 | [log](out/autocollie/runs/2026-05-22T12-12-50_20260522T120828-filetypes-java_java_kv_vocab_10k.log) |
+| `0a1ee7fc7f87c47c` | java_text_metrics_encoding | dup | 0.4389 | 0.8021 | 0.4000 | 1 | [log](out/autocollie/runs/2026-05-22T12-12-51_20260522T120828-filetypes-java_java_text_metrics_encoding.log) |
+| `c1a3c2734cbfdf94` | java_kv_split_vocab_15k | ok | 0.4389 | 0.8021 | 0.4000 | 3 | [log](out/autocollie/runs/2026-05-22T12-12-52_20260522T120828-filetypes-java_java_kv_split_vocab_15k.log) |
+| `63e570dccc08a9c1` | java_hardneg_tail_reg | ok | 0.4324 | 0.7708 | 0.4000 | 2 | [log](out/autocollie/runs/2026-05-22T12-12-54_20260522T120828-filetypes-java_java_hardneg_tail_reg.log) |
+| `caee54152b079267` | java_seed_search_ensemble | ok | 0.4389 | 0.8021 | 0.6667 | 1 | [log](out/autocollie/runs/2026-05-22T12-12-56_20260522T120828-filetypes-java_java_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`java_control_scale05_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC config by tuning threshold to deployed operating point and down-weighting positives to reduce FPs, targeting PR_AUC.
+- **`java_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value pair signals from Java manifests and properties, targeting PR_AUC improvement.
+- **`java_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_metrics_full and text_encoding to capture obfuscation and encoding patterns in Java source, aiming for higher PR_AUC.
+- **`java_kv_split_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_value_split to recover per-element signal in Java property lists and manifests, targeting PR_AUC improvement.
+- **`java_hardneg_tail_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Use hard negatives with moderate weight and lower leaves to focus on tail separation, aiming to boost recall@3 FP/M without hurting ROC_AUC.
+- **`java_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search with ensemble averaging to reduce variance and stabilize PR_AUC gains across different data splits.
+
+</details>
+

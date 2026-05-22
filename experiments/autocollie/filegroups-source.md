@@ -188,3 +188,125 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T190347-filegroups-source` — 2026-05-21T19:03:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aba20c0d61e4f411` | source_control_lr003_leaves128 | ok | 0.9987 | 0.9980 | 0.9794 | 24 | [log](out/autocollie/runs/2026-05-21T19-09-07_20260521T190347-filegroups-source_source_control_lr003_leaves128.log) |
+| `` | source_exploit_hardneg_scalepos | fail | — | — | — | 11 | [log](out/autocollie/runs/2026-05-21T19-09-38_20260521T190347-filegroups-source_source_exploit_hardneg_scalepos.log) |
+| `99d8f563179371a9` | source_kv_vocab_20k_min10 | ok | 0.9988 | 0.9981 | 0.9801 | 22 | [log](out/autocollie/runs/2026-05-21T19-09-49_20260521T190347-filegroups-source_source_kv_vocab_20k_min10.log) |
+| `80dd81a85a1f6f38` | source_textenc_metrics_full | ok | 0.9988 | 0.9981 | 0.9606 | 21 | [log](out/autocollie/runs/2026-05-21T19-10-11_20260521T190347-filegroups-source_source_textenc_metrics_full.log) |
+| `` | source_transfer_xml_bigrams | fail | — | — | — | 6 | [log](out/autocollie/runs/2026-05-21T19-10-33_20260521T190347-filegroups-source_source_transfer_xml_bigrams.log) |
+| `548965454a5d6194` | source_seed_search_k3_kv | ok | 0.9988 | 0.9981 | 0.9765 | 31 | [log](out/autocollie/runs/2026-05-21T19-10-39_20260521T190347-filegroups-source_source_seed_search_k3_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_control_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature env with lower LR and more leaves to improve PR_AUC and recall@3FPM via finer tree splits.
+- **`source_exploit_hardneg_scalepos`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Baseline features with hard negatives and lower scale_pos_weight to push recall@3FPM while guarding PR_AUC.
+- **`source_kv_vocab_20k_min10`** `EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to 20k with lower min freq to capture rarer key-value patterns, targeting PR_AUC gains.
+- **`source_textenc_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture structural text signals in source files, aiming for PR_AUC improvement.
+- **`source_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer strict bigram config from xml route (max 5000, min freq 1000) to reduce noise and improve PR_AUC.
+- **`source_seed_search_k3_kv`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run best-of-3 seed search with expanded KV vocab to reduce variance and stabilize recall@3FPM.
+
+</details>
+
+## Cycle `20260522T030148-filegroups-source` — 2026-05-22T03:01:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3f653acb0360208e` | source_control_kv_full_train_tweak | ok | 0.9988 | 0.9981 | 0.9788 | 26 | [log](out/autocollie/runs/2026-05-22T03-07-38_20260522T030148-filegroups-source_source_control_kv_full_train_tweak.log) |
+| `8ef6d0fc99b39da4` | source_kv_vocab_15k_split | ok | 0.9987 | 0.9980 | 0.9779 | 31 | [log](out/autocollie/runs/2026-05-22T03-08-04_20260522T030148-filegroups-source_source_kv_vocab_15k_split.log) |
+| `d40f1bcaa3a4cd71` | source_textenc_metrics_low_bigram_freq | ok | 0.9988 | 0.9980 | 0.9818 | 36 | [log](out/autocollie/runs/2026-05-22T03-08-35_20260522T030148-filegroups-source_source_textenc_metrics_low_bigram_freq.log) |
+| `2ce75f4c8035a210` | source_trigrams_tiered_obj | ok | 0.9988 | 0.9981 | 0.9809 | 28 | [log](out/autocollie/runs/2026-05-22T03-09-11_20260522T030148-filegroups-source_source_trigrams_tiered_obj.log) |
+| `` | source_train_extra_trees_subsample | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-22T03-09-39_20260522T030148-filegroups-source_source_train_extra_trees_subsample.log) |
+| `` | source_seed_ensemble_k3_retry | fail | — | — | — | 17 | [log](out/autocollie/runs/2026-05-22T03-09-46_20260522T030148-filegroups-source_source_seed_ensemble_k3_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_control_kv_full_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline replicating best feature_env; tweak LR and leaves to improve PR_AUC while keeping ROC_AUC flat.
+- **`source_kv_vocab_15k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab with value splitting to capture finer-grained key-value signals in source files, aiming to boost PR_AUC.
+- **`source_textenc_metrics_low_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Add text_metrics_full and text_encoding while lowering bigram_min_freq to 25 to capture rarer source patterns, targeting recall@3 FP/M.
+- **`source_trigrams_tiered_obj`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 …` — Enable tiered critical trigrams and objective trigrams with low min_freq to improve ranking of malicious source patterns, aiming for PR_AUC gain.
+- **`source_train_extra_trees_subsample`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Use extra_trees and subsampling to reduce overfitting on rare source patterns, targeting stable ROC_AUC and improved recall@3 FP/M.
+- **`source_seed_ensemble_k3_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry top PR_AUC config with seed ensemble to reduce variance and stabilize recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260522T054334-filegroups-source` — 2026-05-22T05:43:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f2ddc9aa6cf5a667` | source_control_kv15k_train_tune | ok | 0.9988 | 0.9980 | 0.9810 | 23 | [log](out/autocollie/runs/2026-05-22T05-48-54_20260522T054334-filegroups-source_source_control_kv15k_train_tune.log) |
+| `0a4303ca98383203` | source_textenc_metrics_full | ok | 0.9988 | 0.9982 | 0.9727 | 23 | [log](out/autocollie/runs/2026-05-22T05-49-17_20260522T054334-filegroups-source_source_textenc_metrics_full.log) |
+| `0ddd93cd2f529614` | source_trigrams_tiered_obj_expanded | ok | 0.9988 | 0.9981 | 0.9820 | 31 | [log](out/autocollie/runs/2026-05-22T05-49-40_20260522T054334-filegroups-source_source_trigrams_tiered_obj_expanded.log) |
+| `` | source_hardneg_01_12 | fail | — | — | — | 12 | [log](out/autocollie/runs/2026-05-22T05-50-12_20260522T054334-filegroups-source_source_hardneg_01_12.log) |
+| `7b840a5fa77f5f64` | source_ablation_kv_off_symbol_on | ok | 0.9989 | 0.9982 | 0.9817 | 24 | [log](out/autocollie/runs/2026-05-22T05-50-24_20260522T054334-filegroups-source_source_ablation_kv_off_symbol_on.log) |
+| `` | source_dart_boosting_regularized | fail | — | — | — | 8 | [log](out/autocollie/runs/2026-05-22T05-50-48_20260522T054334-filegroups-source_source_dart_boosting_regularized.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_control_kv15k_train_tune`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Control feature set with deeper trees and lower LR to improve PR_AUC ranking quality.
+- **`source_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Adds text structure and encoding features to capture obfuscation patterns in source files, targeting recall@3 FP/M.
+- **`source_trigrams_tiered_obj_expanded`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Expands trigram coverage for attack objectives to improve PR_AUC by capturing longer malicious sequences.
+- **`source_hardneg_01_12`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Upweights hard benigns to push decision boundary, aiming to boost recall@3 FP/M without hurting PR_AUC.
+- **`source_ablation_kv_off_symbol_on`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=0 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Replaces KV vocab with symbol vocab to test if function/import names provide cleaner signal for source files, targeting PR_AUC stability.
+- **`source_dart_boosting_regularized`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Uses DART boosting for dropout regularization to improve generalization and tail recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T094217-filegroups-source` — 2026-05-22T09:42:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1da5fc468b18ff08` | source_control_baseline_lr003 | ok | 0.9987 | 0.9980 | 0.9759 | 23 | [log](out/autocollie/runs/2026-05-22T09-47-01_20260522T094217-filegroups-source_source_control_baseline_lr003.log) |
+| `1dd034ece1744323` | source_kv_vocab_expanded_split | ok | 0.9989 | 0.9983 | 0.9826 | 28 | [log](out/autocollie/runs/2026-05-22T09-47-24_20260522T094217-filegroups-source_source_kv_vocab_expanded_split.log) |
+| `a1e023df5e9095fd` | source_textenc_metrics_full | ok | 0.9988 | 0.9982 | 0.9814 | 25 | [log](out/autocollie/runs/2026-05-22T09-47-52_20260522T094217-filegroups-source_source_textenc_metrics_full.log) |
+| `25310200212d8611` | source_ngram_rare_obj_trigrams | ok | 0.9989 | 0.9983 | 0.9828 | 31 | [log](out/autocollie/runs/2026-05-22T09-48-17_20260522T094217-filegroups-source_source_ngram_rare_obj_trigrams.log) |
+| `d35c6af7fcca5780` | source_train_reg_subsample | ok | 0.9989 | 0.9983 | 0.9821 | 15 | [log](out/autocollie/runs/2026-05-22T09-48-48_20260522T094217-filegroups-source_source_train_reg_subsample.log) |
+| `53256c57e3db58e4` | source_transfer_xml_kv_full | ok | 0.9988 | 0.9981 | 0.9818 | 26 | [log](out/autocollie/runs/2026-05-22T09-49-03_20260522T094217-filegroups-source_source_transfer_xml_kv_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_control_baseline_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature set with lower LR and deeper trees to improve PR_AUC and recall@3FPM via better convergence.
+- **`source_kv_vocab_expanded_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 …` — Expand KV vocab and split string values to capture finer-grained source patterns, targeting PR_AUC gains.
+- **`source_textenc_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SYMBOL_VOCAB=1 EXP_TEXT_ENCODING_FEATURES=1 …` — Add text structure and encoding features to better separate obfuscated source files, targeting recall@3FPM.
+- **`source_ngram_rare_obj_trigrams`** `EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 …` — Include rarer bigrams and objective trigrams to capture subtle attack patterns, aiming for PR_AUC improvement.
+- **`source_train_reg_subsample`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_WEIGHT=5 EXP_NUM_LEAVES=128 …` — Increase L2 regularization and row subsampling to reduce overfitting on rare patterns, targeting stable PR_AUC and ROC_AUC.
+- **`source_transfer_xml_kv_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=3 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_LEARNING_RATE=0.05 …` — Port strong XML route KV config with higher vocab cap to source, testing cross-route generalization for PR_AUC.
+
+</details>
+
+## Cycle `20260522T102954-filegroups-source` — 2026-05-22T10:29:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e563641eebecbc7e` | source_textenc_kv_vocab_expanded | ok | 0.9988 | 0.9982 | 0.9811 | 41 | [log](out/autocollie/runs/2026-05-22T10-32-29_20260522T102954-filegroups-source_source_textenc_kv_vocab_expanded.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_textenc_kv_vocab_expanded`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Enable text_metrics_full and expand kv_vocab to capture structural and key-value signals in source files, aiming to improve PR_AUC and recall@3FPM by reducing false negatives on obfuscated or complex source patterns.
+
+</details>
+
+## Cycle `20260522T131012-filegroups-source` — 2026-05-22T13:10:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3f653acb0360208e` | source_control_train_tune | dup | 0.9988 | 0.9981 | 0.9788 | 1 | [log](out/autocollie/runs/2026-05-22T13-15-10_20260522T131012-filegroups-source_source_control_train_tune.log) |
+| `59bd69f517fd4146` | source_textenc_metrics_full | ok | 0.9988 | 0.9981 | 0.9820 | 21 | [log](out/autocollie/runs/2026-05-22T13-15-11_20260522T131012-filegroups-source_source_textenc_metrics_full.log) |
+| `dd58e9f12aaa3abd` | source_rare_ngrams_tiered | ok | 0.9988 | 0.9982 | 0.9820 | 26 | [log](out/autocollie/runs/2026-05-22T13-15-32_20260522T131012-filegroups-source_source_rare_ngrams_tiered.log) |
+| `f5f0a42e4e5df23e` | source_kv_split_ratios | ok | 0.9988 | 0.9981 | 0.9815 | 22 | [log](out/autocollie/runs/2026-05-22T13-15-58_20260522T131012-filegroups-source_source_kv_split_ratios.log) |
+| `327c653f1094c6f7` | source_extra_trees_reg | ok | 0.9983 | 0.9973 | 0.9774 | 8 | [log](out/autocollie/runs/2026-05-22T13-16-20_20260522T131012-filegroups-source_source_extra_trees_reg.log) |
+| `d9fa5d7a4ee885a5` | source_subsample_lr | ok | 0.9988 | 0.9982 | 0.9820 | 9 | [log](out/autocollie/runs/2026-05-22T13-16-27_20260522T131012-filegroups-source_source_subsample_lr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`source_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Replicates best feature set while tuning num_leaves and learning_rate to improve PR_AUC without changing the matrix.
+- **`source_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture structural obfuscation in source files, aiming to boost PR_AUC.
+- **`source_rare_ngrams_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Lowers bigram_min_freq and enables tiered_crit_trigrams to capture rare malicious patterns, targeting recall@3 FP/M.
+- **`source_kv_split_ratios`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_value_split and metric_ratio_features to recover per-element KV signal and cross-metric interactions, aiming for PR_AUC gain.
+- **`source_extra_trees_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Activates extra_trees with higher reg_lambda to reduce overfitting on rare patterns, targeting stable PR_AUC and recall@3 FP/M.
+- **`source_subsample_lr`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Applies row subsampling and slightly higher learning rate to improve generalization, targeting recall@3 FP/M gains.
+
+</details>
+

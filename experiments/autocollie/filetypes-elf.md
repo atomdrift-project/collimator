@@ -324,3 +324,67 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T024435-filetypes-elf` — 2026-05-22T02:44:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `80e79d0cc92c1601` | elf_control_leaves128_reg2 | ok | 1.0000 | 1.0000 | 0.9948 | 38 | [log](out/autocollie/runs/2026-05-22T02-49-03_20260522T024435-filetypes-elf_elf_control_leaves128_reg2.log) |
+| `` | elf_hardneg_01_12 | fail | — | — | — | 15 | [log](out/autocollie/runs/2026-05-22T02-49-41_20260522T024435-filetypes-elf_elf_hardneg_01_12.log) |
+| `` | elf_tail_fpr3e6_threshold | fail | — | — | — | 8 | [log](out/autocollie/runs/2026-05-22T02-49-57_20260522T024435-filetypes-elf_elf_tail_fpr3e6_threshold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_control_leaves128_reg2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Baseline feature set with increased tree capacity and L2 regularization to improve PR_AUC ranking stability.
+- **`elf_hardneg_01_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard-negative mining to focus model on difficult benigns, aiming to boost recall@3FPM without hurting PR_AUC.
+- **`elf_tail_fpr3e6_threshold`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimize threshold for deployed operating point to maximize recall@3FPM at 3e-6 FPR.
+
+</details>
+
+## Cycle `20260522T072807-filetypes-elf` — 2026-05-22T07:28:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | elf_control_baseline | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-22T07-33-05_20260522T072807-filetypes-elf_elf_control_baseline.log) |
+| `` | elf_hardneg_012_16 | fail | — | — | — | 14 | [log](out/autocollie/runs/2026-05-22T07-33-12_20260522T072807-filetypes-elf_elf_hardneg_012_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_control_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature set with standard training to establish a stable baseline for PR_AUC and ROC_AUC.
+- **`elf_hardneg_012_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Sweep hard-negative weighting to improve recall@3FPM by focusing on difficult benigns, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260522T102316-filetypes-elf` — 2026-05-22T10:23:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e9da240081557db7` | elf_control_leaves100_reg1 | ok | 1.0000 | 1.0000 | 0.9950 | 9 | [log](out/autocollie/runs/2026-05-22T10-28-01_20260522T102316-filetypes-elf_elf_control_leaves100_reg1.log) |
+| `0c8515b9f0731e0f` | elf_hardneg_01_12 | ok | 1.0000 | 1.0000 | 0.9981 | 16 | [log](out/autocollie/runs/2026-05-22T10-28-10_20260522T102316-filetypes-elf_elf_hardneg_01_12.log) |
+| `ce70fd5d4b591a28` | elf_tail_fpr3e6_extra_trees | ok | 1.0000 | 1.0000 | 0.9986 | 9 | [log](out/autocollie/runs/2026-05-22T10-28-26_20260522T102316-filetypes-elf_elf_tail_fpr3e6_extra_trees.log) |
+| `4a8fc645b7ea86b9` | elf_kv_vocab_15k_split | ok | 1.0000 | 1.0000 | 0.9962 | 58 | [log](out/autocollie/runs/2026-05-22T10-28-35_20260522T102316-filetypes-elf_elf_kv_vocab_15k_split.log) |
+| `1eed4e3fa1858244` | elf_sym_trigrams_2k | ok | 1.0000 | 1.0000 | 0.9927 | 42 | [log](out/autocollie/runs/2026-05-22T10-29-33_20260522T102316-filetypes-elf_elf_sym_trigrams_2k.log) |
+| `5f1bf2af06a4015c` | elf_overlay_extended_metrics | ok | 1.0000 | 1.0000 | 0.9939 | 36 | [log](out/autocollie/runs/2026-05-22T10-30-14_20260522T102316-filetypes-elf_elf_overlay_extended_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_control_leaves100_reg1`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=100 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating recent best feature_env; tests if moderate regularization (reg_lambda=1.0, leaves=100) stabilizes PR_AUC and recall@3FPM without overfitting.
+- **`elf_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Hard-negative sweep with fraction=0.01 and weight=12 to push recall@3FPM by focusing the model on difficult benigns, while keeping PR_AUC flat.
+- **`elf_tail_fpr3e6_extra_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets deployed operating point with threshold_mode=max_recall_at_fpr and fpr_target=3e-6 to directly maximize recall@3FPM; adds extra_trees for tail generalization.
+- **`elf_kv_vocab_15k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to recover per-element signal in ELF metadata, aiming to improve PR_AUC by capturing fine-grained library/dependency patterns.
+- **`elf_sym_trigrams_2k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ_TRIGRAM=5 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Adds symbol_trigrams with max=2000 to capture multi-import co-occurrence patterns in ELF binaries, targeting PR_AUC gains from structural malware signatures.
+- **`elf_overlay_extended_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTENDED_METRICS_INCLUDE=binary_overlay,binary_entropy EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Combines overlay_signal with extended_metrics to detect packer/dropper artifacts, aiming to boost recall@3FPM on obfuscated ELF samples while maintaining ROC_AUC.
+
+</details>
+
+## Cycle `20260522T105016-filetypes-elf` — 2026-05-22T10:50:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `22717a5e3ef039a8` | elf_hardneg_tail_fpr3e6_sym_vocab | ok | 1.0000 | 1.0000 | 0.9974 | 46 | [log](out/autocollie/runs/2026-05-22T10-52-48_20260522T105016-filetypes-elf_elf_hardneg_tail_fpr3e6_sym_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`elf_hardneg_tail_fpr3e6_sym_vocab`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by targeting the deployed FPR operating point directly and upweighting hard negatives, while adding symbol vocab to boost PR_AUC via ELF-specific import/export signal.
+
+</details>
+

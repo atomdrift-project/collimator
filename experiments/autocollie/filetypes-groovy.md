@@ -250,3 +250,85 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T034235-filetypes-groovy` — 2026-05-22T03:42:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5ce1f9fa5d90e7a0` | groovy_control_tiny_dataset | ok | 0.6667 | 0.5000 | 0.8000 | 5 | [log](out/autocollie/runs/2026-05-22T03-48-52_20260522T034235-filetypes-groovy_groovy_control_tiny_dataset.log) |
+| `cd878390c10e230d` | groovy_text_metrics_full | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-22T03-48-57_20260522T034235-filetypes-groovy_groovy_text_metrics_full.log) |
+| `fd0fd11f9fc666c0` | groovy_kv_vocab_low_freq | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-22T03-48-59_20260522T034235-filetypes-groovy_groovy_kv_vocab_low_freq.log) |
+| `b70a84f72bd9be7c` | groovy_text_encoding_ngrams | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-22T03-49-02_20260522T034235-filetypes-groovy_groovy_text_encoding_ngrams.log) |
+| `` | groovy_train_dart_reg | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T03-49-04_20260522T034235-filetypes-groovy_groovy_train_dart_reg.log) |
+| `` | groovy_seed_ensemble | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T03-49-05_20260522T034235-filetypes-groovy_groovy_seed_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`groovy_control_tiny_dataset`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run adapting tree complexity to the tiny 14-sample corpus to prevent overfitting and stabilize PR_AUC.
+- **`groovy_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full to capture obfuscation signals in Groovy scripts, aiming to improve PR_AUC by adding structural text features.
+- **`groovy_kv_vocab_low_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds KV vocab with low frequency floor to capture rare but malicious key-value patterns, targeting recall@3 FP/M gains.
+- **`groovy_text_encoding_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_encoding and low-freq trigrams to detect encoded payloads in Groovy, aiming to boost PR_AUC.
+- **`groovy_train_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Uses DART boosting with dropout regularization to improve generalization on the small dataset, targeting stable ROC_AUC and PR_AUC.
+- **`groovy_seed_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Averages 3 seeds to reduce variance on the tiny holdout, aiming to stabilize recall@3 FP/M and PR_AUC.
+
+</details>
+
+## Cycle `20260522T074450-filetypes-groovy` — 2026-05-22T07:44:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f98a3f386959b1c1` | groovy_text_metrics_encoding | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-22T07-50-19_20260522T074450-filetypes-groovy_groovy_text_metrics_encoding.log) |
+| `50d8229c6f6e5d3b` | groovy_kv_vocab_5k | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-22T07-50-21_20260522T074450-filetypes-groovy_groovy_kv_vocab_5k.log) |
+| `ff08a0f24b9d6509` | groovy_bigram_low_freq | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-22T07-50-23_20260522T074450-filetypes-groovy_groovy_bigram_low_freq.log) |
+| `` | groovy_hardneg_01_5 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T07-50-26_20260522T074450-filetypes-groovy_groovy_hardneg_01_5.log) |
+| `` | groovy_extra_trees_reg | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T07-50-27_20260522T074450-filetypes-groovy_groovy_extra_trees_reg.log) |
+
+Rejected before run:
+
+- `groovy_control_train_lr003` — training.min_child_samples: 5 below min 10
+
+<details><summary>Spec details</summary>
+
+- **`groovy_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture script obfuscation and structural anomalies, aiming to boost PR_AUC by better separating malicious Groovy payloads.
+- **`groovy_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Add kv_vocab with max 5000 to capture library and configuration patterns, targeting improved recall@3FPM by identifying malicious key-value pairs.
+- **`groovy_bigram_low_freq`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 and increase bigram_max to 10000 to capture rarer code patterns, aiming to increase PR_AUC without excessive noise.
+- **`groovy_hardneg_01_5`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to sharpen the decision boundary at low FPR, targeting higher recall@3FPM while maintaining PR_AUC.
+- **`groovy_extra_trees_reg`** `EXP_ESTIMATORS=250 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Apply extra-trees randomness and L2 regularization to improve generalization on the small corpus, aiming to lift ROC_AUC and stabilize PR_AUC.
+
+</details>
+
+## Cycle `20260522T100024-filetypes-groovy` — 2026-05-22T10:00:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `094ef704b136ec85` | groovy_control_train_lr003_leaves64 | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-22T10-06-40_20260522T100024-filetypes-groovy_groovy_control_train_lr003_leaves64.log) |
+| `70579bd4e24be195` | groovy_kv_vocab_5k_minfreq5 | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-22T10-06-42_20260522T100024-filetypes-groovy_groovy_kv_vocab_5k_minfreq5.log) |
+| `aaa971ca781fb59c` | groovy_text_metrics_full_encoding | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-22T10-06-45_20260522T100024-filetypes-groovy_groovy_text_metrics_full_encoding.log) |
+| `58bb8ac84e7cd56f` | groovy_trigrams_tiered_crit | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-22T10-06-47_20260522T100024-filetypes-groovy_groovy_trigrams_tiered_crit.log) |
+| `0ecb06a5e16fe053` | groovy_train_scalepos05_reg1 | ok | 0.6667 | 0.5000 | 0.8000 | 2 | [log](out/autocollie/runs/2026-05-22T10-06-50_20260522T100024-filetypes-groovy_groovy_train_scalepos05_reg1.log) |
+
+Rejected before run:
+
+- `groovy_train_seed123_mcs10` — training.seed: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`groovy_control_train_lr003_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env to hit matrix cache; lowers LR and leaves to reduce overfit on tiny corpus, aiming to stabilize PR_AUC.
+- **`groovy_kv_vocab_5k_minfreq5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with low min_freq to capture script-specific key-value patterns, targeting PR_AUC gain from new lexical signal.
+- **`groovy_text_metrics_full_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activates text_metrics_full and text_encoding to capture obfuscation and structural text signals in Groovy scripts, aiming to boost recall@3FPM.
+- **`groovy_trigrams_tiered_crit`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds objective_trigrams and tiered_crit_trigrams to capture multi-word attack patterns in scripts, targeting PR_AUC improvement.
+- **`groovy_train_scalepos05_reg1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weights positives via scale_pos_weight_mult=0.5 and adds L2 regularization to suppress false positives, aiming to improve recall@3FPM.
+
+</details>
+
+## Cycle `20260522T102954-filetypes-groovy` — 2026-05-22T10:29:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f73dd43ec8d24d91` | groovy_text_metrics_full_encoding | ok | 0.6667 | 0.5000 | 0.8000 | 3 | [log](out/autocollie/runs/2026-05-22T10-32-06_20260522T102954-filetypes-groovy_groovy_text_metrics_full_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`groovy_text_metrics_full_encoding`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture script obfuscation and encoding patterns, aiming to improve PR_AUC and recall@3FPM by adding discriminative structural signal to the small Groovy corpus.
+
+</details>
+

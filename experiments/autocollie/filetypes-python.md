@@ -360,3 +360,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T042519-filetypes-python` — 2026-05-22T04:25:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9b740cbe5b612d76` | py_control_hsn01_w10_spw08 | ok | 0.9986 | 0.9987 | 0.9814 | 34 | [log](out/autocollie/runs/2026-05-22T04-29-16_20260522T042519-filetypes-python_py_control_hsn01_w10_spw08.log) |
+| `` | py_train_dart_extra_trees_reg2 | fail | — | — | — | 6 | [log](out/autocollie/runs/2026-05-22T04-29-50_20260522T042519-filetypes-python_py_train_dart_extra_trees_reg2.log) |
+| `7b89899c67d2c576` | py_feat_kv_vocab_15k | ok | 0.9984 | 0.9986 | 0.9809 | 27 | [log](out/autocollie/runs/2026-05-22T04-29-56_20260522T042519-filetypes-python_py_feat_kv_vocab_15k.log) |
+| `b5f9f19394da55cc` | py_feat_text_metrics_full | ok | 0.9984 | 0.9985 | 0.9788 | 25 | [log](out/autocollie/runs/2026-05-22T04-30-23_20260522T042519-filetypes-python_py_feat_text_metrics_full.log) |
+| `d8a04ac1fc4c4d3b` | py_feat_bigram_freq50_trigram_freq10 | ok | 0.9985 | 0.9986 | 0.9619 | 27 | [log](out/autocollie/runs/2026-05-22T04-30-47_20260522T042519-filetypes-python_py_feat_bigram_freq50_trigram_freq10.log) |
+| `9da4c1a4c3488651` | py_feat_textenc_seedsearch3 | ok | 0.9983 | 0.9985 | 0.9801 | 36 | [log](out/autocollie/runs/2026-05-22T04-31-14_20260522T042519-filetypes-python_py_feat_textenc_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_control_hsn01_w10_spw08`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.8 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives and slightly downweighting positives to sharpen the low-FPR tail, while keeping PR_AUC flat.
+- **`py_train_dart_extra_trees_reg2`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and PR_AUC by adding dropout regularization and random splits to reduce overfitting on rare Python patterns, stabilizing the tail.
+- **`py_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing key-value pair patterns in Python scripts that standard n-grams miss, while keeping ROC_AUC flat.
+- **`py_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by adding structural text metrics that highlight obfuscated Python payloads, boosting tail recall without hurting PR_AUC.
+- **`py_feat_bigram_freq50_trigram_freq10`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Aims to improve PR_AUC by lowering frequency floors to capture rarer but highly predictive Python code patterns, while capping trigrams to control noise.
+- **`py_feat_textenc_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by testing text encoding features with seed search to ensure signal stability, targeting tail recall gains while monitoring PR_AUC guardrails.
+
+</details>
+
+## Cycle `20260522T055056-filetypes-python` — 2026-05-22T05:50:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | py_control_hn015_w12_spw075 | fail | — | — | — | 12 | [log](out/autocollie/runs/2026-05-22T05-55-09_20260522T055056-filetypes-python_py_control_hn015_w12_spw075.log) |
+| `10683cb8f71e037f` | py_feat_kv_vocab_20k_split | ok | 0.9983 | 0.9985 | 0.9799 | 26 | [log](out/autocollie/runs/2026-05-22T05-55-21_20260522T055056-filetypes-python_py_feat_kv_vocab_20k_split.log) |
+| `` | py_feat_text_metrics_full_lr003 | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-22T05-55-48_20260522T055056-filetypes-python_py_feat_text_metrics_full_lr003.log) |
+| `f850c71c607497ff` | py_feat_bigram_freq25_trigram_freq5 | ok | 0.9983 | 0.9985 | 0.9715 | 25 | [log](out/autocollie/runs/2026-05-22T05-55-55_20260522T055056-filetypes-python_py_feat_bigram_freq25_trigram_freq5.log) |
+| `` | py_seedsearch3_kv_vocab | fail | — | — | — | 16 | [log](out/autocollie/runs/2026-05-22T05-56-20_20260522T055056-filetypes-python_py_seedsearch3_kv_vocab.log) |
+| `0a0074c9d2b7d735` | py_ablation_blindfold_off | ok | 0.9984 | 0.9986 | 0.9806 | 27 | [log](out/autocollie/runs/2026-05-22T05-56-36_20260522T055056-filetypes-python_py_ablation_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_control_hn015_w12_spw075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Tweak hard-negative balance and class weight to lower FPR and improve recall@3 FP/M while keeping PR_AUC flat.
+- **`py_feat_kv_vocab_20k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and split string values to recover per-element signal in Python config lists, targeting PR_AUC gain.
+- **`py_feat_text_metrics_full_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote full text metrics for script obfuscation detection, paired with slower LR to stabilize ranking and boost PR_AUC.
+- **`py_feat_bigram_freq25_trigram_freq5`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Lower n-gram frequency floors to capture rarer malicious patterns in Python scripts, aiming for recall@3 FP/M improvement.
+- **`py_seedsearch3_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ensemble 3 seeds on KV vocab config to reduce variance and confirm PR_AUC signal stability.
+- **`py_ablation_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to test if removing noise improves ROC_AUC and PR_AUC on this route.
+
+</details>
+
+## Cycle `20260522T085952-filetypes-python` — 2026-05-22T08:59:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | py_control_hn02_w15_est300 | fail | — | — | — | 13 | [log](out/autocollie/runs/2026-05-22T09-04-15_20260522T085952-filetypes-python_py_control_hn02_w15_est300.log) |
+| `b496d852a588db50` | py_feat_kv_vocab_25k_split | ok | 0.9983 | 0.9985 | 0.9799 | 28 | [log](out/autocollie/runs/2026-05-22T09-04-29_20260522T085952-filetypes-python_py_feat_kv_vocab_25k_split.log) |
+| `a78f1fcce85b6971` | py_feat_textenc_metrics_full | ok | 0.9982 | 0.9984 | 0.9791 | 31 | [log](out/autocollie/runs/2026-05-22T09-04-57_20260522T085952-filetypes-python_py_feat_textenc_metrics_full.log) |
+| `41cca768a78f5164` | py_feat_trigram_freq10_crit3 | ok | 0.9984 | 0.9986 | 0.9773 | 36 | [log](out/autocollie/runs/2026-05-22T09-05-27_20260522T085952-filetypes-python_py_feat_trigram_freq10_crit3.log) |
+| `` | py_train_spw075_fpr3e6 | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-05-22T09-06-04_20260522T085952-filetypes-python_py_train_spw075_fpr3e6.log) |
+| `` | py_train_dart_extra_trees_reg | fail | — | — | — | 8 | [log](out/autocollie/runs/2026-05-22T09-06-11_20260522T085952-filetypes-python_py_train_dart_extra_trees_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_control_hn02_w15_est300`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control baseline with hard-negative tuning to stabilize PR_AUC while reusing matrix cache.
+- **`py_feat_kv_vocab_25k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab and enables value splitting to capture finer-grained library signals, targeting PR_AUC gain.
+- **`py_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text encoding and full text metrics to detect obfuscation patterns, aiming to improve recall@3FPM.
+- **`py_feat_trigram_freq10_crit3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=5000 EXP_TRIGRAM_MIN_FREQ=10` — Adjusts trigram frequency floor and enables tiered crit trigrams to capture rare attack sequences for PR_AUC lift.
+- **`py_train_spw075_fpr3e6`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Down-weights positives and targets low FPR threshold to directly optimize recall@3FPM at the deployed operating point.
+- **`py_train_dart_extra_trees_reg`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Uses DART boosting with extra trees and L2 regularization to reduce overfitting and improve generalization for PR_AUC.
+
+</details>
+
+## Cycle `20260522T095513-filetypes-python` — 2026-05-22T09:55:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `34866ad4b37d7948` | py_train_hn015_w10_leaves128 | ok | 0.9986 | 0.9988 | 0.9829 | 42 | [log](out/autocollie/runs/2026-05-22T09-59-52_20260522T095513-filetypes-python_py_train_hn015_w10_leaves128.log) |
+| `0d2e411426d50e10` | py_train_lr003_est350_reg1 | ok | 0.9983 | 0.9985 | 0.9778 | 9 | [log](out/autocollie/runs/2026-05-22T10-00-34_20260522T095513-filetypes-python_py_train_lr003_est350_reg1.log) |
+| `1083be9f84e5dcfa` | py_feat_kv_vocab_30k_split | ok | 0.9983 | 0.9985 | 0.9799 | 27 | [log](out/autocollie/runs/2026-05-22T10-00-43_20260522T095513-filetypes-python_py_feat_kv_vocab_30k_split.log) |
+| `b49ed85de9706c71` | py_feat_textenc_metrics_full | ok | 0.9982 | 0.9984 | 0.9791 | 7 | [log](out/autocollie/runs/2026-05-22T10-01-10_20260522T095513-filetypes-python_py_feat_textenc_metrics_full.log) |
+| `f6d927236543bdca` | py_feat_bigram_freq50_trigram_freq10 | ok | 0.9983 | 0.9985 | 0.9771 | 27 | [log](out/autocollie/runs/2026-05-22T10-01-18_20260522T095513-filetypes-python_py_feat_bigram_freq50_trigram_freq10.log) |
+| `dc1fa68de83a46d2` | py_seed_search_k3_hn02_w12 | ok | 0.9987 | 0.9989 | 0.9834 | 33 | [log](out/autocollie/runs/2026-05-22T10-01-45_20260522T095513-filetypes-python_py_seed_search_k3_hn02_w12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_hn015_w10_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by refining hard-negative weighting and increasing tree capacity to better separate tail malware from benign scripts.
+- **`py_train_lr003_est350_reg1`** `EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3 FP/M by using a lower learning rate with more estimators and L2 regularization to smooth score distributions and reduce false positives.
+- **`py_feat_kv_vocab_30k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by expanding KV vocabulary and splitting values to capture granular library/import signals common in Python malware.
+- **`py_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling text encoding and full text metrics to better characterize obfuscated Python scripts and string-heavy payloads.
+- **`py_feat_bigram_freq50_trigram_freq10`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Aims to improve recall@3 FP/M by lowering n-gram frequency floors to capture rarer but highly indicative code patterns in Python malware.
+- **`py_seed_search_k3_hn02_w12`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Tests stability of the hard-negative configuration across seeds to distinguish real PR_AUC signal from seed noise.
+
+</details>
+
+## Cycle `20260522T100832-filetypes-python` — 2026-05-22T10:08:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2df44b7ab682ed7a` | py_train_spw075_hn015_w10_leaves128 | ok | 0.9986 | 0.9988 | 0.9798 | 17 | [log](out/autocollie/runs/2026-05-22T10-10-51_20260522T100832-filetypes-python_py_train_spw075_hn015_w10_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`py_train_spw075_hn015_w10_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 …` — Control feature set with scale_pos_weight_mult=0.75 and moderate hard negatives to reduce FPR and boost recall@3 FP/M while preserving PR_AUC.
+
+</details>
+

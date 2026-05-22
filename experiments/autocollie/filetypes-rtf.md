@@ -232,3 +232,125 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T191709-filetypes-rtf` — 2026-05-21T19:17:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f790336717c15c13` | rtf_control_dart_extratrees | ok | 0.9780 | 0.5000 | 0.9889 | 6 | [log](out/autocollie/runs/2026-05-21T19-21-53_20260521T191709-filetypes-rtf_rtf_control_dart_extratrees.log) |
+| `abb26d9f8e027774` | rtf_feat_text_metrics_full | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-21T19-22-02_20260521T191709-filetypes-rtf_rtf_feat_text_metrics_full.log) |
+| `5de26f0bcb29cbc2` | rtf_feat_kv_vocab_10k | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-21T19-22-06_20260521T191709-filetypes-rtf_rtf_feat_kv_vocab_10k.log) |
+| `7857807936160ce9` | rtf_feat_text_encoding | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-21T19-22-10_20260521T191709-filetypes-rtf_rtf_feat_text_encoding.log) |
+| `` | rtf_train_hardneg_01_10 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-21T19-22-14_20260521T191709-filetypes-rtf_rtf_train_hardneg_01_10.log) |
+| `` | rtf_train_scale_pos_05 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T19-22-15_20260521T191709-filetypes-rtf_rtf_train_scale_pos_05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rtf_control_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env with dart+extra_trees training to stabilize PR_AUC and establish a reliable baseline for comparison.
+- **`rtf_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to capture document obfuscation signals, aiming to improve PR_AUC by adding structural text features that separate malicious RTF formatting from benign noise.
+- **`rtf_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with 10k cap to capture key-value patterns in RTF metadata, aiming to boost recall@3FPM by identifying malicious configuration blobs that evade n-gram detection.
+- **`rtf_feat_text_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding to detect suspicious character encodings in RTF streams, aiming to improve PR_AUC by filtering benign encoding noise and highlighting evasion techniques.
+- **`rtf_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative weighting to focus model capacity on difficult benign RTFs, aiming to improve recall@3FPM by reducing false positives at low FPR without sacrificing ranking quality.
+- **`rtf_train_scale_pos_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives with scale_pos_weight_mult=0.5 to suppress FP tail, aiming to improve recall@3FPM at the deployed operating point by making the threshold calibrator more conservative.
+
+</details>
+
+## Cycle `20260522T041647-filetypes-rtf` — 2026-05-22T04:16:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `42cb2e4c9ddd7013` | rtf_control_dart_extratrees | ok | 0.9780 | 0.5000 | 0.9889 | 6 | [log](out/autocollie/runs/2026-05-22T04-22-02_20260522T041647-filetypes-rtf_rtf_control_dart_extratrees.log) |
+| `3779092425405c6f` | rtf_feat_kv_vocab_15k | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T04-22-08_20260522T041647-filetypes-rtf_rtf_feat_kv_vocab_15k.log) |
+| `542a8239297a323e` | rtf_feat_text_metrics_obfuscation | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T04-22-11_20260522T041647-filetypes-rtf_rtf_feat_text_metrics_obfuscation.log) |
+| `db114028eb93a1c5` | rtf_feat_obj_trigrams | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T04-22-14_20260522T041647-filetypes-rtf_rtf_feat_obj_trigrams.log) |
+| `` | rtf_train_hardneg_scalepos | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T04-22-18_20260522T041647-filetypes-rtf_rtf_train_hardneg_scalepos.log) |
+| `` | rtf_train_seed_search_ensemble | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-22-19_20260522T041647-filetypes-rtf_rtf_train_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rtf_control_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding dart boosting and extra_trees regularization to reduce overfitting on the small benign set while preserving ranking.
+- **`rtf_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing key-value pair patterns specific to RTF macros and fields that often carry malicious intent.
+- **`rtf_feat_text_metrics_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by leveraging structural text metrics and document obfuscation signals that are highly predictive for RTF malware.
+- **`rtf_feat_obj_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing higher-order objective co-occurrences that distinguish malicious RTF payloads from benign templates.
+- **`rtf_train_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by down-weighting positives and up-weighting hard negatives to push benign scores lower at the tail.
+- **`rtf_train_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC and recall@3 FP/M by averaging across seeds to reduce variance on the small holdout.
+
+</details>
+
+## Cycle `20260522T060229-filetypes-rtf` — 2026-05-22T06:02:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `772080cac22efd7b` | rtf_control_obj_trigrams_lr003 | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T06-07-07_20260522T060229-filetypes-rtf_rtf_control_obj_trigrams_lr003.log) |
+| `a1b4cb56f71b6030` | rtf_feat_kv_vocab_20k | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T06-07-10_20260522T060229-filetypes-rtf_rtf_feat_kv_vocab_20k.log) |
+| `08af01bd5bf7a3d7` | rtf_feat_text_metrics_obfus | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T06-07-14_20260522T060229-filetypes-rtf_rtf_feat_text_metrics_obfus.log) |
+| `c7b1bb2e35884d90` | rtf_feat_textenc_kv_combined | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T06-07-17_20260522T060229-filetypes-rtf_rtf_feat_textenc_kv_combined.log) |
+| `` | rtf_train_dart_extratrees | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-07-20_20260522T060229-filetypes-rtf_rtf_train_dart_extratrees.log) |
+| `` | rtf_train_reg_lambda_mcs50 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T06-07-21_20260522T060229-filetypes-rtf_rtf_train_reg_lambda_mcs50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rtf_control_obj_trigrams_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 …` — Replicate best feature set with lower LR and more leaves to stabilize PR_AUC and improve ranking granularity.
+- **`rtf_feat_kv_vocab_20k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 …` — Enable kv_vocab with higher cap to capture RTF metadata patterns, aiming to boost PR_AUC.
+- **`rtf_feat_text_metrics_obfus`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and document_obfuscation_features to catch RTF obfuscation, targeting recall@3 FP/M.
+- **`rtf_feat_textenc_kv_combined`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 …` — Combine text_encoding and kv_vocab to enrich feature surface, aiming to improve PR_AUC.
+- **`rtf_train_dart_extratrees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Use dart boosting and extra_trees to regularize and improve tail recall@3 FP/M without changing features.
+- **`rtf_train_reg_lambda_mcs50`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=1.5 …` — Increase L2 regularization and lower min_child_samples to reduce overfitting on rare patterns, targeting PR_AUC stability.
+
+</details>
+
+## Cycle `20260522T081112-filetypes-rtf` — 2026-05-22T08:11:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `19ed8cb794f93c86` | rtf_control_scale_pos_05 | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T08-16-22_20260522T081112-filetypes-rtf_rtf_control_scale_pos_05.log) |
+| `c796a88bfb97f1f5` | rtf_feat_textmetrics_obfus | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T08-16-25_20260522T081112-filetypes-rtf_rtf_feat_textmetrics_obfus.log) |
+| `cdb513e8530689f3` | rtf_feat_kv_vocab_40k_lowfreq | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T08-16-28_20260522T081112-filetypes-rtf_rtf_feat_kv_vocab_40k_lowfreq.log) |
+| `0c48c00078dfcaa6` | rtf_feat_obj_susp_trigrams | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T08-16-31_20260522T081112-filetypes-rtf_rtf_feat_obj_susp_trigrams.log) |
+| `` | rtf_train_extra_trees_gbdt | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-16-35_20260522T081112-filetypes-rtf_rtf_train_extra_trees_gbdt.log) |
+| `4174da27586fbc16` | rtf_feat_kv_value_split | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T08-16-36_20260522T081112-filetypes-rtf_rtf_feat_kv_value_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rtf_control_scale_pos_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and recall@3FPM by down-weighting the dominant malware class to give benigns more gradient signal.
+- **`rtf_feat_textmetrics_obfus`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,kv EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing document-specific obfuscation and text structure patterns common in malicious RTFs.
+- **`rtf_feat_kv_vocab_40k_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=40000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by capturing rarer key-value patterns that indicate malicious macros or embedded objects.
+- **`rtf_feat_obj_susp_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,kv,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=5` — Aims to improve PR_AUC by capturing sequential objective and suspicious trait patterns specific to RTF exploitation chains.
+- **`rtf_train_extra_trees_gbdt`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC by adding random split noise to prevent overfitting on the tiny benign set while preserving PR_AUC.
+- **`rtf_feat_kv_value_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by splitting KV string values on separators to recover per-element signal in RTF metadata and properties.
+
+</details>
+
+## Cycle `20260522T101540-filetypes-rtf` — 2026-05-22T10:15:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1939b7fd89af0c01` | rtf_feat_textmetrics_full | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T10-18-20_20260522T101540-filetypes-rtf_rtf_feat_textmetrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rtf_feat_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to capture document obfuscation signals (line lengths, escape density) for RTF, aiming to improve PR_AUC and recall@3 FP/M by adding structural text features.
+
+</details>
+
+## Cycle `20260522T112757-filetypes-rtf` — 2026-05-22T11:27:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9130a92ecbd93a30` | rtf_control_leaves128_lr003 | ok | 0.9780 | 0.5000 | 0.9889 | 1 | [log](out/autocollie/runs/2026-05-22T11-33-06_20260522T112757-filetypes-rtf_rtf_control_leaves128_lr003.log) |
+| `5186ac05902881af` | rtf_feat_kv_vocab_20k | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T11-33-07_20260522T112757-filetypes-rtf_rtf_feat_kv_vocab_20k.log) |
+| `f9b852f19a7ca1df` | rtf_feat_lowfreq_bigrams_obj_trigrams | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T11-33-11_20260522T112757-filetypes-rtf_rtf_feat_lowfreq_bigrams_obj_trigrams.log) |
+| `16b8c171f03714c9` | rtf_feat_obfuscation_metrics | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T11-33-14_20260522T112757-filetypes-rtf_rtf_feat_obfuscation_metrics.log) |
+| `b3f9501b308ba65a` | rtf_transfer_ember_extended | ok | 0.9780 | 0.5000 | 0.9889 | 3 | [log](out/autocollie/runs/2026-05-22T11-33-17_20260522T112757-filetypes-rtf_rtf_transfer_ember_extended.log) |
+| `23ac532f6c6a7756` | rtf_seed_search_k3 | ok | 0.9780 | 0.5000 | 0.9889 | 2 | [log](out/autocollie/runs/2026-05-22T11-33-20_20260522T112757-filetypes-rtf_rtf_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`rtf_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Control feature set with num_leaves=128 and lr=0.03 to improve tree granularity and PR_AUC while keeping matrix cache hits.
+- **`rtf_feat_kv_vocab_20k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enable kv_vocab with max 20k to capture RTF property/key-value patterns, targeting PR_AUC improvement.
+- **`rtf_feat_lowfreq_bigrams_obj_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Lower bigram_min_freq to 100 and enable objective_trigrams to capture rare malicious RTF sequences, aiming to boost PR_AUC.
+- **`rtf_feat_obfuscation_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enable document_obfuscation_features and line_length_buckets to detect evasive RTF formatting, targeting recall@3 FP/M.
+- **`rtf_transfer_ember_extended`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Transfer ember_lite and extended_metrics from strong DOCX/XML configs to RTF to improve PR_AUC via structural signals.
+- **`rtf_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Apply seed_search_k=3 on the best feature set to average out variance and stabilize PR_AUC gains.
+
+</details>
+

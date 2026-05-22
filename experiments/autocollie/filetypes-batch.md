@@ -298,3 +298,77 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T020115-filetypes-batch` — 2026-05-22T02:01:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8c3324bdfd43b07f` | batch_control_kv15k_leaves128 | ok | 0.9998 | 0.9981 | 0.9903 | 9 | [log](out/autocollie/runs/2026-05-22T02-05-36_20260522T020115-filetypes-batch_batch_control_kv15k_leaves128.log) |
+| `21982b3d27ce1182` | batch_kv_text_metrics_encoding | ok | 0.9997 | 0.9975 | 0.9850 | 6 | [log](out/autocollie/runs/2026-05-22T02-05-45_20260522T020115-filetypes-batch_batch_kv_text_metrics_encoding.log) |
+| `c938a99fa12874fb` | batch_kv_bigram_freq250 | ok | 0.9997 | 0.9978 | 0.9931 | 6 | [log](out/autocollie/runs/2026-05-22T02-05-51_20260522T020115-filetypes-batch_batch_kv_bigram_freq250.log) |
+| `` | batch_kv_hardneg_01_10 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T02-05-57_20260522T020115-filetypes-batch_batch_kv_hardneg_01_10.log) |
+| `` | batch_kv_seed_ensemble_3 | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T02-05-59_20260522T020115-filetypes-batch_batch_kv_seed_ensemble_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_control_kv15k_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Control feature set with increased tree complexity and lower LR to improve PR_AUC ranking quality while maintaining ROC_AUC.
+- **`batch_kv_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Add text_metrics_full and text_encoding to capture script obfuscation patterns, targeting PR_AUC and recall@3 FP/M gains.
+- **`batch_kv_bigram_freq250`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Lower bigram_min_freq to 250 to capture rarer batch command sequences, aiming to boost PR_AUC.
+- **`batch_kv_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Apply hard negative mining to sharpen low-FPR boundary, targeting recall@3 FP/M improvement.
+- **`batch_kv_seed_ensemble_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Use seed_search_k=3 with ensemble averaging to reduce variance and stabilize recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T072145-filetypes-batch` — 2026-05-22T07:21:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `94a73f2491a2b440` | batch_control_kv15k_lr003_leaves128 | ok | 0.9997 | 0.9978 | 0.9917 | 6 | [log](out/autocollie/runs/2026-05-22T07-27-30_20260522T072145-filetypes-batch_batch_control_kv15k_lr003_leaves128.log) |
+| `0542b48819ff18b2` | batch_kv_vocab_20k_text_metrics | ok | 0.9997 | 0.9979 | 0.9877 | 6 | [log](out/autocollie/runs/2026-05-22T07-27-35_20260522T072145-filetypes-batch_batch_kv_vocab_20k_text_metrics.log) |
+| `c13cad175097cd0a` | batch_bigram_freq100_trigrams | ok | 0.9997 | 0.9980 | 0.9863 | 6 | [log](out/autocollie/runs/2026-05-22T07-27-41_20260522T072145-filetypes-batch_batch_bigram_freq100_trigrams.log) |
+| `` | batch_control_reg_lambda2_subsample08 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-27-47_20260522T072145-filetypes-batch_batch_control_reg_lambda2_subsample08.log) |
+| `` | batch_control_dart_extra_trees_spw05 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-27-49_20260522T072145-filetypes-batch_batch_control_dart_extra_trees_spw05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_control_kv15k_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with lower LR and more leaves to refine ranking and improve PR AUC.
+- **`batch_kv_vocab_20k_text_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture structural and text signals, targeting PR AUC gain.
+- **`batch_bigram_freq100_trigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram freq floor and add tiered trigrams to catch rare malicious patterns, aiming for recall@3 FP/M improvement.
+- **`batch_control_reg_lambda2_subsample08`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Stronger L2 regularization and row subsampling to reduce overfitting on benign noise, targeting ROC AUC stability.
+- **`batch_control_dart_extra_trees_spw05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — DART boosting with extra trees and downweighted benigns to improve tail behavior and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T094518-filetypes-batch` — 2026-05-22T09:45:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9cfb86676e947295` | batch_kv_textmetrics_vocab | ok | 0.9997 | 0.9978 | 0.9904 | 10 | [log](out/autocollie/runs/2026-05-22T09-47-38_20260522T094518-filetypes-batch_batch_kv_textmetrics_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_kv_textmetrics_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to extract richer structural and key-value signals from batch files, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+
+## Cycle `20260522T112524-filetypes-batch` — 2026-05-22T11:25:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2132c40ba7bef25c` | batch_control_kv15k_leaves128 | ok | 0.9997 | 0.9980 | 0.9917 | 2 | [log](out/autocollie/runs/2026-05-22T11-30-35_20260522T112524-filetypes-batch_batch_control_kv15k_leaves128.log) |
+| `0542b48819ff18b2` | batch_kv_split_vocab20k | dup | 0.9997 | 0.9979 | 0.9877 | 1 | [log](out/autocollie/runs/2026-05-22T11-30-37_20260522T112524-filetypes-batch_batch_kv_split_vocab20k.log) |
+| `3aff22984bbeb904` | batch_bigram_freq250_max8k | ok | 0.9997 | 0.9977 | 0.9917 | 6 | [log](out/autocollie/runs/2026-05-22T11-30-38_20260522T112524-filetypes-batch_batch_bigram_freq250_max8k.log) |
+| `ecc9d14c36a87e9a` | batch_symbol_vocab5k | ok | 0.9997 | 0.9975 | 0.9903 | 6 | [log](out/autocollie/runs/2026-05-22T11-30-44_20260522T112524-filetypes-batch_batch_symbol_vocab5k.log) |
+| `bf193423d4373393` | batch_hardneg_01_10 | ok | 0.9998 | 0.9982 | 0.9850 | 2 | [log](out/autocollie/runs/2026-05-22T11-30-50_20260522T112524-filetypes-batch_batch_hardneg_01_10.log) |
+| `1747d05857ccbe21` | batch_spw075_maxrecall_fpr3e6 | ok | 0.9996 | 0.9970 | 0.9353 | 2 | [log](out/autocollie/runs/2026-05-22T11-30-52_20260522T112524-filetypes-batch_batch_spw075_maxrecall_fpr3e6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`batch_control_kv15k_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Baseline feature set with increased tree capacity to capture finer decision boundaries, targeting PR_AUC improvement.
+- **`batch_kv_split_vocab20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_value_split to recover per-element signal in compound KV strings, aiming to boost PR_AUC and recall@3FPM.
+- **`batch_bigram_freq250_max8k`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 250 and raises max to 8000 to capture rarer structural patterns, targeting recall@3FPM gains.
+- **`batch_symbol_vocab5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Adds symbol_vocab to capture import/export presence patterns, aiming to improve ROC_AUC and PR_AUC via new rank signal.
+- **`batch_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 …` — Upweights 10% of benigns as hard negatives to sharpen the decision boundary at low FPR, targeting recall@3FPM.
+- **`batch_spw075_maxrecall_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_METRICS_FULL=1 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Down-weights positives and optimizes threshold directly for 3e-6 FPR to maximize deployed recall@3FPM.
+
+</details>
+

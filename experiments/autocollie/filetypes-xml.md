@@ -266,3 +266,101 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T032023-filetypes-xml` — 2026-05-22T03:20:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `35c9128a864686de` | xml_control_baseline_train | ok | 1.0000 | 1.0000 | 0.9630 | 6 | [log](out/autocollie/runs/2026-05-22T03-25-47_20260522T032023-filetypes-xml_xml_control_baseline_train.log) |
+| `888dd45e4ce9d305` | xml_feat_kv_textmetrics_full | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T03-25-53_20260522T032023-filetypes-xml_xml_feat_kv_textmetrics_full.log) |
+| `af839d85f2adbfba` | xml_feat_lowbigram_objtrigrams | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T03-25-57_20260522T032023-filetypes-xml_xml_feat_lowbigram_objtrigrams.log) |
+| `99fc2ce3b2548072` | xml_ablate_score_extmetrics | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T03-26-01_20260522T032023-filetypes-xml_xml_ablate_score_extmetrics.log) |
+| `` | xml_train_extratrees_reg | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T03-26-05_20260522T032023-filetypes-xml_xml_train_extratrees_reg.log) |
+| `` | xml_seedsearch_ensemble | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T03-26-07_20260522T032023-filetypes-xml_xml_seedsearch_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xml_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best recent feature surface with slightly higher num_leaves to stabilize ranking and maintain PR_AUC/ROC_AUC guardrails.
+- **`xml_feat_kv_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab and text_metrics_full to capture XML structural patterns and obfuscation signals, aiming to improve PR_AUC by resolving ambiguous benign/malware boundaries.
+- **`xml_feat_lowbigram_objtrigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 25 and adds objective_trigrams to capture rare malicious XML constructs, targeting higher recall@3 FP/M without hurting ROC_AUC.
+- **`xml_ablate_score_extmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Disables the score group and enables extended_metrics to reduce noise on the small corpus, aiming to stabilize PR_AUC and improve generalization.
+- **`xml_train_extratrees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Uses extra_trees and L2 regularization to smooth predictions and improve recall@3 FP/M by reducing variance on the small holdout set.
+- **`xml_seedsearch_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Averages 3 seeds via save_all_seeds to mitigate RNG-driven variance, targeting stable PR_AUC and recall@3 FP/M gains across different data splits.
+
+</details>
+
+## Cycle `20260522T054756-filetypes-xml` — 2026-05-22T05:47:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | xml_control_sposw075 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-52-42_20260522T054756-filetypes-xml_xml_control_sposw075.log) |
+| `58c591759d5ce906` | xml_feat_textmetrics_kv | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T05-52-43_20260522T054756-filetypes-xml_xml_feat_textmetrics_kv.log) |
+| `bacc788db8098534` | xml_feat_lowbigram_objtrigrams | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T05-52-47_20260522T054756-filetypes-xml_xml_feat_lowbigram_objtrigrams.log) |
+| `` | xml_train_hardneg_01_10 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-52-51_20260522T054756-filetypes-xml_xml_train_hardneg_01_10.log) |
+| `` | xml_train_reg_depth8 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-52-53_20260522T054756-filetypes-xml_xml_train_reg_depth8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xml_control_sposw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with scale_pos_weight_mult=0.75 to push recall@3 FP/M by down-weighting benign class.
+- **`xml_feat_textmetrics_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and kv_vocab to capture structural/textual obfuscation signals in XML, targeting PR_AUC improvement.
+- **`xml_feat_lowbigram_objtrigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 25 and enable objective_trigrams to capture rarer malicious patterns, aiming for higher recall@3 FP/M.
+- **`xml_train_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard_negative_fraction=0.1 and weight=10 to focus model on difficult benigns, improving ROC_AUC and tail recall.
+- **`xml_train_reg_depth8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Reduce max_depth to 8 and increase min_child_samples to 200 to regularize on small corpus, stabilizing PR_AUC.
+
+</details>
+
+## Cycle `20260522T085401-filetypes-xml` — 2026-05-22T08:54:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4985a7ef9147a6e2` | xml_control_baseline | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T08-59-34_20260522T085401-filetypes-xml_xml_control_baseline.log) |
+| `dec85ba7d4683767` | xml_feat_textenc_kvsplit | ok | 1.0000 | 1.0000 | 0.9818 | 4 | [log](out/autocollie/runs/2026-05-22T08-59-38_20260522T085401-filetypes-xml_xml_feat_textenc_kvsplit.log) |
+| `` | xml_feat_lowbigram_objtrigrams | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T08-59-42_20260522T085401-filetypes-xml_xml_feat_lowbigram_objtrigrams.log) |
+| `7f5246898cd99330` | xml_feat_extmetrics_ratios | ok | 1.0000 | 1.0000 | 0.9630 | 5 | [log](out/autocollie/runs/2026-05-22T08-59-43_20260522T085401-filetypes-xml_xml_feat_extmetrics_ratios.log) |
+| `` | xml_train_dart_extratrees | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T08-59-48_20260522T085401-filetypes-xml_xml_train_dart_extratrees.log) |
+| `` | xml_train_seedsearch3 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T08-59-50_20260522T085401-filetypes-xml_xml_train_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xml_control_baseline`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicates best feature_env to establish a stable baseline for PR_AUC and ROC_AUC while verifying matrix cache hits.
+- **`xml_feat_textenc_kvsplit`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables text_encoding and kv_value_split to capture obfuscated XML payloads and split KV tokens, aiming to improve PR_AUC by isolating malicious encoding patterns.
+- **`xml_feat_lowbigram_objtrigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 …` — Lowers bigram frequency floor and adds objective trigrams to capture rarer malicious XML structures, targeting recall@3 FP/M gains.
+- **`xml_feat_extmetrics_ratios`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=128 …` — Adds extended metrics and ratio features to improve structural ranking signal for XML documents, aiming to boost PR_AUC without adding noise.
+- **`xml_train_dart_extratrees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 …` — Uses DART boosting and extra trees to regularize the model and reduce overfitting on rare XML patterns, targeting stable PR_AUC and ROC_AUC.
+- **`xml_train_seedsearch3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Averages predictions across 3 seeds to reduce variance and stabilize recall@3 FP/M at the deployed operating point.
+
+</details>
+
+## Cycle `20260522T092416-filetypes-xml` — 2026-05-22T09:24:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2069c1da7e1a4042` | xml_feat_textmetrics_kv_vocab | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T09-26-19_20260522T092416-filetypes-xml_xml_feat_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xml_feat_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture structural and key-value patterns in XML, aiming to improve PR_AUC by adding discriminative features for malicious XML payloads.
+
+</details>
+
+## Cycle `20260522T105047-filetypes-xml` — 2026-05-22T10:50:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4985a7ef9147a6e2` | xml_control_baseline_v2 | dup | 1.0000 | 1.0000 | 0.9630 | 1 | [log](out/autocollie/runs/2026-05-22T10-56-00_20260522T105047-filetypes-xml_xml_control_baseline_v2.log) |
+| `58914079d1546794` | xml_feat_textenc_kv_vocab | ok | 1.0000 | 1.0000 | 0.9818 | 4 | [log](out/autocollie/runs/2026-05-22T10-56-00_20260522T105047-filetypes-xml_xml_feat_textenc_kv_vocab.log) |
+| `051713c309b94918` | xml_feat_lowbigram_tieredtrigrams | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T10-56-05_20260522T105047-filetypes-xml_xml_feat_lowbigram_tieredtrigrams.log) |
+| `b02b595109743b05` | xml_transfer_rtf_extmetrics_extreme | ok | 1.0000 | 1.0000 | 0.9630 | 4 | [log](out/autocollie/runs/2026-05-22T10-56-09_20260522T105047-filetypes-xml_xml_transfer_rtf_extmetrics_extreme.log) |
+| `f722d192e9c2695e` | xml_train_hardneg_01_10 | ok | 1.0000 | 1.0000 | 0.9630 | 2 | [log](out/autocollie/runs/2026-05-22T10-56-13_20260522T105047-filetypes-xml_xml_train_hardneg_01_10.log) |
+| `a1dad3b987a1999a` | xml_train_reg_lambda_leaves64 | ok | 1.0000 | 1.0000 | 0.9630 | 1 | [log](out/autocollie/runs/2026-05-22T10-56-14_20260522T105047-filetypes-xml_xml_train_reg_lambda_leaves64.log) |
+
+<details><summary>Spec details</summary>
+
+- **`xml_control_baseline_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicate best recent feature surface to establish a stable baseline for PR_AUC and recall@3FPM comparison.
+- **`xml_feat_textenc_kv_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable text_encoding and expand kv_vocab to capture structural XML encoding patterns, targeting PR_AUC improvement.
+- **`xml_feat_lowbigram_tieredtrigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 …` — Lower bigram_min_freq to 50 and enable tiered_crit_trigrams to capture rarer XML tag sequences, aiming for higher recall@3FPM.
+- **`xml_transfer_rtf_extmetrics_extreme`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 …` — Port extended_metrics and extreme_features from rtf route to capture tail distribution signals, targeting recall@3FPM.
+- **`xml_train_hardneg_01_10`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 …` — Apply hard negative mining to focus model on difficult benign XML files, improving recall@3FPM without hurting PR_AUC.
+- **`xml_train_reg_lambda_leaves64`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 …` — Reduce num_leaves to 64 and increase reg_lambda to 1.0 to prevent overfitting on small dev set, stabilizing recall@3FPM.
+
+</details>
+

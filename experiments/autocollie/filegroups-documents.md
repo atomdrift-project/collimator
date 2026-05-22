@@ -200,3 +200,125 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260521T190808-filegroups-documents` — 2026-05-21T19:08:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `56186fd3fdbad14b` | docs_control_leaves128_est300 | ok | 1.0000 | 0.9987 | 0.9950 | 10 | [log](out/autocollie/runs/2026-05-21T19-12-27_20260521T190808-filegroups-documents_docs_control_leaves128_est300.log) |
+| `20786b9720501024` | docs_text_metrics_full_encoding | ok | 1.0000 | 0.9987 | 0.9950 | 8 | [log](out/autocollie/runs/2026-05-21T19-12-42_20260521T190808-filegroups-documents_docs_text_metrics_full_encoding.log) |
+| `36c885fae2f852fe` | docs_kv_vocab_split_max10k | ok | 1.0000 | 0.9986 | 0.9958 | 10 | [log](out/autocollie/runs/2026-05-21T19-12-50_20260521T190808-filegroups-documents_docs_kv_vocab_split_max10k.log) |
+| `43616d9f3911d53d` | docs_obfuscation_line_buckets | ok | 1.0000 | 0.9987 | 0.9918 | 8 | [log](out/autocollie/runs/2026-05-21T19-13-01_20260521T190808-filegroups-documents_docs_obfuscation_line_buckets.log) |
+| `` | docs_hardneg_frac01_wt5_leaves128 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T19-13-10_20260521T190808-filegroups-documents_docs_hardneg_frac01_wt5_leaves128.log) |
+| `` | docs_scale_pos_05_leaves128 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-21T19-13-12_20260521T190808-filegroups-documents_docs_scale_pos_05_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docs_control_leaves128_est300`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Baseline control replicating recent best feature_env with increased tree capacity to stabilize PR_AUC and ROC_AUC.
+- **`docs_text_metrics_full_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture document obfuscation signals, targeting PR_AUC improvement.
+- **`docs_kv_vocab_split_max10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab to 10k with value splitting to recover per-element signal in document metadata, aiming for recall@3 FP/M gains.
+- **`docs_obfuscation_line_buckets`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Activates document_obfuscation_features and line_length_buckets to target PDF/RTF obfuscation patterns, improving tail recall@3 FP/M.
+- **`docs_hardneg_frac01_wt5_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Applies hard negative sampling (frac=0.1, wt=5.0) to sharpen decision boundary at low FPR, targeting recall@3 FP/M.
+- **`docs_scale_pos_05_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weights positives (scale_pos_weight_mult=0.5) to reduce FP rate at the operating point, directly optimizing recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T040855-filegroups-documents` — 2026-05-22T04:08:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ba1f1921f98c6ea` | docs_control_leaves128_est300 | ok | 1.0000 | 0.9986 | 0.9955 | 10 | [log](out/autocollie/runs/2026-05-22T04-13-46_20260522T040855-filegroups-documents_docs_control_leaves128_est300.log) |
+| `` | docs_scale_pos_075_leaves128 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-13-56_20260522T040855-filegroups-documents_docs_scale_pos_075_leaves128.log) |
+| `5d7e42844aaa9567` | docs_kv_vocab_split_max15k | ok | 1.0000 | 0.9986 | 0.9952 | 7 | [log](out/autocollie/runs/2026-05-22T04-13-58_20260522T040855-filegroups-documents_docs_kv_vocab_split_max15k.log) |
+| `89005f7911c639a4` | docs_text_metrics_full_line_buckets | ok | 1.0000 | 0.9985 | 0.9954 | 7 | [log](out/autocollie/runs/2026-05-22T04-14-06_20260522T040855-filegroups-documents_docs_text_metrics_full_line_buckets.log) |
+| `dcfc463ce8694550` | docs_ablation_score_weighted_traits | ok | 1.0000 | 0.9986 | 0.9956 | 7 | [log](out/autocollie/runs/2026-05-22T04-14-13_20260522T040855-filegroups-documents_docs_ablation_score_weighted_traits.log) |
+| `` | docs_seed_search_k3_ensemble | fail | — | — | — | 3 | [log](out/autocollie/runs/2026-05-22T04-14-20_20260522T040855-filegroups-documents_docs_seed_search_k3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docs_control_leaves128_est300`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees to match recent top performers, targeting PR_AUC stability.
+- **`docs_scale_pos_075_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to reduce FP at low FPR, targeting recall@3FPM improvement.
+- **`docs_kv_vocab_split_max15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — KV vocab with value splitting captures structured metadata in docs, targeting PR_AUC gain.
+- **`docs_text_metrics_full_line_buckets`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Full text metrics and line buckets capture obfuscation patterns in scripts/docs, aiming to boost recall@3FPM.
+- **`docs_ablation_score_weighted_traits`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCORE_WEIGHTED_TRAITS=0 EXP_TRAIN_SAMPLES=30000` — Remove score-weighted traits to reduce noise from low-confidence findings, targeting ROC_AUC stability.
+- **`docs_seed_search_k3_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ensemble 3 seeds to reduce variance and stabilize recall@3FPM gains.
+
+</details>
+
+## Cycle `20260522T070325-filegroups-documents` — 2026-05-22T07:03:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ba1f1921f98c6ea` | docs_control_baseline | dup | 1.0000 | 0.9986 | 0.9955 | 1 | [log](out/autocollie/runs/2026-05-22T07-07-24_20260522T070325-filegroups-documents_docs_control_baseline.log) |
+| `ac8395b87c297c3a` | docs_text_metrics_encoding | ok | 1.0000 | 0.9986 | 0.9955 | 7 | [log](out/autocollie/runs/2026-05-22T07-07-24_20260522T070325-filegroups-documents_docs_text_metrics_encoding.log) |
+| `` | docs_kv_vocab_split | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-07-31_20260522T070325-filegroups-documents_docs_kv_vocab_split.log) |
+| `a058ac27ac682008` | docs_ablation_crit_ngrams | ok | 1.0000 | 0.9986 | 0.9948 | 7 | [log](out/autocollie/runs/2026-05-22T07-07-33_20260522T070325-filegroups-documents_docs_ablation_crit_ngrams.log) |
+| `` | docs_hardneg_frac01_wt5 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-07-40_20260522T070325-filegroups-documents_docs_hardneg_frac01_wt5.log) |
+| `` | docs_dart_boosting | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-07-42_20260522T070325-filegroups-documents_docs_dart_boosting.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docs_control_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline replicating best recent feature_env to verify matrix cache hits and establish reference PR_AUC and ROC_AUC.
+- **`docs_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full and text_encoding to capture document obfuscation and encoding patterns, aiming to improve PR_AUC by adding rank signal for PDF/DOCX/RTF.
+- **`docs_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab and kv_value_split to extract fine-grained metadata signals, aiming to improve recall@3FPM by capturing subtle malicious document configurations.
+- **`docs_ablation_crit_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disables crit_category_ngrams to reduce noise from benign document structures, aiming to improve ROC_AUC by decreasing overfitting while preserving PR_AUC.
+- **`docs_hardneg_frac01_wt5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard_negative_fraction=0.1 and hard_negative_weight=5.0 to sharpen the decision boundary at low FPR, aiming to improve recall@3FPM without hurting PR_AUC.
+- **`docs_dart_boosting`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switches to dart boosting type to add dropout regularization between trees, aiming to improve PR_AUC by reducing variance and improving generalization on the tail.
+
+</details>
+
+## Cycle `20260522T095317-filegroups-documents` — 2026-05-22T09:53:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `35b2c8f163130523` | docs_text_metrics_full_encoding_kv | ok | 1.0000 | 0.9986 | 0.9961 | 8 | [log](out/autocollie/runs/2026-05-22T09-55-50_20260522T095317-filegroups-documents_docs_text_metrics_full_encoding_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docs_text_metrics_full_encoding_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_metrics_full and text_encoding to capture document obfuscation signals, aiming to improve recall@3 FP/M while maintaining PR_AUC.
+
+</details>
+
+## Cycle `20260522T114107-filegroups-documents` — 2026-05-22T11:41:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `277b6277bfa04fab` | docs_control_est350_lr005 | ok | 1.0000 | 0.9986 | 0.9943 | 8 | [log](out/autocollie/runs/2026-05-22T11-45-58_20260522T114107-filegroups-documents_docs_control_est350_lr005.log) |
+| `07e8a23c7566d1b5` | docs_kv_vocab_expanded_minfreq5 | ok | 1.0000 | 0.9985 | 0.9959 | 8 | [log](out/autocollie/runs/2026-05-22T11-46-05_20260522T114107-filegroups-documents_docs_kv_vocab_expanded_minfreq5.log) |
+| `868cff7f1f13a95e` | docs_tiered_crit_trigrams | ok | 1.0000 | 0.9985 | 0.9955 | 8 | [log](out/autocollie/runs/2026-05-22T11-46-13_20260522T114107-filegroups-documents_docs_tiered_crit_trigrams.log) |
+| `74fc82c044cfe3a9` | docs_scale_pos_05_reg_lambda2 | ok | 1.0000 | 0.9980 | 0.9911 | 8 | [log](out/autocollie/runs/2026-05-22T11-46-21_20260522T114107-filegroups-documents_docs_scale_pos_05_reg_lambda2.log) |
+| `b0bd44c965ea6673` | docs_ablation_text_encoding | ok | 1.0000 | 0.9985 | 0.9959 | 8 | [log](out/autocollie/runs/2026-05-22T11-46-28_20260522T114107-filegroups-documents_docs_ablation_text_encoding.log) |
+| `c98b6c327bd912dc` | docs_transfer_xml_bigrams | ok | 1.0000 | 0.9985 | 0.9945 | 7 | [log](out/autocollie/runs/2026-05-22T11-46-36_20260522T114107-filegroups-documents_docs_transfer_xml_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docs_control_est350_lr005`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Control baseline with increased estimators to stabilize tail recall@3 FP/M while preserving PR_AUC and ROC_AUC.
+- **`docs_kv_vocab_expanded_minfreq5`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and lower min_freq to capture rare document metadata patterns, aiming to improve PR_AUC and recall@3 FP/M.
+- **`docs_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Add severity-prefixed trigrams to capture multi-step obfuscation chains in documents, targeting PR_AUC gains.
+- **`docs_scale_pos_05_reg_lambda2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Downweight positives and increase L2 regularization to suppress false positives, directly optimizing recall@3 FP/M.
+- **`docs_ablation_text_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=0 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Ablate text_encoding to test if it adds noise; aims to keep PR_AUC flat while potentially improving ROC_AUC and reducing overfit.
+- **`docs_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Transfer low-frequency bigram strategy from XML route to capture rare document structure patterns, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260522T131724-filegroups-documents` — 2026-05-22T13:17:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f41efa94f6339b57` | docs_control_train_tune | ok | 1.0000 | 0.9985 | 0.9955 | 2 | [log](out/autocollie/runs/2026-05-22T13-21-40_20260522T131724-filegroups-documents_docs_control_train_tune.log) |
+| `b4d5eb4de759ec5d` | docs_text_metrics_encoding | ok | 1.0000 | 0.9986 | 0.9955 | 2 | [log](out/autocollie/runs/2026-05-22T13-21-42_20260522T131724-filegroups-documents_docs_text_metrics_encoding.log) |
+| `35be9d2eb6bc4f82` | docs_kv_vocab_8k | ok | 1.0000 | 0.9986 | 0.9961 | 8 | [log](out/autocollie/runs/2026-05-22T13-21-44_20260522T131724-filegroups-documents_docs_kv_vocab_8k.log) |
+| `cba903b5d6d2baa6` | docs_obfuscation_line_buckets | ok | 1.0000 | 0.9986 | 0.9960 | 7 | [log](out/autocollie/runs/2026-05-22T13-21-52_20260522T131724-filegroups-documents_docs_obfuscation_line_buckets.log) |
+| `5ce0ef6dbdb51809` | docs_hardneg_005_wt10 | ok | 1.0000 | 0.9986 | 0.9926 | 2 | [log](out/autocollie/runs/2026-05-22T13-22-00_20260522T131724-filegroups-documents_docs_hardneg_005_wt10.log) |
+| `7765027cf217815b` | docs_scale_pos_05 | ok | 1.0000 | 0.9982 | 0.9975 | 2 | [log](out/autocollie/runs/2026-05-22T13-22-02_20260522T131724-filegroups-documents_docs_scale_pos_05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`docs_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline replicating best feature_env; varies training knobs to cache-hit and test deeper training for PR_AUC stability.
+- **`docs_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 …` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, aiming to boost recall@3FPM and PR_AUC.
+- **`docs_kv_vocab_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 …` — Expand KV vocab to 8000 to capture more key-value patterns in documents, targeting PR_AUC improvement without triggering the previous split crash.
+- **`docs_obfuscation_line_buckets`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 …` — Add targeted document obfuscation and line length bucket features to improve tail recall@3FPM for malicious docs.
+- **`docs_hardneg_005_wt10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tune hard negatives with lower fraction and higher weight to sharpen decision boundary, aiming to improve recall@3FPM while preserving ROC_AUC.
+- **`docs_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives to reduce false positives at low FPR, directly optimizing recall@3FPM at the deployed operating point.
+
+</details>
+

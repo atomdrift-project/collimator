@@ -261,3 +261,81 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T045501-filetypes-html` — 2026-05-22T04:55:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e774428d7c20958f` | html_control_train_tweak | ok | 0.6154 | 0.5000 | 0.7619 | 5 | [log](out/autocollie/runs/2026-05-22T04-59-47_20260522T045501-filetypes-html_html_control_train_tweak.log) |
+| `ca35e2d2235784e5` | html_feat_text_metrics_full | ok | 0.6154 | 0.5000 | 0.7619 | 3 | [log](out/autocollie/runs/2026-05-22T04-59-51_20260522T045501-filetypes-html_html_feat_text_metrics_full.log) |
+| `8feff14173592308` | html_feat_kv_vocab | ok | 0.6154 | 0.5000 | 0.7619 | 3 | [log](out/autocollie/runs/2026-05-22T04-59-54_20260522T045501-filetypes-html_html_feat_kv_vocab.log) |
+| `680da72123ea0295` | html_transfer_doc_obfuscation | ok | 0.6154 | 0.5000 | 0.7619 | 2 | [log](out/autocollie/runs/2026-05-22T04-59-57_20260522T045501-filetypes-html_html_transfer_doc_obfuscation.log) |
+| `` | html_gen_seed_search | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T04-59-59_20260522T045501-filetypes-html_html_gen_seed_search.log) |
+| `83d375ef566e6134` | html_ablate_attack_features | ok | 0.6154 | 0.5000 | 0.7619 | 2 | [log](out/autocollie/runs/2026-05-22T05-00-00_20260522T045501-filetypes-html_html_ablate_attack_features.log) |
+
+<details><summary>Spec details</summary>
+
+- **`html_control_train_tweak`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set and adjust num_leaves/learning_rate to improve PR_AUC via better tree complexity on this small corpus.
+- **`html_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture HTML obfuscation patterns, targeting PR_AUC gain.
+- **`html_feat_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Add kv_vocab features to capture key-value patterns in HTML attributes, aiming to boost PR_AUC.
+- **`html_transfer_doc_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port document_obfuscation_features from PDF route to capture HTML obfuscation, aiming to improve recall@3 FP/M.
+- **`html_gen_seed_search`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on base features to reduce seed variance and stabilize PR_AUC.
+- **`html_ablate_attack_features`** `EXP_ATTACK_FEATURES=0 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable attack_features to reduce noise on HTML files, aiming to improve ROC_AUC without hurting PR_AUC.
+
+</details>
+
+## Cycle `20260522T051640-filetypes-html` — 2026-05-22T05:16:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | html_control_baseline_train | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-21-14_20260522T051640-filetypes-html_html_control_baseline_train.log) |
+| `8feff14173592308` | html_feat_kv_vocab | dup | 0.6154 | 0.5000 | 0.7619 | 1 | [log](out/autocollie/runs/2026-05-22T05-21-15_20260522T051640-filetypes-html_html_feat_kv_vocab.log) |
+| `d8806f15a7dac4c1` | html_feat_text_metrics_full | ok | 0.6154 | 0.5000 | 0.7619 | 3 | [log](out/autocollie/runs/2026-05-22T05-21-16_20260522T051640-filetypes-html_html_feat_text_metrics_full.log) |
+| `ca13ca829a9bb730` | html_feat_bigram_rare | ok | 0.6154 | 0.5000 | 0.7619 | 4 | [log](out/autocollie/runs/2026-05-22T05-21-19_20260522T051640-filetypes-html_html_feat_bigram_rare.log) |
+| `` | html_train_hardneg | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T05-21-23_20260522T051640-filetypes-html_html_train_hardneg.log) |
+| `` | html_train_reg_lambda | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-05-22T05-21-25_20260522T051640-filetypes-html_html_train_reg_lambda.log) |
+
+<details><summary>Spec details</summary>
+
+- **`html_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 …` — Replicates the best recent feature_env to establish a stable baseline; tweaks learning_rate and num_leaves to improve PR_AUC without changing the feature matrix.
+- **`html_feat_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_EXTENDED_METRICS=1 …` — Enables kv_vocab to extract key-value pair signals from HTML attributes and scripts, aiming to boost PR_AUC by capturing structured metadata patterns.
+- **`html_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_EXTENDED_METRICS=1 …` — Activates text_metrics_full to leverage line length, entropy, and character distribution features specific to HTML documents, targeting PR_AUC gains from structural text analysis.
+- **`html_feat_bigram_rare`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_EXTENDED_METRICS=1 …` — Lowers bigram_min_freq to 100 and raises bigram_max to 10000 to capture rarer HTML tag/attribute combinations, aiming to improve PR_AUC by increasing feature granularity.
+- **`html_train_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_EXTENDED_METRICS=1 …` — Applies hard_negative_fraction=0.1 and hard_negative_weight=8.0 to focus the model on difficult benign HTML files, targeting recall@3 FP/M by reducing false positives at the tail.
+- **`html_train_reg_lambda`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_EXTENDED_METRICS=1 …` — Increases reg_lambda to 2.0 and min_child_samples to 200 to regularize the model on the small HTML corpus, aiming to stabilize PR_AUC and prevent overfitting.
+
+</details>
+
+## Cycle `20260522T101200-filetypes-html` — 2026-05-22T10:12:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c1dd5cf61a91e074` | html_control_bigram_rare_train | ok | 0.6154 | 0.5000 | 0.7619 | 1 | [log](out/autocollie/runs/2026-05-22T10-17-02_20260522T101200-filetypes-html_html_control_bigram_rare_train.log) |
+| `0e564762af3ca21e` | html_feat_text_metrics_full | ok | 0.6154 | 0.5000 | 0.7619 | 1 | [log](out/autocollie/runs/2026-05-22T10-17-03_20260522T101200-filetypes-html_html_feat_text_metrics_full.log) |
+| `76c3f9311c5ba2e1` | html_feat_kv_vocab_split | ok | 0.6154 | 0.5000 | 0.7619 | 2 | [log](out/autocollie/runs/2026-05-22T10-17-05_20260522T101200-filetypes-html_html_feat_kv_vocab_split.log) |
+| `86cea72521c473ae` | html_feat_tiered_trigrams | ok | 0.6154 | 0.5000 | 0.7619 | 3 | [log](out/autocollie/runs/2026-05-22T10-17-07_20260522T101200-filetypes-html_html_feat_tiered_trigrams.log) |
+| `7e0ee74f747dddf1` | html_train_hardneg_01_10 | ok | 0.6154 | 0.5000 | 0.7619 | 1 | [log](out/autocollie/runs/2026-05-22T10-17-10_20260522T101200-filetypes-html_html_train_hardneg_01_10.log) |
+| `0410840b7e98c64d` | html_train_reg_depth | ok | 0.6154 | 0.5000 | 0.7619 | 1 | [log](out/autocollie/runs/2026-05-22T10-17-11_20260522T101200-filetypes-html_html_train_reg_depth.log) |
+
+<details><summary>Spec details</summary>
+
+- **`html_control_bigram_rare_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Replicates best PR_AUC feature set while tuning num_leaves and estimators to improve ranking stability and PR_AUC.
+- **`html_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture HTML structure and obfuscation signals, aiming to boost PR_AUC and recall@3FPM.
+- **`html_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Adds kv_vocab with value splitting to extract per-element signals from HTML attributes, targeting PR_AUC gains.
+- **`html_feat_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,score EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Enables tiered_crit_trigrams with low min_freq to capture rare malicious HTML patterns, aiming to improve recall@3FPM.
+- **`html_train_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Applies hard negative sampling to focus model on difficult benign HTML, aiming to reduce FPR and improve recall@3FPM.
+- **`html_train_reg_depth`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score …` — Increases max_depth and reg_lambda to allow deeper trees with stronger regularization, targeting PR_AUC without overfitting.
+
+</details>
+
+## Cycle `20260522T102007-filetypes-html` — 2026-05-22T10:20:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bb09c97043e29784` | html_text_kv_small_tree | ok | 0.6154 | 0.5000 | 0.7619 | 3 | [log](out/autocollie/runs/2026-05-22T10-22-05_20260522T102007-filetypes-html_html_text_kv_small_tree.log) |
+
+<details><summary>Spec details</summary>
+
+- **`html_text_kv_small_tree`** `EXP_ESTIMATORS=150 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=32 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to extract HTML-specific structural and key-value signals, targeting PR_AUC improvement on the tiny corpus while using shallow trees (num_leaves=32) and higher min_child_samples to reduce overfitting noise.
+
+</details>
+

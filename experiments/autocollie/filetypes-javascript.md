@@ -341,3 +341,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T024007-filetypes-javascript` — 2026-05-22T02:40:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d1c9012aea936e55` | js_control_posweight075 | ok | 0.9993 | 0.9989 | 0.9877 | 42 | [log](out/autocollie/runs/2026-05-22T02-44-29_20260522T024007-filetypes-javascript_js_control_posweight075.log) |
+| `` | js_hn_frac01_w5_reg2_retry | fail | — | — | — | 21 | [log](out/autocollie/runs/2026-05-22T02-45-11_20260522T024007-filetypes-javascript_js_hn_frac01_w5_reg2_retry.log) |
+| `56578550289cdc09` | js_kv_vocab_12k | ok | 0.9994 | 0.9990 | 0.9871 | 35 | [log](out/autocollie/runs/2026-05-22T02-45-32_20260522T024007-filetypes-javascript_js_kv_vocab_12k.log) |
+| `a43005b303fadb87` | js_textenc_metrics_full | ok | 0.9994 | 0.9990 | 0.9875 | 34 | [log](out/autocollie/runs/2026-05-22T02-46-08_20260522T024007-filetypes-javascript_js_textenc_metrics_full.log) |
+| `` | js_seedsearch3_baseline | fail | — | — | — | 27 | [log](out/autocollie/runs/2026-05-22T02-46-42_20260522T024007-filetypes-javascript_js_seedsearch3_baseline.log) |
+| `10c6328a0057f461` | js_ablate_blindfold | ok | 0.9994 | 0.9990 | 0.9871 | 35 | [log](out/autocollie/runs/2026-05-22T02-47-09_20260522T024007-filetypes-javascript_js_ablate_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_control_posweight075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with reduced positive weight to lower FPs at low FPR, targeting recall@3FPM.
+- **`js_hn_frac01_w5_reg2_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retest hard-negative strategy from top PR AUC run with moderate regularization, targeting PR_AUC.
+- **`js_kv_vocab_12k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab to capture key-value pair patterns in JS payloads, targeting PR_AUC.
+- **`js_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text encoding and full text metrics to detect obfuscation patterns, targeting recall@3FPM.
+- **`js_seedsearch3_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Seed search on baseline features to distinguish real signal from seed noise, targeting stable PR_AUC.
+- **`js_ablate_blindfold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ablate blindfold dropout to test if removing regularization improves PR_AUC without hurting ROC_AUC.
+
+</details>
+
+## Cycle `20260522T051446-filetypes-javascript` — 2026-05-22T05:14:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | js_control_leaves128_reg2 | fail | — | — | — | 10 | [log](out/autocollie/runs/2026-05-22T05-19-16_20260522T051446-filetypes-javascript_js_control_leaves128_reg2.log) |
+| `aa0190edc9acdd02` | js_kv_vocab_15k | ok | 0.9994 | 0.9990 | 0.9871 | 36 | [log](out/autocollie/runs/2026-05-22T05-19-26_20260522T051446-filetypes-javascript_js_kv_vocab_15k.log) |
+| `a43005b303fadb87` | js_textenc_metrics_full | dup | 0.9994 | 0.9990 | 0.9875 | 1 | [log](out/autocollie/runs/2026-05-22T05-20-02_20260522T051446-filetypes-javascript_js_textenc_metrics_full.log) |
+| `ae2df6cccb8b7e21` | js_bigram_minfreq100 | ok | 0.9993 | 0.9989 | 0.9871 | 33 | [log](out/autocollie/runs/2026-05-22T05-20-03_20260522T051446-filetypes-javascript_js_bigram_minfreq100.log) |
+| `` | js_dart_extra_trees_lr003 | fail | — | — | — | 12 | [log](out/autocollie/runs/2026-05-22T05-20-37_20260522T051446-filetypes-javascript_js_dart_extra_trees_lr003.log) |
+| `81135d0d963ebd3a` | js_kv_highfreq1k | ok | 0.9994 | 0.9989 | 0.9871 | 38 | [log](out/autocollie/runs/2026-05-22T05-20-48_20260522T051446-filetypes-javascript_js_kv_highfreq1k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_control_leaves128_reg2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Baseline features with increased tree complexity and L2 regularization to improve PR_AUC ranking quality.
+- **`js_kv_vocab_15k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab with higher cap to capture structured JS object patterns, targeting PR_AUC gain.
+- **`js_textenc_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to detect obfuscation, aiming to boost recall@3FPM and PR_AUC.
+- **`js_bigram_minfreq100`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor to 100 to capture rarer malicious patterns, targeting recall@3FPM improvement.
+- **`js_dart_extra_trees_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Use DART boosting and extra trees with lower LR to reduce overfitting and stabilize PR_AUC.
+- **`js_kv_highfreq1k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 …` — Transfer high-frequency bigram floor (1000) with KV vocab to reduce noise and improve PR_AUC guardrails.
+
+</details>
+
+## Cycle `20260522T081639-filetypes-javascript` — 2026-05-22T08:16:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | js_control_leaves128_reg2_v2 | fail | — | — | — | 10 | [log](out/autocollie/runs/2026-05-22T08-21-43_20260522T081639-filetypes-javascript_js_control_leaves128_reg2_v2.log) |
+| `aab77f194b3e114d` | js_kv_textenc_vocab15k | ok | 0.9993 | 0.9989 | 0.9859 | 89 | [log](out/autocollie/runs/2026-05-22T08-21-53_20260522T081639-filetypes-javascript_js_kv_textenc_vocab15k.log) |
+| `7251fca75c84949a` | js_bigram100_textmetrics | ok | 0.9994 | 0.9989 | 0.9863 | 76 | [log](out/autocollie/runs/2026-05-22T08-23-21_20260522T081639-filetypes-javascript_js_bigram100_textmetrics.log) |
+| `` | js_hn_frac01_w5_reg2 | fail | — | — | — | 19 | [log](out/autocollie/runs/2026-05-22T08-24-38_20260522T081639-filetypes-javascript_js_hn_frac01_w5_reg2.log) |
+| `40b77098403fc7f8` | js_kv_split_vocab12k | ok | 0.9994 | 0.9989 | 0.9869 | 63 | [log](out/autocollie/runs/2026-05-22T08-24-57_20260522T081639-filetypes-javascript_js_kv_split_vocab12k.log) |
+| `51632a351193610a` | js_seed123_leaves112_lr004 | ok | 0.9993 | 0.9989 | 0.9858 | 38 | [log](out/autocollie/runs/2026-05-22T08-26-00_20260522T081639-filetypes-javascript_js_seed123_leaves112_lr004.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_control_leaves128_reg2_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control spec replicating best recent feature_env with num_leaves=128 and reg_lambda=2.0 to establish a stable baseline for PR_AUC and recall@3FPM.
+- **`js_kv_textenc_vocab15k`** `EXP_DISABLE_FEATURE_GROUPS= EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture obfuscation patterns and key-value structures, aiming to boost PR_AUC by adding high-signal research features.
+- **`js_bigram100_textmetrics`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS= EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables text_metrics_full to capture rarer patterns and document obfuscation signals, targeting recall@3FPM improvement.
+- **`js_hn_frac01_w5_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard_negative_fraction=0.1 and hard_negative_weight=5.0 on the control feature set to sharpen decision boundaries and improve PR_AUC.
+- **`js_kv_split_vocab12k`** `EXP_DISABLE_FEATURE_GROUPS= EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests kv_value_split alongside kv_vocab to recover per-element signal in array-like KV strings, aiming to improve PR_AUC without adding noise.
+- **`js_seed123_leaves112_lr004`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Varies seed to 123 and adjusts num_leaves/learning_rate to check generalization and reduce seed variance, targeting stable PR_AUC and recall@3FPM.
+
+</details>
+
+## Cycle `20260522T104939-filetypes-javascript` — 2026-05-22T10:49:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b52a2b2f217ab534` | js_textenc_metrics_kv_vocab15k | ok | 0.9994 | 0.9989 | 0.9857 | 37 | [log](out/autocollie/runs/2026-05-22T10-52-22_20260522T104939-filetypes-javascript_js_textenc_metrics_kv_vocab15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_textenc_metrics_kv_vocab15k`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables text_encoding and text_metrics_full alongside kv_vocab to capture script obfuscation and structural signals, aiming to improve PR_AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260522T110612-filetypes-javascript` — 2026-05-22T11:06:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07caddafb7ac4a3e` | js_control_scalepos075_leaves128 | ok | 0.9994 | 0.9990 | 0.9870 | 36 | [log](out/autocollie/runs/2026-05-22T11-11-33_20260522T110612-filetypes-javascript_js_control_scalepos075_leaves128.log) |
+| `a3a28359f72424ca` | js_kv_split_vocab20k_minfreq5 | ok | 0.9994 | 0.9989 | 0.9880 | 37 | [log](out/autocollie/runs/2026-05-22T11-12-09_20260522T110612-filetypes-javascript_js_kv_split_vocab20k_minfreq5.log) |
+| `3541292de81dbaae` | js_textenc_metrics_linebuckets | ok | 0.9994 | 0.9989 | 0.9867 | 35 | [log](out/autocollie/runs/2026-05-22T11-12-47_20260522T110612-filetypes-javascript_js_textenc_metrics_linebuckets.log) |
+| `6d8455ff68c0c285` | js_bigram100_objtrigrams | ok | 0.9994 | 0.9989 | 0.9871 | 37 | [log](out/autocollie/runs/2026-05-22T11-13-22_20260522T110612-filetypes-javascript_js_bigram100_objtrigrams.log) |
+| `d7dee446ef25b7fd` | js_seedsearch3_control | ok | 0.9994 | 0.9990 | 0.9878 | 28 | [log](out/autocollie/runs/2026-05-22T11-13-59_20260522T110612-filetypes-javascript_js_seedsearch3_control.log) |
+| `6b62827e481a0246` | js_ablate_blindfold_crit | ok | 0.9994 | 0.9989 | 0.9879 | 35 | [log](out/autocollie/runs/2026-05-22T11-14-27_20260522T110612-filetypes-javascript_js_ablate_blindfold_crit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`js_control_scalepos075_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with scale_pos_weight_mult=0.75 and num_leaves=128 to reduce false positives at low FPR, targeting recall@3 FP/M.
+- **`js_kv_split_vocab20k_minfreq5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand KV vocab to 20k with value splitting and lower min_freq to capture rare malicious patterns, targeting PR_AUC.
+- **`js_textenc_metrics_linebuckets`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding, text_metrics_full, and line_length_buckets to capture obfuscation signals in JS, targeting PR_AUC.
+- **`js_bigram100_objtrigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 100 and enable objective_trigrams to capture finer-grained attack patterns, targeting PR_AUC.
+- **`js_seedsearch3_control`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed_search_k=3 on the control feature set to distinguish real signal from seed variance, targeting stable recall@3 FP/M.
+- **`js_ablate_blindfold_crit`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold and crit_category_ngrams to reduce feature noise and overfitting, aiming to improve PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

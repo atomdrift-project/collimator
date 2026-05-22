@@ -166,3 +166,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T050029-filetypes-python-bytecode` — 2026-05-22T05:00:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5f77bbdac9e6e9e1` | pybc_ctrl_hardneg_tail | ok | 0.9995 | 0.9981 | 0.9897 | 8 | [log](out/autocollie/runs/2026-05-22T05-05-07_20260522T050029-filetypes-python-bytecode_pybc_ctrl_hardneg_tail.log) |
+| `53c80f9b4e654b6e` | pybc_feat_textenc_kv_expand | ok | 0.9996 | 0.9985 | 0.9898 | 5 | [log](out/autocollie/runs/2026-05-22T05-05-15_20260522T050029-filetypes-python-bytecode_pybc_feat_textenc_kv_expand.log) |
+| `1a24d30901d3fcd9` | pybc_feat_symbol_bigrams | ok | 0.9990 | 0.9962 | 0.9877 | 5 | [log](out/autocollie/runs/2026-05-22T05-05-20_20260522T050029-filetypes-python-bytecode_pybc_feat_symbol_bigrams.log) |
+| `837ce0249fe83b15` | pybc_abl_extreme_lowfreq | ok | 0.9994 | 0.9975 | 0.9877 | 5 | [log](out/autocollie/runs/2026-05-22T05-05-25_20260522T050029-filetypes-python-bytecode_pybc_abl_extreme_lowfreq.log) |
+| `d342b7bca475bc96` | pybc_xfer_seedavg_hardneg | ok | 0.9991 | 0.9962 | 0.9898 | 6 | [log](out/autocollie/runs/2026-05-22T05-05-30_20260522T050029-filetypes-python-bytecode_pybc_xfer_seedavg_hardneg.log) |
+| `1185b4539f3dc967` | pybc_retry_kv_split_sev3 | ok | 0.9993 | 0.9973 | 0.9877 | 7 | [log](out/autocollie/runs/2026-05-22T05-05-36_20260522T050029-filetypes-python-bytecode_pybc_retry_kv_split_sev3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pybc_ctrl_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicate best recent feature set and apply hard-negative upweighting to improve recall@3 FP/M by focusing the model on difficult benign-malware boundaries.
+- **`pybc_feat_textenc_kv_expand`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and expand kv_vocab_max to capture finer bytecode structure signals, targeting PR_AUC improvement through richer feature surface.
+- **`pybc_feat_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 …` — Introduce symbol_vocab and symbol_bigrams to detect malicious import co-occurrence patterns in bytecode, aiming to lift PR_AUC.
+- **`pybc_abl_extreme_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features and lower bigram_min_freq to reduce noise and overfitting, targeting flat or higher PR_AUC with cleaner ranking.
+- **`pybc_xfer_seedavg_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Transfer perl's hard-negative tail config and average 3 seeds to stabilize recall@3 FP/M gains against seed variance.
+- **`pybc_retry_kv_split_sev3`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Retry kv_value_split with higher vocab cap and min_malware_score=3 to focus on high-confidence malware, targeting recall@3 FP/M improvement.
+
+</details>
+
+## Cycle `20260522T072751-filetypes-python-bytecode` — 2026-05-22T07:27:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `50c4975d8ebeee2e` | pybc_ctrl_textenc_kv_train | ok | 0.9993 | 0.9973 | 0.9898 | 5 | [log](out/autocollie/runs/2026-05-22T07-32-27_20260522T072751-filetypes-python-bytecode_pybc_ctrl_textenc_kv_train.log) |
+| `06cbc850644c0406` | pybc_feat_kv_vocab_expand | ok | 0.9993 | 0.9972 | 0.9857 | 5 | [log](out/autocollie/runs/2026-05-22T07-32-32_20260522T072751-filetypes-python-bytecode_pybc_feat_kv_vocab_expand.log) |
+| `9132faaf52edef23` | pybc_feat_text_metrics_full | ok | 0.9992 | 0.9967 | 0.9857 | 5 | [log](out/autocollie/runs/2026-05-22T07-32-37_20260522T072751-filetypes-python-bytecode_pybc_feat_text_metrics_full.log) |
+| `84886a519a2ac3e5` | pybc_abl_extreme_off | ok | 0.9993 | 0.9972 | 0.9857 | 5 | [log](out/autocollie/runs/2026-05-22T07-32-42_20260522T072751-filetypes-python-bytecode_pybc_abl_extreme_off.log) |
+| `f252b91f62f1a21f` | pybc_xfer_hardneg_scalepos | ok | 0.9989 | 0.9957 | 0.9814 | 5 | [log](out/autocollie/runs/2026-05-22T07-32-47_20260522T072751-filetypes-python-bytecode_pybc_xfer_hardneg_scalepos.log) |
+| `` | pybc_gen_seedavg_3 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T07-32-52_20260522T072751-filetypes-python-bytecode_pybc_gen_seedavg_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pybc_ctrl_textenc_kv_train`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Target PR_AUC by refining tree depth and hard-negative weighting on the top-performing textenc+kv feature surface to improve ranking without changing the matrix.
+- **`pybc_feat_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Target PR_AUC by expanding kv_vocab_max and lowering kv_min_freq to capture rarer key-value patterns in python-bytecode that signal obfuscation or malicious imports.
+- **`pybc_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=280 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 …` — Target recall@3FPM by enabling text_metrics_full to leverage structural text statistics that better separate benign scripts from packed malware at low FPR.
+- **`pybc_abl_extreme_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=200 EXP_EXTREME_FEATURES=0 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Target PR_AUC by disabling extreme_features to reduce overfitting on tail noise, expecting cleaner ranking and flatter ROC AUC.
+- **`pybc_xfer_hardneg_scalepos`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 …` — Target recall@3FPM by transferring perl's hard-negative weighting and scale_pos_weight reduction to suppress benign false positives in bytecode.
+- **`pybc_gen_seedavg_3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Target PR_AUC by averaging across 3 seeds to reduce variance and confirm the textenc+kv signal is robust rather than seed-dependent.
+
+</details>
+
+## Cycle `20260522T100228-filetypes-python-bytecode` — 2026-05-22T10:02:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a5b57cb1422c5300` | pybc_ctrl_textenc_kv_train_lr003 | ok | 0.9989 | 0.9953 | 0.9898 | 5 | [log](out/autocollie/runs/2026-05-22T10-04-59_20260522T100228-filetypes-python-bytecode_pybc_ctrl_textenc_kv_train_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pybc_ctrl_textenc_kv_train_lr003`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env with text_encoding and kv_vocab enabled, lowering learning_rate to 0.03 and increasing estimators to 300 to improve PR_AUC via finer gradient steps.
+
+</details>
+
+## Cycle `20260522T101231-filetypes-python-bytecode` — 2026-05-22T10:12:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a5b57cb1422c5300` | pybc_ctrl_textenc_kv_lr003_leaves128 | dup | 0.9989 | 0.9953 | 0.9898 | 1 | [log](out/autocollie/runs/2026-05-22T10-17-34_20260522T101231-filetypes-python-bytecode_pybc_ctrl_textenc_kv_lr003_leaves128.log) |
+| `b81322f42c983221` | pybc_exploit_hardneg_tail | ok | 0.9994 | 0.9977 | 0.9898 | 2 | [log](out/autocollie/runs/2026-05-22T10-17-35_20260522T101231-filetypes-python-bytecode_pybc_exploit_hardneg_tail.log) |
+| `805a861496398a9e` | pybc_feat_kv_vocab_20k | ok | 0.9994 | 0.9975 | 0.9857 | 5 | [log](out/autocollie/runs/2026-05-22T10-17-37_20260522T101231-filetypes-python-bytecode_pybc_feat_kv_vocab_20k.log) |
+| `c45f5da199812014` | pybc_feat_text_metrics_full | ok | 0.9993 | 0.9973 | 0.9857 | 5 | [log](out/autocollie/runs/2026-05-22T10-17-42_20260522T101231-filetypes-python-bytecode_pybc_feat_text_metrics_full.log) |
+| `84d29f489db0191f` | pybc_abl_blindfold_off | ok | 0.9994 | 0.9975 | 0.9857 | 5 | [log](out/autocollie/runs/2026-05-22T10-17-47_20260522T101231-filetypes-python-bytecode_pybc_abl_blindfold_off.log) |
+| `7a07fe51b2bf0a2f` | pybc_feat_bigram_lowfreq_200 | ok | 0.9995 | 0.9981 | 0.9877 | 5 | [log](out/autocollie/runs/2026-05-22T10-17-53_20260522T101231-filetypes-python-bytecode_pybc_feat_bigram_lowfreq_200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pybc_ctrl_textenc_kv_lr003_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Fine-tune learning rate and leaves on the best feature surface to improve PR_AUC and recall@3FPM via better gradient descent stability.
+- **`pybc_exploit_hardneg_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 …` — Apply hard negative mining to focus the model on difficult benign bytecode, targeting recall@3FPM improvement at low FPR.
+- **`pybc_feat_kv_vocab_20k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 …` — Expand KV vocab cap to 20k to capture rarer metadata patterns, aiming to lift PR_AUC by adding discriminative signal.
+- **`pybc_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable full text metrics to capture structural obfuscation in bytecode strings, targeting recall@3FPM gains on packed/obfuscated samples.
+- **`pybc_abl_blindfold_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 …` — Disable blindfold dropout features to reduce training noise, aiming to stabilize PR_AUC and ROC_AUC while preserving recall@3FPM.
+- **`pybc_feat_bigram_lowfreq_200`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram min freq to 200 to include rarer bytecode patterns, targeting PR_AUC improvement by expanding feature coverage.
+
+</details>
+
+## Cycle `20260522T132204-filetypes-python-bytecode` — 2026-05-22T13:22:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7f4dc0c0359d0525` | pybc_ctrl_bigram200_train_lr003 | ok | 0.9991 | 0.9966 | 0.9856 | 5 | [log](out/autocollie/runs/2026-05-22T13-27-13_20260522T132204-filetypes-python-bytecode_pybc_ctrl_bigram200_train_lr003.log) |
+| `06cbc850644c0406` | pybc_feat_textenc_kv_vocab | dup | 0.9993 | 0.9972 | 0.9857 | 1 | [log](out/autocollie/runs/2026-05-22T13-27-19_20260522T132204-filetypes-python-bytecode_pybc_feat_textenc_kv_vocab.log) |
+| `10b4c6aca8994694` | pybc_feat_tiered_trigrams | ok | 0.9990 | 0.9959 | 0.9877 | 6 | [log](out/autocollie/runs/2026-05-22T13-27-20_20260522T132204-filetypes-python-bytecode_pybc_feat_tiered_trigrams.log) |
+| `f0b2d02e2732be79` | pybc_abl_metrics_off | ok | 0.9980 | 0.9922 | 0.9898 | 5 | [log](out/autocollie/runs/2026-05-22T13-27-25_20260522T132204-filetypes-python-bytecode_pybc_abl_metrics_off.log) |
+| `1ee79ee9db146f21` | pybc_transfer_xml_bigram50 | ok | 0.9995 | 0.9979 | 0.9834 | 5 | [log](out/autocollie/runs/2026-05-22T13-27-30_20260522T132204-filetypes-python-bytecode_pybc_transfer_xml_bigram50.log) |
+| `f8597e596647105c` | pybc_gen_seed123_bigram200 | ok | 0.9992 | 0.9967 | 0.9877 | 8 | [log](out/autocollie/runs/2026-05-22T13-27-35_20260522T132204-filetypes-python-bytecode_pybc_gen_seed123_bigram200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`pybc_ctrl_bigram200_train_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicate best PR_AUC feature set with lower learning rate and more estimators to stabilize ranking and improve PR_AUC.
+- **`pybc_feat_textenc_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and kv_vocab to capture structural bytecode patterns, targeting PR_AUC gains from new rank signal.
+- **`pybc_feat_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=5` — Add tiered critical trigrams to capture multi-step malicious sequences, aiming to boost recall@3FPM.
+- **`pybc_abl_metrics_off`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters,metrics EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Disable metrics group to reduce noise from aggregate counts, targeting flat or higher PR_AUC with less overfit.
+- **`pybc_transfer_xml_bigram50`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port XML route's low bigram frequency floor to capture rare bytecode patterns, targeting recall@3FPM improvement.
+- **`pybc_gen_seed123_bigram200`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Vary seed on best feature set to distinguish real signal from seed noise, targeting stable PR_AUC.
+
+</details>
+

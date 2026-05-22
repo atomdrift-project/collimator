@@ -198,3 +198,103 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260522T043153-filetypes-gz` — 2026-05-22T04:31:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afb70c1f976a057d` | gz_control_lr003_leaves128 | ok | 0.9987 | 0.9983 | 0.9820 | 9 | [log](out/autocollie/runs/2026-05-22T04-36-58_20260522T043153-filetypes-gz_gz_control_lr003_leaves128.log) |
+| `` | gz_exploit_hard_neg_02_10 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T04-37-07_20260522T043153-filetypes-gz_gz_exploit_hard_neg_02_10.log) |
+| `f192e89af3a5263b` | gz_feat_kv_vocab_15000_split | ok | 0.9986 | 0.9982 | 0.9774 | 6 | [log](out/autocollie/runs/2026-05-22T04-37-09_20260522T043153-filetypes-gz_gz_feat_kv_vocab_15000_split.log) |
+| `1f27022c50e13a9b` | gz_transfer_conf_tiered_trigrams | ok | 0.9988 | 0.9984 | 0.9774 | 6 | [log](out/autocollie/runs/2026-05-22T04-37-15_20260522T043153-filetypes-gz_gz_transfer_conf_tiered_trigrams.log) |
+| `be1bab0f7a8b693c` | gz_abl_blindfold_off | ok | 0.9989 | 0.9986 | 0.9774 | 6 | [log](out/autocollie/runs/2026-05-22T04-37-22_20260522T043153-filetypes-gz_gz_abl_blindfold_off.log) |
+| `a21e0b3141c48a7b` | gz_retry_hard_neg_attack_k3 | ok | 0.9998 | 0.9997 | 0.9869 | 9 | [log](out/autocollie/runs/2026-05-22T04-37-28_20260522T043153-filetypes-gz_gz_retry_hard_neg_attack_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`gz_control_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Test lower LR and higher leaves on baseline features to improve PR_AUC via better gradient descent stability.
+- **`gz_exploit_hard_neg_02_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard negative mining to baseline features to boost recall@3FPM by focusing on difficult benign examples.
+- **`gz_feat_kv_vocab_15000_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with higher cap and value splitting to capture granular key-value patterns, targeting PR_AUC improvement.
+- **`gz_transfer_conf_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Port confidence-weighted ngrams and tiered trigrams to capture co-occurrence signals, aiming for PR_AUC gain.
+- **`gz_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold dropout to reduce feature noise, aiming to stabilize PR_AUC while keeping ROC_AUC flat.
+- **`gz_retry_hard_neg_attack_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 …` — Retry top historical hard-negative config with seed_search_k=3 to verify signal stability and improve recall@3FPM.
+
+</details>
+
+## Cycle `20260522T063753-filetypes-gz` — 2026-05-22T06:37:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | gz_control_lr003_leaves128 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T06-42-23_20260522T063753-filetypes-gz_gz_control_lr003_leaves128.log) |
+| `fd858c240069ae7b` | gz_feat_kv_vocab_split | ok | 0.9986 | 0.9982 | 0.9774 | 7 | [log](out/autocollie/runs/2026-05-22T06-42-25_20260522T063753-filetypes-gz_gz_feat_kv_vocab_split.log) |
+| `05911dcfdcdb4c15` | gz_feat_text_metrics_full | ok | 0.9987 | 0.9983 | 0.9774 | 7 | [log](out/autocollie/runs/2026-05-22T06-42-32_20260522T063753-filetypes-gz_gz_feat_text_metrics_full.log) |
+| `0056fc3644edf0cf` | gz_feat_tiered_trigrams | ok | 0.9987 | 0.9983 | 0.9774 | 7 | [log](out/autocollie/runs/2026-05-22T06-42-38_20260522T063753-filetypes-gz_gz_feat_tiered_trigrams.log) |
+| `` | gz_train_hard_neg_weight_15 | fail | — | — | — | 2 | [log](out/autocollie/runs/2026-05-22T06-42-45_20260522T063753-filetypes-gz_gz_train_hard_neg_weight_15.log) |
+| `1d64ad1783e67ee2` | gz_seed_search_k3_kv | ok | 0.9989 | 0.9986 | 0.9956 | 8 | [log](out/autocollie/runs/2026-05-22T06-42-47_20260522T063753-filetypes-gz_gz_seed_search_k3_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`gz_control_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 …` — Aims to improve PR_AUC by tuning learning rate and tree depth on the top-performing feature set, leveraging matrix cache for cheap validation.
+- **`gz_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Aims to boost recall@3FPM by enabling kv_vocab and kv_value_split to capture granular metadata signals in gz archives that distinguish malicious payloads.
+- **`gz_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to improve PR_AUC by adding text_metrics_full and text_encoding to detect obfuscation and structural anomalies in compressed document streams.
+- **`gz_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 …` — Aims to increase recall@3FPM by enabling tiered_crit_trigrams and objective_trigrams to capture higher-order attack chain signals in archive contents.
+- **`gz_train_hard_neg_weight_15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 …` — Aims to maximize recall@3FPM by applying high hard_negative_weight and down-weighting positives to tighten score separation at the deployed low-FPR operating point.
+- **`gz_seed_search_k3_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 …` — Aims to improve PR_AUC by averaging across 3 seeds to reduce variance and confirm signal robustness for the kv_vocab feature set.
+
+</details>
+
+## Cycle `20260522T093700-filetypes-gz` — 2026-05-22T09:37:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a65eb4d9591e71ec` | gz_feat_kv_vocab_15k | ok | 0.9988 | 0.9984 | 0.9820 | 7 | [log](out/autocollie/runs/2026-05-22T09-39-33_20260522T093700-filetypes-gz_gz_feat_kv_vocab_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`gz_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab research family to capture key-value pair signals in archive contents, aiming to improve PR_AUC by adding discriminative feature surface without harming ROC_AUC.
+
+</details>
+
+## Cycle `20260522T094405-filetypes-gz` — 2026-05-22T09:44:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ff26ec9d2bf4505a` | gz_control_scalepos05 | ok | 0.9987 | 0.9982 | 0.9774 | 2 | [log](out/autocollie/runs/2026-05-22T09-48-33_20260522T094405-filetypes-gz_gz_control_scalepos05.log) |
+| `fd858c240069ae7b` | gz_feat_kv_vocab_split | dup | 0.9986 | 0.9982 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T09-48-35_20260522T094405-filetypes-gz_gz_feat_kv_vocab_split.log) |
+| `e30a9eaebc979e4e` | gz_feat_bigram_freq200 | ok | 0.9989 | 0.9986 | 0.9774 | 11 | [log](out/autocollie/runs/2026-05-22T09-48-36_20260522T094405-filetypes-gz_gz_feat_bigram_freq200.log) |
+| `05911dcfdcdb4c15` | gz_feat_text_metrics_enc | dup | 0.9987 | 0.9983 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T09-48-47_20260522T094405-filetypes-gz_gz_feat_text_metrics_enc.log) |
+| `b408fcade97efe49` | gz_train_hardneg_05_8 | ok | 0.9990 | 0.9987 | 0.9865 | 4 | [log](out/autocollie/runs/2026-05-22T09-48-48_20260522T094405-filetypes-gz_gz_train_hardneg_05_8.log) |
+| `ca022ca2fc2b1137` | gz_profile_seed_search_k3 | ok | 0.9988 | 0.9984 | 0.9956 | 10 | [log](out/autocollie/runs/2026-05-22T09-48-51_20260522T094405-filetypes-gz_gz_profile_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`gz_control_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with reduced scale_pos_weight_mult to down-weight positives, aiming to improve recall@3 FP/M by lowering the decision threshold for benigns.
+- **`gz_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture embedded metadata and trait signals in archives, targeting PR AUC improvement.
+- **`gz_feat_bigram_freq200`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 to include rarer archive-specific patterns, aiming to boost PR AUC without harming ROC AUC.
+- **`gz_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to detect obfuscated scripts inside archives, targeting recall@3 FP/M gain.
+- **`gz_train_hardneg_05_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tune hard negative sampling with lower fraction and weight to improve tail recall without overfitting, targeting recall@3 FP/M.
+- **`gz_profile_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Average over 3 seeds to stabilize recall@3 FP/M and reduce seed-driven variance on the baseline feature set.
+
+</details>
+
+## Cycle `20260522T131104-filetypes-gz` — 2026-05-22T13:11:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `30f766c513051dda` | gz_control_base_lr005_leaves128 | ok | 0.9987 | 0.9983 | 0.9774 | 2 | [log](out/autocollie/runs/2026-05-22T13-17-04_20260522T131104-filetypes-gz_gz_control_base_lr005_leaves128.log) |
+| `fd858c240069ae7b` | gz_feat_kv_vocab_10k_split | dup | 0.9986 | 0.9982 | 0.9774 | 1 | [log](out/autocollie/runs/2026-05-22T13-17-06_20260522T131104-filetypes-gz_gz_feat_kv_vocab_10k_split.log) |
+| `71273bc43e08171c` | gz_feat_lowbigram_tieredtrigrams | ok | 0.9987 | 0.9983 | 0.9774 | 7 | [log](out/autocollie/runs/2026-05-22T13-17-07_20260522T131104-filetypes-gz_gz_feat_lowbigram_tieredtrigrams.log) |
+| `6cefecc4af224c5f` | gz_feat_textmetrics_extended | ok | 0.9987 | 0.9983 | 0.9774 | 6 | [log](out/autocollie/runs/2026-05-22T13-17-14_20260522T131104-filetypes-gz_gz_feat_textmetrics_extended.log) |
+| `4d28eef352bcb932` | gz_train_reg_alpha05_depth8 | ok | 0.9987 | 0.9982 | 0.9727 | 2 | [log](out/autocollie/runs/2026-05-22T13-17-20_20260522T131104-filetypes-gz_gz_train_reg_alpha05_depth8.log) |
+| `1ec2543d12ec2168` | gz_train_dart_scalepos075 | ok | 0.9983 | 0.9976 | 0.9820 | 2 | [log](out/autocollie/runs/2026-05-22T13-17-22_20260522T131104-filetypes-gz_gz_train_dart_scalepos075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`gz_control_base_lr005_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env with deeper trees to capture complex patterns, targeting PR_AUC improvement while maintaining ROC_AUC.
+- **`gz_feat_kv_vocab_10k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds KV vocabulary and value splitting to capture structured metadata in gz archives, targeting PR_AUC by distinguishing benign vs malicious payload metadata.
+- **`gz_feat_lowbigram_tieredtrigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram frequency floor and adds tiered critical trigrams to catch rarer malicious sequences, targeting recall@3FPM by improving low-FPR ranking.
+- **`gz_feat_textmetrics_extended`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables full text metrics and extended metrics to capture structural anomalies in compressed streams, targeting PR_AUC via richer feature surface.
+- **`gz_train_reg_alpha05_depth8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies stronger L1 regularization and shallower trees to reduce overfitting on the small gz corpus, targeting ROC_AUC stability and PR_AUC generalization.
+- **`gz_train_dart_scalepos075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Down-weights positives and uses DART boosting to suppress false positives, targeting recall@3FPM by tightening the score distribution at low FPR.
+
+</details>
+
