@@ -126,6 +126,33 @@ def main() -> int:
     )
     parser.add_argument("--level", type=int, default=3)
     parser.add_argument("--severity", default="hostile", choices=["hostile", "suspicious"])
+    parser.add_argument(
+        "--net-improvement-fallback",
+        action="store_true",
+        help=(
+            "When set, the gate PASSES despite per-filetype regressions if "
+            "(a) the net malware-caught delta across all compared filetypes "
+            "is positive, and (b) no single filetype's recall drop exceeds "
+            "--max-net-route-regression. Designed for shared-route promotes "
+            "(filegroups/* or general) where a new model legitimately helps "
+            "most filetypes but hurts one — the strict per-filetype gate "
+            "blocks net-positive deploys. The catastrophe cap prevents "
+            "this from masking a single huge regression that average-out "
+            "across many small wins."
+        ),
+    )
+    parser.add_argument(
+        "--max-net-route-regression",
+        type=float,
+        default=0.05,
+        help=(
+            "Maximum tolerated per-filetype recall drop (absolute) when "
+            "--net-improvement-fallback rescues a deploy. Default 0.05 = "
+            "5pp. A single filetype dropping more than this still blocks "
+            "the deploy even if net is positive — catastrophes shouldn't "
+            "hide behind aggregate wins."
+        ),
+    )
     args = parser.parse_args()
 
     if os.environ.get("AZOTH_ALLOW_REGRESSION", "").strip().lower() in {"1", "true", "yes"}:
@@ -158,6 +185,12 @@ def main() -> int:
     route_wins: list[str] = []          # informational
     compared = 0
     skipped_small = 0
+    # Net-improvement accounting: per-filetype (delta_tp, recall_drop) so the
+    # fallback can decide whether the aggregate is net-positive AND no single
+    # filetype crossed the catastrophe cap.
+    net_delta_tp = 0
+    max_recall_drop = 0.0
+    max_drop_ft = ""
 
     for ft, deployed_entry in deployed_ft.items():
         staged_entry = staged_ft.get(ft)
@@ -177,8 +210,18 @@ def main() -> int:
         s_recall = staged_l.get("recall")
         d_recall = deployed_l.get("recall")
         d_tp = deployed_l.get("tp")
+        s_tp = staged_l.get("tp")
+        # Track per-filetype TP delta for the net-improvement fallback. Use
+        # raw TP counts (not recall) so the aggregation weights by absolute
+        # malware-caught — a 0.5pp shift on PE (113K mal) outweighs a 5pp
+        # shift on a 200-malware route, matching deploy-time customer impact.
+        if _is_finite_number(s_tp) and _is_finite_number(d_tp):
+            net_delta_tp += int(s_tp) - int(d_tp)
         if _is_finite_number(s_recall) and _is_finite_number(d_recall):
             delta = float(s_recall) - float(d_recall)  # positive = improvement
+            if -delta > max_recall_drop:
+                max_recall_drop = -delta
+                max_drop_ft = ft
             # Dual-gate regression: drop must exceed the configured
             # tolerance (effect-size threshold) AND fall below the
             # deployed recall's 1-alpha Clopper-Pearson lower bound
@@ -261,9 +304,40 @@ def main() -> int:
 
     if regressions:
         print()
-        print(f"error: {len(regressions)} ensemble regression(s) over tolerance:")
+        print(f"{len(regressions)} ensemble regression(s) over tolerance:")
         for r in regressions:
             print(f"  - {r}")
+
+        # Net-improvement fallback. Lets shared-route promotes (filegroups/*
+        # and general) ship when the new model is net-positive across the
+        # corpus despite hurting one or two routes — provided no single
+        # filetype's recall drop crossed the catastrophe cap. Strict per-
+        # filetype gating still applies when this flag is off.
+        if args.net_improvement_fallback:
+            net_pp = (
+                f"net malware-caught delta = {net_delta_tp:+,} TPs across "
+                f"{compared} compared filetypes; "
+                f"worst single drop = {max_recall_drop*100:.2f}pp on {max_drop_ft!r} "
+                f"(cap = {args.max_net_route_regression*100:.2f}pp)"
+            )
+            if net_delta_tp > 0 and max_recall_drop <= args.max_net_route_regression:
+                print()
+                print(
+                    f"net-improvement-fallback rescues deploy: {net_pp}"
+                )
+                return 0
+            print()
+            print(f"net-improvement-fallback DID NOT rescue: {net_pp}")
+            if net_delta_tp <= 0:
+                print("  reason: aggregate TP delta is not positive")
+            if max_recall_drop > args.max_net_route_regression:
+                print(
+                    f"  reason: worst single-filetype drop "
+                    f"({max_recall_drop*100:.2f}pp on {max_drop_ft!r}) "
+                    f"exceeds catastrophe cap "
+                    f"({args.max_net_route_regression*100:.2f}pp)"
+                )
+
         print()
         print(
             f"compared {compared} filetypes "
@@ -273,7 +347,8 @@ def main() -> int:
         print()
         print(
             "If this regression is intentional, set "
-            "AZOTH_ALLOW_REGRESSION=1 and re-run.",
+            "AZOTH_ALLOW_REGRESSION=1 and re-run "
+            "(or pass --net-improvement-fallback for shared-route promotes).",
         )
         return 1
 
