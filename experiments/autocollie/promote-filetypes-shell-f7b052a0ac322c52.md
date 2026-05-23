@@ -1,8 +1,8 @@
 # Promote REJECTED — `f7b052a0ac322c52` on `filetypes/shell`
 
-Generated 2026-05-22T17:51:12Z
+Generated 2026-05-22T19:26:08Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-22T17-51-11_20260522T175109-promote-f7b052a0ac322c52_azoth-validate.log; tail: make[1]: Entering directory '/home/t/collimator'
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-22T19-25-27_20260522T192525-promote-f7b052a0ac322c52_azoth-validate.log; tail: make[1]: Entering directory '/home/t/collimator'
 .venv/bin/python scripts/azoth_calibrate_ensemble.py \
 	--db postgres://hopper@localhost:5432/hopper \
 	--workers 64 \
@@ -18,16 +18,18 @@ azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs
 	 \
 	 \
 	--feature-cache-dir out/cache/azoth-route-features
+2026-05-22 15:25:30,044 INFO azoth_calibrate_ensemble: partition 'dev': 592917 of 4730194 rows (12.5%) kept for fit/eval; score_table covers all 4730194
 Traceback (most recent call last):
   File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1649, in <module>
     raise SystemExit(main())
                      ~~~~^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1356, in main
-    general_cache = np.load(args.general_scores)
-  File "/home/t/collimator/.venv/lib/python3.14/site-packages/numpy/lib/_npyio_impl.py", line 454, in load
-    fid = stack.enter_context(open(os.fspath(file), "rb"))
-                              ~~~~^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: '/home/t/collimator/out/models/azoth-candidate-filetypes-shell-f7b052a0ac322c52/general/threshold_scores.npz'
+  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1413, in main
+    routes = list(_load_routes(args.summary))
+                  ~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1069, in _load_routes
+    with open(summary_path) as f:
+         ~~~~^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/t/collimator/out/models/azoth-candidate-filetypes-shell-f7b052a0ac322c52/specialists.json'
 make[1]: *** [Makefile:1010: azoth-calibrate] Error 1
 make[1]: Leaving directory '/home/t/collimator')
 
@@ -49,7 +51,7 @@ make[1]: Leaving directory '/home/t/collimator')
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-22T17-51-11_20260522T175109-promote-f7b052a0ac322c52_azoth-validate.log; tail: make[1]: Entering directory '/home/t/collimator'
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-22T19-25-27_20260522T192525-promote-f7b052a0ac322c52_azoth-validate.log; tail: make[1]: Entering directory '/home/t/collimator'
 .venv/bin/python scripts/azoth_calibrate_ensemble.py \
 	--db postgres://hopper@localhost:5432/hopper \
 	--workers 64 \
@@ -65,15 +67,17 @@ azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs
 	 \
 	 \
 	--feature-cache-dir out/cache/azoth-route-features
+2026-05-22 15:25:30,044 INFO azoth_calibrate_ensemble: partition 'dev': 592917 of 4730194 rows (12.5%) kept for fit/eval; score_table covers all 4730194
 Traceback (most recent call last):
   File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1649, in <module>
     raise SystemExit(main())
                      ~~~~^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1356, in main
-    general_cache = np.load(args.general_scores)
-  File "/home/t/collimator/.venv/lib/python3.14/site-packages/numpy/lib/_npyio_impl.py", line 454, in load
-    fid = stack.enter_context(open(os.fspath(file), "rb"))
-                              ~~~~^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: '/home/t/collimator/out/models/azoth-candidate-filetypes-shell-f7b052a0ac322c52/general/threshold_scores.npz'
+  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1413, in main
+    routes = list(_load_routes(args.summary))
+                  ~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1069, in _load_routes
+    with open(summary_path) as f:
+         ~~~~^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/t/collimator/out/models/azoth-candidate-filetypes-shell-f7b052a0ac322c52/specialists.json'
 make[1]: *** [Makefile:1010: azoth-calibrate] Error 1
 make[1]: Leaving directory '/home/t/collimator')

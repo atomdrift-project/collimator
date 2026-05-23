@@ -223,6 +223,21 @@ def export_lightgbm_onnx(
         zipmap=False,
         target_opset=15,
     )
+    # onnxmltools' LightGBM converter declares the output shapes
+    # with a fixed first dim ({1}) even when the INPUT batch was
+    # declared dynamic ([None, n_features]). ONNX Runtime then logs
+    # a VerifyOutputSizes warning on every inference call where the
+    # actual batch != 1 ("Expected shape from model of {1} does not
+    # match actual shape of {N} for output label"). The computation
+    # is correct; only the declared output shape disagrees. Patch
+    # each graph output's first dim to be a symbolic "batch"
+    # dimension so the declared shape matches reality and ORT stays
+    # quiet.
+    for output in onnx_model.graph.output:
+        shape = output.type.tensor_type.shape
+        if len(shape.dim) > 0:
+            shape.dim[0].Clear()
+            shape.dim[0].dim_param = "batch"
     # Atomic write: serialize to a sibling .tmp, then rename. A kill
     # mid-write leaves the original alone and the .tmp gets reaped by
     # the next training pass (it doesn't match the *.onnx glob).

@@ -59,6 +59,14 @@ from typing import Any
 
 LOG = logging.getLogger("azoth_train_best")
 
+
+# Mirror of azoth_specialist_suite.APPLES_MIN_*_HOLDOUT. Kept in sync by
+# convention — both pickers MUST use the same floor so a screen run
+# eligible for one is eligible for the other. If you change one,
+# change the other.
+APPLES_MIN_MALWARE_HOLDOUT: int = 500
+APPLES_MIN_BENIGN_HOLDOUT: int = 200
+
 # train_config field -> EXP_* env var the Makefile experiment target accepts.
 _TRAIN_CONFIG_TO_EXP_ENV: dict[str, str] = {
     "n_estimators":           "EXP_ESTIMATORS",
@@ -126,6 +134,20 @@ def _load_promoted_baseline(
         return None
     entry = (baselines.get("routes") or {}).get(route)
     if not isinstance(entry, dict):
+        return None
+    # Retired entries: the audit-trail mechanism for demoting a
+    # promoted baseline that later regressed (or was promoted under
+    # gates we've since recognized as too lenient). The entry stays
+    # in the file with a `retired_at` timestamp so a human can see
+    # what was demoted and why (`retired_reason` is informational).
+    # Picker treats retired entries as if they didn't exist, falling
+    # through to the apples-to-apples screen-run scan or to defaults.
+    if entry.get("retired_at"):
+        LOG.info(
+            "promoted baseline for %s is retired (at=%s, reason=%s); "
+            "falling through to fallback picker",
+            route, entry.get("retired_at"), entry.get("retired_reason") or "unspecified",
+        )
         return None
     # Prefer full_train_key (the post-promote full-data replay) but
     # fall back to promote_key when full_train wasn't recorded.
@@ -234,12 +256,24 @@ def _select_best_run(
             r3 = float(recall_at_3)
         else:
             r3 = 0.0
-        # Apples-to-apples tier: when autocollie's post-screen hook
-        # populated deployed_on_same_data with a valid r@3FP/M, rank
-        # by delta vs the deployed model's score on the *same rows*.
-        # That's the only honest comparison — legacy runs' raw r@3FP/M
-        # is on a holdout the deployed model never sees, so a "win"
-        # there can flip on the test slice.
+        # Apples-to-apples gate: a screen run is only eligible to win
+        # the fallback picker if deployed_on_same_data is populated on
+        # a statistically meaningful holdout. Below the floor (see
+        # APPLES_MIN_*_HOLDOUT in azoth_specialist_suite), 3 FP/M is
+        # below the slice's noise floor and even a paired comparison
+        # carries no signal. The picker used to break ties on raw r3
+        # across all legacy runs, which is how lucky perfect-recall
+        # runs on tiny holdouts beat structurally stronger configs.
+        #
+        # EXEMPTION: routes that autocollie can't score apples-to-apples
+        # by design (general — see routeSupportsSameDataScoring in
+        # cmd/autocollie/score_deployed.go) will never have
+        # deployed_on_same_data populated. They fall back to legacy
+        # r3 ranking. The "tiny holdout" failure mode doesn't apply
+        # to general because general sees the whole corpus, not a
+        # per-filetype slice — its r3 is on a 100k+ benign holdout
+        # where the FP/M threshold is well above the noise floor.
+        route_supports_apples = route.startswith("filetypes/") or route.startswith("filegroups/")
         deployed = run.get("deployed_on_same_data") or {}
         deployed_r3_raw = deployed.get("recall_at_fp_per_million_3")
         n_mal = deployed.get("n_malware", 0) or 0
@@ -247,13 +281,16 @@ def _select_best_run(
         has_apples = (
             isinstance(deployed_r3_raw, (int, float))
             and not math.isnan(float(deployed_r3_raw))
-            and n_mal >= 1 and n_ben >= 1
+            and n_mal >= APPLES_MIN_MALWARE_HOLDOUT
+            and n_ben >= APPLES_MIN_BENIGN_HOLDOUT
         )
+        if route_supports_apples and not has_apples:
+            legacy_count += 1
+            continue
+        delta_r3 = (r3 - float(deployed_r3_raw)) if has_apples else 0.0
         if has_apples:
-            delta_r3 = r3 - float(deployed_r3_raw)
             apples_to_apples_count += 1
         else:
-            delta_r3 = 0.0
             legacy_count += 1
         candidate = (
             has_apples,
@@ -269,10 +306,19 @@ def _select_best_run(
     if best is not None:
         LOG.info(
             "fallback picker for route %s scanned %d apples-to-apples + %d "
-            "legacy runs; winner is %s (delta_r3=%+.4f, r3=%.4f)",
+            "legacy (skipped) runs; winner delta_r3=%+.4f r3=%.4f",
             route, apples_to_apples_count, legacy_count,
-            "apples-to-apples" if best[0] else "legacy",
             best[1], best[2],
+        )
+    elif legacy_count > 0 and (route.startswith("filetypes/") or route.startswith("filegroups/")):
+        LOG.warning(
+            "fallback picker for route %s scanned %d screen run(s), none "
+            "with apples-to-apples on holdout >= %d malware / %d benign; "
+            "no override applied — caller will use defaults. Run an "
+            "autocollie cycle on this route to generate a trustworthy "
+            "baseline.",
+            route, legacy_count,
+            APPLES_MIN_MALWARE_HOLDOUT, APPLES_MIN_BENIGN_HOLDOUT,
         )
     return best[6] if best is not None else None
 

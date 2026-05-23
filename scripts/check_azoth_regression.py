@@ -102,7 +102,41 @@ def main() -> int:
     )
     parser.add_argument("--min-mal", type=int, default=1)
     parser.add_argument("--min-ben", type=int, default=1)
-    parser.add_argument("--recall-tolerance", type=float, default=0.01)
+    parser.add_argument(
+        "--recall-tolerance", type=float, default=0.017,
+        help=(
+            "Per-filetype recall-drop tolerance vs the currently-deployed "
+            "bundle. Default 0.017 = 1.7pp. Combined with the CI gate "
+            "below to filter small-sample noise. This is the soft "
+            "tolerance — it permits ordinary deploy-to-deploy wiggle. The "
+            "low-water-mark gate (--low-water-mark + --lwm-tolerance) is "
+            "the harder floor that cumulative drift can't sneak past."
+        ),
+    )
+    parser.add_argument(
+        "--low-water-mark", type=Path, default=None,
+        help=(
+            "Path to a pinned reference bundle (or to its "
+            "route_policy_eval_oof.json directly). When set, the gate "
+            "ALSO blocks if any filetype's recall falls below the LWM "
+            "by more than --lwm-tolerance. Use to lock in a known-good "
+            "baseline so cumulative per-deploy drift can't quietly push "
+            "performance under it. Captured via `make "
+            "azoth-set-low-water-mark`. If the file doesn't exist the "
+            "LWM gate is silently skipped (lets you opt in without "
+            "breaking existing pipelines)."
+        ),
+    )
+    parser.add_argument(
+        "--lwm-tolerance", type=float, default=0.009,
+        help=(
+            "Per-filetype recall-drop tolerance vs the low-water-mark. "
+            "Default 0.009 = 0.9pp. Tighter than --recall-tolerance "
+            "because LWM is the floor; deployed tolerance is the "
+            "per-deploy wiggle room ABOVE that floor. No CI filter — "
+            "the LWM check is unconditional by design."
+        ),
+    )
     parser.add_argument(
         "--ci-alpha", type=float, default=0.05,
         help=(
@@ -161,6 +195,18 @@ def main() -> int:
 
     staged_eval = _load(args.staged / "route_policy_eval_oof.json")
     deployed_eval = _load(args.deployed / "route_policy_eval_oof.json")
+    # Low-water-mark: accept either a bundle directory or a direct path
+    # to a route_policy_eval_oof.json file. Missing file = LWM gate
+    # silently skipped (opt-in).
+    lwm_eval: dict = {}
+    lwm_path_used: Path | None = None
+    if args.low_water_mark is not None:
+        candidate = args.low_water_mark
+        if candidate.is_dir():
+            candidate = candidate / "route_policy_eval_oof.json"
+        if candidate.is_file():
+            lwm_eval = _load(candidate)
+            lwm_path_used = candidate
 
     if not staged_eval:
         print(
@@ -180,11 +226,17 @@ def main() -> int:
     level_key = f"L{args.level}_{args.severity}"
 
     regressions: list[str] = []
+    # LWM regressions: hard floor; can't be rescued by net-improvement-fallback
+    # because they represent cumulative drift below a pinned baseline, not
+    # per-deploy noise. Reported separately so the user can see the two
+    # gate types distinctly.
+    lwm_regressions: list[str] = []
     ensemble_wins: list[str] = []
     route_drops: list[str] = []         # informational; doesn't fail the gate
     route_wins: list[str] = []          # informational
     compared = 0
     skipped_small = 0
+    lwm_ft = (lwm_eval.get("filetypes") or {}) if lwm_eval else {}
     # Net-improvement accounting: per-filetype (delta_tp, recall_drop) so the
     # fallback can decide whether the aggregate is net-positive AND no single
     # filetype crossed the catastrophe cap.
@@ -250,6 +302,24 @@ def main() -> int:
                     f"({float(d_recall)*100:.2f}% → {float(s_recall)*100:.2f}%)",
                 )
 
+        # Low-water-mark check (independent of the deployed-vs-staged
+        # gate above): hard floor against a pinned reference. No CI
+        # filter — the LWM is the line we promised never to cross,
+        # and a drop bigger than --lwm-tolerance against it is a
+        # block by definition.
+        if lwm_ft and _is_finite_number(s_recall):
+            lwm_entry = lwm_ft.get(ft)
+            lwm_l = ((lwm_entry or {}).get("deployed_or_by_level") or {}).get(level_key) or {}
+            lwm_recall = lwm_l.get("recall")
+            if _is_finite_number(lwm_recall):
+                lwm_delta = float(s_recall) - float(lwm_recall)
+                if -lwm_delta > args.lwm_tolerance:
+                    lwm_regressions.append(
+                        f"{ft}: L{args.level} {args.severity} ENSEMBLE recall dropped {-lwm_delta*100:.2f}pp "
+                        f"BELOW LOW-WATER-MARK ({float(lwm_recall)*100:.2f}% → {float(s_recall)*100:.2f}%; "
+                        f"LWM tolerance {args.lwm_tolerance*100:.2f}pp)",
+                    )
+
         # Per-route attribution. ``slice_metrics.routes.<route>.recall_at_3fp``
         # is each contributing route's single-point operating metric on
         # this filetype's slice. Drops + improvements both reported, so a
@@ -302,30 +372,42 @@ def main() -> int:
         for line in route_drops:
             print(line)
 
-    if regressions:
+    if lwm_regressions:
         print()
-        print(f"{len(regressions)} ensemble regression(s) over tolerance:")
-        for r in regressions:
+        print(
+            f"{len(lwm_regressions)} LOW-WATER-MARK regression(s) "
+            f"(pinned reference: {lwm_path_used}):",
+        )
+        for r in lwm_regressions:
             print(f"  - {r}")
 
-        # Net-improvement fallback. Lets shared-route promotes (filegroups/*
-        # and general) ship when the new model is net-positive across the
-        # corpus despite hurting one or two routes — provided no single
-        # filetype's recall drop crossed the catastrophe cap. Strict per-
-        # filetype gating still applies when this flag is off.
-        if args.net_improvement_fallback:
-            net_pp = (
-                f"net malware-caught delta = {net_delta_tp:+,} TPs across "
-                f"{compared} compared filetypes; "
-                f"worst single drop = {max_recall_drop*100:.2f}pp on {max_drop_ft!r} "
-                f"(cap = {args.max_net_route_regression*100:.2f}pp)"
-            )
-            if net_delta_tp > 0 and max_recall_drop <= args.max_net_route_regression:
-                print()
-                print(
-                    f"net-improvement-fallback rescues deploy: {net_pp}"
-                )
-                return 0
+    # Two independent gates:
+    #   - `regressions`: per-filetype drop vs DEPLOYED beyond --recall-tolerance.
+    #     May be rescued by --net-improvement-fallback for shared-route promotes.
+    #   - `lwm_regressions`: per-filetype drop vs the pinned LOW-WATER-MARK
+    #     beyond --lwm-tolerance. Unconditional — cumulative drift below the
+    #     pinned floor is exactly what the LWM exists to catch, so it can't
+    #     be rescued by net-positive aggregates.
+    deployed_gate_blocked = bool(regressions)
+
+    if regressions and args.net_improvement_fallback:
+        # Net-improvement fallback applies ONLY to the deployed-tolerance gate.
+        # Lets shared-route promotes (filegroups/* and general) ship when the
+        # new model is net-positive across the corpus despite hurting one or
+        # two routes — provided no single filetype's recall drop crossed the
+        # catastrophe cap. LWM regressions, computed separately above, are
+        # not eligible for rescue.
+        net_pp = (
+            f"net malware-caught delta = {net_delta_tp:+,} TPs across "
+            f"{compared} compared filetypes; "
+            f"worst single drop = {max_recall_drop*100:.2f}pp on {max_drop_ft!r} "
+            f"(cap = {args.max_net_route_regression*100:.2f}pp)"
+        )
+        if net_delta_tp > 0 and max_recall_drop <= args.max_net_route_regression:
+            print()
+            print(f"net-improvement-fallback rescues deployed-tolerance gate: {net_pp}")
+            deployed_gate_blocked = False
+        else:
             print()
             print(f"net-improvement-fallback DID NOT rescue: {net_pp}")
             if net_delta_tp <= 0:
@@ -338,6 +420,7 @@ def main() -> int:
                     f"({args.max_net_route_regression*100:.2f}pp)"
                 )
 
+    if deployed_gate_blocked or lwm_regressions:
         print()
         print(
             f"compared {compared} filetypes "
@@ -345,17 +428,34 @@ def main() -> int:
             f"{skipped_small} below threshold and skipped.",
         )
         print()
+        reasons: list[str] = []
+        if deployed_gate_blocked:
+            reasons.append(
+                f"deployed-tolerance gate ({args.recall_tolerance*100:.2f}pp)"
+            )
+        if lwm_regressions:
+            reasons.append(
+                f"low-water-mark gate ({args.lwm_tolerance*100:.2f}pp vs {lwm_path_used})"
+            )
+        print(f"blocked by: {', '.join(reasons)}")
+        print()
         print(
             "If this regression is intentional, set "
             "AZOTH_ALLOW_REGRESSION=1 and re-run "
-            "(or pass --net-improvement-fallback for shared-route promotes).",
+            "(or pass --net-improvement-fallback for shared-route promotes "
+            "to address the deployed-tolerance gate only — the LWM gate "
+            "is unconditional and AZOTH_ALLOW_REGRESSION is the only "
+            "override for it).",
         )
         return 1
 
     print(
         f"regression check ok: compared {compared} filetype(s) "
         f"(mal≥{args.min_mal}, ben≥{args.min_ben}) at L{args.level} "
-        f"{args.severity}; tolerance {args.recall_tolerance*100:.2f}pp.",
+        f"{args.severity}; deployed tolerance {args.recall_tolerance*100:.2f}pp"
+        + (f"; LWM tolerance {args.lwm_tolerance*100:.2f}pp ({lwm_path_used})"
+           if lwm_path_used is not None else "; no LWM provided")
+        + ".",
     )
     return 0
 

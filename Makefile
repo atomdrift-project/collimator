@@ -88,6 +88,23 @@ AZOTH_GLOBAL_POLICY_METRICS_MD ?= $(AZOTH_ROOT)/global_policy_metrics.md
 AZOTH_ROUTED_METRICS_ARGS ?=
 AZOTH_VALIDATE_ROUTED_METRICS_ARGS ?= --no-ci --no-stacked
 AZOTH_VALIDATE_DIAGNOSTICS ?= 0
+# Whether azoth-deploy emits route_diagnostics.{md,csv} and slice_metrics.{md,csv}.
+# Diagnostics are human-debugging artifacts that nothing downstream consumes —
+# regression check, policy search, and routed metrics all read directly from
+# config.json + score_table.npz. Generating them on every deploy adds many
+# minutes to the critical path for output most deploys never read. Off by
+# default; run `make azoth-diagnostics` standalone when you actually need
+# the report (the deployed bundle has everything it needs to regenerate them
+# on demand). Set to 1/true/yes to opt back in.
+AZOTH_DEPLOY_DIAGNOSTICS ?= 0
+# Low-water-mark for the regression gate: a pinned reference bundle's
+# route_policy_eval_oof.json that no future deploy is allowed to fall more
+# than --lwm-tolerance below (per filetype). Lives outside $(AZOTH_ROOT)
+# so azoth-clean-bundle doesn't wipe it. Captured via
+# `make azoth-set-low-water-mark`. If the file doesn't exist the
+# regression gate silently skips the LWM check, so this is fully
+# opt-in — set the LWM once you have a deploy you want to lock in.
+AZOTH_LOW_WATER_MARK_DIR ?= $(OUT_ROOT)/azoth_low_water_mark
 AZOTH_POLICY_OVERRIDE_ROUTE ?=
 AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/litmus/models/azoth
 ELF_ROUTE_OUTPUT_DIR ?= $(AZOTH_ROOT)/elf_route_optimization
@@ -1040,6 +1057,24 @@ azoth-calibrate: venv check-db
 		--apply-thresholds-from $(AZOTH_CONFIG) \
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 
+# azoth-set-low-water-mark pins the current deployed-bundle's
+# route_policy_eval_oof.json as the low-water-mark for the regression
+# gate. From this point on every deploy must keep per-filetype recall
+# within --lwm-tolerance (default 0.9pp) of this snapshot, regardless
+# of how the live deployed bundle drifts. Re-run this target whenever
+# you want to advance the floor (e.g., after several deploys land
+# stable improvements you want to lock in). Idempotent.
+azoth-set-low-water-mark:
+	@test -f "$(AZOTH_ROOT)/route_policy_eval_oof.json" || { \
+	  echo "error: $(AZOTH_ROOT)/route_policy_eval_oof.json not found — run make azoth-deploy first"; \
+	  exit 1; \
+	}
+	mkdir -p "$(AZOTH_LOW_WATER_MARK_DIR)"
+	cp "$(AZOTH_ROOT)/route_policy_eval_oof.json" "$(AZOTH_LOW_WATER_MARK_DIR)/route_policy_eval_oof.json"
+	@echo "low-water-mark pinned: $(AZOTH_LOW_WATER_MARK_DIR)/route_policy_eval_oof.json"
+	@echo "  source: $(AZOTH_ROOT)/route_policy_eval_oof.json"
+	@echo "  future deploys must stay within --lwm-tolerance of this snapshot."
+
 azoth-diagnostics: venv
 	$(PYTHON) scripts/azoth_route_diagnostics.py \
 		--config $(AZOTH_CONFIG) \
@@ -1119,7 +1154,7 @@ azoth-validate: azoth-calibrate
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" && \
 	  if [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "1" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "true" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "yes" ]; then \
 	    echo "Skipping litmus deployed-ensemble compatibility checks (AZOTH_SKIP_LITMUS_VALIDATE=$(AZOTH_SKIP_LITMUS_VALIDATE))"; \
 	  else \
@@ -1199,13 +1234,20 @@ azoth-deploy: azoth-calibrate
 	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/model.txt || ls $(AZOTH_ROOT)/general/models/seed_*.txt >/dev/null 2>&1 || { echo "error: $(AZOTH_ROOT)/general missing model.txt or models/seed_*.txt"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
-	$(PYTHON) scripts/azoth_route_diagnostics.py \
-		--config $(AZOTH_CONFIG) \
-		--score-table $(AZOTH_SCORE_TABLE) \
-		--output $(AZOTH_DIAGNOSTICS) \
-		--csv $(AZOTH_DIAGNOSTICS_CSV) \
-		--slice-output $(AZOTH_SLICE_METRICS) \
-		--slice-csv $(AZOTH_SLICE_METRICS_CSV)
+	@if [ "$(AZOTH_DEPLOY_DIAGNOSTICS)" = "1" ] || [ "$(AZOTH_DEPLOY_DIAGNOSTICS)" = "true" ] || [ "$(AZOTH_DEPLOY_DIAGNOSTICS)" = "yes" ]; then \
+	  $(PYTHON) scripts/azoth_route_diagnostics.py \
+	    --config $(AZOTH_CONFIG) \
+	    --score-table $(AZOTH_SCORE_TABLE) \
+	    --output $(AZOTH_DIAGNOSTICS) \
+	    --csv $(AZOTH_DIAGNOSTICS_CSV) \
+	    --slice-output $(AZOTH_SLICE_METRICS) \
+	    --slice-csv $(AZOTH_SLICE_METRICS_CSV); \
+	else \
+	  printf '# Azoth Route Diagnostics\n\nSkipped during deploy (AZOTH_DEPLOY_DIAGNOSTICS=0). Run `make azoth-diagnostics AZOTH_ROOT=%s` for the full report.\n' "$(AZOTH_ROOT)" > "$(AZOTH_DIAGNOSTICS)"; \
+	  printf 'status,message\nskipped,AZOTH_DEPLOY_DIAGNOSTICS=0\n' > "$(AZOTH_DIAGNOSTICS_CSV)"; \
+	  printf '# Azoth Slice Metrics\n\nSkipped during deploy (AZOTH_DEPLOY_DIAGNOSTICS=0). Run `make azoth-diagnostics AZOTH_ROOT=%s` for the full report.\n' "$(AZOTH_ROOT)" > "$(AZOTH_SLICE_METRICS)"; \
+	  printf 'status,message\nskipped,AZOTH_DEPLOY_DIAGNOSTICS=0\n' > "$(AZOTH_SLICE_METRICS_CSV)"; \
+	fi
 	$(PYTHON) scripts/azoth_route_policy_search.py \
 		$(if $(AZOTH_POLICY_OVERRIDE_ROUTE),--db $(DB),) \
 		--config $(AZOTH_CONFIG) \
@@ -1267,7 +1309,7 @@ azoth-deploy-final: venv
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" && \
 	  echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
 	  ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
 	  $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf && \

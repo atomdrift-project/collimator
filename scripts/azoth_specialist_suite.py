@@ -87,6 +87,23 @@ def _feature_cache_helpers() -> tuple[Any, Any, Any, Any]:
 RESIDUAL_FILETYPES: frozenset[str] = frozenset({"unknown", "data"})
 
 
+# Minimum holdout sizes for an apples-to-apples claim to count as
+# trustworthy in the fallback picker. The deployed_on_same_data field
+# records counts from the *candidate's* holdout — both candidate and
+# deployed score the same rows. But if those rows can't distinguish
+# models in the first place (e.g., 93-benign holdouts make 3 FP/M
+# unmeasurable since min-observable FP/M = 1e6/93 ≈ 10752), then even
+# a paired comparison can't extract signal. Below these floors the
+# run is treated as legacy and ineligible; the route falls through to
+# suite defaults rather than locking in a noisy "win." This is what
+# would have prevented the 2026-05-22 pdf regression: an old screen
+# run with r3=1.0 on a tiny holdout was picked over recent runs with
+# stronger configs because no apples-to-apples baseline disqualified
+# it.
+APPLES_MIN_MALWARE_HOLDOUT: int = 500
+APPLES_MIN_BENIGN_HOLDOUT: int = 200
+
+
 LITMUS_EXTRACTED_FILETYPES: frozenset[str] = frozenset({
     "7z",
     "apk",
@@ -600,6 +617,17 @@ def _load_promoted_baseline_run(
     entry = (baselines.get("routes") or {}).get(route)
     if not isinstance(entry, dict):
         return None
+    # Retired entries: mirror of azoth_train_best._load_promoted_baseline.
+    # `retired_at` marks an entry as demoted but kept in-file for audit.
+    # The picker treats it as if it didn't exist, so the route falls
+    # through to the apples-to-apples screen scan or to defaults.
+    if entry.get("retired_at"):
+        LOG.info(
+            "promoted baseline for %s is retired (at=%s, reason=%s); "
+            "falling through to fallback picker",
+            route, entry.get("retired_at"), entry.get("retired_reason") or "unspecified",
+        )
+        return None
     for key_field in ("full_train_key", "promote_key"):
         key = entry.get(key_field)
         if not isinstance(key, str) or not key:
@@ -711,9 +739,13 @@ def _load_autocollie_best_per_route(
             r3 = float(recall_at_3)
         else:
             r3 = 0.0
-        # Apples-to-apples tier: a run carrying deployed_on_same_data
-        # outranks one without, regardless of raw r@3FPM. See
-        # azoth_train_best._select_best_run for the rationale.
+        # Apples-to-apples gate: a run is only eligible to win the
+        # fallback picker if it carries deployed_on_same_data on a
+        # statistically meaningful holdout. Without it, screen-time
+        # r3 is dominated by threshold noise on tiny slices —
+        # picking by raw r3 across legacy runs is how a lucky-perfect
+        # r3=1.0 on a small holdout beat strong recent configs.
+        # See APPLES_MIN_*_HOLDOUT for the floor rationale.
         deployed = run.get("deployed_on_same_data") or {}
         deployed_r3_raw = deployed.get("recall_at_fp_per_million_3")
         n_mal = deployed.get("n_malware", 0) or 0
@@ -721,11 +753,15 @@ def _load_autocollie_best_per_route(
         has_apples = (
             isinstance(deployed_r3_raw, (int, float))
             and not math.isnan(float(deployed_r3_raw))
-            and n_mal >= 1 and n_ben >= 1
+            and n_mal >= APPLES_MIN_MALWARE_HOLDOUT
+            and n_ben >= APPLES_MIN_BENIGN_HOLDOUT
         )
-        delta_r3 = (r3 - float(deployed_r3_raw)) if has_apples else 0.0
         counts = apples_counts.setdefault(route, [0, 0])
-        counts[0 if has_apples else 1] += 1
+        if not has_apples:
+            counts[1] += 1
+            continue
+        counts[0] += 1
+        delta_r3 = r3 - float(deployed_r3_raw)
         save_all = bool(run.get("save_all_seeds"))
         timestamp = str(run.get("timestamp") or "")
         candidate = (has_apples, delta_r3, r3, float(ap), save_all, timestamp, run)
@@ -737,10 +773,18 @@ def _load_autocollie_best_per_route(
             winner = best[route]
             LOG.info(
                 "autocollie-best (fallback) %s: scanned %d apples-to-apples + "
-                "%d legacy runs; winner=%s delta_r3=%+.4f r3=%.4f",
+                "%d legacy (skipped) runs; winner delta_r3=%+.4f r3=%.4f",
                 route, n_apples, n_legacy,
-                "apples-to-apples" if winner[0] else "legacy",
                 winner[1], winner[2],
+            )
+        elif n_legacy > 0:
+            LOG.warning(
+                "autocollie-best %s: scanned %d screen run(s), none with "
+                "apples-to-apples on holdout >= %d malware / %d benign; "
+                "route falls through to suite defaults. Run an autocollie "
+                "cycle on this route to generate a trustworthy baseline.",
+                route, n_legacy,
+                APPLES_MIN_MALWARE_HOLDOUT, APPLES_MIN_BENIGN_HOLDOUT,
             )
 
     valid_train_fields = _train_config_field_names()
@@ -1517,6 +1561,60 @@ def main() -> int:
         else:
             LOG.info("autocollie-best: no historical runs found in %s for any target route",
                      args.autocollie_best_runs_dir)
+
+    # Small-route defaults for COLLIMATOR_MIN_SAMPLE_SCORE.
+    #
+    # The global default is 3 (data.py:_default_min) — keeps the training
+    # pool to rows whose hopper-rule score crossed a meaningful threshold.
+    # For abundant routes (PE, ELF, PDF) this is the right filter — there
+    # are millions of score≥3 rows, no need to dilute training with
+    # low-signal samples.
+    #
+    # For tiny routes (groovy, makefile, lnk, etc. — where total labeled
+    # samples may be in the hundreds), score≥3 strips most of the pool,
+    # often leaving a degenerate one-class training set. We saw exactly
+    # this in autocollie cycles on pdf: specs proposing min_sample_score=3
+    # produced n_ben_holdout=95 → constant-predictor at confirm.
+    #
+    # When neither an autocollie-best entry nor a CLI override has set
+    # COLLIMATOR_MIN_SAMPLE_SCORE for a small route, default it to a
+    # value that preserves benign-pool diversity. "Explicit wins": if
+    # the operator or a promoted-baseline already chose a value, keep
+    # it — the route's verified history said so.
+    #
+    # Tradeoff: min_sample_score=0 includes rows where cleave found no
+    # features. Those rows have near-empty feature vectors and shift
+    # the model toward learning label-prior rather than feature
+    # distribution. For very small routes this is still better than
+    # starving the model entirely.
+    small_route_default_applied: list[str] = []
+    for target in targets:
+        if target.get("kind") not in ("filetype",):
+            continue  # filegroups/general always have abundant pools
+        route = _route_key_for_target(target)
+        existing_env = feature_envs.get(route, {})
+        if "COLLIMATOR_MIN_SAMPLE_SCORE" in existing_env:
+            continue
+        n_mal = int(target.get("bad", 0))
+        n_ben = int(target.get("good", 0))
+        binding = min(n_mal, n_ben)
+        if binding < 2000:
+            new_min = "0"
+        elif binding < 10000:
+            new_min = "1"
+        else:
+            continue
+        feature_envs.setdefault(route, {})["COLLIMATOR_MIN_SAMPLE_SCORE"] = new_min
+        small_route_default_applied.append(
+            f"{route} (min={n_mal}/{n_ben} bad/good → min_sample_score={new_min})"
+        )
+    if small_route_default_applied:
+        LOG.info(
+            "small-route min_sample_score defaults applied to %d route(s) "
+            "(no explicit override present): %s",
+            len(small_route_default_applied),
+            ", ".join(small_route_default_applied),
+        )
 
     # Auto-cap LightGBM threads per training when running multiple
     # specialists concurrently. Without this, every concurrent training
