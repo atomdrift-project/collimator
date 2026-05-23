@@ -13,6 +13,7 @@ import argparse
 import json
 import os
 import shutil
+import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -71,8 +72,13 @@ def _outer_sha_lookup(db_dsn: str, outer_path: str) -> str | None:
 
 def _clear_directory(path: Path) -> None:
     resolved = path.resolve(strict=False)
-    if not str(resolved).startswith("/tmp/") or resolved == Path("/tmp"):
-        raise ValueError(f"refusing to clear non-/tmp triage directory: {path}")
+    temp_root = Path(tempfile.gettempdir()).resolve(strict=False)
+    try:
+        inside_temp = os.path.commonpath([str(resolved), str(temp_root)]) == str(temp_root)
+    except ValueError:
+        inside_temp = False
+    if not inside_temp or resolved == temp_root:
+        raise ValueError(f"refusing to clear non-temp triage directory: {path}")
     path.mkdir(parents=True, exist_ok=True)
     for child in path.iterdir():
         if child.is_dir() and not child.is_symlink():

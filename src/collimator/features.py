@@ -190,7 +190,7 @@ def _pe_entry_section_nontext(_metrics: dict, files: list[dict]) -> float:
     """1.0 if any file's PE entry section isn't .text. Strings don't survive
     metric max-aggregation, so we scan files directly."""
     for f in files:
-        es = ((f.get("ms") or {}).get("pe") or {}).get("entry_section")
+        es = ((file_metrics(f).get("pe") or {}).get("entry_section"))
         if isinstance(es, str) and es and es != ".text":
             return 1.0
     return 0.0
@@ -942,6 +942,54 @@ def primary_file(report: dict[str, Any]) -> dict[str, Any]:
     return files[0] if files else {}
 
 
+def file_facts(file_entry: dict[str, Any]) -> dict[str, Any]:
+    """Return a cleave v5 ff block, or an empty mapping for v4 rows."""
+    facts = file_entry.get("ff")
+    return facts if isinstance(facts, dict) else {}
+
+
+def file_metrics(file_entry: dict[str, Any]) -> dict[str, Any]:
+    """Return per-file metrics from v5 ff.m or v4 ms."""
+    facts = file_facts(file_entry)
+    metrics = facts.get("m") if facts else None
+    if not isinstance(metrics, dict):
+        metrics = file_entry.get("ms")
+    return metrics if isinstance(metrics, dict) else {}
+
+
+def file_values(file_entry: dict[str, Any]) -> dict[str, Any]:
+    """Return flat structural values from v5 ff.v or v4 k."""
+    facts = file_facts(file_entry)
+    values = facts.get("v") if facts else None
+    if not isinstance(values, dict):
+        values = file_entry.get("k")
+    return values if isinstance(values, dict) else {}
+
+
+def _tuple_string(raw: Any, index: int) -> str:
+    if isinstance(raw, (list, tuple)) and len(raw) > index:
+        return str(raw[index] or "")
+    return ""
+
+
+def file_imports(file_entry: dict[str, Any]) -> list[Any]:
+    """Return import entries from v5 ff.i or v4 is."""
+    facts = file_facts(file_entry)
+    raw = facts.get("i") if facts else None
+    if raw is None:
+        raw = file_entry.get("is")
+    return raw if isinstance(raw, list) else []
+
+
+def file_strings(file_entry: dict[str, Any]) -> list[Any]:
+    """Return string tuples from v5 ff.s or v4 ss."""
+    facts = file_facts(file_entry)
+    raw = facts.get("s") if facts else None
+    if raw is None:
+        raw = file_entry.get("ss")
+    return raw if isinstance(raw, list) else []
+
+
 def _float(value: Any, default: float = 0.0) -> float:
     """Best-effort float conversion for report fields."""
     try:
@@ -964,10 +1012,28 @@ def _normalize_vocab_token(value: Any, *, max_len: int = 96) -> str:
 def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
     """Return normalized import/symbol tokens from a cleave file entry."""
     symbols: set[str] = set()
-    for raw in file_entry.get("is") or []:
+    for raw in file_imports(file_entry):
+        if isinstance(raw, (list, tuple)):
+            lib = _tuple_string(raw, 0)
+            name = _tuple_string(raw, 1)
+            name_sym = _normalize_vocab_token(name)
+            if len(name_sym) >= 2:
+                symbols.add(name_sym)
+            raw = f"{lib}!{name}" if lib and name else name or lib
         if isinstance(raw, dict):
             raw = raw.get("n") or raw.get("name") or raw.get("symbol")
         sym = _normalize_vocab_token(raw)
+        if len(sym) >= 2:
+            symbols.add(sym)
+    facts = file_facts(file_entry)
+    for raw in facts.get("x") or []:
+        name = _tuple_string(raw, 0) if isinstance(raw, (list, tuple)) else raw
+        sym = _normalize_vocab_token(name)
+        if len(sym) >= 2:
+            symbols.add(sym)
+    for raw in facts.get("fn") or []:
+        name = _tuple_string(raw, 0) if isinstance(raw, (list, tuple)) else raw
+        sym = _normalize_vocab_token(name)
         if len(sym) >= 2:
             symbols.add(sym)
     return symbols
@@ -1066,7 +1132,7 @@ def _metric_kv_tokens(
     libc.so.6]"` that would otherwise be one opaque blob token.
     """
     tokens: set[str] = set()
-    metrics = file_entry.get("ms") or {}
+    metrics = file_metrics(file_entry)
     for group, fields in metrics.items():
         if not isinstance(fields, dict):
             continue
@@ -1118,16 +1184,41 @@ def _metric_kv_tokens(
                 tokens.add(f"{base}={val}")
             elif include_shape:
                 tokens.add(f"{base}:empty")
+    for path, value in file_values(file_entry).items():
+        base = f"v.{path}"
+        if include_shape:
+            tokens.add(f"{base}:exists")
+        if isinstance(value, bool):
+            tokens.add(f"{base}={str(value).lower()}")
+        elif isinstance(value, str):
+            val = _normalize_vocab_token(value, max_len=80)
+            if val:
+                tokens.add(f"{base}={val}")
+            if include_shape:
+                tokens.add(f"{base}:strlen={_bucket_count(len(value))}")
+            if split_string_values and value:
+                for component in _KV_VALUE_SPLIT_SEPARATORS.split(value):
+                    sub = _normalize_vocab_token(component, max_len=64)
+                    if sub:
+                        tokens.add(f"{base}=part:{sub}")
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            if include_shape:
+                tokens.add(f"{base}:number={_bucket_number(float(value))}")
+        elif include_shape:
+            if value in (None, [], {}, ()):  # type: ignore[comparison-overlap]
+                tokens.add(f"{base}:empty")
+            elif isinstance(value, (list, tuple, set, dict)):
+                tokens.add(f"{base}:len={_bucket_count(len(value))}")
     return tokens
 
 
 def _string_values(file_entry: dict[str, Any]) -> list[tuple[str, bool]]:
     """Return extracted string values with a best-effort wide-string flag."""
     out: list[tuple[str, bool]] = []
-    for item in file_entry.get("ss") or []:
+    for item in file_strings(file_entry):
         if not isinstance(item, (list, tuple)) or len(item) < 2:
             continue
-        is_wide = any(str(part).lower() == "wide" for part in item[1:-1])
+        is_wide = any(str(part).lower() in {"wide", "u16", "utf16le", "utf-16le"} for part in item[1:-1])
         value = str(item[-1] or "")
         if value:
             out.append((value, is_wide))
@@ -2112,7 +2203,7 @@ def _merge_metric_values(files: list[dict[str, Any]]) -> dict[str, dict[str, flo
     """
     merged: dict[str, dict[str, float]] = {}
     for file_entry in files:
-        metrics = file_entry.get("ms") or {}
+        metrics = file_metrics(file_entry)
         for group, fields in metrics.items():
             if not isinstance(fields, dict):
                 continue
@@ -2673,7 +2764,7 @@ def _apply_experimental_features(
         import re
         api_pattern = re.compile(r'^[A-Z][a-zA-Z0-9_]{3,}[A-Za-z]$')
         for file_entry in files:
-            for sym in (file_entry.get("is") or []):
+            for sym in _file_symbols(file_entry):
                 if not api_pattern.match(sym):
                     continue
                 total_imports += 1
@@ -2969,7 +3060,7 @@ def _apply_ember_lite_features(
     signed_files = 0
 
     for file_entry in files:
-        metrics = file_entry.get("ms") or {}
+        metrics = file_metrics(file_entry)
         if not metrics:
             continue
 
@@ -3411,8 +3502,8 @@ def _apply_structural_features(
                 has_foreign_binaries = True
         
         # Track lines of code for density
-        file_metrics = file_entry.get("ms") or {}
-        text_metrics = file_metrics.get("text") or {}
+        per_file_metrics = file_metrics(file_entry)
+        text_metrics = per_file_metrics.get("text") or {}
         total_loc += int(_float(text_metrics.get("total_lines", 0)))
 
         # Track extension mismatches
@@ -3431,13 +3522,14 @@ def _apply_structural_features(
 
         if file_entry.get("type", "") in binary_like and _float(file_entry.get("sz", 0)) < 20000:
             any_tiny_binary = True
-        if "is" in file_entry:
+        imports = file_imports(file_entry)
+        if imports or "is" in file_entry or "ff" in file_entry:
             import_candidates += 1
-            if len(file_entry.get("is") or []) == 0:
+            if len(imports) == 0:
                 importless_candidates += 1
 
         # Track max entropy across all files in the report.
-        metrics = file_entry.get("ms") or {}
+        metrics = file_metrics(file_entry)
         binary_metrics = metrics.get("binary") or {}
         ent = _float(binary_metrics.get("overall_entropy", 0.0))
         if ent > 0:
@@ -3815,13 +3907,7 @@ def _apply_logic_gap_features(
     # Collect all unique imports across the report.
     all_imports: set[str] = set()
     for file_entry in files:
-        imports = file_entry.get("is") or []
-        for imp in imports:
-            # Cleave imports are often list of dicts with 'n' key
-            if isinstance(imp, dict):
-                all_imports.add(imp.get("n", ""))
-            else:
-                all_imports.add(str(imp))
+        all_imports.update(_file_symbols(file_entry))
 
     sample_paths = summary.sample_paths
     for cat, (imports_set, traits_set) in sorted(LOGIC_GAPS.items()):
@@ -5118,7 +5204,7 @@ def build_vocab_from_db(
                 if report is None:
                     continue
                 for file_entry in report_files(report):
-                    ms = file_entry.get("ms") or {}
+                    ms = file_metrics(file_entry)
                     for group, fields in ms.items():
                         if not isinstance(fields, dict):
                             continue

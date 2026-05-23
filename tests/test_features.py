@@ -11,6 +11,9 @@ import pytest
 from collimator.features import (
     FeatureSpec,
     _finding_paths,
+    _metric_kv_tokens,
+    _string_values,
+    _file_symbols,
     build_vocab,
     extract,
     extract_all,
@@ -47,6 +50,36 @@ def _make_report(
             "is": imports or [],
             "ss": [],
             "ms": metrics or {},
+        }],
+    }
+
+
+def _make_report_v5(
+    findings: list[dict] | None = None,
+    imports: list[list[str]] | None = None,
+    metrics: dict | None = None,
+    values: dict | None = None,
+) -> dict:
+    """Create a report in the cleave compact v5 schema."""
+    return {
+        "v": "5",
+        "fs": [{
+            "id": 0,
+            "path": "/tmp/test",
+            "dp": 0,
+            "type": "pe",
+            "sha": "abc123",
+            "sz": 1024,
+            "ts": findings or [],
+            "ff": {
+                "id": "pe",
+                "i": imports or [],
+                "x": [["DllRegisterServer"]],
+                "fn": [["main", 4096]],
+                "s": [[7, "u16", "CreateFileW"]],
+                "m": metrics or {},
+                "v": values or {},
+            },
         }],
     }
 
@@ -101,6 +134,24 @@ def test_report_files_filters_invalid_entries() -> None:
     files = report_files(report)
 
     assert [f["type"] for f in files] == ["zip", "python"]
+
+
+def test_v5_ff_helpers_feed_existing_feature_surfaces() -> None:
+    report = _make_report_v5(
+        imports=[["kernel32.dll", "CreateFileW"]],
+        metrics={"binary": {"overall_entropy": 7.2}},
+        values={"pe.machine": "x86_64"},
+    )
+    file_entry = report_files(report)[0]
+
+    assert "kernel32.dll!CreateFileW" in _file_symbols(file_entry)
+    assert "DllRegisterServer" in _file_symbols(file_entry)
+    assert "main" in _file_symbols(file_entry)
+    assert _string_values(file_entry) == [("CreateFileW", True)]
+
+    tokens = _metric_kv_tokens(file_entry, include_shape=True)
+    assert "binary.overall_entropy:exists" in tokens
+    assert "v.pe.machine=x86_64" in tokens
 
 
 # ---------------------------------------------------------------------------

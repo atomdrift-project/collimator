@@ -11,6 +11,8 @@ Requires-Dist: onnxmltools>=1.12
 Requires-Dist: numpy>=1.24
 Requires-Dist: scikit-learn>=1.3
 Requires-Dist: shap>=0.44
+Requires-Dist: numba>=0.60
+Requires-Dist: llvmlite>=0.43
 Requires-Dist: psycopg[binary]>=3.1
 Requires-Dist: lightgbm>=4.0
 Provides-Extra: dev

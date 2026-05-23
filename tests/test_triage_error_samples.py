@@ -54,7 +54,7 @@ def test_copy_report_refuses_to_clear_non_tmp_directory(tmp_path: Path) -> None:
     report = tmp_path / "false_positives.json"
     report.write_text(json.dumps({"false_positives": []}))
 
-    with pytest.raises(ValueError, match="refusing to clear non-/tmp"):
+    with pytest.raises(ValueError, match="refusing to clear non-temp"):
         copy_report(
             report_path=report,
             output_dir=Path("relative-triage-dir"),
