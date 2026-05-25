@@ -388,3 +388,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T080225-filetypes-xml` — 2026-05-24T08:02:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `34dd0b246c329be5` | inherit_from_filetypes_perl_271acc64 | ok | 1.0000 | 1.0000 | 0.9643 | 6 | [log](out/autocollie/runs/2026-05-24T08-07-45_20260524T080225-filetypes-xml_inherit_from_filetypes_perl_271acc64.log) |
+| `0cfbeef9d427a48d` | xml_control_scalepos_075 | ok | 1.0000 | 1.0000 | 0.9825 | 2 | [log](out/autocollie/runs/2026-05-24T08-07-56_20260524T080225-filetypes-xml_xml_control_scalepos_075.log) |
+| `a7b7782fd5858ce8` | xml_feat_textmetrics_encoding | ok | 1.0000 | 1.0000 | 0.9825 | 4 | [log](out/autocollie/runs/2026-05-24T08-07-58_20260524T080225-filetypes-xml_xml_feat_textmetrics_encoding.log) |
+| `882b3755d5082925` | xml_feat_kv_vocab | ok | 1.0000 | 1.0000 | 0.9643 | 4 | [log](out/autocollie/runs/2026-05-24T08-08-03_20260524T080225-filetypes-xml_xml_feat_kv_vocab.log) |
+| `52ecadaa576a0d96` | xml_feat_lowbigram_trigrams | ok | 1.0000 | 1.0000 | 0.9643 | 4 | [log](out/autocollie/runs/2026-05-24T08-08-07_20260524T080225-filetypes-xml_xml_feat_lowbigram_trigrams.log) |
+| `03ae290246b96661` | xml_train_hardneg_01_10 | ok | 1.0000 | 1.0000 | 0.9643 | 2 | [log](out/autocollie/runs/2026-05-24T08-08-12_20260524T080225-filetypes-xml_xml_train_hardneg_01_10.log) |
+| `bcd7c067df033912` | xml_train_reg_minchild | ok | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-24T08-08-14_20260524T080225-filetypes-xml_xml_train_reg_minchild.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_perl_271acc64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/perl (key=271acc64b3a7fd1a, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_scalepos_075`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.75 to shift threshold and improve recall@3FPM at the deployed operating point.
+- **`xml_feat_textmetrics_encoding`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document obfuscation patterns, targeting PR_AUC gains.
+- **`xml_feat_kv_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to extract structured attribute signal from XML, aiming to improve PR_AUC and recall@3FPM.
+- **`xml_feat_lowbigram_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 100 and enable tiered_crit_trigrams to capture rarer malicious patterns, boosting recall@3FPM.
+- **`xml_train_hardneg_01_10`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Introduce hard negative mining to sharpen decision boundary and improve recall@3FPM without hurting PR_AUC.
+- **`xml_train_reg_minchild`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increase regularization and min_child_samples to reduce overfitting on the small XML corpus, targeting stable PR_AUC and recall@3FPM.
+
+</details>
+
+## Cycle `20260524T110743-filetypes-xml` — 2026-05-24T11:07:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `34dd0b246c329be5` | inherit_from_filetypes_perl_271acc64 | dup | 1.0000 | 1.0000 | 0.9643 | 3 | [log](out/autocollie/runs/2026-05-24T11-13-56_20260524T110743-filetypes-xml_inherit_from_filetypes_perl_271acc64.log) |
+| `de830616b3c7aa15` | xml_control_train_leaves128_lr003 | ok | 1.0000 | 1.0000 | 0.9643 | 39 | [log](out/autocollie/runs/2026-05-24T11-14-05_20260524T110743-filetypes-xml_xml_control_train_leaves128_lr003.log) |
+| `753604efb78fe739` | xml_feat_textmetrics_encoding_lines | ok | 1.0000 | 1.0000 | 0.9825 | 32 | [log](out/autocollie/runs/2026-05-24T11-14-45_20260524T110743-filetypes-xml_xml_feat_textmetrics_encoding_lines.log) |
+| `51275916e7b049e7` | xml_feat_kv_vocab_15k | ok | 1.0000 | 1.0000 | 0.9643 | 31 | [log](out/autocollie/runs/2026-05-24T11-15-19_20260524T110743-filetypes-xml_xml_feat_kv_vocab_15k.log) |
+| `883a64da5ab23db4` | xml_feat_rarebigrams_trigrams | ok | 1.0000 | 1.0000 | 0.9643 | 5 | [log](out/autocollie/runs/2026-05-24T11-15-51_20260524T110743-filetypes-xml_xml_feat_rarebigrams_trigrams.log) |
+| `9851aa3238762472` | xml_train_hardneg_01_15 | ok | 1.0000 | 1.0000 | 0.9643 | 3 | [log](out/autocollie/runs/2026-05-24T11-15-58_20260524T110743-filetypes-xml_xml_train_hardneg_01_15.log) |
+| `1287caed16eb4145` | xml_train_goss_reg_lambda2 | ok | 1.0000 | 1.0000 | 0.9825 | 16 | [log](out/autocollie/runs/2026-05-24T11-16-02_20260524T110743-filetypes-xml_xml_train_goss_reg_lambda2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_perl_271acc64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/perl (key=271acc64b3a7fd1a, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_train_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — control feature set with deeper trees and lower LR to improve tail recall@3 FP/M
+- **`xml_feat_textmetrics_encoding_lines`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — enable text_metrics_full and text_encoding with line_length_buckets to capture document obfuscation signals, targeting PR_AUC
+- **`xml_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — expand kv_vocab to 15000 to capture rare XML attribute/value patterns, targeting PR_AUC
+- **`xml_feat_rarebigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=3000 EXP_TRIGRAM_MIN_FREQ=10` — lower bigram_min_freq to 50 and add trigrams to catch rare malicious sequences, targeting recall@3 FP/M
+- **`xml_train_hardneg_01_15`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — increase hard_negative_weight to 15 to sharpen low-FPR boundary, targeting recall@3 FP/M
+- **`xml_train_goss_reg_lambda2`** `EXP_BOOSTING_TYPE=goss EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — test goss boosting with higher L2 regularization to reduce overfitting on small corpus, targeting PR_AUC
+
+</details>
+
+## Cycle `20260525T003707-filetypes-xml` — 2026-05-25T00:37:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de830616b3c7aa15` | inherit_from_filetypes_zst_011ac2c6 | dup | 1.0000 | 1.0000 | 0.9643 | 1 | [log](out/autocollie/runs/2026-05-25T00-43-18_20260525T003707-filetypes-xml_inherit_from_filetypes_zst_011ac2c6.log) |
+| `0108ddeb27fb3b93` | xml_control_scalepos_075 | ok | 1.0000 | 1.0000 | 0.9825 | 28 | [log](out/autocollie/runs/2026-05-25T00-43-22_20260525T003707-filetypes-xml_xml_control_scalepos_075.log) |
+| `a7b7782fd5858ce8` | xml_feat_textmetrics_encoding | dup | 1.0000 | 1.0000 | 0.9825 | 1 | [log](out/autocollie/runs/2026-05-25T00-43-51_20260525T003707-filetypes-xml_xml_feat_textmetrics_encoding.log) |
+| `d57a3cdc55e5b4fb` | xml_feat_kv_vocab_15k_split | ok | 1.0000 | 1.0000 | 0.9643 | 33 | [log](out/autocollie/runs/2026-05-25T00-43-53_20260525T003707-filetypes-xml_xml_feat_kv_vocab_15k_split.log) |
+| `bc6a33bee40f6b48` | xml_feat_rare_bigrams_trigrams | ok | 1.0000 | 1.0000 | 0.9643 | 20 | [log](out/autocollie/runs/2026-05-25T00-44-27_20260525T003707-filetypes-xml_xml_feat_rare_bigrams_trigrams.log) |
+| `03ae290246b96661` | xml_train_hardneg_01_10 | dup | 1.0000 | 1.0000 | 0.9643 | 1 | [log](out/autocollie/runs/2026-05-25T00-44-48_20260525T003707-filetypes-xml_xml_train_hardneg_01_10.log) |
+| `fe92d698201cd74d` | xml_train_leaves128_reg2 | ok | 1.0000 | 1.0000 | 0.9643 | 2 | [log](out/autocollie/runs/2026-05-25T00-44-50_20260525T003707-filetypes-xml_xml_train_leaves128_reg2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_scalepos_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with scale_pos_weight_mult=0.75 to down-weight positives and reduce FPs at low FPR, targeting recall@3FPM improvement.
+- **`xml_feat_textmetrics_encoding`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture structural text anomalies and encoding artifacts common in malicious XML, targeting PR_AUC gain.
+- **`xml_feat_kv_vocab_15k_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab with value splitting to recover per-element signal from XML attributes and tags, targeting PR_AUC and recall@3FPM.
+- **`xml_feat_rare_bigrams_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Lower bigram_min_freq to 50 and add trigrams to capture rarer malicious patterns in XML structure, targeting PR_AUC improvement.
+- **`xml_train_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard negative mining (fraction=0.1, weight=10) to sharpen decision boundary near benign/malware overlap, targeting recall@3FPM.
+- **`xml_train_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Increase num_leaves to 128 and reg_lambda to 2.0 to allow more complex splits while regularizing against overfit on small corpus, targeting PR_AUC stability.
+
+</details>
+
+## Cycle `20260525T060658-filetypes-xml` — 2026-05-25T06:06:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de830616b3c7aa15` | inherit_from_filetypes_zst_011ac2c6 | dup | 1.0000 | 1.0000 | 0.9643 | 1 | [log](out/autocollie/runs/2026-05-25T06-12-18_20260525T060658-filetypes-xml_inherit_from_filetypes_zst_011ac2c6.log) |
+| `0108ddeb27fb3b93` | xml_control_scalepos_075 | dup | 1.0000 | 1.0000 | 0.9825 | 1 | [log](out/autocollie/runs/2026-05-25T06-12-22_20260525T060658-filetypes-xml_xml_control_scalepos_075.log) |
+| `2e1e572a7d128dbb` | xml_feat_textmetrics_encoding | ok | 1.0000 | 1.0000 | 0.9643 | 31 | [log](out/autocollie/runs/2026-05-25T06-12-25_20260525T060658-filetypes-xml_xml_feat_textmetrics_encoding.log) |
+| `d57a3cdc55e5b4fb` | xml_feat_kv_vocab_split | dup | 1.0000 | 1.0000 | 0.9643 | 2 | [log](out/autocollie/runs/2026-05-25T06-12-57_20260525T060658-filetypes-xml_xml_feat_kv_vocab_split.log) |
+| `4cca91c755feb479` | xml_feat_obj_susp_trigrams | ok | 1.0000 | 1.0000 | 0.9825 | 7 | [log](out/autocollie/runs/2026-05-25T06-13-00_20260525T060658-filetypes-xml_xml_feat_obj_susp_trigrams.log) |
+| `03ae290246b96661` | xml_train_hardneg_01_10 | dup | 1.0000 | 1.0000 | 0.9643 | 1 | [log](out/autocollie/runs/2026-05-25T06-13-08_20260525T060658-filetypes-xml_xml_train_hardneg_01_10.log) |
+| `3903f7014f054142` | xml_train_extratrees_lr003 | ok | 0.9978 | 0.9996 | 0.9355 | 3 | [log](out/autocollie/runs/2026-05-25T06-13-11_20260525T060658-filetypes-xml_xml_train_extratrees_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_scalepos_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env with scale_pos_weight_mult=0.75 to stabilize PR_AUC and improve recall@3FPM by down-weighting benign class.
+- **`xml_feat_textmetrics_encoding`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture XML structural obfuscation, aiming to lift PR_AUC and recall@3FPM.
+- **`xml_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with kv_value_split to parse XML attribute values, targeting recall@3FPM gains on structured payloads.
+- **`xml_feat_obj_susp_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Enable objective_trigrams and suspicious_trigrams with lower min_freq to capture longer attack patterns, aiming for PR_AUC improvement.
+- **`xml_train_hardneg_01_10`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction=0.1 and weight=10 to focus model on difficult benigns, improving recall@3FPM without hurting ROC_AUC.
+- **`xml_train_extratrees_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable extra_trees with lower learning_rate to add ensemble noise and improve generalization at the tail, targeting recall@3FPM.
+
+</details>
+

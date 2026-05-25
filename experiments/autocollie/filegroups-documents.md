@@ -1702,3 +1702,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T030415-filegroups-documents` — 2026-05-24T03:04:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7eb9b3459c95a6ce` | inherit_from_filetypes_xml_051713c3 | ok | 1.0000 | 0.9983 | 0.9960 | 14 | [log](out/autocollie/runs/2026-05-24T03-09-26_20260524T030415-filegroups-documents_inherit_from_filetypes_xml_051713c3.log) |
+| `6c6a40c2d65d7f75` | ctrl_baseline_hardneg_tail | ok | 1.0000 | 0.9982 | 0.9887 | 9 | [log](out/autocollie/runs/2026-05-24T03-09-47_20260524T030415-filegroups-documents_ctrl_baseline_hardneg_tail.log) |
+| `97d477284e8e1823` | feat_textmetrics_docobf | ok | 1.0000 | 0.9981 | 0.9966 | 9 | [log](out/autocollie/runs/2026-05-24T03-09-56_20260524T030415-filegroups-documents_feat_textmetrics_docobf.log) |
+| `57e7933b9d81899e` | feat_lowbigram_8k | ok | 1.0000 | 0.9980 | 0.9958 | 8 | [log](out/autocollie/runs/2026-05-24T03-10-06_20260524T030415-filegroups-documents_feat_lowbigram_8k.log) |
+| `4243089ed8075441` | feat_kv_vocab_split | ok | 1.0000 | 0.9983 | 0.9962 | 9 | [log](out/autocollie/runs/2026-05-24T03-10-16_20260524T030415-filegroups-documents_feat_kv_vocab_split.log) |
+| `ebe4495017ac5a82` | train_dart_extra_trees | ok | 0.9999 | 0.9959 | 0.9907 | 2 | [log](out/autocollie/runs/2026-05-24T03-10-26_20260524T030415-filegroups-documents_train_dart_extra_trees.log) |
+| `c3f54afb1c684321` | gen_seed_search_k3 | ok | 1.0000 | 0.9982 | 0.9968 | 3 | [log](out/autocollie/runs/2026-05-24T03-10-29_20260524T030415-filegroups-documents_gen_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_baseline_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env and tune hard_negative_weight to 12 to improve recall@3 FP/M by focusing on difficult benigns.
+- **`feat_textmetrics_docobf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and document_obfuscation_features to capture structural obfuscation signals, targeting PR_AUC and recall@3 FP/M gains on document routes.
+- **`feat_lowbigram_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 50 and raise bigram_max to 8000 to capture rarer but informative n-grams, targeting PR_AUC improvement.
+- **`feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split with max 15000 to extract finer-grained metadata signals, targeting recall@3 FP/M by distinguishing malicious document properties.
+- **`train_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting and enable extra_trees to add regularization noise, targeting recall@3 FP/M by improving tail generalization without feature changes.
+- **`gen_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed_search_k=3 with save_all_seeds=true on baseline features to average out seed variance, targeting stable recall@3 FP/M across different RNG splits.
+
+</details>
+
+## Cycle `20260524T124800-filegroups-documents` — 2026-05-24T12:48:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7eb9b3459c95a6ce` | inherit_from_filetypes_xml_051713c3 | dup | 1.0000 | 0.9983 | 0.9960 | 2 | [log](out/autocollie/runs/2026-05-24T12-52-25_20260524T124800-filegroups-documents_inherit_from_filetypes_xml_051713c3.log) |
+| `177ae70ae4de7c5f` | ctrl_dart_extra_trees_lr003 | ok | 0.9999 | 0.9955 | 0.9910 | 6 | [log](out/autocollie/runs/2026-05-24T12-52-35_20260524T124800-filegroups-documents_ctrl_dart_extra_trees_lr003.log) |
+| `f3c9853ea2ff27de` | feat_textmetrics_docobf_full | ok | 1.0000 | 0.9980 | 0.9959 | 12 | [log](out/autocollie/runs/2026-05-24T12-52-42_20260524T124800-filegroups-documents_feat_textmetrics_docobf_full.log) |
+| `52bab2e09688cafe` | feat_kv_vocab_split_15k | ok | 1.0000 | 0.9982 | 0.9957 | 13 | [log](out/autocollie/runs/2026-05-24T12-52-56_20260524T124800-filegroups-documents_feat_kv_vocab_split_15k.log) |
+| `519354a788a4ab96` | feat_lowbigram_10k_tiered | ok | 1.0000 | 0.9980 | 0.9956 | 15 | [log](out/autocollie/runs/2026-05-24T12-53-10_20260524T124800-filegroups-documents_feat_lowbigram_10k_tiered.log) |
+| `bb8d16240c359cd8` | transfer_xml_trigrams_lowfreq | ok | 1.0000 | 0.9973 | 0.9937 | 14 | [log](out/autocollie/runs/2026-05-24T12-53-28_20260524T124800-filegroups-documents_transfer_xml_trigrams_lowfreq.log) |
+| `b8bcef87bec706ba` | gen_seed_search_k3_textmetrics | ok | 1.0000 | 0.9982 | 0.9963 | 128 | [log](out/autocollie/runs/2026-05-24T12-53-44_20260524T124800-filegroups-documents_gen_seed_search_k3_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_dart_extra_trees_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control feature set with dart boosting and extra_trees to improve tail recall@3FPM while keeping PR_AUC flat.
+- **`feat_textmetrics_docobf_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture document structure signals, aiming to boost PR_AUC and recall@3FPM.
+- **`feat_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with value splitting to recover granular metadata signals, targeting improved recall@3FPM.
+- **`feat_lowbigram_10k_tiered`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Lowers bigram min_freq to 50 and increases max to 10000 to capture rarer malicious patterns, aiming to lift PR_AUC.
+- **`transfer_xml_trigrams_lowfreq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Ports XML route's low-freq bigram and tiered_crit_trigrams config to documents to enhance PR_AUC via richer n-gram coverage.
+- **`gen_seed_search_k3_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Applies seed_search_k=3 to the text_metrics config to average out seed variance and stabilize recall@3FPM gains.
+
+</details>
+
+## Cycle `20260524T202532-filegroups-documents` — 2026-05-24T20:25:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7eb9b3459c95a6ce` | inherit_from_filetypes_xml_051713c3 | dup | 1.0000 | 0.9983 | 0.9960 | 1 | [log](out/autocollie/runs/2026-05-24T20-32-27_20260524T202532-filegroups-documents_inherit_from_filetypes_xml_051713c3.log) |
+| `d53cf0621df7a505` | ctrl_baseline_scale_pos_05 | ok | 1.0000 | 0.9974 | 0.9907 | 12 | [log](out/autocollie/runs/2026-05-24T20-32-33_20260524T202532-filegroups-documents_ctrl_baseline_scale_pos_05.log) |
+| `1b3f8ebf95d4586b` | ctrl_dart_hardneg_01_8 | ok | 0.9999 | 0.9951 | 0.9905 | 8 | [log](out/autocollie/runs/2026-05-24T20-32-46_20260524T202532-filegroups-documents_ctrl_dart_hardneg_01_8.log) |
+| `f3c9853ea2ff27de` | feat_textmetrics_docobf_full | dup | 1.0000 | 0.9980 | 0.9959 | 1 | [log](out/autocollie/runs/2026-05-24T20-32-55_20260524T202532-filegroups-documents_feat_textmetrics_docobf_full.log) |
+| `4fc5031584489fe5` | feat_kv_vocab_split_20k | ok | 1.0000 | 0.9982 | 0.9957 | 17 | [log](out/autocollie/runs/2026-05-24T20-32-58_20260524T202532-filegroups-documents_feat_kv_vocab_split_20k.log) |
+| `79f52cf8ac40d39b` | gen_seed_search_k3_tiered_trigrams | ok | 1.0000 | 0.9983 | 0.9967 | 17 | [log](out/autocollie/runs/2026-05-24T20-33-15_20260524T202532-filegroups-documents_gen_seed_search_k3_tiered_trigrams.log) |
+| `72360f01c3f3cb22` | drift_retry_kv_textenc_ablate_blindfold | ok | 1.0000 | 0.9982 | 0.9970 | 16 | [log](out/autocollie/runs/2026-05-24T20-33-34_20260524T202532-filegroups-documents_drift_retry_kv_textenc_ablate_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_baseline_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM by down-weighting positives to reduce false positives at the deployed operating point, keeping PR_AUC flat.
+- **`ctrl_dart_hardneg_01_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve recall@3FPM by using DART boosting with hard negatives to sharpen decision boundaries in the tail, preserving ROC_AUC.
+- **`feat_textmetrics_docobf_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by enabling document-specific obfuscation signals and full text metrics, which capture PDF/DOCX evasion patterns missed by n-grams alone.
+- **`feat_kv_vocab_split_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding KV vocabulary and splitting string values to recover granular library/path signals in document metadata, boosting tail recall.
+- **`gen_seed_search_k3_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM gains by averaging over 3 seeds on a tiered trigram surface, reducing seed variance while targeting PR_AUC improvements.
+- **`drift_retry_kv_textenc_ablate_blindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to recover PR_AUC by retrying a strong historical KV+textenc combo while ablating blindfold dropout to reduce noise in the highly imbalanced benign tail.
+
+</details>
+
+## Cycle `20260525T041225-filegroups-documents` — 2026-05-25T04:12:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c452b3ea333dc419` | inherit_from_filetypes_zst_011ac2c6 | ok | 1.0000 | 0.9979 | 0.9955 | 3 | [log](out/autocollie/runs/2026-05-25T04-18-43_20260525T041225-filegroups-documents_inherit_from_filetypes_zst_011ac2c6.log) |
+| `0986344587bf8575` | ctrl_baseline_tail_recall | ok | 1.0000 | 0.9977 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-25T04-18-49_20260525T041225-filegroups-documents_ctrl_baseline_tail_recall.log) |
+| `7f13b4215d0d21c6` | feat_textmetrics_obfuscation | ok | 1.0000 | 0.9980 | 0.9959 | 3 | [log](out/autocollie/runs/2026-05-25T04-18-52_20260525T041225-filegroups-documents_feat_textmetrics_obfuscation.log) |
+| `e0f6737811bce48a` | feat_kv_vocab_split_15k | ok | 1.0000 | 0.9983 | 0.9961 | 3 | [log](out/autocollie/runs/2026-05-25T04-18-56_20260525T041225-filegroups-documents_feat_kv_vocab_split_15k.log) |
+| `e773e2c47e0c7b72` | train_dart_hardneg_01_12 | ok | 1.0000 | 0.9978 | 0.9915 | 5 | [log](out/autocollie/runs/2026-05-25T04-19-00_20260525T041225-filegroups-documents_train_dart_hardneg_01_12.log) |
+| `0c24324925bb9abc` | ablate_blindfold_noise | ok | 1.0000 | 0.9980 | 0.9967 | 9 | [log](out/autocollie/runs/2026-05-25T04-19-06_20260525T041225-filegroups-documents_ablate_blindfold_noise.log) |
+| `7a0bec0c7f61fed9` | transfer_xml_lowbigram_seed3 | ok | 1.0000 | 0.9983 | 0.9887 | 11 | [log](out/autocollie/runs/2026-05-25T04-19-16_20260525T041225-filegroups-documents_transfer_xml_lowbigram_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_baseline_tail_recall`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env to hit matrix cache; lowers scale_pos_weight_mult to 0.75 and sets threshold_mode=max_recall_at_fpr to push recall@3FPM at the deployed operating point.
+- **`feat_textmetrics_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture structural PDF/DOCX obfuscation signals, aiming to improve PR_AUC by separating malicious document layouts from benign ones.
+- **`feat_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with kv_value_split and raises kv_vocab_max to 15000 to recover per-element signal in document metadata, targeting PR_AUC gains from finer-grained key-value patterns.
+- **`train_dart_hardneg_01_12`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Uses dart boosting with hard_negative_fraction=0.1 and hard_negative_weight=12 to sharpen decision boundaries on difficult benigns, aiming to boost recall@3FPM without hurting ROC_AUC.
+- **`ablate_blindfold_noise`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout features to reduce variance on the small benign holdout, aiming to stabilize PR_AUC and improve recall@3FPM by removing stochastic feature masking.
+- **`transfer_xml_lowbigram_seed3`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ports filetypes/xml low bigram_min_freq=50 to capture rarer document n-grams, paired with seed_search_k=3 to average out seed variance and target stable recall@3FPM improvements.
+
+</details>
+

@@ -292,3 +292,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T075537-filetypes-jar` — 2026-05-24T07:55:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `129233c5d70bb889` | inherit_from_filetypes_xml_051713c3 | ok | 0.9976 | 0.9959 | 0.9798 | 15 | [log](out/autocollie/runs/2026-05-24T08-01-03_20260524T075537-filetypes-jar_inherit_from_filetypes_xml_051713c3.log) |
+| `0aa6d4ce5761bc4b` | jar_control_kv20k_textenc_leaves128 | ok | 0.9988 | 0.9978 | 0.9798 | 11 | [log](out/autocollie/runs/2026-05-24T08-01-23_20260524T075537-filetypes-jar_jar_control_kv20k_textenc_leaves128.log) |
+| `18b95a629e0f96f2` | jar_exploit_hardneg_01_12 | ok | 0.9988 | 0.9978 | 0.9526 | 3 | [log](out/autocollie/runs/2026-05-24T08-01-34_20260524T075537-filetypes-jar_jar_exploit_hardneg_01_12.log) |
+| `939dc319cec7ddd5` | jar_symbol_vocab_bigrams | ok | 0.9988 | 0.9979 | 0.9856 | 10 | [log](out/autocollie/runs/2026-05-24T08-01-37_20260524T075537-filetypes-jar_jar_symbol_vocab_bigrams.log) |
+| `5f7dec248beb674c` | jar_kv25k_textmetrics_full | ok | 0.9984 | 0.9974 | 0.9853 | 10 | [log](out/autocollie/runs/2026-05-24T08-01-47_20260524T075537-filetypes-jar_jar_kv25k_textmetrics_full.log) |
+| `c791cd4f7f091a32` | jar_transfer_tiered_trigrams | ok | 0.9973 | 0.9954 | 0.9795 | 12 | [log](out/autocollie/runs/2026-05-24T08-01-58_20260524T075537-filetypes-jar_jar_transfer_tiered_trigrams.log) |
+| `9b996657fa26ca39` | jar_generalization_seed1337 | ok | 0.9983 | 0.9970 | 0.9795 | 13 | [log](out/autocollie/runs/2026-05-24T08-02-11_20260524T075537-filetypes-jar_jar_generalization_seed1337.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_kv20k_textenc_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Control on best feature set; increases leaves to 128 and estimators to 300 to capture complex patterns while stabilizing PR_AUC.
+- **`jar_exploit_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Tests hard-negative mining to push down benign scores near the decision boundary, targeting recall@3FPM improvement.
+- **`jar_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_VOCAB=1 …` — Enables symbol and bigram vocabs to capture Java class/method co-occurrence patterns, aiming to boost PR_AUC via structural signal.
+- **`jar_kv25k_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=0 EXP_TEXT_METRICS_FULL=1 …` — Swaps text_encoding for text_metrics_full to capture document obfuscation and structural stats in JAR manifests, targeting recall@3FPM.
+- **`jar_transfer_tiered_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Transfers tiered critical trigrams from xml route to capture high-severity path co-occurrences, aiming to improve PR_AUC.
+- **`jar_generalization_seed1337`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Generalization check on best config with varied seed to confirm signal stability and rule out seed noise for PR_AUC.
+
+</details>
+
+## Cycle `20260524T104934-filetypes-jar` — 2026-05-24T10:49:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `129233c5d70bb889` | inherit_from_filetypes_xml_051713c3 | dup | 0.9976 | 0.9959 | 0.9798 | 2 | [log](out/autocollie/runs/2026-05-24T10-55-27_20260524T104934-filetypes-jar_inherit_from_filetypes_xml_051713c3.log) |
+| `41d7349c9565b162` | jar_control_symbol_bigrams_leaves128 | ok | 0.9988 | 0.9979 | 0.9856 | 15 | [log](out/autocollie/runs/2026-05-24T10-55-33_20260524T104934-filetypes-jar_jar_control_symbol_bigrams_leaves128.log) |
+| `74dcee70f10865f3` | jar_exploit_hardneg_01_15_lr003 | ok | 0.9979 | 0.9962 | 0.9497 | 3 | [log](out/autocollie/runs/2026-05-24T10-55-49_20260524T104934-filetypes-jar_jar_exploit_hardneg_01_15_lr003.log) |
+| `e8f41d7439f9adea` | jar_feat_textmetrics_full_kv30k | ok | 0.9984 | 0.9974 | 0.9853 | 13 | [log](out/autocollie/runs/2026-05-24T10-55-54_20260524T104934-filetypes-jar_jar_feat_textmetrics_full_kv30k.log) |
+| `cc93e23c0ec78808` | jar_feat_tiered_trigrams_10k | ok | 0.9983 | 0.9971 | 0.9798 | 18 | [log](out/autocollie/runs/2026-05-24T10-56-08_20260524T104934-filetypes-jar_jar_feat_tiered_trigrams_10k.log) |
+| `2f858a46f6048292` | jar_abl_no_extreme_features | ok | 0.9988 | 0.9979 | 0.9856 | 15 | [log](out/autocollie/runs/2026-05-24T10-56-27_20260524T104934-filetypes-jar_jar_abl_no_extreme_features.log) |
+| `e76e7fb20fd21cf6` | jar_transfer_lowbigramfreq_seed1337 | ok | 0.9981 | 0.9966 | 0.9742 | 13 | [log](out/autocollie/runs/2026-05-24T10-56-43_20260524T104934-filetypes-jar_jar_transfer_lowbigramfreq_seed1337.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_symbol_bigrams_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best PR_AUC feature set; increase num_leaves to 128 to improve ranking granularity and stabilize PR_AUC.
+- **`jar_exploit_hardneg_01_15_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 …` — Apply hard negatives with higher weight and lower LR to sharpen decision boundary, targeting recall@3FPM without hurting PR_AUC.
+- **`jar_feat_textmetrics_full_kv30k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and expand KV vocab to 30k to capture manifest/class obfuscation patterns, aiming to lift PR_AUC.
+- **`jar_feat_tiered_trigrams_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Add tiered critical trigrams with relaxed min_freq to capture co-occurring malicious traits, targeting PR_AUC and recall@3FPM.
+- **`jar_abl_no_extreme_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce tail noise and overfitting, aiming to stabilize ROC_AUC and maintain PR_AUC.
+- **`jar_transfer_lowbigramfreq_seed1337`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfer low bigram_min_freq from xml route to capture rarer JAR structural patterns; vary seed to check generalization, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260524T200220-filetypes-jar` — 2026-05-24T20:02:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `129233c5d70bb889` | inherit_from_filetypes_xml_051713c3 | dup | 0.9976 | 0.9959 | 0.9798 | 2 | [log](out/autocollie/runs/2026-05-24T20-08-31_20260524T200220-filetypes-jar_inherit_from_filetypes_xml_051713c3.log) |
+| `0963437903d69f29` | jar_control_baseline_v2 | ok | 0.9988 | 0.9979 | 0.9856 | 19 | [log](out/autocollie/runs/2026-05-24T20-08-39_20260524T200220-filetypes-jar_jar_control_baseline_v2.log) |
+| `2ee180368c5d398b` | jar_feat_kv_vocab_10k | ok | 0.9988 | 0.9979 | 0.9856 | 24 | [log](out/autocollie/runs/2026-05-24T20-09-00_20260524T200220-filetypes-jar_jar_feat_kv_vocab_10k.log) |
+| `1eda9c292b255cd9` | jar_feat_textmetrics_encoding | ok | 0.9991 | 0.9984 | 0.9855 | 19 | [log](out/autocollie/runs/2026-05-24T20-09-26_20260524T200220-filetypes-jar_jar_feat_textmetrics_encoding.log) |
+| `25c0310f22a47572` | jar_feat_tiered_trigrams_5k | ok | 0.9988 | 0.9979 | 0.9856 | 20 | [log](out/autocollie/runs/2026-05-24T20-09-47_20260524T200220-filetypes-jar_jar_feat_tiered_trigrams_5k.log) |
+| `fb61f89351556562` | jar_train_hardneg_01_12 | ok | 0.9985 | 0.9974 | 0.9421 | 4 | [log](out/autocollie/runs/2026-05-24T20-10-08_20260524T200220-filetypes-jar_jar_train_hardneg_01_12.log) |
+| `a8ea085444def318` | jar_train_dart_extratrees | ok | 0.9944 | 0.9911 | 0.9742 | 9 | [log](out/autocollie/runs/2026-05-24T20-10-14_20260524T200220-filetypes-jar_jar_train_dart_extratrees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_baseline_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env to establish matrix cache baseline; test num_leaves=128 to improve PR_AUC by capturing finer decision boundaries.
+- **`jar_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture key-value metadata patterns in JAR manifests/properties, aiming to boost PR_AUC by adding structural signal.
+- **`jar_feat_textmetrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text_metrics_full and text_encoding to detect obfuscation in embedded resources, targeting recall@3FPM improvement via better benign/malware separation.
+- **`jar_feat_tiered_trigrams_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable tiered trigrams to capture longer path co-occurrences in JAR structures, targeting PR_AUC improvement by adding hierarchical signal.
+- **`jar_train_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard_negative_fraction=0.1 and weight=12 to focus model on difficult benigns, targeting recall@3FPM gain by pushing FP scores lower.
+- **`jar_train_dart_extratrees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting and enable extra_trees for regularization, aiming to improve ROC_AUC and generalization at the tail without hurting PR_AUC.
+
+</details>
+
+## Cycle `20260525T084938-filetypes-jar` — 2026-05-25T08:49:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9395698527143115` | inherit_from_filetypes_zst_011ac2c6 | ok | 0.9986 | 0.9976 | 0.9853 | 11 | [log](out/autocollie/runs/2026-05-25T08-56-02_20260525T084938-filetypes-jar_inherit_from_filetypes_zst_011ac2c6.log) |
+| `a4717cc28371eb0f` | jar_control_scalepos05 | ok | 0.9980 | 0.9967 | 0.9799 | 12 | [log](out/autocollie/runs/2026-05-25T08-56-17_20260525T084938-filetypes-jar_jar_control_scalepos05.log) |
+| `2ee180368c5d398b` | jar_feat_kv_vocab_10k | dup | 0.9988 | 0.9979 | 0.9856 | 3 | [log](out/autocollie/runs/2026-05-25T08-56-34_20260525T084938-filetypes-jar_jar_feat_kv_vocab_10k.log) |
+| `8e3105889f0c73dc` | jar_feat_text_tiered_trigrams | ok | 0.9988 | 0.9979 | 0.9799 | 91 | [log](out/autocollie/runs/2026-05-25T08-56-40_20260525T084938-filetypes-jar_jar_feat_text_tiered_trigrams.log) |
+| `dee76693092bb404` | jar_feat_symbol_vocab_bigrams | ok | 0.9988 | 0.9979 | 0.9856 | 24 | [log](out/autocollie/runs/2026-05-25T08-58-14_20260525T084938-filetypes-jar_jar_feat_symbol_vocab_bigrams.log) |
+| `2769a62c62988555` | jar_train_dart_lr004_leaves112 | ok | 0.9944 | 0.9903 | 0.9632 | 3 | [log](out/autocollie/runs/2026-05-25T08-58-39_20260525T084938-filetypes-jar_jar_train_dart_lr004_leaves112.log) |
+| `f1187e181b0b220e` | jar_abl_no_extreme | ok | 0.9991 | 0.9984 | 0.9855 | 17 | [log](out/autocollie/runs/2026-05-25T08-58-43_20260525T084938-filetypes-jar_jar_abl_no_extreme.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_scalepos05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.5 to down-weight positives, aiming to reduce FPs and improve recall@3 FP/M while keeping PR AUC flat.
+- **`jar_feat_kv_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 10k to capture manifest/properties key-value signals, targeting PR AUC improvement via new rank signal.
+- **`jar_feat_text_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Combine text metrics/encoding with tiered critical trigrams to capture structured malicious patterns, aiming to boost PR AUC.
+- **`jar_feat_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enable symbol vocab and bigrams to capture class/method co-occurrence patterns, targeting tail recall and PR AUC gains.
+- **`jar_train_dart_lr004_leaves112`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — DART boosting with extra trees and tuned LR/leaves to regularize and improve low-FPR generalization, targeting recall@3 FP/M.
+- **`jar_abl_no_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Disable extreme features to reduce noise and overfitting, aiming to maintain PR AUC while improving ROC AUC stability and tail recall.
+
+</details>
+

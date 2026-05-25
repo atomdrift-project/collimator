@@ -276,3 +276,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T070553-filetypes-pkg-info` — 2026-05-24T07:05:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6f73c7fd6fd282ef` | inherit_from_filetypes_xml_051713c3 | ok | 0.9941 | 0.5000 | 0.9971 | 27 | [log](out/autocollie/runs/2026-05-24T07-12-13_20260524T070553-filetypes-pkg-info_inherit_from_filetypes_xml_051713c3.log) |
+| `7cb5a35186054856` | pkginfo_ctrl_baseline_dart | ok | 0.9941 | 0.5000 | 0.9971 | 15 | [log](out/autocollie/runs/2026-05-24T07-12-49_20260524T070553-filetypes-pkg-info_pkginfo_ctrl_baseline_dart.log) |
+| `dcb8a35f119a431d` | pkginfo_train_extra_trees | ok | 0.9941 | 0.5000 | 0.9971 | 3 | [log](out/autocollie/runs/2026-05-24T07-13-05_20260524T070553-filetypes-pkg-info_pkginfo_train_extra_trees.log) |
+| `167a0d0eac8d761b` | pkginfo_feat_kv_vocab | ok | 0.9941 | 0.5000 | 0.9971 | 14 | [log](out/autocollie/runs/2026-05-24T07-13-09_20260524T070553-filetypes-pkg-info_pkginfo_feat_kv_vocab.log) |
+| `20cd99532a23c769` | pkginfo_feat_textmetrics | ok | 0.9941 | 0.5000 | 0.9971 | 14 | [log](out/autocollie/runs/2026-05-24T07-13-25_20260524T070553-filetypes-pkg-info_pkginfo_feat_textmetrics.log) |
+| `35443361d79e0956` | pkginfo_feat_lowbigram_transfer | ok | 0.9941 | 0.5000 | 0.9971 | 15 | [log](out/autocollie/runs/2026-05-24T07-13-40_20260524T070553-filetypes-pkg-info_pkginfo_feat_lowbigram_transfer.log) |
+| `3705d12f367f09f9` | pkginfo_abl_crit_ngrams | ok | 0.9941 | 0.5000 | 0.9971 | 12 | [log](out/autocollie/runs/2026-05-24T07-13-57_20260524T070553-filetypes-pkg-info_pkginfo_abl_crit_ngrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_ctrl_baseline_dart`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TRAIN_SAMPLES=30000` — Control to establish baseline PR_AUC using the best recent feature_env with dart boosting to ensure matrix cache hits.
+- **`pkginfo_train_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Aim to improve PR_AUC by enabling extra_trees to add ensemble noise regularization, reducing overfitting on the imbalanced corpus.
+- **`pkginfo_feat_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve PR_AUC by enabling kv_vocab to capture structured metadata key-value pairs unique to pkg-info files.
+- **`pkginfo_feat_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aim to improve recall@3FPM by enabling text_metrics_full to detect obfuscation patterns in pkg-info text blocks.
+- **`pkginfo_feat_lowbigram_transfer`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve PR_AUC by lowering bigram_min_freq to 50 and increasing bigram_max to 8000, transferring a successful config from the xml route.
+- **`pkginfo_abl_crit_ngrams`** `EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aim to improve PR_AUC by disabling crit_category_ngrams to remove noisy severity-prefixed features that may dilute ranking signal.
+
+</details>
+
+## Cycle `20260524T121529-filetypes-pkg-info` — 2026-05-24T12:15:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6f73c7fd6fd282ef` | inherit_from_filetypes_xml_051713c3 | dup | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-24T12-21-40_20260524T121529-filetypes-pkg-info_inherit_from_filetypes_xml_051713c3.log) |
+| `20b81b164f2762e1` | pkginfo_ctrl_scalepos05 | ok | 0.9941 | 0.5000 | 0.9971 | 11 | [log](out/autocollie/runs/2026-05-24T12-21-46_20260524T121529-filetypes-pkg-info_pkginfo_ctrl_scalepos05.log) |
+| `4fcbca9923cd1f84` | pkginfo_feat_kv_split | ok | 0.9941 | 0.5000 | 0.9971 | 12 | [log](out/autocollie/runs/2026-05-24T12-21-58_20260524T121529-filetypes-pkg-info_pkginfo_feat_kv_split.log) |
+| `dab1e2df5c90c0a9` | pkginfo_feat_textenc_metrics | ok | 0.9941 | 0.5000 | 0.9971 | 10 | [log](out/autocollie/runs/2026-05-24T12-22-11_20260524T121529-filetypes-pkg-info_pkginfo_feat_textenc_metrics.log) |
+| `2e36786f0b4db29d` | pkginfo_feat_lowbigram100 | ok | 0.9941 | 0.5000 | 0.9971 | 8 | [log](out/autocollie/runs/2026-05-24T12-22-22_20260524T121529-filetypes-pkg-info_pkginfo_feat_lowbigram100.log) |
+| `d4d49ca3c4200858` | pkginfo_train_dart_extratrees | ok | 0.9941 | 0.5000 | 0.9971 | 12 | [log](out/autocollie/runs/2026-05-24T12-22-32_20260524T121529-filetypes-pkg-info_pkginfo_train_dart_extratrees.log) |
+| `48b392d2ab22cf01` | pkginfo_train_gamma05_mcs200 | ok | 0.9941 | 0.5000 | 0.9971 | 2 | [log](out/autocollie/runs/2026-05-24T12-22-46_20260524T121529-filetypes-pkg-info_pkginfo_train_gamma05_mcs200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_ctrl_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives to reduce false positives at low FPR, targeting recall@3FPM improvement while preserving PR_AUC.
+- **`pkginfo_feat_kv_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab with value splitting to capture granular metadata tokens, aiming to improve PR_AUC by adding discriminative feature signal.
+- **`pkginfo_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text encoding and full text metrics to capture structural obfuscation patterns, targeting PR_AUC gains from new rank signal.
+- **`pkginfo_feat_lowbigram100`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram frequency floor to include rarer malicious patterns, aiming to boost PR_AUC while regularization controls overfit.
+- **`pkginfo_train_dart_extratrees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to DART boosting with extra trees to add ensemble noise and regularization, targeting recall@3FPM by reducing tail false positives.
+- **`pkginfo_train_gamma05_mcs200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Increase split gain threshold and min child samples to prune noisy splits, targeting recall@3FPM by reducing false positive rate at the tail.
+
+</details>
+
+## Cycle `20260525T031126-filetypes-pkg-info` — 2026-05-25T03:11:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `52bf896160e82d2d` | inherit_from_filetypes_zst_011ac2c6 | ok | 0.9941 | 0.5000 | 0.9971 | 4 | [log](out/autocollie/runs/2026-05-25T03-17-58_20260525T031126-filetypes-pkg-info_inherit_from_filetypes_zst_011ac2c6.log) |
+| `d87d91ecb45ac444` | pkginfo_ctrl_dart_mcs300 | ok | 0.9941 | 0.5000 | 0.9971 | 3 | [log](out/autocollie/runs/2026-05-25T03-18-07_20260525T031126-filetypes-pkg-info_pkginfo_ctrl_dart_mcs300.log) |
+| `ad878aec36951df2` | pkginfo_feat_kv_split_vocab | ok | 0.9941 | 0.5000 | 0.9971 | 15 | [log](out/autocollie/runs/2026-05-25T03-18-11_20260525T031126-filetypes-pkg-info_pkginfo_feat_kv_split_vocab.log) |
+| `bc6895048719ccf9` | pkginfo_feat_text_metrics_enc | ok | 0.9941 | 0.5000 | 0.9971 | 5 | [log](out/autocollie/runs/2026-05-25T03-18-28_20260525T031126-filetypes-pkg-info_pkginfo_feat_text_metrics_enc.log) |
+| `21501638cfd1de9b` | pkginfo_feat_lowbigram50_trigrams | ok | 0.9941 | 0.5000 | 0.9971 | 14 | [log](out/autocollie/runs/2026-05-25T03-18-34_20260525T031126-filetypes-pkg-info_pkginfo_feat_lowbigram50_trigrams.log) |
+| `757df7e7d3a58566` | pkginfo_train_hardneg_01_5 | ok | 0.9941 | 0.5000 | 0.9971 | 7 | [log](out/autocollie/runs/2026-05-25T03-18-49_20260525T031126-filetypes-pkg-info_pkginfo_train_hardneg_01_5.log) |
+| `6b8bf455c9930257` | pkginfo_seed_search_3 | ok | 0.9941 | 0.5000 | 0.9971 | 10 | [log](out/autocollie/runs/2026-05-25T03-18-58_20260525T031126-filetypes-pkg-info_pkginfo_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_ctrl_dart_mcs300`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=300 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by using DART boosting with higher min_child_samples and down-weighting positives to prevent degenerate calibration on the highly imbalanced corpus.
+- **`pkginfo_feat_kv_split_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by extracting granular key-value metadata signal from package manifests, which often contain obfuscated or suspicious dependency strings.
+- **`pkginfo_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by capturing structural text anomalies and encoding patterns that distinguish malicious package metadata from benign ones.
+- **`pkginfo_feat_lowbigram50_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering the bigram frequency floor to capture rare malicious patterns and adding trigram context for better ranking.
+- **`pkginfo_train_hardneg_01_5`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard benign negatives to sharpen the decision boundary at low FPR, avoiding the degenerate calibration seen in previous runs.
+- **`pkginfo_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC and recall@3FPM by averaging over 3 seeds to reduce variance caused by the tiny benign class size.
+
+</details>
+
+## Cycle `20260525T062458-filetypes-pkg-info` — 2026-05-25T06:24:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `52bf896160e82d2d` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-25T06-31-09_20260525T062458-filetypes-pkg-info_inherit_from_filetypes_zst_011ac2c6.log) |
+| `830627a1092b1952` | pkginfo_ctrl_dart_spw05 | ok | 0.9941 | 0.5000 | 0.9971 | 2 | [log](out/autocollie/runs/2026-05-25T06-31-11_20260525T062458-filetypes-pkg-info_pkginfo_ctrl_dart_spw05.log) |
+| `4fcbca9923cd1f84` | pkginfo_feat_kv_vocab_split | dup | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-25T06-31-14_20260525T062458-filetypes-pkg-info_pkginfo_feat_kv_vocab_split.log) |
+| `dab1e2df5c90c0a9` | pkginfo_feat_text_metrics_enc | dup | 0.9941 | 0.5000 | 0.9971 | 1 | [log](out/autocollie/runs/2026-05-25T06-31-16_20260525T062458-filetypes-pkg-info_pkginfo_feat_text_metrics_enc.log) |
+| `916bd2b526cb528e` | pkginfo_feat_tiered_trigrams_lowfreq | ok | 0.9941 | 0.5000 | 0.9971 | 8 | [log](out/autocollie/runs/2026-05-25T06-31-18_20260525T062458-filetypes-pkg-info_pkginfo_feat_tiered_trigrams_lowfreq.log) |
+| `3ca32f4fa36a0c2c` | pkginfo_train_hardneg_01_10 | ok | 0.9941 | 0.5000 | 0.9971 | 2 | [log](out/autocollie/runs/2026-05-25T06-31-27_20260525T062458-filetypes-pkg-info_pkginfo_train_hardneg_01_10.log) |
+| `70c8a89a263139fe` | pkginfo_train_reg_spw025_fpr | ok | 0.9941 | 0.5000 | 0.0000 | 2 | [log](out/autocollie/runs/2026-05-25T06-31-29_20260525T062458-filetypes-pkg-info_pkginfo_train_reg_spw025_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_ctrl_dart_spw05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control baseline with dart boosting and reduced positive weight to improve score separation and target PR_AUC stability.
+- **`pkginfo_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to extract structured dependency/metadata signals, aiming to lift PR_AUC.
+- **`pkginfo_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text_metrics_full and text_encoding to capture obfuscation patterns in package manifests, targeting PR_AUC gain.
+- **`pkginfo_feat_tiered_trigrams_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 100 and enable tiered_crit_trigrams to capture rarer malicious patterns, aiming to improve recall@3FPM.
+- **`pkginfo_train_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard_negative_fraction 0.1 and weight 10 to force benign boundary learning, targeting recall@3FPM improvement.
+- **`pkginfo_train_reg_spw025_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Increase reg_lambda and lower scale_pos_weight_mult to 0.25 with max_recall_at_fpr threshold mode to reduce overconfidence and target ROC_AUC/PR_AUC.
+
+</details>
+

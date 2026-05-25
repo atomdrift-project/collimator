@@ -386,3 +386,123 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T060433-filetypes-kotlin` — 2026-05-24T06:04:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a2b543cb94549d13` | inherit_from_filetypes_xml_051713c3 | ok | 0.9879 | 0.5000 | 0.9939 | 94 | [log](out/autocollie/runs/2026-05-24T06-10-34_20260524T060433-filetypes-kotlin_inherit_from_filetypes_xml_051713c3.log) |
+| `7cb5a247487edf3f` | kotlin_ctrl_scalepos05_reg2 | ok | 0.9879 | 0.5000 | 0.9939 | 41 | [log](out/autocollie/runs/2026-05-24T06-12-18_20260524T060433-filetypes-kotlin_kotlin_ctrl_scalepos05_reg2.log) |
+| `bbf867ef851d960d` | kotlin_feat_kv_vocab_8k | ok | 0.9879 | 0.5000 | 0.9939 | 46 | [log](out/autocollie/runs/2026-05-24T06-13-00_20260524T060433-filetypes-kotlin_kotlin_feat_kv_vocab_8k.log) |
+| `6e04f0c865b6b912` | kotlin_feat_text_metrics_encoding | ok | 0.9879 | 0.5000 | 0.9939 | 38 | [log](out/autocollie/runs/2026-05-24T06-13-47_20260524T060433-filetypes-kotlin_kotlin_feat_text_metrics_encoding.log) |
+| `c480a855ad6ed7ec` | kotlin_transfer_xml_lowbigram_tieredtri | ok | 0.9879 | 0.5000 | 0.9939 | 43 | [log](out/autocollie/runs/2026-05-24T06-14-26_20260524T060433-filetypes-kotlin_kotlin_transfer_xml_lowbigram_tieredtri.log) |
+| `020e89617cd024ca` | kotlin_gen_seedsearch3_avg | ok | 0.9879 | 0.5000 | 0.9939 | 45 | [log](out/autocollie/runs/2026-05-24T06-15-10_20260524T060433-filetypes-kotlin_kotlin_gen_seedsearch3_avg.log) |
+| `30c21c0865ac67f3` | kotlin_abl_no_blindfold_lr005 | ok | 0.9879 | 0.5000 | 0.9939 | 56 | [log](out/autocollie/runs/2026-05-24T06-15-56_20260524T060433-filetypes-kotlin_kotlin_abl_no_blindfold_lr005.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_scalepos05_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Downweight malware positives and increase L2 regularization to force score separation, targeting ROC_AUC recovery from degenerate 0.5 while preserving PR_AUC.
+- **`kotlin_feat_kv_vocab_8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture Kotlin property/config key-value patterns, aiming to boost PR_AUC with structured signal.
+- **`kotlin_feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_metrics_full and text_encoding to detect obfuscation and formatting anomalies in Kotlin scripts, targeting recall@3FPM gains.
+- **`kotlin_transfer_xml_lowbigram_tieredtri`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Port XML's low-frequency bigram and tiered trigram config to capture finer Kotlin code structure, aiming to improve PR_AUC.
+- **`kotlin_gen_seedsearch3_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds to average models, reducing variance and stabilizing recall@3FPM across different RNG splits.
+- **`kotlin_abl_no_blindfold_lr005`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout features to reduce noise and stabilize scoring, targeting ROC_AUC improvement while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260524T100623-filetypes-kotlin` — 2026-05-24T10:06:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a2b543cb94549d13` | inherit_from_filetypes_xml_051713c3 | dup | 0.9879 | 0.5000 | 0.9939 | 2 | [log](out/autocollie/runs/2026-05-24T10-13-17_20260524T100623-filetypes-kotlin_inherit_from_filetypes_xml_051713c3.log) |
+| `1d6a7afffa549782` | kotlin_ctrl_extra_trees_reg2 | ok | 0.9879 | 0.5000 | 0.9939 | 7 | [log](out/autocollie/runs/2026-05-24T10-13-22_20260524T100623-filetypes-kotlin_kotlin_ctrl_extra_trees_reg2.log) |
+| `cf728b7000013da2` | kotlin_feat_kv_vocab_10k | ok | 0.9879 | 0.5000 | 0.9939 | 36 | [log](out/autocollie/runs/2026-05-24T10-13-31_20260524T100623-filetypes-kotlin_kotlin_feat_kv_vocab_10k.log) |
+| `d663bcb802455f06` | kotlin_feat_text_metrics_enc | ok | 0.9879 | 0.5000 | 0.9939 | 28 | [log](out/autocollie/runs/2026-05-24T10-14-08_20260524T100623-filetypes-kotlin_kotlin_feat_text_metrics_enc.log) |
+| `58bd915486c5fcf4` | kotlin_feat_lowbigram_freq50 | ok | 0.9879 | 0.5000 | 0.9939 | 31 | [log](out/autocollie/runs/2026-05-24T10-14-38_20260524T100623-filetypes-kotlin_kotlin_feat_lowbigram_freq50.log) |
+| `14b7094607148925` | kotlin_abl_no_extended_metrics | ok | 0.9879 | 0.5000 | 0.9939 | 37 | [log](out/autocollie/runs/2026-05-24T10-15-09_20260524T100623-filetypes-kotlin_kotlin_abl_no_extended_metrics.log) |
+| `3a8d756634f9fce7` | kotlin_gen_seedsearch3_avg | ok | 0.9879 | 0.5000 | 0.9939 | 50 | [log](out/autocollie/runs/2026-05-24T10-15-47_20260524T100623-filetypes-kotlin_kotlin_gen_seedsearch3_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_extra_trees_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Test extra_trees and higher reg_lambda to smooth score distributions and improve recall@3 FP/M while keeping PR_AUC flat.
+- **`kotlin_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture key-value pair signals, aiming to improve PR_AUC and recall@3 FP/M by distinguishing benign config patterns from malicious ones.
+- **`kotlin_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and text_encoding to capture obfuscation and encoding artifacts, targeting PR_AUC gains on script-like kotlin files.
+- **`kotlin_feat_lowbigram_freq50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 50 to capture rarer malicious patterns, aiming to boost recall@3 FP/M without hurting PR_AUC.
+- **`kotlin_abl_no_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable extended_metrics to reduce noise from sparse numeric features, aiming to stabilize ROC_AUC and improve recall@3 FP/M.
+- **`kotlin_gen_seedsearch3_avg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use seed_search_k=3 with save_all_seeds to average out seed variance and find a more robust configuration for recall@3 FP/M.
+
+</details>
+
+## Cycle `20260524T103231-filetypes-kotlin` — 2026-05-24T10:32:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a2b543cb94549d13` | inherit_from_filetypes_xml_051713c3 | dup | 0.9879 | 0.5000 | 0.9939 | 2 | [log](out/autocollie/runs/2026-05-24T10-38-17_20260524T103231-filetypes-kotlin_inherit_from_filetypes_xml_051713c3.log) |
+| `f006dff941b0b6fd` | kotlin_ctrl_leaves128_lr003 | ok | 0.9879 | 0.5000 | 0.9939 | 7 | [log](out/autocollie/runs/2026-05-24T10-38-24_20260524T103231-filetypes-kotlin_kotlin_ctrl_leaves128_lr003.log) |
+| `ec4bb12506a41449` | kotlin_feat_kv_vocab_15k | ok | 0.9879 | 0.5000 | 0.9939 | 38 | [log](out/autocollie/runs/2026-05-24T10-38-32_20260524T103231-filetypes-kotlin_kotlin_feat_kv_vocab_15k.log) |
+| `ea220192be5b96eb` | kotlin_feat_text_metrics_full | ok | 0.9879 | 0.5000 | 0.9939 | 32 | [log](out/autocollie/runs/2026-05-24T10-39-12_20260524T103231-filetypes-kotlin_kotlin_feat_text_metrics_full.log) |
+| `36d4ab50818000b3` | kotlin_train_scalepos075 | ok | 0.9879 | 0.5000 | 0.9939 | 6 | [log](out/autocollie/runs/2026-05-24T10-39-45_20260524T103231-filetypes-kotlin_kotlin_train_scalepos075.log) |
+| `23e72e6fbdda4c01` | kotlin_train_reg_alpha1_gamma05 | ok | 0.9879 | 0.5000 | 0.9939 | 5 | [log](out/autocollie/runs/2026-05-24T10-39-52_20260524T103231-filetypes-kotlin_kotlin_train_reg_alpha1_gamma05.log) |
+| `6912fefb2f86e3dd` | kotlin_gen_seedsearch3 | ok | 0.9879 | 0.5000 | 0.9939 | 50 | [log](out/autocollie/runs/2026-05-24T10-40-00_20260524T103231-filetypes-kotlin_kotlin_gen_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature env with deeper trees and lower LR to improve PR_AUC ranking stability.
+- **`kotlin_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value pair signals in Kotlin manifests, targeting PR_AUC gain.
+- **`kotlin_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote text_metrics_full to capture obfuscation signals in Kotlin source, aiming for recall@3 FP/M improvement.
+- **`kotlin_train_scalepos075`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives slightly to reduce false positives at low FPR, targeting recall@3 FP/M.
+- **`kotlin_train_reg_alpha1_gamma05`** `EXP_ESTIMATORS=300 EXP_GAMMA=0.5 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_ALPHA=1 EXP_TRAIN_SAMPLES=30000` — Add L1 regularization and split gain threshold to prune noisy leaves, aiming to stabilize PR_AUC.
+- **`kotlin_gen_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search k=3 on baseline features to distinguish real signal from seed noise, targeting robust PR_AUC.
+
+</details>
+
+## Cycle `20260525T030424-filetypes-kotlin` — 2026-05-25T03:04:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f006dff941b0b6fd` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9879 | 0.5000 | 0.9939 | 1 | [log](out/autocollie/runs/2026-05-25T03-10-15_20260525T030424-filetypes-kotlin_inherit_from_filetypes_zst_011ac2c6.log) |
+| `f006dff941b0b6fd` | kotlin_ctrl_leaves128_lr003 | dup | 0.9879 | 0.5000 | 0.9939 | 1 | [log](out/autocollie/runs/2026-05-25T03-10-20_20260525T030424-filetypes-kotlin_kotlin_ctrl_leaves128_lr003.log) |
+| `0919a53f8a50b915` | kotlin_feat_kv_vocab_split | ok | 0.9879 | 0.5000 | 0.9939 | 31 | [log](out/autocollie/runs/2026-05-25T03-10-22_20260525T030424-filetypes-kotlin_kotlin_feat_kv_vocab_split.log) |
+| `d663bcb802455f06` | kotlin_feat_text_metrics_enc | dup | 0.9879 | 0.5000 | 0.9939 | 1 | [log](out/autocollie/runs/2026-05-25T03-10-54_20260525T030424-filetypes-kotlin_kotlin_feat_text_metrics_enc.log) |
+| `151b2a2bd5e059e8` | kotlin_feat_lowbigram_trigrams | ok | 0.9879 | 0.5000 | 0.9939 | 24 | [log](out/autocollie/runs/2026-05-25T03-10-56_20260525T030424-filetypes-kotlin_kotlin_feat_lowbigram_trigrams.log) |
+| `b40beaee5f5b5fb6` | kotlin_train_extratrees_reg2 | ok | 0.9879 | 0.5000 | 0.9939 | 3 | [log](out/autocollie/runs/2026-05-25T03-11-20_20260525T030424-filetypes-kotlin_kotlin_train_extratrees_reg2.log) |
+| `6912fefb2f86e3dd` | kotlin_gen_seedsearch3_avg | dup | 0.9879 | 0.5000 | 0.9939 | 1 | [log](out/autocollie/runs/2026-05-25T03-11-25_20260525T030424-filetypes-kotlin_kotlin_gen_seedsearch3_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`kotlin_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured metadata signals, aiming to boost PR_AUC by distinguishing malicious config patterns from benign ones.
+- **`kotlin_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add full text metrics and encoding features to capture obfuscation and script structure, targeting recall@3FPM by better separating obfuscated malware from benign scripts.
+- **`kotlin_feat_lowbigram_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add tiered critical trigrams to capture rarer attack patterns, aiming to improve recall@3FPM without hurting PR_AUC.
+- **`kotlin_train_extratrees_reg2`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Use extra trees and stronger L2 regularization to smooth decision boundaries, targeting PR_AUC stability and recall@3FPM by reducing variance on the benign tail.
+- **`kotlin_gen_seedsearch3_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ensemble 3 seeds to average out variance, aiming to stabilize recall@3FPM and PR_AUC across different random splits.
+
+</details>
+
+## Cycle `20260525T070233-filetypes-kotlin` — 2026-05-25T07:02:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f006dff941b0b6fd` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9879 | 0.5000 | 0.9939 | 1 | [log](out/autocollie/runs/2026-05-25T07-07-47_20260525T070233-filetypes-kotlin_inherit_from_filetypes_zst_011ac2c6.log) |
+| `82f6bff31550046c` | kotlin_control_baseline | ok | 0.9879 | 0.5000 | 0.9939 | 5 | [log](out/autocollie/runs/2026-05-25T07-07-50_20260525T070233-filetypes-kotlin_kotlin_control_baseline.log) |
+| `cf5a1af66cc293c3` | kotlin_feat_kv_vocab_10k | ok | 0.9879 | 0.5000 | 0.9939 | 3 | [log](out/autocollie/runs/2026-05-25T07-07-55_20260525T070233-filetypes-kotlin_kotlin_feat_kv_vocab_10k.log) |
+| `c256fc0bc41a644c` | kotlin_feat_lowbigram_50 | ok | 0.9879 | 0.5000 | 0.9939 | 22 | [log](out/autocollie/runs/2026-05-25T07-07-59_20260525T070233-filetypes-kotlin_kotlin_feat_lowbigram_50.log) |
+| `d663bcb802455f06` | kotlin_feat_textenc_metrics | dup | 0.9879 | 0.5000 | 0.9939 | 1 | [log](out/autocollie/runs/2026-05-25T07-08-22_20260525T070233-filetypes-kotlin_kotlin_feat_textenc_metrics.log) |
+| `c29797aec2f75275` | kotlin_train_scalepos075_reg2 | ok | 0.9879 | 0.5000 | 0.9939 | 3 | [log](out/autocollie/runs/2026-05-25T07-08-24_20260525T070233-filetypes-kotlin_kotlin_train_scalepos075_reg2.log) |
+| `4f809fe1393d0ec8` | kotlin_train_hardneg_005_w5 | ok | 0.9879 | 0.5000 | 0.9939 | 6 | [log](out/autocollie/runs/2026-05-25T07-08-28_20260525T070233-filetypes-kotlin_kotlin_train_hardneg_005_w5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env to establish matrix cache baseline; tweak num_leaves to 128 to test capacity without rebuilding features, targeting stable PR_AUC.
+- **`kotlin_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture key-value pair signals in Kotlin metadata/manifests, aiming to improve PR_AUC by adding discriminative feature surface.
+- **`kotlin_feat_lowbigram_50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 50 to include rarer code patterns, targeting PR_AUC gains from long-tail signal.
+- **`kotlin_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text_encoding and text_metrics_full to capture obfuscation and structural text signals, aiming to boost recall@3 FP/M.
+- **`kotlin_train_scalepos075_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives slightly with scale_pos_weight_mult=0.75 and increase L2 regularization to reduce overfitting and improve recall@3 FP/M.
+- **`kotlin_train_hardneg_005_w5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use conservative hard-negative fraction and weight to focus on difficult benigns without triggering calibration degeneracy, targeting PR_AUC stability.
+
+</details>
+

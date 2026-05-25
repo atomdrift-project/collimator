@@ -432,3 +432,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T054907-filetypes-java_class` — 2026-05-24T05:49:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `805659476a84e002` | inherit_from_filetypes_xml_051713c3 | ok | 0.9963 | 0.9991 | 0.9662 | 17 | [log](out/autocollie/runs/2026-05-24T05-55-38_20260524T054907-filetypes-java_class_inherit_from_filetypes_xml_051713c3.log) |
+| `1173be41e610ecc8` | java_class_ctrl_baseline_lr004 | ok | 0.9961 | 0.9990 | 0.9485 | 10 | [log](out/autocollie/runs/2026-05-24T05-56-06_20260524T054907-filetypes-java_class_java_class_ctrl_baseline_lr004.log) |
+| `07236b90b038797e` | java_class_feat_kv_vocab_20k | ok | 0.9959 | 0.9990 | 0.9559 | 8 | [log](out/autocollie/runs/2026-05-24T05-56-16_20260524T054907-filetypes-java_class_java_class_feat_kv_vocab_20k.log) |
+| `d15f13c6a8ad4b60` | java_class_feat_symbol_vocab_15k | ok | 0.9962 | 0.9991 | 0.9448 | 9 | [log](out/autocollie/runs/2026-05-24T05-56-25_20260524T054907-filetypes-java_class_java_class_feat_symbol_vocab_15k.log) |
+| `2d18143d50f8e3f6` | java_class_feat_lowbigram_trigrams | ok | 0.9960 | 0.9990 | 0.9448 | 17 | [log](out/autocollie/runs/2026-05-24T05-56-35_20260524T054907-filetypes-java_class_java_class_feat_lowbigram_trigrams.log) |
+| `7674b1e10f9b7e8a` | java_class_train_hardneg_015_12 | ok | 0.9955 | 0.9989 | 0.9420 | 4 | [log](out/autocollie/runs/2026-05-24T05-56-52_20260524T054907-filetypes-java_class_java_class_train_hardneg_015_12.log) |
+| `64913674da1d1efe` | java_class_train_spw06_seed3 | ok | 0.9964 | 0.9991 | 0.9699 | 4 | [log](out/autocollie/runs/2026-05-24T05-56-57_20260524T054907-filetypes-java_class_java_class_train_spw06_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_ctrl_baseline_lr004`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best feature_env with lower LR and more estimators to stabilize PR_AUC and improve recall@3 FP/M.
+- **`java_class_feat_kv_vocab_20k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with expanded cap to capture rare key-value patterns in Java class metadata, targeting PR_AUC and recall@3 FP/M gains.
+- **`java_class_feat_symbol_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables symbol_vocab to capture import/method co-occurrence signals specific to Java bytecode, aiming to boost PR_AUC.
+- **`java_class_feat_lowbigram_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 250 and enables tiered_crit_trigrams to capture finer-grained structural patterns, targeting recall@3 FP/M.
+- **`java_class_train_hardneg_015_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Introduces hard negative mining to sharpen decision boundary at low FPR, directly optimizing recall@3 FP/M while guarding PR_AUC.
+- **`java_class_train_spw06_seed3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Uses seed_search_k=3 with scale_pos_weight_mult=0.6 to reduce seed variance and stabilize recall@3 FP/M while preserving PR_AUC.
+
+</details>
+
+## Cycle `20260524T122917-filetypes-java_class` — 2026-05-24T12:29:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `805659476a84e002` | inherit_from_filetypes_xml_051713c3 | dup | 0.9963 | 0.9991 | 0.9662 | 2 | [log](out/autocollie/runs/2026-05-24T12-36-12_20260524T122917-filetypes-java_class_inherit_from_filetypes_xml_051713c3.log) |
+| `709b0bf2a23c7214` | java_class_ctrl_baseline_spw075 | ok | 0.9965 | 0.9992 | 0.9485 | 36 | [log](out/autocollie/runs/2026-05-24T12-36-22_20260524T122917-filetypes-java_class_java_class_ctrl_baseline_spw075.log) |
+| `06f9d132cda27fb0` | java_class_train_hardneg_01_10 | ok | 0.9950 | 0.9988 | 0.9456 | 5 | [log](out/autocollie/runs/2026-05-24T12-36-59_20260524T122917-filetypes-java_class_java_class_train_hardneg_01_10.log) |
+| `a4e871941f4bbc88` | java_class_feat_kv_vocab_15k | ok | 0.9959 | 0.9990 | 0.9559 | 12 | [log](out/autocollie/runs/2026-05-24T12-37-05_20260524T122917-filetypes-java_class_java_class_feat_kv_vocab_15k.log) |
+| `ef10949f54df9fcb` | java_class_feat_symbol_vocab_10k | ok | 0.9962 | 0.9991 | 0.9448 | 9 | [log](out/autocollie/runs/2026-05-24T12-37-18_20260524T122917-filetypes-java_class_java_class_feat_symbol_vocab_10k.log) |
+| `602382a9e2e9533f` | java_class_feat_lowbigram_trigrams | ok | 0.9959 | 0.9990 | 0.9627 | 10 | [log](out/autocollie/runs/2026-05-24T12-37-28_20260524T122917-filetypes-java_class_java_class_feat_lowbigram_trigrams.log) |
+| `2a015728987e5c3e` | java_class_seed_search_k3 | ok | 0.9965 | 0.9992 | 0.9772 | 4 | [log](out/autocollie/runs/2026-05-24T12-37-40_20260524T122917-filetypes-java_class_java_class_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_ctrl_baseline_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best feature_env with scale_pos_weight_mult=0.75 to stabilize PR_AUC while targeting recall@3 FP/M via class weight adjustment.
+- **`java_class_train_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tests hard-negative mining to improve ranking at low FPR, aiming to boost recall@3 FP/M without hurting PR_AUC.
+- **`java_class_feat_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with 15k cap to capture key-value metadata patterns, targeting PR_AUC improvement via richer feature surface.
+- **`java_class_feat_symbol_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables symbol_vocab with 10k cap to capture class/method name patterns, aiming to lift PR_AUC and recall@3 FP/M.
+- **`java_class_feat_lowbigram_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 250 and enables objective_trigrams to capture rarer code patterns, targeting PR_AUC gains.
+- **`java_class_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Uses seed_search_k=3 with save_all_seeds to average out seed variance, stabilizing recall@3 FP/M and PR_AUC.
+
+</details>
+
+## Cycle `20260525T012053-filetypes-java_class` — 2026-05-25T01:20:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1283c39c749e680d` | inherit_from_filetypes_zst_011ac2c6 | ok | 0.9965 | 0.9991 | 0.9521 | 4 | [log](out/autocollie/runs/2026-05-25T01-27-02_20260525T012053-filetypes-java_class_inherit_from_filetypes_zst_011ac2c6.log) |
+| `72bf90fc1b902f20` | java_class_ctrl_baseline_mcs50 | ok | 0.9955 | 0.9989 | 0.9452 | 2 | [log](out/autocollie/runs/2026-05-25T01-27-10_20260525T012053-filetypes-java_class_java_class_ctrl_baseline_mcs50.log) |
+| `a4e871941f4bbc88` | java_class_feat_kv_vocab_15k | dup | 0.9959 | 0.9990 | 0.9559 | 1 | [log](out/autocollie/runs/2026-05-25T01-27-13_20260525T012053-filetypes-java_class_java_class_feat_kv_vocab_15k.log) |
+| `c6efd60fb659decd` | java_class_feat_lowbigram_250 | ok | 0.9961 | 0.9990 | 0.9444 | 8 | [log](out/autocollie/runs/2026-05-25T01-27-15_20260525T012053-filetypes-java_class_java_class_feat_lowbigram_250.log) |
+| `ef10949f54df9fcb` | java_class_feat_symbol_vocab_10k | dup | 0.9962 | 0.9991 | 0.9448 | 1 | [log](out/autocollie/runs/2026-05-25T01-27-24_20260525T012053-filetypes-java_class_java_class_feat_symbol_vocab_10k.log) |
+| `9adcbc55a9b0e9a8` | java_class_train_hardneg_005_15 | ok | 0.9953 | 0.9989 | 0.9492 | 3 | [log](out/autocollie/runs/2026-05-25T01-27-26_20260525T012053-filetypes-java_class_java_class_train_hardneg_005_15.log) |
+| `26fc56b3a1c88003` | java_class_train_dart_lr003 | ok | 0.9867 | 0.9968 | 0.9443 | 3 | [log](out/autocollie/runs/2026-05-25T01-27-31_20260525T012053-filetypes-java_class_java_class_train_dart_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_ctrl_baseline_mcs50`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with lower min_child_samples to capture rarer malicious patterns, aiming to improve recall@3 FP/M while keeping PR_AUC flat.
+- **`java_class_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Adds key-value metadata vocab to capture Java attribute signals, targeting PR_AUC improvement via richer feature surface.
+- **`java_class_feat_lowbigram_250`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor to include rarer code patterns, aiming to boost recall@3 FP/M by capturing niche malware signatures.
+- **`java_class_feat_symbol_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol vocabulary to extract method/field name patterns, targeting PR_AUC gain from lexical signals.
+- **`java_class_train_hardneg_005_15`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aggressive hard-negative weighting with moderate L2 regularization to sharpen decision boundary at low FPR, aiming to improve recall@3 FP/M.
+- **`java_class_train_dart_lr003`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Switches to DART boosting with lower LR to reduce overfitting on noisy benign patterns, targeting stable PR_AUC and better tail recall.
+
+</details>
+
+## Cycle `20260525T050624-filetypes-java_class` — 2026-05-25T05:06:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1283c39c749e680d` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9965 | 0.9991 | 0.9521 | 1 | [log](out/autocollie/runs/2026-05-25T05-11-30_20260525T050624-filetypes-java_class_inherit_from_filetypes_zst_011ac2c6.log) |
+| `f9859dd1c13a9b0b` | java_class_ctrl_baseline_lr002_leaves128 | ok | 0.9958 | 0.9990 | 0.9556 | 2 | [log](out/autocollie/runs/2026-05-25T05-11-33_20260525T050624-filetypes-java_class_java_class_ctrl_baseline_lr002_leaves128.log) |
+| `51b403ae98599748` | java_class_train_hardneg_01_12 | ok | 0.9954 | 0.9989 | 0.9420 | 3 | [log](out/autocollie/runs/2026-05-25T05-11-36_20260525T050624-filetypes-java_class_java_class_train_hardneg_01_12.log) |
+| `523efc6e8dc7bdb4` | java_class_feat_kv_vocab_5k | ok | 0.9959 | 0.9990 | 0.9559 | 6 | [log](out/autocollie/runs/2026-05-25T05-11-40_20260525T050624-filetypes-java_class_java_class_feat_kv_vocab_5k.log) |
+| `c2764aac88ce18a1` | java_class_feat_lowbigram_tieredtri | ok | 0.9966 | 0.9992 | 0.9485 | 12 | [log](out/autocollie/runs/2026-05-25T05-11-47_20260525T050624-filetypes-java_class_java_class_feat_lowbigram_tieredtri.log) |
+| `7000410a06203804` | java_class_feat_symbol_vocab_5k | ok | 0.9962 | 0.9991 | 0.9448 | 11 | [log](out/autocollie/runs/2026-05-25T05-12-00_20260525T050624-filetypes-java_class_java_class_feat_symbol_vocab_5k.log) |
+| `ed29f869258f64ee` | java_class_seed_search_k3_best | ok | 0.9962 | 0.9991 | 0.9448 | 8 | [log](out/autocollie/runs/2026-05-25T05-12-12_20260525T050624-filetypes-java_class_java_class_seed_search_k3_best.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_ctrl_baseline_lr002_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env; lowers LR to 0.02 and increases leaves to 128 to improve PR_AUC by reducing variance while keeping ROC_AUC flat.
+- **`java_class_train_hardneg_01_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative mining with fraction 0.1 and weight 12 to push recall@3 FP/M by focusing the model on difficult benigns, targeting PR_AUC gain.
+- **`java_class_feat_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with max 5000 to capture key-value metadata patterns in Java class files, aiming to boost PR_AUC via new rank signal.
+- **`java_class_feat_lowbigram_tieredtri`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables tiered_crit_trigrams to capture rarer code patterns, targeting recall@3 FP/M improvement while monitoring PR_AUC.
+- **`java_class_feat_symbol_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab with max 5000 to extract method/class name signals, aiming to improve PR_AUC by adding structural lexical features.
+- **`java_class_seed_search_k3_best`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Applies seed_search_k=3 to the best feature set to average out seed variance and stabilize recall@3 FP/M gains.
+
+</details>
+

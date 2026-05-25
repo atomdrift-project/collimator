@@ -290,3 +290,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T071410-filetypes-python-bytecode` — 2026-05-24T07:14:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4f71411432b72c86` | inherit_from_filetypes_xml_051713c3 | ok | 0.9994 | 0.9976 | 0.9856 | 37 | [log](out/autocollie/runs/2026-05-24T07-21-00_20260524T071410-filetypes-python-bytecode_inherit_from_filetypes_xml_051713c3.log) |
+| `6fff533bb0434e66` | pybc_ctrl_lr003_leaves128 | ok | 0.9991 | 0.9966 | 0.9856 | 51 | [log](out/autocollie/runs/2026-05-24T07-21-45_20260524T071410-filetypes-python-bytecode_pybc_ctrl_lr003_leaves128.log) |
+| `cb67c4c47c527b0a` | pybc_feat_kv_vocab_split | ok | 0.9990 | 0.9960 | 0.9877 | 52 | [log](out/autocollie/runs/2026-05-24T07-22-39_20260524T071410-filetypes-python-bytecode_pybc_feat_kv_vocab_split.log) |
+| `b37d8dabba8a9dcd` | pybc_feat_lowfreq_bigrams_trigrams | ok | 0.9994 | 0.9977 | 0.9877 | 14 | [log](out/autocollie/runs/2026-05-24T07-23-35_20260524T071410-filetypes-python-bytecode_pybc_feat_lowfreq_bigrams_trigrams.log) |
+| `f210538d8265245a` | pybc_train_scalepos05_hardneg15 | ok | 0.9994 | 0.9975 | 0.9835 | 35 | [log](out/autocollie/runs/2026-05-24T07-23-50_20260524T071410-filetypes-python-bytecode_pybc_train_scalepos05_hardneg15.log) |
+| `31041652309c5484` | pybc_transfer_xml_bigrams | ok | 0.9994 | 0.9975 | 0.9877 | 32 | [log](out/autocollie/runs/2026-05-24T07-24-26_20260524T071410-filetypes-python-bytecode_pybc_transfer_xml_bigrams.log) |
+| `15da4cb16e229a50` | pybc_gen_seedsearch3 | ok | 0.9994 | 0.9976 | 0.9856 | 51 | [log](out/autocollie/runs/2026-05-24T07-25-02_20260524T071410-filetypes-python-bytecode_pybc_gen_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_lr003_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with lower learning rate and more leaves to improve PR_AUC ranking stability without changing features.
+- **`pybc_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab with value splitting to capture structured bytecode metadata, targeting PR_AUC improvement via finer-grained feature signal.
+- **`pybc_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram freq floor and add tiered crit trigrams to capture rare malicious patterns, aiming to boost recall@3 FP/M.
+- **`pybc_train_scalepos05_hardneg15`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives and increase hard-negative weight to sharpen decision boundary at low FPR, targeting recall@3 FP/M.
+- **`pybc_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer XML route's expanded bigram vocab to capture more bytecode sequence patterns, targeting PR_AUC.
+- **`pybc_gen_seedsearch3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Multi-seed search on strong baseline to isolate real signal from seed noise, targeting stable PR_AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260524T111619-filetypes-python-bytecode` — 2026-05-24T11:16:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4f71411432b72c86` | inherit_from_filetypes_xml_051713c3 | dup | 0.9994 | 0.9976 | 0.9856 | 1 | [log](out/autocollie/runs/2026-05-24T11-24-33_20260524T111619-filetypes-python-bytecode_inherit_from_filetypes_xml_051713c3.log) |
+| `6fff533bb0434e66` | pybc_ctrl_leaves128_lr003 | dup | 0.9991 | 0.9966 | 0.9856 | 1 | [log](out/autocollie/runs/2026-05-24T11-24-38_20260524T111619-filetypes-python-bytecode_pybc_ctrl_leaves128_lr003.log) |
+| `35da03d8bbc85a86` | pybc_feat_kv_vocab_split | ok | 0.9993 | 0.9974 | 0.9877 | 6 | [log](out/autocollie/runs/2026-05-24T11-24-41_20260524T111619-filetypes-python-bytecode_pybc_feat_kv_vocab_split.log) |
+| `318ae721b34f7e21` | pybc_feat_textenc_full | ok | 0.9995 | 0.9980 | 0.9877 | 7 | [log](out/autocollie/runs/2026-05-24T11-24-49_20260524T111619-filetypes-python-bytecode_pybc_feat_textenc_full.log) |
+| `fc9b1829dc0f2b1e` | pybc_feat_lowfreq_ngrams | ok | 0.9995 | 0.9981 | 0.9897 | 7 | [log](out/autocollie/runs/2026-05-24T11-24-57_20260524T111619-filetypes-python-bytecode_pybc_feat_lowfreq_ngrams.log) |
+| `5a2a76e0d6881163` | pybc_train_hardneg_scalepos | ok | 0.9995 | 0.9982 | 0.9835 | 4 | [log](out/autocollie/runs/2026-05-24T11-25-05_20260524T111619-filetypes-python-bytecode_pybc_train_hardneg_scalepos.log) |
+| `530d7f6d33ba09d4` | pybc_gen_seedsearch3_textenc | ok | 0.9995 | 0.9983 | 0.9898 | 13 | [log](out/autocollie/runs/2026-05-24T11-25-10_20260524T111619-filetypes-python-bytecode_pybc_gen_seedsearch3_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Control baseline with deeper trees and lower LR to improve PR_AUC by reducing overfitting on rare patterns.
+- **`pybc_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enables KV vocab and value splitting to capture structured payload signals, aiming to boost recall@3FPM by identifying obfuscated bytecode patterns.
+- **`pybc_feat_textenc_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Promotes text metrics and encoding features to improve PR_AUC by better distinguishing benign scripts from malicious bytecode obfuscation.
+- **`pybc_feat_lowfreq_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Expands n-gram coverage to rarer patterns to increase recall@3FPM for novel malware variants.
+- **`pybc_train_hardneg_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Focuses model on hard negatives to reduce false positives at low FPR, targeting recall@3FPM improvement.
+- **`pybc_gen_seedsearch3_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Averages over 3 seeds on the text-metrics config to stabilize recall@3FPM gains and reduce variance from RNG initialization.
+
+</details>
+
+## Cycle `20260525T000727-filetypes-python-bytecode` — 2026-05-25T00:07:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4f71411432b72c86` | inherit_from_filetypes_xml_051713c3 | dup | 0.9994 | 0.9976 | 0.9856 | 1 | [log](out/autocollie/runs/2026-05-25T00-13-18_20260525T000727-filetypes-python-bytecode_inherit_from_filetypes_xml_051713c3.log) |
+| `6fff533bb0434e66` | pybc_control_deeper_trees | dup | 0.9991 | 0.9966 | 0.9856 | 1 | [log](out/autocollie/runs/2026-05-25T00-13-21_20260525T000727-filetypes-python-bytecode_pybc_control_deeper_trees.log) |
+| `318ae721b34f7e21` | pybc_feat_textenc_metrics | dup | 0.9995 | 0.9980 | 0.9877 | 1 | [log](out/autocollie/runs/2026-05-25T00-13-23_20260525T000727-filetypes-python-bytecode_pybc_feat_textenc_metrics.log) |
+| `35da03d8bbc85a86` | pybc_feat_kv_vocab_split | dup | 0.9993 | 0.9974 | 0.9877 | 1 | [log](out/autocollie/runs/2026-05-25T00-13-24_20260525T000727-filetypes-python-bytecode_pybc_feat_kv_vocab_split.log) |
+| `345f51ec4305106d` | pybc_feat_rare_bigrams_trigrams | ok | 0.9994 | 0.9977 | 0.9877 | 6 | [log](out/autocollie/runs/2026-05-25T00-13-26_20260525T000727-filetypes-python-bytecode_pybc_feat_rare_bigrams_trigrams.log) |
+| `a3351ee012de781b` | pybc_train_hardneg_downweight | ok | 0.9995 | 0.9979 | 0.9898 | 2 | [log](out/autocollie/runs/2026-05-25T00-13-32_20260525T000727-filetypes-python-bytecode_pybc_train_hardneg_downweight.log) |
+| `384871104b256b70` | pybc_train_dart_regularization | ok | 0.9975 | 0.9900 | 0.9751 | 2 | [log](out/autocollie/runs/2026-05-25T00-13-35_20260525T000727-filetypes-python-bytecode_pybc_train_dart_regularization.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_control_deeper_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Control replicating best feature_env while increasing num_leaves and estimators to improve PR_AUC by allowing more complex decision boundaries without changing the feature matrix.
+- **`pybc_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enables text_encoding and text_metrics_full to capture obfuscation and structural text signals, aiming to boost PR_AUC and recall@3FPM on heavily obfuscated bytecode.
+- **`pybc_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Activates kv_vocab and kv_value_split to recover granular signal from configuration strings, targeting recall@3FPM improvement by distinguishing malicious payload configurations from benign ones.
+- **`pybc_feat_rare_bigrams_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Lowers bigram_min_freq and enables tiered_crit_trigrams to capture rarer and higher-criticality n-gram patterns, aiming to improve PR_AUC by reducing false negatives on novel attack patterns.
+- **`pybc_train_hardneg_downweight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Applies hard_negative mining and scales down positive weight to sharpen the low-FPR decision boundary, aiming to increase recall@3FPM by correctly ranking difficult benigns lower.
+- **`pybc_train_dart_regularization`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switches to dart boosting with extra_trees and L2 regularization to reduce overfitting on rare patterns, aiming to improve ROC_AUC and PR_AUC generalization across the dev set.
+
+</details>
+
+## Cycle `20260525T062457-filetypes-python-bytecode` — 2026-05-25T06:24:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `11eb30fa32706c21` | inherit_from_filetypes_zst_011ac2c6 | ok | 0.9987 | 0.9948 | 0.9835 | 6 | [log](out/autocollie/runs/2026-05-25T06-30-36_20260525T062457-filetypes-python-bytecode_inherit_from_filetypes_zst_011ac2c6.log) |
+| `48690c5a695f99c2` | pybc_control_hardneg_scalepos | ok | 0.9996 | 0.9983 | 0.9898 | 6 | [log](out/autocollie/runs/2026-05-25T06-30-44_20260525T062457-filetypes-python-bytecode_pybc_control_hardneg_scalepos.log) |
+| `f7d67a072c83475c` | pybc_feat_kv_vocab_split | ok | 0.9990 | 0.9960 | 0.9877 | 6 | [log](out/autocollie/runs/2026-05-25T06-30-51_20260525T062457-filetypes-python-bytecode_pybc_feat_kv_vocab_split.log) |
+| `8159b9a640bfad22` | pybc_feat_lowfreq_bigrams_textmetrics | ok | 0.9994 | 0.9975 | 0.9877 | 6 | [log](out/autocollie/runs/2026-05-25T06-30-58_20260525T062457-filetypes-python-bytecode_pybc_feat_lowfreq_bigrams_textmetrics.log) |
+| `b166dba9c57fef86` | pybc_train_dart_extratrees | ok | 0.9981 | 0.9924 | 0.9877 | 2 | [log](out/autocollie/runs/2026-05-25T06-31-04_20260525T062457-filetypes-python-bytecode_pybc_train_dart_extratrees.log) |
+| `6fe8663ddcd9a365` | pybc_feat_tiered_crit_trigrams | ok | 0.9989 | 0.9957 | 0.9877 | 6 | [log](out/autocollie/runs/2026-05-25T06-31-07_20260525T062457-filetypes-python-bytecode_pybc_feat_tiered_crit_trigrams.log) |
+| `87d3586a695d068a` | pybc_retry_lowfreq_seedsearch | ok | 0.9995 | 0.9981 | 0.9897 | 7 | [log](out/autocollie/runs/2026-05-25T06-31-15_20260525T062457-filetypes-python-bytecode_pybc_retry_lowfreq_seedsearch.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_control_hardneg_scalepos`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_ENCODING_FEATURES=1 …` — Replicate best feature set with hard-negative upweighting and positive downweighting to improve recall@3 FP/M at the deployed operating point.
+- **`pybc_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured constant/metadata signals, aiming to boost PR AUC by adding discriminative features for obfuscated bytecode.
+- **`pybc_feat_lowfreq_bigrams_textmetrics`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Expand rare bigram coverage and add full text metrics to capture obfuscation patterns, targeting PR AUC gains from finer-grained structural signals.
+- **`pybc_train_dart_extratrees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 …` — Switch to DART boosting with extra trees to reduce overfitting on rare patterns, aiming to stabilize ROC AUC while preserving recall@3 FP/M.
+- **`pybc_feat_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Enable severity-prefixed trigrams to focus on high-crit code paths, targeting PR AUC improvement by filtering noise and emphasizing malicious sequences.
+- **`pybc_retry_lowfreq_seedsearch`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=5` — Retry low-frequency n-gram expansion with seed search to verify signal stability across seeds, aiming to confirm PR AUC gains without seed-driven variance.
+
+</details>
+

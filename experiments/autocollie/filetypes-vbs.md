@@ -354,3 +354,123 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T084233-filetypes-vbs` — 2026-05-24T08:42:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8878cd093c3fd938` | inherit_from_filetypes_xml_051713c3 | ok | 0.9983 | 0.9868 | 0.9812 | 10 | [log](out/autocollie/runs/2026-05-24T08-48-02_20260524T084233-filetypes-vbs_inherit_from_filetypes_xml_051713c3.log) |
+| `c810bf3b26b32bb8` | vbs_control_leaves128_lr003 | ok | 0.9981 | 0.9856 | 0.9766 | 7 | [log](out/autocollie/runs/2026-05-24T08-48-16_20260524T084233-filetypes-vbs_vbs_control_leaves128_lr003.log) |
+| `91eef2e3ad1f692a` | vbs_textmetrics_encoding_full | ok | 0.9983 | 0.9867 | 0.9882 | 6 | [log](out/autocollie/runs/2026-05-24T08-48-24_20260524T084233-filetypes-vbs_vbs_textmetrics_encoding_full.log) |
+| `4014467ad1f275ba` | vbs_kv_vocab_split | ok | 0.9983 | 0.9868 | 0.9801 | 7 | [log](out/autocollie/runs/2026-05-24T08-48-31_20260524T084233-filetypes-vbs_vbs_kv_vocab_split.log) |
+| `0d55cf734b878b41` | vbs_relaxed_bigrams_trigrams | ok | 0.9982 | 0.9860 | 0.9789 | 6 | [log](out/autocollie/runs/2026-05-24T08-48-39_20260524T084233-filetypes-vbs_vbs_relaxed_bigrams_trigrams.log) |
+| `13958c9f6648a734` | vbs_hardneg_005_8 | ok | 0.9981 | 0.9860 | 0.9858 | 2 | [log](out/autocollie/runs/2026-05-24T08-48-46_20260524T084233-filetypes-vbs_vbs_hardneg_005_8.log) |
+| `68be454c12bb906d` | vbs_seedsearch_textmetrics | ok | 0.9982 | 0.9862 | 0.9870 | 7 | [log](out/autocollie/runs/2026-05-24T08-48-49_20260524T084233-filetypes-vbs_vbs_seedsearch_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best PR AUC feature set with tuned leaves/LR to stabilize ranking and improve recall@3 FP/M.
+- **`vbs_textmetrics_encoding_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text_metrics_full and text_encoding to capture script obfuscation patterns, targeting PR AUC and recall@3 FP/M gains.
+- **`vbs_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to extract signal from COM/registry KV pairs, aiming to boost PR AUC.
+- **`vbs_relaxed_bigrams_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram min_freq and add objective trigrams to capture rare attack patterns, targeting recall@3 FP/M.
+- **`vbs_hardneg_005_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply mild hard-negative upweighting to sharpen decision boundary at low FPR, improving recall@3 FP/M.
+- **`vbs_seedsearch_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ensemble 3 seeds on text_metrics config to reduce variance and stabilize recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260524T102339-filetypes-vbs` — 2026-05-24T10:23:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8878cd093c3fd938` | inherit_from_filetypes_xml_051713c3 | dup | 0.9983 | 0.9868 | 0.9812 | 2 | [log](out/autocollie/runs/2026-05-24T10-29-29_20260524T102339-filetypes-vbs_inherit_from_filetypes_xml_051713c3.log) |
+| `0fe011602db9e090` | vbs_control_kv_split_lr003 | ok | 0.9981 | 0.9856 | 0.9766 | 14 | [log](out/autocollie/runs/2026-05-24T10-29-35_20260524T102339-filetypes-vbs_vbs_control_kv_split_lr003.log) |
+| `7ed4d7d6222cafa4` | vbs_textmetrics_encoding_full | ok | 0.9983 | 0.9867 | 0.9870 | 8 | [log](out/autocollie/runs/2026-05-24T10-29-51_20260524T102339-filetypes-vbs_vbs_textmetrics_encoding_full.log) |
+| `d6e70ea612b54d70` | vbs_relaxed_ngrams_trigrams | ok | 0.9981 | 0.9858 | 0.9845 | 15 | [log](out/autocollie/runs/2026-05-24T10-30-02_20260524T102339-filetypes-vbs_vbs_relaxed_ngrams_trigrams.log) |
+| `27f4bdd36e96efd6` | vbs_kv_vocab_expansion | ok | 0.9983 | 0.9866 | 0.9847 | 19 | [log](out/autocollie/runs/2026-05-24T10-30-19_20260524T102339-filetypes-vbs_vbs_kv_vocab_expansion.log) |
+| `b41fb946f162567e` | vbs_hardneg_005_10 | ok | 0.9980 | 0.9851 | 0.9882 | 8 | [log](out/autocollie/runs/2026-05-24T10-30-41_20260524T102339-filetypes-vbs_vbs_hardneg_005_10.log) |
+| `bf454c916bb9e93b` | vbs_scale_pos_075_leaves128 | ok | 0.9981 | 0.9853 | 0.9755 | 6 | [log](out/autocollie/runs/2026-05-24T10-30-50_20260524T102339-filetypes-vbs_vbs_scale_pos_075_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_kv_split_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best PR_AUC feature set with lower LR and more leaves to stabilize ranking and improve PR_AUC.
+- **`vbs_textmetrics_encoding_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and text_encoding to capture script obfuscation signals, targeting PR_AUC gain.
+- **`vbs_relaxed_ngrams_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram/trigram frequency floors to capture rare malicious patterns, aiming to boost recall@3 FP/M and PR_AUC.
+- **`vbs_kv_vocab_expansion`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand KV vocab cap and enable value splitting to recover granular signal from complex VBS property bags, targeting PR_AUC.
+- **`vbs_hardneg_005_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply moderate hard-negative weighting to sharpen decision boundary at low FPR, improving recall@3 FP/M.
+- **`vbs_scale_pos_075_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives to reduce false positives at the deployed operating point, directly targeting recall@3 FP/M.
+
+</details>
+
+## Cycle `20260524T122250-filetypes-vbs` — 2026-05-24T12:22:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8878cd093c3fd938` | inherit_from_filetypes_xml_051713c3 | dup | 0.9983 | 0.9868 | 0.9812 | 1 | [log](out/autocollie/runs/2026-05-24T12-28-34_20260524T122250-filetypes-vbs_inherit_from_filetypes_xml_051713c3.log) |
+| `c810bf3b26b32bb8` | vbs_control_lr003_leaves128 | dup | 0.9981 | 0.9856 | 0.9766 | 1 | [log](out/autocollie/runs/2026-05-24T12-28-36_20260524T122250-filetypes-vbs_vbs_control_lr003_leaves128.log) |
+| `7752d92a102306e7` | vbs_kv_vocab_split_expansion | ok | 0.9983 | 0.9866 | 0.9847 | 7 | [log](out/autocollie/runs/2026-05-24T12-28-38_20260524T122250-filetypes-vbs_vbs_kv_vocab_split_expansion.log) |
+| `7ed4d7d6222cafa4` | vbs_text_metrics_encoding | dup | 0.9983 | 0.9867 | 0.9870 | 1 | [log](out/autocollie/runs/2026-05-24T12-28-47_20260524T122250-filetypes-vbs_vbs_text_metrics_encoding.log) |
+| `c34e2fe977ae177c` | vbs_scale_pos_05_reg2 | ok | 0.9861 | 0.9316 | 0.9438 | 2 | [log](out/autocollie/runs/2026-05-24T12-28-48_20260524T122250-filetypes-vbs_vbs_scale_pos_05_reg2.log) |
+| `fb76f572a4f1d270` | vbs_tiered_trigrams_lowfreq | ok | 0.9981 | 0.9860 | 0.9824 | 7 | [log](out/autocollie/runs/2026-05-24T12-28-51_20260524T122250-filetypes-vbs_vbs_tiered_trigrams_lowfreq.log) |
+| `1e5bb472ad6e0765` | vbs_seed_search_kv_text | ok | 0.9982 | 0.9866 | 0.9893 | 10 | [log](out/autocollie/runs/2026-05-24T12-29-00_20260524T122250-filetypes-vbs_vbs_seed_search_kv_text.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_lr003_leaves128`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with lower LR and higher leaves to refine decision boundaries, targeting PR_AUC improvement while keeping ROC_AUC flat.
+- **`vbs_kv_vocab_split_expansion`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Expand KV vocab and enable value splitting to capture fine-grained script object signals, targeting PR_AUC gain.
+- **`vbs_text_metrics_encoding`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable full text metrics and encoding features to capture obfuscation patterns in VBS scripts, aiming for recall@3 FP/M improvement.
+- **`vbs_scale_pos_05_reg2`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Down-weight positives to reduce FPs at low FPR, targeting recall@3 FP/M gain with L2 regularization to prevent overfit.
+- **`vbs_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lower tiered trigram min freq to capture rarer malicious command sequences in VBS, targeting PR_AUC.
+- **`vbs_seed_search_kv_text`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 …` — Average over 3 seeds on a combined KV+text feature set to stabilize recall@3 FP/M gains and reduce seed noise.
+
+</details>
+
+## Cycle `20260525T034946-filetypes-vbs` — 2026-05-25T03:49:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e0a8c52a0e7dd205` | inherit_from_filetypes_zst_011ac2c6 | ok | 0.9968 | 0.9803 | 0.9732 | 16 | [log](out/autocollie/runs/2026-05-25T03-56-22_20260525T034946-filetypes-vbs_inherit_from_filetypes_zst_011ac2c6.log) |
+| `c810bf3b26b32bb8` | vbs_control_train_lr003 | dup | 0.9981 | 0.9856 | 0.9766 | 3 | [log](out/autocollie/runs/2026-05-25T03-56-44_20260525T034946-filetypes-vbs_vbs_control_train_lr003.log) |
+| `dade371c76b4e630` | vbs_kv_vocab_split_expansion | ok | 0.9973 | 0.9819 | 0.9755 | 16 | [log](out/autocollie/runs/2026-05-25T03-56-53_20260525T034946-filetypes-vbs_vbs_kv_vocab_split_expansion.log) |
+| `d3aeecc8a2b67be5` | vbs_text_metrics_encoding | ok | 0.9971 | 0.9824 | 0.9824 | 20 | [log](out/autocollie/runs/2026-05-25T03-57-14_20260525T034946-filetypes-vbs_vbs_text_metrics_encoding.log) |
+| `18107a8d6eed9697` | vbs_tiered_trigrams_lowfreq | ok | 0.9974 | 0.9825 | 0.9766 | 10 | [log](out/autocollie/runs/2026-05-25T03-57-39_20260525T034946-filetypes-vbs_vbs_tiered_trigrams_lowfreq.log) |
+| `c678f3b03fcdb0af` | vbs_hardneg_005_8 | ok | 0.9973 | 0.9829 | 0.9870 | 2 | [log](out/autocollie/runs/2026-05-25T03-57-50_20260525T034946-filetypes-vbs_vbs_hardneg_005_8.log) |
+| `75370251505c5c69` | vbs_scale_pos_075_reg2 | ok | 0.9971 | 0.9824 | 0.9766 | 2 | [log](out/autocollie/runs/2026-05-25T03-57-54_20260525T034946-filetypes-vbs_vbs_scale_pos_075_reg2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_train_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env with lower learning rate to stabilize tree splits and improve PR_AUC.
+- **`vbs_kv_vocab_split_expansion`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture granular script parameters, targeting PR_AUC gain.
+- **`vbs_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_metrics_full and text_encoding to detect obfuscation patterns in VBS, aiming for recall@3FPM improvement.
+- **`vbs_tiered_trigrams_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=1 EXP_TRAIN_SAMPLES=30000` — Lower tiered trigram frequency floor to capture rare malicious sequences, targeting PR_AUC.
+- **`vbs_hardneg_005_8`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Apply mild hard-negative weighting to sharpen low-FPR boundary, targeting recall@3FPM.
+- **`vbs_scale_pos_075_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives with stronger L2 regularization to reduce false positives, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260525T040730-filetypes-vbs` — 2026-05-25T04:07:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e0a8c52a0e7dd205` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9968 | 0.9803 | 0.9732 | 2 | [log](out/autocollie/runs/2026-05-25T04-12-47_20260525T040730-filetypes-vbs_inherit_from_filetypes_zst_011ac2c6.log) |
+| `c123c63dbe940fd5` | vbs_control_train_tune_v2 | ok | 0.9971 | 0.9815 | 0.9778 | 4 | [log](out/autocollie/runs/2026-05-25T04-12-53_20260525T040730-filetypes-vbs_vbs_control_train_tune_v2.log) |
+| `427958b323a24b41` | vbs_kv_textmetrics_vocab | ok | 0.9970 | 0.9824 | 0.9893 | 12 | [log](out/autocollie/runs/2026-05-25T04-13-00_20260525T040730-filetypes-vbs_vbs_kv_textmetrics_vocab.log) |
+| `2ea94d253e44df68` | vbs_lowfreq_bigrams_trigrams | ok | 0.9986 | 0.9886 | 0.9857 | 9 | [log](out/autocollie/runs/2026-05-25T04-13-14_20260525T040730-filetypes-vbs_vbs_lowfreq_bigrams_trigrams.log) |
+| `df2d351d10a54c59` | vbs_ablate_blindfold_crit | ok | 0.9973 | 0.9823 | 0.9778 | 9 | [log](out/autocollie/runs/2026-05-25T04-13-26_20260525T040730-filetypes-vbs_vbs_ablate_blindfold_crit.log) |
+| `a4a305a8f8d408f6` | vbs_hardneg_scalepos | ok | 0.9972 | 0.9816 | 0.9847 | 5 | [log](out/autocollie/runs/2026-05-25T04-13-37_20260525T040730-filetypes-vbs_vbs_hardneg_scalepos.log) |
+| `ba31c2579ddb3f4a` | vbs_reg_lambda_leaves | ok | 0.9964 | 0.9795 | 0.9732 | 3 | [log](out/autocollie/runs/2026-05-25T04-13-44_20260525T040730-filetypes-vbs_vbs_reg_lambda_leaves.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_train_tune_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control spec replicating best recent feature surface while tuning training knobs to improve PR_AUC via deeper trees and lower LR.
+- **`vbs_kv_textmetrics_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Expands KV vocab and enables text_metrics_full/text_encoding to capture script-specific obfuscation patterns, aiming to boost PR_AUC.
+- **`vbs_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lowers bigram and trigram frequency floors to capture rarer malicious patterns in VBS scripts, targeting recall@3 FP/M and PR_AUC gains.
+- **`vbs_ablate_blindfold_crit`** `EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout and crit_category_ngrams to reduce feature noise and overfitting, targeting stable PR_AUC and ROC_AUC.
+- **`vbs_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Applies hard negative mining with moderate weight and scales down positive weight to sharpen decision boundary at low FPR, targeting recall@3 FP/M.
+- **`vbs_reg_lambda_leaves`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=160 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increases L2 regularization and tree leaves while lowering LR to improve generalization and ranking quality, targeting PR_AUC.
+
+</details>
+

@@ -465,3 +465,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T060002-filetypes-javascript` — 2026-05-24T06:00:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `324195ddc0290910` | inherit_from_filetypes_xml_051713c3 | ok | 0.9994 | 0.9990 | 0.9877 | 154 | [log](out/autocollie/runs/2026-05-24T06-06-40_20260524T060002-filetypes-javascript_inherit_from_filetypes_xml_051713c3.log) |
+| `a8b6250e826c60e6` | js_control_est350_seed42 | ok | 0.9993 | 0.9989 | 0.9870 | 98 | [log](out/autocollie/runs/2026-05-24T06-09-32_20260524T060002-filetypes-javascript_js_control_est350_seed42.log) |
+| `cce04150916f5aad` | js_train_scalepos075_hn005 | ok | 0.9994 | 0.9990 | 0.9858 | 106 | [log](out/autocollie/runs/2026-05-24T06-11-13_20260524T060002-filetypes-javascript_js_train_scalepos075_hn005.log) |
+| `8b35dafa7f038335` | js_train_extra_trees_lr003_leaves64 | ok | 0.9993 | 0.9988 | 0.9862 | 37 | [log](out/autocollie/runs/2026-05-24T06-13-00_20260524T060002-filetypes-javascript_js_train_extra_trees_lr003_leaves64.log) |
+| `bf1defc9c1fdc069` | js_kv_vocab_15k_split_bigram200 | ok | 0.9994 | 0.9990 | 0.9876 | 101 | [log](out/autocollie/runs/2026-05-24T06-13-38_20260524T060002-filetypes-javascript_js_kv_vocab_15k_split_bigram200.log) |
+| `741d735681797882` | js_textenc_metrics_full_bigram100 | ok | 0.9994 | 0.9990 | 0.9874 | 93 | [log](out/autocollie/runs/2026-05-24T06-15-20_20260524T060002-filetypes-javascript_js_textenc_metrics_full_bigram100.log) |
+| `f802255d0626a914` | js_tiered_trigrams_obj_bigram50 | ok | 0.9993 | 0.9989 | 0.9876 | 71 | [log](out/autocollie/runs/2026-05-24T06-16-54_20260524T060002-filetypes-javascript_js_tiered_trigrams_obj_bigram50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_est350_seed42`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Establish baseline with 350 estimators to verify matrix cache hit and stable PR_AUC before feature changes.
+- **`js_train_scalepos075_hn005`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives (scale_pos_weight_mult=0.75) and add light hard negatives to push recall@3 FP/M higher by tightening the low-FPR tail.
+- **`js_train_extra_trees_lr003_leaves64`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable extra_trees with lower LR and leaves to improve generalization and PR_AUC by reducing overfit on rare JS patterns.
+- **`js_kv_vocab_15k_split_bigram200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split with lower bigram_min_freq to capture fine-grained JS object/key signals, targeting PR_AUC gain.
+- **`js_textenc_metrics_full_bigram100`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text_encoding and text_metrics_full to capture script obfuscation patterns, aiming to boost recall@3 FP/M on packed JS.
+- **`js_tiered_trigrams_obj_bigram50`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand tiered trigrams and enable objective_trigrams with lower bigram floor to capture deeper attack-chain signals, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260524T145922-filetypes-javascript` — 2026-05-24T14:59:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `324195ddc0290910` | inherit_from_filetypes_xml_051713c3 | dup | 0.9994 | 0.9990 | 0.9877 | 3 | [log](out/autocollie/runs/2026-05-24T15-05-43_20260524T145922-filetypes-javascript_inherit_from_filetypes_xml_051713c3.log) |
+| `adc95a531472c635` | js_control_est350_lr004 | ok | 0.9993 | 0.9989 | 0.9868 | 198 | [log](out/autocollie/runs/2026-05-24T15-06-03_20260524T145922-filetypes-javascript_js_control_est350_lr004.log) |
+| `137d67ae75eacbb4` | js_kv_vocab_20k_split | ok | 0.9993 | 0.9989 | 0.9875 | 89 | [log](out/autocollie/runs/2026-05-24T15-09-23_20260524T145922-filetypes-javascript_js_kv_vocab_20k_split.log) |
+| `741d735681797882` | js_textenc_metrics_full | dup | 0.9994 | 0.9990 | 0.9874 | 1 | [log](out/autocollie/runs/2026-05-24T15-10-55_20260524T145922-filetypes-javascript_js_textenc_metrics_full.log) |
+| `2141c4de4d46ca5f` | js_tiered_trigrams_bigram25 | ok | 0.9993 | 0.9989 | 0.9862 | 95 | [log](out/autocollie/runs/2026-05-24T15-10-57_20260524T145922-filetypes-javascript_js_tiered_trigrams_bigram25.log) |
+| `f8adb8caed6480c9` | js_hn_frac005_w12_reg1 | ok | 0.9994 | 0.9990 | 0.9877 | 100 | [log](out/autocollie/runs/2026-05-24T15-12-34_20260524T145922-filetypes-javascript_js_hn_frac005_w12_reg1.log) |
+| `12c04f8843366ad0` | js_scalepos075_maxrecall_fpr | ok | 0.9993 | 0.9989 | 0.0000 | 39 | [log](out/autocollie/runs/2026-05-24T15-14-15_20260524T145922-filetypes-javascript_js_scalepos075_maxrecall_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_est350_lr004`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Baseline feature set with increased estimators and slightly lower LR to stabilize PR_AUC while leveraging matrix cache.
+- **`js_kv_vocab_20k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab and kv_value_split to capture granular JS object properties, targeting PR_AUC gains from structured key-value signals.
+- **`js_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activates text_encoding and text_metrics_full to detect obfuscation patterns common in JS malware, aiming to boost Recall@3FPM and PR_AUC.
+- **`js_tiered_trigrams_bigram25`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 25 and enables tiered_crit_trigrams to capture rare but high-crit JS patterns, targeting PR_AUC improvement.
+- **`js_hn_frac005_w12_reg1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard negative sampling with moderate weight to sharpen decision boundary at low FPR, aiming to improve Recall@3FPM without hurting PR_AUC.
+- **`js_scalepos075_maxrecall_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weights positives and optimizes threshold for max recall at 3e-6 FPR to directly target deployed Recall@3FPM operating point.
+
+</details>
+
+## Cycle `20260525T030424-filetypes-javascript` — 2026-05-25T03:04:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cdff64dcb756e96c` | inherit_from_filetypes_zst_011ac2c6 | ok | 0.9993 | 0.9988 | 0.9865 | 16 | [log](out/autocollie/runs/2026-05-25T03-11-33_20260525T030424-filetypes-javascript_inherit_from_filetypes_zst_011ac2c6.log) |
+| `115e7a1d7794dc29` | js_control_scalepos05_maxrecall | ok | 0.9993 | 0.9989 | 0.0000 | 12 | [log](out/autocollie/runs/2026-05-25T03-11-53_20260525T030424-filetypes-javascript_js_control_scalepos05_maxrecall.log) |
+| `cef5d8b792ac1291` | js_kv_vocab_20k_split | ok | 0.9993 | 0.9989 | 0.9875 | 17 | [log](out/autocollie/runs/2026-05-25T03-12-06_20260525T030424-filetypes-javascript_js_kv_vocab_20k_split.log) |
+| `cf6f4582d298e659` | js_textenc_metrics_full | ok | 0.9994 | 0.9990 | 0.9874 | 17 | [log](out/autocollie/runs/2026-05-25T03-12-24_20260525T030424-filetypes-javascript_js_textenc_metrics_full.log) |
+| `1f3461a3cc54f347` | js_hn_frac005_w10_reg1 | ok | 0.9994 | 0.9990 | 0.9882 | 32 | [log](out/autocollie/runs/2026-05-25T03-12-42_20260525T030424-filetypes-javascript_js_hn_frac005_w10_reg1.log) |
+| `25fe28c22d509e4d` | js_transfer_lowbigram_8k | ok | 0.9993 | 0.9989 | 0.9875 | 46 | [log](out/autocollie/runs/2026-05-25T03-13-15_20260525T030424-filetypes-javascript_js_transfer_lowbigram_8k.log) |
+| `7cdf4180be5877e3` | js_seedsearch3_scalepos075 | ok | 0.9993 | 0.9989 | 0.9389 | 28 | [log](out/autocollie/runs/2026-05-25T03-14-02_20260525T030424-filetypes-javascript_js_seedsearch3_scalepos075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_scalepos05_maxrecall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with lower scale_pos_weight_mult to suppress benign scores at the tail, targeting recall@3 FP/M improvement while preserving PR_AUC.
+- **`js_kv_vocab_20k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to capture structured JS configuration and dependency signals, aiming for PR_AUC gain.
+- **`js_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activate text_encoding and text_metrics_full to detect obfuscation and structural anomalies in JS payloads, targeting PR_AUC lift.
+- **`js_hn_frac005_w10_reg1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply moderate hard-negative upweighting to sharpen the decision boundary at low FPR, targeting recall@3 FP/M without overfitting.
+- **`js_transfer_lowbigram_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfer lower-frequency bigram strategy from XML route to capture rarer JS patterns, aiming for PR_AUC improvement.
+- **`js_seedsearch3_scalepos075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ensemble 3 seeds to reduce variance and stabilize recall@3 FP/M gains from the scale_pos_weight config.
+
+</details>
+
+## Cycle `20260525T063132-filetypes-javascript` — 2026-05-25T06:31:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cdff64dcb756e96c` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9993 | 0.9988 | 0.9865 | 2 | [log](out/autocollie/runs/2026-05-25T06-36-59_20260525T063132-filetypes-javascript_inherit_from_filetypes_zst_011ac2c6.log) |
+| `25fe28c22d509e4d` | js_control_leaves128_lr005 | dup | 0.9993 | 0.9989 | 0.9875 | 1 | [log](out/autocollie/runs/2026-05-25T06-37-04_20260525T063132-filetypes-javascript_js_control_leaves128_lr005.log) |
+| `023687eb694076df` | js_hn_frac005_w10_leaves96 | ok | 0.9994 | 0.9990 | 0.9883 | 157 | [log](out/autocollie/runs/2026-05-25T06-37-06_20260525T063132-filetypes-javascript_js_hn_frac005_w10_leaves96.log) |
+| `0109ed509f7d6937` | js_scalepos075_leaves112 | ok | 0.9993 | 0.9990 | 0.9875 | 13 | [log](out/autocollie/runs/2026-05-25T06-39-44_20260525T063132-filetypes-javascript_js_scalepos075_leaves112.log) |
+| `7edbe467b2c6f888` | js_kv_textenc_metrics_full | ok | 0.9993 | 0.9990 | 0.9872 | 47 | [log](out/autocollie/runs/2026-05-25T06-39-59_20260525T063132-filetypes-javascript_js_kv_textenc_metrics_full.log) |
+| `bf8dea5bb3289383` | js_lowbigram25_trigrams2k | ok | 0.9993 | 0.9989 | 0.9872 | 44 | [log](out/autocollie/runs/2026-05-25T06-40-47_20260525T063132-filetypes-javascript_js_lowbigram25_trigrams2k.log) |
+| `b195926a083a49e3` | js_seedsearch3_avg_ensemble | ok | 0.9993 | 0.9989 | 0.9849 | 37 | [log](out/autocollie/runs/2026-05-25T06-41-32_20260525T063132-filetypes-javascript_js_seedsearch3_avg_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_leaves128_lr005`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Control baseline features with deeper trees to stabilize PR_AUC and improve ranking quality.
+- **`js_hn_frac005_w10_leaves96`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Apply hard negatives to sharpen decision boundary at low FPR, targeting recall@3 FP/M gain.
+- **`js_scalepos075_leaves112`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weight positives to reduce false positives at the deployed operating point, improving recall@3 FP/M.
+- **`js_kv_textenc_metrics_full`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable KV vocab, text encoding, and full text metrics to capture obfuscation and structural signals for PR_AUC gain.
+- **`js_lowbigram25_trigrams2k`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000 …` — Lower bigram frequency floor and add trigrams to catch rare obfuscated JS patterns, targeting recall@3 FP/M.
+- **`js_seedsearch3_avg_ensemble`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Average predictions across 3 seeds to reduce variance and stabilize recall@3 FP/M without sacrificing PR_AUC.
+
+</details>
+

@@ -412,3 +412,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T052319-filetypes-elf` — 2026-05-24T05:23:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ef7ee683ebeeaae` | inherit_from_filetypes_xml_051713c3 | ok | 1.0000 | 1.0000 | 0.9981 | 88 | [log](out/autocollie/runs/2026-05-24T05-30-36_20260524T052319-filetypes-elf_inherit_from_filetypes_xml_051713c3.log) |
+| `f115fed50ea3def8` | elf_control_lr003_leaves128 | ok | 1.0000 | 1.0000 | 0.9958 | 59 | [log](out/autocollie/runs/2026-05-24T05-32-12_20260524T052319-filetypes-elf_elf_control_lr003_leaves128.log) |
+| `91ac9203d7b7b620` | elf_hardneg_01_12 | ok | 1.0000 | 1.0000 | 0.9975 | 22 | [log](out/autocollie/runs/2026-05-24T05-33-12_20260524T052319-filetypes-elf_elf_hardneg_01_12.log) |
+| `c3024981770ef433` | elf_tail_fpr3e6_opt | ok | 1.0000 | 1.0000 | 0.9840 | 9 | [log](out/autocollie/runs/2026-05-24T05-33-34_20260524T052319-filetypes-elf_elf_tail_fpr3e6_opt.log) |
+| `bd446f3c6c71e66b` | elf_kv_vocab_20k | ok | 1.0000 | 1.0000 | 0.9979 | 55 | [log](out/autocollie/runs/2026-05-24T05-33-43_20260524T052319-filetypes-elf_elf_kv_vocab_20k.log) |
+| `8cbf6a90b7e65eda` | elf_symbol_bigrams_10k | ok | 1.0000 | 1.0000 | 0.9963 | 257 | [log](out/autocollie/runs/2026-05-24T05-34-43_20260524T052319-filetypes-elf_elf_symbol_bigrams_10k.log) |
+| `81ef12b012bbc283` | elf_overlay_extended_metrics | ok | 1.0000 | 1.0000 | 0.9984 | 107 | [log](out/autocollie/runs/2026-05-24T05-39-02_20260524T052319-filetypes-elf_elf_overlay_extended_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline matching recent best feature_env; tests if lower LR and higher leaves improve recall@3FPM without hurting PR_AUC.
+- **`elf_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard-negative sweep to push recall@3FPM by upweighting difficult benigns; aims to improve tail recall while keeping PR_AUC flat.
+- **`elf_tail_fpr3e6_opt`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Directly optimizes threshold for deployed operating point to maximize recall@3FPM; targets tail recall gain at strict FPR.
+- **`elf_kv_vocab_20k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables KV vocab to capture key-value metadata patterns in ELF headers/sections; aims to boost PR_AUC and recall@3FPM via new structural signal.
+- **`elf_symbol_bigrams_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol co-occurrence bigrams to catch import/symbol interaction patterns; targets PR_AUC improvement through richer binary feature surface.
+- **`elf_overlay_extended_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds overlay and extended metric features to detect packer/dropper artifacts; aims to improve recall@3FPM on obfuscated ELF binaries.
+
+</details>
+
+## Cycle `20260524T184713-filetypes-elf` — 2026-05-24T18:47:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3ef7ee683ebeeaae` | inherit_from_filetypes_xml_051713c3 | dup | 1.0000 | 1.0000 | 0.9981 | 2 | [log](out/autocollie/runs/2026-05-24T18-54-05_20260524T184713-filetypes-elf_inherit_from_filetypes_xml_051713c3.log) |
+| `d8def66f5452e338` | elf_control_lr002_leaves128 | ok | 1.0000 | 1.0000 | 0.9969 | 194 | [log](out/autocollie/runs/2026-05-24T18-54-19_20260524T184713-filetypes-elf_elf_control_lr002_leaves128.log) |
+| `8d130214d9cde509` | elf_hardneg_01_16_fpr3e6 | ok | 1.0000 | 1.0000 | 0.9792 | 321 | [log](out/autocollie/runs/2026-05-24T18-57-37_20260524T184713-filetypes-elf_elf_hardneg_01_16_fpr3e6.log) |
+| `0e40888da0638d0f` | elf_kv_vocab_15k_split | ok | 1.0000 | 1.0000 | 0.9982 | 73 | [log](out/autocollie/runs/2026-05-24T19-02-59_20260524T184713-filetypes-elf_elf_kv_vocab_15k_split.log) |
+| `9be33918c6931a18` | elf_symbol_bigrams_8k | ok | 1.0000 | 1.0000 | 0.9968 | 92 | [log](out/autocollie/runs/2026-05-24T19-04-13_20260524T184713-filetypes-elf_elf_symbol_bigrams_8k.log) |
+| `63fbc6ac1c171cb1` | elf_seed_search_3_hardneg | ok | 1.0000 | 1.0000 | 0.9981 | 84 | [log](out/autocollie/runs/2026-05-24T19-05-46_20260524T184713-filetypes-elf_elf_seed_search_3_hardneg.log) |
+| `eddae231a0edca42` | elf_abl_no_blindfold_metrics | ok | 1.0000 | 1.0000 | 0.9969 | 39 | [log](out/autocollie/runs/2026-05-24T19-07-12_20260524T184713-filetypes-elf_elf_abl_no_blindfold_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_lr002_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Baseline feature set with lower LR and more leaves to refine tail ranking and improve recall@3 FP/M.
+- **`elf_hardneg_01_16_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard-negative sweep paired with max_recall_at_fpr threshold to directly optimize deployed tail recall@3 FP/M.
+- **`elf_kv_vocab_15k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables KV vocab with value splitting to recover per-element library signals, targeting PR AUC improvement.
+- **`elf_symbol_bigrams_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol bigrams to capture ELF import co-occurrence patterns, aiming to boost tail recall@3 FP/M.
+- **`elf_seed_search_3_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Seed search on hard-negative config to reduce variance and stabilize recall@3 FP/M gains across seeds.
+- **`elf_abl_no_blindfold_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disables blindfold dropout and adds extended metrics to test if full signal retention improves PR AUC stability.
+
+</details>
+
+## Cycle `20260525T004453-filetypes-elf` — 2026-05-25T00:44:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f115fed50ea3def8` | inherit_from_filetypes_zst_011ac2c6 | dup | 1.0000 | 1.0000 | 0.9958 | 1 | [log](out/autocollie/runs/2026-05-25T00-50-42_20260525T004453-filetypes-elf_inherit_from_filetypes_zst_011ac2c6.log) |
+| `d5083dd7207d5d52` | elf_control_train_tune | ok | 1.0000 | 1.0000 | 0.9957 | 36 | [log](out/autocollie/runs/2026-05-25T00-50-46_20260525T004453-filetypes-elf_elf_control_train_tune.log) |
+| `91ac9203d7b7b620` | elf_hardneg_01_12 | dup | 1.0000 | 1.0000 | 0.9975 | 1 | [log](out/autocollie/runs/2026-05-25T00-51-23_20260525T004453-filetypes-elf_elf_hardneg_01_12.log) |
+| `c3024981770ef433` | elf_tail_fpr3e6_opt | dup | 1.0000 | 1.0000 | 0.9840 | 1 | [log](out/autocollie/runs/2026-05-25T00-51-26_20260525T004453-filetypes-elf_elf_tail_fpr3e6_opt.log) |
+| `f9f290ca22045457` | elf_kv_vocab_15k | ok | 1.0000 | 1.0000 | 0.9979 | 48 | [log](out/autocollie/runs/2026-05-25T00-51-27_20260525T004453-filetypes-elf_elf_kv_vocab_15k.log) |
+| `cf2a620dd34ab639` | elf_symbol_bigrams_8k | ok | 1.0000 | 1.0000 | 0.9979 | 90 | [log](out/autocollie/runs/2026-05-25T00-52-17_20260525T004453-filetypes-elf_elf_symbol_bigrams_8k.log) |
+| `caa22b3e685d2996` | elf_tiered_crit_trigrams | ok | 1.0000 | 1.0000 | 0.9975 | 148 | [log](out/autocollie/runs/2026-05-25T00-53-48_20260525T004453-filetypes-elf_elf_tiered_crit_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_train_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 …` — Replicate best feature_env for matrix cache hit, tuning num_leaves and learning_rate to improve PR_AUC while preserving ROC_AUC.
+- **`elf_hardneg_01_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 …` — Apply hard-negative upweighting to focus model on difficult benigns, aiming to boost recall@3FPM while keeping PR_AUC flat.
+- **`elf_tail_fpr3e6_opt`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 …` — Directly optimize threshold for deployed operating point to maximize recall@3FPM at 3e-6 FPR.
+- **`elf_kv_vocab_15k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 …` — Enable kv_vocab to capture key-value pair signals in ELF metadata, targeting PR_AUC gain from richer feature surface.
+- **`elf_symbol_bigrams_8k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 …` — Add symbol bigrams to catch co-occurrence patterns in ELF imports, aiming to improve PR_AUC and tail recall.
+- **`elf_tiered_crit_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Enable tiered critical trigrams to capture higher-order trait sequences, targeting PR_AUC improvement via better malware structuring signal.
+
+</details>
+
+## Cycle `20260525T060658-filetypes-elf` — 2026-05-25T06:06:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f115fed50ea3def8` | inherit_from_filetypes_zst_011ac2c6 | dup | 1.0000 | 1.0000 | 0.9958 | 1 | [log](out/autocollie/runs/2026-05-25T06-12-19_20260525T060658-filetypes-elf_inherit_from_filetypes_zst_011ac2c6.log) |
+| `e87ad464b4544dbe` | elf_control_train_tune_v2 | ok | 1.0000 | 1.0000 | 0.9966 | 43 | [log](out/autocollie/runs/2026-05-25T06-12-24_20260525T060658-filetypes-elf_elf_control_train_tune_v2.log) |
+| `91ac9203d7b7b620` | elf_hardneg_01_12 | dup | 1.0000 | 1.0000 | 0.9975 | 1 | [log](out/autocollie/runs/2026-05-25T06-13-08_20260525T060658-filetypes-elf_elf_hardneg_01_12.log) |
+| `c3024981770ef433` | elf_tail_fpr3e6_threshold_v2 | dup | 1.0000 | 1.0000 | 0.9840 | 1 | [log](out/autocollie/runs/2026-05-25T06-13-11_20260525T060658-filetypes-elf_elf_tail_fpr3e6_threshold_v2.log) |
+| `c5d44ab07058d0ee` | elf_symbol_vocab_10k | ok | 1.0000 | 1.0000 | 0.9967 | 62 | [log](out/autocollie/runs/2026-05-25T06-13-13_20260525T060658-filetypes-elf_elf_symbol_vocab_10k.log) |
+| `ea57641d2dd17db4` | elf_tiered_trigrams_8k | ok | 1.0000 | 1.0000 | 0.9974 | 82 | [log](out/autocollie/runs/2026-05-25T06-14-17_20260525T060658-filetypes-elf_elf_tiered_trigrams_8k.log) |
+| `a13f4ea43589ee4c` | elf_overlay_mbc_vocab | ok | 1.0000 | 1.0000 | 0.9970 | 48 | [log](out/autocollie/runs/2026-05-25T06-15-40_20260525T060658-filetypes-elf_elf_overlay_mbc_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_train_tune_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env while tuning num_leaves and reg_lambda to stabilize PR_AUC and improve recall@3 FP/M.
+- **`elf_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Hard-negative sweep with fraction 0.01 and weight 12 to sharpen decision boundary and boost recall@3 FP/M without harming ROC_AUC.
+- **`elf_tail_fpr3e6_threshold_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets deployed operating point with max_recall_at_fpr at 3e-6 to directly optimize recall@3 FP/M while monitoring PR_AUC guardrails.
+- **`elf_symbol_vocab_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab with max 10k to capture ELF import/export patterns, aiming to lift PR_AUC via stronger binary structure signal.
+- **`elf_tiered_trigrams_8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Expands tiered_crit_trigrams to 8k max with lower min_freq to capture rarer malicious path combinations, targeting PR_AUC gains.
+- **`elf_overlay_mbc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Adds overlay_signal and mbc_id_vocab to detect packer artifacts and behavior catalog IDs, aiming to improve recall@3 FP/M on obfuscated ELF binaries.
+
+</details>
+

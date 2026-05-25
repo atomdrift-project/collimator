@@ -310,3 +310,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T072617-filegroups-native` — 2026-05-24T07:26:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `70312096fce61096` | inherit_from_filetypes_xml_051713c3 | ok | 0.9994 | 0.9995 | 0.9915 | 227 | [log](out/autocollie/runs/2026-05-24T07-33-21_20260524T072617-filegroups-native_inherit_from_filetypes_xml_051713c3.log) |
+| `5e63529922de57d8` | native_control_fpr3e6_leaves128 | ok | 0.9995 | 0.9995 | 0.0000 | 213 | [log](out/autocollie/runs/2026-05-24T07-38-29_20260524T072617-filegroups-native_native_control_fpr3e6_leaves128.log) |
+| `cbda2e220215ff57` | native_hn_01_18_tail | ok | 0.9994 | 0.9995 | 0.9923 | 195 | [log](out/autocollie/runs/2026-05-24T07-42-04_20260524T072617-filegroups-native_native_hn_01_18_tail.log) |
+| `918265f8e6ca921b` | native_kv_vocab_10k_tail | ok | 0.9995 | 0.9995 | 0.9917 | 149 | [log](out/autocollie/runs/2026-05-24T07-45-22_20260524T072617-filegroups-native_native_kv_vocab_10k_tail.log) |
+| `5ba2c42deeca36bf` | native_sym_bigrams_5k_tail | ok | 0.9994 | 0.9995 | 0.9919 | 127 | [log](out/autocollie/runs/2026-05-24T07-47-54_20260524T072617-filegroups-native_native_sym_bigrams_5k_tail.log) |
+| `77beca409e812af4` | native_overlay_signal_tail | ok | 0.9995 | 0.9995 | 0.9893 | 82 | [log](out/autocollie/runs/2026-05-24T07-50-03_20260524T072617-filegroups-native_native_overlay_signal_tail.log) |
+| `2a8fd61afd87622d` | native_seed_search_k3_hn | ok | 0.9994 | 0.9995 | 0.9920 | 104 | [log](out/autocollie/runs/2026-05-24T07-51-27_20260524T072617-filegroups-native_native_seed_search_k3_hn.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_fpr3e6_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with max_recall_at_fpr thresholding and increased leaves to target recall@3 FP/M while preserving PR AUC.
+- **`native_hn_01_18_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard-negative sweep with fraction 0.01 and weight 18 to sharpen decision boundary and boost recall@3 FP/M.
+- **`native_kv_vocab_10k_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with max 10k to capture structured binary metadata signals, aiming to lift PR AUC and recall@3 FP/M.
+- **`native_sym_bigrams_5k_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable symbol_bigrams with max 5k to capture import co-occurrence patterns in native binaries, targeting PR AUC gain.
+- **`native_overlay_signal_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable overlay_signal to detect packer/dropper artifacts in native binaries, aiming to improve recall@3 FP/M.
+- **`native_seed_search_k3_hn`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Seed search k=3 on hard-negative config to reduce variance and stabilize recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260524T105416-filegroups-native` — 2026-05-24T10:54:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `70312096fce61096` | inherit_from_filetypes_xml_051713c3 | dup | 0.9994 | 0.9995 | 0.9915 | 2 | [log](out/autocollie/runs/2026-05-24T11-00-17_20260524T105416-filegroups-native_inherit_from_filetypes_xml_051713c3.log) |
+| `4bf049bb955856bc` | native_control_fpr3e6_lr003 | ok | 0.9994 | 0.9995 | 0.0000 | 69 | [log](out/autocollie/runs/2026-05-24T11-00-40_20260524T105416-filegroups-native_native_control_fpr3e6_lr003.log) |
+| `36e145547587e77d` | native_hn_01_16_tail | ok | 0.9995 | 0.9995 | 0.9919 | 244 | [log](out/autocollie/runs/2026-05-24T11-01-51_20260524T105416-filegroups-native_native_hn_01_16_tail.log) |
+| `cc47b0a83a9dc0f6` | native_kv_vocab_15k | ok | 0.9995 | 0.9995 | 0.9917 | 166 | [log](out/autocollie/runs/2026-05-24T11-05-57_20260524T105416-filegroups-native_native_kv_vocab_15k.log) |
+| `404e865bfc36b9ef` | native_sym_bigrams_8k | ok | 0.9995 | 0.9995 | 0.9920 | 179 | [log](out/autocollie/runs/2026-05-24T11-08-45_20260524T105416-filegroups-native_native_sym_bigrams_8k.log) |
+| `6483082ff54d06b2` | native_overlay_packer_tail | ok | 0.9995 | 0.9995 | 0.9919 | 247 | [log](out/autocollie/runs/2026-05-24T11-11-46_20260524T105416-filegroups-native_native_overlay_packer_tail.log) |
+| `3cc35a9d62af1fe5` | native_seed_search_k3_hn | ok | 0.9995 | 0.9995 | 0.9924 | 190 | [log](out/autocollie/runs/2026-05-24T11-15-54_20260524T105416-filegroups-native_native_seed_search_k3_hn.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_fpr3e6_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with max_recall_at_fpr thresholding to directly optimize recall@3FPM at the deployed operating point.
+- **`native_hn_01_16_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard-negative sweep to push PR_AUC and recall@3FPM by upweighting difficult benigns.
+- **`native_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab to capture structured binary metadata for PR_AUC gain.
+- **`native_sym_bigrams_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol bigrams to capture API call sequences for improved PR_AUC and recall@3FPM.
+- **`native_overlay_packer_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable overlay and packer signals to catch packed/dropper binaries, boosting recall@3FPM.
+- **`native_seed_search_k3_hn`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Seed search on hard-negative config to stabilize recall@3FPM gains and reduce variance.
+
+</details>
+
+## Cycle `20260525T012053-filegroups-native` — 2026-05-25T01:20:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f9661f3df55178c8` | inherit_from_filetypes_zst_011ac2c6 | ok | 0.9994 | 0.9995 | 0.9914 | 29 | [log](out/autocollie/runs/2026-05-25T01-27-58_20260525T012053-filegroups-native_inherit_from_filetypes_zst_011ac2c6.log) |
+| `f72e5260424e8ac3` | native_control_tail_threshold | ok | 0.9995 | 0.9995 | 0.0000 | 22 | [log](out/autocollie/runs/2026-05-25T01-28-30_20260525T012053-filegroups-native_native_control_tail_threshold.log) |
+| `2b28997fe73ca2ed` | native_hn_01_12_tail | ok | 0.9995 | 0.9995 | 0.0000 | 35 | [log](out/autocollie/runs/2026-05-25T01-28-53_20260525T012053-filegroups-native_native_hn_01_12_tail.log) |
+| `d61bca66cc6d1171` | native_kv_sym_vocab_15k_10k | ok | 0.9994 | 0.9995 | 0.9923 | 99 | [log](out/autocollie/runs/2026-05-25T01-29-29_20260525T012053-filegroups-native_native_kv_sym_vocab_15k_10k.log) |
+| `f729fb9fa5733c96` | native_overlay_packer_signals | ok | 0.9995 | 0.9995 | 0.9919 | 22 | [log](out/autocollie/runs/2026-05-25T01-31-08_20260525T012053-filegroups-native_native_overlay_packer_signals.log) |
+| `290fc3b8fae43710` | native_tiered_crit_trigrams | ok | 0.9995 | 0.9995 | 0.9920 | 114 | [log](out/autocollie/runs/2026-05-25T01-31-32_20260525T012053-filegroups-native_native_tiered_crit_trigrams.log) |
+| `35e5c09a40426f9a` | native_seed_search_ensemble | ok | 0.9995 | 0.9995 | 0.9921 | 52 | [log](out/autocollie/runs/2026-05-25T01-33-27_20260525T012053-filegroups-native_native_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_tail_threshold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with max_recall_at_fpr thresholding to directly optimize deployed tail recall@3 FP/M.
+- **`native_hn_01_12_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard-negative training to suppress benign tail FPs and improve recall@3 FP/M while preserving PR AUC.
+- **`native_kv_sym_vocab_15k_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand KV and symbol vocabs to capture finer-grained native binary patterns, targeting PR AUC and tail recall gains.
+- **`native_overlay_packer_signals`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add overlay and packer structural signals to catch packed/dropper malware, improving recall@3 FP/M on evasive samples.
+- **`native_tiered_crit_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add severity-prefixed trigrams to capture multi-step attack chains, boosting PR AUC and tail recall.
+- **`native_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ensemble 3 seeds to reduce variance and stabilize tail recall@3 FP/M across different data splits.
+
+</details>
+
+## Cycle `20260525T051222-filegroups-native` — 2026-05-25T05:12:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f9661f3df55178c8` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9994 | 0.9995 | 0.9914 | 1 | [log](out/autocollie/runs/2026-05-25T05-18-41_20260525T051222-filegroups-native_inherit_from_filetypes_zst_011ac2c6.log) |
+| `f674e3cbd4d8f7fe` | native_control_tail_threshold_fpr3e6 | ok | 0.9995 | 0.9995 | 0.0000 | 34 | [log](out/autocollie/runs/2026-05-25T05-18-45_20260525T051222-filegroups-native_native_control_tail_threshold_fpr3e6.log) |
+| `82b5f64f258cc4ae` | native_hn_015_16_tail | ok | 0.9994 | 0.9995 | 0.9927 | 326 | [log](out/autocollie/runs/2026-05-25T05-19-21_20260525T051222-filegroups-native_native_hn_015_16_tail.log) |
+| `aa648fd77ca84edb` | native_kv_vocab_15k | ok | 0.9995 | 0.9995 | 0.9917 | 51 | [log](out/autocollie/runs/2026-05-25T05-24-49_20260525T051222-filegroups-native_native_kv_vocab_15k.log) |
+| `4325ae61dd965638` | native_sym_vocab_bigrams | ok | 0.9994 | 0.9995 | 0.9911 | 153 | [log](out/autocollie/runs/2026-05-25T05-25-41_20260525T051222-filegroups-native_native_sym_vocab_bigrams.log) |
+| `6c433e9b39d52fc1` | native_tiered_trigrams_5k | ok | 0.9995 | 0.9995 | 0.9920 | 159 | [log](out/autocollie/runs/2026-05-25T05-28-15_20260525T051222-filegroups-native_native_tiered_trigrams_5k.log) |
+| `35e5c09a40426f9a` | native_seed_search_ensemble_3 | dup | 0.9995 | 0.9995 | 0.9921 | 1 | [log](out/autocollie/runs/2026-05-25T05-30-55_20260525T051222-filegroups-native_native_seed_search_ensemble_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_tail_threshold_fpr3e6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to hit matrix cache; aims to improve recall@3FPM by optimizing threshold at deployed operating point (3e-6 FPR).
+- **`native_hn_015_16_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative upweighting to improve PR_AUC by forcing the model to better separate difficult benigns from malware, avoiding previously crashed combos.
+- **`native_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value signals in native binaries, aiming to boost PR_AUC and recall@3FPM via new feature surface.
+- **`native_sym_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Adds symbol_vocab and bigrams to capture import co-occurrence, targeting PR_AUC gains on native binaries.
+- **`native_tiered_trigrams_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Expands tiered_crit_trigrams to capture rarer malicious paths, aiming to improve recall@3FPM without hurting ROC_AUC.
+- **`native_seed_search_ensemble_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 ensemble to reduce variance, aiming to stabilize and improve recall@3FPM on the control feature set.
+
+</details>
+

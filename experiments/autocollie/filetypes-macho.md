@@ -504,3 +504,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T030313-filetypes-macho` — 2026-05-24T03:03:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `185da78f50df1926` | inherit_from_filetypes_xml_051713c3 | ok | 0.9967 | 0.9993 | 0.9689 | 28 | [log](out/autocollie/runs/2026-05-24T03-09-15_20260524T030313-filetypes-macho_inherit_from_filetypes_xml_051713c3.log) |
+| `adac88c1958844cb` | macho_control_hardneg_01_12 | ok | 0.9963 | 0.9992 | 0.9727 | 24 | [log](out/autocollie/runs/2026-05-24T03-09-49_20260524T030313-filetypes-macho_macho_control_hardneg_01_12.log) |
+| `665996ffb52cbf63` | macho_symbol_vocab_bigrams | ok | 0.9970 | 0.9994 | 0.9728 | 25 | [log](out/autocollie/runs/2026-05-24T03-10-14_20260524T030313-filetypes-macho_macho_symbol_vocab_bigrams.log) |
+| `deba67cb01e4969d` | macho_kv_vocab_split_20k | ok | 0.9969 | 0.9994 | 0.9727 | 18 | [log](out/autocollie/runs/2026-05-24T03-10-40_20260524T030313-filetypes-macho_macho_kv_vocab_split_20k.log) |
+| `da0b6d2d678bd8d0` | macho_hardneg_015_16_poswt075 | ok | 0.9966 | 0.9993 | 0.9746 | 5 | [log](out/autocollie/runs/2026-05-24T03-11-00_20260524T030313-filetypes-macho_macho_hardneg_015_16_poswt075.log) |
+| `b2e6d1ddbdda15f0` | macho_tail_opt_3e6_extra_trees | ok | 0.9966 | 0.9993 | 0.9533 | 4 | [log](out/autocollie/runs/2026-05-24T03-11-05_20260524T030313-filetypes-macho_macho_tail_opt_3e6_extra_trees.log) |
+| `7cb93dd067a2d1b1` | macho_abl_no_blindfold_overlay | ok | 0.9968 | 0.9993 | 0.9727 | 16 | [log](out/autocollie/runs/2026-05-24T03-11-10_20260524T030313-filetypes-macho_macho_abl_no_blindfold_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with hard-negative sweep to improve recall@3 FP/M by focusing on difficult benigns.
+- **`macho_symbol_vocab_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 …` — Enable symbol vocab and bigrams to capture Mach-O import co-occurrence patterns, targeting PR_AUC gain.
+- **`macho_kv_vocab_split_20k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 …` — Expand KV vocab and enable value splitting to recover per-element signal in Mach-O metadata, aiming for PR_AUC improvement.
+- **`macho_hardneg_015_16_poswt075`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Aggressive hard-negative weighting with reduced positive weight to suppress FPs and boost recall@3 FP/M.
+- **`macho_tail_opt_3e6_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Optimize threshold for deployed operating point (3e-6 FPR) with extra_trees regularization to maximize recall@3 FP/M.
+- **`macho_abl_no_blindfold_overlay`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OVERLAY_SIGNAL=1 …` — Disable blindfold dropout and enable overlay signal to reduce noise and capture packer traits, targeting stable PR_AUC.
+
+</details>
+
+## Cycle `20260524T104207-filetypes-macho` — 2026-05-24T10:42:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `185da78f50df1926` | inherit_from_filetypes_xml_051713c3 | dup | 0.9967 | 0.9993 | 0.9689 | 1 | [log](out/autocollie/runs/2026-05-24T10-47-44_20260524T104207-filetypes-macho_inherit_from_filetypes_xml_051713c3.log) |
+| `49a9c1b2891a03aa` | macho_control_lr003_leaves128 | ok | 0.9966 | 0.9993 | 0.9689 | 6 | [log](out/autocollie/runs/2026-05-24T10-47-51_20260524T104207-filetypes-macho_macho_control_lr003_leaves128.log) |
+| `e390c0e4387dc625` | macho_hardneg_01_12_poswt075 | ok | 0.9966 | 0.9993 | 0.9688 | 9 | [log](out/autocollie/runs/2026-05-24T10-47-59_20260524T104207-filetypes-macho_macho_hardneg_01_12_poswt075.log) |
+| `f8f29cbf3eef6478` | macho_tail_3e6_max_recall | ok | 0.9968 | 0.9993 | 0.9556 | 8 | [log](out/autocollie/runs/2026-05-24T10-48-10_20260524T104207-filetypes-macho_macho_tail_3e6_max_recall.log) |
+| `387aa5128d4f5182` | macho_symbol_vocab_bigrams_10k | ok | 0.9970 | 0.9994 | 0.9728 | 7 | [log](out/autocollie/runs/2026-05-24T10-48-19_20260524T104207-filetypes-macho_macho_symbol_vocab_bigrams_10k.log) |
+| `93df74c22f8cbf82` | macho_kv_vocab_split_25k | ok | 0.9969 | 0.9994 | 0.9727 | 27 | [log](out/autocollie/runs/2026-05-24T10-48-27_20260524T104207-filetypes-macho_macho_kv_vocab_split_25k.log) |
+| `77d49f67613ba151` | macho_overlay_section_signal | ok | 0.9969 | 0.9994 | 0.9727 | 29 | [log](out/autocollie/runs/2026-05-24T10-48-55_20260524T104207-filetypes-macho_macho_overlay_section_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_lr003_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with lower LR and higher leaves to improve PR_AUC while reusing matrix cache.
+- **`macho_hardneg_01_12_poswt075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Hard-negative sweep with fraction 0.01 and weight 12 to push recall@3 FP/M by focusing on difficult benigns.
+- **`macho_tail_3e6_max_recall`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimize deployed tail recall@3 FP/M using max_recall_at_fpr mode at 3e-6 FPR target.
+- **`macho_symbol_vocab_bigrams_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol vocab and bigrams to capture Mach-O import co-occurrence patterns, aiming to boost PR_AUC.
+- **`macho_kv_vocab_split_25k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — KV vocab with value splitting recovers per-element signal in Mach-O load commands, targeting PR_AUC gain.
+- **`macho_overlay_section_signal`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Add overlay and nonstandard section signals to catch packer/dropper patterns in Mach-O, aiming for recall@3 FP/M improvement.
+
+</details>
+
+## Cycle `20260524T221335-filetypes-macho` — 2026-05-24T22:13:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `185da78f50df1926` | inherit_from_filetypes_xml_051713c3 | dup | 0.9967 | 0.9993 | 0.9689 | 2 | [log](out/autocollie/runs/2026-05-24T22-21-36_20260524T221335-filetypes-macho_inherit_from_filetypes_xml_051713c3.log) |
+| `859f83b57c360eed` | macho_control_baseline | ok | 0.9968 | 0.9993 | 0.9727 | 14 | [log](out/autocollie/runs/2026-05-24T22-21-42_20260524T221335-filetypes-macho_macho_control_baseline.log) |
+| `adac88c1958844cb` | macho_hardneg_01_12 | dup | 0.9963 | 0.9992 | 0.9727 | 2 | [log](out/autocollie/runs/2026-05-24T22-21-58_20260524T221335-filetypes-macho_macho_hardneg_01_12.log) |
+| `f8f29cbf3eef6478` | macho_tail_3e6_max_recall | dup | 0.9968 | 0.9993 | 0.9556 | 1 | [log](out/autocollie/runs/2026-05-24T22-22-01_20260524T221335-filetypes-macho_macho_tail_3e6_max_recall.log) |
+| `17c818c3a22489f9` | macho_kv_vocab_split_15k | ok | 0.9969 | 0.9994 | 0.9727 | 35 | [log](out/autocollie/runs/2026-05-24T22-22-04_20260524T221335-filetypes-macho_macho_kv_vocab_split_15k.log) |
+| `c3edc1415e77c6d5` | macho_symbol_bigrams_10k | ok | 0.9965 | 0.9992 | 0.9747 | 40 | [log](out/autocollie/runs/2026-05-24T22-22-40_20260524T221335-filetypes-macho_macho_symbol_bigrams_10k.log) |
+| `95a26e9606bcd91c` | macho_tiered_crit_trigrams | ok | 0.9970 | 0.9994 | 0.9708 | 35 | [log](out/autocollie/runs/2026-05-24T22-23-21_20260524T221335-filetypes-macho_macho_tiered_crit_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature_env to establish a stable baseline for PR_AUC and ROC_AUC comparison.
+- **`macho_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tests hard-negative upweighting to improve PR_AUC by focusing model capacity on difficult benign samples.
+- **`macho_tail_3e6_max_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Optimizes threshold for deployed operating point to maximize recall@3FPM while monitoring PR_AUC guardrails.
+- **`macho_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables KV vocab with value splitting to capture structured metadata signals, aiming to lift PR_AUC.
+- **`macho_symbol_bigrams_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol bigram vocab to capture import co-occurrence patterns, targeting PR_AUC improvement.
+- **`macho_tiered_crit_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ports tiered critical trigrams from sister routes to add severity-aware n-gram signal, aiming for PR_AUC gain.
+
+</details>
+
+## Cycle `20260525T061315-filetypes-macho` — 2026-05-25T06:13:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `49a9c1b2891a03aa` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9966 | 0.9993 | 0.9689 | 1 | [log](out/autocollie/runs/2026-05-25T06-21-00_20260525T061315-filetypes-macho_inherit_from_filetypes_zst_011ac2c6.log) |
+| `49a9c1b2891a03aa` | macho_control_train_tune | dup | 0.9966 | 0.9993 | 0.9689 | 1 | [log](out/autocollie/runs/2026-05-25T06-21-04_20260525T061315-filetypes-macho_macho_control_train_tune.log) |
+| `adac88c1958844cb` | macho_hardneg_01_12 | dup | 0.9963 | 0.9992 | 0.9727 | 1 | [log](out/autocollie/runs/2026-05-25T06-21-06_20260525T061315-filetypes-macho_macho_hardneg_01_12.log) |
+| `f8f29cbf3eef6478` | macho_threshold_3e6_tail | dup | 0.9968 | 0.9993 | 0.9556 | 1 | [log](out/autocollie/runs/2026-05-25T06-21-08_20260525T061315-filetypes-macho_macho_threshold_3e6_tail.log) |
+| `17c818c3a22489f9` | macho_kv_vocab_split_15k | dup | 0.9969 | 0.9994 | 0.9727 | 1 | [log](out/autocollie/runs/2026-05-25T06-21-10_20260525T061315-filetypes-macho_macho_kv_vocab_split_15k.log) |
+| `08f197853799ae1c` | macho_symbol_bigrams_10k | ok | 0.9964 | 0.9993 | 0.9709 | 33 | [log](out/autocollie/runs/2026-05-25T06-21-12_20260525T061315-filetypes-macho_macho_symbol_bigrams_10k.log) |
+| `2ee79a6decdd40dd` | macho_tiered_trigrams_overlay | ok | 0.9970 | 0.9994 | 0.9708 | 25 | [log](out/autocollie/runs/2026-05-25T06-21-46_20260525T061315-filetypes-macho_macho_tiered_trigrams_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature env and tune training knobs to establish a stable baseline for PR_AUC and recall@3FPM.
+- **`macho_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard-negative upweighting to focus model capacity on difficult benigns, aiming to improve recall@3FPM without hurting PR_AUC.
+- **`macho_threshold_3e6_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Optimize threshold directly for deployed operating point to maximize recall@3FPM while monitoring PR_AUC guardrails.
+- **`macho_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab with value splitting to capture Mach-O metadata patterns, targeting PR_AUC improvement via richer feature surface.
+- **`macho_symbol_bigrams_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol bigram vocab to capture import co-occurrence patterns in Mach-O binaries, aiming to boost PR_AUC and recall@3FPM.
+- **`macho_tiered_trigrams_overlay`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Combine tiered criticality trigrams with overlay metrics to detect packer signals, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+

@@ -478,3 +478,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T080029-filetypes-c` — 2026-05-24T08:00:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a60148eff39255c8` | inherit_from_filetypes_xml_051713c3 | ok | 0.9918 | 0.9957 | 0.9421 | 15 | [log](out/autocollie/runs/2026-05-24T08-06-04_20260524T080029-filetypes-c_inherit_from_filetypes_xml_051713c3.log) |
+| `17d0fc853cf83df9` | c_control_train_leaves128 | ok | 0.9916 | 0.9955 | 0.9548 | 10 | [log](out/autocollie/runs/2026-05-24T08-06-26_20260524T080029-filetypes-c_c_control_train_leaves128.log) |
+| `c4529e4fe4799e78` | c_train_hardneg_tuned | ok | 0.9917 | 0.9955 | 0.9542 | 4 | [log](out/autocollie/runs/2026-05-24T08-06-36_20260524T080029-filetypes-c_c_train_hardneg_tuned.log) |
+| `50ff78279c627e74` | c_feat_symbol_vocab_bigrams | ok | 0.9927 | 0.9962 | 0.9489 | 14 | [log](out/autocollie/runs/2026-05-24T08-06-40_20260524T080029-filetypes-c_c_feat_symbol_vocab_bigrams.log) |
+| `732acd98dece37a5` | c_feat_kv_vocab_split | ok | 0.9918 | 0.9957 | 0.9483 | 11 | [log](out/autocollie/runs/2026-05-24T08-06-55_20260524T080029-filetypes-c_c_feat_kv_vocab_split.log) |
+| `e36f114d62fbca73` | c_feat_overlay_packer_signal | ok | 0.9915 | 0.9955 | 0.9493 | 10 | [log](out/autocollie/runs/2026-05-24T08-07-07_20260524T080029-filetypes-c_c_feat_overlay_packer_signal.log) |
+| `ca4a6c748d6eea25` | c_generalize_seed_ensemble_sym | ok | 0.9928 | 0.9963 | 0.9496 | 14 | [log](out/autocollie/runs/2026-05-24T08-07-18_20260524T080029-filetypes-c_c_generalize_seed_ensemble_sym.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_train_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with deeper trees to capture complex C-binary patterns, targeting PR_AUC improvement.
+- **`c_train_hardneg_tuned`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Moderate hard-negative upweighting to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`c_feat_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol co-occurrence signal common in C/PE binaries to improve ranking of packed/malicious imports, targeting PR_AUC.
+- **`c_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — KV features with value splitting recover granular library/config signals in C binaries, targeting PR_AUC and recall@3FPM.
+- **`c_feat_overlay_packer_signal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Packer/overlay metrics directly target obfuscated C binaries, aiming to boost recall@3FPM without hurting ROC_AUC.
+- **`c_generalize_seed_ensemble_sym`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ensemble across 3 seeds to reduce variance and stabilize recall@3FPM gains from symbol features.
+
+</details>
+
+## Cycle `20260524T144547-filetypes-c` — 2026-05-24T14:45:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a60148eff39255c8` | inherit_from_filetypes_xml_051713c3 | dup | 0.9918 | 0.9957 | 0.9421 | 2 | [log](out/autocollie/runs/2026-05-24T14-52-48_20260524T144547-filetypes-c_inherit_from_filetypes_xml_051713c3.log) |
+| `a0fca704de2f4c30` | c_control_train_lr003_leaves128 | ok | 0.9915 | 0.9955 | 0.9501 | 114 | [log](out/autocollie/runs/2026-05-24T14-52-55_20260524T144547-filetypes-c_c_control_train_lr003_leaves128.log) |
+| `403fb52df11a98fb` | c_feat_kv_vocab_split | ok | 0.9918 | 0.9957 | 0.9483 | 208 | [log](out/autocollie/runs/2026-05-24T14-54-51_20260524T144547-filetypes-c_c_feat_kv_vocab_split.log) |
+| `95f4ec56174f9646` | c_feat_symbol_bigrams | ok | 0.9921 | 0.9959 | 0.9249 | 31 | [log](out/autocollie/runs/2026-05-24T14-58-20_20260524T144547-filetypes-c_c_feat_symbol_bigrams.log) |
+| `5fc200517285320f` | c_feat_overlay_packer | ok | 0.9915 | 0.9955 | 0.9493 | 26 | [log](out/autocollie/runs/2026-05-24T14-58-53_20260524T144547-filetypes-c_c_feat_overlay_packer.log) |
+| `c32d6213d911d26d` | c_feat_textenc_metrics | ok | 0.9908 | 0.9951 | 0.9396 | 32 | [log](out/autocollie/runs/2026-05-24T14-59-21_20260524T144547-filetypes-c_c_feat_textenc_metrics.log) |
+| `a78991a84e733747` | c_generalize_seed7 | ok | 0.9922 | 0.9958 | 0.9546 | 27 | [log](out/autocollie/runs/2026-05-24T14-59-55_20260524T144547-filetypes-c_c_generalize_seed7.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_train_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with lower LR and higher leaves to improve PR_AUC via better gradient descent stability.
+- **`c_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab and value splitting to extract structured metadata signals, aiming to boost PR_AUC.
+- **`c_feat_symbol_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol bigrams to capture import co-occurrence patterns in C binaries, targeting recall@3 FP/M improvement.
+- **`c_feat_overlay_packer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable overlay and silent packer signals to better detect packed C malware, aiming for recall@3 FP/M gain.
+- **`c_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Test text encoding and full text metrics to capture string/comment obfuscation in C files, targeting PR_AUC.
+- **`c_generalize_seed7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Vary seed to 7 on the best feature set to check for seed-driven variance and stabilize recall@3 FP/M.
+
+</details>
+
+## Cycle `20260525T034151-filetypes-c` — 2026-05-25T03:41:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a0fca704de2f4c30` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9915 | 0.9955 | 0.9501 | 2 | [log](out/autocollie/runs/2026-05-25T03-47-35_20260525T034151-filetypes-c_inherit_from_filetypes_zst_011ac2c6.log) |
+| `17d0fc853cf83df9` | c_control_baseline_leaves128 | dup | 0.9916 | 0.9955 | 0.9548 | 2 | [log](out/autocollie/runs/2026-05-25T03-47-42_20260525T034151-filetypes-c_c_control_baseline_leaves128.log) |
+| `47c470ac2d8eabe3` | c_exploit_hardneg_medium | ok | 0.9917 | 0.9955 | 0.9542 | 133 | [log](out/autocollie/runs/2026-05-25T03-47-46_20260525T034151-filetypes-c_c_exploit_hardneg_medium.log) |
+| `61421132893e22e8` | c_feat_kv_vocab_split | ok | 0.9918 | 0.9957 | 0.9483 | 55 | [log](out/autocollie/runs/2026-05-25T03-50-01_20260525T034151-filetypes-c_c_feat_kv_vocab_split.log) |
+| `3e107b3b6e97c612` | c_feat_symbol_bigrams_vocab | ok | 0.9927 | 0.9962 | 0.9489 | 28 | [log](out/autocollie/runs/2026-05-25T03-50-58_20260525T034151-filetypes-c_c_feat_symbol_bigrams_vocab.log) |
+| `aefe37cdc31183b7` | c_feat_textenc_metrics_transfer | ok | 0.9909 | 0.9951 | 0.9445 | 16 | [log](out/autocollie/runs/2026-05-25T03-51-28_20260525T034151-filetypes-c_c_feat_textenc_metrics_transfer.log) |
+| `f72e323ab2279167` | c_generalize_seed_ensemble_retry | ok | 0.9923 | 0.9959 | 0.9503 | 37 | [log](out/autocollie/runs/2026-05-25T03-51-46_20260525T034151-filetypes-c_c_generalize_seed_ensemble_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_baseline_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best recent feature_env; increases leaves to 128 to capture finer decision boundaries, aiming to improve PR_AUC.
+- **`c_exploit_hardneg_medium`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Tests moderate hard-negative weighting to focus on difficult benigns, aiming to increase recall@3FPM while keeping PR_AUC stable.
+- **`c_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables KV vocab with value splitting to recover per-element signal in C config/struct fields, aiming to improve PR_AUC from structured metadata.
+- **`c_feat_symbol_bigrams_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol bigrams and expanded symbol vocab to capture co-occurrence patterns in C imports/strings, aiming to boost recall@3FPM.
+- **`c_feat_textenc_metrics_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfers text encoding and full text metrics from sister routes to capture obfuscation/entropy signals in C source/comments, aiming to improve PR_AUC.
+- **`c_generalize_seed_ensemble_retry`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retries top-performing seed7 config with K=3 ensemble to reduce variance, aiming to stabilize and improve recall@3FPM against data drift.
+
+</details>
+
+## Cycle `20260525T084016-filetypes-c` — 2026-05-25T08:40:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a0fca704de2f4c30` | inherit_from_filetypes_zst_011ac2c6 | dup | 0.9915 | 0.9955 | 0.9501 | 2 | [log](out/autocollie/runs/2026-05-25T08-45-48_20260525T084016-filetypes-c_inherit_from_filetypes_zst_011ac2c6.log) |
+| `17d0fc853cf83df9` | c_control_baseline_leaves128 | dup | 0.9916 | 0.9955 | 0.9548 | 1 | [log](out/autocollie/runs/2026-05-25T08-45-51_20260525T084016-filetypes-c_c_control_baseline_leaves128.log) |
+| `699643fbb39b79fd` | c_feat_kv_vocab_split | ok | 0.9918 | 0.9957 | 0.9483 | 5 | [log](out/autocollie/runs/2026-05-25T08-45-53_20260525T084016-filetypes-c_c_feat_kv_vocab_split.log) |
+| `80bc850cbe8371e6` | c_feat_symbol_bigrams_vocab | ok | 0.9927 | 0.9962 | 0.9496 | 23 | [log](out/autocollie/runs/2026-05-25T08-46-00_20260525T084016-filetypes-c_c_feat_symbol_bigrams_vocab.log) |
+| `aefe37cdc31183b7` | c_feat_text_metrics_encoding | dup | 0.9909 | 0.9951 | 0.9445 | 2 | [log](out/autocollie/runs/2026-05-25T08-46-25_20260525T084016-filetypes-c_c_feat_text_metrics_encoding.log) |
+| `cc7f6a3db60edfb5` | c_train_dart_hardneg | ok | 0.9898 | 0.9944 | 0.9365 | 11 | [log](out/autocollie/runs/2026-05-25T08-46-27_20260525T084016-filetypes-c_c_train_dart_hardneg.log) |
+| `820d80f1d82d2ebe` | c_train_extra_trees_reg | ok | 0.9889 | 0.9940 | 0.9449 | 4 | [log](out/autocollie/runs/2026-05-25T08-46-40_20260525T084016-filetypes-c_c_train_extra_trees_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_baseline_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature env with slightly deeper trees to stabilize PR AUC and capture complex patterns.
+- **`c_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables KV vocab and value splitting to extract structured string signals, aiming to improve recall@3FPM.
+- **`c_feat_symbol_bigrams_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 …` — Expands symbol bigram vocab to catch import co-occurrence patterns in C binaries, targeting PR AUC gain.
+- **`c_feat_text_metrics_encoding`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Adds text metrics and encoding features to detect obfuscation in C artifacts, aiming to boost recall@3FPM.
+- **`c_train_dart_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Uses DART boosting with hard negatives to reduce tail false positives, targeting recall@3FPM.
+- **`c_train_extra_trees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies extra trees and stronger L2 regularization to improve generalization at low FPR, targeting recall@3FPM.
+
+</details>
+

@@ -370,3 +370,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T061806-filetypes-zip` — 2026-05-24T06:18:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b5460bc63a2d4a17` | inherit_from_filetypes_xml_051713c3 | ok | 0.9998 | 0.9963 | 0.9943 | 151 | [log](out/autocollie/runs/2026-05-24T06-25-28_20260524T061806-filetypes-zip_inherit_from_filetypes_xml_051713c3.log) |
+| `0cdfb1f35ac5ce69` | zip_control_scalepos_05 | ok | 0.9998 | 0.9959 | 0.9876 | 108 | [log](out/autocollie/runs/2026-05-24T06-28-00_20260524T061806-filetypes-zip_zip_control_scalepos_05.log) |
+| `9b5c1f128b26b9ca` | zip_feat_kv_vocab_10k | ok | 0.9998 | 0.9964 | 0.9892 | 129 | [log](out/autocollie/runs/2026-05-24T06-29-49_20260524T061806-filetypes-zip_zip_feat_kv_vocab_10k.log) |
+| `487ddd70172a42e2` | zip_feat_text_metrics_full | ok | 0.9998 | 0.9966 | 0.9938 | 114 | [log](out/autocollie/runs/2026-05-24T06-31-58_20260524T061806-filetypes-zip_zip_feat_text_metrics_full.log) |
+| `c3fcc56a9733de84` | zip_feat_tiered_trigrams | ok | 0.9998 | 0.9963 | 0.9941 | 169 | [log](out/autocollie/runs/2026-05-24T06-33-53_20260524T061806-filetypes-zip_zip_feat_tiered_trigrams.log) |
+| `8fffa08eee82a453` | zip_train_hardneg_005_8 | ok | 0.9998 | 0.9963 | 0.9877 | 67 | [log](out/autocollie/runs/2026-05-24T06-36-43_20260524T061806-filetypes-zip_zip_train_hardneg_005_8.log) |
+| `926a3586c396011b` | zip_seed_search_ensemble | ok | 0.9998 | 0.9964 | 0.9941 | 50 | [log](out/autocollie/runs/2026-05-24T06-37-50_20260524T061806-filetypes-zip_zip_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_scalepos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with scale_pos_weight_mult=0.5 to reduce FPR and improve recall@3 FP/M.
+- **`zip_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab to capture metadata key-value signals, targeting PR AUC improvement.
+- **`zip_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full to capture obfuscation and structural text signals, aiming to boost PR AUC.
+- **`zip_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds tiered_crit_trigrams to model complex trait co-occurrences, targeting tail recall gains.
+- **`zip_train_hardneg_005_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Hard negative mining with fraction=0.05 and weight=8 to sharpen boundary and improve recall@3 FP/M.
+- **`zip_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Averages 3 seeds via seed_search_k=3 to reduce variance and stabilize recall@3 FP/M.
+
+</details>
+
+## Cycle `20260524T163403-filetypes-zip` — 2026-05-24T16:34:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b5460bc63a2d4a17` | inherit_from_filetypes_xml_051713c3 | dup | 0.9998 | 0.9963 | 0.9943 | 2 | [log](out/autocollie/runs/2026-05-24T16-39-55_20260524T163403-filetypes-zip_inherit_from_filetypes_xml_051713c3.log) |
+| `597c409a20669260` | zip_control_leaves128_lr005 | ok | 0.9998 | 0.9964 | 0.9921 | 312 | [log](out/autocollie/runs/2026-05-24T16-39-57_20260524T163403-filetypes-zip_zip_control_leaves128_lr005.log) |
+| `0cdfb1f35ac5ce69` | zip_train_scale_pos_05 | dup | 0.9998 | 0.9959 | 0.9876 | 2 | [log](out/autocollie/runs/2026-05-24T16-45-10_20260524T163403-filetypes-zip_zip_train_scale_pos_05.log) |
+| `d8282e07909e3a1b` | zip_feat_kv_vocab_split | ok | 0.9998 | 0.9963 | 0.9938 | 195 | [log](out/autocollie/runs/2026-05-24T16-45-12_20260524T163403-filetypes-zip_zip_feat_kv_vocab_split.log) |
+| `3b7cbd6c9e86d9f6` | zip_feat_text_metrics_full | ok | 0.9998 | 0.9964 | 0.9945 | 120 | [log](out/autocollie/runs/2026-05-24T16-48-28_20260524T163403-filetypes-zip_zip_feat_text_metrics_full.log) |
+| `09eed37ae5b0ad8f` | zip_feat_tiered_trigrams | ok | 0.9998 | 0.9963 | 0.9941 | 655 | [log](out/autocollie/runs/2026-05-24T16-50-29_20260524T163403-filetypes-zip_zip_feat_tiered_trigrams.log) |
+| `926a3586c396011b` | zip_seed_search_ensemble | dup | 0.9998 | 0.9964 | 0.9941 | 2 | [log](out/autocollie/runs/2026-05-24T17-01-25_20260524T163403-filetypes-zip_zip_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_leaves128_lr005`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with deeper trees to establish matrix-cache-hitting reference for PR_AUC stability.
+- **`zip_train_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives to suppress false positives at low FPR, targeting recall@3FPM improvement.
+- **`zip_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab and value splitting to extract embedded file metadata signals, aiming to lift PR_AUC.
+- **`zip_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activate full text metrics to capture obfuscation and structural anomalies in archived documents, targeting recall@3FPM.
+- **`zip_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add severity-prefixed trigrams to model multi-hop malicious patterns in archive contents, aiming to improve PR_AUC.
+- **`zip_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ensemble 3 seeds on the control feature set to reduce variance and stabilize recall@3FPM gains.
+
+</details>
+
+## Cycle `20260524T195101-filetypes-zip` — 2026-05-24T19:51:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b5460bc63a2d4a17` | inherit_from_filetypes_xml_051713c3 | dup | 0.9998 | 0.9963 | 0.9943 | 1 | [log](out/autocollie/runs/2026-05-24T19-55-56_20260524T195101-filetypes-zip_inherit_from_filetypes_xml_051713c3.log) |
+| `0622d49e0f00059e` | zip_control_textmetrics_leaves128 | ok | 0.9998 | 0.9964 | 0.9946 | 80 | [log](out/autocollie/runs/2026-05-24T19-55-57_20260524T195101-filetypes-zip_zip_control_textmetrics_leaves128.log) |
+| `c83384f046dcf22d` | zip_feat_kv_vocab_split_15k | ok | 0.9998 | 0.9965 | 0.9945 | 193 | [log](out/autocollie/runs/2026-05-24T19-57-18_20260524T195101-filetypes-zip_zip_feat_kv_vocab_split_15k.log) |
+| `b0d44eab9da0b7af` | zip_feat_text_encoding_metrics | ok | 0.9998 | 0.9962 | 0.9937 | 190 | [log](out/autocollie/runs/2026-05-24T20-00-31_20260524T195101-filetypes-zip_zip_feat_text_encoding_metrics.log) |
+| `893227be19578119` | zip_train_hardneg_005_12 | ok | 0.9998 | 0.9960 | 0.9876 | 68 | [log](out/autocollie/runs/2026-05-24T20-03-42_20260524T195101-filetypes-zip_zip_train_hardneg_005_12.log) |
+| `a8ae761c1d5b7545` | zip_train_scalepos_05 | ok | 0.9998 | 0.9960 | 0.9910 | 41 | [log](out/autocollie/runs/2026-05-24T20-04-51_20260524T195101-filetypes-zip_zip_train_scalepos_05.log) |
+| `de291511a844278a` | zip_profile_seedsearch_ensemble | ok | 0.9998 | 0.9964 | 0.9950 | 124 | [log](out/autocollie/runs/2026-05-24T20-05-33_20260524T195101-filetypes-zip_zip_profile_seedsearch_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_textmetrics_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Replicate best feature surface with text_metrics_full; tweak leaves to 128 to stabilize PR_AUC while keeping ROC_AUC flat.
+- **`zip_feat_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enable kv_vocab and kv_value_split to recover per-element signal in archive metadata, targeting PR_AUC improvement.
+- **`zip_feat_text_encoding_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_encoding family alongside text_metrics_full to capture obfuscation patterns in embedded scripts, aiming to boost recall@3 FP/M.
+- **`zip_train_hardneg_005_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction=0.05 and weight=12.0 to focus model on difficult benigns, targeting tail recall@3 FP/M gains.
+- **`zip_train_scalepos_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Down-weight positives with scale_pos_weight_mult=0.5 to suppress FP tail and improve recall@3 FP/M at deployed operating point.
+- **`zip_profile_seedsearch_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 …` — Use seed_search_k=3 with save_all_seeds=true to average predictions across seeds, reducing variance and stabilizing recall@3 FP/M.
+
+</details>
+
+## Cycle `20260525T050046-filetypes-zip` — 2026-05-25T05:00:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `131fb84ad31c75e1` | inherit_from_filetypes_zst_011ac2c6 | ok | 0.9998 | 0.9961 | 0.9933 | 85 | [log](out/autocollie/runs/2026-05-25T05-07-55_20260525T050046-filetypes-zip_inherit_from_filetypes_zst_011ac2c6.log) |
+| `ecb895a9265d023d` | zip_control_scalepos05_est350 | ok | 0.9998 | 0.9961 | 0.9925 | 14 | [log](out/autocollie/runs/2026-05-25T05-09-21_20260525T050046-filetypes-zip_zip_control_scalepos05_est350.log) |
+| `f19940ca237d1315` | zip_feat_kv20k_textmetrics | ok | 0.9998 | 0.9958 | 0.9890 | 96 | [log](out/autocollie/runs/2026-05-25T05-09-35_20260525T050046-filetypes-zip_zip_feat_kv20k_textmetrics.log) |
+| `15f56f5b7b4d0c8e` | zip_feat_lowbigram_tieredtri | ok | 0.9997 | 0.9957 | 0.9918 | 125 | [log](out/autocollie/runs/2026-05-25T05-11-11_20260525T050046-filetypes-zip_zip_feat_lowbigram_tieredtri.log) |
+| `8ae84aa31137b371` | zip_transfer_hardneg_005_8 | ok | 0.9998 | 0.9964 | 0.9924 | 42 | [log](out/autocollie/runs/2026-05-25T05-13-17_20260525T050046-filetypes-zip_zip_transfer_hardneg_005_8.log) |
+| `7bae34233c793286` | zip_seedsearch_k3_scalepos05 | ok | 0.9998 | 0.9960 | 0.9935 | 61 | [log](out/autocollie/runs/2026-05-25T05-13-59_20260525T050046-filetypes-zip_zip_seedsearch_k3_scalepos05.log) |
+| `e5515a55fd3408b8` | zip_abl_blindfold_textenc | ok | 0.9998 | 0.9960 | 0.9895 | 119 | [log](out/autocollie/runs/2026-05-25T05-15-00_20260525T050046-filetypes-zip_zip_abl_blindfold_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_zst_011ac2c6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/zst (key=011ac2c620804b65, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_scalepos05_est350`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline replicating best feature_env; increases estimators to 350 to improve PR_AUC convergence without altering the feature surface.
+- **`zip_feat_kv20k_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with value splitting and text_metrics_full to capture structural document signals, targeting PR_AUC gains from richer key-value and text features.
+- **`zip_feat_lowbigram_tieredtri`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 200 and enables tiered_crit_trigrams to capture rarer malicious patterns, aiming to boost recall@3FPM by surfacing low-frequency attack indicators.
+- **`zip_transfer_hardneg_005_8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfers hard-negative weighting strategy from sister routes; uses fraction 0.05 and weight 8.0 to sharpen tail recall@3FPM while preserving PR_AUC guardrails.
+- **`zip_seedsearch_k3_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies seed_search_k=3 to the scale_pos_weight_mult=0.5 config to average out seed variance and stabilize recall@3FPM gains across different random splits.
+- **`zip_abl_blindfold_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disables blindfold dropout and enables text_encoding to reduce training noise and add encoding signals, targeting higher ROC_AUC while keeping PR_AUC flat.
+
+</details>
+

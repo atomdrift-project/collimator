@@ -300,3 +300,99 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260524T050824-filetypes-zst` — 2026-05-24T05:08:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a30b07f6d1a71ff0` | inherit_from_filetypes_xml_051713c3 | ok | 1.0000 | 1.0000 | 1.0000 | 18 | [log](out/autocollie/runs/2026-05-24T05-14-05_20260524T050824-filetypes-zst_inherit_from_filetypes_xml_051713c3.log) |
+| `fd05e632b42d8250` | zst_control_baseline_train | ok | 1.0000 | 1.0000 | 1.0000 | 10 | [log](out/autocollie/runs/2026-05-24T05-14-23_20260524T050824-filetypes-zst_zst_control_baseline_train.log) |
+| `200f605dda54f98a` | zst_feat_kv_vocab_expansion | ok | 1.0000 | 1.0000 | 1.0000 | 16 | [log](out/autocollie/runs/2026-05-24T05-14-34_20260524T050824-filetypes-zst_zst_feat_kv_vocab_expansion.log) |
+| `a2f58d8e37bc79e4` | zst_feat_text_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 15 | [log](out/autocollie/runs/2026-05-24T05-14-50_20260524T050824-filetypes-zst_zst_feat_text_metrics_full.log) |
+| `609d4307473d8f76` | zst_feat_bigram_rare_transfer | ok | 1.0000 | 1.0000 | 1.0000 | 14 | [log](out/autocollie/runs/2026-05-24T05-15-06_20260524T050824-filetypes-zst_zst_feat_bigram_rare_transfer.log) |
+| `b1acbcb41a9d577f` | zst_train_hardneg_upweight | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-24T05-15-20_20260524T050824-filetypes-zst_zst_train_hardneg_upweight.log) |
+| `9ad5ddaa1913198a` | zst_train_reg_lambda_leaves | ok | 1.0000 | 1.0000 | 1.0000 | 4 | [log](out/autocollie/runs/2026-05-24T05-15-24_20260524T050824-filetypes-zst_zst_train_reg_lambda_leaves.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_baseline_train`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env to establish a stable baseline; aims to maintain PR_AUC and ROC_AUC while verifying matrix cache hits.
+- **`zst_feat_kv_vocab_expansion`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals in compressed payloads; aims to improve PR_AUC by adding discriminative structural features.
+- **`zst_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to detect obfuscation in extracted text; aims to improve recall@3 FP/M by capturing payload anomalies.
+- **`zst_feat_bigram_rare_transfer`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 250 and raises max to 8000 based on gz route success; aims to improve PR_AUC by capturing rarer co-occurrence patterns.
+- **`zst_train_hardneg_upweight`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard_negative_fraction=0.1 and weight=10 to focus on difficult benigns; aims to improve recall@3 FP/M by sharpening the decision boundary at low FPR.
+- **`zst_train_reg_lambda_leaves`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increases reg_lambda to 2.0 and num_leaves to 128 to control complexity; aims to improve ROC_AUC and PR_AUC by reducing overfitting on the saturated dataset.
+
+</details>
+
+## Cycle `20260524T131411-filetypes-zst` — 2026-05-24T13:14:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a30b07f6d1a71ff0` | inherit_from_filetypes_xml_051713c3 | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-24T13-19-05_20260524T131411-filetypes-zst_inherit_from_filetypes_xml_051713c3.log) |
+| `37e1d93d0b3022dc` | zst_control_baseline_train_v2 | ok | 1.0000 | 1.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-05-24T13-19-06_20260524T131411-filetypes-zst_zst_control_baseline_train_v2.log) |
+| `87a0ef596766b16e` | zst_feat_text_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-05-24T13-19-15_20260524T131411-filetypes-zst_zst_feat_text_metrics_full.log) |
+| `674244cf6383276a` | zst_feat_kv_vocab_split_v2 | ok | 1.0000 | 1.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-05-24T13-19-23_20260524T131411-filetypes-zst_zst_feat_kv_vocab_split_v2.log) |
+| `49c6a270a5563a65` | zst_feat_tiered_trigrams | ok | 1.0000 | 1.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-05-24T13-19-31_20260524T131411-filetypes-zst_zst_feat_tiered_trigrams.log) |
+| `238111a0b29807f5` | zst_train_hardneg_upweight_v2 | ok | 1.0000 | 1.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-05-24T13-19-40_20260524T131411-filetypes-zst_zst_train_hardneg_upweight_v2.log) |
+| `a741ab111046af70` | zst_seed_search_k3 | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-24T13-19-48_20260524T131411-filetypes-zst_zst_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_baseline_train_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline to maintain PR_AUC and ROC_AUC while testing higher tree capacity for stable recall@3FPM.
+- **`zst_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to capture document obfuscation patterns, aiming to improve recall@3FPM without degrading PR_AUC.
+- **`zst_feat_kv_vocab_split_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to extract structured metadata signals, targeting PR_AUC gains from fine-grained key-value pairs.
+- **`zst_feat_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams to model higher-order trait co-occurrences, aiming to boost recall@3FPM on complex samples.
+- **`zst_train_hardneg_upweight_v2`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative upweighting to focus on difficult benigns, targeting recall@3FPM improvement at the deployed operating point.
+- **`zst_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 to average out RNG variance, stabilizing recall@3FPM and preserving PR_AUC across different data splits.
+
+</details>
+
+## Cycle `20260525T002708-filetypes-zst` — 2026-05-25T00:27:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a30b07f6d1a71ff0` | inherit_from_filetypes_xml_051713c3 | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-25T00-32-24_20260525T002708-filetypes-zst_inherit_from_filetypes_xml_051713c3.log) |
+| `011ac2c620804b65` | zst_control_train_v3 | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-25T00-32-25_20260525T002708-filetypes-zst_zst_control_train_v3.log) |
+| `b90213a5610de9e7` | zst_feat_kv_vocab_split_v2 | ok | 1.0000 | 1.0000 | 1.0000 | 9 | [log](out/autocollie/runs/2026-05-25T00-32-27_20260525T002708-filetypes-zst_zst_feat_kv_vocab_split_v2.log) |
+| `945b2700d2e5dda9` | zst_feat_text_metrics_full | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-25T00-32-36_20260525T002708-filetypes-zst_zst_feat_text_metrics_full.log) |
+| `85c59fd2ac0101d2` | zst_feat_tiered_trigrams_v2 | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-25T00-32-38_20260525T002708-filetypes-zst_zst_feat_tiered_trigrams_v2.log) |
+| `a07b804754783d92` | zst_train_hardneg_upweight | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-25T00-32-40_20260525T002708-filetypes-zst_zst_train_hardneg_upweight.log) |
+| `a49d1980de2289e5` | zst_train_reg_depth64 | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-25T00-32-43_20260525T002708-filetypes-zst_zst_train_reg_depth64.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_train_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — baseline feature set with conservative training knobs to maintain PR_AUC and ROC_AUC guardrails
+- **`zst_feat_kv_vocab_split_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — enable kv_vocab and kv_value_split to capture structured archive metadata for PR_AUC gain
+- **`zst_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — promote text_metrics_full to detect obfuscation patterns in zst payloads, targeting recall@3FPM
+- **`zst_feat_tiered_trigrams_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — add tiered_crit_trigrams to capture higher-order trait co-occurrences for PR_AUC improvement
+- **`zst_train_hardneg_upweight`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — upweight hard negatives to sharpen decision boundary at low FPR, aiming to boost recall@3FPM
+- **`zst_train_reg_depth64`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=64 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — reduce num_leaves and increase reg_lambda to prevent overfitting, preserving ROC_AUC while stabilizing PR_AUC
+
+</details>
+
+## Cycle `20260525T080850-filetypes-zst` — 2026-05-25T08:08:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a30b07f6d1a71ff0` | inherit_from_filetypes_xml_051713c3 | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-05-25T08-14-46_20260525T080850-filetypes-zst_inherit_from_filetypes_xml_051713c3.log) |
+| `ead9486d76066cdb` | zst_control_baseline_v2 | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-25T08-14-48_20260525T080850-filetypes-zst_zst_control_baseline_v2.log) |
+| `08add01b4df8bc9a` | zst_train_hardneg_01_10 | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-25T08-14-52_20260525T080850-filetypes-zst_zst_train_hardneg_01_10.log) |
+| `5c8e2e992b90bcca` | zst_train_posweight_05 | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-25T08-14-55_20260525T080850-filetypes-zst_zst_train_posweight_05.log) |
+| `eb2b35d751d379d2` | zst_feat_kv_vocab_split_v3 | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-25T08-14-58_20260525T080850-filetypes-zst_zst_feat_kv_vocab_split_v3.log) |
+| `601bf6e22ee6fdf1` | zst_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-05-25T08-15-00_20260525T080850-filetypes-zst_zst_feat_text_metrics_enc.log) |
+| `3785a492b14aa82e` | zst_feat_tiered_trigrams_lowfreq | ok | 1.0000 | 1.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-05-25T08-15-09_20260525T080850-filetypes-zst_zst_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_xml_051713c3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/xml (key=051713c309b94918, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_baseline_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env to verify matrix cache hit and establish stable PR_AUC floor.
+- **`zst_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to improve ranking at low FPR, targeting recall@3 FP/M.
+- **`zst_train_posweight_05`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Downweight positives to reduce false positives at the tail, improving recall@3 FP/M resolution.
+- **`zst_feat_kv_vocab_split_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab with value splitting to capture granular metadata signals, aiming to lift PR_AUC.
+- **`zst_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add full text metrics and encoding features to capture structural obfuscation patterns, targeting PR_AUC gain.
+- **`zst_feat_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and enable tiered crit trigrams to capture rarer high-signal patterns, improving tail recall@3 FP/M.
+
+</details>
+
