@@ -687,6 +687,7 @@ def compute_per_filetype_metrics(
     severity: str = "hostile",
     with_ci: bool = True,
     include_stacked: bool = True,
+    calib_parallelism: int = 1,
 ) -> dict[str, Any]:
     score_table = np.load(score_table_path, allow_pickle=True)
     scores: np.ndarray = score_table["scores"]
@@ -715,11 +716,33 @@ def compute_per_filetype_metrics(
     # Per-route isotonic calibration via 5-fold CV on the (possibly test-only)
     # row population.  Result is a parallel array of probability-domain scores
     # the same shape as `scores`, used by calibrated_max and specialist_priority
-    # ensemble strategies.  Costs ~50 isotonic fits × 5 folds; bounded.
-    LOG.info("fitting per-route isotonic calibrators (5-fold CV) over %d rows", labels.size)
+    # ensemble strategies.  Costs ~50 isotonic fits × 5 folds.
+    #
+    # Each route's calibration is independent — embarrassingly parallel. Run
+    # them across a ProcessPoolExecutor so we don't sit serially on sklearn's
+    # single-threaded IsotonicRegression.fit for ~46 routes (was the dominant
+    # deploy-time wall-clock after diagnostics was gated).
+    LOG.info("fitting per-route isotonic calibrators (5-fold CV) over %d rows (parallelism=%d)",
+             labels.size, calib_parallelism)
     calibrated = np.full_like(scores, np.nan, dtype=np.float32)
-    for r_idx, route_name in enumerate(route_names):
-        calibrated[r_idx] = _calibrate_route_scores_cv(scores[r_idx], labels)
+    if calib_parallelism > 1 and len(route_names) > 1:
+        from concurrent.futures import ProcessPoolExecutor  # noqa: PLC0415
+        # Cap workers at route count (no benefit beyond) and cpu count.
+        n_workers = min(calib_parallelism, len(route_names))
+        # Build per-route argument tuples; ProcessPoolExecutor will pickle.
+        # Each tuple is ~3 MB (one route's float32 scores over 588k rows) so
+        # transfer cost is negligible vs the ~seconds-per-route fit.
+        with ProcessPoolExecutor(max_workers=n_workers) as pool:
+            futures = {
+                pool.submit(_calibrate_route_scores_cv, scores[r_idx], labels): r_idx
+                for r_idx in range(len(route_names))
+            }
+            for fut in futures:
+                r_idx = futures[fut]
+                calibrated[r_idx] = fut.result()
+    else:
+        for r_idx, route_name in enumerate(route_names):
+            calibrated[r_idx] = _calibrate_route_scores_cv(scores[r_idx], labels)
     LOG.info("calibration complete; computing per-filetype metrics")
 
     with open(route_policies_path) as f:
@@ -909,6 +932,7 @@ def compute_per_filetype_metrics_honest(
     severity: str = "hostile",
     with_ci: bool = True,
     include_stacked: bool = True,
+    calib_parallelism: int = 1,
 ) -> dict[str, Any]:
     """Run the metric pipeline twice — once on the dev bucket, once on
     the test bucket — and merge so that ensemble-strategy selection
@@ -933,6 +957,7 @@ def compute_per_filetype_metrics_honest(
         severity=severity,
         with_ci=with_ci,
         include_stacked=include_stacked,
+        calib_parallelism=calib_parallelism,
     )
     LOG.info("computing dev-partition metrics (strategy selection)")
     dev_out = compute_per_filetype_metrics(
@@ -945,6 +970,7 @@ def compute_per_filetype_metrics_honest(
         severity=severity,
         with_ci=False,                # CIs unused for selection; faster.
         include_stacked=include_stacked,
+        calib_parallelism=calib_parallelism,
     )
 
     test_out["schema"] = "azoth.per_filetype_metrics.v2"
@@ -1064,11 +1090,21 @@ def main() -> int:
                         help="Skip stacked LR/XGBoost ensemble diagnostics. "
                              "Core general/specialist/ensemble metrics are "
                              "still computed.")
+    parser.add_argument("--calib-parallelism", type=int, default=0,
+                        help="Worker processes for per-route isotonic "
+                             "calibration. 0 (default) auto-picks "
+                             "min(cpu_count, n_routes) capped at 16. Set "
+                             "to 1 to force serial.")
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format="%(message)s")
     root = args.azoth_root
     cache_dir = None if args.no_test_mask_cache else args.test_mask_cache_dir
+    if args.calib_parallelism <= 0:
+        import os as _os  # noqa: PLC0415
+        calib_parallelism = min(_os.cpu_count() or 1, 16)
+    else:
+        calib_parallelism = args.calib_parallelism
     if args.db:
         # Honest: pick ensemble strategy on dev, report on test.
         metrics = compute_per_filetype_metrics_honest(
@@ -1080,6 +1116,7 @@ def main() -> int:
             severity=args.severity,
             with_ci=not args.no_ci,
             include_stacked=not args.no_stacked,
+            calib_parallelism=calib_parallelism,
         )
     else:
         # Full-corpus mode (no partition split available). Strategy is
@@ -1094,6 +1131,7 @@ def main() -> int:
             severity=args.severity,
             with_ci=not args.no_ci,
             include_stacked=not args.no_stacked,
+            calib_parallelism=calib_parallelism,
         )
     out_path = root / "per_filetype_metrics.json"
     with open(out_path, "w") as f:

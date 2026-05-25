@@ -104,33 +104,31 @@ APPLES_MIN_MALWARE_HOLDOUT: int = 500
 APPLES_MIN_BENIGN_HOLDOUT: int = 200
 
 
-LITMUS_EXTRACTED_FILETYPES: frozenset[str] = frozenset({
-    "7z",
-    "apk",
+# Raw single-file compression formats — these have no multi-file
+# container structure for a specialist to learn from. Litmus decompresses
+# them and re-routes the single inner file; the wrapper itself has no
+# signal of its own. Skip specialist training entirely.
+#
+# Archive/container formats (tar, tar.gz, zip, 7z, deb, apk, etc.) are
+# DIFFERENT: even though litmus extracts their contents and re-routes
+# the inner files, the container structure (file count, layout,
+# member-name patterns, oversized headers, etc.) carries malware
+# signal that a specialist can learn. Those are NOT in this set and
+# DO get trained.
+RAW_COMPRESSED_FILETYPES: frozenset[str] = frozenset({
     "bz2",
-    "cab",
-    "crx",
-    "deb",
-    "egg",
-    "gem",
     "gz",
-    "ipa",
-    "npm",
-    "nupkg",
-    "rar",
-    "tar",
-    "tar.bz2",
-    "tar.gz",
-    "tar.xz",
-    "tar.zst",
-    "tgz",
-    "vsix",
-    "whl",
-    "xpi",
+    "lzma",
     "xz",
-    "zip",
     "zst",
 })
+
+# Backwards-compatible alias. Older code (and possibly downstream
+# scripts) still imports LITMUS_EXTRACTED_FILETYPES; keep it as the
+# raw-compressed set so existing skip semantics for those formats
+# stay intact. Archive formats that USED to be in this set (tar,
+# tar.gz, zip, 7z, deb, ...) now train specialists.
+LITMUS_EXTRACTED_FILETYPES: frozenset[str] = RAW_COMPRESSED_FILETYPES
 
 
 DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
@@ -383,12 +381,15 @@ def _eligible_filetypes(
         rows = data._execute(conn, query, params)  # noqa: SLF001
         for file_type, bad, good, total in rows:
             file_type_str = str(file_type)
-            if file_type_str in LITMUS_EXTRACTED_FILETYPES:
-                # Litmus has already decomposed and re-graded the contents
-                # at this point; the container itself carries no signal a
-                # specialist could learn that the general model lacks.
+            if file_type_str in RAW_COMPRESSED_FILETYPES:
+                # Raw single-file compression: litmus decompresses and
+                # re-routes the inner file. The wrapper itself has no
+                # multi-file container structure for a specialist to
+                # learn from. Archive formats (tar, tar.gz, zip, 7z,
+                # deb, etc.) DO have container-level signal and are
+                # NOT in this set; they get specialists trained.
                 LOG.info(
-                    "%s: skipping filetype specialist (litmus-extracted; %d bad, %d good)",
+                    "%s: skipping filetype specialist (raw-compressed; %d bad, %d good)",
                     file_type_str, int(bad), int(good),
                 )
                 continue

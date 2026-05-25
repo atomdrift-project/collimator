@@ -305,6 +305,23 @@ def _save_cache(cache_path: Path, row_ids: np.ndarray, probs: np.ndarray) -> Non
     tmp.rename(cache_path)
 
 
+def _strip_nan(value):
+    """Recursively replace non-finite floats with None so the output is
+    standards-compliant JSON. Mirrors the helper used in other azoth
+    scripts (azoth_specialist_suite, compute_routed_metrics) — same
+    rationale: Go's strict JSON parser rejects literal NaN/Infinity.
+    """
+    if isinstance(value, float):
+        if math.isnan(value) or math.isinf(value):
+            return None
+        return value
+    if isinstance(value, dict):
+        return {k: _strip_nan(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_strip_nan(v) for v in value]
+    return value
+
+
 def _is_v2_cache(npz: np.lib.npyio.NpzFile) -> bool:
     """v1 caches carry a 'labels' array; v2 does not. Used to detect
     old-schema caches and force a fresh populate."""
@@ -636,6 +653,41 @@ def main() -> int:
         raw = args.row_ids_file.read_text().split()
         subset_ids = np.asarray([int(x) for x in raw if x.strip()], dtype=np.int64)
 
+    # Populate-on-miss: when the caller passes a subset of row IDs that
+    # don't all overlap with the cache's coverage (which only stores
+    # test-partition rows for this route), score the missing rows on
+    # demand and merge them into the cache. Without this, autocollie's
+    # apples-to-apples scoring silently returned n_rows=0 whenever the
+    # candidate's holdout rows (its internal screen-time split) fell
+    # outside the deployed model's test-partition population — which
+    # is the common case, since the candidate's holdout is drawn from
+    # its own training pool, not from the deployed test bucket. The
+    # screen gate would then fall back to legacy promoted_baselines
+    # comparison without telling anyone the apples-to-apples evidence
+    # was missing.
+    if subset_ids is not None and subset_ids.size:
+        cache_set = set(int(x) for x in row_ids.tolist())
+        missing = [int(x) for x in subset_ids.tolist() if int(x) not in cache_set]
+        if missing:
+            LOG.info(
+                "subset has %d row IDs not in cache; scoring on-demand and "
+                "extending cache (cache had %d rows)",
+                len(missing), int(row_ids.size),
+            )
+            new_probs = _extract_and_predict(
+                route_dir=route_dir, db_path=args.db,
+                row_ids=missing, workers=args.workers,
+            )
+            new_row_ids = np.asarray(missing, dtype=np.int64)
+            row_ids = np.concatenate([row_ids, new_row_ids])
+            probs = np.concatenate([probs, new_probs])
+            _save_cache(cache_path, row_ids, probs)
+            sidecar = {**(sidecar or {})}
+            sidecar["max_id_at_populate"] = int(row_ids.max())
+            sidecar["n_rows"] = int(row_ids.size)
+            sidecar["last_extended_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            _save_sidecar(sidecar_path, sidecar)
+
     metrics = _metrics(row_ids, probs, db_path=args.db, subset_ids=subset_ids)
     metrics["model_hash_used"] = model_hash
     metrics["route"] = args.route
@@ -643,7 +695,17 @@ def main() -> int:
     metrics["cache_max_id_at_populate"] = int(sidecar.get("max_id_at_populate", 0))
     metrics["cache_n_rows"] = int(sidecar.get("n_rows", 0))
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(metrics, indent=2, default=str))
+    # Strip non-finite floats (NaN, ±inf) before serializing — Python's
+    # json.dumps emits them as literal NaN/Infinity tokens which aren't
+    # valid JSON and break Go's strict parser on the autocollie side.
+    # The script emits math.nan from _metrics() for recall_at_fp_per_million_X
+    # when there are no eligible scores; replace those with None (=> JSON
+    # null) so the consumer can detect-and-skip without parse failures.
+    # Also pass allow_nan=False so any non-finite we missed crashes here
+    # loudly rather than producing invalid JSON.
+    args.output.write_text(
+        json.dumps(_strip_nan(metrics), indent=2, default=str, allow_nan=False)
+    )
     LOG.info("wrote %s", args.output)
     return 0
 

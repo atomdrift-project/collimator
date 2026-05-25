@@ -1874,6 +1874,25 @@ autocollie-screen: venv check-db autocollie-build
 # Confirm a screening winner by re-running with a different seed.
 # Usage: make autocollie-confirm KEY=<16-hex experiment_key> [SEED=43]
 CONFIRM_SEED ?= 43
+# Phase-1 favorites report: scan autocollie's screen-run JSONs for
+# candidates that look promising under CURRENT gate logic but were never
+# promoted (rejected by older gates, broke at confirm/promote, etc.).
+# Read-only — no retraining. Use this to spot candidates worth re-running
+# manually via `make autocollie-confirm KEY=...` + `make autocollie-promote`.
+#
+# Usage:
+#   make autocollie-favorites-report                 # top 10 per route
+#   make autocollie-favorites-report TOP=5
+#   make autocollie-favorites-report ROUTE=filetypes/pdf
+#   make autocollie-favorites-report REQUIRE_APPLES=1  # only apples-to-apples eligible
+autocollie-favorites-report: venv
+	$(PYTHON) scripts/autocollie_favorites.py \
+		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--baselines $(AZOTH_ROOT)/.autocollie/promoted_baselines.json \
+		--top $(or $(TOP),10) \
+		$(if $(ROUTE),--route $(ROUTE),) \
+		$(if $(REQUIRE_APPLES),--require-apples,)
+
 autocollie-confirm: venv check-db autocollie-build
 	@test -n "$(KEY)" || { echo "error: set KEY=<16-hex experiment_key>"; exit 1; }
 	$(AUTOCOLLIE_BIN) confirm \

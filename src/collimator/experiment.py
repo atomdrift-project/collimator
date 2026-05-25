@@ -539,8 +539,18 @@ def _print_test_metrics(
             f"5={rec_fp['recall_at_fp_per_million_5']:.4f} "
             f"9={rec_fp['recall_at_fp_per_million_9']:.4f} "
             f"(n_benign={rec_fp['n_benign_holdout']}, "
-            f"min_resolvable={rec_fp['min_observable_fp_per_million']:.1f}/M)"
+            f"min_resolvable={_format_min_observable(rec_fp['min_observable_fp_per_million'])})"
         )
+
+
+def _format_min_observable(value: float | None) -> str:
+    """Format the min_observable_fp_per_million metric for the human-readable
+    summary log line. Handles the `None` (n_benign=0, FP/M unmeasurable)
+    case explicitly — see _recall_at_fp_per_million_block for context.
+    """
+    if value is None:
+        return "unmeasurable (n_ben=0)"
+    return f"{value:.1f}/M"
 
 
 # k values reported by `_recall_at_fp_per_million`.  Recall@3 FP/M is the
@@ -571,7 +581,15 @@ def _recall_at_fp_per_million(
     # FP budget to spend.  Reporting the floor lets downstream gates pick the
     # smallest meaningful k for the route instead of optimizing a metric the
     # holdout can't actually distinguish.
-    min_observable = (1_000_000.0 / n_benign) if n_benign > 0 else float("inf")
+    #
+    # When n_benign == 0 the floor is mathematically infinite (no FP is
+    # resolvable), but `float("inf")` is not JSON-compliant — Python's
+    # encoder emits it as the literal `Infinity` token, which crashes
+    # downstream readers using `allow_nan=False` (the autocollie run JSON
+    # writer + Go's strict parser).  Emit `None` (=> JSON null) instead,
+    # documenting "FP/M is unmeasurable here." Downstream code that uses
+    # this metric must handle the None case.
+    min_observable: float | None = (1_000_000.0 / n_benign) if n_benign > 0 else None
     out: dict[str, float | int] = {
         "n_benign_holdout": n_benign,
         "n_malware_holdout": n_malware,

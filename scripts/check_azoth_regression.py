@@ -231,6 +231,11 @@ def main() -> int:
     # per-deploy noise. Reported separately so the user can see the two
     # gate types distinctly.
     lwm_regressions: list[str] = []
+    # LWM wins are symmetric to lwm_regressions — informational only (don't
+    # gate the deploy), but reported so a net-improvement candidate doesn't
+    # look one-sidedly bad. The threshold mirrors --lwm-tolerance: a gain
+    # large enough that a regression of the same size would block.
+    lwm_wins: list[str] = []
     ensemble_wins: list[str] = []
     route_drops: list[str] = []         # informational; doesn't fail the gate
     route_wins: list[str] = []          # informational
@@ -306,7 +311,10 @@ def main() -> int:
         # gate above): hard floor against a pinned reference. No CI
         # filter — the LWM is the line we promised never to cross,
         # and a drop bigger than --lwm-tolerance against it is a
-        # block by definition.
+        # block by definition. Symmetric wins are reported too so the
+        # output isn't one-sidedly bad: a candidate with 12 LWM-floor
+        # regressions and 8 LWM-ceiling improvements is a different
+        # story than 12 regressions and 0 improvements.
         if lwm_ft and _is_finite_number(s_recall):
             lwm_entry = lwm_ft.get(ft)
             lwm_l = ((lwm_entry or {}).get("deployed_or_by_level") or {}).get(level_key) or {}
@@ -318,6 +326,11 @@ def main() -> int:
                         f"{ft}: L{args.level} {args.severity} ENSEMBLE recall dropped {-lwm_delta*100:.2f}pp "
                         f"BELOW LOW-WATER-MARK ({float(lwm_recall)*100:.2f}% → {float(s_recall)*100:.2f}%; "
                         f"LWM tolerance {args.lwm_tolerance*100:.2f}pp)",
+                    )
+                elif lwm_delta > args.lwm_tolerance:
+                    lwm_wins.append(
+                        f"{ft}: L{args.level} {args.severity} ensemble recall +{lwm_delta*100:.2f}pp "
+                        f"above LWM ({float(lwm_recall)*100:.2f}% → {float(s_recall)*100:.2f}%)",
                     )
 
         # Per-route attribution. ``slice_metrics.routes.<route>.recall_at_3fp``
@@ -371,6 +384,15 @@ def main() -> int:
         print("per-route regressions (informational; does not block deploy):")
         for line in route_drops:
             print(line)
+
+    if lwm_wins:
+        print()
+        print(
+            f"{len(lwm_wins)} low-water-mark improvement(s) "
+            f"(>{args.lwm_tolerance*100:.2f}pp above LWM, informational):",
+        )
+        for w in lwm_wins:
+            print(f"  + {w}")
 
     if lwm_regressions:
         print()
