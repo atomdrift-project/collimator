@@ -47,16 +47,25 @@ def _copy_route(src: Path, dst: Path) -> bool:
         return False
     if not (src / "feature_spec.json").is_file():
         return False
-    dst.mkdir(parents=True, exist_ok=True)
-    # Copy model artifacts in whichever layout the source uses; the relative
-    # path is preserved so litmus loads the same layout it sees during
-    # validation.
+    # The deployed bundle is ONNX-only — litmus no longer loads .txt/.json.
+    # model_files() already prefers .onnx per seed, so any non-ONNX artifact
+    # here means that seed has no .onnx sibling: refuse to deploy it.
     try:
-        for model_path in bundle.model_files(src):
-            rel = model_path.relative_to(src)
-            _copy_if_exists(model_path, dst / rel)
+        model_paths = bundle.model_files(src)
     except ValueError as exc:
         raise SystemExit(f"{src}: {exc}") from exc
+    non_onnx = sorted(p.name for p in model_paths if p.suffix != ".onnx")
+    if non_onnx:
+        raise SystemExit(
+            f"{src}: ONNX-only deploy but route ships non-ONNX model(s) {non_onnx}; "
+            f"regenerate so every seed has an .onnx sibling (litmus dropped the "
+            f"LightGBM/XGBoost loaders)."
+        )
+    dst.mkdir(parents=True, exist_ok=True)
+    # Preserve the source layout (top-level or models/) so litmus loads the
+    # same layout it sees during validation.
+    for model_path in model_paths:
+        _copy_if_exists(model_path, dst / model_path.relative_to(src))
     for name in ROUTE_AUX_FILES:
         _copy_if_exists(src / name, dst / name)
     return True

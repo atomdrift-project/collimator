@@ -1,62 +1,13 @@
-# Promote REJECTED — `388062cdae015a34` on `filetypes/tar.gz`
+# Promote PASS — `388062cdae015a34` on `filetypes/tar.gz`
 
-Generated 2026-05-24T08:36:30Z
+Generated 2026-05-27T02:48:01Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-24T08-32-32_20260524T083032-promote-388062cdae015a34_azoth-validate.log; tail: wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/global_policy_metrics.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/global_policy_metrics.md
-.venv/bin/python scripts/compute_routed_metrics.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34 --db postgres://hopper@localhost:5432/hopper --no-ci --no-stacked 
-computing test-partition metrics (reporting)
-loaded cached test-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/test-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-test bucket: 588814/4731967 rows (12.44%)
-fitting per-route isotonic calibrators (5-fold CV) over 588814 rows (parallelism=16)
-calibration complete; computing per-filetype metrics
-filetypes/xlsb: 0 rows in score table; skipping
-computing dev-partition metrics (strategy selection)
-loaded cached dev-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/dev-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-dev bucket: 589608/4731967 rows (12.46%)
-fitting per-route isotonic calibrators (5-fold CV) over 589608 rows (parallelism=16)
-calibration complete; computing per-filetype metrics
-filetypes/xlsb: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/per_filetype_metrics.json (filetypes: 78, filegroups: 0)
-.venv/bin/python scripts/azoth_route_policy_eval.py \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/score_table.npz \
-	--general-scores /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/general/threshold_scores.npz \
-	--route-policies /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policies.json \
-	--partition test \
-	--output-md /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policy_eval_oof.md \
-	--output-json /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policy_eval_oof.md
-.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34
-staged runtime azoth bundle: /tmp/tmp.hQW12Db3IW
-azoth bundle ok: /tmp/tmp.hQW12Db3IW
-
-12 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - c: L3 hostile ENSEMBLE recall dropped 0.91pp BELOW LOW-WATER-MARK (10.93% → 10.02%; LWM tolerance 0.90pp)
-  - csharp: L3 hostile ENSEMBLE recall dropped 2.14pp BELOW LOW-WATER-MARK (27.35% → 25.21%; LWM tolerance 0.90pp)
-  - docx: L3 hostile ENSEMBLE recall dropped 2.27pp BELOW LOW-WATER-MARK (73.86% → 71.59%; LWM tolerance 0.90pp)
-  - gz: L3 hostile ENSEMBLE recall dropped 3.47pp BELOW LOW-WATER-MARK (31.79% → 28.32%; LWM tolerance 0.90pp)
-  - javascript: L3 hostile ENSEMBLE recall dropped 5.71pp BELOW LOW-WATER-MARK (71.91% → 66.20%; LWM tolerance 0.90pp)
-  - kotlin: L3 hostile ENSEMBLE recall dropped 4.39pp BELOW LOW-WATER-MARK (57.06% → 52.67%; LWM tolerance 0.90pp)
-  - pe: L3 hostile ENSEMBLE recall dropped 3.26pp BELOW LOW-WATER-MARK (65.21% → 61.96%; LWM tolerance 0.90pp)
-  - powershell: L3 hostile ENSEMBLE recall dropped 8.85pp BELOW LOW-WATER-MARK (38.46% → 29.62%; LWM tolerance 0.90pp)
-  - pptx: L3 hostile ENSEMBLE recall dropped 13.64pp BELOW LOW-WATER-MARK (22.73% → 9.09%; LWM tolerance 0.90pp)
-  - python: L3 hostile ENSEMBLE recall dropped 2.73pp BELOW LOW-WATER-MARK (67.00% → 64.28%; LWM tolerance 0.90pp)
-  - tar: L3 hostile ENSEMBLE recall dropped 14.00pp BELOW LOW-WATER-MARK (76.00% → 62.00%; LWM tolerance 0.90pp)
-  - zip: L3 hostile ENSEMBLE recall dropped 1.38pp BELOW LOW-WATER-MARK (41.99% → 40.61%; LWM tolerance 0.90pp)
-
-compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
-
-blocked by: low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[1]: *** [Makefile:1117: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+full-train holds — PR_AUC 0.9994 -> 0.9994, AUC 0.9987 -> 0.9988, Brier 0.0106 -> 0.0095
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9994)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
@@ -67,57 +18,127 @@ make[1]: Leaving directory '/home/t/collimator')
 | ROC AUC | 0.9987 | 0.9988 | 0.9988 |
 | F1 | 0.9913 | 0.9921 | 0.9914 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-24T08-32-32_20260524T083032-promote-388062cdae015a34_azoth-validate.log; tail: wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/global_policy_metrics.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/global_policy_metrics.md
-.venv/bin/python scripts/compute_routed_metrics.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34 --db postgres://hopper@localhost:5432/hopper --no-ci --no-stacked 
-computing test-partition metrics (reporting)
-loaded cached test-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/test-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-test bucket: 588814/4731967 rows (12.44%)
-fitting per-route isotonic calibrators (5-fold CV) over 588814 rows (parallelism=16)
-calibration complete; computing per-filetype metrics
-filetypes/xlsb: 0 rows in score table; skipping
-computing dev-partition metrics (strategy selection)
-loaded cached dev-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/dev-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-dev bucket: 589608/4731967 rows (12.46%)
-fitting per-route isotonic calibrators (5-fold CV) over 589608 rows (parallelism=16)
-calibration complete; computing per-filetype metrics
-filetypes/xlsb: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/per_filetype_metrics.json (filetypes: 78, filegroups: 0)
-.venv/bin/python scripts/azoth_route_policy_eval.py \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/score_table.npz \
-	--general-scores /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/general/threshold_scores.npz \
-	--route-policies /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policies.json \
-	--partition test \
-	--output-md /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policy_eval_oof.md \
-	--output-json /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/route_policy_eval_oof.md
-.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34
-staged runtime azoth bundle: /tmp/tmp.hQW12Db3IW
-azoth bundle ok: /tmp/tmp.hQW12Db3IW
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-12 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - c: L3 hostile ENSEMBLE recall dropped 0.91pp BELOW LOW-WATER-MARK (10.93% → 10.02%; LWM tolerance 0.90pp)
-  - csharp: L3 hostile ENSEMBLE recall dropped 2.14pp BELOW LOW-WATER-MARK (27.35% → 25.21%; LWM tolerance 0.90pp)
-  - docx: L3 hostile ENSEMBLE recall dropped 2.27pp BELOW LOW-WATER-MARK (73.86% → 71.59%; LWM tolerance 0.90pp)
-  - gz: L3 hostile ENSEMBLE recall dropped 3.47pp BELOW LOW-WATER-MARK (31.79% → 28.32%; LWM tolerance 0.90pp)
-  - javascript: L3 hostile ENSEMBLE recall dropped 5.71pp BELOW LOW-WATER-MARK (71.91% → 66.20%; LWM tolerance 0.90pp)
-  - kotlin: L3 hostile ENSEMBLE recall dropped 4.39pp BELOW LOW-WATER-MARK (57.06% → 52.67%; LWM tolerance 0.90pp)
-  - pe: L3 hostile ENSEMBLE recall dropped 3.26pp BELOW LOW-WATER-MARK (65.21% → 61.96%; LWM tolerance 0.90pp)
-  - powershell: L3 hostile ENSEMBLE recall dropped 8.85pp BELOW LOW-WATER-MARK (38.46% → 29.62%; LWM tolerance 0.90pp)
-  - pptx: L3 hostile ENSEMBLE recall dropped 13.64pp BELOW LOW-WATER-MARK (22.73% → 9.09%; LWM tolerance 0.90pp)
-  - python: L3 hostile ENSEMBLE recall dropped 2.73pp BELOW LOW-WATER-MARK (67.00% → 64.28%; LWM tolerance 0.90pp)
-  - tar: L3 hostile ENSEMBLE recall dropped 14.00pp BELOW LOW-WATER-MARK (76.00% → 62.00%; LWM tolerance 0.90pp)
-  - zip: L3 hostile ENSEMBLE recall dropped 1.38pp BELOW LOW-WATER-MARK (41.99% → 40.61%; LWM tolerance 0.90pp)
+The candidate bundle lives at:
 
-compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+```
+/home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34
+```
 
-blocked by: low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+## Candidate knobs (raw EXP_* form)
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[1]: *** [Makefile:1117: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=2
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0
+EXP_HARD_NEGATIVE_WEIGHT=1
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=0
+EXP_KV_VOCAB_MAX=5000
+EXP_LEARNING_RATE=0.02
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=64
+EXP_NUM_THREADS=64
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1.5
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=0
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
+
+## To deploy (HUMAN)
+
+Read `/home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
+
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-tar.gz-388062cdae015a34
+```
+
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

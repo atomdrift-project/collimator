@@ -420,9 +420,9 @@ def main() -> int:
         default=None,
         help="Instead of invoking `make experiment`, run an arbitrary command "
              "with the resolved env vars in its environment. Use to give other "
-             "tools (fixture generators, ad-hoc scripts) the same feature/env "
-             "settings the deployed model was trained with. Example: "
-             "azoth_train_best.py --exec python -m collimator fixture --db $DB",
+             "tools (ad-hoc scripts) the same feature/env settings the deployed "
+             "model was trained with. Example: "
+             "azoth_train_best.py --exec python scripts/gen_route_extraction_fixture.py --db $DB",
     )
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()

@@ -426,3 +426,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T031448-filetypes-php` — 2026-05-28T03:14:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `79d369eaf67d608e` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9924 | 0.9971 | 0.9787 | 21 | [log](out/autocollie/runs/2026-05-28T03-21-26_20260528T031448-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3f4d6b3124dfbde7` | php_control_extra_trees_lr003 | ok | 0.9924 | 0.9968 | 0.9810 | 16 | [log](out/autocollie/runs/2026-05-28T03-21-53_20260528T031448-filetypes-php_php_control_extra_trees_lr003.log) |
+| `59c0c8c9e28e2d42` | php_feat_kv_textenc_vocab | ok | 0.9911 | 0.9967 | 0.9765 | 17 | [log](out/autocollie/runs/2026-05-28T03-22-10_20260528T031448-filetypes-php_php_feat_kv_textenc_vocab.log) |
+| `1872fe207e1d8a74` | php_feat_lowfreq_bigrams_50 | ok | 0.9920 | 0.9973 | 0.9789 | 17 | [log](out/autocollie/runs/2026-05-28T03-22-28_20260528T031448-filetypes-php_php_feat_lowfreq_bigrams_50.log) |
+| `53b7b0e78235b67b` | php_train_scale05_maxrecall | ok | 0.9898 | 0.9968 | 0.9692 | 4 | [log](out/autocollie/runs/2026-05-28T03-22-46_20260528T031448-filetypes-php_php_train_scale05_maxrecall.log) |
+| `35b58ddf4867893b` | php_feat_text_metrics_full | ok | 0.9914 | 0.9969 | 0.9788 | 15 | [log](out/autocollie/runs/2026-05-28T03-22-51_20260528T031448-filetypes-php_php_feat_text_metrics_full.log) |
+| `44eb4be45c8f84b1` | php_retry_trigrams_seed123 | ok | 0.9882 | 0.9961 | 0.9735 | 17 | [log](out/autocollie/runs/2026-05-28T03-23-07_20260528T031448-filetypes-php_php_retry_trigrams_seed123.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_extra_trees_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent strong feature surface; tests if lower LR with extra_trees improves PR_AUC while keeping ROC flat.
+- **`php_feat_kv_textenc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture PHP-specific string patterns and encoding artifacts, aiming to boost PR_AUC and recall@3FPM.
+- **`php_feat_lowfreq_bigrams_50`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 to include rarer PHP-specific n-grams, targeting PR_AUC gains from long-tail malicious patterns.
+- **`php_train_scale05_maxrecall`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Down-weights positives to reduce FPs at low FPR, directly optimizing recall@3FPM via max_recall_at_fpr threshold mode.
+- **`php_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture structural text anomalies in PHP scripts, aiming to improve PR_AUC by distinguishing obfuscated malware from benign scripts.
+- **`php_retry_trigrams_seed123`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Retries strong historical trigram config with a new seed to verify signal stability and rule out seed noise for PR_AUC.
+
+</details>
+
+## Cycle `20260528T093248-filetypes-php` — 2026-05-28T09:32:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `79d369eaf67d608e` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9924 | 0.9971 | 0.9787 | 1 | [log](out/autocollie/runs/2026-05-28T09-38-58_20260528T093248-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `0976edab55c5f45c` | php_control_et_lr002_leaves112 | ok | 0.9912 | 0.9964 | 0.9731 | 25 | [log](out/autocollie/runs/2026-05-28T09-39-01_20260528T093248-filetypes-php_php_control_et_lr002_leaves112.log) |
+| `3a11506f24c2ca25` | php_feat_textenc_metrics_full | ok | 0.9915 | 0.9969 | 0.9799 | 42 | [log](out/autocollie/runs/2026-05-28T09-39-27_20260528T093248-filetypes-php_php_feat_textenc_metrics_full.log) |
+| `126c049b04ce7d3b` | php_feat_kv_vocab_expanded | ok | 0.9916 | 0.9969 | 0.9713 | 25 | [log](out/autocollie/runs/2026-05-28T09-40-10_20260528T093248-filetypes-php_php_feat_kv_vocab_expanded.log) |
+| `ed002f0e486b2184` | php_transfer_lowfreq_bigrams | ok | 0.9923 | 0.9971 | 0.9811 | 30 | [log](out/autocollie/runs/2026-05-28T09-40-35_20260528T093248-filetypes-php_php_transfer_lowfreq_bigrams.log) |
+| `8db71f0bd06fced9` | php_ablate_extreme_features | ok | 0.9923 | 0.9968 | 0.9764 | 32 | [log](out/autocollie/runs/2026-05-28T09-41-07_20260528T093248-filetypes-php_php_ablate_extreme_features.log) |
+| `276ee5e9e2347ea3` | php_retry_trigrams_seedsearch | ok | 0.9923 | 0.9967 | 0.9798 | 36 | [log](out/autocollie/runs/2026-05-28T09-41-40_20260528T093248-filetypes-php_php_retry_trigrams_seedsearch.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_et_lr002_leaves112`** `EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — Control baseline using extra_trees and lower learning_rate to improve recall@3FPM while preserving PR_AUC via matrix cache hit.
+- **`php_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation signals, aiming to boost PR_AUC and recall@3FPM.
+- **`php_feat_kv_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand kv_vocab and lower kv_min_freq to capture rare PHP key-value patterns, targeting PR_AUC improvement via finer trait discrimination.
+- **`php_transfer_lowfreq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Transfer low-frequency bigram strategy from XML route to capture rare PHP code patterns, aiming to lift PR_AUC.
+- **`php_ablate_extreme_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce tail noise and overfitting, aiming to stabilize PR_AUC and improve recall@3FPM.
+- **`php_retry_trigrams_seedsearch`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SEED_SEARCH_K=3 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Retry top historical trigram config with seed_search_k=3 to verify signal robustness and boost recall@3FPM.
+
+</details>
+

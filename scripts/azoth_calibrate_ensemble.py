@@ -19,7 +19,7 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 
-from collimator import bundle, data, features, model, thresholds
+from collimator import bundle, data, export, features, model, thresholds
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: E402
@@ -1081,9 +1081,22 @@ def _load_routes(summary_path: Path) -> list[dict[str, Any]]:
             else f"filetypes/{item['name']}"
         )
         route_dir = root / route
-        normalized = {**item, "route": route}
-        if bundle.has_model(route_dir) and (route_dir / "feature_spec.json").exists():
-            normalized["output_dir"] = str(route_dir)
+        # No model on disk → not a deployable route. This covers routes
+        # training deliberately refused to emit (constant predictors) as
+        # well as partial/legacy bundles. Dropping it here keeps it out of
+        # config.json so litmus routes those files to the filegroup/general
+        # ensemble (absent specialists are droppable on the loader side).
+        if not (bundle.has_model(route_dir) and (route_dir / "feature_spec.json").exists()):
+            LOG.info("skipping route %s: no model on disk", route)
+            continue
+        # Degenerate (constant-predictor) routes carry no signal. Drop them
+        # so they never enter config.json — the stager copies per config, so
+        # this keeps them out of the entire deploy; litmus routes those files
+        # to the filegroup/general ensemble.
+        if export.route_model_is_degenerate(route_dir):
+            LOG.info("skipping route %s: constant-predictor model (no split learned)", route)
+            continue
+        normalized = {**item, "route": route, "output_dir": str(route_dir)}
         routes.append(normalized)
     return routes
 

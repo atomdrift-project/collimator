@@ -570,3 +570,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T044152-filetypes-pe` — 2026-05-28T04:41:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ad4eae67f6af1835` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9994 | 0.9995 | 0.9902 | 496 | [log](out/autocollie/runs/2026-05-28T04-48-30_20260528T044152-filetypes-pe_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9ad1c1d2ae170e9c` | pe_control_hardneg_01_12 | ok | 0.9994 | 0.9995 | 0.9914 | 177 | [log](out/autocollie/runs/2026-05-28T04-57-51_20260528T044152-filetypes-pe_pe_control_hardneg_01_12.log) |
+| `02ee7b6549eeb2aa` | pe_feat_kv_vocab_split_15k | ok | 0.9994 | 0.9994 | 0.9911 | 146 | [log](out/autocollie/runs/2026-05-28T05-00-50_20260528T044152-filetypes-pe_pe_feat_kv_vocab_split_15k.log) |
+| `43d6e3a28f3ce3e0` | pe_feat_symbol_bigrams_10k | ok | 0.9994 | 0.9994 | 0.9887 | 156 | [log](out/autocollie/runs/2026-05-28T05-03-17_20260528T044152-filetypes-pe_pe_feat_symbol_bigrams_10k.log) |
+| `37eee4d752105c8b` | pe_feat_pe_flags_overlay_temporal | ok | 0.9994 | 0.9994 | 0.9908 | 127 | [log](out/autocollie/runs/2026-05-28T05-05-55_20260528T044152-filetypes-pe_pe_feat_pe_flags_overlay_temporal.log) |
+| `711937cac785f994` | pe_train_reg_lambda2_alpha05 | ok | 0.9994 | 0.9995 | 0.9896 | 36 | [log](out/autocollie/runs/2026-05-28T05-08-03_20260528T044152-filetypes-pe_pe_train_reg_lambda2_alpha05.log) |
+| `614f040efac77f86` | pe_seed_search_3_kv_vocab | ok | 0.9994 | 0.9994 | 0.9907 | 216 | [log](out/autocollie/runs/2026-05-28T05-08-40_20260528T044152-filetypes-pe_pe_seed_search_3_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with hard-negative sweep to improve recall@3 FP/M by upweighting difficult benigns.
+- **`pe_feat_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to capture structured metadata signal, targeting PR_AUC and recall@3 FP/M gains.
+- **`pe_feat_symbol_bigrams_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add symbol vocab and bigrams to capture import co-occurrence patterns, aiming to boost PR_AUC and recall@3 FP/M.
+- **`pe_feat_pe_flags_overlay_temporal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable PE-format, temporal anomaly, and overlay signals to catch packer/dropper artifacts, targeting recall@3 FP/M.
+- **`pe_train_reg_lambda2_alpha05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Increase regularization and estimators to reduce overfitting on rare patterns, aiming to stabilize PR_AUC and improve generalization.
+- **`pe_seed_search_3_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Seed search ensemble on kv_vocab config to reduce variance and confirm signal stability for recall@3 FP/M.
+
+</details>
+
+## Cycle `20260528T115220-filetypes-pe` — 2026-05-28T11:52:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ad4eae67f6af1835` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9994 | 0.9995 | 0.9902 | 2 | [log](out/autocollie/runs/2026-05-28T11-57-49_20260528T115220-filetypes-pe_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3a82839ef185a631` | pe_control_hardneg_01_12 | ok | 0.9995 | 0.9995 | 0.9910 | 423 | [log](out/autocollie/runs/2026-05-28T11-57-53_20260528T115220-filetypes-pe_pe_control_hardneg_01_12.log) |
+| `dfaf27d54bb17fcf` | pe_feat_kv_vocab_split_12k | ok | 0.9995 | 0.9995 | 0.9901 | 130 | [log](out/autocollie/runs/2026-05-28T12-04-57_20260528T115220-filetypes-pe_pe_feat_kv_vocab_split_12k.log) |
+| `b37e0ee78406b0d6` | pe_feat_symbol_bigrams_8k | ok | 0.9994 | 0.9995 | 0.9892 | 201 | [log](out/autocollie/runs/2026-05-28T12-07-07_20260528T115220-filetypes-pe_pe_feat_symbol_bigrams_8k.log) |
+| `9fcf6fc2d0df6958` | pe_feat_pe_flags_overlay_temporal | ok | 0.9994 | 0.9995 | 0.9907 | 343 | [log](out/autocollie/runs/2026-05-28T12-10-31_20260528T115220-filetypes-pe_pe_feat_pe_flags_overlay_temporal.log) |
+| `042b38e33e18c97a` | pe_train_hardneg_015_18 | ok | 0.9995 | 0.9995 | 0.9890 | 158 | [log](out/autocollie/runs/2026-05-28T12-16-15_20260528T115220-filetypes-pe_pe_train_hardneg_015_18.log) |
+| `ccc7403b8f43ea3a` | pe_train_reg_lambda2_alpha05 | ok | 0.9993 | 0.9994 | 0.9898 | 42 | [log](out/autocollie/runs/2026-05-28T12-18-55_20260528T115220-filetypes-pe_pe_train_reg_lambda2_alpha05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate recent feature_env to establish baseline; tweak hard-negative weight to improve recall@3 FP/M without hurting PR_AUC.
+- **`pe_feat_kv_vocab_split_12k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture structured key-value patterns in PE metadata, aiming to boost PR_AUC.
+- **`pe_feat_symbol_bigrams_8k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Enable symbol_bigrams to catch import co-occurrence patterns typical in PE malware, targeting recall@3 FP/M gains.
+- **`pe_feat_pe_flags_overlay_temporal`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enable PE-specific flags, overlay, and temporal anomaly features to improve ROC_AUC by leveraging binary structural anomalies.
+- **`pe_train_hardneg_015_18`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Increase hard-negative fraction and weight to better separate difficult benigns, aiming to lift recall@3 FP/M.
+- **`pe_train_reg_lambda2_alpha05`** `EXP_ESTIMATORS=200 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_WEIGHT=5 EXP_REG_ALPHA=0.5 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Apply L1/L2 regularization and higher min_child_weight to reduce overfitting on rare patterns, targeting stable PR_AUC.
+
+</details>
+

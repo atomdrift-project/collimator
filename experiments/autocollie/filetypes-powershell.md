@@ -501,3 +501,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T005958-filetypes-powershell` — 2026-05-28T00:59:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d339179367057c86` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9987 | 0.9961 | 0.9888 | 11 | [log](out/autocollie/runs/2026-05-28T01-04-55_20260528T005958-filetypes-powershell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2646e71a228079b3` | ps_ctrl_extra_trees_reg | ok | 0.9990 | 0.9966 | 0.9858 | 10 | [log](out/autocollie/runs/2026-05-28T01-05-11_20260528T005958-filetypes-powershell_ps_ctrl_extra_trees_reg.log) |
+| `ddd5221c997ebbd0` | ps_train_hardneg_scalepos | ok | 0.9989 | 0.9965 | 0.9887 | 3 | [log](out/autocollie/runs/2026-05-28T01-05-23_20260528T005958-filetypes-powershell_ps_train_hardneg_scalepos.log) |
+| `d240d951978f3209` | ps_feat_textenc_metrics_full | ok | 0.9987 | 0.9960 | 0.9888 | 10 | [log](out/autocollie/runs/2026-05-28T01-05-27_20260528T005958-filetypes-powershell_ps_feat_textenc_metrics_full.log) |
+| `1ecdf9c9e8b923ca` | ps_transfer_hardneg_kv_lowfreq | ok | 0.9990 | 0.9967 | 0.9860 | 12 | [log](out/autocollie/runs/2026-05-28T01-05-38_20260528T005958-filetypes-powershell_ps_transfer_hardneg_kv_lowfreq.log) |
+| `c40fad06cd60477c` | ps_abl_extreme_off_reg | ok | 0.9986 | 0.9956 | 0.9819 | 8 | [log](out/autocollie/runs/2026-05-28T01-05-51_20260528T005958-filetypes-powershell_ps_abl_extreme_off_reg.log) |
+| `422857f0ebf67eed` | ps_gen_seed_search_kv20k | ok | 0.9992 | 0.9975 | 0.9803 | 15 | [log](out/autocollie/runs/2026-05-28T01-06-00_20260528T005958-filetypes-powershell_ps_gen_seed_search_kv20k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_extra_trees_reg`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 …` — Tests extra_trees and L2 regularization on the best feature set to improve PR_AUC generalization without hurting ROC_AUC.
+- **`ps_train_hardneg_scalepos`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 …` — Uses hard negatives and lower positive weight to push recall@3FPM higher by focusing on difficult benign/malware boundaries.
+- **`ps_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=0 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and text_encoding to capture PowerShell script obfuscation patterns, targeting PR_AUC gains from structural text signals.
+- **`ps_transfer_hardneg_kv_lowfreq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 …` — Transfers perl/ruby hard-negative strategy with expanded low-freq bigrams and moderate KV vocab to boost recall@3FPM on rare malicious patterns.
+- **`ps_abl_extreme_off_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Ablates extreme_features to reduce noise on script routes, aiming to keep PR_AUC flat while improving ROC_AUC stability.
+- **`ps_gen_seed_search_kv20k`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 …` — Retries top KV vocab config with seed_search_k=3 to verify PR_AUC signal isn't seed-dependent and capture ensemble stability.
+
+</details>
+
+## Cycle `20260528T104922-filetypes-powershell` — 2026-05-28T10:49:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d339179367057c86` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9987 | 0.9961 | 0.9888 | 1 | [log](out/autocollie/runs/2026-05-28T10-54-01_20260528T104922-filetypes-powershell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `5776c2366392903d` | ps_ctrl_best_feat_lr003 | ok | 0.9989 | 0.9965 | 0.9831 | 4 | [log](out/autocollie/runs/2026-05-28T10-54-04_20260528T104922-filetypes-powershell_ps_ctrl_best_feat_lr003.log) |
+| `1290c14b4ba8caba` | ps_feat_textenc_metrics_full | ok | 0.9986 | 0.9958 | 0.9874 | 8 | [log](out/autocollie/runs/2026-05-28T10-54-10_20260528T104922-filetypes-powershell_ps_feat_textenc_metrics_full.log) |
+| `956969284f464525` | ps_feat_kv30k_lowfreq_bigrams | ok | 0.9991 | 0.9971 | 0.9859 | 29 | [log](out/autocollie/runs/2026-05-28T10-54-19_20260528T104922-filetypes-powershell_ps_feat_kv30k_lowfreq_bigrams.log) |
+| `ef94b1e7d2a03b01` | ps_train_hardneg_02_12 | ok | 0.9982 | 0.9948 | 0.9859 | 46 | [log](out/autocollie/runs/2026-05-28T10-54-50_20260528T104922-filetypes-powershell_ps_train_hardneg_02_12.log) |
+| `ef634592dbe72c5f` | ps_train_extra_trees_reg2 | ok | 0.9989 | 0.9962 | 0.9697 | 10 | [log](out/autocollie/runs/2026-05-28T10-55-38_20260528T104922-filetypes-powershell_ps_train_extra_trees_reg2.log) |
+| `274ab2dbe3caa96d` | ps_gen_seed_search_textenc | ok | 0.9988 | 0.9962 | 0.9888 | 22 | [log](out/autocollie/runs/2026-05-28T10-55-49_20260528T104922-filetypes-powershell_ps_gen_seed_search_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_best_feat_lr003`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Replicate best PR_AUC feature set to establish baseline; lower learning_rate to 0.03 with more estimators to stabilize PR_AUC and improve recall@3FPM via finer gradient steps.
+- **`ps_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation patterns in PowerShell scripts, targeting PR_AUC gains from structural text signals while keeping ROC_AUC flat.
+- **`ps_feat_kv30k_lowfreq_bigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=30000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 …` — Expand kv_vocab_max to 30000 and lower bigram_min_freq to 25 to capture rare PowerShell cmdlet combinations, aiming to boost recall@3FPM by surfacing long-tail malicious patterns.
+- **`ps_train_hardneg_02_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction=0.2 and hard_negative_weight=12 to sharpen decision boundary near benign/malware overlap, targeting recall@3FPM improvement without PR_AUC regression.
+- **`ps_train_extra_trees_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Enable extra_trees with reg_lambda=2.0 to reduce overfitting on rare script patterns, targeting stable PR_AUC and improved ROC_AUC generalization.
+- **`ps_gen_seed_search_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the text_encoding config to verify signal robustness against RNG variance, targeting consistent recall@3FPM gains across seeds.
+
+</details>
+

@@ -466,3 +466,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T060450-filetypes-zip` — 2026-05-28T06:04:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `883dd2373fa51dc8` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9997 | 0.9959 | 0.9913 | 188 | [log](out/autocollie/runs/2026-05-28T06-11-50_20260528T060450-filetypes-zip_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4f8150a533c1aaf0` | zip_control_hardneg_leaves128 | ok | 0.9997 | 0.9963 | 0.9936 | 37 | [log](out/autocollie/runs/2026-05-28T06-15-35_20260528T060450-filetypes-zip_zip_control_hardneg_leaves128.log) |
+| `d187b1a736449d19` | zip_kv_vocab_5k | ok | 0.9997 | 0.9960 | 0.9941 | 279 | [log](out/autocollie/runs/2026-05-28T06-16-13_20260528T060450-filetypes-zip_zip_kv_vocab_5k.log) |
+| `bf697ea0c1e033f9` | zip_text_metrics_full | ok | 0.9997 | 0.9962 | 0.9945 | 174 | [log](out/autocollie/runs/2026-05-28T06-20-54_20260528T060450-filetypes-zip_zip_text_metrics_full.log) |
+| `3d9408580396c8aa` | zip_bigram_lowfreq_8k | ok | 0.9997 | 0.9961 | 0.9934 | 153 | [log](out/autocollie/runs/2026-05-28T06-23-49_20260528T060450-filetypes-zip_zip_bigram_lowfreq_8k.log) |
+| `becf26ff52bff163` | zip_scalepos05_maxrecall | ok | 0.9997 | 0.9957 | 0.0000 | 23 | [log](out/autocollie/runs/2026-05-28T06-26-24_20260528T060450-filetypes-zip_zip_scalepos05_maxrecall.log) |
+| `5be94e143be7bfc3` | zip_dart_hardneg_tail | ok | 0.9996 | 0.9937 | 0.9807 | 45 | [log](out/autocollie/runs/2026-05-28T06-26-48_20260528T060450-filetypes-zip_zip_dart_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Replicates best feature_env to hit matrix cache; increases num_leaves and hard_negative_weight to improve PR_AUC by better separating hard benigns from malware.
+- **`zip_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enables kv_vocab to capture key-value pair signals in zip metadata/entries, aiming to lift PR_AUC by adding discriminative structural features.
+- **`zip_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — Enables text_metrics_full to extract line/char statistics from embedded text files in zips, targeting PR_AUC gains from document obfuscation signals.
+- **`zip_bigram_lowfreq_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Lowers bigram_min_freq to 500 and raises bigram_max to 8000 to capture rarer but informative path/entry co-occurrences, aiming to improve PR_AUC.
+- **`zip_scalepos05_maxrecall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Down-weights positives via scale_pos_weight_mult=0.5 and optimizes threshold for max_recall_at_fpr to directly boost recall@3FPM at the deployed operating point.
+- **`zip_dart_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switches to dart boosting with hard negatives to regularize tree splits and reduce overfitting on noisy benigns, targeting recall@3FPM improvement.
+
+</details>
+
+## Cycle `20260528T111023-filetypes-zip` — 2026-05-28T11:10:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `883dd2373fa51dc8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9997 | 0.9959 | 0.9913 | 1 | [log](out/autocollie/runs/2026-05-28T11-17-14_20260528T111023-filetypes-zip_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `becf26ff52bff163` | zip_control_maxrecall_threshold | dup | 0.9997 | 0.9957 | 0.0000 | 1 | [log](out/autocollie/runs/2026-05-28T11-17-16_20260528T111023-filetypes-zip_zip_control_maxrecall_threshold.log) |
+| `f9ce08d251d31782` | zip_textmetrics_kv_vocab | ok | 0.9997 | 0.9963 | 0.9932 | 116 | [log](out/autocollie/runs/2026-05-28T11-17-18_20260528T111023-filetypes-zip_zip_textmetrics_kv_vocab.log) |
+| `d8e69f218511539a` | zip_bigram_trigram_expansion | ok | 0.9997 | 0.9963 | 0.9935 | 114 | [log](out/autocollie/runs/2026-05-28T11-19-14_20260528T111023-filetypes-zip_zip_bigram_trigram_expansion.log) |
+| `058cd900c037f7e7` | zip_hardneg_tail_recall | ok | 0.9997 | 0.9960 | 0.9860 | 26 | [log](out/autocollie/runs/2026-05-28T11-21-09_20260528T111023-filetypes-zip_zip_hardneg_tail_recall.log) |
+| `f41add50f70ccb72` | zip_kv_seed_search_stability | ok | 0.9997 | 0.9962 | 0.9942 | 155 | [log](out/autocollie/runs/2026-05-28T11-21-36_20260528T111023-filetypes-zip_zip_kv_seed_search_stability.log) |
+| `7f0b1cd10ff2a825` | zip_dart_extratrees_reg | ok | 0.9993 | 0.9903 | 0.9882 | 18 | [log](out/autocollie/runs/2026-05-28T11-24-11_20260528T111023-filetypes-zip_zip_dart_extratrees_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_maxrecall_threshold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Control baseline replicating best feature_env; tunes threshold_mode to max_recall_at_fpr and lowers scale_pos_weight_mult to maximize recall@3 FP/M at deployed operating point.
+- **`zip_textmetrics_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Enables text_metrics_full and kv_vocab to capture structural and key-value signals in zip contents, aiming to boost PR_AUC by improving rank separation for obfuscated payloads.
+- **`zip_bigram_trigram_expansion`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Expands bigram/trigram vocab and lowers min_freq to capture rarer malicious patterns in zip archives, targeting PR_AUC improvement via finer-grained feature discrimination.
+- **`zip_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Applies hard-negative mining with moderate weight to push benign zip files lower in ranking, aiming to increase recall@3 FP/M without hurting ROC_AUC.
+- **`zip_kv_seed_search_stability`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Tests seed stability of kv_vocab signal on zip route using seed search, targeting consistent PR_AUC gains across random splits while reducing variance.
+- **`zip_dart_extratrees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Uses DART boosting with extra trees to reduce overfitting on rare zip patterns, aiming to stabilize ROC_AUC while maintaining PR_AUC.
+
+</details>
+

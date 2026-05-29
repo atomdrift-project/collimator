@@ -740,3 +740,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T044230-filetypes-go` — 2026-05-28T04:42:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `54d60f755f1a200c` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9604 | 0.9850 | 0.8731 | 23 | [log](out/autocollie/runs/2026-05-28T04-48-11_20260528T044230-filetypes-go_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `8f875a32c7cf0244` | go_control_leaves128_lr005 | ok | 0.9646 | 0.9872 | 0.8835 | 17 | [log](out/autocollie/runs/2026-05-28T04-48-48_20260528T044230-filetypes-go_go_control_leaves128_lr005.log) |
+| `309e881381696cb6` | go_exploit_hardneg_01_10 | ok | 0.9625 | 0.9858 | 0.8765 | 4 | [log](out/autocollie/runs/2026-05-28T04-49-07_20260528T044230-filetypes-go_go_exploit_hardneg_01_10.log) |
+| `aa6656b5710a2df2` | go_feat_kv_vocab_split | ok | 0.9595 | 0.9852 | 0.8809 | 35 | [log](out/autocollie/runs/2026-05-28T04-49-13_20260528T044230-filetypes-go_go_feat_kv_vocab_split.log) |
+| `6331391781131104` | go_feat_symbol_vocab_bigrams | ok | 0.9623 | 0.9865 | 0.8833 | 36 | [log](out/autocollie/runs/2026-05-28T04-49-51_20260528T044230-filetypes-go_go_feat_symbol_vocab_bigrams.log) |
+| `6f6cfc43b8b47cfe` | go_abl_blindfold_off | ok | 0.9575 | 0.9847 | 0.8802 | 23 | [log](out/autocollie/runs/2026-05-28T04-50-28_20260528T044230-filetypes-go_go_abl_blindfold_off.log) |
+| `3756df39c21e31a8` | go_seed_search_k3 | ok | 0.9613 | 0.9867 | 0.9011 | 8 | [log](out/autocollie/runs/2026-05-28T04-50-53_20260528T044230-filetypes-go_go_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_leaves128_lr005`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Baseline feature set with increased tree capacity to improve PR_AUC by capturing finer malware patterns.
+- **`go_exploit_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard negative mining to suppress benign tail scores, targeting recall@3FPM gains while preserving PR_AUC.
+- **`go_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to extract Go package/import tokens, aiming to boost PR_AUC with discriminative lexical signals.
+- **`go_feat_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Add symbol vocab and bigrams to model import co-occurrences in Go binaries, targeting PR_AUC improvement from structural patterns.
+- **`go_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout to reduce feature noise, aiming to stabilize PR_AUC and improve recall@3FPM by preserving consistent signals.
+- **`go_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Train 3 seeds and average predictions to reduce variance, robustly improving recall@3FPM without sacrificing PR_AUC.
+
+</details>
+

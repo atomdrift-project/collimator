@@ -376,3 +376,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T032027-filegroups-scripts` — 2026-05-28T03:20:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10270eff3f0c2706` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9978 | 0.9976 | 0.9773 | 68 | [log](out/autocollie/runs/2026-05-28T03-25-21_20260528T032027-filegroups-scripts_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `5fd485356899ae90` | scripts_control_train_scalepos075 | ok | 0.9975 | 0.9972 | 0.9708 | 45 | [log](out/autocollie/runs/2026-05-28T03-26-50_20260528T032027-filegroups-scripts_scripts_control_train_scalepos075.log) |
+| `e98fc4545795616a` | scripts_feat_kv_vocab_20k | ok | 0.9976 | 0.9974 | 0.9749 | 48 | [log](out/autocollie/runs/2026-05-28T03-27-37_20260528T032027-filegroups-scripts_scripts_feat_kv_vocab_20k.log) |
+| `c680648f65984143` | scripts_feat_text_metrics_full | ok | 0.9975 | 0.9973 | 0.9728 | 45 | [log](out/autocollie/runs/2026-05-28T03-28-25_20260528T032027-filegroups-scripts_scripts_feat_text_metrics_full.log) |
+| `c136faa93cd45a9a` | scripts_feat_low_freq_bigrams | ok | 0.9975 | 0.9973 | 0.9706 | 137 | [log](out/autocollie/runs/2026-05-28T03-29-11_20260528T032027-filegroups-scripts_scripts_feat_low_freq_bigrams.log) |
+| `421743203b6308dc` | scripts_train_hardneg_02_12 | ok | 0.9977 | 0.9975 | 0.9765 | 189 | [log](out/autocollie/runs/2026-05-28T03-31-30_20260528T032027-filegroups-scripts_scripts_train_hardneg_02_12.log) |
+| `a842315abcc30603` | scripts_seed_search_k3_kv | ok | 0.9976 | 0.9974 | 0.9667 | 151 | [log](out/autocollie/runs/2026-05-28T03-34-40_20260528T032027-filegroups-scripts_scripts_seed_search_k3_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_train_scalepos075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature_env to establish a baseline; vary scale_pos_weight_mult to 0.75 to gently down-weight positives and improve recall@3FPM at the deployed operating point while keeping PR_AUC flat.
+- **`scripts_feat_kv_vocab_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with a 20k cap to capture richer key-value pair signals in scripts, aiming to lift PR_AUC by distinguishing malicious configuration patterns from benign ones.
+- **`scripts_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to promote ~22 unused text fields capturing script obfuscation, targeting PR_AUC gains on heavily obfuscated malware by adding structural text signal.
+- **`scripts_feat_low_freq_bigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 25 to include rarer but high-signal bigrams in scripts, aiming to improve PR_AUC by capturing niche attack patterns without overfitting due to tree regularization.
+- **`scripts_train_hardneg_02_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining (fraction 0.2, weight 12) to focus the model on difficult benign scripts, targeting recall@3FPM improvement by sharpening the decision boundary at low FPR.
+- **`scripts_seed_search_k3_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Combine kv_vocab with seed_search_k: 3 to average out seed variance and stabilize PR_AUC gains from the KV feature surface across different random splits.
+
+</details>
+
+## Cycle `20260528T095448-filegroups-scripts` — 2026-05-28T09:54:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10270eff3f0c2706` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9978 | 0.9976 | 0.9773 | 1 | [log](out/autocollie/runs/2026-05-28T10-00-44_20260528T095448-filegroups-scripts_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `aa5a09ecc0e5c792` | scripts_ctrl_kv15k_leaves128 | ok | 0.9975 | 0.9973 | 0.9692 | 28 | [log](out/autocollie/runs/2026-05-28T10-00-47_20260528T095448-filegroups-scripts_scripts_ctrl_kv15k_leaves128.log) |
+| `e770c775e2235400` | scripts_ctrl_kv15k_hardneg | ok | 0.9976 | 0.9974 | 0.9770 | 56 | [log](out/autocollie/runs/2026-05-28T10-01-16_20260528T095448-filegroups-scripts_scripts_ctrl_kv15k_hardneg.log) |
+| `d44e022f7f619183` | scripts_feat_textenc_metrics | ok | 0.9974 | 0.9972 | 0.9685 | 67 | [log](out/autocollie/runs/2026-05-28T10-02-13_20260528T095448-filegroups-scripts_scripts_feat_textenc_metrics.log) |
+| `b78dc8e6d4751b4e` | scripts_feat_lowfreq_bigrams_trigrams | ok | 0.9974 | 0.9972 | 0.9731 | 57 | [log](out/autocollie/runs/2026-05-28T10-03-21_20260528T095448-filegroups-scripts_scripts_feat_lowfreq_bigrams_trigrams.log) |
+| `2d02eb3244104df5` | scripts_transfer_xml_bigrams | ok | 0.9974 | 0.9972 | 0.9685 | 62 | [log](out/autocollie/runs/2026-05-28T10-04-20_20260528T095448-filegroups-scripts_scripts_transfer_xml_bigrams.log) |
+| `7de063d0c783ff11` | scripts_seed_search_kv15k | ok | 0.9975 | 0.9973 | 0.9654 | 39 | [log](out/autocollie/runs/2026-05-28T10-05-22_20260528T095448-filegroups-scripts_scripts_seed_search_kv15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_ctrl_kv15k_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control on best PR_AUC feature set; increases num_leaves to 128 to improve PR_AUC by allowing finer decision boundaries without overfitting.
+- **`scripts_ctrl_kv15k_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard-negative mining to the best feature set to push recall@3FPM higher by forcing the model to separate difficult benign scripts from malware.
+- **`scripts_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture script obfuscation and structural anomalies, aiming to boost PR_AUC on document-heavy script samples.
+- **`scripts_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 and enables tiered trigrams to capture rarer malicious patterns in scripts, targeting PR_AUC improvement.
+- **`scripts_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Ports the successful xml route bigram config (max 8000, min_freq 50) to scripts to improve PR_AUC by leveraging cross-route n-gram signal.
+- **`scripts_seed_search_kv15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Runs seed_search_k=3 on the top kv_vocab config to average out seed variance and stabilize recall@3FPM gains.
+
+</details>
+

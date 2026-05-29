@@ -1,23 +1,19 @@
-# Confirm PASS — f8c733f0d9b6ddf1 on `filetypes/jpeg`
+# Confirm FAIL — f8c733f0d9b6ddf1 on `filetypes/jpeg`
 
-Cycle `20260520T073011-confirm-f8c733f0d9b6ddf1` — 2026-05-20T07:30:11Z
+Cycle `20260527T010538-confirm-f8c733f0d9b6ddf1` — 2026-05-27T01:05:38Z
 
-PR_AUC held across 3 seeds (orig 0.9798)
+averaged ensemble PR_AUC regressed: 0.9798 -> 0.9707 (tol 0.0050, K=3)
 
 ## Per-seed results (3 ran)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `f8c733f0d9b6ddf1` | `960fc2f0e3c98bd9` | `960fc2f0e3c98bd9` | `960fc2f0e3c98bd9` |
-| PR AUC | 0.9798 | 0.9698 | 0.9795 | 0.9696 |
-| ROC AUC | 0.9839 | 0.9776 | 0.9839 | 0.9764 |
-| Recall@3FPM | — | 0.6957 | 0.8261 | 0.7826 |
-| verdict | — | FAIL | PASS | FAIL |
+| key | `f8c733f0d9b6ddf1` | `6601587b359a582e` | `6601587b359a582e` | `6601587b359a582e` |
+| PR AUC | 0.9798 | 0.9767 | 0.9671 | 0.9712 |
+| ROC AUC | 0.9839 | 0.9806 | 0.9749 | 0.9771 |
+| Recall@3FPM | — | 0.8000 | 0.6400 | 0.7200 |
+| verdict | — | PASS | FAIL | FAIL |
 
-## Next step
+## Disposition
 
-The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
-
-```
-make autocollie-promote KEY=f8c733f0d9b6ddf1
-```
+This spec did not survive multi-seed reseeding (1/3 held). Suggest abandoning the idea or letting the LLM propose a variant.

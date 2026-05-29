@@ -442,3 +442,34 @@ def test_evaluate_thresholds_at_level_skips_missing_route() -> None:
     )
     assert "general" in result["thresholds"]
     assert "filetypes/missing" not in result["thresholds"]
+
+
+def test_load_routes_drops_routes_without_a_model(tmp_path: Path) -> None:
+    """A route training refused to emit (constant predictor -> no model on
+    disk) is dropped from the route list, so it never reaches config.json and
+    litmus routes those files to the filegroup/general ensemble. A route with
+    a model + feature_spec is kept."""
+    root = tmp_path
+    # Present route: has a model file and a feature_spec.
+    kept = root / "filetypes" / "elf"
+    kept.mkdir(parents=True)
+    (kept / "model.txt").write_text("tree\n")
+    (kept / "feature_spec.json").write_text("{}")
+    # Refused route: recorded in the summary but no model on disk.
+    (root / "filetypes" / "xls").mkdir(parents=True)
+
+    summary = {
+        "results": [
+            {"name": "general", "kind": "general"},
+            {"name": "elf", "kind": "filetype"},
+            {"name": "xls", "kind": "filetype", "error": True,
+             "skip_reason": "constant_predictor"},
+        ]
+    }
+    summary_path = root / "specialists.json"
+    summary_path.write_text(json.dumps(summary))
+
+    routes = _mod._load_routes(summary_path)  # type: ignore[attr-defined]
+    names = {r["route"] for r in routes}
+    assert names == {"filetypes/elf"}
+    assert routes[0]["output_dir"] == str(kept)

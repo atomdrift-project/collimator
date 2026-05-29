@@ -561,3 +561,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T040050-filetypes-javascript` — 2026-05-28T04:00:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7525cf2eee9fd2b2` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9989 | 0.9984 | 0.9838 | 137 | [log](out/autocollie/runs/2026-05-28T04-07-05_20260528T040050-filetypes-javascript_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `81ce7bf814cc33e4` | js_control_best_feat_train_tune | ok | 0.9988 | 0.9984 | 0.9830 | 44 | [log](out/autocollie/runs/2026-05-28T04-09-45_20260528T040050-filetypes-javascript_js_control_best_feat_train_tune.log) |
+| `791198d4411ccaef` | js_kv_textenc_metrics_full_v2 | ok | 0.9988 | 0.9983 | 0.9827 | 43 | [log](out/autocollie/runs/2026-05-28T04-10-30_20260528T040050-filetypes-javascript_js_kv_textenc_metrics_full_v2.log) |
+| `0490ca02846cbd48` | js_tiered_trigrams_low_freq | ok | 0.9988 | 0.9984 | 0.9824 | 76 | [log](out/autocollie/runs/2026-05-28T04-11-14_20260528T040050-filetypes-javascript_js_tiered_trigrams_low_freq.log) |
+| `655535809c62b2ac` | js_hardneg_015_12_scalepos075 | ok | 0.9988 | 0.9984 | 0.9833 | 40 | [log](out/autocollie/runs/2026-05-28T04-12-32_20260528T040050-filetypes-javascript_js_hardneg_015_12_scalepos075.log) |
+| `220cbdc5eb564dcc` | js_extra_trees_high_leaves | ok | 0.9988 | 0.9983 | 0.9816 | 24 | [log](out/autocollie/runs/2026-05-28T04-13-12_20260528T040050-filetypes-javascript_js_extra_trees_high_leaves.log) |
+| `42e55247585790e7` | js_seed_search_3_best_feat | ok | 0.9988 | 0.9984 | 0.9800 | 58 | [log](out/autocollie/runs/2026-05-28T04-13-37_20260528T040050-filetypes-javascript_js_seed_search_3_best_feat.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_best_feat_train_tune`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 …` — Replicates the best recent feature surface to establish a stable baseline PR_AUC while tuning training knobs for consistent recall@3FPM.
+- **`js_kv_textenc_metrics_full_v2`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Expands KV vocab and enables text metrics to capture JS obfuscation patterns, targeting PR_AUC improvement via richer feature signal.
+- **`js_tiered_trigrams_low_freq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 …` — Enables tiered critical trigrams with a lower frequency floor to catch rare JS attack patterns, aiming to boost recall@3FPM without hurting ROC_AUC.
+- **`js_hardneg_015_12_scalepos075`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 …` — Applies hard negative mining with moderate weight and down-weights positives to sharpen the decision boundary at low FPR, targeting recall@3FPM.
+- **`js_extra_trees_high_leaves`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 …` — Uses extra trees with higher leaf count to reduce overfitting on noisy JS patterns, aiming to stabilize PR_AUC and improve tail recall.
+- **`js_seed_search_3_best_feat`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 …` — Runs seed search on the strongest feature configuration to isolate true signal from RNG variance, targeting consistent PR_AUC and recall@3FPM gains.
+
+</details>
+

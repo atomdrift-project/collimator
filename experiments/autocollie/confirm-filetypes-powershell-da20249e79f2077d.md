@@ -1,6 +1,6 @@
 # Confirm PASS — da20249e79f2077d on `filetypes/powershell`
 
-Cycle `20260522T172750-confirm-da20249e79f2077d` — 2026-05-22T17:27:50Z
+Cycle `20260527T005313-confirm-da20249e79f2077d` — 2026-05-27T00:53:13Z
 
 PR_AUC held across 3 seeds (orig 0.9987)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9987)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `da20249e79f2077d` | `9039d25b71f17135` | `9039d25b71f17135` | `9039d25b71f17135` |
-| PR AUC | 0.9987 | 0.9973 | 0.9985 | 0.9962 |
-| ROC AUC | 0.9967 | 0.9936 | 0.9963 | 0.9917 |
-| Recall@3FPM | — | 0.7500 | 0.8387 | 0.6210 |
+| key | `da20249e79f2077d` | `4a07be7346569775` | `4a07be7346569775` | `4a07be7346569775` |
+| PR AUC | 0.9987 | 0.9987 | 0.9992 | 0.9981 |
+| ROC AUC | 0.9967 | 0.9954 | 0.9973 | 0.9938 |
+| Recall@3FPM | — | 0.8319 | 0.8348 | 0.7265 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

@@ -1,6 +1,6 @@
 # Confirm PASS — b9b626a2dfccc543 on `filetypes/tar`
 
-Cycle `20260515T064000-confirm-b9b626a2dfccc543` — 2026-05-15T06:40:00Z
+Cycle `20260526T212737-confirm-b9b626a2dfccc543` — 2026-05-26T21:27:37Z
 
 PR_AUC held across 3 seeds (orig 1.0000)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 1.0000)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `b9b626a2dfccc543` | `9800d79fbe956d65` | `9800d79fbe956d65` | `9800d79fbe956d65` |
-| PR AUC | 1.0000 | 0.9997 | 1.0000 | 0.9991 |
-| ROC AUC | 1.0000 | 0.9968 | 1.0000 | 0.9899 |
-| Recall@3FPM | — | 0.9793 | 1.0000 | 0.9793 |
+| key | `b9b626a2dfccc543` | `e413690766a95833` | `e413690766a95833` | `e413690766a95833` |
+| PR AUC | 1.0000 | 0.9997 | 0.9993 | 0.9997 |
+| ROC AUC | 1.0000 | 0.9974 | 0.9934 | 0.9971 |
+| Recall@3FPM | — | 0.9803 | 0.9868 | 0.9737 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

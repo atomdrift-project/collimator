@@ -1710,6 +1710,18 @@ def main() -> int:
     parser.add_argument("--csv", type=Path, default=Path("out/models/azoth/route_policies.csv"))
     parser.add_argument("--markdown", type=Path, default=Path("out/models/azoth/route_policies.md"))
     parser.add_argument("--override-route", action="append", default=[])
+    parser.add_argument(
+        "--previous-bundle", type=Path, default=None,
+        help=(
+            "Previous bundle path. When set, the script compares this "
+            "bundle's score_table.npz against the current one and "
+            "carries forward route_policies entries for filetypes "
+            "whose routes' scores are bytewise-identical. Major win on "
+            "promote: only filetypes whose routes actually changed get "
+            "re-searched; the rest copy from "
+            "<previous-bundle>/route_policies.json."
+        ),
+    )
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument(
         "--parallelism",
@@ -1771,20 +1783,71 @@ def main() -> int:
     _SHARED["total_benign"] = total_benign
 
     unique_filetypes = sorted(set(file_types))
-    parallelism = _resolve_parallelism(args.parallelism, len(unique_filetypes))
-    if parallelism <= 1 or len(unique_filetypes) <= 1:
-        print(f"policy_search: processing {len(unique_filetypes)} filetypes serially")
-        results: list[tuple[str, dict[str, Any]]] = [
-            _process_filetype(ft) for ft in unique_filetypes
-        ]
+
+    # Carry-forward optimization for single-route promotes. When
+    # --previous-bundle is set, compare the current score_table.npz
+    # against the previous one; for filetypes whose relevant routes
+    # are bytewise-identical between bundles, the policy choice cannot
+    # have changed (it's a deterministic function of the scores).
+    # Copy those entries from <previous-bundle>/route_policies.json
+    # rather than re-running policy_search on them.
+    carry_forward_policies: dict[str, dict[str, Any]] = {}
+    if args.previous_bundle is not None:
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(Path(__file__).parent))
+            from azoth_impact import changed_routes, unchanged_filetypes  # noqa: PLC0415
+            from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: PLC0415
+            prev_score_table = args.previous_bundle / "score_table.npz"
+            prev_policies_path = args.previous_bundle / "route_policies.json"
+            changed_set, _ = changed_routes(args.score_table, prev_score_table)
+            avail_routes = set(routes.keys())
+            unchanged = unchanged_filetypes(
+                changed_set, DEPLOYMENT_GROUPS, avail_routes, unique_filetypes,
+            )
+            print(
+                f"policy_search carry-forward: {len(changed_set)}/{len(avail_routes)} "
+                f"routes changed; {len(unchanged)}/{len(unique_filetypes)} filetypes "
+                f"can be carried forward from previous bundle"
+            )
+            if prev_policies_path.is_file():
+                with open(prev_policies_path) as f:
+                    prev_payload = json.load(f)
+                prev_routes = prev_payload.get("routes", {}) or {}
+                for ft in unchanged:
+                    route_key = f"filetypes/{ft}"
+                    if route_key in prev_routes:
+                        carry_forward_policies[route_key] = prev_routes[route_key]
+        except Exception as e:  # noqa: BLE001
+            print(f"policy_search: carry-forward setup failed ({e}); "
+                  f"running full search")
+            carry_forward_policies = {}
+
+    # Stash carried-forward results into route_payload directly; only
+    # process the remaining filetypes.
+    for route_key, entry in carry_forward_policies.items():
+        route_payload[route_key] = entry
+    skipped = set(rk.split("/", 1)[1] for rk in carry_forward_policies if rk.startswith("filetypes/"))
+    to_process = [ft for ft in unique_filetypes if ft not in skipped]
+
+    parallelism = _resolve_parallelism(args.parallelism, len(to_process))
+    if not to_process:
+        print(f"policy_search: all {len(unique_filetypes)} filetypes carried forward; "
+              f"no recomputation needed")
+        results = []
+    elif parallelism <= 1 or len(to_process) <= 1:
+        print(f"policy_search: processing {len(to_process)} filetypes serially "
+              f"({len(skipped)} carried forward)")
+        results = [_process_filetype(ft) for ft in to_process]
     else:
         print(
-            f"policy_search: processing {len(unique_filetypes)} filetypes "
-            f"across {parallelism} worker processes",
+            f"policy_search: processing {len(to_process)} filetypes "
+            f"across {parallelism} worker processes "
+            f"({len(skipped)} carried forward)",
         )
         ctx = mp.get_context("fork")
         with ctx.Pool(parallelism) as pool:
-            results = list(pool.imap_unordered(_process_filetype, unique_filetypes))
+            results = list(pool.imap_unordered(_process_filetype, to_process))
     for route_key, ft_payload in results:
         route_payload[route_key] = ft_payload
 

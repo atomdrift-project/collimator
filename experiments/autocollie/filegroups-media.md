@@ -430,3 +430,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T010718-filegroups-media` — 2026-05-28T01:07:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f34f53c40c494cd8` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9964 | 0.9958 | 0.9432 | 6 | [log](out/autocollie/runs/2026-05-28T01-13-22_20260528T010718-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2579c9674d080dd9` | media_control_deeper_trees | ok | 0.9935 | 0.9921 | 0.9545 | 3 | [log](out/autocollie/runs/2026-05-28T01-13-32_20260528T010718-filegroups-media_media_control_deeper_trees.log) |
+| `b8b06647b80010e3` | media_kv_vocab_10k | ok | 0.9936 | 0.9923 | 0.9545 | 3 | [log](out/autocollie/runs/2026-05-28T01-13-36_20260528T010718-filegroups-media_media_kv_vocab_10k.log) |
+| `b0517d72b91091f7` | media_text_metrics_encoding | ok | 0.9935 | 0.9923 | 0.9249 | 3 | [log](out/autocollie/runs/2026-05-28T01-13-40_20260528T010718-filegroups-media_media_text_metrics_encoding.log) |
+| `4917c3783165d077` | media_rare_bigrams_tiered_trigrams | ok | 0.9925 | 0.9907 | 0.9379 | 3 | [log](out/autocollie/runs/2026-05-28T01-13-44_20260528T010718-filegroups-media_media_rare_bigrams_tiered_trigrams.log) |
+| `515f34614f8fb7f7` | media_hardneg_dart_regularized | ok | 0.9942 | 0.9932 | 0.9371 | 2 | [log](out/autocollie/runs/2026-05-28T01-13-48_20260528T010718-filegroups-media_media_hardneg_dart_regularized.log) |
+| `394cad4bf33bab8b` | media_abl_blindfold_off | ok | 0.9925 | 0.9907 | 0.9385 | 4 | [log](out/autocollie/runs/2026-05-28T01-13-51_20260528T010718-filegroups-media_media_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_deeper_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature_env with increased estimators and num_leaves to reduce underfitting and improve PR_AUC.
+- **`media_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab with max 10000 to capture structured metadata patterns, targeting higher PR_AUC via discriminative key-value signals.
+- **`media_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activate text_metrics_full and text_encoding to extract obfuscation signals from embedded payloads, aiming to boost recall@3 FP/M.
+- **`media_rare_bigrams_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 200 and enable tiered_crit_trigrams to capture rare malicious co-occurrences, targeting improved PR_AUC.
+- **`media_hardneg_dart_regularized`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Apply hard-negative sampling with DART boosting to sharpen low-FPR decision boundaries, targeting higher recall@3 FP/M.
+- **`media_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold dropout features to reduce noise and stabilize ranking, aiming to maintain or improve PR_AUC with a simpler feature set.
+
+</details>
+
+## Cycle `20260528T085625-filegroups-media` — 2026-05-28T08:56:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f34f53c40c494cd8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9964 | 0.9958 | 0.9432 | 1 | [log](out/autocollie/runs/2026-05-28T09-04-04_20260528T085625-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3d6c62f5c4a0e2c2` | media_control_dart_hardneg | ok | 0.9942 | 0.9932 | 0.9371 | 2 | [log](out/autocollie/runs/2026-05-28T09-04-06_20260528T085625-filegroups-media_media_control_dart_hardneg.log) |
+| `a3c0ef97b527434b` | media_control_posweight_reg | ok | 0.9750 | 0.9604 | 0.9341 | 2 | [log](out/autocollie/runs/2026-05-28T09-04-08_20260528T085625-filegroups-media_media_control_posweight_reg.log) |
+| `e8fedcc5cc310ca4` | media_kv_vocab_split | ok | 0.9939 | 0.9925 | 0.9545 | 4 | [log](out/autocollie/runs/2026-05-28T09-04-11_20260528T085625-filegroups-media_media_kv_vocab_split.log) |
+| `3054752bf9a4e070` | media_rare_bigrams_tiered | ok | 0.9934 | 0.9920 | 0.9492 | 4 | [log](out/autocollie/runs/2026-05-28T09-04-16_20260528T085625-filegroups-media_media_rare_bigrams_tiered.log) |
+| `db358ab349040065` | media_transfer_xml_lowfreq | ok | 0.9934 | 0.9920 | 0.9492 | 4 | [log](out/autocollie/runs/2026-05-28T09-04-20_20260528T085625-filegroups-media_media_transfer_xml_lowfreq.log) |
+| `bf0e220469fdd111` | media_seed_ensemble_dart | ok | 0.9951 | 0.9942 | 0.9630 | 3 | [log](out/autocollie/runs/2026-05-28T09-04-25_20260528T085625-filegroups-media_media_seed_ensemble_dart.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_dart_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Targets PR_AUC and recall@3FPM by applying DART boosting with hard negatives to better separate tail malware from benign media files while reusing the matrix cache.
+- **`media_control_posweight_reg`** `EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by down-weighting positives to reduce false positives at low FPR while increasing L2 regularization to prevent overfitting on rare media artifacts.
+- **`media_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by capturing structured metadata patterns in media files that are missed by n-grams, improving rank signal for obfuscated payloads.
+- **`media_rare_bigrams_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by lowering frequency floors to capture rarer but highly predictive co-occurrence patterns in media file headers and embedded streams.
+- **`media_transfer_xml_lowfreq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by transferring a proven low-frequency bigram expansion from XML, adapted for media to catch subtle structural anomalies in container formats.
+- **`media_seed_ensemble_dart`** `EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 …` — Targets recall@3FPM stability by averaging across 3 seeds to reduce variance and confirm the hard-negative DART signal is robust to initialization noise.
+
+</details>
+

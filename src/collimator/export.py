@@ -168,6 +168,54 @@ def validate_onnx(
     return True
 
 
+def is_constant_predictor(model: object) -> bool:
+    """True when a LightGBM model degenerates to a constant predictor:
+    every tree has ≤1 leaf, i.e. the optimizer found no split worth
+    making (typically tiny single-class filetype slices like xls/xlsx).
+
+    Such a model carries no feature-space signal — it always emits the
+    same score regardless of input. Training refuses to emit a route for
+    it (see ``azoth_specialist_suite``) so litmus routes those files to
+    the filegroup/general ensemble instead. Accepts either a LightGBM
+    Booster or an sklearn ``LGBMClassifier`` wrapper."""
+    booster = getattr(model, "booster_", model)
+    try:
+        leaf_counts = [t["num_leaves"] for t in booster.dump_model().get("tree_info", [])]
+    except Exception:
+        return False
+    return bool(leaf_counts) and max(leaf_counts) <= 1
+
+
+def route_model_is_degenerate(route_dir: Path) -> bool:
+    """True when a deployed route directory ships only constant-predictor
+    model(s) and should be kept out of the bundle (so litmus routes those
+    files to the filegroup/general ensemble).
+
+    A route carrying an ``.onnx`` artifact is never degenerate: ONNX export
+    is skipped for constant predictors (see ``export_lightgbm_onnx``), so its
+    presence implies the model learned at least one split. Only ``.txt``-only
+    routes are inspected, and only those whose every seed is constant count as
+    degenerate. Used by calibration (drops them from ``config.json``) and by
+    deploy validation (hard-fails if one slips through)."""
+    from collimator import bundle  # noqa: PLC0415 — avoid import cycle at module load
+
+    files = bundle.model_files(route_dir)
+    if any(f.suffix == ".onnx" for f in files):
+        return False
+    txts = [f for f in files if f.suffix == ".txt"]
+    if not txts:
+        return False
+    import lightgbm as lgb  # noqa: PLC0415 — heavy; only needed for .txt-only routes
+
+    try:
+        boosters = [lgb.Booster(model_file=str(f)) for f in txts]
+    except Exception:
+        # Can't parse the model — don't silently drop the route; let real
+        # validation (feature-count, schema) surface the problem instead.
+        return False
+    return all(is_constant_predictor(b) for b in boosters)
+
+
 def export_lightgbm_onnx(
     booster: object,
     n_features: int,
@@ -189,29 +237,17 @@ def export_lightgbm_onnx(
         log.warning("onnxmltools not installed; skipping ONNX export for LightGBM")
         return False
 
-    # Skip degenerate constant-predictor models. When LightGBM can't
-    # find ANY split worth making (typically tiny-benign filetypes
-    # like xls/xlsx where the optimizer just emits a single-leaf
-    # tree with a constant logit value), the converter generates a
-    # spec-correct ONNX graph that hits an ONNX Runtime bug in
-    # TreeEnsembleClassifier: the LOGISTIC post-transform doesn't
-    # get applied to 0-split trees and raw class_weights leak out
-    # as if they were probabilities. The model is operationally
-    # useless to convert (constant predictor = no feature-space
-    # variation = no size or speed win) so we skip rather than
-    # emit a broken .onnx. The .txt remains valid and litmus's
-    # loader picks it up.
-    try:
-        leaf_counts = [t["num_leaves"] for t in booster.dump_model().get("tree_info", [])]
-    except Exception:
-        leaf_counts = []
-    if leaf_counts and max(leaf_counts) <= 1:
+    # Defense-in-depth: never emit ONNX for a constant predictor. The
+    # converter produces a spec-correct graph that trips an ONNX Runtime
+    # bug in TreeEnsembleClassifier (LOGISTIC post-transform skipped for
+    # 0-split trees, leaking raw class_weights as probabilities), and the
+    # model has no feature-space signal anyway. Training already refuses
+    # to emit a route for these (azoth_specialist_suite); this guard
+    # covers the direct/migration callers (e.g. convert_bundle_to_onnx).
+    if is_constant_predictor(booster):
         log.info(
             "skipping ONNX export for %s: model is a constant predictor "
-            "(every tree has ≤1 leaf — LightGBM couldn't find any split "
-            "to learn from). Trips an ONNX Runtime bug for "
-            "TreeEnsembleClassifier with 0-split trees. .txt remains "
-            "the canonical artifact.",
+            "(no split learned — trips the TreeEnsembleClassifier 0-split bug)",
             output_path,
         )
         return False

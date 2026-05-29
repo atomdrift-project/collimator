@@ -1010,7 +1010,19 @@ def _normalize_vocab_token(value: Any, *, max_len: int = 96) -> str:
 
 
 def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
-    """Return normalized import/symbol tokens from a cleave file entry."""
+    """Return normalized import/symbol tokens from a cleave file entry.
+
+    Sources unified under one `symbol_vocab`:
+      - imports (`ff.i` / v4 `is`) — lib!name and bare name
+      - exports (`ff.x`)
+      - functions (`ff.fn`)
+      - call targets (`ff.ct`) — filefacts `Symbol::Call` dotted paths
+      - member chains (`ff.mc`) — filefacts `Symbol::Member` paths
+
+    `ff.ct`/`ff.mc` only appear in cleave's newer (filefacts-backed)
+    schema; on older reports `facts.get("ct")` returns None and the
+    loop is a no-op. So the read is naturally graceful — no gate.
+    """
     symbols: set[str] = set()
     for raw in file_imports(file_entry):
         if isinstance(raw, (list, tuple)):
@@ -1034,6 +1046,14 @@ def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
     for raw in facts.get("fn") or []:
         name = _tuple_string(raw, 0) if isinstance(raw, (list, tuple)) else raw
         sym = _normalize_vocab_token(name)
+        if len(sym) >= 2:
+            symbols.add(sym)
+    for raw in facts.get("ct") or []:
+        sym = _normalize_vocab_token(raw)
+        if len(sym) >= 2:
+            symbols.add(sym)
+    for raw in facts.get("mc") or []:
+        sym = _normalize_vocab_token(raw)
         if len(sym) >= 2:
             symbols.add(sym)
     return symbols

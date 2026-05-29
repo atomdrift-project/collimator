@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-xgboost-ars verify-litmus venv help fixture repin azoth-clean-bundle autocollie-backfill-l3
+.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle autocollie-backfill-l3
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -86,6 +86,24 @@ AZOTH_ROUTE_POLICIES_MD ?= $(AZOTH_ROOT)/route_policies.md
 AZOTH_GLOBAL_POLICY_METRICS ?= $(AZOTH_ROOT)/global_policy_metrics.json
 AZOTH_GLOBAL_POLICY_METRICS_MD ?= $(AZOTH_ROOT)/global_policy_metrics.md
 AZOTH_ROUTED_METRICS_ARGS ?=
+# When set, compute_routed_metrics and azoth_route_policy_search carry
+# forward unchanged-filetype entries from this bundle's previous outputs
+# instead of recomputing them. Honest invalidation: any model/feature
+# spec hash diff triggers recomputation for the affected filetypes.
+# Major wall-time savings on single-route promotes (~3-5 min off each
+# of policy_search and compute_routed_metrics).
+#
+# Defaults to $(OUT_ROOT)/azoth — the SOURCE training bundle is what
+# the candidate was cloned from (autocollie promote does
+# cloneTreeFast(baselineRoot, candidateRoot) → only the changed route's
+# files differ from this baseline). Using the live deployed bundle as
+# the comparison point fails: it may not have been refreshed in days,
+# so its model files genuinely differ on many routes from the training
+# baseline, defeating the impact detection.
+#
+# Empty disables the optimization.
+AZOTH_PREVIOUS_BUNDLE ?= $(OUT_ROOT)/azoth
+AZOTH_PREVIOUS_BUNDLE_ARG = $(if $(AZOTH_PREVIOUS_BUNDLE),--previous-bundle $(AZOTH_PREVIOUS_BUNDLE),)
 AZOTH_VALIDATE_ROUTED_METRICS_ARGS ?= --no-ci --no-stacked
 AZOTH_VALIDATE_DIAGNOSTICS ?= 0
 # Whether azoth-deploy emits route_diagnostics.{md,csv} and slice_metrics.{md,csv}.
@@ -685,21 +703,6 @@ _azoth-train: azoth-general
 	$(MAKE) azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0
 	$(MAKE) azoth-deploy
 
-# fixture: regenerate extraction_fixture.json + cross_language_fixture.json
-# using the SAME feature env autocollie's best general run was trained with,
-# so litmus parity tests exercise the deployed model's feature pipeline
-# rather than some divergent default.  Reuses azoth_train_best.py to resolve
-# the env so there's exactly one place that knows "what features did we ship
-# with" — historically this Make target reimplemented that knowledge as a
-# wall of TRAIN_* vars that drifted from reality.
-fixture: venv check-db
-	$(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
-		--route general \
-		--exec $(PYTHON) -m collimator fixture --db $(DB) --output $(OUT_DIR) \
-			$(if $(wildcard $(OUT_DIR)/$(MODEL_FILE)),--model $(OUT_DIR)/$(MODEL_FILE),) \
-			$(if $(wildcard $(OUT_DIR)/feature_spec.json),--spec $(OUT_DIR)/feature_spec.json,)
-
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json
 
@@ -1093,6 +1096,7 @@ azoth-policies: venv
 		--csv $(AZOTH_ROUTE_POLICIES_CSV) \
 		--markdown $(AZOTH_ROUTE_POLICIES_MD) \
 		$(foreach route,$(AZOTH_POLICY_OVERRIDE_ROUTE),--override-route $(route)) \
+		$(AZOTH_PREVIOUS_BUNDLE_ARG) \
 		$(EXP_WORKERS_ARG)
 
 # azoth-validate runs every gate that azoth-deploy runs (calibrate, route
@@ -1130,6 +1134,7 @@ azoth-validate: azoth-calibrate
 		--csv $(AZOTH_ROUTE_POLICIES_CSV) \
 		--markdown $(AZOTH_ROUTE_POLICIES_MD) \
 		$(foreach route,$(AZOTH_POLICY_OVERRIDE_ROUTE),--override-route $(route)) \
+		$(AZOTH_PREVIOUS_BUNDLE_ARG) \
 		$(EXP_WORKERS_ARG)
 	$(PYTHON) scripts/azoth_policy_global_metrics.py \
 		--config $(AZOTH_CONFIG) \
@@ -1154,7 +1159,7 @@ azoth-validate: azoth-calibrate
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_PREVIOUS_BUNDLE_ARG:--previous-bundle=--source-bundle) && \
 	  if [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "1" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "true" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "yes" ]; then \
 	    echo "Skipping litmus deployed-ensemble compatibility checks (AZOTH_SKIP_LITMUS_VALIDATE=$(AZOTH_SKIP_LITMUS_VALIDATE))"; \
 	  else \
@@ -1256,6 +1261,7 @@ azoth-deploy: azoth-calibrate
 		--csv $(AZOTH_ROUTE_POLICIES_CSV) \
 		--markdown $(AZOTH_ROUTE_POLICIES_MD) \
 		$(foreach route,$(AZOTH_POLICY_OVERRIDE_ROUTE),--override-route $(route)) \
+		$(AZOTH_PREVIOUS_BUNDLE_ARG) \
 		$(EXP_WORKERS_ARG)
 	$(PYTHON) scripts/azoth_policy_global_metrics.py \
 		--config $(AZOTH_CONFIG) \
@@ -1264,7 +1270,7 @@ azoth-deploy: azoth-calibrate
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget --max-budget-multiplier 30
-	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_ROUTED_METRICS_ARGS)
+	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_PREVIOUS_BUNDLE_ARG) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/azoth_route_policy_eval.py \
 		--score-table $(AZOTH_ROOT)/score_table.npz \
 		--general-scores $(AZOTH_ROOT)/general/threshold_scores.npz \
@@ -1309,7 +1315,13 @@ azoth-deploy-final: venv
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_PREVIOUS_BUNDLE_ARG:--previous-bundle=--source-bundle) && \
+	  echo "Preparing litmus before compatibility checks (update + build + update-rules; each non-fatal, all run)..." && \
+	  ( cd $(LITMUS_DIR) || { echo "WARN: cannot enter $(LITMUS_DIR); skipping litmus prep"; exit 0; }; \
+	    { echo "==> update litmus (git pull)"; git pull --ff-only; } || echo "WARN: litmus update (git pull) failed; continuing with current checkout"; \
+	    { echo "==> build litmus (cargo build --release)"; cargo build --release; } || echo "WARN: litmus build failed; continuing (the gating test below will surface a broken build)"; \
+	    { echo "==> litmus update-rules"; cargo run --release -- update-rules; } || echo "WARN: litmus update-rules failed; continuing (trait/model rules may be stale)"; \
+	    true ) && \
 	  echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
 	  ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
 	  $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf && \
@@ -1684,70 +1696,14 @@ lint: venv
 	$(VENV_DIR)/bin/mypy src/collimator/
 
 XDG_DATA_HOME ?= $(HOME)/.local/share
-# Model bundle directory. Azoth is the default model family; other explicit
-# MODEL values deploy to same-named sibling bundles unless BUNDLE is set.
-BUNDLE ?= $(if $(filter azoth,$(LEARNER)),azoth,$(MODEL))
-MODELS_DIR ?= $(XDG_DATA_HOME)/litmus/models/$(BUNDLE)
-XGBOOST_ARS_DIR ?= ../xgboost-ars
 LIGHTGBM_ARS_DIR ?= ../lightgbm-ars
 
 LITMUS_DIR ?= ../litmus
 
-# verify-xgboost-ars is only meaningful when shipping an XGBoost booster.
-# For azoth (LightGBM) models we skip it; lightgbm-ars's own parity
-# tests live in its repo and verify-litmus exercises the integrated path.
-_DEPLOY_PREREQS := verify-xgboost-ars verify-litmus
-
-ifeq ($(LEARNER),azoth)
+# Azoth (LightGBM → ONNX ensemble) is the only deploy path. The legacy
+# single-model deploy and its xgboost-ars cross-language parity gate were
+# retired along with the xgboost-ars crate.
 deploy: azoth-deploy
-else
-deploy: $(_DEPLOY_PREREQS)
-	@# Stage to a temp dir first — every staged file passes the
-	@# compatibility tests before we touch anything in MODELS_DIR.
-	$(eval _STAGE := $(shell mktemp -d))
-	cp $(OUT_DIR)/$(MODEL_FILE) $(_STAGE)/$(MODEL_FILE)
-	cp $(OUT_DIR)/feature_spec.json $(_STAGE)/feature_spec.json
-	@test -f $(OUT_DIR)/extraction_fixture.json || { rm -rf $(_STAGE); echo "error: extraction_fixture.json not found"; exit 1; }
-	cp $(OUT_DIR)/extraction_fixture.json $(_STAGE)/extraction_fixture.json
-	@# Optional artifacts: explain.rs reads shap_importance.json if
-	@# present (and degrades silently otherwise); model.onnx is for
-	@# non-litmus downstream consumers and litmus itself never reads it.
-	@test ! -f $(OUT_DIR)/evaluation.json || cp $(OUT_DIR)/evaluation.json $(_STAGE)/evaluation.json
-	@test ! -f $(OUT_DIR)/shap_importance.json || cp $(OUT_DIR)/shap_importance.json $(_STAGE)/shap_importance.json
-	@test ! -f $(OUT_DIR)/model.onnx || cp $(OUT_DIR)/model.onnx $(_STAGE)/model.onnx
-	@test ! -f $(OUT_DIR)/README.md || cp $(OUT_DIR)/README.md $(_STAGE)/README.md
-	@test ! -f $(OUT_DIR)/MODEL.md || cp $(OUT_DIR)/MODEL.md $(_STAGE)/MODEL.md
-	@$(PYTHON) scripts/build_litmus_config.py --threshold-tuning $(OUT_DIR)/threshold_tuning.json --output $(_STAGE)/config.json || { rm -rf $(_STAGE); exit 1; }
-	@echo "Running litmus deployed-model compatibility checks against staged copy..."
-	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test feature_spec || { rm -rf $(_STAGE); exit 1; }
-	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(_STAGE) cargo test --release --test extraction_parity || { rm -rf $(_STAGE); exit 1; }
-	@# Promote into MODELS_DIR without swapping the directory wholesale, so
-	@# `.git/` and unrelated repo files survive. Remove stale model-layout
-	@# artifacts first: litmus treats a leftover general/ directory as an
-	@# ensemble bundle and would ignore the freshly deployed single bundle.
-	@mkdir -p $(MODELS_DIR)
-	@rm -rf "$(MODELS_DIR)/general" "$(MODELS_DIR)/filegroups" "$(MODELS_DIR)/filetypes"
-	@rm -f "$(MODELS_DIR)/model.json" "$(MODELS_DIR)/model.txt" "$(MODELS_DIR)/feature_spec.json" \
-	  "$(MODELS_DIR)/evaluation.json" "$(MODELS_DIR)/extraction_fixture.json" "$(MODELS_DIR)/config.json" \
-	  "$(MODELS_DIR)/shap_importance.json" "$(MODELS_DIR)/model.onnx" "$(MODELS_DIR)/README.md" \
-	  "$(MODELS_DIR)/MODEL.md"
-	@for f in $(MODEL_FILE) feature_spec.json evaluation.json extraction_fixture.json config.json shap_importance.json model.onnx README.md MODEL.md; do \
-	  if [ -f "$(_STAGE)/$$f" ]; then \
-	    cp "$(_STAGE)/$$f" "$(MODELS_DIR)/$$f"; \
-	  fi; \
-	done
-	@rm -rf $(_STAGE)
-	@echo "litmus: all deploy checks passed"
-	@echo "Deployed to $(MODELS_DIR) (commit and push manually if you want to publish)."
-endif
-
-.PHONY: verify-xgboost-ars
-verify-xgboost-ars:
-	@test -d $(XGBOOST_ARS_DIR) || { echo "error: $(XGBOOST_ARS_DIR) does not exist"; exit 1; }
-	@test -f $(OUT_DIR)/reference.json || { echo "error: $(OUT_DIR)/reference.json not found — run make azoth-fast-train first"; exit 1; }
-	@echo "Running xgboost-ars tests..."
-	cd $(XGBOOST_ARS_DIR) && XGBOOST_ARS_REFERENCE_JSON=$(abspath $(OUT_DIR)/reference.json) cargo test --release
-	@echo "xgboost-ars: all tests passed"
 
 .PHONY: verify-litmus
 verify-litmus:
@@ -1814,7 +1770,7 @@ azoth-augment-small-routes: venv check-db
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
 		--fail-on-budget --max-budget-multiplier 30
-	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_ROUTED_METRICS_ARGS)
+	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_PREVIOUS_BUNDLE_ARG) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 
 # One-time repair for legacy autocollie baselines whose run JSONs predate
@@ -1892,6 +1848,57 @@ autocollie-favorites-report: venv
 		--top $(or $(TOP),10) \
 		$(if $(ROUTE),--route $(ROUTE),) \
 		$(if $(REQUIRE_APPLES),--require-apples,)
+
+# Phase-2 auto-replay. Picks top-N candidates per route (globally
+# ranked by replay_score: apples-to-apples first, then biggest d_r3,
+# then largest n_ben_holdout), filters out anything that recently
+# failed (cooldown window), then iterates confirm + promote per key.
+# Each outcome is recorded in out/autocollie/replay_history.json so the
+# favorites report can show "last attempted YYYY-MM-DD: <reason>" and
+# the cooldown skips recently-failed candidates next time around.
+#
+# Usage:
+#   make autocollie-replay-favorites                # top 1 per route
+#   make autocollie-replay-favorites TOP=3
+#   make autocollie-replay-favorites ROUTE=filegroups/source
+#   make autocollie-replay-favorites COOLDOWN=0     # ignore retry history
+autocollie-replay-favorites: venv autocollie-build
+	@set -e; \
+	plan=$$(mktemp); \
+	$(PYTHON) scripts/autocollie_favorites.py \
+		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
+		--baselines $(AZOTH_ROOT)/.autocollie/promoted_baselines.json \
+		--top $(or $(TOP),1) \
+		--replay-cooldown $(or $(COOLDOWN),2.0) \
+		$(if $(ROUTE),--route $(ROUTE),) \
+		--replay-plan > "$$plan"; \
+	count=$$(wc -l < "$$plan" | tr -d ' '); \
+	echo "▶ replay-favorites: $$count candidate(s) queued"; \
+	if [ "$$count" -eq 0 ]; then \
+	  echo "no candidates eligible (try TOP=N, ROUTE=, or COOLDOWN=0)"; \
+	  rm -f "$$plan"; \
+	  exit 0; \
+	fi; \
+	while IFS="	" read key route idea; do \
+	  echo ""; \
+	  echo "▶▶▶ replay candidate: $$route  idea=$$idea  key=$$key"; \
+	  echo ""; \
+	  conf_log=/tmp/replay-confirm-$$key.log; \
+	  prom_log=/tmp/replay-promote-$$key.log; \
+	  : > "$$conf_log"; : > "$$prom_log"; \
+	  $(MAKE) --no-print-directory autocollie-confirm KEY=$$key 2>&1 | tee "$$conf_log" || true; \
+	  if ! grep -q ": FAIL ===" "$$conf_log"; then \
+	    $(MAKE) --no-print-directory autocollie-promote KEY=$$key 2>&1 | tee "$$prom_log" || true; \
+	  fi; \
+	  $(PYTHON) scripts/autocollie_record_replay.py \
+	    --auto-detect \
+	    --key $$key --route "$$route" \
+	    --confirm-log "$$conf_log" --promote-log "$$prom_log" \
+	    || echo "warn: record_replay failed for $$key"; \
+	done < "$$plan"; \
+	rm -f "$$plan"; \
+	echo ""; \
+	echo "🏁 replay-favorites complete"
 
 autocollie-confirm: venv check-db autocollie-build
 	@test -n "$(KEY)" || { echo "error: set KEY=<16-hex experiment_key>"; exit 1; }
@@ -2003,7 +2010,7 @@ help:
 	@echo "  azoth-validate     Run azoth-deploy gates against AZOTH_ROOT without copying (AZOTH_SKIP_LITMUS_VALIDATE=1 skips litmus)"
 	@echo "  demo-db            Create a small SQLite DB for testing"
 	@echo "  test               Run unit tests"
-	@echo "  deploy             Copy model artifacts to ../litmus-models"
+	@echo "  deploy             Alias for azoth-deploy (deploy the routed ensemble)"
 	@echo ""
 	@echo "Options:"
 	@echo "  DB=url             Hopper database DSN"
@@ -2029,4 +2036,3 @@ help:
 	@echo "  EXP_ESTIMATORS_DEFAULT=n  Floor for screen/confirm/promote estimators (default: 250)"
 	@echo "  AZOTH_SPECIALIST_TRAIN_OVERRIDE='route:field=value ...'"
 	@echo "                       Per-route specialist TrainConfig overrides"
-	@echo "  MODELS_DIR=path    Deployment target (default: ../litmus-models/<target-model>)"

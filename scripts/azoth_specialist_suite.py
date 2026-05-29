@@ -1167,6 +1167,29 @@ def _train_one(
         feature_names=spec.feature_names,
         sample_file_types=sample_file_types,
     )
+
+    # Refuse to emit a route for a constant predictor. When the optimizer
+    # finds no split worth making (tiny single-class slices), the model
+    # always emits the same score regardless of input — it carries no
+    # signal. Rather than ship a useless route, omit it: litmus routes
+    # those files to the filegroup/general ensemble instead (the loader
+    # treats absent specialists as droppable). Marked with `error` so the
+    # existing summary-skip path (azoth_calibrate_ensemble._load_routes)
+    # drops it from the deployed route list.
+    if export.is_constant_predictor(result.model):
+        LOG.info(
+            "%s: constant predictor (no split learned) — refusing to emit a route; "
+            "litmus will route these files to the filegroup/general ensemble",
+            name,
+        )
+        return {
+            "name": name,
+            "kind": kind,
+            "file_types": list(file_types),
+            "error": True,
+            "skip_reason": "constant_predictor",
+        }
+
     output_dir.mkdir(parents=True, exist_ok=True)
     if feature_env:
         spec.save(output_dir / "feature_spec.json")
@@ -1187,10 +1210,21 @@ def _train_one(
         # LAST — only after every new seed file is durable on disk — so
         # an interrupted run never produces a bundle with zero models.
         def _save_seed_atomic(seed: int, model_obj: Any) -> None:
-            final_path = bundle.write_seed_model_path(output_dir, seed, "txt")
-            tmp_path = final_path.with_name(f".{final_path.name}.tmp")
-            export.save_model(model_obj, tmp_path)
-            os.replace(tmp_path, final_path)
+            # Write .txt then .onnx, each via a `.tmp` sibling renamed into
+            # place (model_files() ignores `.tmp`, so an interrupted run never
+            # exposes a half-written seed). The .onnx is emitted EXPLICITLY:
+            # the `.tmp` suffix would otherwise suppress save_model's automatic
+            # sibling export, and the deployed bundle is ONNX-only — every seed
+            # needs an .onnx or the route strands on the retired LightGBM loader.
+            final_txt = bundle.write_seed_model_path(output_dir, seed, "txt")
+            tmp_txt = final_txt.with_name(f".{final_txt.name}.tmp")
+            export.save_model(model_obj, tmp_txt)
+            os.replace(tmp_txt, final_txt)
+            booster = getattr(model_obj, "booster_", model_obj)
+            final_onnx = final_txt.with_suffix(".onnx")
+            tmp_onnx = final_onnx.with_name(f".{final_onnx.name}.tmp")
+            if export.export_lightgbm_onnx(booster, booster.num_feature(), tmp_onnx):
+                os.replace(tmp_onnx, final_onnx)
         _save_seed_atomic(int(config.seed), result.model)
         for offset in range(1, n_seed_extras + 1):
             extra_seed = int(config.seed) + offset

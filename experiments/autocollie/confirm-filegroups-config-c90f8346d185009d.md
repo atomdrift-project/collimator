@@ -1,6 +1,6 @@
 # Confirm PASS — c90f8346d185009d on `filegroups/config`
 
-Cycle `20260524T185742-confirm-c90f8346d185009d` — 2026-05-24T18:57:42Z
+Cycle `20260525T180412-confirm-c90f8346d185009d` — 2026-05-25T18:04:12Z
 
 PR_AUC held across 3 seeds (orig 0.9998)
 

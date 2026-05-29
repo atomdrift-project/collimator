@@ -600,3 +600,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T005948-filetypes-macho` — 2026-05-28T00:59:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `db3eee868079e68f` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9965 | 0.9993 | 0.9724 | 23 | [log](out/autocollie/runs/2026-05-28T01-04-49_20260528T005948-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b5c17dea71395712` | macho_control_tail_target | ok | 0.9963 | 0.9992 | 0.9535 | 19 | [log](out/autocollie/runs/2026-05-28T01-05-18_20260528T005948-filetypes-macho_macho_control_tail_target.log) |
+| `094e74ce19c18f56` | macho_hardneg_01_12 | ok | 0.9958 | 0.9991 | 0.9704 | 5 | [log](out/autocollie/runs/2026-05-28T01-05-39_20260528T005948-filetypes-macho_macho_hardneg_01_12.log) |
+| `b6988610744ea7c3` | macho_sym_vocab_bigrams | ok | 0.9964 | 0.9991 | 0.9670 | 29 | [log](out/autocollie/runs/2026-05-28T01-05-46_20260528T005948-filetypes-macho_macho_sym_vocab_bigrams.log) |
+| `93ea2308645c590c` | macho_kv_vocab_split | ok | 0.9964 | 0.9992 | 0.9742 | 20 | [log](out/autocollie/runs/2026-05-28T01-06-16_20260528T005948-filetypes-macho_macho_kv_vocab_split.log) |
+| `da52de6b1d5d4538` | macho_ablate_extreme | ok | 0.9963 | 0.9992 | 0.9651 | 18 | [log](out/autocollie/runs/2026-05-28T01-06-37_20260528T005948-filetypes-macho_macho_ablate_extreme.log) |
+| `184ca04f383b230f` | macho_tiered_trigrams_strict | ok | 0.9962 | 0.9992 | 0.9617 | 22 | [log](out/autocollie/runs/2026-05-28T01-06-56_20260528T005948-filetypes-macho_macho_tiered_trigrams_strict.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_tail_target`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Control spec targeting deployed operating point to maximize recall@3FPM while keeping PR_AUC flat.
+- **`macho_hardneg_01_12`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Hard-negative sweep aiming to improve recall@3FPM by upweighting difficult benign samples to sharpen the decision boundary.
+- **`macho_sym_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol vocab and bigrams to capture Mach-O import co-occurrence patterns, aiming to boost PR_AUC.
+- **`macho_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates KV vocab with value splitting to recover per-element signal in metadata, aiming to improve PR_AUC.
+- **`macho_ablate_extreme`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme features to reduce noise and overfitting, aiming to stabilize ROC_AUC and PR_AUC.
+- **`macho_tiered_trigrams_strict`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Ports tiered crit trigrams with stricter frequency floor from sister routes to capture high-signal trait co-occurrences, aiming to lift PR_AUC.
+
+</details>
+
+## Cycle `20260528T122535-filetypes-macho` — 2026-05-28T12:25:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `db3eee868079e68f` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9965 | 0.9993 | 0.9724 | 2 | [log](out/autocollie/runs/2026-05-28T12-32-09_20260528T122535-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b5c17dea71395712` | macho_control_tail_target | dup | 0.9963 | 0.9992 | 0.9535 | 2 | [log](out/autocollie/runs/2026-05-28T12-32-13_20260528T122535-filetypes-macho_macho_control_tail_target.log) |
+| `ebc6b7f65b609766` | macho_hardneg_01_12 | ok | 0.9958 | 0.9991 | 0.9704 | 17 | [log](out/autocollie/runs/2026-05-28T12-32-18_20260528T122535-filetypes-macho_macho_hardneg_01_12.log) |
+| `3ebfc3cedbdbfda6` | macho_kv_vocab_split | ok | 0.9964 | 0.9992 | 0.9742 | 11 | [log](out/autocollie/runs/2026-05-28T12-32-37_20260528T122535-filetypes-macho_macho_kv_vocab_split.log) |
+| `6e776f8b75fa2536` | macho_sym_bigrams_vocab | ok | 0.9964 | 0.9991 | 0.9670 | 14 | [log](out/autocollie/runs/2026-05-28T12-32-50_20260528T122535-filetypes-macho_macho_sym_bigrams_vocab.log) |
+| `401157be69b9e108` | macho_lowfreq_tiered_trigrams | ok | 0.9966 | 0.9992 | 0.9670 | 55 | [log](out/autocollie/runs/2026-05-28T12-33-05_20260528T122535-filetypes-macho_macho_lowfreq_tiered_trigrams.log) |
+| `41d6bb769035b296` | macho_seed_search_tail | ok | 0.9967 | 0.9993 | 0.8971 | 25 | [log](out/autocollie/runs/2026-05-28T12-34-02_20260528T122535-filetypes-macho_macho_seed_search_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_tail_target`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Targets recall@3FPM by optimizing threshold at deployed FPR while keeping feature surface identical to recent baseline for cache hits.
+- **`macho_hardneg_01_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to boost PR_AUC by upweighting hard negatives to sharpen decision boundary near benign/malware overlap.
+- **`macho_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by adding KV vocab features to capture Mach-O load command and metadata patterns missed by n-grams.
+- **`macho_sym_bigrams_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 …` — Aims to improve recall@3FPM by modeling Mach-O symbol co-occurrence patterns that indicate malicious API usage chains.
+- **`macho_lowfreq_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by lowering bigram frequency floor and adding tiered trigrams to capture rarer but high-signal Mach-O structural patterns.
+- **`macho_seed_search_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Targets recall@3FPM stability by averaging over 3 seeds to filter out RNG noise while optimizing for the deployed tail operating point.
+
+</details>
+

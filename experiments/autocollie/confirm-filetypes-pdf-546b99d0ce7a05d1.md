@@ -1,15 +1,15 @@
 # Confirm FAIL — 546b99d0ce7a05d1 on `filetypes/pdf`
 
-Cycle `20260523T172547-confirm-546b99d0ce7a05d1` — 2026-05-23T17:25:47Z
+Cycle `20260526T215310-confirm-546b99d0ce7a05d1` — 2026-05-26T21:53:10Z
 
-averaged ensemble PR_AUC regressed: 1.0000 -> 0.9942 (tol 0.0050, K=3)
+averaged ensemble PR_AUC regressed: 1.0000 -> 0.9943 (tol 0.0050, K=3)
 
 ## Per-seed results (3 ran)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `546b99d0ce7a05d1` | `97fe34953704ecf5` | `97fe34953704ecf5` | `97fe34953704ecf5` |
-| PR AUC | 1.0000 | 0.9942 | 0.9942 | 0.9942 |
+| key | `546b99d0ce7a05d1` | `61bfb709c25e6a69` | `61bfb709c25e6a69` | `61bfb709c25e6a69` |
+| PR AUC | 1.0000 | 0.9943 | 0.9943 | 0.9943 |
 | ROC AUC | 0.9992 | 0.5000 | 0.5000 | 0.5000 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | FAIL | FAIL | FAIL |

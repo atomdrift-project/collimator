@@ -16,7 +16,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from collimator import bundle  # noqa: E402  — late import after sys.path patch
+from collimator import bundle, export  # noqa: E402  — late import after sys.path patch
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -113,6 +113,20 @@ def validate(root: Path) -> list[str]:
             errors.append(f"{route}: referenced but missing model file or feature_spec.json")
         else:
             errors.extend(_ensemble_feature_count_errors(root, route))
+            # Degenerate routes must never ship: they carry no signal and
+            # (being .txt-only constant predictors) can't even export to ONNX.
+            # Calibration drops them upstream; this is the hard deploy gate.
+            if export.route_model_is_degenerate(_route_path(root, route)):
+                errors.append(f"{route}: constant-predictor model must not be deployed")
+            # ONNX-only deploy: litmus no longer loads .txt/.json. Any native
+            # dump in the staged bundle means a seed has no .onnx sibling.
+            native = sorted(
+                p.name
+                for p in bundle.model_files(_route_path(root, route))
+                if p.suffix != ".onnx"
+            )
+            if native:
+                errors.append(f"{route}: non-ONNX model(s) {native} must not be deployed")
 
     for route_name, route in policy.get("routes", {}).items():
         filetype = str(route.get("filetype", ""))

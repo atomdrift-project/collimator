@@ -494,3 +494,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T011756-general` — 2026-05-28T01:17:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `88b3d568b8357518` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9986 | 0.9987 | 0.9852 | 117 | [log](out/autocollie/runs/2026-05-28T01-23-37_20260528T011756-general_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c0887a6abd5dcb6b` | general_control_scalepos075_est300 | ok | 0.9984 | 0.9985 | 0.9816 | 78 | [log](out/autocollie/runs/2026-05-28T01-25-34_20260528T011756-general_general_control_scalepos075_est300.log) |
+| `aa5037f17dc77e56` | general_exploit_extra_trees_est350 | ok | 0.9982 | 0.9983 | 0.9804 | 19 | [log](out/autocollie/runs/2026-05-28T01-26-53_20260528T011756-general_general_exploit_extra_trees_est350.log) |
+| `201ee313ed22e4cb` | general_feat_kv_textenc_vocab | ok | 0.9985 | 0.9986 | 0.9810 | 86 | [log](out/autocollie/runs/2026-05-28T01-27-12_20260528T011756-general_general_feat_kv_textenc_vocab.log) |
+| `7c2ae1ee143d1483` | general_feat_lowbigram_tieredtrigrams | ok | 0.9984 | 0.9985 | 0.9816 | 73 | [log](out/autocollie/runs/2026-05-28T01-28-38_20260528T011756-general_general_feat_lowbigram_tieredtrigrams.log) |
+| `136fec71d46fb23b` | general_ablation_blindfold_off | ok | 0.9984 | 0.9985 | 0.9808 | 78 | [log](out/autocollie/runs/2026-05-28T01-29-51_20260528T011756-general_general_ablation_blindfold_off.log) |
+| `a4cd85ee0477c434` | general_retry_seedsearch3 | ok | 0.9986 | 0.9987 | 0.9826 | 63 | [log](out/autocollie/runs/2026-05-28T01-31-09_20260528T011756-general_general_retry_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`general_control_scalepos075_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature set; down-weight positives to reduce FPs and improve recall@3 FP/M at deployed operating point.
+- **`general_exploit_extra_trees_est350`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Same feature set; use extra_trees for ensemble noise to improve generalization at tail and boost recall@3 FP/M.
+- **`general_feat_kv_textenc_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and text_encoding to capture lexical/encoding signals, aiming to lift PR_AUC and recall@3 FP/M.
+- **`general_feat_lowbigram_tieredtrigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port xml route's low bigram_min_freq and tiered trigrams to catch rarer malicious patterns, targeting recall@3 FP/M gain.
+- **`general_ablation_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold dropout to test if removing stochastic feature noise improves PR_AUC stability.
+- **`general_retry_seedsearch3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry best feature set with seed_search_k=3 to average out seed variance and confirm recall@3 FP/M signal.
+
+</details>
+

@@ -296,6 +296,87 @@ def _route_idx(route_names: np.ndarray) -> dict[str, int]:
     return {str(name): i for i, name in enumerate(route_names)}
 
 
+def _route_calibrator_cache_key(
+    route_name: str, partition: str, raw_scores: np.ndarray, labels: np.ndarray,
+) -> str:
+    """Stable hash of the inputs to _calibrate_route_scores_cv.
+
+    The calibrated output is purely a function of:
+      - route_name (identity, not really an input but part of the cache namespace)
+      - partition (test vs dev — calibration is per-partition)
+      - raw_scores at the partition's rows (NaNs included)
+      - labels at the partition's rows
+      - n_splits + random_state (held constant at defaults)
+    so hashing those gives an exact-match cache key. If the route's
+    model didn't change between deploys, the score_table entries for
+    that route are identical → hash is identical → cache hit. If ANY
+    score differs (route retrained, score table regenerated, partition
+    mask shifted), the hash changes and we recompute honestly.
+    """
+    h = hashlib.sha256()
+    h.update(route_name.encode("utf-8"))
+    h.update(b"\x00")
+    h.update(partition.encode("utf-8"))
+    h.update(b"\x00")
+    # Use raw bytes — np.ndarray.tobytes() is fast and gives a stable
+    # representation as long as dtype is stable (we asarray to float32
+    # to lock that in).
+    h.update(np.ascontiguousarray(raw_scores, dtype=np.float32).tobytes())
+    h.update(b"\x00")
+    h.update(np.ascontiguousarray(labels, dtype=np.int8).tobytes())
+    return h.hexdigest()[:32]
+
+
+def _calibrate_route_with_cache(
+    route_name: str,
+    partition: str,
+    raw_scores: np.ndarray,
+    labels: np.ndarray,
+    cache_dir: Path | None,
+) -> np.ndarray:
+    """Cached wrapper around _calibrate_route_scores_cv.
+
+    When cache_dir is given, hash the inputs; on hit, load the cached
+    calibrated array. On miss, compute and write. Cache files are
+    self-validating (hash in filename → input change → miss). Stale
+    files accumulate but are bounded — one file per unique
+    (route, partition, score-content) tuple, ~2.4 MB each.
+    """
+    if cache_dir is None:
+        return _calibrate_route_scores_cv(raw_scores, labels)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    key = _route_calibrator_cache_key(route_name, partition, raw_scores, labels)
+    safe_name = route_name.replace("/", "_")
+    cache_path = cache_dir / f"{safe_name}-{partition}-{key}.npz"
+    if cache_path.is_file():
+        try:
+            with np.load(cache_path) as cached:
+                cached_arr = cached["calibrated"]
+                if cached_arr.shape == raw_scores.shape:
+                    return cached_arr.astype(np.float32)
+                LOG.warning(
+                    "calibrator cache shape mismatch for %s: cached=%s, expected=%s; refitting",
+                    route_name, cached_arr.shape, raw_scores.shape,
+                )
+        except (OSError, ValueError) as e:
+            LOG.warning("calibrator cache load failed for %s: %s; refitting", route_name, e)
+    out = _calibrate_route_scores_cv(raw_scores, labels)
+    # Atomic write under concurrent workers. np.savez_compressed
+    # auto-appends '.npz' to a string path, which broke the first
+    # version that used cache_path.with_suffix('.tmp') — savez wrote
+    # to '<hash>.tmp.npz' but we then tried to rename '<hash>.tmp'.
+    # Use a unique-per-worker tmp file ending in .npz so savez doesn't
+    # rewrite the name, then atomic-rename to the final path. If two
+    # workers race to write the same key, last-rename-wins; both
+    # outputs are bytewise-identical (deterministic CV at fixed seed)
+    # so the race is harmless.
+    import os as _os  # noqa: PLC0415
+    tmp = cache_path.parent / f"{cache_path.stem}.{_os.getpid()}.tmp.npz"
+    np.savez_compressed(tmp, calibrated=out)
+    _os.replace(tmp, cache_path)
+    return out
+
+
 def _calibrate_route_scores_cv(
     raw_scores: np.ndarray,
     labels: np.ndarray,
@@ -688,6 +769,9 @@ def compute_per_filetype_metrics(
     with_ci: bool = True,
     include_stacked: bool = True,
     calib_parallelism: int = 1,
+    calibrator_cache_dir: Path | None = None,
+    previous_metrics_path: Path | None = None,
+    previous_score_table_path: Path | None = None,
 ) -> dict[str, Any]:
     score_table = np.load(score_table_path, allow_pickle=True)
     scores: np.ndarray = score_table["scores"]
@@ -722,8 +806,10 @@ def compute_per_filetype_metrics(
     # them across a ProcessPoolExecutor so we don't sit serially on sklearn's
     # single-threaded IsotonicRegression.fit for ~46 routes (was the dominant
     # deploy-time wall-clock after diagnostics was gated).
-    LOG.info("fitting per-route isotonic calibrators (5-fold CV) over %d rows (parallelism=%d)",
-             labels.size, calib_parallelism)
+    LOG.info("fitting per-route isotonic calibrators (5-fold CV) over %d rows "
+             "(parallelism=%d, cache=%s)",
+             labels.size, calib_parallelism,
+             str(calibrator_cache_dir) if calibrator_cache_dir else "off")
     calibrated = np.full_like(scores, np.nan, dtype=np.float32)
     if calib_parallelism > 1 and len(route_names) > 1:
         from concurrent.futures import ProcessPoolExecutor  # noqa: PLC0415
@@ -734,7 +820,11 @@ def compute_per_filetype_metrics(
         # transfer cost is negligible vs the ~seconds-per-route fit.
         with ProcessPoolExecutor(max_workers=n_workers) as pool:
             futures = {
-                pool.submit(_calibrate_route_scores_cv, scores[r_idx], labels): r_idx
+                pool.submit(
+                    _calibrate_route_with_cache,
+                    str(route_names[r_idx]), partition, scores[r_idx], labels,
+                    calibrator_cache_dir,
+                ): r_idx
                 for r_idx in range(len(route_names))
             }
             for fut in futures:
@@ -742,7 +832,10 @@ def compute_per_filetype_metrics(
                 calibrated[r_idx] = fut.result()
     else:
         for r_idx, route_name in enumerate(route_names):
-            calibrated[r_idx] = _calibrate_route_scores_cv(scores[r_idx], labels)
+            calibrated[r_idx] = _calibrate_route_with_cache(
+                str(route_name), partition, scores[r_idx], labels,
+                calibrator_cache_dir,
+            )
     LOG.info("calibration complete; computing per-filetype metrics")
 
     with open(route_policies_path) as f:
@@ -771,11 +864,61 @@ def compute_per_filetype_metrics(
         out["all_files"]["n_malware"] = int((labels == 1).sum())
         out["all_files"]["n_benign"] = int((labels == 0).sum())
 
+    # Carry-forward optimization for single-route promotes. When a
+    # previous bundle exists AND its score_table.npz has the same routes
+    # with identical scores for a filetype's relevant routes (general +
+    # filegroup parent + own specialist), the filetype's ensemble
+    # metrics for THIS partition can't have changed. Copy the previous
+    # entry rather than recomputing — saves ~3-4 min on a promote where
+    # only ONE route's specialist was retrained. Honest invalidation:
+    # any score change → hash mismatch → recompute.
+    carry_forward: dict[str, dict[str, Any]] = {}
+    if previous_metrics_path is not None and previous_score_table_path is not None:
+        try:
+            from azoth_impact import changed_routes as _changed_routes, unchanged_filetypes  # noqa: PLC0415
+            from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: PLC0415
+            changed, _ = _changed_routes(score_table_path, previous_score_table_path)
+            if previous_metrics_path.is_file():
+                with open(previous_metrics_path) as f:
+                    prev_metrics = json.load(f)
+                prev_ft_entries = (prev_metrics.get("filetypes") or {})
+                # Build available_routes from THIS bundle's route list.
+                avail = set(_route_idx(route_names).keys())
+                # Compute "filetypes whose relevant routes all match previous"
+                # — these can be carried forward verbatim from prev_metrics.
+                all_fts_in_policies = [
+                    rn.split("/", 1)[1]
+                    for rn in policies.get("routes", {}).keys()
+                    if rn.startswith("filetypes/")
+                ]
+                unchanged = unchanged_filetypes(
+                    changed, DEPLOYMENT_GROUPS, avail, all_fts_in_policies,
+                )
+                LOG.info(
+                    "carry-forward: %d/%d routes changed; %d/%d filetypes can be carried forward from prev metrics",
+                    len(changed), len(avail),
+                    len(unchanged), len(all_fts_in_policies),
+                )
+                for ft in unchanged:
+                    if ft in prev_ft_entries:
+                        carry_forward[ft] = prev_ft_entries[ft]
+        except Exception as e:  # noqa: BLE001
+            LOG.warning(
+                "carry-forward setup failed (%s); recomputing all filetypes from scratch",
+                e,
+            )
+            carry_forward = {}
+
     # Per-filetype 3-way views.
     for route_name, route_info in policies.get("routes", {}).items():
         if not route_name.startswith("filetypes/"):
             continue
         ftype = route_name.split("/", 1)[1]
+        if ftype in carry_forward:
+            # Copy the prior bundle's entry verbatim — its inputs were
+            # bytewise-identical to ours.
+            out["filetypes"][ftype] = carry_forward[ftype]
+            continue
         mask = file_types == ftype
         n_files = int(mask.sum())
         if n_files == 0:
@@ -933,6 +1076,9 @@ def compute_per_filetype_metrics_honest(
     with_ci: bool = True,
     include_stacked: bool = True,
     calib_parallelism: int = 1,
+    calibrator_cache_dir: Path | None = None,
+    previous_metrics_path: Path | None = None,
+    previous_score_table_path: Path | None = None,
 ) -> dict[str, Any]:
     """Run the metric pipeline twice — once on the dev bucket, once on
     the test bucket — and merge so that ensemble-strategy selection
@@ -958,6 +1104,9 @@ def compute_per_filetype_metrics_honest(
         with_ci=with_ci,
         include_stacked=include_stacked,
         calib_parallelism=calib_parallelism,
+        calibrator_cache_dir=calibrator_cache_dir,
+        previous_metrics_path=previous_metrics_path,
+        previous_score_table_path=previous_score_table_path,
     )
     LOG.info("computing dev-partition metrics (strategy selection)")
     dev_out = compute_per_filetype_metrics(
@@ -971,6 +1120,9 @@ def compute_per_filetype_metrics_honest(
         with_ci=False,                # CIs unused for selection; faster.
         include_stacked=include_stacked,
         calib_parallelism=calib_parallelism,
+        calibrator_cache_dir=calibrator_cache_dir,
+        previous_metrics_path=previous_metrics_path,
+        previous_score_table_path=previous_score_table_path,
     )
 
     test_out["schema"] = "azoth.per_filetype_metrics.v2"
@@ -1095,6 +1247,26 @@ def main() -> int:
                              "calibration. 0 (default) auto-picks "
                              "min(cpu_count, n_routes) capped at 16. Set "
                              "to 1 to force serial.")
+    parser.add_argument("--calibrator-cache-dir", type=Path, default=None,
+                        help="Directory to cache per-route calibrated arrays. "
+                             "Cache key = sha256(route + partition + raw_scores "
+                             "+ labels), so any input change invalidates the "
+                             "entry honestly. Major win on promote: only the "
+                             "ONE route that changed needs to refit; the other "
+                             "44 hit the cache. Defaults to "
+                             "out/cache/azoth-calibrator/. Pass '' to disable.")
+    parser.add_argument("--no-calibrator-cache", action="store_true",
+                        help="Disable the per-route calibrator cache. Useful "
+                             "when debugging suspected calibration drift.")
+    parser.add_argument("--previous-bundle", type=Path, default=None,
+                        help="Previous bundle path. When set, the script "
+                             "compares this bundle's score_table.npz against "
+                             "the current one and carries forward per-filetype "
+                             "metrics for filetypes whose routes' scores are "
+                             "bytewise-identical. Major win on promote: only "
+                             "the filetypes whose routes actually changed get "
+                             "recomputed; the rest copy from "
+                             "<previous-bundle>/per_filetype_metrics.json.")
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format="%(message)s")
@@ -1105,6 +1277,17 @@ def main() -> int:
         calib_parallelism = min(_os.cpu_count() or 1, 16)
     else:
         calib_parallelism = args.calib_parallelism
+    if args.no_calibrator_cache:
+        calibrator_cache_dir = None
+    elif args.calibrator_cache_dir is not None:
+        calibrator_cache_dir = args.calibrator_cache_dir
+    else:
+        calibrator_cache_dir = Path("out/cache/azoth-calibrator")
+    prev_metrics_path: Path | None = None
+    prev_score_table_path: Path | None = None
+    if args.previous_bundle is not None:
+        prev_metrics_path = args.previous_bundle / "per_filetype_metrics.json"
+        prev_score_table_path = args.previous_bundle / "score_table.npz"
     if args.db:
         # Honest: pick ensemble strategy on dev, report on test.
         metrics = compute_per_filetype_metrics_honest(
@@ -1117,6 +1300,9 @@ def main() -> int:
             with_ci=not args.no_ci,
             include_stacked=not args.no_stacked,
             calib_parallelism=calib_parallelism,
+            calibrator_cache_dir=calibrator_cache_dir,
+            previous_metrics_path=prev_metrics_path,
+            previous_score_table_path=prev_score_table_path,
         )
     else:
         # Full-corpus mode (no partition split available). Strategy is
@@ -1132,6 +1318,9 @@ def main() -> int:
             with_ci=not args.no_ci,
             include_stacked=not args.no_stacked,
             calib_parallelism=calib_parallelism,
+            calibrator_cache_dir=calibrator_cache_dir,
+            previous_metrics_path=prev_metrics_path,
+            previous_score_table_path=prev_score_table_path,
         )
     out_path = root / "per_filetype_metrics.json"
     with open(out_path, "w") as f:

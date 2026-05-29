@@ -604,3 +604,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T082248-filetypes-python` — 2026-05-28T08:22:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d7e19b08891d48f3` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9980 | 0.9984 | 0.9801 | 101 | [log](out/autocollie/runs/2026-05-28T08-28-24_20260528T082248-filetypes-python_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3e4db218070e9710` | py_control_hsn01_w18_gamma1 | ok | 0.9982 | 0.9985 | 0.9790 | 67 | [log](out/autocollie/runs/2026-05-28T08-30-19_20260528T082248-filetypes-python_py_control_hsn01_w18_gamma1.log) |
+| `548c54756307725f` | py_feat_kv_textenc_vocab | ok | 0.9980 | 0.9983 | 0.9751 | 85 | [log](out/autocollie/runs/2026-05-28T08-31-27_20260528T082248-filetypes-python_py_feat_kv_textenc_vocab.log) |
+| `0cca5c0355f79413` | py_feat_lowbigram_textmetrics | ok | 0.9981 | 0.9984 | 0.9756 | 92 | [log](out/autocollie/runs/2026-05-28T08-32-53_20260528T082248-filetypes-python_py_feat_lowbigram_textmetrics.log) |
+| `b02a69a23c014650` | py_train_dart_subsample08 | ok | 0.9965 | 0.9969 | 0.9194 | 32 | [log](out/autocollie/runs/2026-05-28T08-34-27_20260528T082248-filetypes-python_py_train_dart_subsample08.log) |
+| `20fb171a56ade46b` | py_train_spw05_fpr_target | ok | 0.9978 | 0.9981 | 0.0000 | 48 | [log](out/autocollie/runs/2026-05-28T08-35-00_20260528T082248-filetypes-python_py_train_spw05_fpr_target.log) |
+| `70e365a599e96a45` | py_feat_extreme_off_tieredtri | ok | 0.9980 | 0.9983 | 0.9741 | 99 | [log](out/autocollie/runs/2026-05-28T08-35-49_20260528T082248-filetypes-python_py_feat_extreme_off_tieredtri.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`py_control_hsn01_w18_gamma1`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_GAMMA=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 …` — Replicates best recent feature_env to establish a stable baseline for PR_AUC while testing gamma=1.0 regularization to reduce overfitting on rare patterns.
+- **`py_feat_kv_textenc_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables kv_vocab and text_encoding to capture Python-specific string patterns and encoding artifacts, targeting PR_AUC gains from richer feature surface.
+- **`py_feat_lowbigram_textmetrics`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables text_metrics_full to capture rarer Python constructs and document obfuscation signals, aiming to improve recall@3FPM.
+- **`py_train_dart_subsample08`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 …` — Tests dart boosting with subsample=0.8 on the control feature set to improve ROC_AUC and PR_AUC via dropout-style regularization and reduced variance.
+- **`py_train_spw05_fpr_target`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_THRESHOLD_FPR_TARGET=3e-06 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Down-weights positives with scale_pos_weight_mult=0.5 and targets threshold_fpr_target=3e-6 to directly optimize recall@3FPM at the deployed operating point.
+- **`py_feat_extreme_off_tieredtri`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Ports sister-route success by disabling extreme_features to reduce noise and enabling tiered_crit_trigrams for structured signal, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260528T102841-filetypes-python` — 2026-05-28T10:28:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d7e19b08891d48f3` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9980 | 0.9984 | 0.9801 | 1 | [log](out/autocollie/runs/2026-05-28T10-34-07_20260528T102841-filetypes-python_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `aa7c0f60d06c3f2f` | py_control_hsn_gamma | ok | 0.9981 | 0.9984 | 0.9804 | 33 | [log](out/autocollie/runs/2026-05-28T10-34-09_20260528T102841-filetypes-python_py_control_hsn_gamma.log) |
+| `eff9bc0a65f3ffcf` | py_feat_kv_vocab_15k | ok | 0.9978 | 0.9982 | 0.9723 | 249 | [log](out/autocollie/runs/2026-05-28T10-34-44_20260528T102841-filetypes-python_py_feat_kv_vocab_15k.log) |
+| `056701115566f1d4` | py_feat_textenc_metrics | ok | 0.9978 | 0.9981 | 0.9775 | 543 | [log](out/autocollie/runs/2026-05-28T10-38-54_20260528T102841-filetypes-python_py_feat_textenc_metrics.log) |
+| `1c5ca834decce6b6` | py_feat_lowfreq_ngrams | ok | 0.9979 | 0.9982 | 0.9701 | 39 | [log](out/autocollie/runs/2026-05-28T10-47-58_20260528T102841-filetypes-python_py_feat_lowfreq_ngrams.log) |
+| `4368f4f14ae5862f` | py_train_dart_hsn_tail | ok | 0.9964 | 0.9968 | 0.9705 | 21 | [log](out/autocollie/runs/2026-05-28T10-48-38_20260528T102841-filetypes-python_py_train_dart_hsn_tail.log) |
+| `0f38be6b1ad4eaf8` | py_feat_kv_seedsearch3 | ok | 0.9978 | 0.9982 | 0.9723 | 21 | [log](out/autocollie/runs/2026-05-28T10-49-00_20260528T102841-filetypes-python_py_feat_kv_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`py_control_hsn_gamma`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_GAMMA=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by replicating the best recent feature_env while tuning hard-negative weighting and gamma to reduce overfitting on rare benign patterns.
+- **`py_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab with a 15k cap to capture high-signal key-value pairs in Python scripts, removing kv from disable_groups.
+- **`py_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_encoding and text_metrics_full to capture obfuscation and structural text signals in Python files, removing textenc from disable_groups.
+- **`py_feat_lowfreq_ngrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MIN_FREQ=20 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by lowering bigram_min_freq to 100 and tiered_trigram_min_freq to 20 to capture rarer but highly indicative code patterns without adding kv/textenc noise.
+- **`py_train_dart_hsn_tail`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by switching to dart boosting with dropout regularization and moderate hard-negative weighting to sharpen the decision boundary at low FPR.
+- **`py_feat_kv_seedsearch3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to validate PR_AUC gains from kv_vocab by running seed_search_k=3 to average out seed variance and confirm robust tail recall@3FPM improvements.
+
+</details>
+

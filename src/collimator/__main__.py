@@ -7,14 +7,11 @@ import json
 import logging
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 import numpy as np
-import scipy.sparse as sp
 
-from . import ablation, benchmark, data, demo, experiment, explain, export, features, inspect, thresholds, train, traits
-from .model import detect_device
+from . import ablation, benchmark, data, demo, experiment, explain, export, features, inspect, thresholds, traits
 
 log = logging.getLogger(__name__)
 
@@ -251,147 +248,6 @@ def _add_seed_arg(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def _predict_fixture_batch(
-    booster: object,
-    X: np.ndarray,
-    iteration_range: tuple[int, int],
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, float]:
-    """Predict probabilities, raw margins, and SHAP values for a feature matrix.
-
-    Returns (probabilities, raw_margins, shap_values, shap_bias).
-    """
-    import xgboost as xgb
-
-    dmat = xgb.DMatrix(X)
-    raw_margins = booster.predict(dmat, output_margin=True, iteration_range=iteration_range)
-    # sigmoid(margin) = probability
-    probs = 1.0 / (1.0 + np.exp(-raw_margins))
-    contribs = booster.predict(dmat, pred_contribs=True, iteration_range=iteration_range)
-    shap_values = contribs[:, :-1]
-    shap_bias = float(contribs[0, -1])
-    return probs, raw_margins, shap_values, shap_bias
-
-
-def generate_fixtures(
-    model: object,
-    spec: features.FeatureSpec,
-    X_raw: object,
-    X_std: object,
-    out_dir: Path,
-    n_samples: int = 50,
-    optimal_threshold: float = 0.5,
-) -> None:
-    """Generate cross-language test fixtures for xgboost-ars.
-
-    Writes two files into out_dir:
-      - cross_language_fixture.json: raw features + expected predictions
-        (tests the full Scaler → Model pipeline in Rust)
-      - reference.json: standardized features + predictions + SHAP values,
-        including NaN-feature and extreme-value edge-case samples
-        (tests Model inference and TreeSHAP in Rust)
-    """
-    import numpy as np
-
-    from .model import predict_proba
-
-    rng = np.random.default_rng(42)
-    n = min(n_samples, len(X_raw))
-    idx = rng.choice(len(X_raw), n, replace=False)
-    idx.sort()
-
-    X_raw_sel = X_raw[idx]
-    X_std_sel = X_std[idx]
-
-    probs = predict_proba(model, X_std_sel)
-
-    n_feat = spec.total_features
-
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    cross_fixture = {
-        "n_features": n_feat,
-        "raw_features": X_raw_sel.tolist(),
-        "probabilities": probs.tolist(),
-    }
-    cross_path = out_dir / "cross_language_fixture.json"
-    with open(cross_path, "w") as f:
-        json.dump(cross_fixture, f)
-    print(f"  wrote {cross_path.name} ({n} samples)")
-
-    if not hasattr(model, "get_booster"):
-        ref_path = out_dir / "reference.json"
-        if ref_path.exists():
-            ref_path.unlink()
-        print("  skipped reference.json (xgboost-ars fixture only)")
-        return
-
-    booster = model.get_booster()
-
-    best_iteration = getattr(model, "best_iteration", None)
-    if best_iteration is None:
-        best_iteration = len(booster.get_dump()) - 1
-    iteration_range = (0, best_iteration + 1)
-
-    _, raw_margins, shap_values, shap_bias = _predict_fixture_batch(
-        booster, X_std_sel, iteration_range,
-    )
-
-    # --- Edge-case samples for xgboost-ars correctness ---
-
-    # NaN samples: take real samples and knock out random subsets of features.
-    # This exercises default_left routing in tree traversal and SHAP.
-    nan_samples = []
-    n_nan = min(10, n)
-    for i in range(n_nan):
-        row = X_std_sel[i].copy()
-        # Knock out ~30% of features at deterministic positions.
-        nan_mask = rng.random(n_feat) < 0.3
-        row[nan_mask] = np.nan
-        nan_samples.append(row)
-    X_nan = np.array(nan_samples, dtype=np.float32)
-
-    nan_probs, nan_margins, nan_shap, _ = _predict_fixture_batch(
-        booster, X_nan, iteration_range,
-    )
-
-    # Extreme-value samples: very large/small features to test sigmoid tails
-    # and tree traversal with values far outside training distribution.
-    X_extreme = np.array([
-        np.full(n_feat, 100.0, dtype=np.float32),   # all large positive
-        np.full(n_feat, -100.0, dtype=np.float32),   # all large negative
-        np.zeros(n_feat, dtype=np.float32),           # all zeros
-    ])
-    ext_probs, ext_margins, ext_shap, _ = _predict_fixture_batch(
-        booster, X_extreme, iteration_range,
-    )
-
-    reference = {
-        "n_features": n_feat,
-        "best_iteration": best_iteration,
-        "optimal_threshold": optimal_threshold,
-        "features": X_std_sel.tolist(),
-        "probabilities": [float(p) for p in probs],
-        "raw_margins": [float(m) for m in raw_margins],
-        "shap_values": shap_values.tolist(),
-        "shap_bias": shap_bias,
-        # NaN edge cases: features with NaN at ~30% of positions.
-        # Tests default_left routing in tree traversal and SHAP.
-        "nan_features": _nan_safe_tolist(X_nan),
-        "nan_probabilities": [float(p) for p in nan_probs],
-        "nan_raw_margins": [float(m) for m in nan_margins],
-        "nan_shap_values": nan_shap.tolist(),
-        # Extreme-value edge cases: [all +100, all -100, all zeros].
-        "extreme_features": X_extreme.tolist(),
-        "extreme_probabilities": [float(p) for p in ext_probs],
-        "extreme_raw_margins": [float(m) for m in ext_margins],
-        "extreme_shap_values": ext_shap.tolist(),
-    }
-    ref_path = out_dir / "reference.json"
-    with open(ref_path, "w") as f:
-        json.dump(reference, f)
-    print(f"  wrote {ref_path.name} ({n}+{n_nan}+{len(X_extreme)} samples, {n_feat} features)")
-
-
 def _gather_diverse_fixture_reports(
     db_path: Path | str,
     target_per_bucket: int = 2,
@@ -586,91 +442,6 @@ def generate_extraction_fixture(
     print(f"  wrote {path.name} ({n} samples, {spec.total_features} features)")
 
 
-def _nan_safe_tolist(arr: np.ndarray) -> list:
-    """Convert array to nested list, encoding NaN as the string "NaN".
-
-    JSON has no NaN literal, so we encode it as a string for the Rust
-    deserializer to interpret.
-    """
-    import math
-    return [["NaN" if math.isnan(v) else float(v) for v in row] for row in arr]
-
-
-def cmd_fixture(args: argparse.Namespace) -> None:
-    """Generate cross-language test fixtures for xgboost-ars."""
-    from .model import load_model
-
-    db_path = _db_dsn(args.db)
-    spec_path = Path(args.spec)
-    model_path = Path(args.model)
-
-    spec = features.FeatureSpec.load(spec_path)
-    model = load_model(model_path)
-
-    fixture_reports = _gather_diverse_fixture_reports(db_path)
-    if not fixture_reports:
-        print("No samples found")
-        return
-
-    reports = fixture_reports[:args.n_samples]
-    labels = [0] * len(reports)
-    X, _ = features.extract_all(reports, labels, spec)
-
-    X_fix = X.toarray()
-    X_fix_std = features.standardize(X, spec) if spec.standardized else X_fix
-
-    # Load the calibrated threshold from evaluation.json if available.
-    eval_path = Path(args.output) / "evaluation.json"
-    threshold = 0.5
-    if eval_path.exists():
-        threshold = export.load_threshold(eval_path)
-        log.info("using threshold %.3f from %s", threshold, eval_path)
-
-    recommended = None
-    tuning_path = Path(args.output) / "threshold_tuning.json"
-    if tuning_path.exists():
-        with open(tuning_path) as f:
-            tuning = json.load(f)
-        default_level = next(
-            (
-                row
-                for row in tuning.get("severity_levels", [])
-                if row.get("level") == thresholds.DEFAULT_SEVERITY_LEVEL
-            ),
-            None,
-        )
-        if isinstance(default_level, dict):
-            suspicious = default_level.get("suspicious") or {}
-            hostile = default_level.get("hostile") or {}
-            if suspicious.get("threshold") is not None and hostile.get("threshold") is not None:
-                recommended = {
-                    "suspicious": float(suspicious["threshold"]),
-                    "hostile": float(hostile["threshold"]),
-                }
-                threshold = recommended["hostile"]
-                log.info("using deployed thresholds from %s", tuning_path)
-
-    generate_fixtures(
-        model, spec, X_fix, X_fix_std,
-        out_dir=Path(args.output),
-        n_samples=len(reports),
-        optimal_threshold=threshold,
-    )
-
-    # Feature-extraction parity fixture for litmus — diverse samples.
-    if recommended is None and eval_path.exists():
-        eval_data = export.load_evaluation(eval_path)
-        recommended = eval_data.get("recommended_thresholds")
-    extraction_reports = fixture_reports
-    if extraction_reports:
-        generate_extraction_fixture(
-            extraction_reports, spec, out_dir=Path(args.output),
-            n_samples=len(extraction_reports),
-            model=model, optimal_threshold=threshold,
-            recommended_thresholds=recommended,
-        )
-
-
 def main() -> None:
     setup_logging()
 
@@ -720,19 +491,6 @@ def main() -> None:
     p_scan.add_argument("--cleave", default="cleave", help="Path to cleave binary")
     p_scan.add_argument("--db", default=None, help="Background DB for SHAP context (optional)")
 
-    # fixture
-    p_fixture = subparsers.add_parser(
-        "fixture", help="Generate cross-language test fixtures for xgboost-ars",
-    )
-    p_fixture.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
-    p_fixture.add_argument("--model", default="out/model.json", help="Path to XGBoost model")
-    p_fixture.add_argument(
-        "--spec", default="out/feature_spec.json", help="Path to feature_spec.json",
-    )
-    p_fixture.add_argument("--output", default="out", help="Output directory")
-    p_fixture.add_argument(
-        "--n-samples", type=int, default=10, help="Number of samples in fixture (default: 10)",
-    )
 
     # traits
     p_traits = subparsers.add_parser("traits", help="Analyze exact finding IDs across the DB")
@@ -1051,8 +809,6 @@ def main() -> None:
             spec_path=Path(args.spec),
             cleave_bin=args.cleave,
         )
-    elif args.command == "fixture":
-        cmd_fixture(args)
     elif args.command == "traits":
         traits.analyze_traits(
             db_path=_db_dsn(args.db),

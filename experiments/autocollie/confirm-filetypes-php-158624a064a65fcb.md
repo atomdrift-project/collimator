@@ -1,24 +1,19 @@
-# Confirm PASS — 158624a064a65fcb on `filetypes/php`
+# Confirm FAIL — 158624a064a65fcb on `filetypes/php`
 
-Cycle `20260508T200716-confirm-158624a064a65fcb` — 2026-05-08T20:07:16Z
+Cycle `20260526T184601-confirm-158624a064a65fcb` — 2026-05-26T18:46:01Z
 
-F1 held across 3 seeds (orig 1.0000)
+averaged ensemble PR_AUC regressed: 1.0000 -> 0.9911 (tol 0.0050, K=3)
 
 ## Per-seed results (3 ran)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `158624a064a65fcb` | `acf757f53ad896f2` | `acf757f53ad896f2` | `acf757f53ad896f2` |
-| F1 | 1.0000 | 1.0000 | 1.0000 | 0.9914 |
-| ROC AUC | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| AP | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
-| recall@3 FP/M | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| verdict | — | PASS | PASS | FAIL |
+| key | `158624a064a65fcb` | `390998bf60b185c1` | `390998bf60b185c1` | `390998bf60b185c1` |
+| PR AUC | 1.0000 | 0.9879 | 0.9926 | 0.9911 |
+| ROC AUC | 1.0000 | 0.9968 | 0.9972 | 0.9969 |
+| Recall@3FPM | — | 0.0160 | 0.1210 | 0.0753 |
+| verdict | — | FAIL | FAIL | FAIL |
 
-## Next step
+## Disposition
 
-The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
-
-```
-make autocollie-promote KEY=158624a064a65fcb
-```
+This spec did not survive multi-seed reseeding (0/3 held). Suggest abandoning the idea or letting the LLM propose a variant.

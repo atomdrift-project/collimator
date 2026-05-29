@@ -570,3 +570,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T025419-filetypes-png` — 2026-05-28T02:54:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f5daf8fa6494be9b` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9927 | 0.9872 | 0.9076 | 8 | [log](out/autocollie/runs/2026-05-28T03-00-06_20260528T025419-filetypes-png_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bf86010665b13395` | png_ctrl_hardneg_weight15 | ok | 0.9886 | 0.9795 | 0.9516 | 5 | [log](out/autocollie/runs/2026-05-28T03-00-21_20260528T025419-filetypes-png_png_ctrl_hardneg_weight15.log) |
+| `23126f94a5ad2e6c` | png_feat_kv_vocab_split | ok | 0.9865 | 0.9753 | 0.9431 | 6 | [log](out/autocollie/runs/2026-05-28T03-00-27_20260528T025419-filetypes-png_png_feat_kv_vocab_split.log) |
+| `e90aa91fe2a9071b` | png_feat_text_metrics_ext | ok | 0.9872 | 0.9769 | 0.9431 | 5 | [log](out/autocollie/runs/2026-05-28T03-00-35_20260528T025419-filetypes-png_png_feat_text_metrics_ext.log) |
+| `2921029088c28ac4` | png_feat_lowbigram_objtri | ok | 0.9861 | 0.9745 | 0.9431 | 5 | [log](out/autocollie/runs/2026-05-28T03-00-40_20260528T025419-filetypes-png_png_feat_lowbigram_objtri.log) |
+| `4458151f7af7aaf5` | png_abl_extreme_blindfold_off | ok | 0.9872 | 0.9769 | 0.9431 | 4 | [log](out/autocollie/runs/2026-05-28T03-00-47_20260528T025419-filetypes-png_png_abl_extreme_blindfold_off.log) |
+| `44fd2731baf0c836` | png_seed_search_ensemble | ok | 0.9909 | 0.9835 | 0.9403 | 3 | [log](out/autocollie/runs/2026-05-28T03-00-52_20260528T025419-filetypes-png_png_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_hardneg_weight15`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicate best feature_env with higher hard-negative weight to boost PR_AUC while keeping ROC_AUC flat.
+- **`png_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured metadata in PNG chunks, targeting PR_AUC improvement.
+- **`png_feat_text_metrics_ext`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate full text metrics and extended metrics to detect obfuscation in PNG overlays, aiming to lift recall@3 FP/M.
+- **`png_feat_lowbigram_objtri`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add objective trigrams to capture rare malicious patterns, targeting PR_AUC gains.
+- **`png_abl_extreme_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable extreme and blindfold features to reduce noise and overfitting, expecting flat or improved PR_AUC.
+- **`png_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Use seed search and ensemble averaging to stabilize recall@3 FP/M and reduce variance from RNG splits.
+
+</details>
+
+## Cycle `20260528T095436-filetypes-png` — 2026-05-28T09:54:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f5daf8fa6494be9b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9927 | 0.9872 | 0.9076 | 2 | [log](out/autocollie/runs/2026-05-28T10-00-12_20260528T095436-filetypes-png_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `cd2fcb8b8d0af5f4` | png_ctrl_hardneg_12 | ok | 0.9903 | 0.9815 | 0.9431 | 2 | [log](out/autocollie/runs/2026-05-28T10-00-15_20260528T095436-filetypes-png_png_ctrl_hardneg_12.log) |
+| `f9e7dae05d9ebbd0` | png_feat_kv_vocab_5k | ok | 0.9872 | 0.9769 | 0.9431 | 5 | [log](out/autocollie/runs/2026-05-28T10-00-18_20260528T095436-filetypes-png_png_feat_kv_vocab_5k.log) |
+| `5dd86d35a8ef0193` | png_feat_text_metrics_full | ok | 0.9863 | 0.9749 | 0.9344 | 5 | [log](out/autocollie/runs/2026-05-28T10-00-25_20260528T095436-filetypes-png_png_feat_text_metrics_full.log) |
+| `7172318c6b9845b2` | png_transfer_lowbigram_objtri | ok | 0.9861 | 0.9745 | 0.9431 | 4 | [log](out/autocollie/runs/2026-05-28T10-00-31_20260528T095436-filetypes-png_png_transfer_lowbigram_objtri.log) |
+| `8c9e8e001b6d0272` | png_abl_blindfold_off | ok | 0.9872 | 0.9769 | 0.9431 | 5 | [log](out/autocollie/runs/2026-05-28T10-00-37_20260528T095436-filetypes-png_png_abl_blindfold_off.log) |
+| `1d19ea6d44ded6b0` | png_gen_seed_ensemble_3 | ok | 0.9855 | 0.9733 | 0.8904 | 2 | [log](out/autocollie/runs/2026-05-28T10-00-43_20260528T095436-filetypes-png_png_gen_seed_ensemble_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_hardneg_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline features with hard negative upweighting to improve PR_AUC and recall@3 FP/M by focusing on difficult benigns.
+- **`png_feat_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocab to capture structured metadata in PNG chunks, aiming to boost PR_AUC with new rank signal.
+- **`png_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text metrics and encoding features to detect anomalous text in PNG metadata, targeting PR_AUC gain.
+- **`png_transfer_lowbigram_objtri`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfer low-frequency bigram and objective trigram strategy from sister routes to capture rarer PNG patterns, aiming for PR_AUC improvement.
+- **`png_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Remove blindfold dropout to test if retaining full feature signal improves PR_AUC without overfitting, checking if blindfold masks useful PNG signals.
+- **`png_gen_seed_ensemble_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Retry seed search ensemble to reduce variance and stabilize recall@3 FP/M gains observed in recent runs.
+
+</details>
+

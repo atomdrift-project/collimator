@@ -508,3 +508,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T052653-filegroups-portable` — 2026-05-28T05:26:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1a27e52b2186b1a6` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9930 | 0.9983 | 0.9669 | 11 | [log](out/autocollie/runs/2026-05-28T05-32-44_20260528T052653-filegroups-portable_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `29ee15180b59859b` | control_baseline_train_tweak | ok | 0.9926 | 0.9983 | 0.9317 | 10 | [log](out/autocollie/runs/2026-05-28T05-33-05_20260528T052653-filegroups-portable_control_baseline_train_tweak.log) |
+| `34adb9692bc21be7` | feat_kv_vocab_split_15k | ok | 0.9948 | 0.9987 | 0.9404 | 8 | [log](out/autocollie/runs/2026-05-28T05-33-16_20260528T052653-filegroups-portable_feat_kv_vocab_split_15k.log) |
+| `002a308f0385da08` | feat_tiered_trigrams_low_bigram_freq | ok | 0.9936 | 0.9985 | 0.9091 | 8 | [log](out/autocollie/runs/2026-05-28T05-33-25_20260528T052653-filegroups-portable_feat_tiered_trigrams_low_bigram_freq.log) |
+| `35ea3a9c2ad45e06` | abl_remove_blindfold_airgap | ok | 0.9941 | 0.9987 | 0.9288 | 8 | [log](out/autocollie/runs/2026-05-28T05-33-34_20260528T052653-filegroups-portable_abl_remove_blindfold_airgap.log) |
+| `414da1eccab664e9` | transfer_hardneg_01_10 | ok | 0.9938 | 0.9986 | 0.9202 | 4 | [log](out/autocollie/runs/2026-05-28T05-33-43_20260528T052653-filegroups-portable_transfer_hardneg_01_10.log) |
+| `05a0f2f9f6740ee9` | gen_seed_search_k3_kv_split | ok | 0.9948 | 0.9987 | 0.9404 | 14 | [log](out/autocollie/runs/2026-05-28T05-33-48_20260528T052653-filegroups-portable_gen_seed_search_k3_kv_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_baseline_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature env with adjusted tree depth and regularization to stabilize PR_AUC and improve ranking quality.
+- **`feat_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable KV vocabulary with value splitting to capture granular key-value signals, targeting PR_AUC improvement.
+- **`feat_tiered_trigrams_low_bigram_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram frequency floor and add tiered trigrams to capture rarer malicious patterns, targeting recall@3FPM.
+- **`abl_remove_blindfold_airgap`** `EXP_AIR_GAP_SIGNAL=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold and air_gap_signal to reduce noise and overfitting, targeting PR_AUC stability with simpler model.
+- **`transfer_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard-negative weighting from perl route to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`gen_seed_search_k3_kv_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Run seed search on KV split config to verify PR_AUC gains are robust across seeds and not variance artifacts.
+
+</details>
+
+## Cycle `20260528T113710-filegroups-portable` — 2026-05-28T11:37:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1a27e52b2186b1a6` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9930 | 0.9983 | 0.9669 | 1 | [log](out/autocollie/runs/2026-05-28T11-42-01_20260528T113710-filegroups-portable_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `e37c19c390b6cab9` | control_baseline_train_tweak | ok | 0.9936 | 0.9985 | 0.9259 | 4 | [log](out/autocollie/runs/2026-05-28T11-42-03_20260528T113710-filegroups-portable_control_baseline_train_tweak.log) |
+| `7d282feffab584d5` | feat_kv_vocab_split_20k | ok | 0.9944 | 0.9987 | 0.9521 | 9 | [log](out/autocollie/runs/2026-05-28T11-42-08_20260528T113710-filegroups-portable_feat_kv_vocab_split_20k.log) |
+| `83c453470d3a20f7` | feat_text_metrics_full_encoding | ok | 0.9941 | 0.9985 | 0.9119 | 8 | [log](out/autocollie/runs/2026-05-28T11-42-18_20260528T113710-filegroups-portable_feat_text_metrics_full_encoding.log) |
+| `67a640d2fb01947d` | transfer_lowbigram_tieredtrigrams | ok | 0.9945 | 0.9988 | 0.9259 | 10 | [log](out/autocollie/runs/2026-05-28T11-42-27_20260528T113710-filegroups-portable_transfer_lowbigram_tieredtrigrams.log) |
+| `c18d5b8749504d5b` | train_hardneg_01_12 | ok | 0.9932 | 0.9985 | 0.9063 | 8 | [log](out/autocollie/runs/2026-05-28T11-42-38_20260528T113710-filegroups-portable_train_hardneg_01_12.log) |
+| `78584e2f0a501803` | train_extra_trees_subsample | ok | 0.9889 | 0.9974 | 0.9342 | 3 | [log](out/autocollie/runs/2026-05-28T11-42-47_20260528T113710-filegroups-portable_train_extra_trees_subsample.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_baseline_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature env and increase num_leaves/estimators to improve PR_AUC by capturing finer decision boundaries.
+- **`feat_kv_vocab_split_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand kv_vocab_max to 20000 and enable kv_value_split to recover per-element signal in structured portable files, targeting PR_AUC gains.
+- **`feat_text_metrics_full_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture obfuscation patterns in script/document portable files, aiming to boost recall@3 FP/M.
+- **`transfer_lowbigram_tieredtrigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Port xml/data route success by lowering bigram_min_freq to 100 and enabling tiered_crit_trigrams to capture rare but malicious co-occurrences, targeting PR_AUC.
+- **`train_hardneg_01_12`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction=0.1 and hard_negative_weight=12 to focus model capacity on difficult benigns, improving recall@3 FP/M.
+- **`train_extra_trees_subsample`** `EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Enable extra_trees and reduce subsample to 0.8 to add ensemble noise and reduce overfitting, targeting stable recall@3 FP/M gains.
+
+</details>
+

@@ -1,23 +1,19 @@
-# Confirm PASS — f6c00ae88555760a on `filetypes/kotlin`
+# Confirm FAIL — f6c00ae88555760a on `filetypes/kotlin`
 
-Cycle `20260515T002700-confirm-f6c00ae88555760a` — 2026-05-15T00:27:00Z
+Cycle `20260525T202358-confirm-f6c00ae88555760a` — 2026-05-25T20:23:58Z
 
-PR_AUC held across 3 seeds (orig 1.0000)
+averaged ensemble PR_AUC regressed: 1.0000 -> 0.9903 (tol 0.0050, K=3)
 
 ## Per-seed results (3 ran)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `f6c00ae88555760a` | `2cf44129e4c6756d` | `2cf44129e4c6756d` | `2cf44129e4c6756d` |
-| PR AUC | 1.0000 | 0.9996 | 1.0000 | 1.0000 |
-| ROC AUC | 0.9994 | 0.9861 | 0.9986 | 0.9986 |
-| Recall@3FPM | — | 0.9660 | 0.9794 | 0.9785 |
-| verdict | — | PASS | PASS | PASS |
+| key | `f6c00ae88555760a` | `11f44a8dabcb7c6d` | `11f44a8dabcb7c6d` | `11f44a8dabcb7c6d` |
+| PR AUC | 1.0000 | 0.9903 | 0.9903 | 0.9903 |
+| ROC AUC | 0.9994 | 0.5000 | 0.5000 | 0.5000 |
+| Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
+| verdict | — | FAIL | FAIL | FAIL |
 
-## Next step
+## Disposition
 
-The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
-
-```
-make autocollie-promote KEY=f6c00ae88555760a
-```
+This spec did not survive multi-seed reseeding (0/3 held). Suggest abandoning the idea or letting the LLM propose a variant.

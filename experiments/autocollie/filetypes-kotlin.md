@@ -506,3 +506,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T053403-filetypes-kotlin` — 2026-05-28T05:34:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0ca491031de092ab` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9888 | 0.5000 | 0.9944 | 43 | [log](out/autocollie/runs/2026-05-28T05-39-32_20260528T053403-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c888b70b2c6461b1` | kotlin_ctrl_leaves128_lr003 | ok | 0.9888 | 0.5000 | 0.9944 | 36 | [log](out/autocollie/runs/2026-05-28T05-40-27_20260528T053403-filetypes-kotlin_kotlin_ctrl_leaves128_lr003.log) |
+| `4bfbc36ad46f3aa2` | kotlin_feat_kv_vocab_10k | ok | 0.9888 | 0.5000 | 0.9944 | 50 | [log](out/autocollie/runs/2026-05-28T05-41-05_20260528T053403-filetypes-kotlin_kotlin_feat_kv_vocab_10k.log) |
+| `b8a1b798288bdf07` | kotlin_feat_text_metrics_full | ok | 0.9888 | 0.5000 | 0.9944 | 41 | [log](out/autocollie/runs/2026-05-28T05-41-56_20260528T053403-filetypes-kotlin_kotlin_feat_text_metrics_full.log) |
+| `46e536b5c0a480ec` | kotlin_feat_lowbigram_objtri | ok | 0.9888 | 0.5000 | 0.9944 | 39 | [log](out/autocollie/runs/2026-05-28T05-42-38_20260528T053403-filetypes-kotlin_kotlin_feat_lowbigram_objtri.log) |
+| `b49361a1dfd6340a` | kotlin_train_hardneg_005_w5 | ok | 0.9888 | 0.5000 | 0.9944 | 11 | [log](out/autocollie/runs/2026-05-28T05-43-19_20260528T053403-filetypes-kotlin_kotlin_train_hardneg_005_w5.log) |
+| `a54e75e5453a602b` | kotlin_seed_search_3_avg | ok | 0.9888 | 0.5000 | 0.9944 | 11 | [log](out/autocollie/runs/2026-05-28T05-43-32_20260528T053403-filetypes-kotlin_kotlin_seed_search_3_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with deeper trees and lower LR to improve PR_AUC by better separating tail malware from benigns.
+- **`kotlin_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture structured metadata and config patterns in Kotlin, aiming to boost PR_AUC.
+- **`kotlin_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and text_encoding to detect obfuscation and encoding anomalies, targeting recall@3 FP/M gains.
+- **`kotlin_feat_lowbigram_objtri`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq and enable objective_trigrams to capture rarer malicious patterns, aiming to improve PR_AUC.
+- **`kotlin_train_hardneg_005_w5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply mild hard-negative weighting to focus on difficult benigns, targeting recall@3 FP/M without triggering degenerate calibration.
+- **`kotlin_seed_search_3_avg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use seed_search_k=3 with averaging to reduce variance in the imbalanced dataset, stabilizing recall@3 FP/M.
+
+</details>
+
+## Cycle `20260528T111659-filetypes-kotlin` — 2026-05-28T11:16:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0ca491031de092ab` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9888 | 0.5000 | 0.9944 | 1 | [log](out/autocollie/runs/2026-05-28T11-22-11_20260528T111659-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c888b70b2c6461b1` | kotlin_ctrl_leaves128_lr003 | dup | 0.9888 | 0.5000 | 0.9944 | 1 | [log](out/autocollie/runs/2026-05-28T11-22-12_20260528T111659-filetypes-kotlin_kotlin_ctrl_leaves128_lr003.log) |
+| `41cfee6ef54aca76` | kotlin_feat_kv_vocab_15k | ok | 0.9888 | 0.5000 | 0.9944 | 29 | [log](out/autocollie/runs/2026-05-28T11-22-14_20260528T111659-filetypes-kotlin_kotlin_feat_kv_vocab_15k.log) |
+| `3b0822f06978430a` | kotlin_feat_text_metrics_full | ok | 0.9888 | 0.5000 | 0.9944 | 3 | [log](out/autocollie/runs/2026-05-28T11-22-44_20260528T111659-filetypes-kotlin_kotlin_feat_text_metrics_full.log) |
+| `d4290ac8f9f00db6` | kotlin_train_scalepos075_reg2 | ok | 0.9888 | 0.5000 | 0.9944 | 3 | [log](out/autocollie/runs/2026-05-28T11-22-48_20260528T111659-filetypes-kotlin_kotlin_train_scalepos075_reg2.log) |
+| `3c1925885df0b914` | kotlin_train_hardneg_005_w8_et | ok | 0.9888 | 0.5000 | 0.9944 | 5 | [log](out/autocollie/runs/2026-05-28T11-22-52_20260528T111659-filetypes-kotlin_kotlin_train_hardneg_005_w8_et.log) |
+| `4930cb807fc011d3` | kotlin_seed_search_3_avg_lowbigram | ok | 0.9888 | 0.5000 | 0.9944 | 38 | [log](out/autocollie/runs/2026-05-28T11-22-57_20260528T111659-filetypes-kotlin_kotlin_seed_search_3_avg_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env with deeper trees and lower LR to stabilize PR_AUC and reduce overfitting on the imbalanced holdout.
+- **`kotlin_feat_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab with higher cap to capture more Kotlin-specific configuration and import patterns, aiming to lift PR_AUC.
+- **`kotlin_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activates text_metrics_full and text_encoding to exploit structural obfuscation signals in Kotlin scripts, targeting PR_AUC gains.
+- **`kotlin_train_scalepos075_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Downweights malware class with stronger L2 regularization to improve ROC_AUC and PR_AUC by reducing constant-score collapse on benigns.
+- **`kotlin_train_hardneg_005_w8_et`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Uses mild hard negatives with extra_trees regularization to sharpen decision boundaries at low FPR, targeting recall@3 FP/M.
+- **`kotlin_seed_search_3_avg_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Averages 3 seeds with lower bigram_min_freq to reduce variance and capture rarer patterns, aiming for stable PR_AUC improvement.
+
+</details>
+

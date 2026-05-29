@@ -540,3 +540,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T055723-filetypes-jpeg` — 2026-05-28T05:57:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aacb193b8d074a4f` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9538 | 0.9626 | 0.8889 | 10 | [log](out/autocollie/runs/2026-05-28T06-04-01_20260528T055723-filetypes-jpeg_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `52e50559df3310d0` | jpeg_ctrl_leaves128_lr004 | ok | 0.9725 | 0.9776 | 0.9091 | 4 | [log](out/autocollie/runs/2026-05-28T06-04-18_20260528T055723-filetypes-jpeg_jpeg_ctrl_leaves128_lr004.log) |
+| `c34aee2db92cf4a8` | jpeg_feat_textenc_metrics_full | ok | 0.9795 | 0.9829 | 0.8980 | 4 | [log](out/autocollie/runs/2026-05-28T06-04-23_20260528T055723-filetypes-jpeg_jpeg_feat_textenc_metrics_full.log) |
+| `583f76576309f698` | jpeg_feat_kv_vocab_split | ok | 0.9626 | 0.9701 | 0.9091 | 5 | [log](out/autocollie/runs/2026-05-28T06-04-28_20260528T055723-filetypes-jpeg_jpeg_feat_kv_vocab_split.log) |
+| `7dbbd387ffbf104f` | jpeg_feat_lowfreq_tiered_trigrams | ok | 0.9613 | 0.9690 | 0.8889 | 5 | [log](out/autocollie/runs/2026-05-28T06-04-35_20260528T055723-filetypes-jpeg_jpeg_feat_lowfreq_tiered_trigrams.log) |
+| `66d8470124e00af4` | jpeg_abl_blindfold_airgap_off | ok | 0.9626 | 0.9701 | 0.9091 | 4 | [log](out/autocollie/runs/2026-05-28T06-04-40_20260528T055723-filetypes-jpeg_jpeg_abl_blindfold_airgap_off.log) |
+| `410fefd690221c9b` | jpeg_train_maxrecall_fpr3e6 | ok | 0.9730 | 0.9776 | 0.7000 | 2 | [log](out/autocollie/runs/2026-05-28T06-04-46_20260528T055723-filetypes-jpeg_jpeg_train_maxrecall_fpr3e6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_ctrl_leaves128_lr004`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Control feature set with deeper trees and lower LR to improve PR_AUC via better gradient descent stability.
+- **`jpeg_feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Enable text_encoding and text_metrics_full to capture document obfuscation signals, targeting PR_AUC gain.
+- **`jpeg_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Enable kv_vocab and kv_value_split to recover per-element signal in metadata, targeting recall@3FPM.
+- **`jpeg_feat_lowfreq_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Lower bigram_min_freq to 100 and enable tiered_crit_trigrams to capture rarer malicious patterns, targeting PR_AUC.
+- **`jpeg_abl_blindfold_airgap_off`** `EXP_AIR_GAP_SIGNAL=0 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Disable blindfold and air_gap_signal to reduce noise and overfitting, aiming to keep PR_AUC flat while improving ROC_AUC.
+- **`jpeg_train_maxrecall_fpr3e6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Optimize threshold directly for deployed operating point using max_recall_at_fpr and scale_pos_weight_mult to boost recall@3FPM.
+
+</details>
+
+## Cycle `20260528T121754-filetypes-jpeg` — 2026-05-28T12:17:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aacb193b8d074a4f` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9538 | 0.9626 | 0.8889 | 2 | [log](out/autocollie/runs/2026-05-28T12-24-58_20260528T121754-filetypes-jpeg_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `661f5578cdd14210` | jpeg_ctrl_textenc_metrics_leaves128 | ok | 0.9736 | 0.9776 | 0.9200 | 3 | [log](out/autocollie/runs/2026-05-28T12-25-01_20260528T121754-filetypes-jpeg_jpeg_ctrl_textenc_metrics_leaves128.log) |
+| `e015d7a6e2a996e9` | jpeg_feat_kv_vocab_split_textenc | ok | 0.9795 | 0.9829 | 0.8980 | 6 | [log](out/autocollie/runs/2026-05-28T12-25-05_20260528T121754-filetypes-jpeg_jpeg_feat_kv_vocab_split_textenc.log) |
+| `c0e21142367d03b7` | jpeg_feat_lowfreq_bigram_tiered_trig | ok | 0.9733 | 0.9786 | 0.8750 | 6 | [log](out/autocollie/runs/2026-05-28T12-25-13_20260528T121754-filetypes-jpeg_jpeg_feat_lowfreq_bigram_tiered_trig.log) |
+| `a2df17e0ae2b56d2` | jpeg_train_hardneg_scalepos05 | ok | 0.9617 | 0.9712 | 0.8302 | 3 | [log](out/autocollie/runs/2026-05-28T12-25-20_20260528T121754-filetypes-jpeg_jpeg_train_hardneg_scalepos05.log) |
+| `3db757442be9909d` | jpeg_train_dart_extratrees_reg | ok | 0.9282 | 0.9455 | 0.8136 | 4 | [log](out/autocollie/runs/2026-05-28T12-25-25_20260528T121754-filetypes-jpeg_jpeg_train_dart_extratrees_reg.log) |
+| `7dd653cca29e5252` | jpeg_retry_maxrecall_seedsearch | ok | 0.9762 | 0.9797 | 0.9167 | 4 | [log](out/autocollie/runs/2026-05-28T12-25-30_20260528T121754-filetypes-jpeg_jpeg_retry_maxrecall_seedsearch.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_ctrl_textenc_metrics_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Control baseline replicating best feature env with tuned leaves/estimators to stabilize PR_AUC and improve recall@3 FP/M via better tree capacity.
+- **`jpeg_feat_kv_vocab_split_textenc`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 …` — Adds KV vocab and value splitting to capture structured metadata in JPEG headers, targeting PR_AUC improvement by reducing false positives on benign metadata patterns.
+- **`jpeg_feat_lowfreq_bigram_tiered_trig`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Lowers bigram frequency floor and adds tiered critical trigrams to capture rare malicious sequences, aiming to boost recall@3 FP/M without hurting PR_AUC.
+- **`jpeg_train_hardneg_scalepos05`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Uses hard negatives and down-weights positives to sharpen the decision boundary at low FPR, targeting recall@3 FP/M improvement while maintaining PR_AUC.
+- **`jpeg_train_dart_extratrees_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=400 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Applies DART boosting and extra trees to reduce overfitting on the small JPEG corpus, aiming to improve ROC_AUC and stabilize PR_AUC.
+- **`jpeg_retry_maxrecall_seedsearch`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 …` — Retries the max-recall threshold tuning with seed search to verify if the recall@3 FP/M gain is robust across seeds, targeting stable recall@3 FP/M.
+
+</details>
+

@@ -396,3 +396,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T030746-filetypes-zst` — 2026-05-28T03:07:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9c5bb0faacb14687` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 1.0000 | 1.0000 | 12 | [log](out/autocollie/runs/2026-05-28T03-13-50_20260528T030746-filetypes-zst_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3a10ed0ad5fe5e3b` | zst_control_baseline_v3 | ok | 1.0000 | 1.0000 | 1.0000 | 9 | [log](out/autocollie/runs/2026-05-28T03-14-03_20260528T030746-filetypes-zst_zst_control_baseline_v3.log) |
+| `25f0345e48ed8990` | zst_feat_kv_vocab_5k | ok | 1.0000 | 1.0000 | 1.0000 | 10 | [log](out/autocollie/runs/2026-05-28T03-14-12_20260528T030746-filetypes-zst_zst_feat_kv_vocab_5k.log) |
+| `b237e1dd062204ee` | zst_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 1.0000 | 9 | [log](out/autocollie/runs/2026-05-28T03-14-23_20260528T030746-filetypes-zst_zst_feat_text_metrics_enc.log) |
+| `2a51e6b4647628d0` | zst_transfer_low_bigram_freq | ok | 1.0000 | 1.0000 | 1.0000 | 9 | [log](out/autocollie/runs/2026-05-28T03-14-32_20260528T030746-filetypes-zst_zst_transfer_low_bigram_freq.log) |
+| `3400470556b2064f` | zst_seed_search_ensemble | ok | 1.0000 | 1.0000 | 1.0000 | 2 | [log](out/autocollie/runs/2026-05-28T03-14-42_20260528T030746-filetypes-zst_zst_seed_search_ensemble.log) |
+| `ec4cca624d3208bb` | zst_train_hardneg_posweight | ok | 1.0000 | 1.0000 | 1.0000 | 3 | [log](out/autocollie/runs/2026-05-28T03-14-45_20260528T030746-filetypes-zst_zst_train_hardneg_posweight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_baseline_v3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best feature_env with minor training tweaks to verify matrix cache hit and establish stable PR_AUC/ROC_AUC floor.
+- **`zst_feat_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value pair signals in compressed archives, aiming to improve PR_AUC by adding discriminative structural features without harming ROC_AUC.
+- **`zst_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_metrics_full and text_encoding to extract obfuscation and encoding patterns from decompressed payloads, targeting higher recall@3 FP/M by surfacing hidden malicious text structures.
+- **`zst_transfer_low_bigram_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer low bigram_min_freq strategy from xml route to capture rarer but highly specific n-gram patterns in zst archives, aiming to boost PR_AUC while maintaining ROC_AUC.
+- **`zst_seed_search_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search with ensemble averaging to reduce variance and stabilize recall@3 FP/M across different data splits, ensuring robust PR_AUC gains.
+- **`zst_train_hardneg_posweight`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Tune hard negatives and down-weight positives to sharpen decision boundary at low FPR, targeting improved recall@3 FP/M without degrading PR_AUC or ROC_AUC.
+
+</details>
+

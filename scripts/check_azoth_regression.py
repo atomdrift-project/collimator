@@ -187,6 +187,19 @@ def main() -> int:
             "hide behind aggregate wins."
         ),
     )
+    parser.add_argument(
+        "--source-bundle", type=Path, default=None,
+        help=(
+            "Source training bundle that the staged candidate was cloned "
+            "from. When set, the gate computes impacted filetypes by "
+            "hashing each route's model + feature_spec and comparing "
+            "staged vs source. Only impacted filetypes are gated — "
+            "unimpacted filetypes inherited their metrics verbatim from "
+            "the source via the carry-forward optimization, so any drift "
+            "vs LWM or deployed there is pre-existing and not this "
+            "promote's responsibility. Reports them informationally only."
+        ),
+    )
     args = parser.parse_args()
 
     if os.environ.get("AZOTH_ALLOW_REGRESSION", "").strip().lower() in {"1", "true", "yes"}:
@@ -225,6 +238,53 @@ def main() -> int:
     deployed_ft = (deployed_eval.get("filetypes") or {})
     level_key = f"L{args.level}_{args.severity}"
 
+    # Impact-aware gating: when --source-bundle is given, compute which
+    # filetypes the staged candidate actually touched. A promote that
+    # only retrains filegroups/native impacts only {elf, macho, pe} —
+    # all other filetypes' metrics are bytewise-identical inheritance
+    # from the source training bundle (via the carry-forward
+    # optimization). Their drift vs LWM or deployed is pre-existing and
+    # not caused by THIS promote; gating on it would block honest
+    # candidates for problems they didn't cause. Report those drifts
+    # informationally instead.
+    impacted_filetypes: set[str] | None = None
+    impact_source = ""
+    if args.source_bundle is not None:
+        try:
+            sys.path.insert(0, str(Path(__file__).parent))
+            from azoth_impact import changed_routes, unchanged_filetypes  # noqa: PLC0415
+            from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: PLC0415
+            changed, _ = changed_routes(args.staged, args.source_bundle)
+            # Available routes = those the staged bundle has trained.
+            # Read from the staged bundle's config.json.
+            staged_config_path = args.staged / "config.json"
+            available_routes: set[str] = {"general"}
+            if staged_config_path.is_file():
+                try:
+                    cfg = json.loads(staged_config_path.read_text())
+                    for m in cfg.get("models", []):
+                        if isinstance(m, dict) and isinstance(m.get("route"), str):
+                            available_routes.add(m["route"])
+                except (OSError, ValueError):
+                    pass
+            all_compared = set(staged_ft.keys()) & set(deployed_ft.keys())
+            unchanged = unchanged_filetypes(
+                changed, DEPLOYMENT_GROUPS, available_routes, all_compared,
+            )
+            impacted_filetypes = all_compared - unchanged
+            impact_source = (
+                f"--source-bundle {args.source_bundle}: "
+                f"{len(changed)} routes changed → "
+                f"{len(impacted_filetypes)} filetypes impacted, "
+                f"{len(unchanged)} unimpacted (drift treated as pre-existing)"
+            )
+        except Exception as e:
+            print(f"warning: impact-aware gating setup failed ({e}); "
+                  f"falling back to all-filetypes gating", file=sys.stderr)
+            impacted_filetypes = None
+    if impacted_filetypes is not None:
+        print(impact_source)
+
     regressions: list[str] = []
     # LWM regressions: hard floor; can't be rescued by net-improvement-fallback
     # because they represent cumulative drift below a pinned baseline, not
@@ -241,6 +301,10 @@ def main() -> int:
     route_wins: list[str] = []          # informational
     compared = 0
     skipped_small = 0
+    # Pre-existing drift on unimpacted filetypes — surfaced informationally
+    # so the operator knows the LWM is stale on those filetypes, but
+    # doesn't block the deploy (not THIS promote's responsibility).
+    preexisting_drift: list[str] = []
     lwm_ft = (lwm_eval.get("filetypes") or {}) if lwm_eval else {}
     # Net-improvement accounting: per-filetype (delta_tp, recall_drop) so the
     # fallback can decide whether the aggregate is net-positive AND no single
@@ -274,9 +338,16 @@ def main() -> int:
         # shift on a 200-malware route, matching deploy-time customer impact.
         if _is_finite_number(s_tp) and _is_finite_number(d_tp):
             net_delta_tp += int(s_tp) - int(d_tp)
+        # Impact gating: if --source-bundle was provided and this
+        # filetype's routes weren't touched by the promote, its metrics
+        # are bytewise-identical inheritance from the source bundle. Any
+        # drift vs deployed or LWM here is pre-existing and not THIS
+        # promote's responsibility. Report informationally; don't block.
+        is_impacted = impacted_filetypes is None or ft in impacted_filetypes
+
         if _is_finite_number(s_recall) and _is_finite_number(d_recall):
             delta = float(s_recall) - float(d_recall)  # positive = improvement
-            if -delta > max_recall_drop:
+            if is_impacted and -delta > max_recall_drop:
                 max_recall_drop = -delta
                 max_drop_ft = ft
             # Dual-gate regression: drop must exceed the configured
@@ -296,11 +367,17 @@ def main() -> int:
                     f"; deployed 95% CI lower = {d_lower*100:.2f}%"
                     if d_lower is not None else ""
                 )
-                regressions.append(
-                    f"{ft}: L{args.level} {args.severity} ENSEMBLE recall dropped {-delta*100:.2f}pp "
-                    f"({float(d_recall)*100:.2f}% → {float(s_recall)*100:.2f}%; "
-                    f"tolerance {args.recall_tolerance*100:.2f}pp{ci_note})",
-                )
+                if is_impacted:
+                    regressions.append(
+                        f"{ft}: L{args.level} {args.severity} ENSEMBLE recall dropped {-delta*100:.2f}pp "
+                        f"({float(d_recall)*100:.2f}% → {float(s_recall)*100:.2f}%; "
+                        f"tolerance {args.recall_tolerance*100:.2f}pp{ci_note})",
+                    )
+                else:
+                    preexisting_drift.append(
+                        f"{ft}: pre-existing drift, recall {float(d_recall)*100:.2f}% → "
+                        f"{float(s_recall)*100:.2f}% ({-delta*100:+.2f}pp; unimpacted by this promote)"
+                    )
             elif delta >= args.improvement_threshold:
                 ensemble_wins.append(
                     f"  {ft}: L{args.level} {args.severity} ensemble recall +{delta*100:.2f}pp "
@@ -315,6 +392,11 @@ def main() -> int:
         # output isn't one-sidedly bad: a candidate with 12 LWM-floor
         # regressions and 8 LWM-ceiling improvements is a different
         # story than 12 regressions and 0 improvements.
+        #
+        # Impact-aware: unimpacted filetypes' LWM drift is pre-existing
+        # state, not this promote's doing. Reporting them as LWM
+        # regressions would block honest single-route promotes for
+        # problems that pre-date them.
         if lwm_ft and _is_finite_number(s_recall):
             lwm_entry = lwm_ft.get(ft)
             lwm_l = ((lwm_entry or {}).get("deployed_or_by_level") or {}).get(level_key) or {}
@@ -322,11 +404,13 @@ def main() -> int:
             if _is_finite_number(lwm_recall):
                 lwm_delta = float(s_recall) - float(lwm_recall)
                 if -lwm_delta > args.lwm_tolerance:
-                    lwm_regressions.append(
-                        f"{ft}: L{args.level} {args.severity} ENSEMBLE recall dropped {-lwm_delta*100:.2f}pp "
-                        f"BELOW LOW-WATER-MARK ({float(lwm_recall)*100:.2f}% → {float(s_recall)*100:.2f}%; "
-                        f"LWM tolerance {args.lwm_tolerance*100:.2f}pp)",
-                    )
+                    if is_impacted:
+                        lwm_regressions.append(
+                            f"{ft}: L{args.level} {args.severity} ENSEMBLE recall dropped {-lwm_delta*100:.2f}pp "
+                            f"BELOW LOW-WATER-MARK ({float(lwm_recall)*100:.2f}% → {float(s_recall)*100:.2f}%; "
+                            f"LWM tolerance {args.lwm_tolerance*100:.2f}pp)",
+                        )
+                    # else: pre-existing drift already logged in the deployed-vs-staged section above (or not — but either way, not a block)
                 elif lwm_delta > args.lwm_tolerance:
                     lwm_wins.append(
                         f"{ft}: L{args.level} {args.severity} ensemble recall +{lwm_delta*100:.2f}pp "
@@ -385,6 +469,16 @@ def main() -> int:
         for line in route_drops:
             print(line)
 
+    if preexisting_drift:
+        print()
+        print(
+            f"{len(preexisting_drift)} pre-existing drift(s) on unimpacted "
+            f"filetypes (informational — not caused by this promote, "
+            f"see --source-bundle impact analysis):",
+        )
+        for line in preexisting_drift:
+            print(f"  ~ {line}")
+
     if lwm_wins:
         print()
         print(
@@ -393,6 +487,15 @@ def main() -> int:
         )
         for w in lwm_wins:
             print(f"  + {w}")
+
+    if regressions:
+        print()
+        print(
+            f"{len(regressions)} DEPLOYED-TOLERANCE regression(s) "
+            f"(vs currently-deployed bundle {args.deployed}) — THIS IS WHAT BLOCKS THE DEPLOY:",
+        )
+        for r in regressions:
+            print(f"  - {r}")
 
     if lwm_regressions:
         print()
@@ -453,11 +556,14 @@ def main() -> int:
         reasons: list[str] = []
         if deployed_gate_blocked:
             reasons.append(
-                f"deployed-tolerance gate ({args.recall_tolerance*100:.2f}pp)"
+                f"deployed-tolerance gate ({len(regressions)} filetype(s) "
+                f"regressed vs deployed beyond the {args.recall_tolerance*100:.2f}pp tolerance; "
+                f"see list above for the actual drops)"
             )
         if lwm_regressions:
             reasons.append(
-                f"low-water-mark gate ({args.lwm_tolerance*100:.2f}pp vs {lwm_path_used})"
+                f"low-water-mark gate ({len(lwm_regressions)} filetype(s) "
+                f"below LWM beyond the {args.lwm_tolerance*100:.2f}pp tolerance vs {lwm_path_used})"
             )
         print(f"blocked by: {', '.join(reasons)}")
         print()

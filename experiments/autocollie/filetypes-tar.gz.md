@@ -424,3 +424,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T053407-filetypes-tar.gz` — 2026-05-28T05:34:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0b48a3c16b6949fe` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9993 | 0.9985 | 0.9894 | 206 | [log](out/autocollie/runs/2026-05-28T05-39-36_20260528T053407-filetypes-tar.gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `20f900a3daf73ff1` | tar_gz_ctrl_hardneg_scalepos | ok | 0.9993 | 0.9986 | 0.9889 | 144 | [log](out/autocollie/runs/2026-05-28T05-43-25_20260528T053407-filetypes-tar.gz_tar_gz_ctrl_hardneg_scalepos.log) |
+| `cb70baaf27ce33f0` | tar_gz_feat_kv_vocab_split | ok | 0.9993 | 0.9986 | 0.9912 | 133 | [log](out/autocollie/runs/2026-05-28T05-45-51_20260528T053407-filetypes-tar.gz_tar_gz_feat_kv_vocab_split.log) |
+| `cef957355cad528b` | tar_gz_feat_low_freq_bigrams | ok | 0.9992 | 0.9984 | 0.9912 | 110 | [log](out/autocollie/runs/2026-05-28T05-48-05_20260528T053407-filetypes-tar.gz_tar_gz_feat_low_freq_bigrams.log) |
+| `55c3bfae6822b331` | tar_gz_transfer_gz_kv_seed | ok | 0.9993 | 0.9986 | 0.9900 | 210 | [log](out/autocollie/runs/2026-05-28T05-49-56_20260528T053407-filetypes-tar.gz_tar_gz_transfer_gz_kv_seed.log) |
+| `e4a0e2dec59409f2` | tar_gz_abl_blindfold_off | ok | 0.9993 | 0.9986 | 0.9908 | 116 | [log](out/autocollie/runs/2026-05-28T05-53-27_20260528T053407-filetypes-tar.gz_tar_gz_abl_blindfold_off.log) |
+| `97e42a73c48e41b8` | tar_gz_gen_min_malware_score | ok | 0.9993 | 0.9985 | 0.9905 | 116 | [log](out/autocollie/runs/2026-05-28T05-55-25_20260528T053407-filetypes-tar.gz_tar_gz_gen_min_malware_score.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_gz_ctrl_hardneg_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env; tunes hard_negative_fraction and scale_pos_weight_mult to sharpen low-FPR ranking and improve recall@3 FP/M without hurting PR_AUC.
+- **`tar_gz_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to extract structured key-value pairs from archive metadata, targeting PR_AUC gains from fine-grained configuration signals.
+- **`tar_gz_feat_low_freq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 200 to capture rarer but high-signal co-occurrences in tar.gz payloads, aiming to lift PR_AUC while monitoring ROC_AUC for overfit.
+- **`tar_gz_transfer_gz_kv_seed`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ports filetypes/gz winning config by enabling kv_vocab and using seed_search_k=3 to average out seed variance, targeting stable recall@3 FP/M improvements.
+- **`tar_gz_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout features to reduce training noise on this dense archive route, expecting flat or higher PR_AUC with cleaner probability calibration.
+- **`tar_gz_gen_min_malware_score`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Sets min_malware_score=3 to filter low-severity malware from training, forcing the model to focus on high-confidence threats and improving recall@3 FP/M at the deployed operating point.
+
+</details>
+

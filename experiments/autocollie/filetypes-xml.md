@@ -484,3 +484,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T030248-filetypes-xml` — 2026-05-28T03:02:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8b7afb84bd8a184e` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9968 | 0.9994 | 0.9524 | 8 | [log](out/autocollie/runs/2026-05-28T03-07-38_20260528T030248-filetypes-xml_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `a6ca13b03ca25b70` | xml_control_hardneg_tail | ok | 0.9895 | 0.9977 | 0.9492 | 5 | [log](out/autocollie/runs/2026-05-28T03-07-54_20260528T030248-filetypes-xml_xml_control_hardneg_tail.log) |
+| `5e27801f4d86c6f1` | xml_feat_textmetrics_encoding | ok | 0.9989 | 0.9998 | 0.9655 | 5 | [log](out/autocollie/runs/2026-05-28T03-08-00_20260528T030248-filetypes-xml_xml_feat_textmetrics_encoding.log) |
+| `3de9e744eaed2469` | xml_feat_kv_vocab_split | ok | 0.9978 | 0.9996 | 0.9375 | 5 | [log](out/autocollie/runs/2026-05-28T03-08-06_20260528T030248-filetypes-xml_xml_feat_kv_vocab_split.log) |
+| `360930d2352e7c20` | xml_feat_obj_trigrams_lowfreq | ok | 0.9978 | 0.9996 | 0.9524 | 5 | [log](out/autocollie/runs/2026-05-28T03-08-12_20260528T030248-filetypes-xml_xml_feat_obj_trigrams_lowfreq.log) |
+| `d71d7baa0c74ea0b` | xml_transfer_extreme_metrics | ok | 0.9978 | 0.9996 | 0.9524 | 2 | [log](out/autocollie/runs/2026-05-28T03-08-18_20260528T030248-filetypes-xml_xml_transfer_extreme_metrics.log) |
+| `d4484e3ef19ae2e3` | xml_seed_search_k3_stability | ok | 0.9978 | 0.9996 | 0.9524 | 2 | [log](out/autocollie/runs/2026-05-28T03-08-20_20260528T030248-filetypes-xml_xml_seed_search_k3_stability.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env to hit matrix cache; tests hard-negative upweighting to improve recall@3 FP/M by focusing on difficult benigns.
+- **`xml_feat_textmetrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture XML structural/textual obfuscation signals, targeting PR_AUC improvement.
+- **`xml_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab and kv_value_split to parse XML attribute/value pairs into discrete tokens, aiming to boost recall@3 FP/M.
+- **`xml_feat_obj_trigrams_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Enables objective_trigrams with low min_freq to catch rare malicious XML tag sequences, targeting recall@3 FP/M.
+- **`xml_transfer_extreme_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports extended_metrics and extreme_features from sister routes to capture tail distribution signals, targeting PR_AUC.
+- **`xml_seed_search_k3_stability`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Runs seed_search_k=3 on the baseline feature set to verify recall@3 FP/M stability across RNG seeds.
+
+</details>
+
+## Cycle `20260528T100046-filetypes-xml` — 2026-05-28T10:00:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8b7afb84bd8a184e` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9968 | 0.9994 | 0.9524 | 2 | [log](out/autocollie/runs/2026-05-28T10-07-23_20260528T100046-filetypes-xml_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f008d878cc20cc41` | xml_control_reg_lambda_leaves128 | ok | 0.9978 | 0.9996 | 0.9375 | 2 | [log](out/autocollie/runs/2026-05-28T10-07-26_20260528T100046-filetypes-xml_xml_control_reg_lambda_leaves128.log) |
+| `49fc2c469b434609` | xml_feat_textmetrics_kv_vocab | ok | 0.9989 | 0.9998 | 0.9831 | 7 | [log](out/autocollie/runs/2026-05-28T10-07-29_20260528T100046-filetypes-xml_xml_feat_textmetrics_kv_vocab.log) |
+| `565cb34c1ffc9d14` | xml_feat_kv_split_lowfreq_bigrams | ok | 0.9978 | 0.9996 | 0.9231 | 5 | [log](out/autocollie/runs/2026-05-28T10-07-37_20260528T100046-filetypes-xml_xml_feat_kv_split_lowfreq_bigrams.log) |
+| `f095d0ce804e09a0` | xml_transfer_doc_obfuscation_extreme | ok | 0.9978 | 0.9996 | 0.9524 | 5 | [log](out/autocollie/runs/2026-05-28T10-07-43_20260528T100046-filetypes-xml_xml_transfer_doc_obfuscation_extreme.log) |
+| `cc41cfea455335da` | xml_feat_obj_trigrams_lowfreq_noblindfold | ok | 0.9978 | 0.9996 | 0.9524 | 7 | [log](out/autocollie/runs/2026-05-28T10-07-49_20260528T100046-filetypes-xml_xml_feat_obj_trigrams_lowfreq_noblindfold.log) |
+| `f19c3a55209bef03` | xml_seed_search_k3_textenc_kv | ok | 0.9989 | 0.9998 | 0.9655 | 8 | [log](out/autocollie/runs/2026-05-28T10-07-57_20260528T100046-filetypes-xml_xml_seed_search_k3_textenc_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_reg_lambda_leaves128`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tightening L2 regularization and increasing tree complexity to better rank the dense text metric features without overfitting.
+- **`xml_feat_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and kv_vocab to capture structural XML obfuscation and malicious key-value patterns.
+- **`xml_feat_kv_split_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by splitting KV values to recover per-element signal and lowering bigram_min_freq to capture rarer malicious XML templates.
+- **`xml_transfer_doc_obfuscation_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to lift recall@3FPM by porting document_obfuscation_features and extreme_features from sister document routes to catch tail XML malware.
+- **`xml_feat_obj_trigrams_lowfreq_noblindfold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=1` — Aims to increase PR_AUC by enabling objective_trigrams with low min_freq to catch rare attack paths and disabling blindfold to reduce ranking noise.
+- **`xml_seed_search_k3_textenc_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM by using seed_search_k=3 on the text_encoding and kv_vocab surface to average out seed-driven variance.
+
+</details>
+

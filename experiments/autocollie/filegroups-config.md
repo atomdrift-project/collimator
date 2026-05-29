@@ -476,3 +476,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T051217-filegroups-config` — 2026-05-28T05:12:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bb81bd69cbc5d687` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9997 | 0.9994 | 0.9957 | 74 | [log](out/autocollie/runs/2026-05-28T05-18-39_20260528T051217-filegroups-config_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bd8ace9823d255fb` | config_ctrl_train_leaves128_lr003 | ok | 0.9997 | 0.9994 | 0.9961 | 26 | [log](out/autocollie/runs/2026-05-28T05-20-04_20260528T051217-filegroups-config_config_ctrl_train_leaves128_lr003.log) |
+| `5b818391a70238e4` | config_feat_text_metrics_full | ok | 0.9997 | 0.9995 | 0.9949 | 44 | [log](out/autocollie/runs/2026-05-28T05-20-31_20260528T051217-filegroups-config_config_feat_text_metrics_full.log) |
+| `6408a03a5a59f619` | config_feat_kv_vocab_split | ok | 0.9997 | 0.9994 | 0.9959 | 16 | [log](out/autocollie/runs/2026-05-28T05-21-16_20260528T051217-filegroups-config_config_feat_kv_vocab_split.log) |
+| `837037ce438b84fe` | config_feat_lowbigram_tiered_tri | ok | 0.9997 | 0.9994 | 0.9951 | 21 | [log](out/autocollie/runs/2026-05-28T05-21-33_20260528T051217-filegroups-config_config_feat_lowbigram_tiered_tri.log) |
+| `d05006552cbd82bb` | config_train_hardneg_02_12 | ok | 0.9996 | 0.9992 | 0.9949 | 14 | [log](out/autocollie/runs/2026-05-28T05-21-56_20260528T051217-filegroups-config_config_train_hardneg_02_12.log) |
+| `d4266320f83340c9` | config_train_extra_trees_subsample | ok | 0.9997 | 0.9995 | 0.9788 | 6 | [log](out/autocollie/runs/2026-05-28T05-22-11_20260528T051217-filegroups-config_config_train_extra_trees_subsample.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_train_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best feature_env; lowers learning_rate and increases num_leaves to refine ranking and improve PR_AUC without changing features.
+- **`config_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full to capture structural text signals in config files, aiming to boost PR_AUC by distinguishing obfuscated configs from benign ones.
+- **`config_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab and kv_value_split to recover per-element signal in config key-value pairs, targeting recall@3FPM improvement by better isolating malicious config patterns.
+- **`config_feat_lowbigram_tiered_tri`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 50 and enables tiered_crit_trigrams to capture rarer config patterns, aiming to improve PR_AUC by adding discriminative n-gram signal.
+- **`config_train_hardneg_02_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard_negative_fraction=0.2 and hard_negative_weight=12 to focus model capacity on difficult benign configs, targeting recall@3FPM improvement by reducing false positives at the tail.
+- **`config_train_extra_trees_subsample`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables extra_trees and lowers subsample to 0.8 to add ensemble noise and reduce overfitting, aiming to stabilize ROC_AUC and improve generalization for recall@3FPM.
+
+</details>
+
+## Cycle `20260528T084335-filegroups-config` — 2026-05-28T08:43:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bb81bd69cbc5d687` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9997 | 0.9994 | 0.9957 | 2 | [log](out/autocollie/runs/2026-05-28T08-49-49_20260528T084335-filegroups-config_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `51aaaecd4f086955` | config_ctrl_baseline_train_tweak | ok | 0.9997 | 0.9995 | 0.9788 | 55 | [log](out/autocollie/runs/2026-05-28T08-49-53_20260528T084335-filegroups-config_config_ctrl_baseline_train_tweak.log) |
+| `89ed6ee89246440a` | config_feat_kv_vocab_split | ok | 0.9997 | 0.9994 | 0.9959 | 153 | [log](out/autocollie/runs/2026-05-28T08-50-49_20260528T084335-filegroups-config_config_feat_kv_vocab_split.log) |
+| `f5a7868fc5b28c6e` | config_feat_text_metrics_encoding | ok | 0.9997 | 0.9995 | 0.9959 | 73 | [log](out/autocollie/runs/2026-05-28T08-53-23_20260528T084335-filegroups-config_config_feat_text_metrics_encoding.log) |
+| `1d505049126dcd77` | config_feat_tiered_tri_lowbigram | ok | 0.9997 | 0.9994 | 0.9951 | 19 | [log](out/autocollie/runs/2026-05-28T08-54-37_20260528T084335-filegroups-config_config_feat_tiered_tri_lowbigram.log) |
+| `f0a8c2d50529df8b` | config_train_hardneg_02_15 | ok | 0.9996 | 0.9993 | 0.9945 | 54 | [log](out/autocollie/runs/2026-05-28T08-54-58_20260528T084335-filegroups-config_config_train_hardneg_02_15.log) |
+| `d81e5b007e11a1c7` | config_train_scalepos_05 | ok | 0.9996 | 0.9993 | 0.9944 | 30 | [log](out/autocollie/runs/2026-05-28T08-55-53_20260528T084335-filegroups-config_config_train_scalepos_05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_baseline_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates recent best feature_env to hit matrix cache; tweaks extra_trees and subsample to improve PR_AUC by reducing overfitting on noisy config patterns.
+- **`config_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab and kv_value_split to capture structured key-value pairs in config files, aiming to boost PR_AUC by isolating malicious configuration directives.
+- **`config_feat_text_metrics_encoding`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Activates text_metrics_full and text_encoding to detect obfuscation and encoding anomalies in config scripts, targeting PR_AUC gains from structural text signals.
+- **`config_feat_tiered_tri_lowbigram`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 and enables tiered_crit_trigrams to capture rare but critical n-gram sequences, aiming to improve recall@3 FP/M by catching subtle malicious patterns.
+- **`config_train_hardneg_02_15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard_negative_fraction 0.2 and weight 15 to focus the model on difficult benign configs, targeting recall@3 FP/M by sharpening the decision boundary at low FPR.
+- **`config_train_scalepos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Sets scale_pos_weight_mult to 0.5 to down-weight malware positives, reducing false positives on benign configs and improving recall@3 FP/M at the deployed operating point.
+
+</details>
+

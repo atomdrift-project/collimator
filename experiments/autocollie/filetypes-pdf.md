@@ -1902,3 +1902,51 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260528T030059-filetypes-pdf` — 2026-05-28T03:00:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9e0537f091a83d65` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 0.9994 | 0.9980 | 12 | [log](out/autocollie/runs/2026-05-28T03-06-24_20260528T030059-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `8ffc56f6da05001d` | pdf_control_deeper_trees_reg | ok | 1.0000 | 0.9991 | 0.9982 | 9 | [log](out/autocollie/runs/2026-05-28T03-06-46_20260528T030059-filetypes-pdf_pdf_control_deeper_trees_reg.log) |
+| `cf83b1f1a33a6de0` | pdf_textmetrics_kv_vocab | ok | 1.0000 | 0.9992 | 0.9984 | 9 | [log](out/autocollie/runs/2026-05-28T03-06-56_20260528T030059-filetypes-pdf_pdf_textmetrics_kv_vocab.log) |
+| `9234f177831c2f42` | pdf_lowfreq_bigrams_tiered_tri | ok | 1.0000 | 0.9992 | 0.9984 | 9 | [log](out/autocollie/runs/2026-05-28T03-07-07_20260528T030059-filetypes-pdf_pdf_lowfreq_bigrams_tiered_tri.log) |
+| `6411dcb0f5c74d40` | pdf_hardneg_tail_recall | ok | 0.9999 | 0.9947 | 0.9933 | 2 | [log](out/autocollie/runs/2026-05-28T03-07-18_20260528T030059-filetypes-pdf_pdf_hardneg_tail_recall.log) |
+| `d0ba2fb12f0ae307` | pdf_transfer_xml_lowbigram_tri | ok | 1.0000 | 0.9993 | 0.9984 | 9 | [log](out/autocollie/runs/2026-05-28T03-07-21_20260528T030059-filetypes-pdf_pdf_transfer_xml_lowbigram_tri.log) |
+| `3eb1e3f8b14252c2` | pdf_seedsearch_text_kv_avg | ok | 1.0000 | 0.9993 | 0.9980 | 11 | [log](out/autocollie/runs/2026-05-28T03-07-32_20260528T030059-filetypes-pdf_pdf_seedsearch_text_kv_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_deeper_trees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature_env with increased num_leaves and reg_lambda to better model complex PDF structures, targeting PR_AUC improvement.
+- **`pdf_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation signals and metadata anomalies, targeting recall@3FPM.
+- **`pdf_lowfreq_bigrams_tiered_tri`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and enables tiered_crit_trigrams to capture rarer malicious PDF payload patterns, targeting PR_AUC.
+- **`pdf_hardneg_tail_recall`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Applies hard negative upweighting to sharpen the decision boundary at low FPR, targeting recall@3FPM.
+- **`pdf_transfer_xml_lowbigram_tri`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Ports XML route's low-frequency bigram and tiered trigram config to capture rare PDF structural signals, targeting PR_AUC.
+- **`pdf_seedsearch_text_kv_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Averages predictions over 3 seeds on the text/KV feature surface to reduce variance and stabilize gains, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260528T094812-filetypes-pdf` — 2026-05-28T09:48:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9e0537f091a83d65` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 0.9994 | 0.9980 | 1 | [log](out/autocollie/runs/2026-05-28T09-53-53_20260528T094812-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `320fbff61f121f32` | pdf_control_deeper_trees_lr003 | ok | 1.0000 | 0.9992 | 0.9984 | 3 | [log](out/autocollie/runs/2026-05-28T09-53-59_20260528T094812-filetypes-pdf_pdf_control_deeper_trees_lr003.log) |
+| `3070b968262518d1` | pdf_textmetrics_full_kv_vocab | ok | 1.0000 | 0.9992 | 0.9984 | 4 | [log](out/autocollie/runs/2026-05-28T09-54-03_20260528T094812-filetypes-pdf_pdf_textmetrics_full_kv_vocab.log) |
+| `56adc1879a6c28ff` | pdf_doc_obfuscation_tiered_tri | ok | 1.0000 | 0.9992 | 0.9983 | 10 | [log](out/autocollie/runs/2026-05-28T09-54-10_20260528T094812-filetypes-pdf_pdf_doc_obfuscation_tiered_tri.log) |
+| `2418201a4c9c782b` | pdf_transfer_xml_lowfreq_bigrams | ok | 1.0000 | 0.9993 | 0.9983 | 8 | [log](out/autocollie/runs/2026-05-28T09-54-21_20260528T094812-filetypes-pdf_pdf_transfer_xml_lowfreq_bigrams.log) |
+| `d410c59a43e56a46` | pdf_seedsearch_textmetrics_ensemble | ok | 1.0000 | 0.9993 | 0.9977 | 7 | [log](out/autocollie/runs/2026-05-28T09-54-31_20260528T094812-filetypes-pdf_pdf_seedsearch_textmetrics_ensemble.log) |
+| `7498f5f822ae3b5d` | pdf_abl_blindfold_off_hardneg | ok | 0.9999 | 0.9947 | 0.9933 | 7 | [log](out/autocollie/runs/2026-05-28T09-54-40_20260528T094812-filetypes-pdf_pdf_abl_blindfold_off_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_deeper_trees_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature_env for matrix cache hit; increase depth/leaves and lower LR to improve PR_AUC ranking without hurting ROC_AUC.
+- **`pdf_textmetrics_full_kv_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, targeting PR_AUC gains on PDF-specific evasion tactics.
+- **`pdf_doc_obfuscation_tiered_tri`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Enable document_obfuscation_features and tiered_crit_trigrams to isolate PDF anti-static patterns and improve recall@3 FP/M on obfuscated payloads.
+- **`pdf_transfer_xml_lowfreq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Port XML's low-frequency bigram strategy to PDF to capture rare but malicious document structures, aiming for higher recall@3 FP/M.
+- **`pdf_seedsearch_textmetrics_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Use seed_search_k=3 with save_all_seeds=true on text_metrics config to average out seed variance and stabilize PR_AUC gains.
+- **`pdf_abl_blindfold_off_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 …` — Disable blindfold to recover signal lost to dropout, paired with hard negatives to sharpen the decision boundary and boost recall@3 FP/M.
+
+</details>
+

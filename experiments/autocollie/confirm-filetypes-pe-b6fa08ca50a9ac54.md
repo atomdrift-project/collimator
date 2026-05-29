@@ -1,6 +1,6 @@
 # Confirm PASS — b6fa08ca50a9ac54 on `filetypes/pe`
 
-Cycle `20260524T132706-confirm-b6fa08ca50a9ac54` — 2026-05-24T13:27:06Z
+Cycle `20260525T190315-confirm-b6fa08ca50a9ac54` — 2026-05-25T19:03:15Z
 
 PR_AUC held across 3 seeds (orig 0.9997)
 

@@ -1,6 +1,6 @@
 # Confirm PASS — 64d295b8743c959a on `filegroups/portable`
 
-Cycle `20260520T184329-confirm-64d295b8743c959a` — 2026-05-20T18:43:29Z
+Cycle `20260527T013520-confirm-64d295b8743c959a` — 2026-05-27T01:35:20Z
 
 PR_AUC held across 3 seeds (orig 0.9967)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9967)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `64d295b8743c959a` | `36faffff0426af0e` | `36faffff0426af0e` | `36faffff0426af0e` |
-| PR AUC | 0.9967 | 0.9942 | 0.9959 | 0.9963 |
-| ROC AUC | 0.9992 | 0.9987 | 0.9990 | 0.9991 |
-| Recall@3FPM | — | 0.5867 | 0.7733 | 0.8533 |
+| key | `64d295b8743c959a` | `fb8a80965c79ad5c` | `fb8a80965c79ad5c` | `fb8a80965c79ad5c` |
+| PR AUC | 0.9967 | 0.9960 | 0.9948 | 0.9957 |
+| ROC AUC | 0.9992 | 0.9990 | 0.9988 | 0.9989 |
+| Recall@3FPM | — | 0.8200 | 0.7000 | 0.8667 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

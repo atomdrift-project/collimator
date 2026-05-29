@@ -1,6 +1,6 @@
 # Confirm PASS — 12c04f8843366ad0 on `filetypes/javascript`
 
-Cycle `20260524T151456-confirm-12c04f8843366ad0` — 2026-05-24T15:14:56Z
+Cycle `20260525T185800-confirm-12c04f8843366ad0` — 2026-05-25T18:58:00Z
 
 PR_AUC held across 3 seeds (orig 0.9993)
 

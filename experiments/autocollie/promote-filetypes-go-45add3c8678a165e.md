@@ -1,62 +1,13 @@
-# Promote REJECTED — `45add3c8678a165e` on `filetypes/go`
+# Promote PASS — `45add3c8678a165e` on `filetypes/go`
 
-Generated 2026-05-25T10:04:05Z
+Generated 2026-05-25T16:08:34Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T10-02-59_20260525T100235-promote-45add3c8678a165e_azoth-validate.log; tail: 2026-05-25 06:03:59,381 INFO azoth_calibrate_ensemble: filetypes/xls: using cached scores
-2026-05-25 06:04:00,044 INFO azoth_calibrate_ensemble: filetypes/ole: using cached scores
-2026-05-25 06:04:00,161 INFO azoth_calibrate_ensemble: filetypes/vbs: using cached scores
-2026-05-25 06:04:00,522 INFO azoth_calibrate_ensemble: filetypes/groovy: using cached scores
-2026-05-25 06:04:00,681 INFO azoth_calibrate_ensemble: filetypes/powershell: using cached scores
-2026-05-25 06:04:00,983 INFO azoth_calibrate_ensemble: filetypes/jar: using cached scores
-2026-05-25 06:04:01,166 INFO azoth_calibrate_ensemble: filetypes/lnk: using cached scores
-2026-05-25 06:04:01,460 INFO azoth_calibrate_ensemble: filetypes/msi: using cached scores
-2026-05-25 06:04:01,650 INFO azoth_calibrate_ensemble: filetypes/rtf: using cached scores
-2026-05-25 06:04:01,969 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-05-25 06:04:02,304 INFO azoth_calibrate_ensemble: filetypes/pptx: using cached scores
-concurrent.futures.process._RemoteTraceback: 
-"""
-Traceback (most recent call last):
-  File "/usr/lib/python3.14/concurrent/futures/process.py", line 254, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1252, in _score_route_worker
-    return _score_route(
-        job["db_path"],
-    ...<7 lines>...
-        oof_route_scores_dir=job.get("oof_route_scores_dir"),
-    )
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 434, in _score_route
-    clf = bundle.Ensemble.load_bundle(output_dir)
-  File "/home/t/collimator/src/collimator/bundle.py", line 223, in load_bundle
-    files = model_files(bundle_dir)
-  File "/home/t/collimator/src/collimator/bundle.py", line 122, in model_files
-    raise ValueError(
-    ...<3 lines>...
-    )
-ValueError: ambiguous bundle layout in /home/t/collimator/out/models/azoth-candidate-filetypes-go-45add3c8678a165e/filetypes/go: both multi-seed (models/seed_*.{onnx,txt,json}) and legacy (model.{onnx,txt,json}) artifacts exist; remove one to disambiguate.
-"""
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1649, in <module>
-    raise SystemExit(main())
-                     ~~~~^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1444, in main
-    route_scores[general_offset + idx] = fut.result()
-                                         ~~~~~~~~~~^^
-  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 443, in result
-    return self.__get_result()
-           ~~~~~~~~~~~~~~~~~^^
-  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
-    raise self._exception
-ValueError: ambiguous bundle layout in /home/t/collimator/out/models/azoth-candidate-filetypes-go-45add3c8678a165e/filetypes/go: both multi-seed (models/seed_*.{onnx,txt,json}) and legacy (model.{onnx,txt,json}) artifacts exist; remove one to disambiguate.
-make[1]: *** [Makefile:1027: azoth-calibrate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+full-train holds — PR_AUC 0.9655 -> 0.9649, AUC 0.9883 -> 0.9883, Brier 0.0389 -> 0.0379
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9655)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
@@ -67,57 +18,127 @@ make[1]: Leaving directory '/home/t/collimator')
 | ROC AUC | 0.9883 | 0.9885 | 0.9883 |
 | F1 | 0.8354 | 0.9086 | 0.9061 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T10-02-59_20260525T100235-promote-45add3c8678a165e_azoth-validate.log; tail: 2026-05-25 06:03:59,381 INFO azoth_calibrate_ensemble: filetypes/xls: using cached scores
-2026-05-25 06:04:00,044 INFO azoth_calibrate_ensemble: filetypes/ole: using cached scores
-2026-05-25 06:04:00,161 INFO azoth_calibrate_ensemble: filetypes/vbs: using cached scores
-2026-05-25 06:04:00,522 INFO azoth_calibrate_ensemble: filetypes/groovy: using cached scores
-2026-05-25 06:04:00,681 INFO azoth_calibrate_ensemble: filetypes/powershell: using cached scores
-2026-05-25 06:04:00,983 INFO azoth_calibrate_ensemble: filetypes/jar: using cached scores
-2026-05-25 06:04:01,166 INFO azoth_calibrate_ensemble: filetypes/lnk: using cached scores
-2026-05-25 06:04:01,460 INFO azoth_calibrate_ensemble: filetypes/msi: using cached scores
-2026-05-25 06:04:01,650 INFO azoth_calibrate_ensemble: filetypes/rtf: using cached scores
-2026-05-25 06:04:01,969 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-05-25 06:04:02,304 INFO azoth_calibrate_ensemble: filetypes/pptx: using cached scores
-concurrent.futures.process._RemoteTraceback: 
-"""
-Traceback (most recent call last):
-  File "/usr/lib/python3.14/concurrent/futures/process.py", line 254, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1252, in _score_route_worker
-    return _score_route(
-        job["db_path"],
-    ...<7 lines>...
-        oof_route_scores_dir=job.get("oof_route_scores_dir"),
-    )
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 434, in _score_route
-    clf = bundle.Ensemble.load_bundle(output_dir)
-  File "/home/t/collimator/src/collimator/bundle.py", line 223, in load_bundle
-    files = model_files(bundle_dir)
-  File "/home/t/collimator/src/collimator/bundle.py", line 122, in model_files
-    raise ValueError(
-    ...<3 lines>...
-    )
-ValueError: ambiguous bundle layout in /home/t/collimator/out/models/azoth-candidate-filetypes-go-45add3c8678a165e/filetypes/go: both multi-seed (models/seed_*.{onnx,txt,json}) and legacy (model.{onnx,txt,json}) artifacts exist; remove one to disambiguate.
-"""
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-The above exception was the direct cause of the following exception:
+The candidate bundle lives at:
 
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1649, in <module>
-    raise SystemExit(main())
-                     ~~~~^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1444, in main
-    route_scores[general_offset + idx] = fut.result()
-                                         ~~~~~~~~~~^^
-  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 443, in result
-    return self.__get_result()
-           ~~~~~~~~~~~~~~~~~^^
-  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
-    raise self._exception
-ValueError: ambiguous bundle layout in /home/t/collimator/out/models/azoth-candidate-filetypes-go-45add3c8678a165e/filetypes/go: both multi-seed (models/seed_*.{onnx,txt,json}) and legacy (model.{onnx,txt,json}) artifacts exist; remove one to disambiguate.
-make[1]: *** [Makefile:1027: azoth-calibrate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+```
+/home/t/collimator/out/models/azoth-candidate-filetypes-go-45add3c8678a165e
+```
+
+## Candidate knobs (raw EXP_* form)
+
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=2
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=50
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0
+EXP_HARD_NEGATIVE_WEIGHT=1
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=1
+EXP_KV_VOCAB_MAX=12000
+EXP_LEARNING_RATE=0.03
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=128
+EXP_NUM_THREADS=64
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=0
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
+
+## To deploy (HUMAN)
+
+Read `/home/t/collimator/out/models/azoth-candidate-filetypes-go-45add3c8678a165e/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
+
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-go-45add3c8678a165e
+```
+
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

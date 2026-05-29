@@ -1,57 +1,57 @@
 # Promote REJECTED — `f72e5260424e8ac3` on `filegroups/native`
 
-Generated 2026-05-25T02:42:01Z
+Generated 2026-05-25T19:16:13Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T02-40-41_20260525T021421-promote-f72e5260424e8ac3_azoth-validate.log; tail: 2026-05-24 22:41:57,455 INFO azoth_calibrate_ensemble: filetypes/xls: using cached scores
-2026-05-24 22:41:57,610 INFO azoth_calibrate_ensemble: filetypes/ole: using cached scores
-2026-05-24 22:41:57,830 INFO azoth_calibrate_ensemble: filetypes/vbs: using cached scores
-2026-05-24 22:41:57,981 INFO azoth_calibrate_ensemble: filetypes/groovy: using cached scores
-2026-05-24 22:41:58,210 INFO azoth_calibrate_ensemble: filetypes/powershell: using cached scores
-2026-05-24 22:41:58,363 INFO azoth_calibrate_ensemble: filetypes/jar: using cached scores
-2026-05-24 22:41:58,581 INFO azoth_calibrate_ensemble: filetypes/lnk: using cached scores
-2026-05-24 22:41:58,795 INFO azoth_calibrate_ensemble: filetypes/msi: using cached scores
-2026-05-24 22:41:59,004 INFO azoth_calibrate_ensemble: filetypes/rtf: using cached scores
-2026-05-24 22:41:59,158 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-05-24 22:41:59,356 INFO azoth_calibrate_ensemble: filetypes/pptx: using cached scores
-concurrent.futures.process._RemoteTraceback: 
-"""
-Traceback (most recent call last):
-  File "/usr/lib/python3.14/concurrent/futures/process.py", line 254, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1252, in _score_route_worker
-    return _score_route(
-        job["db_path"],
-    ...<7 lines>...
-        oof_route_scores_dir=job.get("oof_route_scores_dir"),
-    )
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 434, in _score_route
-    clf = bundle.Ensemble.load_bundle(output_dir)
-  File "/home/t/collimator/src/collimator/bundle.py", line 223, in load_bundle
-    files = model_files(bundle_dir)
-  File "/home/t/collimator/src/collimator/bundle.py", line 122, in model_files
-    raise ValueError(
-    ...<3 lines>...
-    )
-ValueError: ambiguous bundle layout in /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/filegroups/native: both multi-seed (models/seed_*.{onnx,txt,json}) and legacy (model.{onnx,txt,json}) artifacts exist; remove one to disambiguate.
-"""
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T19-07-50_20260525T190749-promote-f72e5260424e8ac3_azoth-validate.log; tail: 	--score-table /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/score_table.npz \
+	--general-scores /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/general/threshold_scores.npz \
+	--route-policies /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policies.json \
+	--partition test \
+	--output-md /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policy_eval_oof.md \
+	--output-json /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policy_eval_oof.json
+wrote /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policy_eval_oof.json
+wrote /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policy_eval_oof.md
+.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3
+staged runtime azoth bundle: /tmp/tmp.5HHGtXtQ4p
+azoth bundle ok: /tmp/tmp.5HHGtXtQ4p
+--source-bundle out/models/azoth: 1 routes changed → 3 filetypes impacted, 62 unimpacted (drift treated as pre-existing)
 
-The above exception was the direct cause of the following exception:
+ensemble improvements (≥0.10pp):
+  c: L3 hostile ensemble recall +1.30pp (10.02% → 11.33%)
+  elf: L3 hostile ensemble recall +2.26pp (92.79% → 95.05%)
+  javascript: L3 hostile ensemble recall +5.92pp (66.20% → 72.12%)
+  package.json: L3 hostile ensemble recall +4.25pp (86.78% → 91.03%)
+  xml: L3 hostile ensemble recall +6.16pp (2.74% → 8.90%)
 
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1649, in <module>
-    raise SystemExit(main())
-                     ~~~~^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1444, in main
-    route_scores[general_offset + idx] = fut.result()
-                                         ~~~~~~~~~~^^
-  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 443, in result
-    return self.__get_result()
-           ~~~~~~~~~~~~~~~~~^^
-  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
-    raise self._exception
-ValueError: ambiguous bundle layout in /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/filegroups/native: both multi-seed (models/seed_*.{onnx,txt,json}) and legacy (model.{onnx,txt,json}) artifacts exist; remove one to disambiguate.
-make[1]: *** [Makefile:1027: azoth-calibrate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+per-route improvements (≥0.10pp, informational):
+  c :: filetypes/c recall@3FP/M +0.28pp (13.53% → 13.82%)
+  elf :: filegroups/native recall@3FP/M +11.03pp (86.66% → 97.68%)
+  elf :: filetypes/elf recall@3FP/M +3.40pp (93.40% → 96.81%)
+  go :: filetypes/go recall@3FP/M +0.34pp (4.84% → 5.18%)
+  javascript :: filetypes/javascript recall@3FP/M +11.24pp (65.71% → 76.95%)
+  macho :: filegroups/native recall@3FP/M +21.37pp (69.08% → 90.46%)
+  package.json :: filegroups/config recall@3FP/M +0.83pp (98.71% → 99.54%)
+  package.json :: filetypes/package.json recall@3FP/M +1.02pp (98.66% → 99.68%)
+  xml :: filegroups/config recall@3FP/M +12.33pp (3.42% → 15.75%)
+
+per-route regressions (informational; does not block deploy):
+  pe :: filegroups/native recall@3FP/M dropped 4.50pp (59.94% → 55.44%)
+
+5 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + c: L3 hostile ensemble recall +1.30pp above LWM (10.02% → 11.33%)
+  + elf: L3 hostile ensemble recall +2.26pp above LWM (92.79% → 95.05%)
+  + javascript: L3 hostile ensemble recall +5.92pp above LWM (66.20% → 72.12%)
+  + package.json: L3 hostile ensemble recall +4.25pp above LWM (86.78% → 91.03%)
+  + xml: L3 hostile ensemble recall +6.16pp above LWM (2.74% → 8.90%)
+
+1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
+  - pe: L3 hostile ENSEMBLE recall dropped 3.53pp BELOW LOW-WATER-MARK (61.96% → 58.43%; LWM tolerance 0.90pp)
+
+compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+
+blocked by: deployed-tolerance gate (1.70pp), low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
+make[2]: *** [Makefile:1136: azoth-validate] Error 1)
 
 ## Gates
 
@@ -71,53 +71,53 @@ make[1]: Leaving directory '/home/t/collimator')
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T02-40-41_20260525T021421-promote-f72e5260424e8ac3_azoth-validate.log; tail: 2026-05-24 22:41:57,455 INFO azoth_calibrate_ensemble: filetypes/xls: using cached scores
-2026-05-24 22:41:57,610 INFO azoth_calibrate_ensemble: filetypes/ole: using cached scores
-2026-05-24 22:41:57,830 INFO azoth_calibrate_ensemble: filetypes/vbs: using cached scores
-2026-05-24 22:41:57,981 INFO azoth_calibrate_ensemble: filetypes/groovy: using cached scores
-2026-05-24 22:41:58,210 INFO azoth_calibrate_ensemble: filetypes/powershell: using cached scores
-2026-05-24 22:41:58,363 INFO azoth_calibrate_ensemble: filetypes/jar: using cached scores
-2026-05-24 22:41:58,581 INFO azoth_calibrate_ensemble: filetypes/lnk: using cached scores
-2026-05-24 22:41:58,795 INFO azoth_calibrate_ensemble: filetypes/msi: using cached scores
-2026-05-24 22:41:59,004 INFO azoth_calibrate_ensemble: filetypes/rtf: using cached scores
-2026-05-24 22:41:59,158 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-05-24 22:41:59,356 INFO azoth_calibrate_ensemble: filetypes/pptx: using cached scores
-concurrent.futures.process._RemoteTraceback: 
-"""
-Traceback (most recent call last):
-  File "/usr/lib/python3.14/concurrent/futures/process.py", line 254, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1252, in _score_route_worker
-    return _score_route(
-        job["db_path"],
-    ...<7 lines>...
-        oof_route_scores_dir=job.get("oof_route_scores_dir"),
-    )
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 434, in _score_route
-    clf = bundle.Ensemble.load_bundle(output_dir)
-  File "/home/t/collimator/src/collimator/bundle.py", line 223, in load_bundle
-    files = model_files(bundle_dir)
-  File "/home/t/collimator/src/collimator/bundle.py", line 122, in model_files
-    raise ValueError(
-    ...<3 lines>...
-    )
-ValueError: ambiguous bundle layout in /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/filegroups/native: both multi-seed (models/seed_*.{onnx,txt,json}) and legacy (model.{onnx,txt,json}) artifacts exist; remove one to disambiguate.
-"""
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T19-07-50_20260525T190749-promote-f72e5260424e8ac3_azoth-validate.log; tail: 	--score-table /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/score_table.npz \
+	--general-scores /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/general/threshold_scores.npz \
+	--route-policies /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policies.json \
+	--partition test \
+	--output-md /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policy_eval_oof.md \
+	--output-json /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policy_eval_oof.json
+wrote /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policy_eval_oof.json
+wrote /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/route_policy_eval_oof.md
+.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3
+staged runtime azoth bundle: /tmp/tmp.5HHGtXtQ4p
+azoth bundle ok: /tmp/tmp.5HHGtXtQ4p
+--source-bundle out/models/azoth: 1 routes changed → 3 filetypes impacted, 62 unimpacted (drift treated as pre-existing)
 
-The above exception was the direct cause of the following exception:
+ensemble improvements (≥0.10pp):
+  c: L3 hostile ensemble recall +1.30pp (10.02% → 11.33%)
+  elf: L3 hostile ensemble recall +2.26pp (92.79% → 95.05%)
+  javascript: L3 hostile ensemble recall +5.92pp (66.20% → 72.12%)
+  package.json: L3 hostile ensemble recall +4.25pp (86.78% → 91.03%)
+  xml: L3 hostile ensemble recall +6.16pp (2.74% → 8.90%)
 
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1649, in <module>
-    raise SystemExit(main())
-                     ~~~~^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1444, in main
-    route_scores[general_offset + idx] = fut.result()
-                                         ~~~~~~~~~~^^
-  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 443, in result
-    return self.__get_result()
-           ~~~~~~~~~~~~~~~~~^^
-  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
-    raise self._exception
-ValueError: ambiguous bundle layout in /home/t/collimator/out/models/azoth-candidate-filegroups-native-f72e5260424e8ac3/filegroups/native: both multi-seed (models/seed_*.{onnx,txt,json}) and legacy (model.{onnx,txt,json}) artifacts exist; remove one to disambiguate.
-make[1]: *** [Makefile:1027: azoth-calibrate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+per-route improvements (≥0.10pp, informational):
+  c :: filetypes/c recall@3FP/M +0.28pp (13.53% → 13.82%)
+  elf :: filegroups/native recall@3FP/M +11.03pp (86.66% → 97.68%)
+  elf :: filetypes/elf recall@3FP/M +3.40pp (93.40% → 96.81%)
+  go :: filetypes/go recall@3FP/M +0.34pp (4.84% → 5.18%)
+  javascript :: filetypes/javascript recall@3FP/M +11.24pp (65.71% → 76.95%)
+  macho :: filegroups/native recall@3FP/M +21.37pp (69.08% → 90.46%)
+  package.json :: filegroups/config recall@3FP/M +0.83pp (98.71% → 99.54%)
+  package.json :: filetypes/package.json recall@3FP/M +1.02pp (98.66% → 99.68%)
+  xml :: filegroups/config recall@3FP/M +12.33pp (3.42% → 15.75%)
+
+per-route regressions (informational; does not block deploy):
+  pe :: filegroups/native recall@3FP/M dropped 4.50pp (59.94% → 55.44%)
+
+5 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + c: L3 hostile ensemble recall +1.30pp above LWM (10.02% → 11.33%)
+  + elf: L3 hostile ensemble recall +2.26pp above LWM (92.79% → 95.05%)
+  + javascript: L3 hostile ensemble recall +5.92pp above LWM (66.20% → 72.12%)
+  + package.json: L3 hostile ensemble recall +4.25pp above LWM (86.78% → 91.03%)
+  + xml: L3 hostile ensemble recall +6.16pp above LWM (2.74% → 8.90%)
+
+1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
+  - pe: L3 hostile ENSEMBLE recall dropped 3.53pp BELOW LOW-WATER-MARK (61.96% → 58.43%; LWM tolerance 0.90pp)
+
+compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+
+blocked by: deployed-tolerance gate (1.70pp), low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
+make[2]: *** [Makefile:1136: azoth-validate] Error 1)

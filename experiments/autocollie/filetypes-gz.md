@@ -442,3 +442,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260528T022224-filetypes-gz` — 2026-05-28T02:22:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ff6e0c0525d71d3` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9987 | 0.9985 | 0.9956 | 10 | [log](out/autocollie/runs/2026-05-28T02-27-40_20260528T022224-filetypes-gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ad9f37fd0fe14fd0` | gz_control_spw05_hardneg | ok | 0.9988 | 0.9985 | 0.9912 | 7 | [log](out/autocollie/runs/2026-05-28T02-27-51_20260528T022224-filetypes-gz_gz_control_spw05_hardneg.log) |
+| `29395f64fe37b595` | gz_kv_vocab_reenable | ok | 0.9982 | 0.9978 | 0.9912 | 8 | [log](out/autocollie/runs/2026-05-28T02-27-59_20260528T022224-filetypes-gz_gz_kv_vocab_reenable.log) |
+| `2884dc0113c2fcd1` | gz_textenc_metrics_full | ok | 0.9983 | 0.9979 | 0.9912 | 9 | [log](out/autocollie/runs/2026-05-28T02-28-07_20260528T022224-filetypes-gz_gz_textenc_metrics_full.log) |
+| `ffc3eaafb5faf522` | gz_transfer_lowfreq_tiered | ok | 0.9983 | 0.9978 | 0.9912 | 14 | [log](out/autocollie/runs/2026-05-28T02-28-17_20260528T022224-filetypes-gz_gz_transfer_lowfreq_tiered.log) |
+| `b81dd2e2473bb6cb` | gz_kv_seedsearch_k3 | ok | 0.9982 | 0.9978 | 0.9912 | 5 | [log](out/autocollie/runs/2026-05-28T02-28-31_20260528T022224-filetypes-gz_gz_kv_seedsearch_k3.log) |
+| `474ade8bad7992b3` | gz_abl_blindfold_off | ok | 0.9980 | 0.9974 | 0.9912 | 9 | [log](out/autocollie/runs/2026-05-28T02-28-37_20260528T022224-filetypes-gz_gz_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_spw05_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 …` — Replicates recent best feature surface while applying scale_pos_weight_mult=0.5 and hard_negative_weight=10 to improve PR_AUC and recall@3 FP/M by focusing the model on hard-to-classify benigns.
+- **`gz_kv_vocab_reenable`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Re-enables kv_vocab with a cap of 12000 to capture archive metadata and embedded file signatures, targeting PR_AUC gains from structured key-value patterns.
+- **`gz_textenc_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to detect obfuscation and encoding anomalies in decompressed payloads, aiming to boost recall@3 FP/M on evasive samples.
+- **`gz_transfer_lowfreq_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Ports xml route's low bigram_min_freq=50 and tiered trigrams to capture rarer but high-signal n-grams in gz archives, targeting PR_AUC improvement.
+- **`gz_kv_seedsearch_k3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 …` — Applies seed_search_k=3 to the kv_vocab configuration to verify signal stability and reduce seed-driven variance, targeting consistent PR_AUC and recall@3 FP/M.
+- **`gz_abl_blindfold_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout features to reduce training noise and variance, aiming to stabilize PR_AUC and improve recall@3 FP/M consistency.
+
+</details>
+
+## Cycle `20260528T112337-filetypes-gz` — 2026-05-28T11:23:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ff6e0c0525d71d3` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9987 | 0.9985 | 0.9956 | 2 | [log](out/autocollie/runs/2026-05-28T11-29-18_20260528T112337-filetypes-gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `e43002374f131da8` | gz_control_spw05_hardneg_v2 | ok | 0.9988 | 0.9985 | 0.9956 | 6 | [log](out/autocollie/runs/2026-05-28T11-29-21_20260528T112337-filetypes-gz_gz_control_spw05_hardneg_v2.log) |
+| `07bf02fff2435daf` | gz_train_dart_extra_trees | ok | 0.9971 | 0.9958 | 0.9870 | 5 | [log](out/autocollie/runs/2026-05-28T11-29-28_20260528T112337-filetypes-gz_gz_train_dart_extra_trees.log) |
+| `ad122e01e72dddb2` | gz_kv_vocab_split | ok | 0.9983 | 0.9978 | 0.9912 | 11 | [log](out/autocollie/runs/2026-05-28T11-29-33_20260528T112337-filetypes-gz_gz_kv_vocab_split.log) |
+| `868777f9664c49fe` | gz_textenc_metrics_full | ok | 0.9983 | 0.9979 | 0.9912 | 10 | [log](out/autocollie/runs/2026-05-28T11-29-45_20260528T112337-filetypes-gz_gz_textenc_metrics_full.log) |
+| `0237766a4af8f1ee` | gz_lowfreq_bigrams_tiered_trigrams | ok | 0.9983 | 0.9979 | 0.9912 | 13 | [log](out/autocollie/runs/2026-05-28T11-29-56_20260528T112337-filetypes-gz_gz_lowfreq_bigrams_tiered_trigrams.log) |
+| `c5b9fd4e4585035b` | gz_kv_seedsearch_ensemble | ok | 0.9983 | 0.9978 | 0.9956 | 5 | [log](out/autocollie/runs/2026-05-28T11-30-10_20260528T112337-filetypes-gz_gz_kv_seedsearch_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_spw05_hardneg_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 …` — Replicate best PR_AUC feature env and tune hard-negative weighting with deeper trees to improve recall@3FPM while preserving PR_AUC.
+- **`gz_train_dart_extra_trees`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 …` — Apply dart boosting and extra_trees regularization to reduce overfitting on rare archive patterns, targeting stable PR_AUC and improved recall@3FPM.
+- **`gz_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab with value splitting to extract structured metadata from nested archive headers, aiming to lift PR_AUC by capturing high-signal key-value pairs.
+- **`gz_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text encoding and full text metrics to detect obfuscation in extracted payloads, targeting PR_AUC and recall@3FPM gains.
+- **`gz_lowfreq_bigrams_tiered_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add tiered trigrams to capture rarer but highly predictive sequence patterns in archive contents, targeting PR_AUC improvement.
+- **`gz_kv_seedsearch_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Average across 3 seeds on the KV vocab config to stabilize recall@3FPM and PR_AUC, distinguishing true feature signal from seed-driven variance.
+
+</details>
+
