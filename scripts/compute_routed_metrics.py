@@ -63,9 +63,10 @@ from collimator import data as collimator_data
 
 LOG = logging.getLogger("compute_routed_metrics")
 
-# Default operating point.  Level 5 corresponds to the deploy-time hostile
-# point we currently ship at (matches azoth_calibrate_ensemble's default).
-DEFAULT_LEVEL = 5
+# Default operating point on the per-100M-benigns grid. L50 = 50 FP per 100M
+# = 0.5 FP/M, the deploy-time hostile point we ship at. Matches
+# collimator.thresholds.DEFAULT_SEVERITY_LEVEL and litmus's `-l` default.
+DEFAULT_LEVEL = 50
 
 
 def _test_mask_cache_key(db_path: str, row_ids: np.ndarray) -> str:
@@ -226,7 +227,7 @@ def _metrics(
     n_neg = int((labels == 0).sum())
     if n_pos == 0 or n_neg == 0:
         return {"roc_auc": 0.0, "pr_auc": 0.0, "f1": 0.0, "f1_at_05": 0.0,
-                "recall_at_3fp_per_million": float("nan"),
+                "recall_at_50_per_100M": float("nan"),
                 "n_evaluated": int(labels.size)}
     roc = float(roc_auc_score(labels, scores))
     ap = float(average_precision_score(labels, scores))
@@ -238,7 +239,9 @@ def _metrics(
         f1_curve = np.where(denom > 0, 2 * precision * recall / denom, 0.0)
     best_f1 = float(np.max(f1_curve)) if f1_curve.size else 0.0
     f1_05 = float(f1_score(labels, (scores >= 0.5).astype(np.int8), zero_division=0))
-    recall_3fpm = _recall_at_fpr_per_million(labels, scores, 3.0)
+    # Recall at 50 FP per 100M = 0.5 FP/M — today's deployed operating point
+    # on the per-100M scale and autocollie's selection axis.
+    recall_50_per_100m = _recall_at_fpr_per_million(labels, scores, 0.5)
     # Brier score on raw probs: how well-calibrated is this route on the
     # eval slice. Lower is better. Useful for per-spec cards where the
     # user wants to see the calibration quality at a glance — bigger
@@ -249,7 +252,7 @@ def _metrics(
     except (ValueError, TypeError):
         brier = float("nan")
     out = {"roc_auc": roc, "pr_auc": ap, "f1": best_f1, "f1_at_05": f1_05,
-           "recall_at_3fp_per_million": recall_3fpm,
+           "recall_at_50_per_100M": recall_50_per_100m,
            "brier": brier,
            "n_evaluated": int(labels.size)}
     if with_ci and labels.size >= 50 and n_pos >= 5 and n_neg >= 5:
@@ -279,16 +282,16 @@ def _metrics(
         ci = bootstrap_metric(labels, scores, _f1_metric, n_resamples=200, seed=42, stratify=labels)
         out["f1_ci_low"], out["f1_ci_high"] = ci["low"], ci["high"]
 
-        def _recall_3fpm(y, s):
-            return _recall_at_fpr_per_million(y, s, 3.0)
+        def _recall_50_per_100m(y, s):
+            return _recall_at_fpr_per_million(y, s, 0.5)
 
-        if not math.isnan(recall_3fpm):
+        if not math.isnan(recall_50_per_100m):
             ci = bootstrap_metric(
-                labels, scores, _recall_3fpm,
+                labels, scores, _recall_50_per_100m,
                 n_resamples=200, seed=42, stratify=labels,
             )
-            out["recall_at_3fp_per_million_ci_low"] = ci["low"]
-            out["recall_at_3fp_per_million_ci_high"] = ci["high"]
+            out["recall_at_50_per_100M_ci_low"] = ci["low"]
+            out["recall_at_50_per_100M_ci_high"] = ci["high"]
     return out
 
 
@@ -1153,12 +1156,12 @@ def compute_per_filetype_metrics_honest(
         # near-saturated values (0.9998-1.0000 is typical here) tiny
         # PR-AUC differences are noise while multi-pp recall differences
         # are meaningful. NaN recall (filetype slice too thin to resolve
-        # 3 FP/M empirically) maps to 0 for ordering.
+        # L50 per 100M empirically) maps to 0 for ordering.
         def _sel_key(m: dict[str, Any]) -> tuple[float, float]:
-            r3 = m.get("recall_at_3fp_per_million")
-            r3 = 0.0 if r3 is None or (isinstance(r3, float) and math.isnan(r3)) else r3
+            r = m.get("recall_at_50_per_100M")
+            r = 0.0 if r is None or (isinstance(r, float) and math.isnan(r)) else r
             pr = m.get("pr_auc") or 0.0
-            return (r3, pr)
+            return (r, pr)
 
         # Specialist-floor invariant: ensemble cannot be worse than the
         # specialist on the same slice. The specialist_priority strategy
@@ -1182,7 +1185,7 @@ def compute_per_filetype_metrics_honest(
                 test_entry["ensemble"] = test_strategies["specialist_priority"]
                 test_entry["ensemble_strategy"] = "specialist_priority"
                 test_entry["ensemble_strategy_dev_pr_auc"] = floor_metric.get("pr_auc")
-                test_entry["ensemble_strategy_dev_recall_at_3fp_per_million"] = floor_metric.get("recall_at_3fp_per_million")
+                test_entry["ensemble_strategy_dev_recall_at_50_per_100M"] = floor_metric.get("recall_at_50_per_100M")
                 test_entry["ensemble_strategy_dev_n_evaluated"] = floor_metric.get("n_evaluated")
                 continue
 
@@ -1205,7 +1208,7 @@ def compute_per_filetype_metrics_honest(
         test_entry["ensemble"] = chosen_test
         test_entry["ensemble_strategy"] = best_name
         test_entry["ensemble_strategy_dev_pr_auc"] = dev_metric.get("pr_auc")
-        test_entry["ensemble_strategy_dev_recall_at_3fp_per_million"] = dev_metric.get("recall_at_3fp_per_million")
+        test_entry["ensemble_strategy_dev_recall_at_50_per_100M"] = dev_metric.get("recall_at_50_per_100M")
         test_entry["ensemble_strategy_dev_n_evaluated"] = dev_metric.get("n_evaluated")
 
     return test_out
@@ -1226,7 +1229,7 @@ def main() -> int:
     parser.add_argument("--level", type=int, default=DEFAULT_LEVEL,
                         help="Operating level to use for ensemble routing (default 5).")
     parser.add_argument("--severity", default="hostile",
-                        choices=["hostile", "suspicious"],
+                        choices=["hostile"],
                         help="Severity tier to use for routing decision.")
     parser.add_argument("--test-mask-cache-dir", type=Path, default=None,
                         help="Directory for cached SHA256 test-bucket masks. "

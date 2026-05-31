@@ -380,7 +380,7 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
         "delta means the ensemble loses to the best single route AT THE "
         "OR's actual operating point — the headline regression.",
         "",
-        "| Filetype | Mal | Ben | Routes | Best route@0FP | OR FP | OR recall | Δ vs best@OR-FP | Best route@3FP | Spec PR-AUC | Max-rule PR-AUC |",
+        "| Filetype | Mal | Ben | Routes | Best route@0FP | OR FP | OR recall | Δ vs best@OR-FP | Best route@1FP | Spec PR-AUC | Max-rule PR-AUC |",
         "| --- | ---: | ---: | --- | --- | ---: | ---: | ---: | --- | ---: | ---: |",
     ]
     rows = []
@@ -388,13 +388,13 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
         n_mal = ft_payload["malware"]
         n_ben = ft_payload["benign"]
         slice_metrics = ft_payload["slice_metrics"]
-        # Pick a representative L/severity for the headline row: highest-malware
-        # L9 hostile if present, else first available.
+        # Pick a representative L/severity for the headline row: L50 hostile
+        # (deploy default) if present, else L100 hostile, else first available.
         op_summary = ft_payload.get("deployed_or_summary") or {}
         or_fp = op_summary.get("fp")
         or_recall = op_summary.get("recall")
         best_route_0, best_recall_0 = _best_route_recall_at_fp(slice_metrics, 0)
-        best_route_3, best_recall_3 = _best_route_recall_at_fp(slice_metrics, 3)
+        best_route_3, best_recall_3 = _best_route_recall_at_fp(slice_metrics, 1)
         # Delta vs best-single-route recall at the OR-rule's own FP count.
         # If OR observed FP=k, find best single-route recall@k and compare.
         if or_fp is not None and not math.isnan(float(or_fp)):
@@ -536,7 +536,11 @@ def main() -> int:
         default=Path("out/models/azoth/route_policy_eval.md"),
     )
     args = parser.parse_args()
-    fp_budgets = tuple(sorted(set(args.fp_budget or [0, 3])))
+    # Default budgets: 0 (zero-FP strictest), 1 (≈ L50 on a 2M-benign slice =
+    # 0.5 FP/M = the new deploy operating point), 3 (legacy L3 = 3 FP/M, kept
+    # for back-compat with readers like azoth_recall_headroom that still
+    # consume the old budget). Pre-migration JSONs emitted only [0, 3].
+    fp_budgets = tuple(sorted(set(args.fp_budget or [0, 1, 3])))
 
     score_table = np.load(args.score_table, allow_pickle=False)
     general_cache = np.load(args.general_scores, allow_pickle=False)
@@ -630,7 +634,7 @@ def main() -> int:
         if policy_payload:
             for level in policy_payload.get("levels", []):
                 level_no = int(level["level"])
-                for severity in ("hostile", "suspicious"):
+                for severity in ("hostile",):
                     best = level.get(severity, {}).get("best") or {}
                     thresholds = best.get("thresholds") or {}
                     blend = best.get("blend")
@@ -648,10 +652,12 @@ def main() -> int:
                         calibrators=route_calibrators,
                     )
                     deployed_or_by_level[(level_no, severity)] = or_metrics
-                    # Headline summary: prefer L9 hostile (the deployment
-                    # default for high-stakes blocks); fallback to L5 hostile.
-                    if (level_no, severity) == (9, "hostile") or (
-                        deployed_or_summary is None and (level_no, severity) == (5, "hostile")
+                    # Headline summary: prefer L50 hostile (the deployment
+                    # default after the per-100M migration); fallback to L100
+                    # hostile for the loose-end view. L500/L1000 from the old
+                    # grid are gone — the new grid caps at L100.
+                    if (level_no, severity) == (50, "hostile") or (
+                        deployed_or_summary is None and (level_no, severity) == (100, "hostile")
                     ):
                         deployed_or_summary = or_metrics
 

@@ -20,10 +20,12 @@ specialist suite.
 Selection
 ---------
 - Runs are filtered to a target route (default ``general``).
-- Primary key is ``sampled_test_metrics.recall_at_fp_per_million_3``,
-  the recall at the L3 hostile deploy budget. This is the operational
-  metric — what fraction of the slice's malware does the model catch
-  at the FP/M target we actually deploy at?
+- Primary key is ``sampled_test_metrics.recall_at_50_per_100M``,
+  the recall at the L50 hostile deploy budget (0.5 FP/M). This is
+  the operational metric — what fraction of the slice's malware
+  does the model catch at the FP/100M target we actually deploy
+  at? Older run JSONs that predate the per-100M emitter fall back
+  to ``recall_at_fp_per_million_3``.
 - Ties on operating-point recall break on ``avg_precision`` (curve
   summary), then ``save_all_seeds`` (prefer averaged), then most recent
   ``timestamp`` (replay-stable).
@@ -66,6 +68,23 @@ LOG = logging.getLogger("azoth_train_best")
 # change the other.
 APPLES_MIN_MALWARE_HOLDOUT: int = 500
 APPLES_MIN_BENIGN_HOLDOUT: int = 200
+
+
+def _op_recall(metrics: dict[str, Any] | None) -> float | None:
+    """Operating-point recall for the picker.
+
+    Prefers per-100M ``recall_at_50_per_100M`` (L50, 0.5 FP/M) that
+    today's emitters write; falls back to the legacy per-million
+    ``recall_at_fp_per_million_3`` (L3, 3 FP/M) for older run JSONs.
+    Returns None when neither field is present or both are NaN.
+    """
+    if not metrics:
+        return None
+    for key in ("recall_at_50_per_100M", "recall_at_fp_per_million_3"):
+        v = metrics.get(key)
+        if isinstance(v, (int, float)) and not math.isnan(float(v)):
+            return float(v)
+    return None
 
 # train_config field -> EXP_* env var the Makefile experiment target accepts.
 _TRAIN_CONFIG_TO_EXP_ENV: dict[str, str] = {
@@ -193,28 +212,31 @@ def _select_best_run(
               trustworthy than a big raw-holdout win, because the
               former's metric is on the *same rows* the deployed model
               is also scoring.
-           2. ``delta_recall_at_3_fpm`` — when apples-to-apples is
-              present: candidate's holdout r@3FP/M minus the deployed
-              model's r@3FP/M on those same rows. Maximizing this
+           2. ``delta_recall_at_L50`` — when apples-to-apples is
+              present: candidate's holdout r@L50 minus the deployed
+              model's r@L50 on those same rows. Maximizing this
               ranks "biggest beat over deployed on identical data."
-           3. ``recall_at_fp_per_million_3`` — operational metric
-              matching the L3 hostile deploy budget. Tiebreaker within
-              apples-to-apples; primary key for legacy runs.
+           3. ``recall_at_50_per_100M`` — operational metric matching
+              the L50 hostile deploy budget (0.5 FP/M). Tiebreaker
+              within apples-to-apples; primary key for legacy runs.
+              Falls back to legacy ``recall_at_fp_per_million_3`` for
+              older run JSONs.
            4. ``avg_precision`` — curve-summarized PR/recall tradeoff.
            5. ``save_all_seeds`` — prefer multi-seed bundles.
            6. ``timestamp`` — most recent tied run.
 
          The has_apples gate exists because legacy screen runs are
-         brittle: their r@3FPM is on the route's small training
+         brittle: their r@L50 is on the route's small training
          holdout, not the deployed test slice, so a high holdout
          number doesn't reliably translate (observed:
-         ``filegroups/native`` AP=0.9999/r@3FPM=88.89% holdout → 56%
+         ``filegroups/native`` AP=0.9999/r@L50=88.89% holdout → 56%
          on test PE slice). When apples-to-apples runs exist they're
          always picked over legacy regardless of raw recall. A
          warning logs when this whole fallback fires so the human
          knows the route needs a promote cycle.
 
     Runs without ``avg_precision`` are skipped entirely. Runs without
+    either ``recall_at_50_per_100M`` or the legacy
     ``recall_at_fp_per_million_3`` get sorted with fallback recall 0.0.
     """
     if baselines_path is not None:
@@ -251,17 +273,14 @@ def _select_best_run(
         ap = metrics.get("avg_precision")
         if not isinstance(ap, (int, float)):
             continue
-        recall_at_3 = metrics.get("recall_at_fp_per_million_3")
-        if isinstance(recall_at_3, (int, float)) and not math.isnan(float(recall_at_3)):
-            r3 = float(recall_at_3)
-        else:
-            r3 = 0.0
+        op_val = _op_recall(metrics)
+        r_op = op_val if op_val is not None else 0.0
         # Apples-to-apples gate: a screen run is only eligible to win
         # the fallback picker if deployed_on_same_data is populated on
         # a statistically meaningful holdout. Below the floor (see
-        # APPLES_MIN_*_HOLDOUT in azoth_specialist_suite), 3 FP/M is
+        # APPLES_MIN_*_HOLDOUT in azoth_specialist_suite), L50 is
         # below the slice's noise floor and even a paired comparison
-        # carries no signal. The picker used to break ties on raw r3
+        # carries no signal. The picker used to break ties on raw r_op
         # across all legacy runs, which is how lucky perfect-recall
         # runs on tiny holdouts beat structurally stronger configs.
         #
@@ -269,33 +288,32 @@ def _select_best_run(
         # by design (general — see routeSupportsSameDataScoring in
         # cmd/autocollie/score_deployed.go) will never have
         # deployed_on_same_data populated. They fall back to legacy
-        # r3 ranking. The "tiny holdout" failure mode doesn't apply
+        # r_op ranking. The "tiny holdout" failure mode doesn't apply
         # to general because general sees the whole corpus, not a
-        # per-filetype slice — its r3 is on a 100k+ benign holdout
-        # where the FP/M threshold is well above the noise floor.
+        # per-filetype slice — its r_op is on a 100k+ benign holdout
+        # where the FP/100M threshold is well above the noise floor.
         route_supports_apples = route.startswith("filetypes/") or route.startswith("filegroups/")
         deployed = run.get("deployed_on_same_data") or {}
-        deployed_r3_raw = deployed.get("recall_at_fp_per_million_3")
+        deployed_op = _op_recall(deployed)
         n_mal = deployed.get("n_malware", 0) or 0
         n_ben = deployed.get("n_benign", 0) or 0
         has_apples = (
-            isinstance(deployed_r3_raw, (int, float))
-            and not math.isnan(float(deployed_r3_raw))
+            deployed_op is not None
             and n_mal >= APPLES_MIN_MALWARE_HOLDOUT
             and n_ben >= APPLES_MIN_BENIGN_HOLDOUT
         )
         if route_supports_apples and not has_apples:
             legacy_count += 1
             continue
-        delta_r3 = (r3 - float(deployed_r3_raw)) if has_apples else 0.0
+        delta_r_op = (r_op - float(deployed_op)) if has_apples else 0.0
         if has_apples:
             apples_to_apples_count += 1
         else:
             legacy_count += 1
         candidate = (
             has_apples,
-            delta_r3,
-            r3,
+            delta_r_op,
+            r_op,
             float(ap),
             bool(run.get("save_all_seeds")),
             str(run.get("timestamp") or ""),
@@ -306,7 +324,7 @@ def _select_best_run(
     if best is not None:
         LOG.info(
             "fallback picker for route %s scanned %d apples-to-apples + %d "
-            "legacy (skipped) runs; winner delta_r3=%+.4f r3=%.4f",
+            "legacy (skipped) runs; winner delta_r_op=%+.4f r_op=%.4f (L50)",
             route, apples_to_apples_count, legacy_count,
             best[1], best[2],
         )
@@ -446,11 +464,12 @@ def main() -> int:
             LOG.error("no historical run found for route %r in %s", args.route, runs_dir_str)
             return 1
         metrics = run.get("sampled_test_metrics") or {}
+        r_op = _op_recall(metrics)
         LOG.info(
-            "best for route %s: key=%s recall@3FP/M=%.4f avg_precision=%.4f save_all=%s idea=%s",
+            "best for route %s: key=%s recall@L50=%s avg_precision=%.4f save_all=%s idea=%s",
             args.route,
             run.get("experiment_key", "?"),
-            metrics.get("recall_at_fp_per_million_3", float("nan")),
+            f"{r_op:.4f}" if r_op is not None else "?",
             metrics.get("avg_precision", float("nan")),
             bool(run.get("save_all_seeds")),
             run.get("idea", "?"),

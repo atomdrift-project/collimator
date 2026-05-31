@@ -1,8 +1,8 @@
 # Confirm FAIL — f1036026f845cb35 on `general`
 
-Cycle `20260527T042438-confirm-f1036026f845cb35` — 2026-05-27T04:24:38Z
+Cycle `20260530T152859-confirm-f1036026f845cb35` — 2026-05-30T15:28:59Z
 
-experiment failed: timed out after 30m0s (timeout(1) exit 124)
+experiment failed: interrupted: context canceled
 
 ## Per-seed results (1 ran)
 

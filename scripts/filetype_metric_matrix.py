@@ -57,7 +57,7 @@ def _thresholds_from_tuning(path: Path | None) -> dict[str, float]:
     thresholds: dict[str, float] = {}
     for level in payload.get("severity_levels", []):
         level_number = int(level["level"])
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             metric = level.get(severity)
             if isinstance(metric, dict) and metric.get("threshold") is not None:
                 thresholds[f"{severity}_l{level_number}"] = float(metric["threshold"])
@@ -81,7 +81,7 @@ def _threshold_metrics(y: np.ndarray, probs: np.ndarray, threshold: float) -> di
         "tp": tp,
         "tn": tn,
         "fn": fn,
-        "fp_per_million": float(fp * 1_000_000 / benign) if benign else None,
+        "fp_per_100M": float(fp * 100_000_000 / benign) if benign else None,
         "malware_recall": float(tp / malware) if malware else None,
     }
 
@@ -135,7 +135,7 @@ def build_matrix(
 
     rows.sort(
         key=lambda row: (
-            float(row.get("hostile_l5_fp_per_million") or 0.0),
+            float(row.get("hostile_l50_fp_per_100M") or 0.0),
             int(row.get("benign") or 0),
             int(row.get("samples") or 0),
         ),
@@ -199,17 +199,17 @@ def main() -> None:
         f"{payload['corpus']['samples']} samples, "
         f"{payload['corpus']['reported_file_types']} reported file types"
     )
-    print("top hostile_l5 fp_per_million:")
+    print("top hostile_l50 fp_per_100M:")
     for row in payload["file_types"][: args.top]:
-        fp_rate = row.get("hostile_l5_fp_per_million")
+        fp_rate = row.get("hostile_l50_fp_per_100M")
         auc = row.get("roc_auc")
-        f1 = row.get("hostile_l5_f1")
+        f1 = row.get("hostile_l50_f1")
         print(
             f"  {row['file_type']:<24} n={row['samples']:<7} "
             f"benign={row['benign']:<7} malware={row['malware']:<7} "
             f"auc={'n/a' if auc is None else f'{auc:.4f}'} "
-            f"h_l5_f1={'n/a' if f1 is None else f'{f1:.4f}'} "
-            f"h_l5_fp1m={'n/a' if fp_rate is None else f'{fp_rate:.1f}'}"
+            f"h_l50_f1={'n/a' if f1 is None else f'{f1:.4f}'} "
+            f"h_l50_fp100m={'n/a' if fp_rate is None else f'{fp_rate:.1f}'}"
         )
 
 

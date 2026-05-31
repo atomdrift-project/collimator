@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Simulate per-filetype 3 FP/M policy selection.
+"""Simulate per-filetype 0.5 FP/M policy selection (L50 on the per-100M scale).
 
-For each filetype with adequate data, scans the L3 hostile candidates in
+For each filetype with adequate data, scans the L50 hostile candidates in
 ``route_policies.json`` and picks the one that maximizes recall while
 honestly hitting ≤ ``--target-fp-per-million`` × ``--max-fpr-multiplier``
 on the slice's own benign tail. The multiplier guard catches cases where a
-candidate is LABELED ``at_fp_3`` but the calibration degenerates and the
-realized FPR is way over target (xlsx ``filetype_only_at_fp_3`` ends up
-firing on 100% of benigns).
+candidate is LABELED at the level's nominal FP budget but the calibration
+degenerates and the realized FPR is way over target (e.g. xlsx
+``filetype_only_at_fp_*`` ends up firing on 100% of benigns).
 
 Output: per-filetype before/after recall, before/after FPR, the chosen
 new policy, and the global rollup (total recall and corpus-wide FPR if
@@ -33,14 +33,15 @@ def main() -> int:
         default=Path("out/models/azoth/route_policies.json"),
     )
     p.add_argument(
-        "--target-fp-per-million", type=float, default=3.0,
-        help="Per-slice FP/M ceiling. Candidates with realized FPR above "
-             "(target × max-fpr-multiplier) are filtered out.",
+        "--target-fp-per-million", type=float, default=0.5,
+        help="Per-slice FP/M ceiling (default 0.5 = L50 on the per-100M scale). "
+             "Candidates with realized FPR above (target × max-fpr-multiplier) "
+             "are filtered out.",
     )
     p.add_argument(
         "--max-fpr-multiplier", type=float, default=3.0,
         help="How much realized-FPR slack to allow above target. "
-             "Default 3.0 = candidates up to 9 FP/M (= 3× of 3 FP/M target) "
+             "Default 3.0 = candidates up to 1.5 FP/M (= 3× of 0.5 FP/M target) "
              "are eligible. Below 1.0 enforces strict ≤target; above 1.0 "
              "permits slop from finite-sample quantile noise.",
     )
@@ -65,14 +66,14 @@ def main() -> int:
         n_mal = int(route.get("malware") or 0)
         if n_ben < 1 or n_mal < 1:
             continue
-        # Find L3 hostile.
-        l3 = next(
-            (lev for lev in route["levels"] if int(lev["level"]) == 3),
+        # Find L50 hostile (per-100M scale = 0.5 FP/M = today's default).
+        l50 = next(
+            (lev for lev in route["levels"] if int(lev["level"]) == 50),
             None,
         )
-        if not l3:
+        if not l50:
             continue
-        h = l3.get("hostile") or {}
+        h = l50.get("hostile") or {}
         deployed = h.get("best") or {}
         deployed_tp = int(deployed.get("tp") or 0)
         deployed_fp = int(deployed.get("fp") or 0)

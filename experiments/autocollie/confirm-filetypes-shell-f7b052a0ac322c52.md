@@ -1,23 +1,19 @@
-# Confirm PASS — f7b052a0ac322c52 on `filetypes/shell`
+# Confirm FAIL — f7b052a0ac322c52 on `filetypes/shell`
 
-Cycle `20260522T192524-confirm-f7b052a0ac322c52` — 2026-05-22T19:25:24Z
+Cycle `20260531T194332-confirm-f7b052a0ac322c52` — 2026-05-31T19:43:32Z
 
-PR_AUC held across 3 seeds (orig 0.9966)
+experiment failed: interrupted: context canceled
 
-## Per-seed results (3 ran)
+## Per-seed results (1 ran)
 
-| | original | seed=43 | seed=44 | seed=45 | 
-|---|---|---|---|---|
-| key | `f7b052a0ac322c52` | `5882e274d2581d97` | `5882e274d2581d97` | `5882e274d2581d97` |
-| PR AUC | 0.9966 | 0.9960 | 0.9968 | 0.9967 |
-| ROC AUC | 0.9980 | 0.9976 | 0.9981 | 0.9980 |
-| Recall@3FPM | — | 0.8379 | 0.8651 | 0.8342 |
-| verdict | — | PASS | PASS | PASS |
+| | original | seed=43 | 
+|---|---|---|
+| key | `f7b052a0ac322c52` | `` |
+| PR AUC | 0.9966 | 0.0000 |
+| ROC AUC | 0.9980 | 0.0000 |
+| Recall@3FPM | — | 0.0000 |
+| verdict | — | FAIL |
 
-## Next step
+## Disposition
 
-The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
-
-```
-make autocollie-promote KEY=f7b052a0ac322c52
-```
+This spec did not survive multi-seed reseeding (0/1 held). Suggest abandoning the idea or letting the LLM propose a variant.

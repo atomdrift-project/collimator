@@ -30,7 +30,7 @@ def load_threshold(path: Path, default: float = 0.5) -> float:
 
 
 def load_recommended_thresholds(path: Path) -> dict[str, float]:
-    """Load suspicious/hostile recommended thresholds from an evaluation artifact.
+    """Load hostile recommended threshold from an evaluation artifact.
 
     Returns the same dict that ``recommended_thresholds`` was saved as. Missing
     or unparseable evaluation files yield an empty dict.

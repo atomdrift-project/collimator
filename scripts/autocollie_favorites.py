@@ -2,7 +2,7 @@
 """Find autocollie screen runs that LOOK promising but never got promoted.
 
 Scans ``out/experiments/azoth/runs/*.json`` for screen runs that:
-  - have usable metrics (PR_AUC, recall@3FPM, holdout counts),
+  - have usable metrics (PR_AUC, recall@L50, holdout counts),
   - are NOT in ``promoted_baselines.json`` (or are marked retired there),
   - rank highly by apples-to-apples delta vs the deployed model.
 
@@ -14,7 +14,7 @@ earlier rules may now look promotable.
 
 Output is grouped by route, ranked within each route by:
   1. has-apples-to-apples (more trustworthy comparison wins)
-  2. delta_r3 (the production-objective metric vs paired baseline)
+  2. delta_r_op (the production-objective metric vs paired baseline)
   3. PR_AUC
   4. timestamp (more recent = less likely to reference dead rows)
 
@@ -93,13 +93,13 @@ def estimate_current_verdict(
     """Mirror autoWinnerVerdict. Returns (would_pass, reason).
 
     ``candidate``/``baseline`` are dicts with avg_precision, roc_auc,
-    recall_at_fp_per_million_3, n_malware_holdout, n_benign_holdout.
-    Missing baseline means "first-run mode" — passes if candidate has
-    positive metrics.
+    recall_at_50_per_100M (or legacy recall_at_fp_per_million_3),
+    n_malware_holdout, n_benign_holdout. Missing baseline means
+    "first-run mode" — passes if candidate has positive metrics.
     """
     cand_ap = candidate.get("avg_precision")
     cand_auc = candidate.get("roc_auc")
-    cand_r3 = candidate.get("recall_at_fp_per_million_3")
+    cand_r_op = _op_recall(candidate)
     n_mal = int(candidate.get("n_malware_holdout") or 0)
     n_ben = int(candidate.get("n_benign_holdout") or 0)
 
@@ -112,13 +112,14 @@ def estimate_current_verdict(
 
     base_ap = baseline.get("avg_precision") or 0.0
     base_auc = baseline.get("roc_auc") or 0.0
-    base_r3 = baseline.get("recall_at_fp_per_million_3") or 0.0
+    base_r_op_val = _op_recall(baseline)
+    base_r_op = base_r_op_val if base_r_op_val is not None else 0.0
     if base_ap == 0 and base_auc == 0:
         return True, "baseline has no usable metrics — first-run mode"
 
     d_ap = float(cand_ap) - float(base_ap)
     d_auc = (float(cand_auc) - float(base_auc)) if isinstance(cand_auc, (int, float)) else 0.0
-    d_r3 = (float(cand_r3) - float(base_r3)) if isinstance(cand_r3, (int, float)) else 0.0
+    d_r_op = (float(cand_r_op) - base_r_op) if cand_r_op is not None else 0.0
 
     # Benign-holdout floor (only meaningful when n_ben was recorded).
     if n_ben > 0 and n_ben < MIN_BENIGN_HOLDOUT_FOR_GATE:
@@ -128,33 +129,33 @@ def estimate_current_verdict(
         return False, f"AUC regressed {d_auc:+.5f} > {MAX_TOLERATED_AUC_REGRESSION}"
     if d_ap < -MAX_TOLERATED_AP_REGRESSION - 1e-12:
         return False, f"PR_AUC regressed {d_ap:+.5f} > {MAX_TOLERATED_AP_REGRESSION}"
-    if d_r3 < -MAX_TOLERATED_RECALL3_REGRESSION - 1e-12:
-        return False, f"recall@3FPM regressed {d_r3:+.5f} > {MAX_TOLERATED_RECALL3_REGRESSION}"
+    if d_r_op < -MAX_TOLERATED_RECALL3_REGRESSION - 1e-12:
+        return False, f"recall@L50 regressed {d_r_op:+.5f} > {MAX_TOLERATED_RECALL3_REGRESSION}"
 
-    sig_eps = recall3_sig_eligibility(base_r3, n_mal, n_ben, paired)
+    sig_eps = recall3_sig_eligibility(base_r_op, n_mal, n_ben, paired)
     pr_up = d_ap > AP_ELIGIBILITY_EPSILON
-    rc_up = d_r3 > sig_eps
+    rc_up = d_r_op > sig_eps
     if not pr_up and not rc_up:
         return False, (
             f"neither axis improved past noise: PR_AUC {d_ap:+.5f} "
-            f"(need >{AP_ELIGIBILITY_EPSILON}), recall@3FPM {d_r3:+.5f} "
+            f"(need >{AP_ELIGIBILITY_EPSILON}), recall@L50 {d_r_op:+.5f} "
             f"(need >{sig_eps:.5f} at n_eff={min(n_mal, n_ben) if n_ben > 0 else n_mal}, paired={paired})"
         )
 
-    saturated = base_ap > SATURATED_PRAUC_FLOOR and base_r3 > SATURATED_RECALL3_FLOOR
+    saturated = base_ap > SATURATED_PRAUC_FLOOR and base_r_op > SATURATED_RECALL3_FLOOR
     if saturated:
-        miss_base = 1.0 - base_r3
+        miss_base = 1.0 - base_r_op
         if miss_base > 0:
-            rel_miss_reduction = d_r3 / miss_base
+            rel_miss_reduction = d_r_op / miss_base
             if rel_miss_reduction < SATURATED_REL_MISS_REDUCTION_FLOOR:
                 return False, (
-                    f"saturated baseline (PR_AUC={base_ap:.5f}, r3={base_r3:.4f}); "
+                    f"saturated baseline (PR_AUC={base_ap:.5f}, r_op={base_r_op:.4f}); "
                     f"miss-reduction {rel_miss_reduction*100:+.1f}% < "
                     f"{SATURATED_REL_MISS_REDUCTION_FLOOR*100:.0f}%"
                 )
 
     return True, (
-        f"either-axis up: PR_AUC {d_ap:+.5f}, recall@3FPM {d_r3:+.5f} "
+        f"either-axis up: PR_AUC {d_ap:+.5f}, recall@L50 {d_r_op:+.5f} "
         f"(paired={paired}, n_mal={n_mal}, n_ben={n_ben})"
     )
 
@@ -166,6 +167,23 @@ def estimate_current_verdict(
 
 def _is_finite(v: Any) -> bool:
     return isinstance(v, (int, float)) and not math.isnan(float(v))
+
+
+def _op_recall(metrics: dict[str, Any] | None) -> float | None:
+    """Operating-point recall: prefers L50 (per-100M), falls back to legacy L3.
+
+    The selection metric is now ``recall_at_50_per_100M`` (L50 = 0.5 FP/M);
+    older run JSONs only carry ``recall_at_fp_per_million_3`` (L3 = 3 FP/M)
+    so we fall back to that to keep history readable. Returns None when
+    neither field is present or both are NaN.
+    """
+    if not metrics:
+        return None
+    for key in ("recall_at_50_per_100M", "recall_at_fp_per_million_3"):
+        v = metrics.get(key)
+        if _is_finite(v):
+            return float(v)
+    return None
 
 
 def load_promoted(baselines_path: Path) -> set[str]:
@@ -205,14 +223,14 @@ def extract_run_record(path: Path) -> dict[str, Any] | None:
     ap = metrics.get("avg_precision")
     if not _is_finite(ap):
         return None
-    r3 = metrics.get("recall_at_fp_per_million_3")
+    r_op = _op_recall(metrics)
     n_mal = metrics.get("n_malware_holdout")
     n_ben = metrics.get("n_benign_holdout")
     if not (_is_finite(n_mal) and _is_finite(n_ben)):
         return None
     deployed = run.get("deployed_on_same_data") or {}
     has_apples = (
-        _is_finite(deployed.get("recall_at_fp_per_million_3"))
+        _op_recall(deployed) is not None
         and int(deployed.get("n_malware", 0) or 0) >= 1
         and int(deployed.get("n_benign", 0) or 0) >= 1
     )
@@ -225,7 +243,9 @@ def extract_run_record(path: Path) -> dict[str, Any] | None:
         "candidate": {
             "avg_precision": float(ap),
             "roc_auc": float(metrics.get("roc_auc") or 0.0) if _is_finite(metrics.get("roc_auc")) else None,
-            "recall_at_fp_per_million_3": float(r3) if _is_finite(r3) else 0.0,
+            # Canonical: per-100M field. Carry L50 in the output dict so
+            # downstream consumers see the new schema name.
+            "recall_at_50_per_100M": r_op if r_op is not None else 0.0,
             "n_malware_holdout": int(n_mal),
             "n_benign_holdout": int(n_ben),
         },
@@ -238,12 +258,13 @@ def extract_run_record(path: Path) -> dict[str, Any] | None:
 def ranking_key(record: dict[str, Any]) -> tuple[int, float, float, str]:
     cand = record["candidate"]
     base = record["baseline"] or {}
-    cand_r3 = cand.get("recall_at_fp_per_million_3", 0.0)
-    base_r3 = base.get("recall_at_fp_per_million_3", 0.0) or 0.0
-    delta_r3 = cand_r3 - base_r3
+    cand_r_op = cand.get("recall_at_50_per_100M", 0.0)
+    base_r_op_val = _op_recall(base)
+    base_r_op = base_r_op_val if base_r_op_val is not None else 0.0
+    delta_r_op = cand_r_op - base_r_op
     return (
         1 if record["has_apples"] else 0,
-        delta_r3,
+        delta_r_op,
         cand["avg_precision"],
         record["ts"],
     )
@@ -265,7 +286,7 @@ def dedup_by_idea(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     Dedup happens AFTER ranking so the kept instance is the strongest
     signal we have for that idea — the run with the freshest apples-to-
-    apples baseline OR the biggest delta_r3.
+    apples baseline OR the biggest delta_r_op.
     """
     best_by_key: dict[tuple[str, str], dict[str, Any]] = {}
     for rec in records:
@@ -297,19 +318,20 @@ def replay_score(record: dict[str, Any]) -> tuple:
     """Global ranking for replay ordering. Higher = try sooner.
 
     Composite: apples-to-apples first (more trustworthy comparison),
-    then absolute recall@3FPM delta (biggest wins first), then
+    then absolute recall@L50 delta (biggest wins first), then
     log(n_benign_holdout) (more reliable measurement). Recency as
     tiebreaker so a fresh run beats a stale one with the same metrics.
     """
     cand = record["candidate"]
     base = record["baseline"] or {}
-    delta_r3 = (cand.get("recall_at_fp_per_million_3", 0.0)
-                - (base.get("recall_at_fp_per_million_3", 0.0) or 0.0))
+    base_r_op_val = _op_recall(base)
+    base_r_op = base_r_op_val if base_r_op_val is not None else 0.0
+    delta_r_op = cand.get("recall_at_50_per_100M", 0.0) - base_r_op
     n_ben = cand.get("n_benign_holdout", 0)
     log_ben = math.log10(max(n_ben, 1))
     return (
         1 if record["has_apples"] else 0,
-        delta_r3,
+        delta_r_op,
         log_ben,
         record["ts"],
     )
@@ -338,12 +360,13 @@ def render(records: list[dict[str, Any]], top: int, route_filter: str | None,
         recs = sorted(by_route[route], key=ranking_key, reverse=True)[:top]
         print(f"## {route}  ({len(by_route[route])} eligible run(s))")
         print(f"{'#':>3} {'idea':<40} {'key':<18} {'ts':<19} "
-              f"{'apples':<6} {'d_r3':>8} {'n_ben':>6} {'last replay':<22} verdict")
+              f"{'apples':<6} {'d_r_op':>8} {'n_ben':>6} {'last replay':<22} verdict")
         for i, rec in enumerate(recs, 1):
             paired = rec["has_apples"]
             ok, reason = estimate_current_verdict(rec["candidate"], rec["baseline"], paired)
-            base_r3 = (rec["baseline"] or {}).get("recall_at_fp_per_million_3", 0.0) or 0.0
-            d_r3 = rec["candidate"]["recall_at_fp_per_million_3"] - base_r3
+            base_r_op_val = _op_recall(rec["baseline"] or {})
+            base_r_op = base_r_op_val if base_r_op_val is not None else 0.0
+            d_r_op = rec["candidate"]["recall_at_50_per_100M"] - base_r_op
             verdict_prefix = "✓" if ok else "✗"
             # Replay-history column: show last attempt outcome if recorded.
             # Lets the operator avoid burning cycles on candidates that
@@ -358,7 +381,7 @@ def render(records: list[dict[str, Any]], top: int, route_filter: str | None,
                 f"{i:>3} {rec['idea'][:40]:<40} {rec['key'][:18]:<18} "
                 f"{rec['ts'][:19]:<19} "
                 f"{'yes' if paired else 'no':<6} "
-                f"{d_r3*100:+7.2f}pp "
+                f"{d_r_op*100:+7.2f}pp "
                 f"{rec['candidate']['n_benign_holdout']:>6} "
                 f"{replay_col:<22} "
                 f"{verdict_prefix} {reason[:90]}"

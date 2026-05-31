@@ -443,7 +443,7 @@ def tune_thresholds(
     for policy in policies:
         errors: dict[str, Any] = {}
         if top_errors > 0:
-            for level_name in ("suspicious", "hostile"):
+            for level_name in ("hostile",):
                 level = policy.get(level_name)
                 if not level or level.get("threshold") is None:
                     continue
@@ -493,12 +493,11 @@ def tune_thresholds(
     print(f"Top errors per level: {top_errors}")
     print()
     _print_severity_table("HOSTILE SEVERITY LEVELS", severity_levels, "hostile")
-    _print_severity_table("SUSPICIOUS SEVERITY LEVELS", severity_levels, "suspicious")
 
     print(f"{'Policy':<18} {'Level':<12} {'Threshold':>10} {'TP Rate':>8} {'Prec':>8} {'FP/1M':>10} {'TP':>7} {'FP':>7}")
     print(f"{'-'*78}")
     for policy in policies:
-        for level_name in ("suspicious", "hostile"):
+        for level_name in ("hostile",):
             level = policy.get(level_name)
             if not level:
                 print(f"{policy['name']:<18} {level_name:<12} {'—':>10} {'—':>8} {'—':>8} {'—':>10} {'—':>7} {'—':>7}")
@@ -506,7 +505,7 @@ def tune_thresholds(
             print(
                 f"{policy['name']:<18} {level_name:<12} {float(level['threshold']):>10.6f} "
                 f"{float(level['recall']):>8.2%} {float(level['precision']):>8.2%} "
-                f"{float(level['fp_per_million']):>10.1f} {int(level['tp']):>7} {int(level['fp']):>7}"
+                f"{float(level['fp_per_100M']):>10.1f} {int(level['tp']):>7} {int(level['fp']):>7}"
             )
         for warning in policy["warnings"]:
             print(f"  warning: {warning}")
@@ -529,22 +528,9 @@ def tune_thresholds(
         )
     print()
 
-    print(f"{'SUSPICIOUS BY GOOD FP BUDGET':=^78}")
-    print(f"Target: <=1 FP per 100,000 good files; current budget = {target_budgets['suspicious']} FP")
-    print(f"{'Allowed FP':>10} {'Good %':>10} {'Threshold':>10} {'TP Rate':>8} {'Prec':>8} {'TP':>7} {'FP':>7} {'FN':>7}")
-    for row in budgets["suspicious"]:
-        fn = malware - int(row["tp"])
-        marker = " *" if int(row["max_fp_budget"]) == target_budgets["suspicious"] else ""
-        print(
-            f"{int(row['max_fp_budget']):>10} {100.0 * int(row['fp']) / max(benign, 1):>9.4f}% "
-            f"{float(row['threshold']):>10.6f} {float(row['recall']):>8.2%} {float(row['precision']):>8.2%} "
-            f"{int(row['tp']):>7} {int(row['fp']):>7} {fn:>7}{marker}"
-        )
-    print()
-
     for policy in policies:
         print(f"{policy['name']}: {policy['description']}")
-        for level_name in ("suspicious", "hostile"):
+        for level_name in ("hostile",):
             level_errors = policy["errors"].get(level_name)
             if not level_errors:
                 continue
@@ -601,10 +587,8 @@ def show_false_positives(
     raw_rows = [
         _row_for_sample(sample, float(prob), int(label), severity_levels)
         for sample, prob, label in zip(samples, probs, y, strict=False)
-        if int(label) == 0 and basis_level is not None and (
-            _matches_severity_level(float(prob), basis_level, "suspicious")
-            or _matches_severity_level(float(prob), basis_level, "hostile")
-        )
+        if int(label) == 0 and basis_level is not None
+        and _matches_severity_level(float(prob), basis_level, "hostile")
     ]
     rows = list(raw_rows)
     rows.sort(key=lambda row: float(row["probability"]), reverse=True)
@@ -622,11 +606,12 @@ def show_false_positives(
         "raw_false_positive_count": len(raw_rows),
         "outer_false_positive_count": len(rows),
         "false_positives": rows[:top_errors],
-        "counts": {"suspicious": {}, "hostile": {}},
+        "counts": {"hostile": {}},
     }
 
-    for name in ("suspicious", "hostile"):
-        for level in range(1, 10):
+    grid_levels = [int(t["level"]) for t in SEVERITY_LEVEL_TARGETS if int(t["level"]) > 0]
+    for name in ("hostile",):
+        for level in grid_levels:
             payload["counts"][name][str(level)] = sum(
                 1 for row in rows if row[f"{name}_level"] == level
             )
@@ -639,15 +624,15 @@ def show_false_positives(
             f"(raw rows: {len(raw_rows)}, outer files: {len(rows)})"
         )
     print("First level counts:")
-    for name in ("hostile", "suspicious"):
-        counts = ", ".join(f"L{level}={payload['counts'][name][str(level)]}" for level in range(1, 10))
+    for name in ("hostile",):
+        counts = ", ".join(f"L{level}={payload['counts'][name][str(level)]}" for level in grid_levels)
         print(f"  {name}: {counts}")
     if rows:
         print("\n  top false positives:")
         for row in rows[:top_errors]:
             print(
                 f"    {row['probability']:.6f}  H={row['hostile_level'] or '-'} "
-                f"S={row['suspicious_level'] or '-'} score={row['score']:<4} "
+                f"score={row['score']:<4} "
                 f"{row['sha256'][:16]}  {row['path']}"
             )
     else:
@@ -696,14 +681,8 @@ def show_near_false_positives(
         if int(label) == 0
         and basis_level is not None
         and near_level is not None
-        and not (
-            _matches_severity_level(float(prob), basis_level, "suspicious")
-            or _matches_severity_level(float(prob), basis_level, "hostile")
-        )
-        and (
-            _matches_severity_level(float(prob), near_level, "suspicious")
-            or _matches_severity_level(float(prob), near_level, "hostile")
-        )
+        and not _matches_severity_level(float(prob), basis_level, "hostile")
+        and _matches_severity_level(float(prob), near_level, "hostile")
     ]
     rows = list(raw_rows)
     rows.sort(key=lambda row: float(row["probability"]), reverse=True)
@@ -722,11 +701,12 @@ def show_near_false_positives(
         "raw_near_false_positive_count": len(raw_rows),
         "outer_near_false_positive_count": len(rows),
         "near_false_positives": rows[:top_errors],
-        "counts": {"suspicious": {}, "hostile": {}},
+        "counts": {"hostile": {}},
     }
 
-    for name in ("suspicious", "hostile"):
-        for level in range(1, 10):
+    grid_levels = [int(t["level"]) for t in SEVERITY_LEVEL_TARGETS if int(t["level"]) > 0]
+    for name in ("hostile",):
+        for level in grid_levels:
             payload["counts"][name][str(level)] = sum(
                 1 for row in rows if row[f"{name}_level"] == level
             )
@@ -738,7 +718,7 @@ def show_near_false_positives(
             f"Basis: level {basis_level['level']} with twice-looser thresholds "
             f"(raw rows: {len(raw_rows)}, outer files: {len(rows)})"
         )
-        for name in ("hostile", "suspicious"):
+        for name in ("hostile",):
             metric = near_level.get(name)
             if isinstance(metric, dict):
                 print(
@@ -746,9 +726,9 @@ def show_near_false_positives(
                     f"{float(metric['threshold']):.6f}"
                 )
     print("Existing first level counts for near rows:")
-    for name in ("hostile", "suspicious"):
+    for name in ("hostile",):
         counts = ", ".join(
-            f"L{level}={payload['counts'][name][str(level)]}" for level in range(1, 10)
+            f"L{level}={payload['counts'][name][str(level)]}" for level in grid_levels
         )
         print(f"  {name}: {counts}")
     if rows:
@@ -756,7 +736,7 @@ def show_near_false_positives(
         for row in rows[:top_errors]:
             print(
                 f"    {row['probability']:.6f}  H={row['hostile_level'] or '-'} "
-                f"S={row['suspicious_level'] or '-'} score={row['score']:<4} "
+                f"score={row['score']:<4} "
                 f"{row['sha256'][:16]}  {row['path']}"
             )
     else:
@@ -806,7 +786,7 @@ def show_false_negatives(
     rows = _outermost_error_rows(rows, limit=len(rows))
     uncaught = [
         row for row in rows
-        if row["suspicious_level"] is None and row["hostile_level"] is None
+        if row["hostile_level"] is None
     ]
 
     payload: dict[str, Any] = {
@@ -818,20 +798,21 @@ def show_false_negatives(
         "severity_level_targets": SEVERITY_LEVEL_TARGETS,
         "severity_levels": severity_levels,
         "uncaught": uncaught[:top_errors],
-        "counts": {"suspicious": {}, "hostile": {}, "uncaught": len(uncaught)},
+        "counts": {"hostile": {}, "uncaught": len(uncaught)},
     }
 
-    for name in ("suspicious", "hostile"):
-        for level in range(1, 10):
+    grid_levels = [int(t["level"]) for t in SEVERITY_LEVEL_TARGETS if int(t["level"]) > 0]
+    for name in ("hostile",):
+        for level in grid_levels:
             payload["counts"][name][str(level)] = sum(1 for row in rows if row[f"{name}_level"] == level)
 
     print(f"\n{'FALSE NEGATIVES BY SEVERITY LEVEL':=^78}")
     print(f"Corpus: {len(samples)} samples ({malware} malware, {benign} good)")
     print("First caught level counts:")
-    for name in ("hostile", "suspicious"):
-        counts = ", ".join(f"L{level}={payload['counts'][name][str(level)]}" for level in range(1, 10))
+    for name in ("hostile",):
+        counts = ", ".join(f"L{level}={payload['counts'][name][str(level)]}" for level in grid_levels)
         print(f"  {name}: {counts}")
-    print(f"  uncaught by level 9: {len(uncaught)}")
+    print(f"  uncaught by the loosest grid level: {len(uncaught)}")
     if uncaught:
         print("\n  highest-probability uncaught bad samples:")
         for row in uncaught[:top_errors]:
@@ -885,14 +866,8 @@ def show_near_false_negatives(
         if int(label) == 1
         and basis_level is not None
         and near_level is not None
-        and not (
-            _matches_severity_level(float(prob), basis_level, "suspicious")
-            or _matches_severity_level(float(prob), basis_level, "hostile")
-        )
-        and (
-            _matches_severity_level(float(prob), near_level, "suspicious")
-            or _matches_severity_level(float(prob), near_level, "hostile")
-        )
+        and not _matches_severity_level(float(prob), basis_level, "hostile")
+        and _matches_severity_level(float(prob), near_level, "hostile")
     ]
     rows = list(raw_rows)
     rows.sort(key=lambda row: float(row["probability"]), reverse=True)
@@ -920,7 +895,7 @@ def show_near_false_negatives(
             f"Basis: level {basis_level['level']} with twice-looser thresholds "
             f"(raw rows: {len(raw_rows)}, outer files: {len(rows)})"
         )
-        for name in ("hostile", "suspicious"):
+        for name in ("hostile",):
             metric = near_level.get(name)
             if isinstance(metric, dict):
                 print(
@@ -932,7 +907,7 @@ def show_near_false_negatives(
         for row in rows[:top_errors]:
             print(
                 f"    {row['probability']:.6f}  H={row['hostile_level'] or '-'} "
-                f"S={row['suspicious_level'] or '-'} score={row['score']:<4} "
+                f"score={row['score']:<4} "
                 f"{row['sha256'][:16]}  {row['path']}"
             )
     else:

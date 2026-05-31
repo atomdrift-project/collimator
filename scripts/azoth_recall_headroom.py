@@ -4,18 +4,19 @@
 For each filetype in the deployed bundle's ``route_policy_eval_oof.json``,
 emits a one-line digest covering:
 
-  - The CURRENT deploy point (L3 hostile OR-rule recall).
+  - The CURRENT deploy point (L50 hostile OR-rule recall = 50 FP/100M
+    = 0.5 FP/M).
   - The BEST AVAILABLE route at the same FP budget (what we'd get if we
     just picked the single strongest specialist for this slice).
   - The PR-AUC ceiling for that best route (a separability proxy — if it's
-    near 1.0 the model can rank perfectly; recall@3FP shortfalls are
+    near 1.0 the model can rank perfectly; recall@L50 shortfalls are
     score-distribution-tail problems, not learning capacity).
-  - Absolute miss count = (1 - recall@L3) * n_malware — how many malware
+  - Absolute miss count = (1 - recall@L50) * n_malware — how many malware
     samples we're leaving on the table at the current operating point.
   - A diagnosis tag:
       * "or_loses"      — current OR is below the best single route at
                           its own FP budget; combiner is the bottleneck.
-      * "saturated_pr"  — best route PR-AUC > 0.99 AND recall@3FP < 0.9.
+      * "saturated_pr"  — best route PR-AUC > 0.99 AND recall@L50 < 0.9.
                           Ranking is fine; the score tail is crowded
                           (benigns and malware mix at very high probs).
                           Knob-tuning won't help; need new features or
@@ -26,11 +27,11 @@ emits a one-line digest covering:
                           we learn here will overfit or hit GPD-
                           extrapolation resolution limits; need more
                           samples before tuning. (The n_benign floor
-                          matters because the "best@3FP" number on a
+                          matters because the "best@L50" number on a
                           small-benign slice is really "best at 1 FP
-                          out of n_benign" — wildly above 3 FP/M when
-                          n_benign is small. xlsx with 12 benigns is
-                          the canonical case.)
+                          out of n_benign" — wildly above 50 FP/100M
+                          when n_benign is small. xlsx with 12 benigns
+                          is the canonical case.)
 
 Sorted by absolute miss count (highest first) — the table reads as a
 priority list.
@@ -80,10 +81,11 @@ def _diagnose(
     best_recall_3: float,
     best_pr: float,
 ) -> str:
-    # n_benign < 500 means recall@3FP is on a slice where the per-slice
-    # 3 FP/M budget rounds to max(1, 0) = 1 FP, which is >> 3 FP/M in
-    # rate. The "headroom" is then a measurement artifact of the small
-    # benign tail, not a real operating point we could deploy at.
+    # n_benign < 500 means recall@L50 is on a slice where the per-slice
+    # 50 FP/100M budget rounds to max(1, 0) = 1 FP, which is >> 50
+    # FP/100M (= 0.5 FP/M) in rate. The "headroom" is then a measurement
+    # artifact of the small benign tail, not a real operating point we
+    # could deploy at.
     if n_mal < 1000 or n_ben < 500:
         return "limited_data"
     # The OR rule combines multiple routes — if it's losing to the single
@@ -128,23 +130,31 @@ def main() -> int:
             continue
         slice_routes = ((e.get("slice_metrics") or {}).get("routes") or {})
 
-        # Current deploy operating point: L3 hostile OR-rule.
-        l3 = (e.get("deployed_or_by_level") or {}).get("L3_hostile") or {}
-        or_recall_l3 = _safe(l3.get("recall"))
-        active_routes = l3.get("active_routes") or []
+        # Current deploy operating point: L50 hostile OR-rule. Pre-migration
+        # bundles only have L3_hostile (= 3 FP/M = 300 FP/100M, the legacy
+        # default); read L50 first, then fall back so this script keeps
+        # working against older eval JSONs during the migration window.
+        by_level = e.get("deployed_or_by_level") or {}
+        op = by_level.get("L50_hostile") or by_level.get("L3_hostile") or {}
+        or_recall_op = _safe(op.get("recall"))
+        active_routes = op.get("active_routes") or []
 
-        # Best single route at the deploy FP budget (3 FP/M).
-        best_name_3, best_recall_3, best_pr = _best_single_route_at_fp(slice_routes, 3)
+        # Best single route at the per-100M-aligned FP budget. Post-migration
+        # emit writes recall_at_{0,1,3}fp; pre-migration only {0,3}. Prefer
+        # the L50-aligned `1` budget, fall back to `3` for old bundles.
+        best_name_op, best_recall_op, best_pr = _best_single_route_at_fp(slice_routes, 1)
+        if math.isnan(best_recall_op):
+            best_name_op, best_recall_op, best_pr = _best_single_route_at_fp(slice_routes, 3)
         _, best_recall_0, _ = _best_single_route_at_fp(slice_routes, 0)
 
         # Headroom proxies.
-        miss = math.nan if math.isnan(or_recall_l3) else (1.0 - or_recall_l3) * n_mal
-        single_vs_or = math.nan if (math.isnan(best_recall_3) or math.isnan(or_recall_l3)) else best_recall_3 - or_recall_l3
+        miss = math.nan if math.isnan(or_recall_op) else (1.0 - or_recall_op) * n_mal
+        single_vs_or = math.nan if (math.isnan(best_recall_op) or math.isnan(or_recall_op)) else best_recall_op - or_recall_op
         diag = _diagnose(
             n_mal=n_mal,
             n_ben=n_ben,
-            or_recall_l3=or_recall_l3,
-            best_recall_3=best_recall_3,
+            or_recall_l3=or_recall_op,
+            best_recall_3=best_recall_op,
             best_pr=best_pr,
         )
         rows.append({
@@ -152,10 +162,10 @@ def main() -> int:
             "filegroup": e.get("file_group") or "?",
             "n_mal": n_mal,
             "n_ben": n_ben,
-            "or_recall_l3": or_recall_l3,
-            "best_recall_3": best_recall_3,
+            "or_recall_op": or_recall_op,
+            "best_recall_op": best_recall_op,
             "best_recall_0": best_recall_0,
-            "best_route_3": best_name_3,
+            "best_route_op": best_name_op,
             "best_pr": best_pr,
             "miss": miss,
             "single_vs_or": single_vs_or,
@@ -173,7 +183,7 @@ def main() -> int:
     # Header.
     hdr = (
         f"{'filetype':<16} {'group':<12} {'n_mal':>8} "
-        f"{'recall@L3':>10} {'best@3FP':>10} {'best@0FP':>10} "
+        f"{'recall@L50':>10} {'best@1FP':>10} {'best@0FP':>10} "
         f"{'PR-AUC':>8} {'miss':>9} {'single-OR':>10} "
         f"{'diag':<14} {'best_route':<22}"
     )
@@ -189,11 +199,11 @@ def main() -> int:
     for r in rows:
         lines.append(
             f"{r['filetype']:<16} {r['filegroup']:<12} {r['n_mal']:>8} "
-            f"{_fmt_pct(r['or_recall_l3']):>10} {_fmt_pct(r['best_recall_3']):>10} "
+            f"{_fmt_pct(r['or_recall_op']):>10} {_fmt_pct(r['best_recall_op']):>10} "
             f"{_fmt_pct(r['best_recall_0']):>10} "
             f"{_safe(r['best_pr']):>8.4f} {_fmt_int(r['miss']):>9} "
             f"{_fmt_pct(r['single_vs_or']):>10} "
-            f"{r['diag']:<14} {r['best_route_3']:<22}"
+            f"{r['diag']:<14} {r['best_route_op']:<22}"
         )
 
     report = "\n".join(lines)
@@ -220,10 +230,10 @@ def main() -> int:
             "```\n" + report + "\n```\n\n"
             "## Diagnosis legend\n\n"
             "- **or_loses** — the deployed OR-rule combiner is below the single best route at its own FP budget; the combiner is the bottleneck.\n"
-            "- **saturated_pr** — PR-AUC > 0.99 but recall@3FP < 0.9. Ranking is good; the issue is the high-confidence score tail is crowded with hard benigns. Needs new features or hard-negative mining, not knob-tuning.\n"
+            "- **saturated_pr** — PR-AUC > 0.99 but recall@L50 < 0.9. Ranking is good; the issue is the high-confidence score tail is crowded with hard benigns. Needs new features or hard-negative mining, not knob-tuning.\n"
             "- **low_pr** — PR-AUC < 0.99. Learning capacity is short. Autocollie can likely move the needle.\n"
             "- **limited_data** — n_malware < 1000. Will overfit before learning anything generalizable. Need more samples first.\n"
-            "- **near_ceiling** — PR-AUC saturated AND recall@3FP > 0.9. Diminishing returns.\n",
+            "- **near_ceiling** — PR-AUC saturated AND recall@L50 > 0.9. Diminishing returns.\n",
         )
         print(f"\nwrote markdown to {args.output_md}")
     return 0

@@ -1950,3 +1950,35 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260531T211817-filetypes-pdf` — 2026-05-31T21:18:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0dc4e3c5a6487a2e` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 0.9994 | 0.9983 | 9 | [log](out/autocollie/runs/2026-05-31T21-26-46_20260531T211817-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `634d8e9969419289` | pdf_control_baseline_lr003 | ok | 1.0000 | 0.9990 | 0.9979 | 7 | [log](out/autocollie/runs/2026-05-31T21-27-01_20260531T211817-filetypes-pdf_pdf_control_baseline_lr003.log) |
+| `6053f5c9e6331c29` | pdf_exploit_hardneg_02_12 | ok | 1.0000 | 0.9993 | 0.9982 | 2 | [log](out/autocollie/runs/2026-05-31T21-27-09_20260531T211817-filetypes-pdf_pdf_exploit_hardneg_02_12.log) |
+| `cc03cf0840ee463c` | pdf_exploit_dart_extra_trees | ok | 1.0000 | 0.9988 | 0.9964 | 2 | [log](out/autocollie/runs/2026-05-31T21-27-12_20260531T211817-filetypes-pdf_pdf_exploit_dart_extra_trees.log) |
+| `b7ef49bca218cbe7` | pdf_feat_textmetrics_kv_vocab | ok | 1.0000 | 0.9993 | 0.9977 | 8 | [log](out/autocollie/runs/2026-05-31T21-27-15_20260531T211817-filetypes-pdf_pdf_feat_textmetrics_kv_vocab.log) |
+| `b66aeb86fac656ad` | pdf_feat_doc_obfuscation_lowfreq | ok | 1.0000 | 0.9991 | 0.9951 | 7 | [log](out/autocollie/runs/2026-05-31T21-27-24_20260531T211817-filetypes-pdf_pdf_feat_doc_obfuscation_lowfreq.log) |
+| `dfcfb38c8288b2ea` | pdf_feat_tiered_tri_kv_split | ok | 1.0000 | 0.9992 | 0.9976 | 7 | [log](out/autocollie/runs/2026-05-31T21-27-32_20260531T211817-filetypes-pdf_pdf_feat_tiered_tri_kv_split.log) |
+| `32ecdf93a3126403` | pdf_abl_extended_metrics_off | ok | 1.0000 | 0.9988 | 0.9974 | 8 | [log](out/autocollie/runs/2026-05-31T21-27-41_20260531T211817-filetypes-pdf_pdf_abl_extended_metrics_off.log) |
+| `a583709fee255902` | pdf_transfer_xml_tiered_tri | ok | 1.0000 | 0.9992 | 0.9979 | 8 | [log](out/autocollie/runs/2026-05-31T21-27-49_20260531T211817-filetypes-pdf_pdf_transfer_xml_tiered_tri.log) |
+| `8c099f540f51bbe5` | pdf_gen_seedsearch_k3 | ok | 1.0000 | 0.9993 | 0.9980 | 9 | [log](out/autocollie/runs/2026-05-31T21-27-58_20260531T211817-filetypes-pdf_pdf_gen_seedsearch_k3.log) |
+| `fe66f9d9707c9a94` | pdf_retry_seedsearch_text_kv | ok | 1.0000 | 0.9993 | 0.9984 | 10 | [log](out/autocollie/runs/2026-05-31T21-28-08_20260531T211817-filetypes-pdf_pdf_retry_seedsearch_text_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_baseline_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Establish baseline PR_AUC and ROC_AUC stability using the current top feature surface with a conservative learning rate to prevent overfitting on the saturated dev set.
+- **`pdf_exploit_hardneg_02_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Improve recall@3FPM by upweighting hard benign negatives to sharpen the decision boundary at low FPR without degrading PR_AUC.
+- **`pdf_exploit_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Boost recall@3FPM via dart dropout and extra_trees ensemble noise to reduce tail overfitting while maintaining PR_AUC guardrails.
+- **`pdf_feat_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC gain by enabling text_metrics_full and kv_vocab to capture document obfuscation and key-value structural signals specific to PDFs.
+- **`pdf_feat_doc_obfuscation_lowfreq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Improve recall@3FPM by lowering bigram frequency floor and adding targeted document obfuscation aggregates to catch rare PDF evasion patterns.
+- **`pdf_feat_tiered_tri_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Push PR_AUC by combining severity-prefixed trigrams with kv_value_split to recover granular signal from complex PDF metadata and object streams.
+- **`pdf_abl_extended_metrics_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test if disabling extended_metrics reduces noise and stabilizes PR_AUC while preserving recall@3FPM, validating feature efficiency.
+- **`pdf_transfer_xml_tiered_tri`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Port XML's successful low-frequency bigram and tiered trigram configuration to PDF to capture cross-document structural patterns and improve PR_AUC.
+- **`pdf_gen_seedsearch_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Verify PR_AUC stability across seeds using seed_search_k=3 on the text/kv surface to distinguish real signal from seed-driven variance.
+- **`pdf_retry_seedsearch_text_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry a historically strong text/kv configuration with updated daily ingest to recover potential PR_AUC gains lost to data drift.
+
+</details>
+

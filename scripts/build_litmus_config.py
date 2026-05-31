@@ -51,44 +51,31 @@ def main() -> None:
         raise SystemExit(
             f"error: threshold report does not contain severity level {DEFAULT_SEVERITY_LEVEL}"
         )
-    for name, expected in (
-        ("hostile", DEFAULT_SEVERITY_TARGET["hostile_per_million"]),
-        ("suspicious", DEFAULT_SEVERITY_TARGET["suspicious_per_million"]),
-    ):
-        metric = default_level.get(name)
-        actual = metric.get("target_fp_per_million") if isinstance(metric, dict) else None
-        if actual is None or abs(float(actual) - float(expected)) > 1e-9:
-            raise SystemExit(
-                f"error: threshold report has stale severity level {DEFAULT_SEVERITY_LEVEL} "
-                f"{name} target {actual!r}; expected {expected:.0f}/1M. "
-                "Run `make thresholds-refresh` before `make deploy`."
-            )
+    expected = DEFAULT_SEVERITY_TARGET["hostile_per_million"]
+    metric = default_level.get("hostile")
+    actual = metric.get("target_fp_per_100M") if isinstance(metric, dict) else None
+    if actual is None or abs(float(actual) - float(expected)) > 1e-9:
+        raise SystemExit(
+            f"error: threshold report has stale severity level {DEFAULT_SEVERITY_LEVEL} "
+            f"hostile target {actual!r}; expected {expected:.0f}/1M. "
+            "Run `make thresholds-refresh` before `make deploy`."
+        )
 
     config: dict[str, Any] = {
         "severity_level_targets": targets,
         "severity_levels": levels,
     }
-    for name in ("suspicious", "hostile"):
-        metric = default_level.get(name)
-        if not isinstance(metric, dict) or metric.get("threshold") is None:
-            raise SystemExit(
-                f"error: severity level {DEFAULT_SEVERITY_LEVEL} is missing {name} threshold"
-            )
-        config[name] = float(metric["threshold"])
-
-    if config["suspicious"] >= config["hostile"]:
+    if not isinstance(metric, dict) or metric.get("threshold") is None:
         raise SystemExit(
-            f"error: full-corpus level {DEFAULT_SEVERITY_LEVEL} thresholds do not create a suspicious band "
-            f"(suspicious={config['suspicious']:.6f}, hostile={config['hostile']:.6f}); "
-            "run `make thresholds-refresh` against the full good corpus"
+            f"error: severity level {DEFAULT_SEVERITY_LEVEL} is missing hostile threshold"
         )
+    config["hostile"] = float(metric["threshold"])
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w") as f:
         json.dump(config, f, indent=2)
     print(
         "  config.json: "
-        f"suspicious={config['suspicious']:.6f}, "
         f"hostile={config['hostile']:.6f}, "
         f"severity_levels={len(levels)}, "
         f"corpus={corpus.get('samples')} samples"

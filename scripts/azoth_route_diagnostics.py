@@ -129,7 +129,7 @@ def _rows(config: dict[str, Any], score_table: np.lib.npyio.NpzFile) -> list[dic
     out: list[dict[str, Any]] = []
     for level in config["levels"]:
         level_no = int(level["level"])
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             block = level[severity]
             max_fp = int(block.get("budget") or _budget(n_benign, float(block["target_per_million"])))
             for route_name, route in routes.items():
@@ -274,7 +274,7 @@ def _metric_row(
         "f1": f1,
         "accuracy": accuracy,
         "fpr": fpr,
-        "fp_per_million": fp * 1_000_000.0 / n_benign if n_benign else math.nan,
+        "fp_per_100M": fp * 100_000_000.0 / n_benign if n_benign else math.nan,
         "used_routes": ",".join(used_routes),
     }
 
@@ -299,7 +299,7 @@ def _slice_rows(config: dict[str, Any], score_table: np.lib.npyio.NpzFile) -> li
 
     for level in config["levels"]:
         level_no = int(level["level"])
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             block = level[severity]
             thresholds = {str(k): float(v) for k, v in block.get("thresholds", {}).items()}
             for scope, name, mask in scopes:
@@ -364,16 +364,9 @@ def _write_slice_markdown(path: Path, config: dict[str, Any], rows: list[dict[st
         f"- Rows: {config.get('rows')} ({config.get('malware')} malware, {config.get('benign')} benign)",
     ]
     interesting = [("all", "all"), ("filetype", "elf"), ("filetype", "pe"), ("filetype", "python"), ("filetype", "javascript")]
-    for level_no, severity in [(5, "hostile"), (9, "hostile"), (5, "suspicious"), (9, "suspicious")]:
-        lines.extend(
-            [
-                "",
-                f"## L{level_no} {severity.title()}",
-                "",
-                "| Scope | Rows | Malware | Benign | Recall | FPR | FP/1M | Precision | F1 | Accuracy | Routes |",
-                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
-            ],
-        )
+    # Headline levels in the new per-100M grid: L50 (default), L100 (loose end).
+    # L300/L500/L1000 from the old grid are no longer computed.
+    for level_no, severity in [(50, "hostile"), (100, "hostile")]:
         selected: list[dict[str, Any]] = []
         for scope, name in interesting:
             selected.extend(
@@ -392,6 +385,17 @@ def _write_slice_markdown(path: Path, config: dict[str, Any], rows: list[dict[st
             and row["scope"] == "filetype"
             and row["malware"] >= 50
         ]
+        if not selected and not top_filetypes:
+            continue
+        lines.extend(
+            [
+                "",
+                f"## L{level_no} {severity.title()}",
+                "",
+                "| Scope | Rows | Malware | Benign | Recall | FPR | FP/100M | Precision | F1 | Accuracy | Routes |",
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
+            ],
+        )
         top_filetypes.sort(key=lambda row: (-float(row["recall"]), -int(row["malware"]), row["name"]))
         for row in selected + [row for row in top_filetypes[:10] if row not in selected]:
             label = row["name"] if row["scope"] == "all" else f"{row['scope']}/{row['name']}"
@@ -403,7 +407,7 @@ def _write_slice_markdown(path: Path, config: dict[str, Any], rows: list[dict[st
                 f"{row['benign']} | "
                 f"{_pct(row['recall'])} | "
                 f"{_pct(row['fpr'])} | "
-                f"{_fmt(row['fp_per_million'], 5)} | "
+                f"{_fmt(row['fp_per_100M'], 5)} | "
                 f"{_pct(row['precision'])} | "
                 f"{_pct(row['f1'])} | "
                 f"{_pct(row['accuracy'])} | "
@@ -429,16 +433,15 @@ def _write_markdown(path: Path, config: dict[str, Any], rows: list[dict[str, Any
         "| ---: | --- | --- |",
     ]
     for level in config["levels"]:
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             thresholds = level[severity].get("thresholds", {})
             selected = ", ".join(thresholds) if thresholds else "-"
             lines.append(f"| {level['level']} | {severity} | {selected} |")
 
+    # Headline levels in the new per-100M grid.
     interesting = [
-        (5, "hostile"),
-        (5, "suspicious"),
-        (9, "hostile"),
-        (9, "suspicious"),
+        (50, "hostile"),
+        (100, "hostile"),
     ]
     for level_no, severity in interesting:
         subset = [
@@ -446,6 +449,8 @@ def _write_markdown(path: Path, config: dict[str, Any], rows: list[dict[str, Any
             for row in rows
             if row["level"] == level_no and row["severity"] == severity and row["route"] != "general"
         ]
+        if not subset:
+            continue
         subset.sort(
             key=lambda row: (
                 not row["selected"],

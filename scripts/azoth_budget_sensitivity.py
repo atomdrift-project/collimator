@@ -89,7 +89,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--severity",
-        choices=("hostile", "suspicious"),
+        choices=("hostile",),
         default="hostile",
     )
     parser.add_argument(

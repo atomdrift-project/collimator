@@ -330,7 +330,7 @@ def _metric_at_fp_count(y: np.ndarray, probs: np.ndarray, fp_count: int) -> dict
             break
     if best is None:
         best = {"tp": 0, "fp": 0, "recall": 0.0 if malware else math.nan}
-    best["fp_per_million"] = best["fp"] * 1_000_000.0 / benign if benign else math.nan
+    best["fp_per_100M"] = best["fp"] * 100_000_000.0 / benign if benign else math.nan
     return best
 
 

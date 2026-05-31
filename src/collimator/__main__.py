@@ -358,14 +358,14 @@ def generate_extraction_fixture(
     classifications. Tests the full pipeline: cleave JSON → extract → standardize
     → predict → classify.
 
-    Classification uses the same three-tier logic as litmus's Thresholds::classify:
+    Classification uses a single hostile threshold:
       prob >= hostile  → "hostile"
-      prob >= suspicious → "suspicious"
       otherwise        → "benign"
 
     Thresholds are resolved in the same priority order as litmus: recommended
-    thresholds from evaluation.json, falling back to optimal_threshold as a
-    single hostile threshold.
+    hostile from evaluation.json, falling back to optimal_threshold.
+    Suspicious is a consumer-side derivation now (litmus does sus = crit/4);
+    collimator only emits the hostile threshold.
     """
     from .model import predict_proba
 
@@ -374,15 +374,10 @@ def generate_extraction_fixture(
     idx = rng.choice(len(reports), n, replace=False)
     idx.sort()
 
-    # Resolve thresholds to match litmus's Model::load priority:
-    # recommended_thresholds (suspicious + hostile) > optimal_threshold as hostile-only.
-    suspicious_thresh: float | None = None
     hostile_thresh: float = optimal_threshold
     if recommended_thresholds:
-        s = recommended_thresholds.get("suspicious")
         h = recommended_thresholds.get("hostile")
-        if s is not None and h is not None:
-            suspicious_thresh = float(s)
+        if h is not None:
             hostile_thresh = float(h)
 
     ctx = features._ExtractContext(spec)
@@ -416,11 +411,10 @@ def generate_extraction_fixture(
                 std_dense = dense_vec
             prob = float(predict_proba(model, std_dense)[0])
 
-            # Three-tier classification matching litmus Thresholds::classify.
+            # Single-tier classification: hostile or benign. Litmus computes
+            # any "suspicious" band at consumer time as crit/4.
             if prob >= hostile_thresh:
                 classification = "hostile"
-            elif suspicious_thresh is not None and prob >= suspicious_thresh:
-                classification = "suspicious"
             else:
                 classification = "benign"
 

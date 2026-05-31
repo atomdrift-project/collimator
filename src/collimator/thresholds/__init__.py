@@ -17,29 +17,40 @@ from collimator.model import load_model, predict_proba
 
 log = logging.getLogger(__name__)
 
-# Deployment operating points, expressed as false positives per million good
-# files. Hostile policy is the primary signal; suspicious is a broader triage
-# band using (level + 1) * 8 FP/1M.
+# Deployment operating points on the per-100M-benigns scale. The integer
+# `level` IS the false-positive budget per 100 million benigns — so L100
+# means 100 FP / 100M ≡ 1 FP/M. The internal computation still carries
+# `hostile_per_million` as a float because the rest of the threshold math
+# is keyed on FP/M; the per-100M level number is the canonical wire unit
+# (matches litmus's `-l` knob and the JSON emit field `target_per_100M`).
 #
-# L0..L9 are the original deployment tiers; L0 (0 FP/M, true zero FP) and L3
-# (the default, 3 FP/M) are the operating points we actively shape policies
-# around. L10..L20 extend the curve into the long-tail regime — at the
-# corpus's ~2.7M benign denominator, L9 has a 24-FP global budget while L18
-# has 49; the elbow in the marginal-recall curve sits between L18 and L19.
-# Levels above the elbow are best-effort: they exist so deployments that can
-# tolerate looser FP rates can still pick up coverage on filetypes the
-# tighter tiers leave at no_policy. They are NOT a back door to inflate L9 —
-# litmus's verdict mapping treats each level as a distinct severity band.
+# Grid is dense in the strict region (L0-L10, where finer resolution
+# actually pays off once the benign corpus is large enough to resolve
+# sub-FP/M budgets) and decade-aligned in the loose region (L10-L100, to
+# match litmus's `-0..-9` shorthand 0/10/20/.../90). L0-L10 will collapse
+# to recall@0 on small corpora; that's honest, the volume floor catches it
+# (see `min_observable_fp_per_million`). Levels >L100 are intentionally
+# absent: litmus's CLI caps at 100, so anything above is unreachable.
+#
+# "Suspicious" is a consumer-side concept (litmus derives a suspicious
+# band from the hostile threshold); collimator only computes and ships
+# the single hostile threshold per level.
+_LEVELS_PER_100M: tuple[int, ...] = (
+    0, 1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+)
 SEVERITY_LEVEL_TARGETS = [
     {
         "level": level,
-        "hostile_per_million": float(level),
-        "suspicious_per_million": float((level + 1) * 8),
+        "target_per_100M": level,
+        "hostile_per_million": level / 100.0,
     }
-    for level in range(21)
+    for level in _LEVELS_PER_100M
 ]
 
-DEFAULT_SEVERITY_LEVEL = 3
+# 50 FP/100M = 0.5 FP/M — the stricter default replacing the legacy L300
+# (= 3 FP/M) operating point. Litmus's CLI default (`-l 50`) matches; if
+# a future train shows recall doesn't hold here, ratchet looser.
+DEFAULT_SEVERITY_LEVEL = 50
 
 
 def _severity_target(level: int) -> dict[str, int | float]:
@@ -51,10 +62,11 @@ def _severity_target(level: int) -> dict[str, int | float]:
 
 DEFAULT_SEVERITY_TARGET = _severity_target(DEFAULT_SEVERITY_LEVEL)
 
-# (label, FP-rate) pairs used by ``fp_budget_tables`` and downstream callers
-# to derive default budgets at the configured severity level.
+# (label, FP-rate) pair used by ``fp_budget_tables`` and downstream callers
+# to derive the default budget at the configured severity level. Only one
+# severity now — "suspicious" is a consumer-side derivation, not a thing
+# collimator tunes for.
 DEFAULT_FP_RATE_RECOMMENDATIONS = [
-    ("suspicious", DEFAULT_SEVERITY_TARGET["suspicious_per_million"] / 1_000_000),
     ("hostile", DEFAULT_SEVERITY_TARGET["hostile_per_million"] / 1_000_000),
 ]
 
@@ -76,7 +88,6 @@ class PolicyLevel:
 class PolicySpec:
     name: str
     description: str
-    suspicious: PolicyLevel
     hostile: PolicyLevel
 
 
@@ -84,14 +95,8 @@ POLICY_SPECS = [
     PolicySpec(
         name="default_fp_rate",
         description=(
-            "Default deploy policy: suspicious "
-            f"<={DEFAULT_SEVERITY_TARGET['suspicious_per_million']:.0f}/1M good FP, "
-            f"hostile <={DEFAULT_SEVERITY_TARGET['hostile_per_million']:.0f}/1M good FP"
-        ),
-        suspicious=PolicyLevel(
-            "suspicious",
-            "max_recall_at_fp_rate",
-            DEFAULT_SEVERITY_TARGET["suspicious_per_million"] / 1_000_000,
+            "Default deploy policy: "
+            f"<={DEFAULT_SEVERITY_TARGET['hostile_per_million']:.0f}/1M good FP"
         ),
         hostile=PolicyLevel(
             "hostile",
@@ -101,32 +106,27 @@ POLICY_SPECS = [
     ),
     PolicySpec(
         name="ultra_low_fpr",
-        description="Max recall at 10 FP/1M suspicious and 1 FP/1M hostile",
-        suspicious=PolicyLevel("suspicious", "max_recall_at_fpr", 10.0),
+        description="Max recall at 1 FP/1M",
         hostile=PolicyLevel("hostile", "max_recall_at_fpr", 1.0),
     ),
     PolicySpec(
         name="low_fpr",
-        description="Looser low-FPR operating point for broader suspicious coverage",
-        suspicious=PolicyLevel("suspicious", "max_recall_at_fpr", 100.0),
+        description="Looser low-FPR operating point",
         hostile=PolicyLevel("hostile", "max_recall_at_fpr", 10.0),
     ),
     PolicySpec(
         name="recall_floor",
-        description="Highest thresholds that still keep malware recall floors",
-        suspicious=PolicyLevel("suspicious", "highest_threshold_at_recall", 0.99),
+        description="Highest threshold that still keeps the malware recall floor",
         hostile=PolicyLevel("hostile", "highest_threshold_at_recall", 0.90),
     ),
     PolicySpec(
         name="recall_plus_fpr",
-        description="Recall floors with aspirational FPR tightening when measurable",
-        suspicious=PolicyLevel("suspicious", "recall_floor_then_fpr", 0.97),
+        description="Recall floor with aspirational FPR tightening when measurable",
         hostile=PolicyLevel("hostile", "recall_floor_then_fpr", 0.85),
     ),
     PolicySpec(
         name="precision_floor",
-        description="Lowest thresholds that satisfy precision floors with enough support",
-        suspicious=PolicyLevel("suspicious", "min_precision", 0.99, min_flags=25),
+        description="Lowest threshold that satisfies the precision floor with enough support",
         hostile=PolicyLevel("hostile", "min_precision", 0.999, min_flags=10),
     ),
 ]
@@ -217,7 +217,8 @@ def credible_bound_fp_rate(
     on the true FP rate.  At large N the bound converges to the empirical
     estimate; at small N (where the empirical is noisy) the upper bound is
     materially higher than the empirical, which is exactly what we want when
-    deploying conservatively against a 3 FP/M target with sparse data.
+    deploying conservatively against a 0.5 FP/M target (= L50) with sparse
+    data.
 
     The math: posterior is Beta(alpha_prior + n_fp, beta_prior + n_benign - n_fp).
     Upper bound is the (confidence)-quantile; lower bound is (1-confidence).
@@ -230,7 +231,7 @@ def credible_bound_fp_rate(
 
       credible_bound_fp_rate(0, 1_000_000, side="upper", confidence=0.95)
       # ≈ 3.0e-6 — at 1M benigns, the upper bound is finally tight enough
-      # to deploy at 3 FP/M.
+      # to deploy at L50 (0.5 FP/M).
 
     No SciPy: we use ``np.random.default_rng().beta`` only as a fallback
     test path; the analytic Beta inverse-CDF is in ``scipy.stats`` but
@@ -356,7 +357,7 @@ def _stats_dict_at_index(
         "true_negative_rate": tnr,
         "precision": precision,
         "fpr": float(fpr_vals[index]),
-        "fp_per_million": float(fpr_vals[index] * 1_000_000),
+        "fp_per_100M": float(fpr_vals[index] * 100_000_000),
         "n_benign": int(n_benign),
         "n_malware": int(n_malware),
     }
@@ -382,7 +383,7 @@ def _empty_threshold_stats(
         "true_negative_rate": 1.0,
         "precision": 1.0,
         "fpr": 0.0,
-        "fp_per_million": 0.0,
+        "fp_per_100M": 0.0,
         "n_benign": int(n_benign),
         "n_malware": int(n_malware),
     }
@@ -443,7 +444,10 @@ def _select_policy_level(
         recall_index = int(np.where(valid_recall)[0][0])
         chosen_index = recall_index
         warning = None
-        aspirational_fpm = 100.0 if level.name == "suspicious" else 10.0
+        # Hostile is the only tier collimator tunes for now; the previous
+        # 100 FP/M aspirational target only applied to the (removed) suspicious
+        # tier, so a single fixed value is enough.
+        aspirational_fpm = 10.0
         measurable = n_benign * aspirational_fpm / 1_000_000 >= _MIN_EXPECTED_FP_FOR_FPR
         if measurable:
             valid_fpr = valid_recall & ((fpr_vals * 1_000_000) <= aspirational_fpm)
@@ -474,20 +478,15 @@ def evaluate_policies(
     )
     results: list[dict[str, Any]] = []
     for spec in POLICY_SPECS:
-        suspicious, suspicious_warning = _select_policy_level(
-            spec.suspicious, thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware,
-        )
         hostile, hostile_warning = _select_policy_level(
             spec.hostile, thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware,
         )
         results.append({
             "name": spec.name,
             "description": spec.description,
-            "suspicious": suspicious,
             "hostile": hostile,
-            "warnings": [w for w in [suspicious_warning, hostile_warning] if w],
+            "warnings": [w for w in [hostile_warning] if w],
             "policy": {
-                "suspicious": asdict(spec.suspicious),
                 "hostile": asdict(spec.hostile),
             },
         })
@@ -500,7 +499,6 @@ def fp_budget_tables(
     *,
     n_benign_denominator: int | None = None,
     hostile_budgets: list[int] | None = None,
-    suspicious_budgets: list[int] | None = None,
 ) -> dict[str, list[dict[str, float | int]]]:
     thresholds, tp_vals, fp_vals, _correct, recall_vals, fpr_vals, _n, n_malware, n_benign = (
         _threshold_stats(probs, y, n_benign_denominator=n_benign_denominator)
@@ -510,7 +508,6 @@ def fp_budget_tables(
         for level, rate in DEFAULT_FP_RATE_RECOMMENDATIONS
     }
     hostile_budgets = hostile_budgets or _nearby_budgets(default_budgets["hostile"])
-    suspicious_budgets = suspicious_budgets or _nearby_budgets(default_budgets["suspicious"])
 
     def _rows(budgets: list[int]) -> list[dict[str, float | int]]:
         rows: list[dict[str, float | int]] = []
@@ -526,7 +523,6 @@ def fp_budget_tables(
 
     return {
         "hostile": _rows(hostile_budgets),
-        "suspicious": _rows(suspicious_budgets),
     }
 
 
@@ -543,26 +539,25 @@ def compute_severity_levels(
     levels: list[dict[str, Any]] = []
     for target in SEVERITY_LEVEL_TARGETS:
         level = int(target["level"])
-        row: dict[str, Any] = {
+        per_million = float(target["hostile_per_million"])
+        budget = _fp_budget_for_per_million(n_benign, per_million)
+        selected = _select_threshold_at_fp_budget(
+            thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware,
+            max_fp=budget,
+        )
+        if selected is not None:
+            # `per_million` is the per-million target rate; per-100M = ×100.
+            selected["target_fp_per_100M"] = per_million * 100.0
+            selected["target_per_100M"] = level
+        levels.append({
             "level": level,
             "targets": {
-                "hostile_per_million": float(target["hostile_per_million"]),
-                "suspicious_per_million": float(target["suspicious_per_million"]),
+                "target_per_100M": level,
+                "hostile_per_million": per_million,
             },
-            "budgets": {},
-        }
-        for name in ("hostile", "suspicious"):
-            per_million = float(target[f"{name}_per_million"])
-            budget = _fp_budget_for_per_million(n_benign, per_million)
-            selected = _select_threshold_at_fp_budget(
-                thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware,
-                max_fp=budget,
-            )
-            row["budgets"][f"{name}_fp"] = budget
-            if selected is not None:
-                selected["target_fp_per_million"] = per_million
-            row[name] = selected
-        levels.append(row)
+            "budgets": {"hostile_fp": budget},
+            "hostile": selected,
+        })
     return levels
 
 
@@ -592,16 +587,15 @@ def _near_severity_level(level: dict[str, Any]) -> dict[str, Any]:
         "targets": level.get("targets", {}),
         "budgets": level.get("budgets", {}),
     }
-    for name in ("hostile", "suspicious"):
-        metric = level.get(name)
-        if isinstance(metric, dict):
-            near_metric = dict(metric)
-            threshold = float(metric["threshold"])
-            near_metric["threshold"] = max(0.0, 1.0 - (2.0 * (1.0 - threshold)))
-            near_metric["basis_threshold"] = threshold
-            near[name] = near_metric
-        else:
-            near[name] = None
+    metric = level.get("hostile")
+    if isinstance(metric, dict):
+        near_metric = dict(metric)
+        threshold = float(metric["threshold"])
+        near_metric["threshold"] = max(0.0, 1.0 - (2.0 * (1.0 - threshold)))
+        near_metric["basis_threshold"] = threshold
+        near["hostile"] = near_metric
+    else:
+        near["hostile"] = None
     return near
 
 
@@ -621,7 +615,6 @@ def _row_for_sample(sample: ScoredSample, probability: float, label: int, levels
         "score": sample.score,
         "probability": float(probability),
         "label": "bad" if int(label) == 1 else "good",
-        "suspicious_level": _first_matching_level(float(probability), levels, "suspicious"),
         "hostile_level": _first_matching_level(float(probability), levels, "hostile"),
     }
 
@@ -729,23 +722,20 @@ def compute_default_recommendations(
     """Compute legacy deploy thresholds from the default severity level."""
     levels = compute_severity_levels(probs, y, n_benign_denominator=n_benign_denominator)
     default_level = _severity_level_by_number(levels, DEFAULT_SEVERITY_LEVEL)
-    result: dict[str, float | None] = {"suspicious": None, "hostile": None}
+    result: dict[str, float | None] = {"hostile": None}
     if default_level is None:
         return result
-    for name in ("suspicious", "hostile"):
-        row = default_level.get(name)
-        if not row:
-            continue
-        result[name] = float(row["threshold"])
+    row = default_level.get("hostile")
+    if row:
+        result["hostile"] = float(row["threshold"])
         log.info(
-            "%s level %d: threshold=%.4f TP-rate=%.2f%% FP=%d/%d good files (target %.1f/1M)",
-            name,
+            "hostile level %d: threshold=%.4f TP-rate=%.2f%% FP=%d/%d good files (target %.1f/1M)",
             DEFAULT_SEVERITY_LEVEL,
             float(row["threshold"]),
             float(row["recall"]) * 100,
             int(row["fp"]),
             int(row["n_benign"]),
-            float(row["target_fp_per_million"]),
+            float(row["target_fp_per_100M"]),
         )
     return result
 

@@ -943,11 +943,11 @@ def _routed_levels(
 
 
 def _level_summary(levels: list[dict[str, Any]]) -> dict[str, Any]:
+    # Per-100M scale: L500 = 5 FP/M (today's L5), L1000 = 10 FP/M (≈ today's L9).
+    # Suspicious is a consumer-side derivation; collimator emits only hostile.
     return {
-        "l5_hostile": next(item["hostile"] for item in levels if item["level"] == 5),
-        "l9_hostile": next(item["hostile"] for item in levels if item["level"] == 9),
-        "l5_suspicious": next(item["suspicious"] for item in levels if item["level"] == 5),
-        "l9_suspicious": next(item["suspicious"] for item in levels if item["level"] == 9),
+        "l500_hostile": next(item["hostile"] for item in levels if item["level"] == 500),
+        "l1000_hostile": next(item["hostile"] for item in levels if item["level"] == 1000),
     }
 
 
@@ -1000,7 +1000,9 @@ def _elf_fp_budget_table(y_true: np.ndarray, probs: np.ndarray) -> list[dict[str
             fp = int(cum_fp[idx])
         out.append(
             {
-                "target_fp_per_million": float(target),
+                # `target` is in per-million units (input convention here);
+                # emit it as the canonical per-100M output.
+                "target_fp_per_100M": float(target) * 100.0,
                 "budget": int(budget),
                 "threshold": threshold,
                 "recall": float(tp / malware) if malware else 0.0,

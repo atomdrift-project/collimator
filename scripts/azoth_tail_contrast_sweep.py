@@ -151,8 +151,8 @@ def main() -> int:
     max_id = int(cache["corpus_requested_max_id"]) or int(cache["corpus_max_row_id"])
     row_index = {int(row_id): idx for idx, row_id in enumerate(row_ids)}
     baseline_levels = _general_baseline(labels, general_probs)
-    general_l5 = next(item for item in baseline_levels if item["level"] == 5)["hostile"]
-    l5_threshold = float(general_l5["thresholds"]["general"])
+    general_l500 = next(item for item in baseline_levels if item["level"] == 500)["hostile"]
+    l500_threshold = float(general_l500["thresholds"]["general"])
 
     targets = _eligible_filetypes(
         args.db,
@@ -218,7 +218,7 @@ def main() -> int:
             weights = np.ones(len(y_train), dtype=np.float32)
             if len(train_global_indices) == len(y_train):
                 train_general_scores = general_probs[train_global_indices]
-                hard_pos = (y_train == 1) & (train_general_scores < l5_threshold)
+                hard_pos = (y_train == 1) & (train_general_scores < l500_threshold)
                 if np.any(y_train == 0):
                     hard_neg_cut = np.quantile(train_general_scores[y_train == 0], 0.995)
                     hard_neg = (y_train == 0) & (train_general_scores >= hard_neg_cut)

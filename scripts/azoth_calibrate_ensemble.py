@@ -812,41 +812,6 @@ def _prepare_calibration(
     }
 
 
-def _enforce_severity_monotonicity(
-    level: int,
-    hostile: dict[str, Any],
-    suspicious: dict[str, Any],
-) -> None:
-    """Mutate `suspicious['thresholds']` in-place so that, for every route
-    present in both severities, suspicious_threshold ≤ hostile_threshold.
-
-    Independent per-severity extrapolation occasionally inverts this on
-    noisy slices. Litmus rejects inverted (route, level) pairs entirely
-    — silently dropping real recall. We collapse to the stricter
-    threshold (i.e. raise suspicious to hostile) when inverted, which
-    keeps the route active at the cost of merging the two tiers at that
-    operating point for that route.
-    """
-    h_thresholds = hostile.get("thresholds", {}) or {}
-    s_thresholds = suspicious.get("thresholds", {}) or {}
-    fixed: list[str] = []
-    for route, h_t in h_thresholds.items():
-        if h_t is None:
-            continue
-        s_t = s_thresholds.get(route)
-        if s_t is None:
-            continue
-        if s_t > h_t:
-            s_thresholds[route] = h_t
-            fixed.append(route)
-    if fixed:
-        LOG.warning(
-            "L%d: %d route(s) had inverted hostile/suspicious thresholds; "
-            "clamped suspicious to hostile for: %s",
-            level, len(fixed), ", ".join(sorted(fixed)),
-        )
-
-
 def _calibrate_one(
     labels: np.ndarray,
     route_scores: list[dict[str, Any]],
@@ -963,7 +928,7 @@ def _calibrate_one(
         "fn": n_malware - tp,
         "recall": float(tp / n_malware) if n_malware else math.nan,
         "precision": float(tp / max(tp + fp, 1)),
-        "fp_per_million": float(fp * 1_000_000.0 / n_benign) if n_benign else math.nan,
+        "fp_per_100M": float(fp * 100_000_000.0 / n_benign) if n_benign else math.nan,
     }
 
 
@@ -1055,7 +1020,7 @@ def _evaluate_thresholds_at_level(
         "fn": n_malware - tp,
         "recall": float(tp / n_malware) if n_malware else math.nan,
         "precision": float(tp / max(tp + fp, 1)),
-        "fp_per_million": float(fp * 1_000_000.0 / n_benign) if n_benign else math.nan,
+        "fp_per_100M": float(fp * 100_000_000.0 / n_benign) if n_benign else math.nan,
     }
 
 
@@ -1160,7 +1125,7 @@ def _fit_and_persist_isotonic_calibrator(
     #
     # This is honest: it's an extrapolation, not a measurement, and we
     # mark it in the calibrator's `method` field. The deployed verdict
-    # (hostile/suspicious/benign) is driven by the raw-score thresholds
+    # (hostile/benign) is driven by the raw-score thresholds
     # found via GPD tail extrapolation in `_calibrate_one`; the calibrator
     # is for human-readable reporting. Anchoring it doesn't add leakage —
     # we use no test rows, and the extension uses no data at all.
@@ -1484,30 +1449,21 @@ def main() -> int:
                 thresholds_for_level=prior_level["hostile"].get("thresholds", {}),
                 target_per_million=float(prior_level["hostile"]["target_per_million"]),
             )
-            suspicious = _evaluate_thresholds_at_level(
-                eval_labels, eval_route_scores,
-                thresholds_for_level=prior_level["suspicious"].get("thresholds", {}),
-                target_per_million=float(prior_level["suspicious"]["target_per_million"]),
-            )
             # Carry through the dev-side resolution flags. These are
             # properties of the threshold-fit data, not of test eval — we
             # propagate them so cards rendered from test_metrics.json can
             # mark "below resolution" rows transparently.
-            for sev_dst, sev_src in (
-                (hostile, prior_level["hostile"]),
-                (suspicious, prior_level["suspicious"]),
-            ):
-                if "below_resolution" in sev_src:
-                    sev_dst["below_resolution"] = bool(sev_src["below_resolution"])
-                if "cp_floor_per_million" in sev_src:
-                    sev_dst["cp_floor_per_million"] = float(sev_src["cp_floor_per_million"])
+            sev_src = prior_level["hostile"]
+            if "below_resolution" in sev_src:
+                hostile["below_resolution"] = bool(sev_src["below_resolution"])
+            if "cp_floor_per_million" in sev_src:
+                hostile["cp_floor_per_million"] = float(sev_src["cp_floor_per_million"])
             LOG.info(
-                "L%d on %s: hostile recall=%.2f%% fp=%d (FP/M=%.2f); suspicious recall=%.2f%% fp=%d (FP/M=%.2f)",
+                "L%d on %s: hostile recall=%.2f%% fp=%d (FP/100M=%.2f)",
                 level_id, args.partition,
-                hostile["recall"] * 100, hostile["fp"], hostile["fp_per_million"],
-                suspicious["recall"] * 100, suspicious["fp"], suspicious["fp_per_million"],
+                hostile["recall"] * 100, hostile["fp"], hostile["fp_per_100M"],
             )
-            eval_levels.append({"level": level_id, "hostile": hostile, "suspicious": suspicious})
+            eval_levels.append({"level": level_id, "hostile": hostile})
         metrics_path = args.azoth_root / f"{args.partition}_metrics.json"
         bundle.atomic_write_json(metrics_path, {
             "schema": "azoth.evaluation.v1",
@@ -1549,7 +1505,6 @@ def main() -> int:
         for target in thresholds.SEVERITY_LEVEL_TARGETS:
             level = int(target["level"])
             hostile_target = float(target["hostile_per_million"])
-            suspicious_target = float(target["suspicious_per_million"])
             levels.append(
                 {
                     "level": level,
@@ -1564,21 +1519,7 @@ def main() -> int:
                         "fn": int(np.sum(fit_labels == 1)),
                         "recall": 0.0,
                         "precision": 0.0,
-                        "fp_per_million": 0.0,
-                        "skipped": True,
-                    },
-                    "suspicious": {
-                        "target_per_million": suspicious_target,
-                        "budget": _budget(n_benign, suspicious_target),
-                        "thresholds": {},
-                        "diagnostics": {},
-                        "tp": 0,
-                        "fp": 0,
-                        "tn": n_benign,
-                        "fn": int(np.sum(fit_labels == 1)),
-                        "recall": 0.0,
-                        "precision": 0.0,
-                        "fp_per_million": 0.0,
+                        "fp_per_100M": 0.0,
                         "skipped": True,
                     },
                 },
@@ -1592,30 +1533,13 @@ def main() -> int:
                 fit_route_scores,
                 target_per_million=float(target["hostile_per_million"]),
             )
-            suspicious = _calibrate_one(
-                fit_labels,
-                fit_route_scores,
-                target_per_million=float(target["suspicious_per_million"]),
-            )
-            # Per-route monotonicity guard: hostile must be at least as
-            # strict as suspicious (i.e. hostile_threshold ≥ suspicious_threshold).
-            # Independent extrapolation per severity occasionally inverts
-            # this on noisy slices (e.g. small filetypes where the
-            # 3-FP vs 32-FP quantiles wobble). Litmus's classifier
-            # `if prob ≥ hostile → Hostile; elif prob ≥ suspicious → Suspicious`
-            # would silently swallow such routes — losing real recall.
-            # When inverted, raise suspicious to hostile so the two tiers
-            # collapse to the stricter operating point for that (route, level).
-            _enforce_severity_monotonicity(level, hostile, suspicious)
             LOG.info(
-                "L%d hostile recall=%.2f%% fp=%d; suspicious recall=%.2f%% fp=%d",
+                "L%d hostile recall=%.2f%% fp=%d",
                 level,
                 hostile["recall"] * 100,
                 hostile["fp"],
-                suspicious["recall"] * 100,
-                suspicious["fp"],
             )
-            levels.append({"level": level, "hostile": hostile, "suspicious": suspicious})
+            levels.append({"level": level, "hostile": hostile})
 
     payload = {
         "timestamp": datetime.now(UTC).isoformat(),

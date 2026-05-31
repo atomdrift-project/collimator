@@ -217,19 +217,15 @@ def inspect_errors(
 
 
 def _classify(prob: float, recommended: dict[str, float], fallback: float) -> str:
-    """Three-tier classification matching litmus's Thresholds::classify.
+    """Single-tier classification using the hostile threshold.
 
-    Uses recommended_thresholds (suspicious + hostile) when both are present;
-    otherwise falls back to a single hostile-only threshold.
+    Uses recommended_thresholds["hostile"] when present; otherwise falls back
+    to the provided single threshold. Suspicious is a consumer-side derivation
+    now (litmus computes sus = crit/4); collimator only reports hostile.
     """
-    s = recommended.get("suspicious")
     h = recommended.get("hostile")
-    if s is not None and h is not None:
-        if prob >= h:
-            return "HOSTILE"
-        if prob >= s:
-            return "SUSPICIOUS"
-        return "BENIGN"
+    if h is not None:
+        return "HOSTILE" if prob >= h else "BENIGN"
     return "MALWARE" if prob > fallback else "BENIGN"
 
 
@@ -246,10 +242,10 @@ def scan_file(
     threshold = load_threshold(eval_path)
     recommended = load_recommended_thresholds(eval_path)
     if eval_path.exists():
-        if recommended.get("suspicious") is not None and recommended.get("hostile") is not None:
+        if recommended.get("hostile") is not None:
             log.info(
-                "using thresholds suspicious=%.3f hostile=%.3f from %s",
-                recommended["suspicious"], recommended["hostile"], eval_path,
+                "using hostile threshold %.3f from %s",
+                recommended["hostile"], eval_path,
             )
         else:
             log.info("using single threshold %.3f from %s", threshold, eval_path)

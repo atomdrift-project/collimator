@@ -273,7 +273,7 @@ def _metric_at_fp_budget(y: np.ndarray, probs: np.ndarray, budget_per_million: i
                 "tp": int(tp),
                 "fp": int(fp),
                 "recall": float(tp / malware) if malware else None,
-                "fp_per_million": float(fp / benign * 1_000_000.0) if benign else None,
+                "fp_per_100M": float(fp / benign * 100_000_000.0) if benign else None,
             }
         elif fp > allowed_fp:
             break
@@ -283,7 +283,7 @@ def _metric_at_fp_budget(y: np.ndarray, probs: np.ndarray, budget_per_million: i
             "tp": 0,
             "fp": 0,
             "recall": 0.0 if malware else None,
-            "fp_per_million": 0.0 if benign else None,
+            "fp_per_100M": 0.0 if benign else None,
         }
     return best
 

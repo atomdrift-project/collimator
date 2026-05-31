@@ -236,7 +236,7 @@ def _operating_point(
                 "tp": tp,
                 "fn": n_malware - tp,
                 "tn": n_benign - fp,
-                "fp_per_million": float(fp * 1_000_000.0 / n_benign) if n_benign else math.nan,
+                "fp_per_100M": float(fp * 100_000_000.0 / n_benign) if n_benign else math.nan,
             }
         else:
             break
@@ -253,7 +253,7 @@ def _operating_point(
             "tp": None,
             "fn": None,
             "tn": None,
-            "fp_per_million": None,
+            "fp_per_100M": None,
         }
     best["target_per_million"] = float(target_per_million)
     best["budget"] = budget
@@ -265,8 +265,7 @@ def _level_table(y_true: np.ndarray, y_prob: np.ndarray) -> list[dict[str, Any]]
     for target in thresholds.SEVERITY_LEVEL_TARGETS:
         level = int(target["level"])
         hostile = _operating_point(y_true, y_prob, float(target["hostile_per_million"]))
-        suspicious = _operating_point(y_true, y_prob, float(target["suspicious_per_million"]))
-        levels.append({"level": level, "hostile": hostile, "suspicious": suspicious})
+        levels.append({"level": level, "hostile": hostile})
     return levels
 
 
@@ -359,23 +358,19 @@ def _print_summary(results: list[dict[str, Any]]) -> None:
     print("\nELF benchmark")
     print(
         f"{'model':<24} {'AUC':>8} {'AP':>8} {'F1':>8} "
-        f"{'L5 H Rec':>9} {'L5 H FP/1M':>11} "
-        f"{'L5 S Rec':>9} {'L5 S FP/1M':>11}",
+        f"{'L5 H Rec':>9} {'L5 H FP/1M':>11}",
     )
     for res in results:
         metrics = res["metrics"]
         l5 = res["levels"][5]
         h = l5["hostile"]
-        s = l5["suspicious"]
         print(
             f"{res['name']:<24} "
             f"{metrics.get('roc_auc', math.nan):>8.4f} "
             f"{metrics.get('avg_precision', math.nan):>8.4f} "
             f"{metrics.get('max_f1', math.nan):>8.4f} "
             f"{(h['recall'] if h['recall'] is not None else math.nan):>9.2%} "
-            f"{(h['fp_per_million'] if h['fp_per_million'] is not None else math.nan):>11.1f} "
-            f"{(s['recall'] if s['recall'] is not None else math.nan):>9.2%} "
-            f"{(s['fp_per_million'] if s['fp_per_million'] is not None else math.nan):>11.1f}"
+            f"{(h['fp_per_100M'] if h['fp_per_100M'] is not None else math.nan):>11.1f}"
         )
 
 

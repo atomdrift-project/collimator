@@ -1,6 +1,6 @@
 # Confirm PASS — b7fe698a88a9b1fc on `general`
 
-Cycle `20260524T032935-confirm-b7fe698a88a9b1fc` — 2026-05-24T03:29:35Z
+Cycle `20260530T154629-confirm-b7fe698a88a9b1fc` — 2026-05-30T15:46:29Z
 
 PR_AUC held across 3 seeds (orig 0.9988)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9988)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `b7fe698a88a9b1fc` | `3167587689286a69` | `3167587689286a69` | `3167587689286a69` |
-| PR AUC | 0.9988 | 0.9999 | 0.9999 | 0.9999 |
-| ROC AUC | 0.9988 | 0.9997 | 0.9997 | 0.9997 |
-| Recall@3FPM | — | 0.6622 | 0.6418 | 0.6761 |
+| key | `b7fe698a88a9b1fc` | `b5019c7c6d26e981` | `b5019c7c6d26e981` | `b5019c7c6d26e981` |
+| PR AUC | 0.9988 | 0.9998 | 0.9998 | 0.9998 |
+| ROC AUC | 0.9988 | 0.9995 | 0.9995 | 0.9995 |
+| Recall@3FPM | — | 0.6588 | 0.6175 | 0.6775 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

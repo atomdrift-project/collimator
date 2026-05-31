@@ -125,7 +125,7 @@ def _metrics(
         "f1": f1,
         "accuracy": accuracy,
         "fpr": fpr,
-        "fp_per_million": fp * 1_000_000.0 / n_benign if n_benign else math.nan,
+        "fp_per_100M": fp * 100_000_000.0 / n_benign if n_benign else math.nan,
         "global_fp_per_million": fp * 1_000_000.0 / total_benign if total_benign else math.nan,
     }
 
@@ -1131,7 +1131,7 @@ def _is_over_target(item: dict[str, Any]) -> bool:
     """
     realized_fp = int(item.get("fp") or 0)
     target = float(item.get("target_per_million") or 0.0)
-    realized_fpm = float(item.get("fp_per_million") or 0.0)
+    realized_fpm = float(item.get("fp_per_100M") or 0.0)
     if target <= 0:
         # L0 hostile / "true zero FP" levels.  Strict: any benign hit
         # in the slice disqualifies the candidate.
@@ -1238,7 +1238,7 @@ def _apply_global_budget_selection(payload: dict[str, Any], config: dict[str, An
     routes = list(payload["routes"].items())
     for config_level in config["levels"]:
         level_no = int(config_level["level"])
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             target = float(config_level[severity]["target_per_million"])
             budget = _budget(total_benign, target)
             dp: dict[int, tuple[int, list[int]]] = {0: (0, [])}
@@ -1264,7 +1264,7 @@ def _apply_global_budget_selection(payload: dict[str, Any], config: dict[str, An
                             "f1": 0.0 if int(route["malware"]) else math.nan,
                             "accuracy": int(route["benign"]) / max(int(route["rows"]), 1),
                             "fpr": 0.0,
-                            "fp_per_million": 0.0,
+                            "fp_per_100M": 0.0,
                             "global_fp_per_million": 0.0,
                         },
                     )
@@ -1320,7 +1320,7 @@ def _csv_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for route_name, route in payload["routes"].items():
         for level in route["levels"]:
-            for severity in ("hostile", "suspicious"):
+            for severity in ("hostile",):
                 best = level[severity]["best"]
                 rows.append(
                     {
@@ -1338,7 +1338,7 @@ def _csv_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                         "precision": best["precision"],
                         "f1": best["f1"],
                         "accuracy": best["accuracy"],
-                        "fp_per_million": best["fp_per_million"],
+                        "fp_per_100M": best["fp_per_100M"],
                         "global_fp_per_million": best["global_fp_per_million"],
                         "thresholds": json.dumps(best["thresholds"], sort_keys=True),
                     },
@@ -1394,11 +1394,22 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
         f"- Calibration snapshot: `{payload.get('calibration_snapshot_id')}`",
         f"- Rows: {payload.get('rows')} ({payload.get('malware')} malware, {payload.get('benign')} benign)",
     ]
-    for level_no, severity in [(5, "hostile"), (9, "hostile"), (5, "suspicious"), (9, "suspicious")]:
+    # Headline sections: L50 (new default), L100 (loose end of the new grid).
+    # Skip a level cleanly if a route lacks it — happens for routes whose
+    # policies are carried forward from a pre-migration bundle that emitted
+    # the old (0,1,2,3,5,10,25,50,100,200,300,500,1000,2000) grid.
+    for level_no, severity in [(50, "hostile"), (100, "hostile")]:
         rows = []
         for route_name, route in payload["routes"].items():
-            level = next(item for item in route["levels"] if item["level"] == level_no)
+            level = next(
+                (item for item in route["levels"] if item["level"] == level_no),
+                None,
+            )
+            if level is None:
+                continue
             rows.append((route_name, route, level[severity]["best"]))
+        if not rows:
+            continue
         rows.sort(key=lambda item: (-_sort_float(item[2]["recall"]), -int(item[1]["malware"]), item[0]))
         lines.extend(
             [
@@ -1406,14 +1417,14 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
                 f"## L{level_no} {severity.title()}",
                 "",
                 "Rows marked † are below data resolution: the per-filetype "
-                "calibration sample is too small to credibly assert FP/M ≤ "
+                "calibration sample is too small to credibly assert FP/100M ≤ "
                 "target at this level (95% CI). The threshold shown is the "
-                "loosest empirical 0-FP threshold; FP/M is what the test "
+                "loosest empirical 0-FP threshold; FP/100M is what the test "
                 "partition actually observed under that threshold. *95% CI "
                 "upper* is the Clopper-Pearson upper bound on deployment "
-                "FP/M given the observed FP count in this filetype's benigns.",
+                "FP/100M given the observed FP count in this filetype's benigns.",
                 "",
-                "| Route | Policy | Malware | Benign | Recall | FP | FP/1M | 95% CI upper | Global FP/1M | F1 | Accuracy | Thresholds |",
+                "| Route | Policy | Malware | Benign | Recall | FP | FP/100M | 95% CI upper (FP/100M) | Global FP/100M | F1 | Accuracy | Thresholds |",
                 "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
             ],
         )
@@ -1421,9 +1432,13 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
             mark = "†" if best.get("below_resolution") else ""
             ben = int(route["benign"])
             cp_upper = (
-                _clopper_pearson_fp_per_million_upper(int(best["fp"]), ben, alpha=0.05)
+                _clopper_pearson_fp_per_million_upper(int(best["fp"]), ben, alpha=0.05) * 100.0
                 if ben > 0 and best.get("fp") is not None
                 else None
+            )
+            global_fp_per_million = best.get("global_fp_per_million")
+            global_fp_per_100M = (
+                global_fp_per_million * 100.0 if global_fp_per_million is not None else None
             )
             lines.append(
                 "| "
@@ -1433,9 +1448,9 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
                 f"{ben} | "
                 f"{_pct(best.get('recall'))} | "
                 f"{best['fp']} | "
-                f"{_fmt_float(best.get('fp_per_million'), 2)} | "
+                f"{_fmt_float(best.get('fp_per_100M'), 2)} | "
                 f"{_fmt_float(cp_upper, 2)} | "
-                f"{_fmt_float(best.get('global_fp_per_million'), 3)} | "
+                f"{_fmt_float(global_fp_per_100M, 3)} | "
                 f"{_pct(best.get('f1'))} | "
                 f"{_pct(best.get('accuracy'))} | "
                 f"`{json.dumps(best['thresholds'], sort_keys=True)}` |",
@@ -1595,7 +1610,7 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
     for target in config["levels"]:
         level_no = int(target["level"])
         level_item: dict[str, Any] = {"level": level_no}
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             target_per_million = float(target[severity]["target_per_million"])
             candidates = [
                 _no_hit_candidate(
@@ -1649,18 +1664,10 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
                         total_benign=total_benign,
                     ),
                 )
-            if severity == "hostile" and not calibrated_thresholds:
-                suspicious_thresholds = target["suspicious"].get("thresholds", {})
-                if suspicious_thresholds:
-                    candidates.append(
-                        _make_calibrate_inherited_candidate(
-                            scoped_labels, route_probs,
-                            thresholds=suspicious_thresholds,
-                            target_per_million=target_per_million,
-                            total_benign=total_benign,
-                            suffix="_suspicious_fallback",
-                        ),
-                    )
+            # (Previously: when hostile had no inherited thresholds, fall back
+            # to the suspicious thresholds. With suspicious removed from
+            # collimator's output, there's no fallback source — the candidate
+            # set just relies on the no-hit + policy + max-rule candidates.)
             _mark_dominated_by_specialist(
                 candidates,
                 route_probs,

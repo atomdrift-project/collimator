@@ -38,7 +38,7 @@ Part of the toolchain: `cleave → hopper → collimator → litmus`
 #
 #    azoth-full-train: full labeled corpus (~2M rows), ~7-8h end-to-end at K=3
 #    seeds. Use for deploy-bound retrains; preserves the benign tail that
-#    determines L3 (default operating point) threshold quality.
+#    determines L50 (default operating point) threshold quality.
 #
 #    azoth-fast-train: 600k 50/50-balanced sample, ~5h. Same fidelity
 #    autocollie's auto-promote uses. Use for fast iteration.

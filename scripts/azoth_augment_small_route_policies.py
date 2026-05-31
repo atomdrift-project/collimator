@@ -211,7 +211,7 @@ def _augment_route(
     levels = route_info.get("levels") or []
     no_policy: list[tuple[int, str]] = []
     for level_obj in levels:
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             best = (level_obj.get(severity) or {}).get("best") or {}
             if best.get("policy") == "no_policy":
                 no_policy.append((level_obj["level"], severity))
@@ -335,7 +335,7 @@ def _augment_route(
             "f1": float(2 * stat_dict.get("recall", 0) * stat_dict.get("precision", 0) /
                        max(stat_dict.get("recall", 0) + stat_dict.get("precision", 0), 1e-9)),
             "fpr": float(stat_dict.get("fpr", 0.0)),
-            "fp_per_million": float(stat_dict.get("fp_per_million", 0.0)),
+            "fp_per_100M": float(stat_dict.get("fp_per_100M", 0.0)),
             "augmented_pool_size": int(n_benign),
             "augmented_pool_family": filegroup,
             "augmented_pool_filetypes": family_filetypes,
@@ -420,7 +420,6 @@ def main() -> int:
         # Has any no_policy level?
         any_no_policy = any(
             (lvl.get("hostile") or {}).get("best", {}).get("policy") == "no_policy"
-            or (lvl.get("suspicious") or {}).get("best", {}).get("policy") == "no_policy"
             for lvl in (route_info.get("levels") or [])
         )
         if any_no_policy:

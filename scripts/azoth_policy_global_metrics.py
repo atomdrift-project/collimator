@@ -90,7 +90,7 @@ def _metrics(labels: np.ndarray, hit: np.ndarray, target_per_million: float) -> 
         "recall": recall,
         "precision": precision,
         "f1": f1,
-        "fp_per_million": fp * 1_000_000.0 / benign_n if benign_n else math.nan,
+        "fp_per_100M": fp * 100_000_000.0 / benign_n if benign_n else math.nan,
         "within_budget": fp <= budget,
     }
 
@@ -137,18 +137,18 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
         f"- Rows: {payload['rows']} ({payload['malware']} malware, {payload['benign']} benign)",
         f"- Calibration snapshot: `{payload.get('calibration_snapshot_id')}`",
         "",
-        "| L | Severity | Target/1M | Budget | Recall | Precision | F1 | FP | FP/1M | Within budget |",
+        "| L | Severity | Target/100M | Budget | Recall | Precision | F1 | FP | FP/100M | Within budget |",
         "| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
     for item in payload["levels"]:
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             m = item[severity]
             lines.append(
                 "| "
                 f"{item['level']} | {severity} | "
-                f"{m['target_per_million']:.1f} | {m['budget']} | "
+                f"{float(m['target_per_million']) * 100.0:.1f} | {m['budget']} | "
                 f"{_pct(float(m['recall']))} | {_pct(float(m['precision']))} | {_pct(float(m['f1']))} | "
-                f"{m['fp']} | {float(m['fp_per_million']):.2f} | "
+                f"{m['fp']} | {float(m['fp_per_100M']):.2f} | "
                 f"{'yes' if m['within_budget'] else 'NO'} |"
             )
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -195,7 +195,7 @@ def main() -> int:
     for level_item in config.get("levels", []):
         level = int(level_item["level"])
         out: dict[str, Any] = {"level": level}
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             target = float(level_item[severity]["target_per_million"])
             hit, route_hits = _decisions(
                 labels=labels,

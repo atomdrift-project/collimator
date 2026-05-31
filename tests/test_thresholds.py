@@ -32,7 +32,9 @@ def test_evaluate_policies_returns_named_candidates() -> None:
     assert "ultra_low_fpr" in names
     assert "recall_plus_fpr" in names
     assert "precision_floor" in names
-    assert all("suspicious" in policy and "hostile" in policy for policy in policies)
+    # "Suspicious" is a consumer-side derivation now; collimator emits only
+    # the single hostile policy level per spec.
+    assert all("hostile" in policy and "suspicious" not in policy for policy in policies)
 
 
 def test_default_recommendations_derive_budgets_from_good_count() -> None:
@@ -44,16 +46,14 @@ def test_default_recommendations_derive_budgets_from_good_count() -> None:
 
     recs = compute_default_recommendations(probs, y)
     budgets = fp_budget_tables(probs, y)
-    # Default severity level is 3 → hostile=3/M, suspicious=32/M
-    # (see SEVERITY_LEVEL_TARGETS in thresholds.py).  With ~1M benigns these
-    # are the FP budgets at level 3.  Earlier this test asserted (5, 48) which
-    # corresponded to a previous default level of 5; updating to match the
-    # current DEFAULT_SEVERITY_LEVEL.
-    hostile_row = next(row for row in budgets["hostile"] if row["max_fp_budget"] == 3)
-    suspicious_row = next(row for row in budgets["suspicious"] if row["max_fp_budget"] == 32)
+    # Default severity level is 50 (per-100M scale) = 0.5 FP/M. With ~1M benigns
+    # the floor budget is clamped to 1 FP by _fp_budget_for_rate. "Suspicious"
+    # is a consumer-side derivation; only hostile is emitted.
+    hostile_row = next(row for row in budgets["hostile"] if row["max_fp_budget"] == 1)
 
     assert recs["hostile"] == hostile_row["threshold"]
-    assert recs["suspicious"] == suspicious_row["threshold"]
+    assert "suspicious" not in recs
+    assert "suspicious" not in budgets
 
 
 def test_severity_levels_derive_budgets_from_good_count() -> None:
@@ -66,17 +66,17 @@ def test_severity_levels_derive_budgets_from_good_count() -> None:
     levels = compute_severity_levels(probs, y)
     by_level = {row["level"]: row for row in levels}
 
+    # Per-100M scale: level N → N FP per 100M benigns → N/100 FP/M. With ~1M
+    # benigns: L100 = 1 FP. Lower levels round to 0 budget (then clamp to 1
+    # via _fp_budget_for_rate). The grid caps at L100 to match litmus's CLI.
     assert by_level[0]["budgets"]["hostile_fp"] == 0
-    assert by_level[0]["budgets"]["suspicious_fp"] == 8
-    assert by_level[1]["budgets"]["hostile_fp"] == 1
-    assert by_level[1]["budgets"]["suspicious_fp"] == 16
-    assert by_level[5]["budgets"]["hostile_fp"] == 5
-    assert by_level[5]["budgets"]["suspicious_fp"] == 48
-    assert by_level[9]["budgets"]["hostile_fp"] == 9
-    assert by_level[9]["budgets"]["suspicious_fp"] == 80
-    assert by_level[5]["hostile"]["fp"] <= 5
-    assert by_level[5]["suspicious"]["fp"] <= 48
-    assert "true_negative_rate" in by_level[5]["hostile"]
+    assert by_level[100]["budgets"]["hostile_fp"] == 1
+    assert by_level[100]["hostile"]["fp"] <= 1
+    assert "true_negative_rate" in by_level[100]["hostile"]
+    # "Suspicious" is a consumer-side derivation now; collimator only emits
+    # the hostile policy level.
+    assert "suspicious_fp" not in by_level[100]["budgets"]
+    assert "suspicious" not in by_level[100]
 
 
 def test_severity_levels_can_use_full_good_file_denominator() -> None:
@@ -89,10 +89,13 @@ def test_severity_levels_can_use_full_good_file_denominator() -> None:
     levels = compute_severity_levels(probs, y, n_benign_denominator=1_000_000)
     by_level = {row["level"]: row for row in levels}
 
-    assert by_level[5]["budgets"]["hostile_fp"] == 5
-    assert by_level[5]["budgets"]["suspicious_fp"] == 48
-    assert by_level[5]["hostile"]["n_benign"] == 1_000_000
-    assert by_level[5]["hostile"]["fp_per_million"] <= 5.0
+    # L100 = 1 FP per 100M = 1 FP per 1M benigns at this denominator.
+    assert by_level[100]["budgets"]["hostile_fp"] == 1
+    assert by_level[100]["hostile"]["n_benign"] == 1_000_000
+    # fp_per_100M = (fp / n_benign) * 1e8; with budget 1 in 1M benigns the
+    # observed rate is at most 1e-6, so ≤ 100 in per-100M units. Allow a
+    # tiny epsilon for float arithmetic.
+    assert by_level[100]["hostile"]["fp_per_100M"] <= 100.0 + 1e-6
 
 
 def test_severity_levels_report_empty_threshold_when_budget_is_too_tight() -> None:
@@ -111,13 +114,12 @@ def test_near_severity_level_doubles_distance_from_full_confidence() -> None:
     near = _near_severity_level({
         "level": 9,
         "hostile": {"threshold": 0.95},
-        "suspicious": {"threshold": 0.90},
     })
 
     assert np.isclose(near["hostile"]["threshold"], 0.90)
-    assert np.isclose(near["suspicious"]["threshold"], 0.80)
     assert np.isclose(near["hostile"]["basis_threshold"], 0.95)
-    assert np.isclose(near["suspicious"]["basis_threshold"], 0.90)
+    # Suspicious is a consumer derivation now; not present in collimator output.
+    assert "suspicious" not in near
 
 
 def test_near_false_reports_only_newly_crossing_rows(monkeypatch) -> None:
@@ -135,7 +137,6 @@ def test_near_false_reports_only_newly_crossing_rows(monkeypatch) -> None:
         {
             "level": 9,
             "hostile": {"threshold": 0.90},
-            "suspicious": {"threshold": 0.90},
         },
     ]
 

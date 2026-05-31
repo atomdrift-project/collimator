@@ -83,11 +83,6 @@ def _general_baseline(labels: np.ndarray, general_probs: np.ndarray) -> list[dic
                 [route],
                 target_per_million=float(target["hostile_per_million"]),
             ),
-            "suspicious": _calibrate_one(
-                labels,
-                [route],
-                target_per_million=float(target["suspicious_per_million"]),
-            ),
         }
         for target in thresholds.SEVERITY_LEVEL_TARGETS
     ]
@@ -115,11 +110,6 @@ def _or_levels(
                 routes,
                 target_per_million=float(target["hostile_per_million"]),
             ),
-            "suspicious": _calibrate_one(
-                labels,
-                routes,
-                target_per_million=float(target["suspicious_per_million"]),
-            ),
         }
         for target in thresholds.SEVERITY_LEVEL_TARGETS
     ]
@@ -144,11 +134,6 @@ def _replacement_levels(
                 labels,
                 routes,
                 target_per_million=float(target["hostile_per_million"]),
-            ),
-            "suspicious": _calibrate_one(
-                labels,
-                routes,
-                target_per_million=float(target["suspicious_per_million"]),
             ),
         }
         for target in thresholds.SEVERITY_LEVEL_TARGETS
@@ -211,13 +196,6 @@ def _acquittal_levels(
                 elf_probs,
                 float(target["hostile_per_million"]),
             ),
-            "suspicious": _calibrate_acquittal_one(
-                labels,
-                general_probs,
-                elf_indices,
-                elf_probs,
-                float(target["suspicious_per_million"]),
-            ),
         }
         for target in thresholds.SEVERITY_LEVEL_TARGETS
     ]
@@ -225,10 +203,8 @@ def _acquittal_levels(
 
 def _best_l5_l9(levels: list[dict[str, Any]]) -> dict[str, Any]:
     return {
-        "l5_hostile": next(item["hostile"] for item in levels if item["level"] == 5),
-        "l5_suspicious": next(item["suspicious"] for item in levels if item["level"] == 5),
-        "l9_hostile": next(item["hostile"] for item in levels if item["level"] == 9),
-        "l9_suspicious": next(item["suspicious"] for item in levels if item["level"] == 9),
+        "l500_hostile": next(item["hostile"] for item in levels if item["level"] == 500),
+        "l1000_hostile": next(item["hostile"] for item in levels if item["level"] == 1000),
     }
 
 
@@ -265,7 +241,7 @@ def _metrics_from_hit(
         "f1": f1,
         "accuracy": accuracy,
         "fpr": fpr,
-        "fp_per_million": fp * 1_000_000.0 / n_benign if n_benign else math.nan,
+        "fp_per_100M": fp * 100_000_000.0 / n_benign if n_benign else math.nan,
         "global_fp_per_million": fp * 1_000_000.0 / total_benign if total_benign else math.nan,
     }
 
@@ -404,40 +380,6 @@ def _elf_local_levels(
                     allowed_routes=("general", "elf"),
                 ),
             },
-            "suspicious": {
-                "general_only": _calibrate_policy_one(
-                    elf_labels,
-                    route_probs,
-                    target_per_million=float(target["suspicious_per_million"]),
-                    total_benign=total_benign,
-                    primary="general",
-                    allowed_routes=("general",),
-                ),
-                "elf_only": _calibrate_policy_one(
-                    elf_labels,
-                    route_probs,
-                    target_per_million=float(target["suspicious_per_million"]),
-                    total_benign=total_benign,
-                    primary="elf",
-                    allowed_routes=("elf",),
-                ),
-                "or_general_primary": _calibrate_policy_one(
-                    elf_labels,
-                    route_probs,
-                    target_per_million=float(target["suspicious_per_million"]),
-                    total_benign=total_benign,
-                    primary="general",
-                    allowed_routes=("general", "elf"),
-                ),
-                "specialist_primary": _calibrate_policy_one(
-                    elf_labels,
-                    route_probs,
-                    target_per_million=float(target["suspicious_per_million"]),
-                    total_benign=total_benign,
-                    primary="elf",
-                    allowed_routes=("general", "elf"),
-                ),
-            },
         }
         for target in thresholds.SEVERITY_LEVEL_TARGETS
     ]
@@ -445,10 +387,8 @@ def _elf_local_levels(
 
 def _elf_local_l5_l9(levels: list[dict[str, Any]]) -> dict[str, Any]:
     return {
-        "l5_hostile": next(item["hostile"] for item in levels if item["level"] == 5),
-        "l5_suspicious": next(item["suspicious"] for item in levels if item["level"] == 5),
-        "l9_hostile": next(item["hostile"] for item in levels if item["level"] == 9),
-        "l9_suspicious": next(item["suspicious"] for item in levels if item["level"] == 9),
+        "l500_hostile": next(item["hostile"] for item in levels if item["level"] == 500),
+        "l1000_hostile": next(item["hostile"] for item in levels if item["level"] == 1000),
     }
 
 
@@ -660,10 +600,10 @@ def main() -> int:
         },
     )
 
-    # Tail contrast: emphasize ELF malware that general scores below L5 hostile
-    # and benign ELF in the high general-score tail.
-    general_l5 = next(item for item in baseline_levels if item["level"] == 5)["hostile"]
-    l5_threshold = float(general_l5["thresholds"]["general"])
+    # Tail contrast: emphasize ELF malware that general scores below L500
+    # hostile (= 5 FP/M, today's L5) and benign ELF in the high general-score tail.
+    general_l500 = next(item for item in baseline_levels if item["level"] == 500)["hostile"]
+    l500_threshold = float(general_l500["thresholds"]["general"])
     train_global_indices = np.asarray(
         [row_index[row_id] for row_id, _label in train_rows if row_id in row_index],
         dtype=np.int64,
@@ -671,7 +611,7 @@ def main() -> int:
     weights = np.ones(len(y_train), dtype=np.float32)
     if len(train_global_indices) == len(y_train):
         train_general_scores = general_probs[train_global_indices]
-        hard_pos = (y_train == 1) & (train_general_scores < l5_threshold)
+        hard_pos = (y_train == 1) & (train_general_scores < l500_threshold)
         hard_neg_cut = np.quantile(train_general_scores[y_train == 0], 0.995)
         hard_neg = (y_train == 0) & (train_general_scores >= hard_neg_cut)
         weights[hard_pos] = 8.0
@@ -754,13 +694,13 @@ def main() -> int:
     print(f"wrote {args.output}")
     for exp in experiments:
         if exp["name"] == "general_baseline":
-            h = exp["summary"]["l5_hostile"]
-            print(f"{exp['name']}: L5 hostile {h['recall']:.2%} @ {h['fp']} FP")
+            h = exp["summary"]["l500_hostile"]
+            print(f"{exp['name']}: L500 hostile {h['recall']:.2%} @ {h['fp']} FP")
             continue
         for rule, summary in exp["summary"].items():
-            h = summary["l5_hostile"]
-            print(f"{exp['name']} {rule}: L5 hostile {h['recall']:.2%} @ {h['fp']} FP")
-        local = exp.get("elf_local", {}).get("l5_hostile", {})
+            h = summary["l500_hostile"]
+            print(f"{exp['name']} {rule}: L500 hostile {h['recall']:.2%} @ {h['fp']} FP")
+        local = exp.get("elf_local", {}).get("l500_hostile", {})
         if local:
             best_policy = max(local.items(), key=lambda item: (item[1]["recall"], -item[1]["fp"]))
             print(

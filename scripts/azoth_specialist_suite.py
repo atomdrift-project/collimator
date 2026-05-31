@@ -104,6 +104,23 @@ APPLES_MIN_MALWARE_HOLDOUT: int = 500
 APPLES_MIN_BENIGN_HOLDOUT: int = 200
 
 
+def _op_recall(metrics: dict[str, Any] | None) -> float | None:
+    """Operating-point recall for the picker.
+
+    Prefers the per-100M field ``recall_at_50_per_100M`` (L50, 0.5 FP/M)
+    that today's emitters write; falls back to the legacy per-million
+    field ``recall_at_fp_per_million_3`` (L3, 3 FP/M) so old run JSONs
+    still rank. Returns None when neither is present or both are NaN.
+    """
+    if not metrics:
+        return None
+    for key in ("recall_at_50_per_100M", "recall_at_fp_per_million_3"):
+        v = metrics.get(key)
+        if isinstance(v, (int, float)) and not math.isnan(float(v)):
+            return float(v)
+    return None
+
+
 # Raw single-file compression formats — these have no multi-file
 # container structure for a specialist to learn from. Litmus decompresses
 # them and re-routes the single inner file; the wrapper itself has no
@@ -468,20 +485,20 @@ def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str,
         "precision_at_max_f1": float(precision_score(y_true, y_pred, zero_division=0)),
         "recall_at_max_f1": float(recall_score(y_true, y_pred, zero_division=0)),
     }
-    # Operating-point recall at the FP/M budgets autocollie's gate reads.
+    # Operating-point recall at the FP/100M budgets autocollie's gate reads.
     # Without these, autocollie's promote gate falls into the legacy
     # PR-AUC-only path (its baseline loader sees no tail-recall and gives
     # up on the operationally-aware comparison). Recording them here
     # closes the loop: training writes them → autocollie reads them →
     # the gate compares operational metrics, not just PR AUC.
-    for fpm in (0, 1, 3, 5, 9):
-        op = _operating_point(y_true, y_prob, float(fpm))
+    for fp100m in (0, 50, 100, 300, 500, 900):
+        op = _operating_point(y_true, y_prob, float(fp100m) / 100.0)
         rec = op.get("recall")
         thr = op.get("threshold")
-        out[f"recall_at_fp_per_million_{fpm}"] = (
+        out[f"recall_at_{fp100m}_per_100M"] = (
             float(rec) if isinstance(rec, (int, float)) else math.nan
         )
-        out[f"threshold_at_fp_per_million_{fpm}"] = (
+        out[f"threshold_at_{fp100m}_per_100M"] = (
             float(thr) if isinstance(thr, (int, float)) else math.nan
         )
     return out
@@ -527,7 +544,7 @@ def _operating_point(
             "tp": tp,
             "fn": n_malware - tp,
             "tn": n_benign - fp,
-            "fp_per_million": float(fp * 1_000_000.0 / n_benign) if n_benign else math.nan,
+            "fp_per_100M": float(fp * 100_000_000.0 / n_benign) if n_benign else math.nan,
         }
         idx = end + 1
     if best is not None:
@@ -542,7 +559,7 @@ def _operating_point(
         "tp": None,
         "fn": None,
         "tn": None,
-        "fp_per_million": None,
+        "fp_per_100M": None,
     }
 
 
@@ -551,7 +568,6 @@ def _level_table(y_true: np.ndarray, y_prob: np.ndarray) -> list[dict[str, Any]]
         {
             "level": level,
             "hostile": _operating_point(y_true, y_prob, float(level)),
-            "suspicious": _operating_point(y_true, y_prob, float((level + 1) * 8)),
         }
         for level in range(len(thresholds.SEVERITY_LEVEL_TARGETS))
     ]
@@ -664,23 +680,24 @@ def _load_autocollie_best_per_route(
     Selection key (priority order):
       1. ``has_apples_to_apples`` — a run with ``deployed_on_same_data``
          (autocollie's post-screen apples-to-apples baseline) always
-         outranks a legacy run without one. Legacy runs' r@3FPM is on
+         outranks a legacy run without one. Legacy runs' r@L50 is on
          a small training holdout the deployed model never sees, so
          even a big "win" there can flip on the test slice.
-      2. ``delta_recall_at_3_fpm`` — when apples-to-apples is present:
-         candidate's holdout r@3FP/M minus the deployed model's
-         r@3FP/M on those same rows. The cleanest "this config beats
+      2. ``delta_recall_at_L50`` — when apples-to-apples is present:
+         candidate's holdout r@L50 minus the deployed model's
+         r@L50 on those same rows. The cleanest "this config beats
          deployed on identical data" signal.
-      3. ``recall_at_fp_per_million_3`` — recall at the L3 hostile
-         deploy budget. Tiebreaker within apples-to-apples; primary
-         key for legacy runs.
+      3. ``recall_at_50_per_100M`` — recall at the L50 hostile
+         deploy budget (0.5 FP/M). Tiebreaker within apples-to-apples;
+         primary key for legacy runs. Falls back to the legacy
+         ``recall_at_fp_per_million_3`` field for older run JSONs.
       4. ``avg_precision`` — curve-summarized PR/recall tradeoff.
       5. ``save_all_seeds`` — prefer multi-seed bundles when otherwise tied.
       6. ``timestamp`` — most recent tied run.
 
     Selecting on ``avg_precision`` alone misses swaps where two
     candidates have ~identical PR AUC but several-fold different
-    recall at the deploy budget. Selecting on raw recall@3FPM (the
+    recall at the deploy budget. Selecting on raw recall@L50 (the
     prior rule) misses the holdout-vs-test-slice gap — the picker
     used to grab ``filegroups/native`` configs with 88.89% holdout
     recall that scored 56% on the test PE slice. Apples-to-apples
@@ -688,10 +705,10 @@ def _load_autocollie_best_per_route(
     deployed model on identical rows.
 
     Routes with no historical runs in ``runs_dir`` get empty overrides
-    and fall through to the suite's CLI defaults. Runs missing
-    ``recall_at_fp_per_million_3`` get sorted with a fallback recall of
-    0.0 — penalized vs runs that recorded the operational metric, but
-    not excluded.
+    and fall through to the suite's CLI defaults. Runs missing both
+    ``recall_at_50_per_100M`` and ``recall_at_fp_per_million_3`` get
+    sorted with a fallback recall of 0.0 — penalized vs runs that
+    recorded the operational metric, but not excluded.
 
     Returns ``(train_overrides_by_route, feature_envs_by_route)``. Both
     maps are keyed by the canonical route name (e.g. ``filetypes/perl``).
@@ -713,7 +730,8 @@ def _load_autocollie_best_per_route(
                 promoted_runs[route] = run
 
     # Track best per route as
-    # (has_apples, delta_r3, r3, avg_precision, save_all_seeds, timestamp, run_dict).
+    # (has_apples, delta_r_op, r_op, avg_precision, save_all_seeds, timestamp, run_dict).
+    # r_op is recall at the operating point (L50 preferred, L3 fallback).
     # Skip routes that already have a promoted baseline — those win.
     best: dict[str, tuple[bool, float, float, float, bool, str, dict[str, Any]]] = {}
     apples_counts: dict[str, list[int]] = {}  # route -> [apples, legacy]
@@ -735,25 +753,21 @@ def _load_autocollie_best_per_route(
         ap = metrics.get("avg_precision")
         if not isinstance(ap, (int, float)):
             continue
-        recall_at_3 = metrics.get("recall_at_fp_per_million_3")
-        if isinstance(recall_at_3, (int, float)) and not math.isnan(float(recall_at_3)):
-            r3 = float(recall_at_3)
-        else:
-            r3 = 0.0
+        op_val = _op_recall(metrics)
+        r_op = op_val if op_val is not None else 0.0
         # Apples-to-apples gate: a run is only eligible to win the
         # fallback picker if it carries deployed_on_same_data on a
         # statistically meaningful holdout. Without it, screen-time
-        # r3 is dominated by threshold noise on tiny slices —
-        # picking by raw r3 across legacy runs is how a lucky-perfect
-        # r3=1.0 on a small holdout beat strong recent configs.
+        # r_op is dominated by threshold noise on tiny slices —
+        # picking by raw r_op across legacy runs is how a lucky-perfect
+        # r_op=1.0 on a small holdout beat strong recent configs.
         # See APPLES_MIN_*_HOLDOUT for the floor rationale.
         deployed = run.get("deployed_on_same_data") or {}
-        deployed_r3_raw = deployed.get("recall_at_fp_per_million_3")
+        deployed_op = _op_recall(deployed)
         n_mal = deployed.get("n_malware", 0) or 0
         n_ben = deployed.get("n_benign", 0) or 0
         has_apples = (
-            isinstance(deployed_r3_raw, (int, float))
-            and not math.isnan(float(deployed_r3_raw))
+            deployed_op is not None
             and n_mal >= APPLES_MIN_MALWARE_HOLDOUT
             and n_ben >= APPLES_MIN_BENIGN_HOLDOUT
         )
@@ -762,10 +776,10 @@ def _load_autocollie_best_per_route(
             counts[1] += 1
             continue
         counts[0] += 1
-        delta_r3 = r3 - float(deployed_r3_raw)
+        delta_r_op = r_op - float(deployed_op)
         save_all = bool(run.get("save_all_seeds"))
         timestamp = str(run.get("timestamp") or "")
-        candidate = (has_apples, delta_r3, r3, float(ap), save_all, timestamp, run)
+        candidate = (has_apples, delta_r_op, r_op, float(ap), save_all, timestamp, run)
         prev = best.get(route)
         if prev is None or candidate[:6] > prev[:6]:
             best[route] = candidate
@@ -774,7 +788,7 @@ def _load_autocollie_best_per_route(
             winner = best[route]
             LOG.info(
                 "autocollie-best (fallback) %s: scanned %d apples-to-apples + "
-                "%d legacy (skipped) runs; winner delta_r3=%+.4f r3=%.4f",
+                "%d legacy (skipped) runs; winner delta_r_op=%+.4f r_op=%.4f (L50)",
                 route, n_apples, n_legacy,
                 winner[1], winner[2],
             )
@@ -809,12 +823,12 @@ def _load_autocollie_best_per_route(
             feature_envs[route] = env_overrides
 
         metrics = run.get("sampled_test_metrics") or {}
-        r3 = metrics.get("recall_at_fp_per_million_3")
+        r_op = _op_recall(metrics)
         ap = metrics.get("avg_precision")
         LOG.info(
-            "autocollie-best: %s -> key=%s source=%s recall@3FP/M=%s avg_precision=%s save_all=%s overrides=%d env=%d",
+            "autocollie-best: %s -> key=%s source=%s recall@L50=%s avg_precision=%s save_all=%s overrides=%d env=%d",
             route, run.get("experiment_key", "?"), source,
-            "%.4f" % r3 if isinstance(r3, (int, float)) else "?",
+            "%.4f" % r_op if r_op is not None else "?",
             "%.4f" % ap if isinstance(ap, (int, float)) else "?",
             bool(run.get("save_all_seeds")),
             len(cfg_overrides), len(env_overrides),
@@ -827,7 +841,7 @@ def _load_autocollie_best_per_route(
     # Fallback: best raw screen run by operational metric. Logs the
     # source explicitly so the human sees which routes need a promote
     # cycle to graduate off the brittle path.
-    for route, (has_apples, _delta, _r3, _ap, _save_all, _ts, run) in best.items():
+    for route, (has_apples, _delta, _r_op, _ap, _save_all, _ts, run) in best.items():
         if route in promoted_runs:
             continue
         source = "screen_runs_apples_to_apples" if has_apples else "screen_runs_legacy"

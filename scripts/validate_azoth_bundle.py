@@ -77,7 +77,7 @@ def _policy_routes(policy: dict[str, Any]) -> set[str]:
         if not str(route_name).startswith("filetypes/"):
             raise SystemExit(f"route_policies.json: unexpected route key {route_name!r}")
         for level in route.get("levels", []):
-            for severity in ("hostile", "suspicious"):
+            for severity in ("hostile",):
                 best = level.get(severity, {}).get("best", {})
                 thresholds = best.get("thresholds", {})
                 if not isinstance(thresholds, dict):

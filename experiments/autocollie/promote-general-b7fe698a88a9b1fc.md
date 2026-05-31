@@ -1,23 +1,45 @@
 # Promote REJECTED — `b7fe698a88a9b1fc` on `general`
 
-Generated 2026-05-24T05:08:24Z
+Generated 2026-05-30T15:57:21Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-24T05-00-51_20260524T042623-promote-b7fe698a88a9b1fc_azoth-validate.log; tail: wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.json
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-30T15-51-01_20260530T154630-promote-b7fe698a88a9b1fc_azoth-validate.log; tail: 	--csv /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.csv \
+	--markdown /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.md \
+	 \
+	--previous-bundle out/models/azoth \
+	--workers 64
+policy_search carry-forward: 1/59 routes changed; 0/89 filetypes can be carried forward from previous bundle
+policy_search: processing 89 filetypes across 32 worker processes (0 carried forward)
+# learned_blend: 1 route(s) without isotonic calibrators; passing raw probs through: ['filetypes/chrome-manifest']
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.json
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.csv
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.md
+.venv/bin/python scripts/azoth_policy_global_metrics.py \
+	--config /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/config.json \
+	--policy /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.json \
+	--score-table /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/score_table.npz \
+	--output /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.json \
+	--markdown /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.md \
+	--fail-on-budget --max-budget-multiplier 30
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.json
 wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.md
 .venv/bin/python scripts/compute_routed_metrics.py --azoth-root /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc --db postgres://hopper@localhost:5432/hopper --no-ci --no-stacked 
 computing test-partition metrics (reporting)
-loaded cached test-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/test-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-test bucket: 588814/4731967 rows (12.44%)
-fitting per-route isotonic calibrators (5-fold CV) over 588814 rows (parallelism=16)
+loaded cached test-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/test-9cd1b636f1f7928ed92de886ec9cefbbad172d1d9fe05122d98736ffb401159e.npz
+test bucket: 695967/5591524 rows (12.45%)
+fitting per-route isotonic calibrators (5-fold CV) over 695967 rows (parallelism=16, cache=out/cache/azoth-calibrator)
 calibration complete; computing per-filetype metrics
+filetypes/ppam: 0 rows in score table; skipping
 filetypes/xlsb: 0 rows in score table; skipping
+filetypes/xpi: 0 rows in score table; skipping
 computing dev-partition metrics (strategy selection)
-loaded cached dev-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/dev-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-dev bucket: 589608/4731967 rows (12.46%)
-fitting per-route isotonic calibrators (5-fold CV) over 589608 rows (parallelism=16)
+loaded cached dev-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/dev-9cd1b636f1f7928ed92de886ec9cefbbad172d1d9fe05122d98736ffb401159e.npz
+dev bucket: 697116/5591524 rows (12.47%)
+fitting per-route isotonic calibrators (5-fold CV) over 697116 rows (parallelism=16, cache=out/cache/azoth-calibrator)
 calibration complete; computing per-filetype metrics
+filetypes/ppam: 0 rows in score table; skipping
 filetypes/xlsb: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/per_filetype_metrics.json (filetypes: 78, filegroups: 0)
+filetypes/xpi: 0 rows in score table; skipping
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/per_filetype_metrics.json (filetypes: 86, filegroups: 0)
 .venv/bin/python scripts/azoth_route_policy_eval.py \
 	--score-table /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/score_table.npz \
 	--general-scores /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/general/threshold_scores.npz \
@@ -28,30 +50,8 @@ wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/per
 wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policy_eval_oof.json
 wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policy_eval_oof.md
 .venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc
-staged runtime azoth bundle: /tmp/tmp.WfspRx1viN
-azoth bundle ok: /tmp/tmp.WfspRx1viN
-
-12 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - c: L3 hostile ENSEMBLE recall dropped 0.91pp BELOW LOW-WATER-MARK (10.93% → 10.02%; LWM tolerance 0.90pp)
-  - csharp: L3 hostile ENSEMBLE recall dropped 2.14pp BELOW LOW-WATER-MARK (27.35% → 25.21%; LWM tolerance 0.90pp)
-  - docx: L3 hostile ENSEMBLE recall dropped 2.27pp BELOW LOW-WATER-MARK (73.86% → 71.59%; LWM tolerance 0.90pp)
-  - gz: L3 hostile ENSEMBLE recall dropped 3.47pp BELOW LOW-WATER-MARK (31.79% → 28.32%; LWM tolerance 0.90pp)
-  - javascript: L3 hostile ENSEMBLE recall dropped 5.71pp BELOW LOW-WATER-MARK (71.91% → 66.20%; LWM tolerance 0.90pp)
-  - kotlin: L3 hostile ENSEMBLE recall dropped 4.39pp BELOW LOW-WATER-MARK (57.06% → 52.67%; LWM tolerance 0.90pp)
-  - pe: L3 hostile ENSEMBLE recall dropped 3.26pp BELOW LOW-WATER-MARK (65.21% → 61.96%; LWM tolerance 0.90pp)
-  - powershell: L3 hostile ENSEMBLE recall dropped 8.85pp BELOW LOW-WATER-MARK (38.46% → 29.62%; LWM tolerance 0.90pp)
-  - pptx: L3 hostile ENSEMBLE recall dropped 13.64pp BELOW LOW-WATER-MARK (22.73% → 9.09%; LWM tolerance 0.90pp)
-  - python: L3 hostile ENSEMBLE recall dropped 2.73pp BELOW LOW-WATER-MARK (67.00% → 64.28%; LWM tolerance 0.90pp)
-  - tar: L3 hostile ENSEMBLE recall dropped 14.00pp BELOW LOW-WATER-MARK (76.00% → 62.00%; LWM tolerance 0.90pp)
-  - zip: L3 hostile ENSEMBLE recall dropped 1.38pp BELOW LOW-WATER-MARK (41.99% → 40.61%; LWM tolerance 0.90pp)
-
-compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
-
-blocked by: low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[1]: *** [Makefile:1117: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+/home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/general: ONNX-only deploy but route ships non-ONNX model(s) ['seed_42.txt', 'seed_43.txt', 'seed_44.txt']; regenerate so every seed has an .onnx sibling (litmus dropped the LightGBM/XGBoost loaders).
+make[2]: *** [Makefile:1151: azoth-validate] Error 1)
 
 ## Gates
 
@@ -62,31 +62,53 @@ make[1]: Leaving directory '/home/t/collimator')
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `b7fe698a88a9b1fc` | `3167587689286a69` | `440ce55c5791cb34` |
-| PR AUC | 0.9988 | 0.9999 | 0.9997 |
-| ROC AUC | 0.9988 | 0.9997 | 0.9997 |
-| F1 | 0.9836 | 0.9951 | 0.9917 |
+| key | `b7fe698a88a9b1fc` | `b5019c7c6d26e981` | `106d52e0efed3889` |
+| PR AUC | 0.9988 | 0.9998 | 0.9996 |
+| ROC AUC | 0.9988 | 0.9996 | 0.9996 |
+| F1 | 0.9836 | 0.9933 | 0.9885 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-24T05-00-51_20260524T042623-promote-b7fe698a88a9b1fc_azoth-validate.log; tail: wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.json
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-30T15-51-01_20260530T154630-promote-b7fe698a88a9b1fc_azoth-validate.log; tail: 	--csv /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.csv \
+	--markdown /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.md \
+	 \
+	--previous-bundle out/models/azoth \
+	--workers 64
+policy_search carry-forward: 1/59 routes changed; 0/89 filetypes can be carried forward from previous bundle
+policy_search: processing 89 filetypes across 32 worker processes (0 carried forward)
+# learned_blend: 1 route(s) without isotonic calibrators; passing raw probs through: ['filetypes/chrome-manifest']
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.json
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.csv
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.md
+.venv/bin/python scripts/azoth_policy_global_metrics.py \
+	--config /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/config.json \
+	--policy /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policies.json \
+	--score-table /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/score_table.npz \
+	--output /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.json \
+	--markdown /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.md \
+	--fail-on-budget --max-budget-multiplier 30
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.json
 wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/global_policy_metrics.md
 .venv/bin/python scripts/compute_routed_metrics.py --azoth-root /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc --db postgres://hopper@localhost:5432/hopper --no-ci --no-stacked 
 computing test-partition metrics (reporting)
-loaded cached test-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/test-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-test bucket: 588814/4731967 rows (12.44%)
-fitting per-route isotonic calibrators (5-fold CV) over 588814 rows (parallelism=16)
+loaded cached test-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/test-9cd1b636f1f7928ed92de886ec9cefbbad172d1d9fe05122d98736ffb401159e.npz
+test bucket: 695967/5591524 rows (12.45%)
+fitting per-route isotonic calibrators (5-fold CV) over 695967 rows (parallelism=16, cache=out/cache/azoth-calibrator)
 calibration complete; computing per-filetype metrics
+filetypes/ppam: 0 rows in score table; skipping
 filetypes/xlsb: 0 rows in score table; skipping
+filetypes/xpi: 0 rows in score table; skipping
 computing dev-partition metrics (strategy selection)
-loaded cached dev-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/dev-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-dev bucket: 589608/4731967 rows (12.46%)
-fitting per-route isotonic calibrators (5-fold CV) over 589608 rows (parallelism=16)
+loaded cached dev-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/dev-9cd1b636f1f7928ed92de886ec9cefbbad172d1d9fe05122d98736ffb401159e.npz
+dev bucket: 697116/5591524 rows (12.47%)
+fitting per-route isotonic calibrators (5-fold CV) over 697116 rows (parallelism=16, cache=out/cache/azoth-calibrator)
 calibration complete; computing per-filetype metrics
+filetypes/ppam: 0 rows in score table; skipping
 filetypes/xlsb: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/per_filetype_metrics.json (filetypes: 78, filegroups: 0)
+filetypes/xpi: 0 rows in score table; skipping
+wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/per_filetype_metrics.json (filetypes: 86, filegroups: 0)
 .venv/bin/python scripts/azoth_route_policy_eval.py \
 	--score-table /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/score_table.npz \
 	--general-scores /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/general/threshold_scores.npz \
@@ -97,27 +119,5 @@ wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/per
 wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policy_eval_oof.json
 wrote /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/route_policy_eval_oof.md
 .venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc
-staged runtime azoth bundle: /tmp/tmp.WfspRx1viN
-azoth bundle ok: /tmp/tmp.WfspRx1viN
-
-12 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - c: L3 hostile ENSEMBLE recall dropped 0.91pp BELOW LOW-WATER-MARK (10.93% → 10.02%; LWM tolerance 0.90pp)
-  - csharp: L3 hostile ENSEMBLE recall dropped 2.14pp BELOW LOW-WATER-MARK (27.35% → 25.21%; LWM tolerance 0.90pp)
-  - docx: L3 hostile ENSEMBLE recall dropped 2.27pp BELOW LOW-WATER-MARK (73.86% → 71.59%; LWM tolerance 0.90pp)
-  - gz: L3 hostile ENSEMBLE recall dropped 3.47pp BELOW LOW-WATER-MARK (31.79% → 28.32%; LWM tolerance 0.90pp)
-  - javascript: L3 hostile ENSEMBLE recall dropped 5.71pp BELOW LOW-WATER-MARK (71.91% → 66.20%; LWM tolerance 0.90pp)
-  - kotlin: L3 hostile ENSEMBLE recall dropped 4.39pp BELOW LOW-WATER-MARK (57.06% → 52.67%; LWM tolerance 0.90pp)
-  - pe: L3 hostile ENSEMBLE recall dropped 3.26pp BELOW LOW-WATER-MARK (65.21% → 61.96%; LWM tolerance 0.90pp)
-  - powershell: L3 hostile ENSEMBLE recall dropped 8.85pp BELOW LOW-WATER-MARK (38.46% → 29.62%; LWM tolerance 0.90pp)
-  - pptx: L3 hostile ENSEMBLE recall dropped 13.64pp BELOW LOW-WATER-MARK (22.73% → 9.09%; LWM tolerance 0.90pp)
-  - python: L3 hostile ENSEMBLE recall dropped 2.73pp BELOW LOW-WATER-MARK (67.00% → 64.28%; LWM tolerance 0.90pp)
-  - tar: L3 hostile ENSEMBLE recall dropped 14.00pp BELOW LOW-WATER-MARK (76.00% → 62.00%; LWM tolerance 0.90pp)
-  - zip: L3 hostile ENSEMBLE recall dropped 1.38pp BELOW LOW-WATER-MARK (41.99% → 40.61%; LWM tolerance 0.90pp)
-
-compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
-
-blocked by: low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[1]: *** [Makefile:1117: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+/home/t/collimator/out/models/azoth-candidate-general-b7fe698a88a9b1fc/general: ONNX-only deploy but route ships non-ONNX model(s) ['seed_42.txt', 'seed_43.txt', 'seed_44.txt']; regenerate so every seed has an .onnx sibling (litmus dropped the LightGBM/XGBoost loaders).
+make[2]: *** [Makefile:1151: azoth-validate] Error 1)

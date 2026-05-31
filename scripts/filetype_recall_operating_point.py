@@ -37,7 +37,7 @@ def _operating_point(y: np.ndarray, probs: np.ndarray, recall_target: float) -> 
         "fn": fn,
         "benign": benign,
         "malware": malware,
-        "fp_per_million": float(fp * 1_000_000 / benign) if benign else 0.0,
+        "fp_per_100M": float(fp * 100_000_000 / benign) if benign else 0.0,
         "fpr": float(fp / benign) if benign else 0.0,
     }
 
@@ -63,7 +63,9 @@ def _fp_per_million_operating_point(y: np.ndarray, probs: np.ndarray, fp_per_mil
     tn = int(np.sum((y == 0) & ~pred))
     fn = int(np.sum((y == 1) & ~pred))
     return {
-        "target_fp_per_million": float(fp_per_million),
+        # `fp_per_million` is in per-million units (input convention); emit
+        # as the canonical per-100M output.
+        "target_fp_per_100M": float(fp_per_million) * 100.0,
         "max_fp_budget": int(budget),
         "threshold": threshold,
         "actual_recall": float(tp / malware) if malware else 0.0,
@@ -74,7 +76,7 @@ def _fp_per_million_operating_point(y: np.ndarray, probs: np.ndarray, fp_per_mil
         "fn": fn,
         "benign": benign,
         "malware": malware,
-        "fp_per_million": float(fp * 1_000_000 / benign),
+        "fp_per_100M": float(fp * 100_000_000 / benign),
         "fpr": float(fp / benign),
     }
 

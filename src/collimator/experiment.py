@@ -531,74 +531,78 @@ def _print_test_metrics(
         print(f"  ROC AUC:   {roc_auc_score(y_true, y_prob):.4f}")
         print(f"  Avg Prec:  {average_precision_score(y_true, y_prob):.4f}")
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
-        rec_fp = _recall_at_fp_per_million(y_true, y_prob)
+        rec_fp = _recall_at_per_100M(y_true, y_prob)
         print(
-            f"  Recall@FP/M: 0={rec_fp['recall_at_fp_per_million_0']:.4f} "
-            f"1={rec_fp['recall_at_fp_per_million_1']:.4f} "
-            f"3={rec_fp['recall_at_fp_per_million_3']:.4f} "
-            f"5={rec_fp['recall_at_fp_per_million_5']:.4f} "
-            f"9={rec_fp['recall_at_fp_per_million_9']:.4f} "
+            f"  Recall@FP/100M: 50={rec_fp['recall_at_50_per_100M']:.4f} "
+            f"100={rec_fp['recall_at_100_per_100M']:.4f} "
+            f"300={rec_fp['recall_at_300_per_100M']:.4f} "
+            f"500={rec_fp['recall_at_500_per_100M']:.4f} "
+            f"900={rec_fp['recall_at_900_per_100M']:.4f} "
             f"(n_benign={rec_fp['n_benign_holdout']}, "
-            f"min_resolvable={_format_min_observable(rec_fp['min_observable_fp_per_million'])})"
+            f"min_resolvable={_format_min_observable(rec_fp['min_observable_per_100M'])})"
         )
 
 
 def _format_min_observable(value: float | None) -> str:
-    """Format the min_observable_fp_per_million metric for the human-readable
-    summary log line. Handles the `None` (n_benign=0, FP/M unmeasurable)
-    case explicitly — see _recall_at_fp_per_million_block for context.
+    """Format the min_observable_per_100M metric for the human-readable summary
+    log line. Handles the `None` (n_benign=0, FP/100M unmeasurable) case
+    explicitly — see _recall_at_per_100M for context.
     """
     if value is None:
         return "unmeasurable (n_ben=0)"
-    return f"{value:.1f}/M"
+    return f"{value:.1f}/100M"
 
 
-# k values reported by `_recall_at_fp_per_million`.  Recall@3 FP/M is the
-# operating point the deployed Azoth bundle ships at, so it's the autocollie
-# gate's primary axis.  0/1/5/9 frame the curve around it: 0 is the strict
-# zero-FP point, 9 the upper edge of the deployed band.
-RECALL_AT_FP_PER_MILLION_KS: tuple[float, ...] = (0.0, 1.0, 3.0, 5.0, 9.0)
+# k values reported by `_recall_at_per_100M` on the canonical per-100M scale.
+# As the benign corpus grows toward 100M, FP/M loses resolution in the strict
+# region; per-100M lets us express finer-grained operating points. The new
+# shared severity grid is L0..L100 (0, 1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70,
+# 80, 90, 100); legacy L300/L500/L900 are gone from the deploy grid. L50 is
+# the current default and autocollie's selection axis. Numbers here literally
+# are FPs per 100M benigns — lower = stricter. The 500/900 entries below are
+# retained as reporting-only views into the loose-tier ranking tail, not as
+# deployable operating points.
+RECALL_AT_PER_100M_KS: tuple[int, ...] = (50, 100, 300, 500, 900)
 
 
-def _recall_at_fp_per_million(
+def _recall_at_per_100M(
     y_true: np.ndarray, y_prob: np.ndarray,
 ) -> dict[str, float | int]:
-    """Recall on malware at thresholds where benign FP rate equals k per million.
+    """Recall on malware at thresholds where benign FP rate equals k per 100M.
 
-    For each ``k`` in :data:`RECALL_AT_FP_PER_MILLION_KS` we compute the FP
-    budget ``floor(n_benign * k / 1e6)`` and return the recall at the lowest
-    threshold whose cumulative benign FPs do not exceed that budget.  When
-    ``n_benign`` is small enough that ``k FP/M`` rounds to zero allowed FPs
-    (typical for narrow routes), the metric collapses to recall@0 — the
-    truthful answer at that holdout size.  Callers can read
-    ``n_benign_holdout`` to detect this saturation case.
+    For each ``k`` in :data:`RECALL_AT_PER_100M_KS` we compute the FP budget
+    ``floor(n_benign * k / 1e8)`` and return the recall at the lowest threshold
+    whose cumulative benign FPs do not exceed that budget. When ``n_benign``
+    is small enough that ``k FP/100M`` rounds to zero allowed FPs (typical for
+    narrow routes), the metric collapses to recall@0 — the truthful answer at
+    that holdout size. Callers can read ``n_benign_holdout`` to detect this
+    saturation case.
     """
     n_benign = int(np.sum(y_true == 0))
     n_malware = int(np.sum(y_true == 1))
-    # `min_observable_fp_per_million` is 1e6 / n_benign — the smallest non-zero
-    # FPR resolvable with this holdout (one false positive over the benign pool).
-    # Below this floor, recall@k collapses to recall@0 because there's no integer
-    # FP budget to spend.  Reporting the floor lets downstream gates pick the
-    # smallest meaningful k for the route instead of optimizing a metric the
-    # holdout can't actually distinguish.
+    # `min_observable_per_100M` is 1e8 / n_benign — the smallest non-zero FPR
+    # resolvable with this holdout (one false positive over the benign pool).
+    # Below this floor, recall@k collapses to recall@0 because there's no
+    # integer FP budget to spend. Reporting the floor lets downstream gates
+    # pick the smallest meaningful k for the route instead of optimizing a
+    # metric the holdout can't actually distinguish.
     #
     # When n_benign == 0 the floor is mathematically infinite (no FP is
-    # resolvable), but `float("inf")` is not JSON-compliant — Python's
-    # encoder emits it as the literal `Infinity` token, which crashes
-    # downstream readers using `allow_nan=False` (the autocollie run JSON
-    # writer + Go's strict parser).  Emit `None` (=> JSON null) instead,
-    # documenting "FP/M is unmeasurable here." Downstream code that uses
-    # this metric must handle the None case.
-    min_observable: float | None = (1_000_000.0 / n_benign) if n_benign > 0 else None
+    # resolvable), but `float("inf")` isn't JSON-compliant — Python's encoder
+    # emits the literal `Infinity` token, which crashes strict downstream
+    # readers (autocollie run JSON writer + Go's strict parser). Emit `None`
+    # (=> JSON null), documenting "FP/100M is unmeasurable here." Downstream
+    # code that uses this metric must handle the None case.
+    min_observable: float | None = (100_000_000.0 / n_benign) if n_benign > 0 else None
     out: dict[str, float | int] = {
         "n_benign_holdout": n_benign,
         "n_malware_holdout": n_malware,
-        "min_observable_fp_per_million": min_observable,
+        "min_observable_per_100M": min_observable,
     }
     if n_benign == 0 or n_malware == 0:
-        for k in RECALL_AT_FP_PER_MILLION_KS:
-            out[f"recall_at_fp_per_million_{int(k)}"] = 0.0
-            out[f"threshold_at_fp_per_million_{int(k)}"] = 1.0
+        for k in RECALL_AT_PER_100M_KS:
+            out[f"recall_at_{int(k)}_per_100M"] = 0.0
+            out[f"threshold_at_{int(k)}_per_100M"] = 1.0
         return out
 
     order = np.argsort(y_prob, kind="stable")[::-1]
@@ -613,10 +617,13 @@ def _recall_at_fp_per_million(
     thresholds = sorted_probs[cuts]
     fp_at_cut = cum_fp[cuts]
     tp_at_cut = cum_tp[cuts]
-    for k in RECALL_AT_FP_PER_MILLION_KS:
-        budget = int(np.floor(n_benign * k / 1_000_000.0))
+    # Per-100M block. L50/L100 will round to "0 allowed FPs" on small holdouts
+    # (rule of 3); the resulting value collapses to recall@0, matching
+    # `min_observable_per_100M`'s honesty contract.
+    for k in RECALL_AT_PER_100M_KS:
+        budget = int(np.floor(n_benign * k / 100_000_000.0))
         valid = fp_at_cut <= budget
-        suffix = f"fp_per_million_{int(k)}"
+        suffix = f"{int(k)}_per_100M"
         if valid.any():
             idx = int(np.where(valid)[0][-1])
             out[f"recall_at_{suffix}"] = float(tp_at_cut[idx] / n_malware)
@@ -974,8 +981,9 @@ def run_experiment(
             constraints[i] = 1
 
     # Best-of-K seed search: train K models with seeds [seed, seed+1, ..., seed+K-1],
-    # ship the one with highest holdout recall@3 FP/M (deployed operating point) with
-    # F1 fallback when recall@3 is unresolvable on tiny holdouts.  K=1 (default) is
+    # ship the one with highest holdout recall@L50 (= 50 FP/100M = 0.5 FP/M, the
+    # deployed operating point) with F1 fallback when recall@L50 is unresolvable
+    # on tiny holdouts.  K=1 (default) is
     # the single-fit current behavior.  Corpus + matrix are reused across attempts
     # — only the model fit varies — so wall clock is K × model_fit, not K × full_pipeline.
     seed_search_k = max(int(seed_search_k), 1)
@@ -1052,7 +1060,7 @@ def run_experiment(
                 ),
                 "brier": float(brier_score_loss(y_test, attempt_probs)) if len(np.unique(y_test)) > 1 else 0.0,
             }
-            attempt_metrics.update(_recall_at_fp_per_million(y_test, attempt_probs))
+            attempt_metrics.update(_recall_at_per_100M(y_test, attempt_probs))
         elif k_idx == 0:
             print("\nNo external test rows available.")
         all_attempt_models.append(attempt_result.model)
@@ -1060,25 +1068,26 @@ def run_experiment(
         if attempt_probs is not None:
             all_attempt_probs.append(attempt_probs)
 
-        # Winner score: prefer recall@3 FP/M (deployed operating point); fall back
-        # to F1 when the holdout is too small to resolve recall@3 (then it equals
-        # recall@0 across all attempts and F1 becomes the only signal).
-        attempt_score = float(attempt_metrics.get("recall_at_fp_per_million_3",
+        # Winner score: prefer recall@L50 per-100M (today's deployed operating
+        # point); fall back to F1 when the holdout is too small to resolve L50
+        # (collapses to recall@0 across all attempts and F1 becomes the only
+        # signal).
+        attempt_score = float(attempt_metrics.get("recall_at_50_per_100M",
                               attempt_metrics.get("f1", 0.0)))
         seed_search_results.append({
             "seed": attempt_seed,
             "f1": float(attempt_metrics.get("f1", 0.0)),
             "roc_auc": float(attempt_metrics.get("roc_auc", 0.0)),
             "avg_precision": float(attempt_metrics.get("avg_precision", 0.0)),
-            "recall_at_fp_per_million_3": float(attempt_metrics.get("recall_at_fp_per_million_3", 0.0)),
+            "recall_at_50_per_100M": float(attempt_metrics.get("recall_at_50_per_100M", 0.0)),
             "wall_s": float(time.perf_counter() - attempt_started),
         })
         if seed_search_k > 1:
             log.info(
-                "seed-search attempt %d/%d done: F1=%.4f AUC=%.4f recall@3FPM=%.4f (%.1fs)",
+                "seed-search attempt %d/%d done: F1=%.4f AUC=%.4f recall@L50/100M=%.4f (%.1fs)",
                 k_idx + 1, seed_search_k,
                 attempt_metrics.get("f1", 0.0), attempt_metrics.get("roc_auc", 0.0),
-                attempt_metrics.get("recall_at_fp_per_million_3", 0.0),
+                attempt_metrics.get("recall_at_50_per_100M", 0.0),
                 seed_search_results[-1]["wall_s"],
             )
 
@@ -1142,15 +1151,15 @@ def run_experiment(
             "avg_precision": float(average_precision_score(y_test, ensemble_probs)) if multi_class else 0.0,
             "brier": float(brier_score_loss(y_test, ensemble_probs)) if multi_class else 0.0,
             "threshold": averaged_threshold,
-            **_recall_at_fp_per_million(y_test, ensemble_probs),
+            **_recall_at_per_100M(y_test, ensemble_probs),
         }
         log.info(
             "seed-search averaged ensemble (K=%d): "
-            "F1=%.4f AUC=%.4f recall@3FPM=%.4f threshold=%.4f (re-picked on averaged probs)",
+            "F1=%.4f AUC=%.4f recall@L50/100M=%.4f threshold=%.4f (re-picked on averaged probs)",
             len(all_attempt_models),
             sampled_test_metrics["f1"],
             sampled_test_metrics["roc_auc"],
-            sampled_test_metrics.get("recall_at_fp_per_million_3", 0.0),
+            sampled_test_metrics.get("recall_at_50_per_100M", 0.0),
             averaged_threshold,
         )
 

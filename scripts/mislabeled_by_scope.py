@@ -88,9 +88,19 @@ def _per_filetype_thresholds(
             continue
         ft = route_key.split("/", 1)[1]
         levels = entry.get("levels") or []
-        if level >= len(levels):
-            continue
-        sev = (levels[level].get(severity) or {})
+        # Find by level value first (new per-100M grid), fall back to
+        # positional index for legacy route_policies.json that predate
+        # the grid change. If neither works, skip.
+        level_entry = next(
+            (lev for lev in levels if int(lev.get("level", -1)) == level),
+            None,
+        )
+        if level_entry is None:
+            if 0 <= level < len(levels):
+                level_entry = levels[level]
+            else:
+                continue
+        sev = (level_entry.get(severity) or {})
         best = sev.get("best") or {}
         ts = best.get("thresholds") or {}
         if not ts:
@@ -172,10 +182,10 @@ def main() -> None:
             "preserves legacy behavior."
         ),
     )
-    p.add_argument("--level", type=int, default=3, help="Severity level [0..20] (default 3)")
+    p.add_argument("--level", type=int, default=50, help="Severity level on the per-100M scale (default 50 = 0.5 FP/M; grid: 0, 1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100). Note: historical route_policies.json files predating the grid change may not have an entry at this level; supply --level explicitly to match the file's available levels.")
     p.add_argument(
         "--severity",
-        choices=["hostile", "suspicious"],
+        choices=["hostile"],
         default="hostile",
     )
     p.add_argument("--top-errors", type=int, default=100)

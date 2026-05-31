@@ -513,20 +513,21 @@ def _metrics(
     best = int(np.argmax(f1_vals))
     thr = 1.0 if best >= len(thresholds) else float(thresholds[best])
     out["max_f1"] = float(f1_score(labels, (probs >= thr).astype(int), zero_division=0))
-    # recall_at_fp_per_million_X — sweep predictions to find tightest
-    # threshold catching <= X benigns-per-million in the slice.
+    # recall_at_X_per_100M — sweep predictions to find tightest threshold
+    # catching <= X benigns-per-100M in the slice. Per-100M is the deployed
+    # scale; 50 maps to the L50 default operating point.
     order = np.argsort(-probs, kind="mergesort")
     sorted_y = labels[order]
     fp_cum = np.cumsum(sorted_y == 0)
     tp_cum = np.cumsum(sorted_y == 1)
-    for fpm in (0, 1, 3, 5, 9):
-        budget = max(1, int(np.floor(n_ben * fpm / 1_000_000.0))) if fpm > 0 else 0
+    for fp100m in (0, 50, 100, 300, 500, 900):
+        budget = max(1, int(np.floor(n_ben * fp100m / 100_000_000.0))) if fp100m > 0 else 0
         best_rec: float | None = None
         for i in range(len(sorted_y)):
             if fp_cum[i] > budget:
                 break
             best_rec = float(tp_cum[i] / n_mal)
-        out[f"recall_at_fp_per_million_{fpm}"] = best_rec if best_rec is not None else math.nan
+        out[f"recall_at_{fp100m}_per_100M"] = best_rec if best_rec is not None else math.nan
     return out
 
 
@@ -698,7 +699,7 @@ def main() -> int:
     # Strip non-finite floats (NaN, ±inf) before serializing — Python's
     # json.dumps emits them as literal NaN/Infinity tokens which aren't
     # valid JSON and break Go's strict parser on the autocollie side.
-    # The script emits math.nan from _metrics() for recall_at_fp_per_million_X
+    # The script emits math.nan from _metrics() for recall_at_X_per_100M
     # when there are no eligible scores; replace those with None (=> JSON
     # null) so the consumer can detect-and-skip without parse failures.
     # Also pass allow_nan=False so any non-finite we missed crashes here

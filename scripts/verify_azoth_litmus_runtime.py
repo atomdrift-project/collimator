@@ -63,9 +63,8 @@ def main() -> int:
             errors.append(f"required model score {model!r} missing from litmus --extra output")
 
     # Surface model-config anomalies that litmus only logs at WARN. Without
-    # this gate they silently degrade the deployed model (e.g. inverted
-    # per-route hostile/suspicious thresholds get the route dropped at that
-    # level). Make them deploy-blocking — easy CI signal, no litmus change.
+    # this gate they silently degrade the deployed model. Make them
+    # deploy-blocking — easy CI signal, no litmus change.
     anomaly_patterns = (
         "config.json thresholds are invalid",
         "abi version mismatch",
@@ -73,7 +72,6 @@ def main() -> int:
         "blend routes/weights length mismatch",
         "blend threshold outside",
         "ignoring invalid thresholds in ensemble config",
-        "ignoring invalid suspicious-only thresholds in ensemble config",
         "no config.json or evaluation.json thresholds found",
     )
     anomaly_hits: list[str] = []

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Block deploys that regress what litmus actually flags at L3 hostile.
+"""Block deploys that regress what litmus actually flags at L50 hostile.
 
 Reads:
   --staged   <dir>   the staged-but-not-yet-deployed bundle
@@ -12,7 +12,7 @@ which is the ground truth of what litmus produces at scan time.
 
 Per filetype where both bundles have ``n_malware >= --min-mal`` AND
 ``n_benign >= --min-ben`` (default 1/1 — we check every filetype with
-even a single sample of each class), we compare deployed L3 hostile
+even a single sample of each class), we compare deployed L50 hostile
 recall. A regression triggers only when BOTH:
 
   1. The recall drop exceeds ``--recall-tolerance`` (default 1pp), AND
@@ -158,8 +158,9 @@ def main() -> int:
             "attribute the deploy's net effect to specific routes."
         ),
     )
-    parser.add_argument("--level", type=int, default=3)
-    parser.add_argument("--severity", default="hostile", choices=["hostile", "suspicious"])
+    parser.add_argument("--level", type=int, default=50,
+                        help="Severity level on the per-100M scale (default 50 = 0.5 FP/M).")
+    parser.add_argument("--severity", default="hostile", choices=["hostile"])
     parser.add_argument(
         "--net-improvement-fallback",
         action="store_true",
@@ -237,6 +238,32 @@ def main() -> int:
     staged_ft = (staged_eval.get("filetypes") or {})
     deployed_ft = (deployed_eval.get("filetypes") or {})
     level_key = f"L{args.level}_{args.severity}"
+
+    def _has_level(ft_dict: dict, key: str) -> bool:
+        for entry in ft_dict.values():
+            by_level = (entry or {}).get("deployed_or_by_level") or {}
+            if key in by_level:
+                return True
+        return False
+
+    # Historic eval files predate the per-100M grid change and may not
+    # carry an L50 row. Refuse to run rather than silently treating every
+    # filetype as "missing level" (which would produce a trivial pass).
+    if not _has_level(staged_ft, level_key):
+        print(
+            f"error: staged bundle has no {level_key} rows in any filetype's "
+            f"deployed_or_by_level — bundle predates the per-100M grid or "
+            f"--level {args.level} isn't a valid grid value for this bundle.",
+            file=sys.stderr,
+        )
+        return 2
+    if not _has_level(deployed_ft, level_key):
+        print(
+            f"warning: deployed bundle at {args.deployed} has no {level_key} "
+            f"rows — likely predates per-100M grid migration. Skipping "
+            f"regression check (treat as first deploy on new grid).",
+        )
+        return 0
 
     # Impact-aware gating: when --source-bundle is given, compute which
     # filetypes the staged candidate actually touched. A promote that

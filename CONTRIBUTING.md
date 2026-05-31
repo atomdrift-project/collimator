@@ -30,9 +30,9 @@ For real workloads, point at a PostgreSQL `hopper` DSN.
 
 Every change should preserve or improve at least one of:
 
-- **Hostile recall at L3** under the global FP/M ≤ 3 budget (the default
-  deployed operating point). Reported in `global_policy_metrics.md` after
-  `make azoth-deploy`.
+- **Hostile recall at L50** under the global FP/100M ≤ 50 budget (= 0.5
+  FP/M, the default deployed operating point). Reported in
+  `global_policy_metrics.md` after `make azoth-deploy`.
 - **Per-route ensemble F1/AUC** for the route(s) you touched. Reported in
   `ENSEMBLE_MODEL.md` and the per-route `README.md` under the deployed bundle.
 - **Wall-clock training cost** for the part of the pipeline you touched.

@@ -8,9 +8,10 @@ score cache:
   test      — only the locked test partition (~12.5% of corpus, never trained on)
 
 For each view we report F1, precision, recall, AUC, PR AUC, Brier, and
-recall@FP/M = {0,1,3,5,9} at the model's threshold (0.5 by default, since
-this script doesn't rerun threshold search). The dev-vs-test gap is the
-generalization-honest signal; the full-vs-test gap is the leakage signal.
+recall@FP/100M = {0,50,100,300,500,900} at the model's threshold (0.5 by
+default, since this script doesn't rerun threshold search). The
+dev-vs-test gap is the generalization-honest signal; the full-vs-test
+gap is the leakage signal.
 
 Outputs a markdown table to stdout and a JSON file to ``--output``.
 """
@@ -66,13 +67,16 @@ def _fetch_canonical_map(db_path: str, row_ids: np.ndarray) -> dict[int, str]:
     return out
 
 
-def _recall_at_fp_per_million(y_true: np.ndarray, y_prob: np.ndarray, target: float) -> float:
-    """Recall@target FP/M on a held-out array. Returns 0 if no benign rows."""
+def _recall_at_per_100M(y_true: np.ndarray, y_prob: np.ndarray, target: float) -> float:
+    """Recall@target FP/100M on a held-out array. Returns 0 if no benign rows.
+
+    ``target`` is in per-100M units (e.g. 50 == L50 == 0.5 FP/M).
+    """
     benign = y_true == 0
     n_benign = int(np.sum(benign))
     if n_benign == 0:
         return 0.0
-    fp_budget = max(0, int(np.floor(n_benign * target / 1_000_000.0)))
+    fp_budget = max(0, int(np.floor(n_benign * target / 100_000_000.0)))
     benign_probs = np.sort(y_prob[benign])[::-1]
     if fp_budget >= len(benign_probs):
         threshold = 0.0
@@ -103,13 +107,13 @@ def _metrics_for_view(y_true: np.ndarray, y_prob: np.ndarray, threshold: float, 
         "pr_auc": float(average_precision_score(y_true, y_prob)) if multi_class else 0.0,
         "brier": float(brier_score_loss(y_true, y_prob)) if multi_class else 0.0,
     }
-    for target in (0.0, 1.0, 3.0, 5.0, 9.0):
-        out[f"recall_at_fp_per_million_{int(target)}"] = _recall_at_fp_per_million(y_true, y_prob, target)
+    for target in (0.0, 50.0, 100.0, 300.0, 500.0, 900.0):
+        out[f"recall_at_{int(target)}_per_100M"] = _recall_at_per_100M(y_true, y_prob, target)
     if with_ci and multi_class:
         for metric_name, metric_fn in (
             ("f1", lambda yt, yp: float(f1_score(yt, (yp >= threshold).astype(int), zero_division=0))),
             ("roc_auc", lambda yt, yp: float(roc_auc_score(yt, yp)) if len(np.unique(yt)) > 1 else 0.0),
-            ("recall_at_fp_per_million_3", lambda yt, yp: _recall_at_fp_per_million(yt, yp, 3.0)),
+            ("recall_at_50_per_100M", lambda yt, yp: _recall_at_per_100M(yt, yp, 50.0)),
         ):
             ci = bootstrap_metric(y_true, y_prob, metric_fn, n_resamples=200, seed=42)
             out[f"{metric_name}_ci"] = {"low": ci["low"], "high": ci["high"]}
@@ -176,19 +180,20 @@ def main() -> int:
             f"{m['roc_auc']:.4f} | {m['pr_auc']:.4f} | {m['brier']:.4f} |",
         )
     print()
-    print("| View | recall@0 FP/M | recall@1 FP/M | recall@3 FP/M | recall@5 FP/M | recall@9 FP/M |")
-    print("|---|---:|---:|---:|---:|---:|")
+    print("| View | recall@L0 | recall@L50 | recall@L100 | recall@L300 | recall@L500 | recall@L900 |")
+    print("|---|---:|---:|---:|---:|---:|---:|")
     for view in ("full", "train", "dev", "test"):
         m = results[view]
         if m.get("n_rows", 0) == 0:
             continue
         print(
             f"| {view} | "
-            f"{m['recall_at_fp_per_million_0']:.4f} | "
-            f"{m['recall_at_fp_per_million_1']:.4f} | "
-            f"{m['recall_at_fp_per_million_3']:.4f} | "
-            f"{m['recall_at_fp_per_million_5']:.4f} | "
-            f"{m['recall_at_fp_per_million_9']:.4f} |",
+            f"{m['recall_at_0_per_100M']:.4f} | "
+            f"{m['recall_at_50_per_100M']:.4f} | "
+            f"{m['recall_at_100_per_100M']:.4f} | "
+            f"{m['recall_at_300_per_100M']:.4f} | "
+            f"{m['recall_at_500_per_100M']:.4f} | "
+            f"{m['recall_at_900_per_100M']:.4f} |",
         )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

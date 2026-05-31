@@ -90,7 +90,7 @@ def load_runs(runs_dir: Path) -> dict[str, dict[str, Any]]:
     return by_key
 
 
-def load_deployed_l3(specialists_path: Path) -> dict[str, dict[str, Any]]:
+def load_deployed_l50(specialists_path: Path) -> dict[str, dict[str, Any]]:
     if not specialists_path.exists():
         return {}
     doc = json.loads(specialists_path.read_text())
@@ -106,17 +106,17 @@ def load_deployed_l3(specialists_path: Path) -> dict[str, dict[str, Any]]:
             route = "general"
         else:
             continue
-        hostile_l3 = None
+        hostile_l50 = None
         for level in item.get("levels", []):
-            if level.get("level") == 3:
-                hostile_l3 = level.get("hostile") or {}
+            if level.get("level") == 50:  # L50 (per-100M) = 0.5 FP/M = today's default
+                hostile_l50 = level.get("hostile") or {}
                 break
         out[route] = {
             "benchmark_rows": item.get("benchmark_rows"),
             "benchmark_malware": item.get("benchmark_malware"),
             "benchmark_benign": item.get("benchmark_benign"),
-            "l3_recall": hostile_l3.get("recall") if hostile_l3 else None,
-            "l3_fp_per_million": hostile_l3.get("fp_per_million") if hostile_l3 else None,
+            "l50_recall": hostile_l50.get("recall") if hostile_l50 else None,
+            "l50_fp_per_100M": hostile_l50.get("fp_per_100M") if hostile_l50 else None,
             "n_features": item.get("n_features"),
         }
     return out
@@ -144,7 +144,7 @@ def main() -> int:
     failed = parse_failures(Path(args.log))
     planned_pairs = {(p.route, p.idea) for p in planned}
     runs = load_runs(Path(args.runs_dir))
-    deployed = load_deployed_l3(Path(args.specialists))
+    deployed = load_deployed_l50(Path(args.specialists))
 
     runs_by_pair: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     runs_by_route: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -324,13 +324,13 @@ def main() -> int:
     lines.append("")
     lines.append("## Candidate Winners")
     lines.append("")
-    lines.append("| verdict | route | best tranche idea | key | F1 | delta vs hist | AUC | AP | deployed L3 recall |")
+    lines.append("| verdict | route | best tranche idea | key | F1 | delta vs hist | AUC | AP | deployed L50 recall |")
     lines.append("|---|---|---|---|---:|---:|---:|---:|---:|")
     for w in winners_sorted:
         if w["verdict"] not in {"winner", "near", "candidate"}:
             continue
         lines.append(
-            "| {verdict} | `{route}` | `{idea}` | `{key}` | {f1} | {delta} | {auc} | {ap} | {l3} |".format(
+            "| {verdict} | `{route}` | `{idea}` | `{key}` | {f1} | {delta} | {auc} | {ap} | {l50} |".format(
                 verdict=w["verdict"],
                 route=w["route"],
                 idea=w["idea"],
@@ -339,7 +339,7 @@ def main() -> int:
                 delta=fmt(w["delta_vs_historical_f1"]),
                 auc=fmt(w["roc_auc"]),
                 ap=fmt(w["avg_precision"]),
-                l3=fmt(w.get("deployed_l3_recall")),
+                l50=fmt(w.get("deployed_l50_recall")),
             )
         )
     lines.append("")

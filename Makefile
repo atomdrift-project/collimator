@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle autocollie-backfill-l3
+.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -437,9 +437,14 @@ $(VENV_DIR)/bin/python:
 	python3 -m venv $(VENV_DIR)
 
 $(VENV_DIR)/.deps.stamp: requirements.txt pyproject.toml | $(VENV_DIR)/bin/python
-	$(VENV_DIR)/bin/pip install --upgrade pip
-	$(VENV_DIR)/bin/pip install -r requirements.txt
-	$(VENV_DIR)/bin/pip install -e .
+	# Bootstrap pip if missing — handles the case where the venv was created
+	# by `uv venv` (which omits pip) instead of `python -m venv`. Using
+	# `python -m pip` rather than `pip` keeps us agnostic to the unversioned
+	# `pip` symlink, which `ensurepip` doesn't always install.
+	$(VENV_DIR)/bin/python -m ensurepip --upgrade
+	$(VENV_DIR)/bin/python -m pip install --upgrade pip
+	$(VENV_DIR)/bin/python -m pip install -r requirements.txt
+	$(VENV_DIR)/bin/python -m pip install -e .
 	touch $(VENV_DIR)/.deps.stamp
 
 # azoth-{full,fast}-train: the two top-level "give me the latest best deployed
@@ -453,7 +458,7 @@ $(VENV_DIR)/.deps.stamp: requirements.txt pyproject.toml | $(VENV_DIR)/bin/pytho
 #     natural distribution).  ~7-8 hours end-to-end at K=3 seeds.  Use this
 #     for deploy-bound retrains: the natural distribution preserves the
 #     benign tail that 50/50 sampling discards, which is what determines
-#     L3 (≤3 FP/M, the default operating point) threshold quality.
+#     L50 (≤0.5 FP/M = 50 FP/100M, the default operating point) threshold quality.
 #
 #   make azoth-fast-train  — train on a 600k 50/50-balanced sample.  ~5 hours
 #     end-to-end at K=3 seeds.  Same fidelity autocollie's promote step uses
@@ -495,12 +500,13 @@ azoth-fast-train: venv check-db
 # azoth-publish-train: publication-grade k=2 out-of-fold calibration.
 #
 # The weekly default (azoth-full-train) calibrates on dev only — ~150k
-# benigns, which puts every hostile L0..L9 below data resolution at 95%
+# benigns, which puts every hostile L0..L50 below data resolution at 95%
 # CI. This target instead runs k=2 OOF: two fold-A/B trainings + a final
 # training, then combines fold-A's predictions on fold-1 rows with
 # fold-B's predictions on fold-0 rows into a single OOF threshold-score
-# table covering ~2.4M benigns. The Clopper-Pearson floor drops from ~20
-# FP/M to ~1.25 FP/M; L3 (q=3) becomes resolvable for the first time.
+# table covering ~2.4M benigns. The Clopper-Pearson floor drops from
+# ~2000 FP/100M (≈ 20 FP/M) to ~125 FP/100M (≈ 1.25 FP/M); L50
+# (q=50/100M = 0.5 FP/M) becomes resolvable for the first time.
 #
 # Compute cost: ~3× weekly (two extra full trainings). Use for paper
 # runs and quarterly publication-grade builds; weekly retrains stay on
@@ -520,8 +526,8 @@ azoth-fast-train: venv check-db
 #   7. Deploy.
 #
 # Note: only the GENERAL model gets OOF treatment in this iteration. The
-# global FP/M budget is dominated by the general route's CP analysis, so
-# unblocking that unlocks meaningful L3 thresholds for the deployed
+# global FP/100M budget is dominated by the general route's CP analysis, so
+# unblocking that unlocks meaningful L50 thresholds for the deployed
 # bundle. Per-route specialists keep their single-pass calibration —
 # their own per-filetype CP floors are still volume-floored and that's
 # documented in the cards.
@@ -623,7 +629,7 @@ azoth-general: venv check-db azoth-clean-bundle
 	@# Rebuild the general's threshold_scores cache against the freshly-
 	@# promoted model. Without this, azoth-calibrate would consume a stale
 	@# score table whose probabilities map to a previous model — calibrators
-	@# and L0..L9 thresholds would be fit on the wrong score distribution.
+	@# and L0..L100 thresholds would be fit on the wrong score distribution.
 	@# Picks model.txt for single-seed bundles, else the lowest-numbered
 	@# seed_*.txt for multi-seed bundles (seed_42 by convention).
 	@if [ "$(AZOTH_GENERAL_SKIP_RESCORE)" = "1" ]; then \
@@ -1010,7 +1016,7 @@ azoth-oof-route-scores: venv check-db
 		$(EXP_WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG)
 
-# AZOTH_CALIBRATE_PARTITION selects which rows the calibrators and L0..L9
+# AZOTH_CALIBRATE_PARTITION selects which rows the calibrators and L0..L100
 # threshold search see. Default 'dev' is the weekly methodology (dev-only,
 # CP-aware budget acknowledging the volume floor). 'all' is for k=2 OOF
 # publication runs where the general/threshold_scores.npz already covers
@@ -1027,6 +1033,36 @@ AZOTH_CALIBRATE_PARALLELISM ?= 2
 AZOTH_OOF_ROUTE_SCORES_ARG := $(if $(filter 1,$(AZOTH_USE_OOF_ROUTE_SCORES)),--oof-route-scores-dir $(AZOTH_OOF_ROUTE_SCORES_DIR),)
 
 azoth-calibrate: venv check-db
+	@# Auto-generate general/threshold_scores.npz if missing. This is the gap
+	@# autocollie's promote-validate flow hits: the candidate bundle is staged
+	@# without the OOF score pipeline ever running, so the file calibrate
+	@# expects doesn't exist and np.load raises FileNotFoundError. The live
+	@# deploy bundle gets honest OOF scores via azoth-oof-merge-general; for a
+	@# candidate we fall back to a single-pass tune-thresholds invocation
+	@# against whatever model the bundle ships (model.txt if present, else the
+	@# first models/seed_*.txt). This is NOT OOF-quality — single-seed probs
+	@# under-approximate the ensemble — but it's sufficient to let calibrate
+	@# run for candidate validation; for the live bundle this branch is a
+	@# no-op since the OOF scores file already exists.
+	@if [ ! -f "$(AZOTH_GENERAL_SCORES)" ]; then \
+		_model="$(AZOTH_GENERAL_DIR)/model.txt"; \
+		if [ ! -f "$$_model" ]; then \
+			_model=$$(ls "$(AZOTH_GENERAL_DIR)"/models/seed_*.txt 2>/dev/null | head -1); \
+		fi; \
+		[ -n "$$_model" ] && [ -f "$$_model" ] || { \
+			echo "azoth-calibrate: $(AZOTH_GENERAL_SCORES) missing AND no general model found in $(AZOTH_GENERAL_DIR) — bundle is incomplete" >&2; \
+			exit 1; \
+		}; \
+		echo "azoth-calibrate: $(AZOTH_GENERAL_SCORES) missing — generating via tune-thresholds (model=$$_model; single-seed approximation suitable for candidate validation; OOF path is azoth-oof-merge-general)"; \
+		$(PYTHON) -m collimator tune-thresholds \
+			--db $(DB) \
+			--model "$$_model" \
+			--spec "$(AZOTH_GENERAL_DIR)/feature_spec.json" \
+			$(EXP_WORKERS_ARG) \
+			--scores-cache "$(AZOTH_GENERAL_SCORES)" \
+			--refresh-cache \
+			--output "$(AZOTH_GENERAL_DIR)/threshold_tuning.json"; \
+	fi
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
@@ -1152,6 +1188,13 @@ azoth-validate: azoth-calibrate
 		--output-md $(AZOTH_ROOT)/route_policy_eval_oof.md \
 		--output-json $(AZOTH_ROOT)/route_policy_eval_oof.json
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
+	@# Auto-convert any LightGBM .txt seeds to .onnx siblings before staging
+	@# trips its ONNX-only guard. Same fix as in azoth-deploy-final, applied
+	@# here too because autocollie's promote-validate path goes through
+	@# azoth-validate (not azoth-deploy-final), and the candidate bundle from
+	@# promote-full-train ships .txt seeds. Idempotent: no-op when every seed
+	@# already has its .onnx sibling.
+	$(PYTHON) scripts/convert_bundle_to_onnx.py --azoth-root $(AZOTH_ROOT) --db $(DB)
 	@_STAGE=$$(mktemp -d) && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
 	  cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
@@ -1297,6 +1340,14 @@ azoth-deploy-final: venv
 	@test -f $(AZOTH_ROUTE_POLICIES) || { echo "error: $(AZOTH_ROUTE_POLICIES) not found; run make azoth-deploy or make azoth-policies first"; exit 1; }
 	@test -f $(AZOTH_ROUTE_POLICIES_MD) || { echo "error: $(AZOTH_ROUTE_POLICIES_MD) not found; run make azoth-deploy or make azoth-policies first"; exit 1; }
 	@test -f $(AZOTH_GLOBAL_POLICY_METRICS_MD) || { echo "error: $(AZOTH_GLOBAL_POLICY_METRICS_MD) not found; run make azoth-deploy first"; exit 1; }
+	@# Auto-convert any LightGBM .txt seeds to .onnx siblings. The deployed
+	@# bundle is ONNX-only (litmus dropped the LightGBM/XGBoost loaders), so a
+	@# training pipeline that emits only .txt would otherwise trip the staging
+	@# guard in stage_azoth_runtime_bundle.py. Idempotent: skips files that
+	@# already have an .onnx sibling (typical case for re-runs). Parity-
+	@# checked: refuses to ship if any prob delta exceeds the converter's
+	@# default tolerance.
+	$(PYTHON) scripts/convert_bundle_to_onnx.py --azoth-root $(AZOTH_ROOT) --db $(DB)
 	@# Mirror staged bundle into deploy dir, deleting anything in the deploy
 	@# tree that isn't in the staged copy. Per-route slot contents (e.g. an
 	@# old `models/` dir from a prior multi-seed deploy) get cleaned even
@@ -1735,11 +1786,11 @@ AUTOCOLLIE_DB ?= postgres://hopper@localhost:5432/hopper
 # ROUTE (singular) is accepted as a convenience.
 ROUTES ?= $(ROUTE)
 
-.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-confirm autocollie-promote autocollie-backfill-l3 azoth-augment-small-routes
+.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-confirm autocollie-promote azoth-augment-small-routes
 
 # azoth-augment-small-routes — post-hoc threshold re-search for routes whose
 # default-level policy is `no_policy` because their own benign pool is too
-# small to estimate FP rate at L3 (3/M).  Loads each such specialist, scores
+# small to estimate FP rate at L50 (50/100M = 0.5/M).  Loads each such specialist, scores
 # its filegroup peers' benigns, and re-runs the threshold search against the
 # augmented pool.  Optional --use-credible-bound applies Beta-Binomial
 # smoothing for routes with very small pools.
@@ -1772,32 +1823,6 @@ azoth-augment-small-routes: venv check-db
 		--fail-on-budget --max-budget-multiplier 30
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_PREVIOUS_BUNDLE_ARG) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
-
-# One-time repair for legacy autocollie baselines whose run JSONs predate
-# recall_at_fp_per_million_* fields. Replays the selected historical baseline
-# specs with EXP_RERUN=1, then copies refreshed metrics back onto the legacy
-# baseline key so autocollie can compare real recall@3FPM instead of falling
-# back to PR AUC.
-#
-# Usage:
-#   make autocollie-backfill-l3 ROUTES=filetypes/python,filetypes/javascript
-#   make autocollie-backfill-l3 ROUTES=filetypes/ DRY_RUN=1
-#   make autocollie-backfill-l3 KEYS=5f2daa8cb63f39c4
-DRY_RUN ?= 0
-KEYS ?=
-BACKFILL_LIMIT ?= 0
-BACKFILL_ALL_MISSING ?= 0
-autocollie-backfill-l3: venv check-db
-	$(PYTHON) scripts/autocollie_backfill_l3.py \
-		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
-		--makefile Makefile \
-		--db $(DB) \
-		--workers $(or $(WORKERS),64) \
-		$(if $(ROUTES),--routes $(ROUTES),) \
-		$(if $(KEYS),--keys $(KEYS),) \
-		$(if $(filter 1 true yes,$(DRY_RUN)),--dry-run,) \
-		$(if $(filter 1 true yes,$(BACKFILL_ALL_MISSING)),--all-missing,) \
-		$(if $(BACKFILL_LIMIT),--limit $(BACKFILL_LIMIT),)
 
 # Autocollie targets all default DB to AUTOCOLLIE_DB (local replica). User can
 # still override with `make autocollie DB=...`; command-line vars beat
@@ -1919,7 +1944,7 @@ autocollie-promote: venv check-db autocollie-build
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--key $(KEY) \
 		--seed $(CONFIRM_SEED) \
-		--screen-timeout 30m \
+		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
 		--promote-timeout 180m \
 		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
 
@@ -1959,7 +1984,7 @@ autocollie: venv check-db autocollie-build
 #   make autocollie-loop ROUTES=filetypes/python EXPERIMENTS=10
 #     — fixed route list, loops indefinitely (same order each pass)
 #   make autocollie-loop AUTO_ROUTES=3 EXPERIMENTS=5
-#     — picks the 3 weakest routes each pass by recall@3 headroom
+#     — picks the 3 weakest routes each pass by recall@L50 headroom
 #       (self-balancing — concentrates on routes with most to gain)
 #   make autocollie-loop SHUFFLE_ROUTES=1 EXPERIMENTS=10
 #     — walks every known route (general + all filegroups + all filetypes)
@@ -2004,7 +2029,6 @@ help:
 	@echo "  autocollie-screen  Generate, validate, and run experiment specs via LLM"
 	@echo "  autocollie-confirm Re-run KEY=<16hex> with a different seed (SEED=43 default)"
 	@echo "  autocollie-promote Confirm + full-train + compare; writes a deploy-or-not report"
-	@echo "  autocollie-backfill-l3 Rerun selected legacy baselines to add recall@FP/M fields"
 	@echo "  autocollie         Full hands-off ladder: screen + auto-promote per route"
 	@echo "  autocollie-loop    Same as autocollie with PASSES=0 (loop until Ctrl-C)"
 	@echo "  azoth-validate     Run azoth-deploy gates against AZOTH_ROOT without copying (AZOTH_SKIP_LITMUS_VALIDATE=1 skips litmus)"

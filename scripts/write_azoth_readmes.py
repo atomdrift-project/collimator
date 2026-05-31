@@ -180,7 +180,7 @@ def _headline_filetypes(
     config: dict[str, Any] | None = None,
     eval_data: dict[str, Any] | None = None,
     *,
-    level: int = 3,
+    level: int = 50,  # per-100M scale: 50 = 0.5 FP/M (today's selection budget L50)
     severity: str = "hostile",
 ) -> tuple[str, ...]:
     """Pick filetypes for the bundle README's headline table.
@@ -188,7 +188,7 @@ def _headline_filetypes(
     Inclusion: at least 25 malware AND 25 benign in test, OR at least 100
     of each in the full labeled corpus (covers small-test-slice filetypes
     where the model still has plenty of training signal). Sort:
-    recall@3FP/M descending — same metric the picker optimizes for, so
+    recall@L50 (0.5 FP/M) descending — same metric the picker optimizes for, so
     the table opens with the filetypes the deployed system actually
     catches the most malware on at our FP budget. PR AUC tiebreaks for
     determinism.
@@ -220,13 +220,13 @@ def _headline_filetypes(
     def sort_key(item: tuple[str, dict[str, Any]]) -> tuple[float, float, str]:
         ft, entry = item
         ens = entry.get("ensemble") or {}
-        r3 = ens.get("recall_at_3fp_per_million")
+        r3 = ens.get("recall_at_50_per_100M")
         pr = ens.get("pr_auc")
         if not isinstance(r3, (int, float)) or (isinstance(r3, float) and math.isnan(r3)):
             r3 = 0.0
         if not isinstance(pr, (int, float)):
             pr = 0.0
-        # Sort by recall@3FP/M desc, PR AUC desc tiebreak, then ft for
+        # Sort by recall@L50 desc, PR AUC desc tiebreak, then ft for
         # determinism. Mirrors the picker's selection key.
         return (-float(r3), -float(pr), ft)
 
@@ -278,7 +278,7 @@ def _ensemble_table(
 ) -> list[str]:
     """Headline table for the routed ensemble's model properties.
 
-    Reports PR AUC, ROC AUC, F1, and Recall@3FP/M from
+    Reports PR AUC, ROC AUC, F1, and Recall@L50 from
     ``per_filetype_metrics.json["filetypes"][<ft>]["ensemble"]`` — the
     selected combiner's per-filetype slice numbers on the locked test
     partition. These are properties of the MODEL: how well its scores
@@ -294,7 +294,7 @@ def _ensemble_table(
     that pre-load it; the headline doesn't read from it anymore.
     """
     lines = [
-        "| File type | Test mal / ben | PR AUC | ROC AUC | F1 | Recall @ 3FP/M | Δ vs EMBER 2024 |",
+        "| File type | Test mal / ben | PR AUC | ROC AUC | F1 | Recall @ L50 | Δ vs EMBER 2024 |",
         "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for ft in filetypes:
@@ -308,7 +308,7 @@ def _ensemble_table(
         ens_pr = ens.get("pr_auc")
         ens_roc = ens.get("roc_auc")
         ens_f1 = ens.get("f1")
-        ens_recall = ens.get("recall_at_3fp_per_million")
+        ens_recall = ens.get("recall_at_50_per_100M")
         if ens_pr is None and ens_roc is None:
             pr_str = roc_str = f1_str = recall_str = "—"
             ember_str = "—"
@@ -418,41 +418,30 @@ def _route_summary(config: dict[str, Any]) -> str:
 
 def _level_table(levels: list[dict[str, Any]]) -> str:
     lines = [
-        "| L | H target/1M | H recall | H FP/1M | H threshold | "
-        "S target/1M | S recall | S FP/1M | S threshold |",
-        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| L | Target/100M | Recall | FP/100M | Threshold |",
+        "| ---: | ---: | ---: | ---: | ---: |",
     ]
     for row in sorted(levels, key=lambda item: int(item["level"])):
         hostile = row["hostile"]
-        suspicious = row["suspicious"]
         targets = row.get("targets") or {}
-        hostile_target = (
+        legacy_per_million = (
             hostile.get("target_per_million")
-            or hostile.get("target_fp_per_million")
             or targets.get("hostile_per_million")
         )
-        suspicious_target = (
-            suspicious.get("target_per_million")
-            or suspicious.get("target_fp_per_million")
-            or targets.get("suspicious_per_million")
+        hostile_target = (
+            hostile.get("target_fp_per_100M")
+            or (legacy_per_million * 100.0 if legacy_per_million is not None else None)
         )
         h_threshold = hostile.get("threshold")
-        s_threshold = suspicious.get("threshold")
         if h_threshold is None and isinstance(hostile.get("thresholds"), dict):
             h_threshold = "routed"
-        if s_threshold is None and isinstance(suspicious.get("thresholds"), dict):
-            s_threshold = "routed"
         lines.append(
             "| "
             f"{row['level']} | "
             f"{_num(hostile_target, 1)} | "
             f"{_pct(hostile.get('recall'))} | "
-            f"{_num(hostile.get('fp_per_million'), 2)} | "
-            f"{_num(h_threshold) if h_threshold != 'routed' else 'routed'} | "
-            f"{_num(suspicious_target, 1)} | "
-            f"{_pct(suspicious.get('recall'))} | "
-            f"{_num(suspicious.get('fp_per_million'), 2)} | "
-            f"{_num(s_threshold) if s_threshold != 'routed' else 'routed'} |"
+            f"{_num(hostile.get('fp_per_100M'), 2)} | "
+            f"{_num(h_threshold) if h_threshold != 'routed' else 'routed'} |"
         )
     return "\n".join(lines)
 
@@ -467,20 +456,20 @@ def _policy_levels(root: Path, route_name: str) -> list[str]:
     if not route:
         return []
     lines = [
-        "| L | Severity | Policy | Recall | FP | FP/1M | Thresholds |",
+        "| L | Severity | Policy | Recall | FP | FP/100M | Thresholds |",
         "| ---: | --- | --- | ---: | ---: | ---: | --- |",
     ]
-    for level_no in (5, 9):
+    for level_no in (50, 300, 500, 1000):
         level = next((item for item in route.get("levels", []) if int(item["level"]) == level_no), None)
         if not level:
             continue
-        for severity in ("hostile", "suspicious"):
+        for severity in ("hostile",):
             best = level[severity]["best"]
             lines.append(
                 "| "
                 f"{level_no} | {severity} | {best['policy']} | "
                 f"{_pct(best.get('recall'))} | {_int(best.get('fp'))} | "
-                f"{_num(best.get('fp_per_million'), 2)} | "
+                f"{_num(best.get('fp_per_100M'), 2)} | "
                 f"`{json.dumps(best.get('thresholds', {}), sort_keys=True)}` |"
             )
     return lines
@@ -509,43 +498,40 @@ def _global_policy_table(root: Path) -> str:
     # the volume floor visible in the table without footnote-only treatment.
     n_test_benign = int(data.get("benign") or 0)
     any_below = any(
-        bool(lvl.get(sev, {}).get("below_resolution"))
-        for lvl in data["levels"] for sev in ("hostile", "suspicious")
+        bool(lvl.get("hostile", {}).get("below_resolution"))
+        for lvl in data["levels"]
     )
 
     def _cp_upper(fp: int | None) -> float | None:
         if fp is None or n_test_benign <= 0:
             return None
-        return _clopper_pearson_fp_per_million_upper(int(fp), n_test_benign, alpha=0.05)
+        return _clopper_pearson_fp_per_million_upper(int(fp), n_test_benign, alpha=0.05) * 100.0
 
     lines = [
-        "| L | H target/1M | H recall | H FP/1M | H 95% CI upper | S target/1M | S recall | S FP/1M | S 95% CI upper |",
-        "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| L | Target/100M | Recall | FP/100M | 95% CI upper (FP/100M) |",
+        "| ---: | ---: | ---: | ---: | ---: |",
     ]
     for level_no in sorted(int(item["level"]) for item in data["levels"]):
         level = next(item for item in data["levels"] if int(item["level"]) == level_no)
         h = level["hostile"]
-        s = level["suspicious"]
-        h_target = _num(h.get("target_per_million"), 1)
-        s_target = _num(s.get("target_per_million"), 1)
+        h_target_value = h.get("target_fp_per_100M")
+        if h_target_value is None:
+            legacy = h.get("target_per_million")
+            h_target_value = legacy * 100.0 if legacy is not None else None
+        h_target = _num(h_target_value, 1)
         if h.get("below_resolution"):
             h_target = h_target + "†"
-        if s.get("below_resolution"):
-            s_target = s_target + "†"
         h_cp = _cp_upper(h.get("fp"))
-        s_cp = _cp_upper(s.get("fp"))
         lines.append(
             "| "
             f"{level_no} | {h_target} | "
-            f"{_pct(h.get('recall'))} | {_num(h.get('fp_per_million'), 2)} | {_num(h_cp, 2)} | "
-            f"{s_target} | "
-            f"{_pct(s.get('recall'))} | {_num(s.get('fp_per_million'), 2)} | {_num(s_cp, 2)} |"
+            f"{_pct(h.get('recall'))} | {_num(h.get('fp_per_100M'), 2)} | {_num(h_cp, 2)} |"
         )
     out = "\n".join(lines)
     out += (
         f"\n\n*95% CI upper* is the Clopper-Pearson upper bound on the deployment "
         f"FP rate given the observed FP count in {n_test_benign:,} test-partition "
-        f"benigns. The honest deployment-FP/M claim sits below this number with "
+        f"benigns. The honest deployment-FP/100M claim sits below this number with "
         f"95% confidence."
     )
     if any_below:
@@ -734,7 +720,7 @@ def _write_route(root: Path, path: Path) -> None:
             else "—"
         )
         # Lead with the routed ensemble's model properties — PR AUC,
-        # ROC AUC, F1, recall@3FP/M — on this filetype's slice of the
+        # ROC AUC, F1, recall@L50 — on this filetype's slice of the
         # locked test partition. These describe what the model's scores
         # rank; how litmus thresholds them at each severity level is
         # documented in route_policies.md.
@@ -745,13 +731,13 @@ def _write_route(root: Path, path: Path) -> None:
             f"on the `{name}` slice of the locked test partition: "
             f"{_int(n_mal)} malware / {_int(n_ben)} benign ({_int(n_eval)} rows).",
             "",
-            "| PR AUC | ROC AUC | F1 | Recall @ 3FP/M | Brier |",
+            "| PR AUC | ROC AUC | F1 | Recall @ L50 | Brier |",
             "|---:|---:|---:|---:|---:|",
             (
                 f"| {_metric_cell(ens_metrics.get('pr_auc'), None, None, include_ci=False)} | "
                 f"{_metric_cell(ens_metrics.get('roc_auc'), None, None, include_ci=False)} | "
                 f"{_metric_cell(ens_metrics.get('f1'), None, None, include_ci=False)} | "
-                f"{_metric_cell(ens_metrics.get('recall_at_3fp_per_million'), None, None, include_ci=False, as_percent=True)} | "
+                f"{_metric_cell(ens_metrics.get('recall_at_50_per_100M'), None, None, include_ci=False, as_percent=True)} | "
                 f"{_num(ens_metrics.get('brier'), 4)} |"
             ),
             "",
@@ -765,13 +751,13 @@ def _write_route(root: Path, path: Path) -> None:
             f"(the ensemble usually does better — that's the point of the "
             f"routing).",
             "",
-            "| PR AUC | ROC AUC | F1 | Recall @ 3FP/M | Brier | Δ vs EMBER 2024 |",
+            "| PR AUC | ROC AUC | F1 | Recall @ L50 | Brier | Δ vs EMBER 2024 |",
             "|---:|---:|---:|---:|---:|---:|",
             (
                 f"| {_metric_cell(spec_metrics.get('pr_auc'), None, None, include_ci=False)} | "
                 f"{_metric_cell(spec_metrics.get('roc_auc'), None, None, include_ci=False)} | "
                 f"{_metric_cell(spec_metrics.get('f1'), None, None, include_ci=False)} | "
-                f"{_metric_cell(spec_metrics.get('recall_at_3fp_per_million'), None, None, include_ci=False, as_percent=True)} | "
+                f"{_metric_cell(spec_metrics.get('recall_at_50_per_100M'), None, None, include_ci=False, as_percent=True)} | "
                 f"{_num(spec_metrics.get('brier'), 4)} | {ember_str} |"
             ),
             "",
@@ -872,10 +858,11 @@ def _write_bundle(root: Path) -> None:
         "## Use",
         "",
         "Input is a JSON report produced by `cleave`. Output is one "
-        "verdict — `benign`, `suspicious`, or `hostile` — qualified by a "
-        "severity level L0..L20. Litmus reads the hostile and suspicious "
-        "thresholds at the same level; the deployed default is L3. Lower "
-        "levels tighten the operating point; higher levels loosen it.",
+        "verdict — `benign` or `hostile` — qualified by a severity level "
+        "L0..L20. Litmus reads the hostile threshold at the chosen level "
+        "(consumers can derive a suspicious band as crit/4 if they want a "
+        "softer tier); the deployed default is L50 (0.5 FP/M). Lower levels tighten the "
+        "operating point; higher levels loosen it.",
         "",
         "## Bundle layout",
         "",
@@ -896,8 +883,8 @@ def _write_bundle(root: Path) -> None:
         "",
         "Each row is the routed ensemble's intrinsic ranking quality on "
         "that filetype's slice of the locked test partition — PR AUC, "
-        "ROC AUC, F1 at the F-beta-tuned threshold, and recall at a "
-        "3 FP/M operating point. These are properties of the model's "
+        "ROC AUC, F1 at the F-beta-tuned threshold, and recall at the "
+        "L50 (0.5 FP/M) operating point. These are properties of the model's "
         "scores; how litmus chooses to threshold those scores at each "
         "severity level is a runtime concern documented in "
         "[`route_policies.md`](route_policies.md).",
@@ -909,7 +896,7 @@ def _write_bundle(root: Path) -> None:
         "reflects the container's shape, not the classifier's quality.",
         "",
         "**Optimization target.** Each filetype's ensemble combiner is "
-        "selected to maximize **recall at 3 FP/M** on the dev partition, "
+        "selected to maximize **recall at L50 (0.5 FP/M)** on the dev partition, "
         "with PR AUC as a tiebreak. Selection is constrained so the "
         "ensemble can never report worse than the specialist alone — "
         "when no combiner clears the specialist on dev, the ensemble "
@@ -924,8 +911,8 @@ def _write_bundle(root: Path) -> None:
         ),
         "",
         "PR AUC summarizes recall against precision across operating "
-        "points. Recall@3FP/M is the deployment-budget headline; for "
-        "filetypes whose dev slice cannot resolve 3 FP/M empirically "
+        "points. Recall@L50 is the selection-budget headline; for "
+        "filetypes whose dev slice cannot resolve L50 (0.5 FP/M) empirically "
         "it is GPD-tail-extrapolated. EMBER 2024 deltas are reported "
         "where Joyce et al. publish per-filetype numbers (Table 5, "
         "All files → X).",
@@ -939,7 +926,7 @@ def _write_bundle(root: Path) -> None:
         "",
         "## Limits",
         "",
-        "- Strict L0..L3 FP/M targets sit below empirical resolution on a single dev partition (one FP per 150k benigns ≈ 6 FP/M); their thresholds are GPD tail-extrapolations.",
+        "- Strict L0..L50 (FP/100M) targets sit below empirical resolution on a single dev partition (one FP per 150k benigns ≈ 600 FP/100M); their thresholds are GPD tail-extrapolations.",
         "- The split is content-deduplicated by `canonical_sha256`, not family-aware. Campaign-level generalization may be overstated.",
         "- Deployment distribution may differ from the training corpus.",
         "",
@@ -1006,7 +993,7 @@ def _write_ensemble_card(root: Path) -> None:
         "check; rejected from the picker because raw scores don't share "
         "a probability calibration.",
         "",
-        "**Selection criterion**: maximize **recall at 3 FP/M** on the "
+        "**Selection criterion**: maximize **recall at L50 (0.5 FP/M)** on the "
         "dev partition (matching the deployment FP/M target), with "
         "**PR AUC** as a secondary tiebreak. The picker is constrained "
         "by a floor: no combiner may report worse than "
@@ -1054,9 +1041,9 @@ def _write_ensemble_card(root: Path) -> None:
         "Litmus reads the per-level thresholds from "
         "`route_policies.json` and assigns severity per file.",
         "",
-        "Default deploy level: L3 (litmus loads both hostile and "
-        "suspicious thresholds at the same level). Per-route L0..L20 "
-        "thresholds and observed FP/M live in "
+        "Default deploy level: L50 (0.5 FP/M) (litmus loads the hostile threshold at "
+        "that level; any suspicious band is derived consumer-side). Per-route "
+        "thresholds and observed FP/100M live in "
         "[route_policies.md](route_policies.md) and each "
         "`filetypes/<name>/README.md`.",
     ]
