@@ -1,6 +1,6 @@
 # Confirm PASS — e67b060e5bcc3a6a on `filegroups/scripts`
 
-Cycle `20260525T184633-confirm-e67b060e5bcc3a6a` — 2026-05-25T18:46:33Z
+Cycle `20260601T151655-confirm-e67b060e5bcc3a6a` — 2026-06-01T15:16:55Z
 
 PR_AUC held across 3 seeds (orig 0.9979)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9979)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `e67b060e5bcc3a6a` | `2b909e7b127047e7` | `2b909e7b127047e7` | `2b909e7b127047e7` |
-| PR AUC | 0.9979 | 0.9993 | 0.9992 | 0.9993 |
-| ROC AUC | 0.9977 | 0.9991 | 0.9991 | 0.9991 |
-| Recall@3FPM | — | 0.7542 | 0.8201 | 0.7580 |
+| key | `e67b060e5bcc3a6a` | `1e434adc3e08c6a1` | `1e434adc3e08c6a1` | `1e434adc3e08c6a1` |
+| PR AUC | 0.9979 | 0.9988 | 0.9987 | 0.9988 |
+| ROC AUC | 0.9977 | 0.9986 | 0.9985 | 0.9986 |
+| Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

@@ -1,184 +1,123 @@
 # Promote REJECTED — `62b6877c5bb21700` on `filetypes/pdf`
 
-Generated 2026-06-01T12:44:22Z
+Generated 2026-06-01T12:53:24Z
 
-confirm did not hold: experiment failed: interrupted: context canceled
---- experiment log tail ---
-COLLIMATOR_TIERED_QUADGRAM_PATH_DEPTH=3 \
-COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT=3 \
-COLLIMATOR_TIERED_QUADGRAM_MAX=5000 \
-COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ=5 \
-COLLIMATOR_MBC_ID_VOCAB=0 \
-COLLIMATOR_TRAIT_CONFIDENCE_MOMENTS=0 \
-COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE=0 \
-COLLIMATOR_DOCUMENT_OBFUSCATION_FEATURES=0 \
-COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT= \
-COLLIMATOR_EXPERIMENT_TAG=_pdf_seed_search_k3_text_confirm_seedsearch_3 \
-.venv/bin/python -u -m collimator experiment --db postgres://hopper@localhost:5432/hopper --output out/experiments/azoth --model-name azoth --learner azoth --workers 128 --seed 43 \
-	--experiment-idea pdf_seed_search_k3_text_confirm_seedsearch_3 --route filetypes/pdf  \
-	--train-samples 0 --max-test-samples 0 \
-	--total-limit 0 \
-	 \
-	 \
-	--n-folds 0 --holdout-fraction 0.12 \
-	--n-estimators 300 --max-depth 12 \
-	--learning-rate 0.05 --early-stopping-rounds 25 \
-	--num-leaves 96 \
-	--min-child-samples 100 \
-	--min-child-weight 5 \
-	--colsample-bytree 0.8 --subsample 0.8 \
-	--gamma 0 --reg-alpha 0 --reg-lambda 1 \
-	--device auto \
-	 \
-	 \
-	--min-malware-score 0 \
-	--beta 2 --threshold-mode fbeta \
-	 \
-	--hard-negative-fraction 0 --hard-negative-weight 1 \
-	--scale-pos-weight-mult 1 \
-	--boosting-type gbdt \
-	 \
-	--seed-search-k 3 \
-	--save-all-seeds \
-	 \
-	 \
-	--cache-dir out/cache/experiment/azoth \
-	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_pdf_seed_search_k3_text_confirm_seedsearch_3.log"
-08:44:21 INFO  collimator.experiment: using cached experiment snapshot: max_id=1636831170
-08:44:21 INFO  collimator.experiment: dataset snapshot: max_id=1636831170
-08:44:21 INFO  collimator.experiment: loaded cached corpus: 102161 train, 16922 test from out/cache/experiment/azoth/corpus_9c2042bda194a190.json
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-01T12-49-07_20260601T124854-promote-62b6877c5bb21700_azoth-validate.log; tail: 2026-06-01 08:53:09,111 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pe already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/perl already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/php already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pkg-info already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/plist already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/png already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/powershell already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pptx already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/python already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/python-bytecode already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/rtf already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/ruby already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/rust already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/shell already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/tar already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/tar.gz already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/text already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/vbs already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/xls already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/xlsx already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/xml already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/zip already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO found 3 .txt files to convert
+2026-06-01 08:53:09,175 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pdf/models/seed_42.onnx
+2026-06-01 08:53:11,467 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 08:53:12,215 INFO filetypes/pdf/models/seed_42.txt -> seed_42.onnx OK (delta=6.41e-08 on 200 rows, 3102 ms)
+2026-06-01 08:53:12,242 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pdf/models/seed_43.onnx
+2026-06-01 08:53:14,476 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 08:53:15,118 INFO filetypes/pdf/models/seed_43.txt -> seed_43.onnx OK (delta=7.01e-08 on 200 rows, 2903 ms)
+2026-06-01 08:53:15,130 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pdf/models/seed_44.onnx
+2026-06-01 08:53:17,299 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 08:53:18,024 INFO filetypes/pdf/models/seed_44.txt -> seed_44.onnx OK (delta=1.93e-08 on 200 rows, 2906 ms)
 
-EXPERIMENT
-============================================================
-Sampled train: 102161 (101086 malware, 1075 benign)
-External test: 16922 (16768 malware, 154 benign)
-08:44:21 INFO  collimator.experiment: pass 1: building vocabulary (worker-local DB fetching)
-make[2]: *** [Makefile:1573: experiment] Terminated
---- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-01T12-44-20_20260601T124420-confirm-62b6877c5bb21700_pdf_seed_search_k3_text_confirm_seedsearch_3.log
+converted 3/3 files (0 intentionally skipped, 0 failed)
+staged runtime azoth bundle: /tmp/tmp.k6U9r5GvXE
+azoth bundle ok: /tmp/tmp.k6U9r5GvXE
+--source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 78 unimpacted (drift treated as pre-existing)
+
+per-route improvements (≥0.10pp, informational):
+  pdf :: filetypes/pdf recall@1FP-on-slice +61.77pp (11.98% → 73.75%)
+
+1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
+  - pdf: L50 hostile ENSEMBLE recall dropped 4.77pp (8.60% → 3.84%; tolerance 1.70pp; deployed 95% CI lower = 8.24%)
+
+compared 77 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
+make[2]: *** [Makefile:1152: azoth-validate] Error 1)
 
 ## Gates
 
-- **Confirm** (different seed, original profile): **FAIL** — experiment failed: interrupted: context canceled
---- experiment log tail ---
-COLLIMATOR_TIERED_QUADGRAM_PATH_DEPTH=3 \
-COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT=3 \
-COLLIMATOR_TIERED_QUADGRAM_MAX=5000 \
-COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ=5 \
-COLLIMATOR_MBC_ID_VOCAB=0 \
-COLLIMATOR_TRAIT_CONFIDENCE_MOMENTS=0 \
-COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE=0 \
-COLLIMATOR_DOCUMENT_OBFUSCATION_FEATURES=0 \
-COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT= \
-COLLIMATOR_EXPERIMENT_TAG=_pdf_seed_search_k3_text_confirm_seedsearch_3 \
-.venv/bin/python -u -m collimator experiment --db postgres://hopper@localhost:5432/hopper --output out/experiments/azoth --model-name azoth --learner azoth --workers 128 --seed 43 \
-	--experiment-idea pdf_seed_search_k3_text_confirm_seedsearch_3 --route filetypes/pdf  \
-	--train-samples 0 --max-test-samples 0 \
-	--total-limit 0 \
-	 \
-	 \
-	--n-folds 0 --holdout-fraction 0.12 \
-	--n-estimators 300 --max-depth 12 \
-	--learning-rate 0.05 --early-stopping-rounds 25 \
-	--num-leaves 96 \
-	--min-child-samples 100 \
-	--min-child-weight 5 \
-	--colsample-bytree 0.8 --subsample 0.8 \
-	--gamma 0 --reg-alpha 0 --reg-lambda 1 \
-	--device auto \
-	 \
-	 \
-	--min-malware-score 0 \
-	--beta 2 --threshold-mode fbeta \
-	 \
-	--hard-negative-fraction 0 --hard-negative-weight 1 \
-	--scale-pos-weight-mult 1 \
-	--boosting-type gbdt \
-	 \
-	--seed-search-k 3 \
-	--save-all-seeds \
-	 \
-	 \
-	--cache-dir out/cache/experiment/azoth \
-	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_pdf_seed_search_k3_text_confirm_seedsearch_3.log"
-08:44:21 INFO  collimator.experiment: using cached experiment snapshot: max_id=1636831170
-08:44:21 INFO  collimator.experiment: dataset snapshot: max_id=1636831170
-08:44:21 INFO  collimator.experiment: loaded cached corpus: 102161 train, 16922 test from out/cache/experiment/azoth/corpus_9c2042bda194a190.json
-
-EXPERIMENT
-============================================================
-Sampled train: 102161 (101086 malware, 1075 benign)
-External test: 16922 (16768 malware, 154 benign)
-08:44:21 INFO  collimator.experiment: pass 1: building vocabulary (worker-local DB fetching)
-make[2]: *** [Makefile:1573: experiment] Terminated
---- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-01T12-44-20_20260601T124420-confirm-62b6877c5bb21700_pdf_seed_search_k3_text_confirm_seedsearch_3.log
-- **Full-train**: not run (confirm gate failed)
+- **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 1.0000)
+- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
 
 ## Metrics
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `62b6877c5bb21700` | `` | `—` |
-| PR AUC | 1.0000 | — | — |
-| ROC AUC | 0.9993 | — | — |
-| F1 | 0.9985 | — | — |
+| key | `62b6877c5bb21700` | `117fc7e5754d478f` | `5331f2dd5d3551e5` |
+| PR AUC | 1.0000 | 1.0000 | 1.0000 |
+| ROC AUC | 0.9993 | 0.9988 | 0.9989 |
+| F1 | 0.9985 | 0.9984 | 0.9985 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-confirm did not hold: experiment failed: interrupted: context canceled
---- experiment log tail ---
-COLLIMATOR_TIERED_QUADGRAM_PATH_DEPTH=3 \
-COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT=3 \
-COLLIMATOR_TIERED_QUADGRAM_MAX=5000 \
-COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ=5 \
-COLLIMATOR_MBC_ID_VOCAB=0 \
-COLLIMATOR_TRAIT_CONFIDENCE_MOMENTS=0 \
-COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE=0 \
-COLLIMATOR_DOCUMENT_OBFUSCATION_FEATURES=0 \
-COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT= \
-COLLIMATOR_EXPERIMENT_TAG=_pdf_seed_search_k3_text_confirm_seedsearch_3 \
-.venv/bin/python -u -m collimator experiment --db postgres://hopper@localhost:5432/hopper --output out/experiments/azoth --model-name azoth --learner azoth --workers 128 --seed 43 \
-	--experiment-idea pdf_seed_search_k3_text_confirm_seedsearch_3 --route filetypes/pdf  \
-	--train-samples 0 --max-test-samples 0 \
-	--total-limit 0 \
-	 \
-	 \
-	--n-folds 0 --holdout-fraction 0.12 \
-	--n-estimators 300 --max-depth 12 \
-	--learning-rate 0.05 --early-stopping-rounds 25 \
-	--num-leaves 96 \
-	--min-child-samples 100 \
-	--min-child-weight 5 \
-	--colsample-bytree 0.8 --subsample 0.8 \
-	--gamma 0 --reg-alpha 0 --reg-lambda 1 \
-	--device auto \
-	 \
-	 \
-	--min-malware-score 0 \
-	--beta 2 --threshold-mode fbeta \
-	 \
-	--hard-negative-fraction 0 --hard-negative-weight 1 \
-	--scale-pos-weight-mult 1 \
-	--boosting-type gbdt \
-	 \
-	--seed-search-k 3 \
-	--save-all-seeds \
-	 \
-	 \
-	--cache-dir out/cache/experiment/azoth \
-	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_pdf_seed_search_k3_text_confirm_seedsearch_3.log"
-08:44:21 INFO  collimator.experiment: using cached experiment snapshot: max_id=1636831170
-08:44:21 INFO  collimator.experiment: dataset snapshot: max_id=1636831170
-08:44:21 INFO  collimator.experiment: loaded cached corpus: 102161 train, 16922 test from out/cache/experiment/azoth/corpus_9c2042bda194a190.json
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-01T12-49-07_20260601T124854-promote-62b6877c5bb21700_azoth-validate.log; tail: 2026-06-01 08:53:09,111 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pe already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/perl already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/php already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pkg-info already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/plist already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/png already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/powershell already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pptx already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/python already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/python-bytecode already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/rtf already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/ruby already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/rust already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/shell already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/tar already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/tar.gz already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/text already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/vbs already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/xls already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/xlsx already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/xml already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/zip already has model.onnx; skipping
+2026-06-01 08:53:09,112 INFO found 3 .txt files to convert
+2026-06-01 08:53:09,175 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pdf/models/seed_42.onnx
+2026-06-01 08:53:11,467 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 08:53:12,215 INFO filetypes/pdf/models/seed_42.txt -> seed_42.onnx OK (delta=6.41e-08 on 200 rows, 3102 ms)
+2026-06-01 08:53:12,242 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pdf/models/seed_43.onnx
+2026-06-01 08:53:14,476 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 08:53:15,118 INFO filetypes/pdf/models/seed_43.txt -> seed_43.onnx OK (delta=7.01e-08 on 200 rows, 2903 ms)
+2026-06-01 08:53:15,130 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-pdf-62b6877c5bb21700/filetypes/pdf/models/seed_44.onnx
+2026-06-01 08:53:17,299 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 08:53:18,024 INFO filetypes/pdf/models/seed_44.txt -> seed_44.onnx OK (delta=1.93e-08 on 200 rows, 2906 ms)
 
-EXPERIMENT
-============================================================
-Sampled train: 102161 (101086 malware, 1075 benign)
-External test: 16922 (16768 malware, 154 benign)
-08:44:21 INFO  collimator.experiment: pass 1: building vocabulary (worker-local DB fetching)
-make[2]: *** [Makefile:1573: experiment] Terminated
---- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-01T12-44-20_20260601T124420-confirm-62b6877c5bb21700_pdf_seed_search_k3_text_confirm_seedsearch_3.log
+converted 3/3 files (0 intentionally skipped, 0 failed)
+staged runtime azoth bundle: /tmp/tmp.k6U9r5GvXE
+azoth bundle ok: /tmp/tmp.k6U9r5GvXE
+--source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 78 unimpacted (drift treated as pre-existing)
+
+per-route improvements (≥0.10pp, informational):
+  pdf :: filetypes/pdf recall@1FP-on-slice +61.77pp (11.98% → 73.75%)
+
+1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
+  - pdf: L50 hostile ENSEMBLE recall dropped 4.77pp (8.60% → 3.84%; tolerance 1.70pp; deployed 95% CI lower = 8.24%)
+
+compared 77 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
+make[2]: *** [Makefile:1152: azoth-validate] Error 1)

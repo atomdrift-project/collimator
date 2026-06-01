@@ -28,6 +28,46 @@ import os
 import logging
 import random
 import sqlite3
+
+
+# Pure-compression suffixes — formats with no multi-file container of
+# their own. When they appear AT THE END of a compound filetype string
+# (e.g. tar.gz, tar.bz2.xz) we strip them so the inner container surfaces.
+# Order matters: longest first (none here overlap, but the pattern would
+# extend if we add multi-char ones later).
+#
+# This list is the deploy-side source of truth and is mirrored verbatim
+# in litmus/src/features.rs (PURE_COMPRESSION_SUFFIXES). Keep them in
+# sync — collimator emits training labels using this rule and litmus
+# routes scan-time files using it.
+_PURE_COMPRESSION_SUFFIXES: tuple[str, ...] = (
+    "gz", "bz2", "xz", "zst", "z", "lzma",
+)
+
+
+def normalize_archive_filetype(file_type: str | None) -> str:
+    """Collapse compression-suffixed archive labels onto their container.
+
+    `tar.gz` → `tar`, `tar.bz2.xz` → `tar`. Bare compression labels (`gz`,
+    `bz2`, …) are returned as-is and remain in `RAW_COMPRESSED_FILETYPES`
+    so the specialist suite continues to skip them. Lowercases and trims
+    whitespace as a side-effect.
+
+    The rule is intentionally textual: cleave emits compound labels like
+    `tar.gz`, and we want every archive specialist (tar, zip, jar, …) to
+    train on AND route together with its compressed variants.
+    """
+    if file_type is None:
+        return ""
+    normalized = str(file_type).strip().lower()
+    while "." in normalized:
+        head, _, tail = normalized.rpartition(".")
+        if tail not in _PURE_COMPRESSION_SUFFIXES:
+            break
+        if not head:
+            break
+        normalized = head
+    return normalized
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager

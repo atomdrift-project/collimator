@@ -41,6 +41,11 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+from collimator.thresholds import default_recall_per_100M_field  # noqa: E402
+
 
 # ---------------------------------------------------------------------------
 # Gate logic mirrored from autocollie/cmd/autocollie/auto.go
@@ -170,16 +175,15 @@ def _is_finite(v: Any) -> bool:
 
 
 def _op_recall(metrics: dict[str, Any] | None) -> float | None:
-    """Operating-point recall: prefers L50 (per-100M), falls back to legacy L3.
-
-    The selection metric is now ``recall_at_50_per_100M`` (L50 = 0.5 FP/M);
-    older run JSONs only carry ``recall_at_fp_per_million_3`` (L3 = 3 FP/M)
-    so we fall back to that to keep history readable. Returns None when
-    neither field is present or both are NaN.
+    """Operating-point recall: prefers the canonical default level field,
+    falls back to the legacy ``recall_at_fp_per_million_3`` (L3 = 3 FP/M)
+    field for pre-migration run JSONs. The canonical key is derived from
+    ``DEFAULT_SEVERITY_LEVEL`` so it follows the deploy default. Returns
+    None when neither field is present or both are NaN.
     """
     if not metrics:
         return None
-    for key in ("recall_at_50_per_100M", "recall_at_fp_per_million_3"):
+    for key in (default_recall_per_100M_field(), "recall_at_fp_per_million_3"):
         v = metrics.get(key)
         if _is_finite(v):
             return float(v)
@@ -243,9 +247,10 @@ def extract_run_record(path: Path) -> dict[str, Any] | None:
         "candidate": {
             "avg_precision": float(ap),
             "roc_auc": float(metrics.get("roc_auc") or 0.0) if _is_finite(metrics.get("roc_auc")) else None,
-            # Canonical: per-100M field. Carry L50 in the output dict so
-            # downstream consumers see the new schema name.
-            "recall_at_50_per_100M": r_op if r_op is not None else 0.0,
+            # Canonical: per-100M field. Carry the deploy-default level's
+            # recall in the output dict so downstream consumers see the
+            # schema name that matches the active DEFAULT_SEVERITY_LEVEL.
+            default_recall_per_100M_field(): r_op if r_op is not None else 0.0,
             "n_malware_holdout": int(n_mal),
             "n_benign_holdout": int(n_ben),
         },
@@ -258,7 +263,7 @@ def extract_run_record(path: Path) -> dict[str, Any] | None:
 def ranking_key(record: dict[str, Any]) -> tuple[int, float, float, str]:
     cand = record["candidate"]
     base = record["baseline"] or {}
-    cand_r_op = cand.get("recall_at_50_per_100M", 0.0)
+    cand_r_op = cand.get(default_recall_per_100M_field(), 0.0)
     base_r_op_val = _op_recall(base)
     base_r_op = base_r_op_val if base_r_op_val is not None else 0.0
     delta_r_op = cand_r_op - base_r_op
@@ -326,7 +331,7 @@ def replay_score(record: dict[str, Any]) -> tuple:
     base = record["baseline"] or {}
     base_r_op_val = _op_recall(base)
     base_r_op = base_r_op_val if base_r_op_val is not None else 0.0
-    delta_r_op = cand.get("recall_at_50_per_100M", 0.0) - base_r_op
+    delta_r_op = cand.get(default_recall_per_100M_field(), 0.0) - base_r_op
     n_ben = cand.get("n_benign_holdout", 0)
     log_ben = math.log10(max(n_ben, 1))
     return (
@@ -340,9 +345,15 @@ def replay_score(record: dict[str, Any]) -> tuple:
 def render(records: list[dict[str, Any]], top: int, route_filter: str | None,
            history: dict[str, dict[str, Any]] | None = None) -> None:
     records = dedup_by_idea(records)
+    # Same comma-list semantics as the --replay-plan branch and the
+    # autocollie binary's --routes flag, so report mode and plan mode behave
+    # identically for the same `--route foo,bar` input.
+    wanted: set[str] | None = None
+    if route_filter:
+        wanted = {r.strip() for r in route_filter.split(",") if r.strip()}
     by_route: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for rec in records:
-        if route_filter and rec["route"] != route_filter:
+        if wanted is not None and rec["route"] not in wanted:
             continue
         by_route[rec["route"]].append(rec)
     if not by_route:
@@ -353,7 +364,7 @@ def render(records: list[dict[str, Any]], top: int, route_filter: str | None,
         return
     print(f"# autocollie favorites — top {top} per route")
     if route_filter:
-        print(f"#   filtered to route: {route_filter}")
+        print(f"#   filtered to route(s): {route_filter}")
     print()
     routes_sorted = sorted(by_route.keys())
     for route in routes_sorted:
@@ -366,7 +377,7 @@ def render(records: list[dict[str, Any]], top: int, route_filter: str | None,
             ok, reason = estimate_current_verdict(rec["candidate"], rec["baseline"], paired)
             base_r_op_val = _op_recall(rec["baseline"] or {})
             base_r_op = base_r_op_val if base_r_op_val is not None else 0.0
-            d_r_op = rec["candidate"]["recall_at_50_per_100M"] - base_r_op
+            d_r_op = rec["candidate"][default_recall_per_100M_field()] - base_r_op
             verdict_prefix = "✓" if ok else "✗"
             # Replay-history column: show last attempt outcome if recorded.
             # Lets the operator avoid burning cycles on candidates that
@@ -411,8 +422,11 @@ def main() -> int:
     parser.add_argument("--top", type=int, default=10,
                         help="Top N candidates per route (default 10).")
     parser.add_argument("--route", default=None,
-                        help="If set, only consider this exact route "
-                             "(e.g., 'filetypes/pdf' or 'filegroups/source').")
+                        help="If set, only consider these routes. Accepts a "
+                             "single route ('filetypes/pdf'), or a comma-"
+                             "separated list ('filetypes/pdf,filetypes/pe,"
+                             "filegroups/source') matching the same syntax "
+                             "as `make autocollie-loop ROUTES=...`.")
     parser.add_argument("--include-promoted", action="store_true",
                         help="Don't exclude runs that are already in "
                              "promoted_baselines.json. Useful for sanity-"
@@ -475,7 +489,11 @@ def main() -> int:
         from datetime import datetime, timezone, timedelta  # noqa: PLC0415
         records = dedup_by_idea(records)
         if args.route:
-            records = [r for r in records if r["route"] == args.route]
+            # Accept either a single route or a comma-separated list, matching
+            # the autocollie binary's `--routes` syntax so operators don't
+            # have to remember a different format for replay-favorites.
+            wanted = {r.strip() for r in args.route.split(",") if r.strip()}
+            records = [r for r in records if r["route"] in wanted]
         # Score and filter
         eligible: list[tuple[tuple, dict[str, Any]]] = []
         cooldown_cutoff = None

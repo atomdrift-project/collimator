@@ -222,6 +222,12 @@ def _label_int(label: str) -> int:
 
 
 def _fetch_file_types(db_path: Path | str, row_ids: np.ndarray) -> dict[int, str]:
+    """Return {row_id: canonical_file_type}. Compound labels like `tar.gz`
+    are collapsed onto their container (`tar`) via
+    [data.normalize_archive_filetype] before they ever land in the score
+    table — every downstream consumer (route discovery, specialist
+    training, per-filetype metrics, litmus route lookup) inherits the
+    normalized form."""
     ids = [int(row_id) for row_id in row_ids]
     out: dict[int, str] = {}
     with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
@@ -233,7 +239,10 @@ def _fetch_file_types(db_path: Path | str, row_ids: np.ndarray) -> dict[int, str
                         "FROM samples WHERE id = ANY(%s)",
                         [chunk],
                     )
-                    out.update({int(row_id): str(file_type) for row_id, file_type in cur})
+                    out.update({
+                        int(row_id): data.normalize_archive_filetype(file_type)
+                        for row_id, file_type in cur
+                    })
         else:
             for chunk in _chunks(ids, 10_000):
                 placeholders = ",".join("?" for _ in chunk)
@@ -241,12 +250,10 @@ def _fetch_file_types(db_path: Path | str, row_ids: np.ndarray) -> dict[int, str
                     "SELECT id, COALESCE(NULLIF(file_type, ''), 'unknown') "
                     f"FROM samples WHERE id IN ({placeholders})"
                 )
-                out.update(
-                    {
-                        int(row_id): str(file_type)
-                        for row_id, file_type in conn.execute(query, chunk)
-                    },
-                )
+                out.update({
+                    int(row_id): data.normalize_archive_filetype(file_type)
+                    for row_id, file_type in conn.execute(query, chunk)
+                })
     return out
 
 
@@ -1166,14 +1173,50 @@ def _fit_and_persist_isotonic_calibrator(
                 # x already reaches 1.0; replace the terminal y to 1.0.
                 y_thr = y_thr.copy()
                 y_thr[-1] = 1.0
+        # `fit_log` is saved into calibrator.json as a schema annotation
+        # (downstream tools read it); keep its format stable.
         fit_log = (
             f"isotonic on {int(valid.sum())} rows "
             f"({int(y.sum())} malware, {int((y == 0).sum())} benign); "
             f"empirical max x={emp_x_max:.3f} y={emp_y_max:.3f}; "
             f"method={method}, breakpoints={len(x_thr)}"
         )
-        if method == "isotonic+anchor":
-            LOG.warning("calibrator %s: %s", name, fit_log)
+        # Operator-facing log line uses a clearer summary + level that
+        # reflects what's actually concerning. The previous version logged
+        # EVERY anchored calibrator at WARNING with raw numerical jargon,
+        # which made healthy and broken routes indistinguishable.
+        n_mal = int(y.sum())
+        n_ben = int((y == 0).sum())
+        if method == "isotonic":
+            # Clean fit — the empirical curve already spans up to ~(1, 1).
+            LOG.info(
+                "calibrator %s: clean fit (%d mal / %d ben, %d breakpoints)",
+                name, n_mal, n_ben, len(x_thr),
+            )
+        elif emp_y_max < 0.10:
+            # Anchor is doing nearly all the work above the empirical range:
+            # the model produced high raw probabilities but very few of those
+            # files were actually malware in training (only %.1f%% at the top).
+            # The anchor extension to (1.0, 1.0) is unsupported by the data —
+            # at scan time, OOD high-confidence files may not classify the
+            # way the operator expects. Operationally: this route is likely
+            # to underperform until more malware appears in its training set.
+            LOG.warning(
+                "calibrator %s: WEAK FIT — only %.1f%% of top-scored files "
+                "in training were actually malware (%d mal / %d ben); "
+                "anchor extrapolates calibrator to (1.0, 1.0) but is "
+                "unsupported by data. Add more %s malware to training.",
+                name, emp_y_max * 100, n_mal, n_ben, name,
+            )
+        else:
+            # Routine anchor — fit covered most of the range, anchor just
+            # caps the terminal point at (1.0, 1.0) so out-of-distribution
+            # high raw scores get a sensible calibrated value at scan time.
+            # No operational concern.
+            LOG.info(
+                "calibrator %s: anchored (emp top y=%.2f → 1.0; %d mal / %d ben)",
+                name, emp_y_max, n_mal, n_ben,
+            )
         slot_dir = azoth_root / name
         slot_dir.mkdir(parents=True, exist_ok=True)
         cal_path = slot_dir / "calibrator.json"

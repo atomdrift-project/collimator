@@ -1,6 +1,6 @@
 # Confirm PASS — f2fba1536fc537d0 on `filetypes/python`
 
-Cycle `20260526T233431-confirm-f2fba1536fc537d0` — 2026-05-26T23:34:31Z
+Cycle `20260601T213055-confirm-f2fba1536fc537d0` — 2026-06-01T21:30:55Z
 
 PR_AUC held across 3 seeds (orig 0.9989)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9989)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `f2fba1536fc537d0` | `15426576c564e9d1` | `15426576c564e9d1` | `15426576c564e9d1` |
-| PR AUC | 0.9989 | 0.9983 | 0.9983 | 0.9982 |
-| ROC AUC | 0.9989 | 0.9985 | 0.9985 | 0.9984 |
-| Recall@3FPM | — | 0.8003 | 0.7448 | 0.7202 |
+| key | `f2fba1536fc537d0` | `b4269d5b16803e77` | `b4269d5b16803e77` | `b4269d5b16803e77` |
+| PR AUC | 0.9989 | 0.9973 | 0.9973 | 0.9972 |
+| ROC AUC | 0.9989 | 0.9980 | 0.9980 | 0.9979 |
+| Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

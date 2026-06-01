@@ -27,20 +27,25 @@ log = logging.getLogger(__name__)
 # Grid is dense in the strict region (L0-L10, where finer resolution
 # actually pays off once the benign corpus is large enough to resolve
 # sub-FP/M budgets), decade-aligned in the mid region (L10-L100, to match
-# litmus's `-0..-9` shorthand 0/10/20/.../90), and sparse in the loose tail
-# (L200-L1000). The loose tail exists for two reasons:
+# litmus's `-0..-9` shorthand 0/10/20/.../90), sparse in the mid-loose
+# region (L200-L1000), and very sparse in the noisy tail (L2000-L10000).
+# The loose-and-noisier tail exists for three reasons:
 #   1. The azoth READMEs' corpus-weighted recall chart needs informational
 #      headroom — operators want to see how recall would grow if the FP
-#      budget were loosened beyond the typical deploy regime.
-#   2. Litmus derives the suspicious threshold as a level-table lookup at
-#      `min(max_level, 4 × hostile_level)` (see
-#      `derive_suspicious_from_hostile_level` in `litmus/src/model.rs`).
-#      Hostile at L100 → suspicious at L400, which needs the loose tail to
-#      be calibrated. Capping the grid at L100 would make suspicious
-#      indistinguishable from hostile for any hostile ≥ L25.
+#      budget were loosened beyond the typical deploy regime, and weak
+#      filetype routes that only fire in the L1k-L10k band need
+#      somewhere to plot.
+#   2. Litmus's loaded suspicious threshold is the level-table lookup at
+#      `max_grid_level` (see `derive_suspicious_level_from_hostile` in
+#      `litmus/src/model.rs`). Extending the tail to L10000 gives "fires
+#      anywhere above critical" maximum reach.
+#   3. Consumer-side classification (promoter / prism / hopper) treats
+#      `l > critical_level` as suspicious — a fatter tail means more files
+#      with weak-but-real signal end up in the suspicious bucket rather
+#      than being silently dropped as benign.
 _LEVELS_PER_100M: tuple[int, ...] = (
-    0, 1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
-    200, 300, 500, 1000,
+    0, 1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+    200, 300, 500, 1000, 2000, 5000, 7500, 10000,
 )
 SEVERITY_LEVEL_TARGETS = [
     {
@@ -56,10 +61,51 @@ SEVERITY_LEVEL_TARGETS = [
 # extends through L1000.
 _CHART_LEVELS_PER_100M: tuple[int, ...] = _LEVELS_PER_100M
 
-# 50 FP/100M = 0.5 FP/M — the stricter default replacing the legacy L300
-# (= 3 FP/M) operating point. Litmus's CLI default (`-l 50`) matches; if
-# a future train shows recall doesn't hold here, ratchet looser.
-DEFAULT_SEVERITY_LEVEL = 50
+# ============================================================================
+# CANONICAL DEPLOY OPERATING POINT
+# ============================================================================
+# 4 FP/100M = 0.04 FP/M — the strict-tail target the deploy aims for. At
+# 100M scans/day this is ~4 FPs/day, matching SOC tolerance for security
+# tooling.
+#
+# To change the default in the future, update this single integer.
+# Whatever value you choose MUST appear in `_LEVELS_PER_100M` above
+# (collimator's calibrator only emits thresholds for grid levels, so a
+# non-grid default is unusable at deploy time). Add it to the grid first
+# if it isn't there.
+#
+# The rest of the system reads it via:
+#   - `default_recall_per_100M_field()` for the JSON key in metrics blobs
+#   - `DEFAULT_SEVERITY_TARGET` for the FPR-per-million math
+# Downstream repos have their own mirror constants (one per repo) that
+# must be flipped in lockstep — see CROSS_REPO_NOTE.
+DEFAULT_SEVERITY_LEVEL = 4
+
+# Cross-repo mirrors of DEFAULT_SEVERITY_LEVEL (kept in sync manually):
+#
+#   - litmus:    src/model.rs    `pub const DEFAULT_SEVERITY_LEVEL: u8`
+#   - autocollie: internal/specs/level.go  `const DefaultSeverityLevel`
+#   - autocollie: internal/specs/spec.go   `defaultMaxRecallAtFPRTarget`
+#                                          (must equal level / 1e8 = 5e-8 at L5)
+#   - autocollie: internal/specs/route_health.go  `DEFAULT_RECALL_LEVEL`
+#                                                 (chart marker level)
+#   - prism, promoter: help text and tooltips only — no functional constants
+#
+# When you change DEFAULT_SEVERITY_LEVEL here, grep each repo for the
+# mirror constant and update it too. Tests will fail loudly if you miss one.
+CROSS_REPO_NOTE = (
+    "DEFAULT_SEVERITY_LEVEL has cross-repo mirrors. See thresholds/__init__.py "
+    "docstring for the canonical list."
+)
+
+
+def default_recall_per_100M_field() -> str:
+    """Return the per_filetype_metrics.json field name for the deploy-default
+    operating point. Use this everywhere a literal "recall_at_N_per_100M" key
+    would otherwise appear so changing DEFAULT_SEVERITY_LEVEL above ripples
+    through automatically.
+    """
+    return f"recall_at_{DEFAULT_SEVERITY_LEVEL}_per_100M"
 
 
 def _severity_target(level: int) -> dict[str, int | float]:

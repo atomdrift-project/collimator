@@ -50,6 +50,11 @@ from typing import Any
 
 import numpy as np
 
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
+
 
 def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str]]:
     """Bulk-fetch (sha256, path) by id from hopper.samples."""
@@ -182,7 +187,20 @@ def main() -> None:
             "preserves legacy behavior."
         ),
     )
-    p.add_argument("--level", type=int, default=50, help="Severity level on the per-100M scale (default 50 = 0.5 FP/M; any integer in 0..=1000 supported by the current grid). Note: historical route_policies.json files predating the grid change may not have an entry at this level; supply --level explicitly to match the file's available levels.")
+    p.add_argument(
+        "--level",
+        type=int,
+        default=DEFAULT_SEVERITY_LEVEL,
+        help=(
+            f"Severity level on the per-100M scale (default "
+            f"{DEFAULT_SEVERITY_LEVEL} = {DEFAULT_SEVERITY_LEVEL/100:.2f} FP/M; "
+            f"any integer in 0..=1000 supported by the current grid; sourced "
+            f"from collimator.thresholds.DEFAULT_SEVERITY_LEVEL). Note: "
+            f"historical route_policies.json files predating the grid change "
+            f"may not have an entry at this level; supply --level explicitly "
+            f"to match the file's available levels."
+        ),
+    )
     p.add_argument(
         "--severity",
         choices=["hostile"],

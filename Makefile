@@ -1853,16 +1853,18 @@ CONFIRM_SEED ?= 43
 # manually via `make autocollie-confirm KEY=...` + `make autocollie-promote`.
 #
 # Usage:
-#   make autocollie-favorites-report                 # top 10 per route
+#   make autocollie-favorites-report                                   # top 10 per route
 #   make autocollie-favorites-report TOP=5
-#   make autocollie-favorites-report ROUTE=filetypes/pdf
-#   make autocollie-favorites-report REQUIRE_APPLES=1  # only apples-to-apples eligible
+#   make autocollie-favorites-report ROUTES=filetypes/pdf
+#   make autocollie-favorites-report ROUTES=filetypes/pe,filegroups/source
+#   make autocollie-favorites-report REQUIRE_APPLES=1                   # apples-to-apples only
+# ROUTE (singular) is accepted as a legacy alias for ROUTES.
 autocollie-favorites-report: venv
 	$(PYTHON) scripts/autocollie_favorites.py \
 		--runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR) \
 		--baselines $(AZOTH_ROOT)/.autocollie/promoted_baselines.json \
 		--top $(or $(TOP),10) \
-		$(if $(ROUTE),--route $(ROUTE),) \
+		$(if $(or $(ROUTES),$(ROUTE)),--route $(or $(ROUTES),$(ROUTE)),) \
 		$(if $(REQUIRE_APPLES),--require-apples,)
 
 # Phase-2 auto-replay. Picks top-N candidates per route (globally
@@ -1874,10 +1876,13 @@ autocollie-favorites-report: venv
 # the cooldown skips recently-failed candidates next time around.
 #
 # Usage:
-#   make autocollie-replay-favorites                # top 1 per route
+#   make autocollie-replay-favorites                                   # top 1 per route, all routes
 #   make autocollie-replay-favorites TOP=3
-#   make autocollie-replay-favorites ROUTE=filegroups/source
-#   make autocollie-replay-favorites COOLDOWN=0     # ignore retry history
+#   make autocollie-replay-favorites ROUTES=filegroups/source
+#   make autocollie-replay-favorites ROUTES=filetypes/pe,filetypes/macho
+#   make autocollie-replay-favorites COOLDOWN=0                        # ignore retry history
+# ROUTE (singular) is accepted as a legacy alias for ROUTES. The plural
+# matches the syntax `make autocollie-loop ROUTES=...` already uses.
 autocollie-replay-favorites: venv autocollie-build
 	@set -e; \
 	plan=$$(mktemp); \
@@ -1886,7 +1891,7 @@ autocollie-replay-favorites: venv autocollie-build
 		--baselines $(AZOTH_ROOT)/.autocollie/promoted_baselines.json \
 		--top $(or $(TOP),1) \
 		--replay-cooldown $(or $(COOLDOWN),2.0) \
-		$(if $(ROUTE),--route $(ROUTE),) \
+		$(if $(or $(ROUTES),$(ROUTE)),--route $(or $(ROUTES),$(ROUTE)),) \
 		--replay-plan > "$$plan"; \
 	count=$$(wc -l < "$$plan" | tr -d ' '); \
 	echo "▶ replay-favorites: $$count candidate(s) queued"; \
@@ -1903,7 +1908,11 @@ autocollie-replay-favorites: venv autocollie-build
 	  prom_log=/tmp/replay-promote-$$key.log; \
 	  : > "$$conf_log"; : > "$$prom_log"; \
 	  $(MAKE) --no-print-directory autocollie-confirm KEY=$$key 2>&1 | tee "$$conf_log" || true; \
-	  if ! grep -q ": FAIL ===" "$$conf_log"; then \
+	  if grep -q ": FAIL ===" "$$conf_log"; then \
+	    : ; \
+	  elif grep -q "^SKIP-PROMOTE:" "$$conf_log"; then \
+	    echo "  ⊘ skipping promote — confirm passed but predicted regression vs deployed"; \
+	  else \
 	    $(MAKE) --no-print-directory autocollie-promote KEY=$$key 2>&1 | tee "$$prom_log" || true; \
 	  fi; \
 	  $(PYTHON) scripts/autocollie_record_replay.py \

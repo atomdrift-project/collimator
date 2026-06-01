@@ -47,6 +47,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from collimator import data  # noqa: E402
+from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
 
 LOGIT_EPS = 1e-6
 
@@ -183,8 +184,13 @@ def main() -> int:
     parser.add_argument(
         "--level",
         type=int,
-        default=50,
-        help="Which level's deployed policy to compare against (default 50, the new per-100M operating point).",
+        default=DEFAULT_SEVERITY_LEVEL,
+        help=(
+            f"Which level's deployed policy to compare against (default "
+            f"{DEFAULT_SEVERITY_LEVEL}, the deploy operating point on the "
+            f"per-100M grid; sourced from "
+            f"collimator.thresholds.DEFAULT_SEVERITY_LEVEL)."
+        ),
     )
     parser.add_argument(
         "--fp-targets",

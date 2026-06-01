@@ -59,6 +59,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+from collimator.thresholds import default_recall_per_100M_field  # noqa: E402
+
 LOG = logging.getLogger("azoth_train_best")
 
 
@@ -73,14 +78,16 @@ APPLES_MIN_BENIGN_HOLDOUT: int = 200
 def _op_recall(metrics: dict[str, Any] | None) -> float | None:
     """Operating-point recall for the picker.
 
-    Prefers per-100M ``recall_at_50_per_100M`` (L50, 0.5 FP/M) that
-    today's emitters write; falls back to the legacy per-million
-    ``recall_at_fp_per_million_3`` (L3, 3 FP/M) for older run JSONs.
-    Returns None when neither field is present or both are NaN.
+    Prefers the canonical per-100M field at the deploy-default level
+    (derived from ``DEFAULT_SEVERITY_LEVEL`` via
+    ``default_recall_per_100M_field()``); falls back to the legacy
+    per-million ``recall_at_fp_per_million_3`` (L3, 3 FP/M) for older
+    run JSONs. Returns None when neither field is present or both are
+    NaN.
     """
     if not metrics:
         return None
-    for key in ("recall_at_50_per_100M", "recall_at_fp_per_million_3"):
+    for key in (default_recall_per_100M_field(), "recall_at_fp_per_million_3"):
         v = metrics.get(key)
         if isinstance(v, (int, float)) and not math.isnan(float(v)):
             return float(v)

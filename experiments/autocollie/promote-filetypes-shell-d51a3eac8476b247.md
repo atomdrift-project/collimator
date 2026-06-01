@@ -1,8 +1,8 @@
 # Promote PASS — `d51a3eac8476b247` on `filetypes/shell`
 
-Generated 2026-05-28T08:43:35Z
+Generated 2026-06-01T14:16:24Z
 
-full-train holds — PR_AUC 0.9960 -> 0.9968, AUC 0.9974 -> 0.9979, Brier 0.0190 -> 0.0175
+full-train holds — PR_AUC 0.9960 -> 0.9987, AUC 0.9974 -> 0.9988, Brier 0.0190 -> 0.0135
 
 ## Gates
 
@@ -13,10 +13,10 @@ full-train holds — PR_AUC 0.9960 -> 0.9968, AUC 0.9974 -> 0.9979, Brier 0.0190
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `d51a3eac8476b247` | `18021b21c57387ac` | `63efe221c54060b0` |
-| PR AUC | 0.9960 | 0.9968 | 0.9968 |
-| ROC AUC | 0.9974 | 0.9979 | 0.9979 |
-| F1 | 0.9569 | 0.9644 | 0.9595 |
+| key | `d51a3eac8476b247` | `ae36794263b81f9f` | `b7e7dc659c5d83b4` |
+| PR AUC | 0.9960 | 0.9987 | 0.9987 |
+| ROC AUC | 0.9974 | 0.9988 | 0.9988 |
+| F1 | 0.9569 | 0.9759 | 0.9756 |
 
 ## Status: candidate bundle is built; litmus validation skipped
 
@@ -79,7 +79,7 @@ EXP_NGRAM_MIN_CRIT=0
 EXP_NGRAM_PATH_DEPTH=0
 EXP_NONSTANDARD_SECTION_SIGNAL=0
 EXP_NUM_LEAVES=96
-EXP_NUM_THREADS=64
+EXP_NUM_THREADS=8
 EXP_OBJECTIVE_TRIGRAMS=0
 EXP_OVERLAY_SIGNAL=0
 EXP_PACKAGED_CAPABILITY_MODE=paths

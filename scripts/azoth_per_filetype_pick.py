@@ -23,7 +23,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
+
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
 
 
 def main() -> int:
@@ -33,17 +39,22 @@ def main() -> int:
         default=Path("out/models/azoth/route_policies.json"),
     )
     p.add_argument(
-        "--target-fp-per-million", type=float, default=0.5,
-        help="Per-slice FP/M ceiling (default 0.5 = L50 on the per-100M scale). "
-             "Candidates with realized FPR above (target × max-fpr-multiplier) "
-             "are filtered out.",
+        "--target-fp-per-million", type=float,
+        default=DEFAULT_SEVERITY_LEVEL / 100.0,
+        help=(
+            f"Per-slice FP/M ceiling (default "
+            f"{DEFAULT_SEVERITY_LEVEL / 100.0:g} = L{DEFAULT_SEVERITY_LEVEL} "
+            f"on the per-100M scale; derived from "
+            f"collimator.thresholds.DEFAULT_SEVERITY_LEVEL). Candidates with "
+            f"realized FPR above (target × max-fpr-multiplier) are filtered out."
+        ),
     )
     p.add_argument(
         "--max-fpr-multiplier", type=float, default=3.0,
         help="How much realized-FPR slack to allow above target. "
-             "Default 3.0 = candidates up to 1.5 FP/M (= 3× of 0.5 FP/M target) "
-             "are eligible. Below 1.0 enforces strict ≤target; above 1.0 "
-             "permits slop from finite-sample quantile noise.",
+             "Default 3.0 — candidates up to 3× the target FP/M are eligible. "
+             "Below 1.0 enforces strict ≤target; above 1.0 permits slop from "
+             "finite-sample quantile noise.",
     )
     args = p.parse_args()
 
@@ -66,14 +77,16 @@ def main() -> int:
         n_mal = int(route.get("malware") or 0)
         if n_ben < 1 or n_mal < 1:
             continue
-        # Find L50 hostile (per-100M scale = 0.5 FP/M = today's default).
-        l50 = next(
-            (lev for lev in route["levels"] if int(lev["level"]) == 50),
+        # Find deploy-default hostile (per-100M scale; derived from
+        # DEFAULT_SEVERITY_LEVEL).
+        default_level_row = next(
+            (lev for lev in route["levels"]
+             if int(lev["level"]) == DEFAULT_SEVERITY_LEVEL),
             None,
         )
-        if not l50:
+        if not default_level_row:
             continue
-        h = l50.get("hostile") or {}
+        h = default_level_row.get("hostile") or {}
         deployed = h.get("best") or {}
         deployed_tp = int(deployed.get("tp") or 0)
         deployed_fp = int(deployed.get("fp") or 0)

@@ -46,9 +46,11 @@ def test_default_recommendations_derive_budgets_from_good_count() -> None:
 
     recs = compute_default_recommendations(probs, y)
     budgets = fp_budget_tables(probs, y)
-    # Default severity level is 50 (per-100M scale) = 0.5 FP/M. With ~1M benigns
-    # the floor budget is clamped to 1 FP by _fp_budget_for_rate. "Suspicious"
-    # is a consumer-side derivation; only hostile is emitted.
+    # Default severity level is DEFAULT_SEVERITY_LEVEL (per-100M scale). With
+    # ~1M benigns the floor budget is clamped to 1 FP by _fp_budget_for_rate
+    # regardless of the exact level (the level only affects the *rate*; any
+    # rate below 1 FP/M rounds up to a 1-FP budget on this corpus size).
+    # "Suspicious" is a consumer-side derivation; only hostile is emitted.
     hostile_row = next(row for row in budgets["hostile"] if row["max_fp_budget"] == 1)
 
     assert recs["hostile"] == hostile_row["threshold"]

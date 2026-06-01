@@ -51,6 +51,12 @@ import os
 import sys
 from pathlib import Path
 
+# scripts/ isn't on sys.path; reach src/ for `collimator.thresholds`.
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
+
 
 def _load(path: Path) -> dict:
     if not path.is_file():
@@ -159,8 +165,12 @@ def main() -> int:
             "attribute the deploy's net effect to specific routes."
         ),
     )
-    parser.add_argument("--level", type=int, default=50,
-                        help="Severity level on the per-100M scale (default 50 = 0.5 FP/M).")
+    parser.add_argument("--level", type=int, default=DEFAULT_SEVERITY_LEVEL,
+                        help=(
+                            f"Severity level on the per-100M scale (default "
+                            f"{DEFAULT_SEVERITY_LEVEL} = {DEFAULT_SEVERITY_LEVEL/100:.2f} FP/M; "
+                            f"sourced from collimator.thresholds.DEFAULT_SEVERITY_LEVEL)."
+                        ))
     parser.add_argument("--severity", default="hostile", choices=["hostile"])
     parser.add_argument(
         "--net-improvement-fallback",
@@ -407,10 +417,23 @@ def main() -> int:
                         f"{float(s_recall)*100:.2f}% ({-delta*100:+.2f}pp; unimpacted by this promote)"
                     )
             elif delta >= args.improvement_threshold:
-                ensemble_wins.append(
-                    f"  {ft}: L{args.level} {args.severity} ensemble recall +{delta*100:.2f}pp "
-                    f"({float(d_recall)*100:.2f}% → {float(s_recall)*100:.2f}%)",
-                )
+                # Only report as an "improvement caused by this promote" when
+                # the filetype was actually touched by the changed routes.
+                # Unimpacted filetypes' positive drift is float-noise or
+                # seed-variance in the recalibration step — flagging it as a
+                # win attributes credit the candidate didn't earn and makes
+                # filegroup promotes look like they affect 70 filetypes
+                # when they really touch ~9.
+                if is_impacted:
+                    ensemble_wins.append(
+                        f"  {ft}: L{args.level} {args.severity} ensemble recall +{delta*100:.2f}pp "
+                        f"({float(d_recall)*100:.2f}% → {float(s_recall)*100:.2f}%)",
+                    )
+                else:
+                    preexisting_drift.append(
+                        f"{ft}: pre-existing drift, recall {float(d_recall)*100:.2f}% → "
+                        f"{float(s_recall)*100:.2f}% ({delta*100:+.2f}pp; unimpacted by this promote)"
+                    )
 
         # Low-water-mark check (independent of the deployed-vs-staged
         # gate above): hard floor against a pinned reference. No CI
@@ -474,6 +497,12 @@ def main() -> int:
             if not (_is_finite_number(s_rec) and _is_finite_number(d_rec)):
                 continue
             delta = float(s_rec) - float(d_rec)  # positive = improvement
+            # Same impact filter as ensemble_wins above: unimpacted filetypes'
+            # per-route slice drift is recalibration noise, not signal. Reporting
+            # it as a per-route improvement/regression makes a single-route
+            # promote look like it touched everything.
+            if not is_impacted:
+                continue
             if -delta > args.recall_tolerance:
                 route_drops.append(
                     f"  {ft} :: {route_name} {kind} dropped {-delta*100:.2f}pp "

@@ -9,9 +9,37 @@ from collimator.data import (
     count_labeled_by_partition_full,
     labeled_corpus_metadata_full,
     load_samples,
+    normalize_archive_filetype,
     stream_labeled_metadata_full_with_size,
     stream_labeled_samples_full,
 )
+
+
+def test_normalize_archive_filetype_strips_pure_compression():
+    """Mirror of litmus' Rust `normalize_archive_filetype` test. The two
+    must stay byte-equivalent — training emits labels with this rule and
+    litmus routes scan-time files with the Rust mirror.
+    """
+    # Compound archive labels collapse onto their container.
+    assert normalize_archive_filetype("tar.gz") == "tar"
+    assert normalize_archive_filetype("tar.bz2") == "tar"
+    assert normalize_archive_filetype("tar.xz") == "tar"
+    assert normalize_archive_filetype("tar.zst") == "tar"
+    assert normalize_archive_filetype("tar.Z") == "tar"
+    assert normalize_archive_filetype("TAR.GZ") == "tar"
+    # Repeated stripping for stacked suffixes.
+    assert normalize_archive_filetype("tar.bz2.xz") == "tar"
+    # Bare compression labels keep their identity — RAW_COMPRESSED_FILETYPES
+    # in azoth_specialist_suite gates them at route discovery.
+    assert normalize_archive_filetype("gz") == "gz"
+    assert normalize_archive_filetype("bz2") == "bz2"
+    # Containers without a compression suffix pass through.
+    assert normalize_archive_filetype("zip") == "zip"
+    assert normalize_archive_filetype("pe") == "pe"
+    # Empty / None / whitespace.
+    assert normalize_archive_filetype("") == ""
+    assert normalize_archive_filetype(None) == ""
+    assert normalize_archive_filetype("  tar.gz  ") == "tar"
 
 
 def _create_test_db(samples: list[tuple[str, str, str | None] | dict[str, str | int | None]]) -> Path:

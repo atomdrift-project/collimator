@@ -44,6 +44,7 @@ from typing import Any
 _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
+from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
 
 
 def _knapsack(
@@ -99,8 +100,13 @@ def main() -> int:
     parser.add_argument(
         "--level",
         type=int,
-        default=50,
-        help="Calibration level whose candidate set to use (default 50, the new per-100M operating point).",
+        default=DEFAULT_SEVERITY_LEVEL,
+        help=(
+            f"Calibration level whose candidate set to use (default "
+            f"{DEFAULT_SEVERITY_LEVEL}, the deploy operating point on the "
+            f"per-100M grid; sourced from "
+            f"collimator.thresholds.DEFAULT_SEVERITY_LEVEL)."
+        ),
     )
     parser.add_argument(
         "--fpm-targets",

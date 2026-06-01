@@ -1,57 +1,57 @@
 # Promote REJECTED — `f2fba1536fc537d0` on `filetypes/python`
 
-Generated 2026-05-26T23:38:33Z
+Generated 2026-06-01T21:35:38Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-26T23-35-07_20260526T233432-promote-f2fba1536fc537d0_azoth-validate.log; tail: filetypes/pyproject.toml: 0 rows in score table; skipping
-filetypes/xlsb: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/per_filetype_metrics.json (filetypes: 79, filegroups: 0)
-.venv/bin/python scripts/azoth_route_policy_eval.py \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/score_table.npz \
-	--general-scores /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/general/threshold_scores.npz \
-	--route-policies /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policies.json \
-	--partition test \
-	--output-md /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policy_eval_oof.md \
-	--output-json /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policy_eval_oof.md
-.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0
-staged runtime azoth bundle: /tmp/tmp.tIPkz1EXLb
-azoth bundle ok: /tmp/tmp.tIPkz1EXLb
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 65 unimpacted (drift treated as pre-existing)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-01T21-31-34_20260601T213056-promote-f2fba1536fc537d0_azoth-validate.log; tail: 2026-06-01 17:35:30,512 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/filetypes/python/models/seed_43.onnx
+2026-06-01 17:35:30,535 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 17:35:31,311 INFO filetypes/python/models/seed_43.txt -> seed_43.onnx OK (delta=8.86e-08 on 200 rows, 1227 ms)
+2026-06-01 17:35:31,792 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/filetypes/python/models/seed_44.onnx
+2026-06-01 17:35:31,814 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 17:35:32,578 INFO filetypes/python/models/seed_44.txt -> seed_44.onnx OK (delta=1.51e-07 on 200 rows, 1267 ms)
 
-ensemble improvements (≥0.10pp):
-  xls: L3 hostile ensemble recall +0.31pp (95.22% → 95.53%)
-
-per-route improvements (≥0.10pp, informational):
-  java_class :: filetypes/java_class recall@3FP/M +4.07pp (84.30% → 88.37%)
+converted 3/3 files (0 intentionally skipped, 0 failed)
+staged runtime azoth bundle: /tmp/tmp.TUux0rhW9V
+azoth bundle ok: /tmp/tmp.TUux0rhW9V
+--source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 78 unimpacted (drift treated as pre-existing)
 
 per-route regressions (informational; does not block deploy):
-  perl :: filetypes/perl recall@3FP/M dropped 3.70pp (88.89% → 85.19%)
-  python :: filetypes/python recall@3FP/M dropped 5.33pp (71.33% → 66.01%)
-  xml :: filetypes/xml recall@3FP/M dropped 4.45pp (5.82% → 1.37%)
+  python :: filetypes/python recall@1FP-on-slice dropped 4.43pp (63.37% → 58.93%)
 
-14 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + c: L3 hostile ensemble recall +2.72pp above LWM (10.02% → 12.74%)
-  + java_class: L3 hostile ensemble recall +2.89pp above LWM (73.41% → 76.30%)
-  + javascript: L3 hostile ensemble recall +8.35pp above LWM (66.20% → 74.55%)
-  + lnk: L3 hostile ensemble recall +13.03pp above LWM (48.66% → 61.69%)
-  + package.json: L3 hostile ensemble recall +3.79pp above LWM (86.78% → 90.57%)
-  + pdf: L3 hostile ensemble recall +1.09pp above LWM (6.41% → 7.50%)
-  + pe: L3 hostile ensemble recall +2.21pp above LWM (61.96% → 64.17%)
-  + perl: L3 hostile ensemble recall +3.70pp above LWM (77.78% → 81.48%)
-  + plist: L3 hostile ensemble recall +1.47pp above LWM (2.94% → 4.41%)
-  + png: L3 hostile ensemble recall +3.20pp above LWM (1.07% → 4.26%)
-  + powershell: L3 hostile ensemble recall +1.54pp above LWM (29.62% → 31.15%)
-  + pptx: L3 hostile ensemble recall +9.09pp above LWM (9.09% → 18.18%)
-  + xls: L3 hostile ensemble recall +3.08pp above LWM (92.44% → 95.53%)
-  + xml: L3 hostile ensemble recall +4.11pp above LWM (2.74% → 6.85%)
+24 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + bz2: L4 hostile ensemble recall +66.67pp above LWM (0.00% → 66.67%)
+  + crx: L4 hostile ensemble recall +76.92pp above LWM (0.00% → 76.92%)
+  + doc: L4 hostile ensemble recall +7.33pp above LWM (90.99% → 98.32%)
+  + docx: L4 hostile ensemble recall +9.85pp above LWM (71.59% → 81.44%)
+  + go: L4 hostile ensemble recall +3.04pp above LWM (1.78% → 4.82%)
+  + html: L4 hostile ensemble recall +51.33pp above LWM (16.67% → 68.00%)
+  + jpeg: L4 hostile ensemble recall +7.83pp above LWM (1.56% → 9.40%)
+  + lnk: L4 hostile ensemble recall +8.14pp above LWM (48.66% → 56.80%)
+  + lua: L4 hostile ensemble recall +53.85pp above LWM (0.00% → 53.85%)
+  + objc: L4 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
+  + package.json: L4 hostile ensemble recall +3.51pp above LWM (86.78% → 90.28%)
+  + pdf: L4 hostile ensemble recall +65.23pp above LWM (6.41% → 71.64%)
+  + plist: L4 hostile ensemble recall +3.12pp above LWM (2.94% → 6.06%)
+  + powershell: L4 hostile ensemble recall +19.35pp above LWM (29.62% → 48.97%)
+  + pptx: L4 hostile ensemble recall +33.99pp above LWM (9.09% → 43.08%)
+  + python-bytecode: L4 hostile ensemble recall +1.14pp above LWM (90.99% → 92.13%)
+  + rtf: L4 hostile ensemble recall +1.02pp above LWM (97.67% → 98.70%)
+  + shell: L4 hostile ensemble recall +4.09pp above LWM (82.78% → 86.88%)
+  + tar: L4 hostile ensemble recall +33.05pp above LWM (62.00% → 95.05%)
+  + tar.gz: L4 hostile ensemble recall +19.17pp above LWM (56.69% → 75.86%)
+  + vbs: L4 hostile ensemble recall +39.13pp above LWM (25.70% → 64.84%)
+  + xls: L4 hostile ensemble recall +0.98pp above LWM (92.44% → 93.42%)
+  + xlsx: L4 hostile ensemble recall +15.90pp above LWM (29.01% → 44.91%)
+  + xml: L4 hostile ensemble recall +1.98pp above LWM (2.74% → 4.72%)
 
-compared 63 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
+  - python: L4 hostile ENSEMBLE recall dropped 20.57pp BELOW LOW-WATER-MARK (64.28% → 43.71%; LWM tolerance 0.90pp)
 
-blocked by: deployed-tolerance gate (1.70pp)
+compared 77 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+
+blocked by: low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
 
 If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1136: azoth-validate] Error 1)
+make[2]: *** [Makefile:1152: azoth-validate] Error 1)
 
 ## Gates
 
@@ -62,62 +62,62 @@ make[2]: *** [Makefile:1136: azoth-validate] Error 1)
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `f2fba1536fc537d0` | `15426576c564e9d1` | `1b90fef94e22b29a` |
-| PR AUC | 0.9989 | 0.9984 | 0.9986 |
-| ROC AUC | 0.9989 | 0.9986 | 0.9987 |
-| F1 | 0.9782 | 0.9784 | 0.9739 |
+| key | `f2fba1536fc537d0` | `b4269d5b16803e77` | `d2a9eb08e337bbac` |
+| PR AUC | 0.9989 | 0.9974 | 0.9975 |
+| ROC AUC | 0.9989 | 0.9981 | 0.9982 |
+| F1 | 0.9782 | 0.9678 | 0.9736 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-26T23-35-07_20260526T233432-promote-f2fba1536fc537d0_azoth-validate.log; tail: filetypes/pyproject.toml: 0 rows in score table; skipping
-filetypes/xlsb: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/per_filetype_metrics.json (filetypes: 79, filegroups: 0)
-.venv/bin/python scripts/azoth_route_policy_eval.py \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/score_table.npz \
-	--general-scores /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/general/threshold_scores.npz \
-	--route-policies /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policies.json \
-	--partition test \
-	--output-md /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policy_eval_oof.md \
-	--output-json /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/route_policy_eval_oof.md
-.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0
-staged runtime azoth bundle: /tmp/tmp.tIPkz1EXLb
-azoth bundle ok: /tmp/tmp.tIPkz1EXLb
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 65 unimpacted (drift treated as pre-existing)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-01T21-31-34_20260601T213056-promote-f2fba1536fc537d0_azoth-validate.log; tail: 2026-06-01 17:35:30,512 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/filetypes/python/models/seed_43.onnx
+2026-06-01 17:35:30,535 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 17:35:31,311 INFO filetypes/python/models/seed_43.txt -> seed_43.onnx OK (delta=8.86e-08 on 200 rows, 1227 ms)
+2026-06-01 17:35:31,792 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-f2fba1536fc537d0/filetypes/python/models/seed_44.onnx
+2026-06-01 17:35:31,814 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-01 17:35:32,578 INFO filetypes/python/models/seed_44.txt -> seed_44.onnx OK (delta=1.51e-07 on 200 rows, 1267 ms)
 
-ensemble improvements (≥0.10pp):
-  xls: L3 hostile ensemble recall +0.31pp (95.22% → 95.53%)
-
-per-route improvements (≥0.10pp, informational):
-  java_class :: filetypes/java_class recall@3FP/M +4.07pp (84.30% → 88.37%)
+converted 3/3 files (0 intentionally skipped, 0 failed)
+staged runtime azoth bundle: /tmp/tmp.TUux0rhW9V
+azoth bundle ok: /tmp/tmp.TUux0rhW9V
+--source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 78 unimpacted (drift treated as pre-existing)
 
 per-route regressions (informational; does not block deploy):
-  perl :: filetypes/perl recall@3FP/M dropped 3.70pp (88.89% → 85.19%)
-  python :: filetypes/python recall@3FP/M dropped 5.33pp (71.33% → 66.01%)
-  xml :: filetypes/xml recall@3FP/M dropped 4.45pp (5.82% → 1.37%)
+  python :: filetypes/python recall@1FP-on-slice dropped 4.43pp (63.37% → 58.93%)
 
-14 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + c: L3 hostile ensemble recall +2.72pp above LWM (10.02% → 12.74%)
-  + java_class: L3 hostile ensemble recall +2.89pp above LWM (73.41% → 76.30%)
-  + javascript: L3 hostile ensemble recall +8.35pp above LWM (66.20% → 74.55%)
-  + lnk: L3 hostile ensemble recall +13.03pp above LWM (48.66% → 61.69%)
-  + package.json: L3 hostile ensemble recall +3.79pp above LWM (86.78% → 90.57%)
-  + pdf: L3 hostile ensemble recall +1.09pp above LWM (6.41% → 7.50%)
-  + pe: L3 hostile ensemble recall +2.21pp above LWM (61.96% → 64.17%)
-  + perl: L3 hostile ensemble recall +3.70pp above LWM (77.78% → 81.48%)
-  + plist: L3 hostile ensemble recall +1.47pp above LWM (2.94% → 4.41%)
-  + png: L3 hostile ensemble recall +3.20pp above LWM (1.07% → 4.26%)
-  + powershell: L3 hostile ensemble recall +1.54pp above LWM (29.62% → 31.15%)
-  + pptx: L3 hostile ensemble recall +9.09pp above LWM (9.09% → 18.18%)
-  + xls: L3 hostile ensemble recall +3.08pp above LWM (92.44% → 95.53%)
-  + xml: L3 hostile ensemble recall +4.11pp above LWM (2.74% → 6.85%)
+24 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + bz2: L4 hostile ensemble recall +66.67pp above LWM (0.00% → 66.67%)
+  + crx: L4 hostile ensemble recall +76.92pp above LWM (0.00% → 76.92%)
+  + doc: L4 hostile ensemble recall +7.33pp above LWM (90.99% → 98.32%)
+  + docx: L4 hostile ensemble recall +9.85pp above LWM (71.59% → 81.44%)
+  + go: L4 hostile ensemble recall +3.04pp above LWM (1.78% → 4.82%)
+  + html: L4 hostile ensemble recall +51.33pp above LWM (16.67% → 68.00%)
+  + jpeg: L4 hostile ensemble recall +7.83pp above LWM (1.56% → 9.40%)
+  + lnk: L4 hostile ensemble recall +8.14pp above LWM (48.66% → 56.80%)
+  + lua: L4 hostile ensemble recall +53.85pp above LWM (0.00% → 53.85%)
+  + objc: L4 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
+  + package.json: L4 hostile ensemble recall +3.51pp above LWM (86.78% → 90.28%)
+  + pdf: L4 hostile ensemble recall +65.23pp above LWM (6.41% → 71.64%)
+  + plist: L4 hostile ensemble recall +3.12pp above LWM (2.94% → 6.06%)
+  + powershell: L4 hostile ensemble recall +19.35pp above LWM (29.62% → 48.97%)
+  + pptx: L4 hostile ensemble recall +33.99pp above LWM (9.09% → 43.08%)
+  + python-bytecode: L4 hostile ensemble recall +1.14pp above LWM (90.99% → 92.13%)
+  + rtf: L4 hostile ensemble recall +1.02pp above LWM (97.67% → 98.70%)
+  + shell: L4 hostile ensemble recall +4.09pp above LWM (82.78% → 86.88%)
+  + tar: L4 hostile ensemble recall +33.05pp above LWM (62.00% → 95.05%)
+  + tar.gz: L4 hostile ensemble recall +19.17pp above LWM (56.69% → 75.86%)
+  + vbs: L4 hostile ensemble recall +39.13pp above LWM (25.70% → 64.84%)
+  + xls: L4 hostile ensemble recall +0.98pp above LWM (92.44% → 93.42%)
+  + xlsx: L4 hostile ensemble recall +15.90pp above LWM (29.01% → 44.91%)
+  + xml: L4 hostile ensemble recall +1.98pp above LWM (2.74% → 4.72%)
 
-compared 63 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
+  - python: L4 hostile ENSEMBLE recall dropped 20.57pp BELOW LOW-WATER-MARK (64.28% → 43.71%; LWM tolerance 0.90pp)
 
-blocked by: deployed-tolerance gate (1.70pp)
+compared 77 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+
+blocked by: low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
 
 If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1136: azoth-validate] Error 1)
+make[2]: *** [Makefile:1152: azoth-validate] Error 1)

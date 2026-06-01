@@ -179,6 +179,21 @@ def main() -> int:
             "the expected per-pool aggregate overshoot."
         ),
     )
+    parser.add_argument(
+        "--budget-gate-max-level",
+        type=int,
+        default=1000,
+        help=(
+            "Only let --fail-on-budget gate levels <= this. Levels above "
+            "are still measured and written to the report but excluded from "
+            "the pass/fail decision — they exist for chart headroom and "
+            "consumer-side suspicious coverage, and the calibrator can't "
+            "always hit a per-budget threshold up there (the model's "
+            "lowest probability bucket may be coarser than the budget). "
+            "Default 1000 matches the previous grid ceiling so deploy gating "
+            "behavior is unchanged for everything that was already deploy-relevant."
+        ),
+    )
     args = parser.parse_args()
 
     config = _load_json(args.config)
@@ -192,9 +207,11 @@ def main() -> int:
     levels: list[dict[str, Any]] = []
     failed = False
     multiplier = max(1.0, float(args.max_budget_multiplier))
+    gate_max_level = int(args.budget_gate_max_level)
     for level_item in config.get("levels", []):
         level = int(level_item["level"])
         out: dict[str, Any] = {"level": level}
+        gated = level <= gate_max_level
         for severity in ("hostile",):
             target = float(level_item[severity]["target_per_million"])
             hit, route_hits = _decisions(
@@ -216,7 +233,12 @@ def main() -> int:
             m["scaled_budget"] = scaled_budget
             m["scaled_budget_multiplier"] = multiplier
             m["within_scaled_budget"] = bool(int(m["fp"]) <= scaled_budget)
-            failed = failed or not bool(m["within_scaled_budget"])
+            # Loose-tail levels (above --budget-gate-max-level) are
+            # informational only — the calibrator can't always hit a
+            # meaningful threshold up there, so don't gate the deploy on them.
+            m["budget_gated"] = gated
+            if gated:
+                failed = failed or not bool(m["within_scaled_budget"])
             out[severity] = m
         levels.append(out)
 

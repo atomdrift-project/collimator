@@ -60,14 +60,17 @@ from sklearn.metrics import (
 from sklearn.model_selection import KFold
 
 from collimator import data as collimator_data
-from collimator.thresholds import _CHART_LEVELS_PER_100M
+from collimator.thresholds import (
+    _CHART_LEVELS_PER_100M,
+    DEFAULT_SEVERITY_LEVEL as _DEFAULT_SEVERITY_LEVEL_FROM_THRESHOLDS,
+)
 
 LOG = logging.getLogger("compute_routed_metrics")
 
-# Default operating point on the per-100M-benigns grid. L50 = 50 FP per 100M
-# = 0.5 FP/M, the deploy-time hostile point we ship at. Matches
-# collimator.thresholds.DEFAULT_SEVERITY_LEVEL and litmus's `-l` default.
-DEFAULT_LEVEL = 50
+# Default operating point on the per-100M-benigns grid. Sourced from the
+# canonical DEFAULT_SEVERITY_LEVEL in collimator.thresholds — flip there to
+# change for the whole pipeline. Litmus's `-l` default mirrors it.
+DEFAULT_LEVEL = _DEFAULT_SEVERITY_LEVEL_FROM_THRESHOLDS
 
 # Full deploy grid of per-100M operating points. Sourced from the thresholds
 # module so the recall curve emitted here tracks whatever litmus actually
@@ -812,6 +815,167 @@ def _load_test_mask(
     return _load_partition_mask(db_path, row_ids, "test", cache_dir=cache_dir)
 
 
+# Per-filetype metrics workers read heavy state (scores, calibrated, labels,
+# …) from this module-level dict. In the SERIAL path the parent populates
+# it directly; in the PARALLEL path each spawned worker populates its own
+# copy via _init_metrics_worker. Either way `_compute_filetype_entry` reads
+# from `_PARALLEL_STATE[...]` so the same function works in both contexts.
+_PARALLEL_STATE: dict[str, Any] = {}
+
+
+def _init_metrics_worker(
+    scores: np.ndarray,
+    calibrated: np.ndarray,
+    file_types: np.ndarray,
+    labels: np.ndarray,
+    idx: dict[str, int],
+    level: int,
+    severity: str,
+    with_ci: bool,
+    include_stacked: bool,
+) -> None:
+    """ProcessPoolExecutor initializer — runs ONCE per spawned worker.
+    Stashes the heavy arrays (each ~hundreds of MB on the full corpus)
+    in the worker's `_PARALLEL_STATE` so subsequent per-filetype tasks
+    cross the IPC boundary with only a (ftype, route_info) tuple."""
+    _PARALLEL_STATE.update({
+        "scores": scores, "calibrated": calibrated,
+        "file_types": file_types, "labels": labels, "idx": idx,
+        "level": level, "severity": severity,
+        "with_ci": with_ci, "include_stacked": include_stacked,
+    })
+
+
+def _compute_filetype_entry(
+    args: tuple[str, dict[str, Any]],
+) -> tuple[str, dict[str, Any] | None]:
+    """Per-filetype work: pulls heavy state from `_PARALLEL_STATE`,
+    computes general / specialist / ensemble metrics for one filetype.
+    Returns (ftype, entry) — entry is None when the slice was skipped
+    (zero rows, missing policy level). Lifted from the per-filetype loop
+    so it can run either in-process or in a ProcessPoolExecutor worker."""
+    ftype, route_info = args
+    s = _PARALLEL_STATE
+    scores = s["scores"]
+    calibrated = s["calibrated"]
+    file_types = s["file_types"]
+    labels = s["labels"]
+    idx = s["idx"]
+    level = s["level"]
+    severity = s["severity"]
+    with_ci = s["with_ci"]
+    include_stacked = s["include_stacked"]
+
+    route_name = f"filetypes/{ftype}"
+    mask = file_types == ftype
+    n_files = int(mask.sum())
+    if n_files == 0:
+        LOG.info("%s: 0 rows in score table; skipping", route_name)
+        return ftype, None
+    f_labels = labels[mask]
+    n_pos = int((f_labels == 1).sum())
+    n_neg = int((f_labels == 0).sum())
+
+    levels = route_info.get("levels") or []
+    # Look up by level VALUE, not array index — the per-100M grid
+    # (0,1,2,3,4,5,10,...,10000) doesn't align positionally with any
+    # legacy index space.
+    level_entry = next(
+        (L for L in levels if int(L.get("level", -1)) == level),
+        None,
+    )
+    if level_entry is None:
+        LOG.warning("%s: level %d not found in route policy (available: %s); skipping",
+                    route_name, level, [int(L.get("level", -1)) for L in levels])
+        return ftype, None
+    sev = level_entry.get(severity, {})
+    best = sev.get("best") or {}
+    allowed = list(best.get("allowed_routes") or [])
+
+    entry: dict[str, Any] = {
+        "n_files": n_files, "n_malware": n_pos, "n_benign": n_neg,
+        "ensemble_policy": best.get("policy"),
+        "ensemble_allowed_routes": allowed,
+    }
+    if "general" in idx:
+        entry["general"] = _metrics(
+            f_labels, scores[idx["general"]][mask], with_ci=with_ci,
+        )
+    if route_name in idx:
+        entry["specialist"] = _metrics(
+            f_labels, scores[idx[route_name]][mask], with_ci=with_ci,
+        )
+
+    # Strategy candidates — see helper docstrings for the math.
+    strategies: dict[str, dict[str, float]] = {}
+    naive = _ensemble_scores_naive_max(scores, mask, allowed, idx)
+    if naive is not None:
+        strategies["naive_max"] = _metrics(f_labels, naive, with_ci=with_ci)
+    calib_max = _ensemble_scores_calibrated_max(calibrated, mask, allowed, idx)
+    if calib_max is not None:
+        strategies["calibrated_max"] = _metrics(
+            f_labels, calib_max, with_ci=with_ci,
+        )
+    fg = route_info.get("filegroup")
+    fallback_chain = []
+    if fg:
+        fallback_chain.append(f"filegroups/{fg}")
+    fallback_chain.append("general")
+    spec_pri = _ensemble_scores_specialist_priority(
+        scores, mask, route_name, fallback_chain, idx,
+    )
+    if spec_pri is not None:
+        strategies["specialist_priority"] = _metrics(
+            f_labels, spec_pri, with_ci=with_ci,
+        )
+    if include_stacked:
+        stacked = _ensemble_scores_stacked_lr(
+            scores, mask, allowed, idx, f_labels,
+        )
+        if stacked is not None:
+            strategies["stacked_lr"] = _metrics(
+                f_labels, stacked, with_ci=with_ci,
+            )
+        stacked_xgb = _ensemble_scores_stacked_xgb(
+            scores, mask, allowed, idx, f_labels,
+        )
+        if stacked_xgb is not None:
+            strategies["stacked_xgb"] = _metrics(
+                f_labels, stacked_xgb, with_ci=with_ci,
+            )
+
+    # Rank by recall at the deploy operating point (DEFAULT_LEVEL) with PR
+    # AUC as a tiebreak. ROC AUC was the prior key but is misleading at the
+    # strict tail: a strategy with great average ranking (high ROC) can have
+    # a degenerate flat operating-point curve, picking it over a strategy
+    # that's 3× better at the actual deploy threshold. See the design doc
+    # ("Selection criterion: maximize recall at the deploy operating point")
+    # and the matching key in the honest-path picker below.
+    _recall_field = f"recall_at_{DEFAULT_LEVEL}_per_100M"
+
+    def _sel_key(m: dict[str, Any]) -> tuple[float, float]:
+        r = m.get(_recall_field)
+        r = 0.0 if r is None or (isinstance(r, float) and math.isnan(r)) else float(r)
+        pr = float(m.get("pr_auc") or 0.0)
+        return (r, pr)
+
+    candidates = [
+        (name, m) for name, m in strategies.items()
+        if name != "naive_max" and m.get("n_evaluated", 0) > 0
+    ]
+    if candidates:
+        best_name, best_metrics = max(
+            candidates, key=lambda kv: _sel_key(kv[1]),
+        )
+        entry["ensemble"] = best_metrics
+        entry["ensemble_strategy"] = best_name
+    elif "specialist" in entry:
+        entry["ensemble"] = entry["specialist"]
+        entry["ensemble_strategy"] = "specialist_only_fallback"
+    entry["ensemble_strategies"] = strategies
+    return ftype, entry
+
+
 def compute_per_filetype_metrics(
     score_table_path: Path,
     route_policies_path: Path,
@@ -823,6 +987,7 @@ def compute_per_filetype_metrics(
     severity: str = "hostile",
     with_ci: bool = True,
     include_stacked: bool = True,
+    metrics_parallelism: int = 1,
     calib_parallelism: int = 1,
     calibrator_cache_dir: Path | None = None,
     previous_metrics_path: Path | None = None,
@@ -964,7 +1129,22 @@ def compute_per_filetype_metrics(
             )
             carry_forward = {}
 
-    # Per-filetype 3-way views.
+    # Per-filetype 3-way views. Each filetype is independent — the only
+    # shared state is the (read-only) scores / calibrated arrays and the
+    # policy lookup. We submit one task per filetype to a spawned process
+    # pool; heavy arrays cross the spawn boundary ONCE via the initializer
+    # (initargs), and per-task payloads are just (ftype, route_info).
+    # Fork would let us inherit the parent's arrays via COW for free, but
+    # the upstream calibration step already touched BLAS in the parent —
+    # forking after that risks the OpenBLAS-mutex deadlock the calibrate
+    # script already worked around.
+    _PARALLEL_STATE.update({
+        "scores": scores, "calibrated": calibrated,
+        "file_types": file_types, "labels": labels, "idx": idx,
+        "level": level, "severity": severity,
+        "with_ci": with_ci, "include_stacked": include_stacked,
+    })
+    work_items: list[tuple[str, dict[str, Any]]] = []
     for route_name, route_info in policies.get("routes", {}).items():
         if not route_name.startswith("filetypes/"):
             continue
@@ -974,115 +1154,32 @@ def compute_per_filetype_metrics(
             # bytewise-identical to ours.
             out["filetypes"][ftype] = carry_forward[ftype]
             continue
-        mask = file_types == ftype
-        n_files = int(mask.sum())
-        if n_files == 0:
-            LOG.info("%s: 0 rows in score table; skipping", route_name)
-            continue
-        f_labels = labels[mask]
-        n_pos = int((f_labels == 1).sum())
-        n_neg = int((f_labels == 0).sum())
+        work_items.append((ftype, route_info))
 
-        levels = route_info.get("levels") or []
-        # Look up by level VALUE, not array index — the new per-100M grid
-        # (0,1,2,3,5,10,20,...,100) doesn't align positionally the way the
-        # old per-million-derived 0..19 grid did.
-        level_entry = next(
-            (L for L in levels if int(L.get("level", -1)) == level),
-            None,
-        )
-        if level_entry is None:
-            LOG.warning("%s: level %d not found in route policy (available: %s); skipping",
-                        route_name, level, [int(L.get("level", -1)) for L in levels])
-            continue
-        sev = level_entry.get(severity, {})
-        best = sev.get("best") or {}
-        allowed = list(best.get("allowed_routes") or [])
-
-        entry: dict[str, Any] = {
-            "n_files": n_files, "n_malware": n_pos, "n_benign": n_neg,
-            "ensemble_policy": best.get("policy"),
-            "ensemble_allowed_routes": allowed,
-        }
-        if "general" in idx:
-            entry["general"] = _metrics(
-                f_labels, scores[idx["general"]][mask], with_ci=with_ci,
-            )
-        if route_name in idx:
-            entry["specialist"] = _metrics(
-                f_labels, scores[idx[route_name]][mask], with_ci=with_ci,
-            )
-
-        # Three ensemble strategies, computed honestly so we can pick the one
-        # that doesn't degrade vs the specialist.  See the helper docstrings
-        # for the math; in summary: naive_max has a known scale-mismatch bias,
-        # calibrated_max + specialist_priority address it differently.
-        strategies: dict[str, dict[str, float]] = {}
-        naive = _ensemble_scores_naive_max(scores, mask, allowed, idx)
-        if naive is not None:
-            strategies["naive_max"] = _metrics(f_labels, naive, with_ci=with_ci)
-        calib_max = _ensemble_scores_calibrated_max(calibrated, mask, allowed, idx)
-        if calib_max is not None:
-            strategies["calibrated_max"] = _metrics(
-                f_labels, calib_max, with_ci=with_ci,
-            )
-        # Specialist-priority needs a primary + fallback chain.  We use the
-        # filetype specialist as primary, then the route's filegroup if
-        # known, then general — matching the deployed router's preference
-        # ordering when a specialist owns the file.
-        fg = route_info.get("filegroup")
-        fallback_chain = []
-        if fg:
-            fallback_chain.append(f"filegroups/{fg}")
-        fallback_chain.append("general")
-        spec_pri = _ensemble_scores_specialist_priority(
-            scores, mask, route_name, fallback_chain, idx,
-        )
-        if spec_pri is not None:
-            strategies["specialist_priority"] = _metrics(
-                f_labels, spec_pri, with_ci=with_ci,
-            )
-        if include_stacked:
-            stacked = _ensemble_scores_stacked_lr(
-                scores, mask, allowed, idx, f_labels,
-            )
-            if stacked is not None:
-                strategies["stacked_lr"] = _metrics(
-                    f_labels, stacked, with_ci=with_ci,
-                )
-            stacked_xgb = _ensemble_scores_stacked_xgb(
-                scores, mask, allowed, idx, f_labels,
-            )
-            if stacked_xgb is not None:
-                strategies["stacked_xgb"] = _metrics(
-                    f_labels, stacked_xgb, with_ci=with_ci,
-                )
-
-        # Headline pick: among non-naive strategies, prefer the one with the
-        # highest ROC AUC, breaking ties on PR AUC.  Specialist_priority is
-        # guaranteed >= specialist by construction; calibrated_max often beats
-        # both.  When all calibrated strategies are missing, fall back to the
-        # specialist's standalone score so the ensemble row never vanishes.
-        candidates = [
-            (name, m) for name, m in strategies.items()
-            if name != "naive_max" and m.get("n_evaluated", 0) > 0
-        ]
-        if candidates:
-            best_name, best_metrics = max(
-                candidates,
-                key=lambda kv: (kv[1].get("roc_auc", 0.0), kv[1].get("pr_auc", 0.0)),
-            )
-            entry["ensemble"] = best_metrics
-            entry["ensemble_strategy"] = best_name
-        elif "specialist" in entry:
-            # Emergency fallback: use the specialist's own metrics.  This keeps
-            # the headline column populated even when calibration was degenerate.
-            entry["ensemble"] = entry["specialist"]
-            entry["ensemble_strategy"] = "specialist_only_fallback"
-        # All three strategies recorded for audit, regardless of which won.
-        entry["ensemble_strategies"] = strategies
-
-        out["filetypes"][ftype] = entry
+    if metrics_parallelism > 1 and len(work_items) > 1:
+        import multiprocessing as _mp  # noqa: PLC0415
+        from concurrent.futures import ProcessPoolExecutor  # noqa: PLC0415
+        n_workers = min(metrics_parallelism, len(work_items))
+        LOG.info("per-filetype metrics: parallel over %d filetypes "
+                 "with %d workers (spawn)",
+                 len(work_items), n_workers)
+        ctx = _mp.get_context("spawn")
+        with ProcessPoolExecutor(
+            max_workers=n_workers,
+            mp_context=ctx,
+            initializer=_init_metrics_worker,
+            initargs=(scores, calibrated, file_types, labels, idx,
+                      level, severity, with_ci, include_stacked),
+        ) as pool:
+            for ftype, entry in pool.map(_compute_filetype_entry, work_items):
+                if entry is not None:
+                    out["filetypes"][ftype] = entry
+    else:
+        LOG.info("per-filetype metrics: serial over %d filetypes", len(work_items))
+        for item in work_items:
+            ftype, entry = _compute_filetype_entry(item)
+            if entry is not None:
+                out["filetypes"][ftype] = entry
 
     # Per-filegroup view: same shape, useful for routes like filegroups/native
     # whose specialist is ALSO an ensemble member (a step between general and
@@ -1141,6 +1238,7 @@ def compute_per_filetype_metrics_honest(
     severity: str = "hostile",
     with_ci: bool = True,
     include_stacked: bool = True,
+    metrics_parallelism: int = 1,
     calib_parallelism: int = 1,
     calibrator_cache_dir: Path | None = None,
     previous_metrics_path: Path | None = None,
@@ -1169,6 +1267,7 @@ def compute_per_filetype_metrics_honest(
         severity=severity,
         with_ci=with_ci,
         include_stacked=include_stacked,
+        metrics_parallelism=metrics_parallelism,
         calib_parallelism=calib_parallelism,
         calibrator_cache_dir=calibrator_cache_dir,
         previous_metrics_path=previous_metrics_path,
@@ -1185,6 +1284,7 @@ def compute_per_filetype_metrics_honest(
         severity=severity,
         with_ci=False,                # CIs unused for selection; faster.
         include_stacked=include_stacked,
+        metrics_parallelism=metrics_parallelism,
         calib_parallelism=calib_parallelism,
         calibrator_cache_dir=calibrator_cache_dir,
         previous_metrics_path=previous_metrics_path,
@@ -1200,8 +1300,9 @@ def compute_per_filetype_metrics_honest(
         dev_entry = (dev_out.get("filetypes") or {}).get(ft) or {}
         dev_strategies = dev_entry.get("ensemble_strategies") or {}
         test_strategies = test_entry.get("ensemble_strategies") or {}
-        # Pick the strategy with the best dev ROC AUC, restricting to
-        # strategies that produced a usable metric in BOTH partitions.
+        # Pick the strategy with the best dev recall at the deploy
+        # operating point, restricting to strategies that produced a
+        # usable metric in BOTH partitions.
         candidates = [
             (name, dev_metric)
             for name, dev_metric in dev_strategies.items()
@@ -1212,18 +1313,20 @@ def compute_per_filetype_metrics_honest(
         ]
         if not candidates:
             continue  # leave whatever test-only selection picked
-        # Selection criterion: recall@3FP/M primary, PR AUC tiebreak.
-        # This matches the deployment budget (litmus operates at ~3 FP/M
-        # at L3 hostile, the headline level). PR AUC stays as a
-        # secondary signal for tiebreaks but doesn't dominate — at
-        # near-saturated values (0.9998-1.0000 is typical here) tiny
-        # PR-AUC differences are noise while multi-pp recall differences
-        # are meaningful. NaN recall (filetype slice too thin to resolve
-        # L50 per 100M empirically) maps to 0 for ordering.
+        # Selection criterion: recall at DEFAULT_LEVEL primary, PR AUC
+        # tiebreak. This matches the deployment budget (litmus operates
+        # at the same level). PR AUC stays as a secondary signal for
+        # tiebreaks but doesn't dominate — at near-saturated values
+        # (0.9998-1.0000 is typical here) tiny PR-AUC differences are
+        # noise while multi-pp recall differences are meaningful. NaN
+        # recall (filetype slice too thin to resolve empirically) maps
+        # to 0 for ordering.
+        _recall_field = f"recall_at_{DEFAULT_LEVEL}_per_100M"
+
         def _sel_key(m: dict[str, Any]) -> tuple[float, float]:
-            r = m.get("recall_at_50_per_100M")
-            r = 0.0 if r is None or (isinstance(r, float) and math.isnan(r)) else r
-            pr = m.get("pr_auc") or 0.0
+            r = m.get(_recall_field)
+            r = 0.0 if r is None or (isinstance(r, float) and math.isnan(r)) else float(r)
+            pr = float(m.get("pr_auc") or 0.0)
             return (r, pr)
 
         # Specialist-floor invariant: ensemble cannot be worse than the
@@ -1248,7 +1351,7 @@ def compute_per_filetype_metrics_honest(
                 test_entry["ensemble"] = test_strategies["specialist_priority"]
                 test_entry["ensemble_strategy"] = "specialist_priority"
                 test_entry["ensemble_strategy_dev_pr_auc"] = floor_metric.get("pr_auc")
-                test_entry["ensemble_strategy_dev_recall_at_50_per_100M"] = floor_metric.get("recall_at_50_per_100M")
+                test_entry[f"ensemble_strategy_dev_{_recall_field}"] = floor_metric.get(_recall_field)
                 test_entry["ensemble_strategy_dev_n_evaluated"] = floor_metric.get("n_evaluated")
                 continue
 
@@ -1271,7 +1374,7 @@ def compute_per_filetype_metrics_honest(
         test_entry["ensemble"] = chosen_test
         test_entry["ensemble_strategy"] = best_name
         test_entry["ensemble_strategy_dev_pr_auc"] = dev_metric.get("pr_auc")
-        test_entry["ensemble_strategy_dev_recall_at_50_per_100M"] = dev_metric.get("recall_at_50_per_100M")
+        test_entry[f"ensemble_strategy_dev_{_recall_field}"] = dev_metric.get(_recall_field)
         test_entry["ensemble_strategy_dev_n_evaluated"] = dev_metric.get("n_evaluated")
 
     return test_out
@@ -1313,6 +1416,13 @@ def main() -> int:
                              "calibration. 0 (default) auto-picks "
                              "min(cpu_count, n_routes) capped at 16. Set "
                              "to 1 to force serial.")
+    parser.add_argument("--metrics-parallelism", type=int, default=0,
+                        help="Worker processes for the per-filetype metrics "
+                             "loop (bootstrap CIs across the full per-100M "
+                             "level grid dominate single-threaded wall-clock "
+                             "once the grid grew past ~20 levels). 0 "
+                             "(default) auto-picks min(cpu_count, n_filetypes) "
+                             "capped at 16. Set to 1 to force serial.")
     parser.add_argument("--calibrator-cache-dir", type=Path, default=None,
                         help="Directory to cache per-route calibrated arrays. "
                              "Cache key = sha256(route + partition + raw_scores "
@@ -1343,6 +1453,11 @@ def main() -> int:
         calib_parallelism = min(_os.cpu_count() or 1, 16)
     else:
         calib_parallelism = args.calib_parallelism
+    if args.metrics_parallelism <= 0:
+        import os as _os  # noqa: PLC0415
+        metrics_parallelism = min(_os.cpu_count() or 1, 16)
+    else:
+        metrics_parallelism = args.metrics_parallelism
     if args.no_calibrator_cache:
         calibrator_cache_dir = None
     elif args.calibrator_cache_dir is not None:
@@ -1365,6 +1480,7 @@ def main() -> int:
             severity=args.severity,
             with_ci=not args.no_ci,
             include_stacked=not args.no_stacked,
+            metrics_parallelism=metrics_parallelism,
             calib_parallelism=calib_parallelism,
             calibrator_cache_dir=calibrator_cache_dir,
             previous_metrics_path=prev_metrics_path,
@@ -1383,6 +1499,7 @@ def main() -> int:
             severity=args.severity,
             with_ci=not args.no_ci,
             include_stacked=not args.no_stacked,
+            metrics_parallelism=metrics_parallelism,
             calib_parallelism=calib_parallelism,
             calibrator_cache_dir=calibrator_cache_dir,
             previous_metrics_path=prev_metrics_path,

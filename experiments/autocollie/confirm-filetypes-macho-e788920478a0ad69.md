@@ -1,6 +1,6 @@
 # Confirm PASS — e788920478a0ad69 on `filetypes/macho`
 
-Cycle `20260525T202922-confirm-e788920478a0ad69` — 2026-05-25T20:29:22Z
+Cycle `20260601T211237-confirm-e788920478a0ad69` — 2026-06-01T21:12:37Z
 
 PR_AUC held across 3 seeds (orig 0.9992)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9992)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `e788920478a0ad69` | `9b215c3126a94421` | `9b215c3126a94421` | `9b215c3126a94421` |
-| PR AUC | 0.9992 | 0.9977 | 0.9974 | 0.9972 |
-| ROC AUC | 0.9998 | 0.9995 | 0.9995 | 0.9994 |
-| Recall@3FPM | — | 0.9098 | 0.8759 | 0.8947 |
+| key | `e788920478a0ad69` | `5f798cfa0d934d96` | `5f798cfa0d934d96` | `5f798cfa0d934d96` |
+| PR AUC | 0.9992 | 0.9961 | 0.9963 | 0.9964 |
+| ROC AUC | 0.9998 | 0.9990 | 0.9991 | 0.9991 |
+| Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

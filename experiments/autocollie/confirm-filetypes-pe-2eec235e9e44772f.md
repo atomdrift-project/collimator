@@ -1,6 +1,6 @@
 # Confirm PASS — 2eec235e9e44772f on `filetypes/pe`
 
-Cycle `20260525T162528-confirm-2eec235e9e44772f` — 2026-05-25T16:25:28Z
+Cycle `20260601T210143-confirm-2eec235e9e44772f` — 2026-06-01T21:01:43Z
 
 PR_AUC held across 3 seeds (orig 0.9997)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9997)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `2eec235e9e44772f` | `5cf06fd239187a04` | `5cf06fd239187a04` | `5cf06fd239187a04` |
+| key | `2eec235e9e44772f` | `d622cdc124b79c3a` | `d622cdc124b79c3a` | `d622cdc124b79c3a` |
 | PR AUC | 0.9997 | 1.0000 | 1.0000 | 1.0000 |
 | ROC AUC | 0.9997 | 0.9999 | 0.9999 | 0.9999 |
-| Recall@3FPM | — | 0.8844 | 0.8563 | 0.8980 |
+| Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

@@ -1807,6 +1807,27 @@ def main() -> int:
             from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: PLC0415
             prev_score_table = args.previous_bundle / "score_table.npz"
             prev_policies_path = args.previous_bundle / "route_policies.json"
+            prev_config_path = args.previous_bundle / "config.json"
+            # Carry-forward is sound ONLY when the level grid is identical
+            # between bundles. _decisions in azoth_policy_global_metrics.py
+            # looks up policy thresholds by exact level match — if a level
+            # exists in the new grid but not in the carried-forward policy,
+            # every filetype falls back to global config thresholds at that
+            # level, producing absurd FP counts that look like a calibrator
+            # regression. Drop carry-forward entirely on any grid mismatch.
+            current_grid = tuple(int(item["level"]) for item in config.get("levels", []))
+            prev_grid: tuple[int, ...] = ()
+            if prev_config_path.is_file():
+                with open(prev_config_path) as f:
+                    prev_grid = tuple(int(item["level"]) for item in json.load(f).get("levels", []))
+            if prev_grid != current_grid:
+                print(
+                    f"policy_search: level grid changed since previous bundle "
+                    f"({len(prev_grid)} → {len(current_grid)} levels); "
+                    f"disabling carry-forward to keep per-filetype policies "
+                    f"in sync with the new grid"
+                )
+                raise RuntimeError("level grid mismatch; carry-forward disabled")
             changed_set, _ = changed_routes(args.score_table, prev_score_table)
             avail_routes = set(routes.keys())
             unchanged = unchanged_filetypes(

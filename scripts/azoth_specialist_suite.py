@@ -107,14 +107,16 @@ APPLES_MIN_BENIGN_HOLDOUT: int = 200
 def _op_recall(metrics: dict[str, Any] | None) -> float | None:
     """Operating-point recall for the picker.
 
-    Prefers the per-100M field ``recall_at_50_per_100M`` (L50, 0.5 FP/M)
-    that today's emitters write; falls back to the legacy per-million
-    field ``recall_at_fp_per_million_3`` (L3, 3 FP/M) so old run JSONs
-    still rank. Returns None when neither is present or both are NaN.
+    Prefers the canonical per-100M field at the deploy-default level
+    (derived from ``DEFAULT_SEVERITY_LEVEL`` via
+    ``default_recall_per_100M_field()``); falls back to the legacy
+    per-million field ``recall_at_fp_per_million_3`` (L3, 3 FP/M) so
+    old run JSONs still rank. Returns None when neither is present or
+    both are NaN.
     """
     if not metrics:
         return None
-    for key in ("recall_at_50_per_100M", "recall_at_fp_per_million_3"):
+    for key in (thresholds.default_recall_per_100M_field(), "recall_at_fp_per_million_3"):
         v = metrics.get(key)
         if isinstance(v, (int, float)) and not math.isnan(float(v)):
             return float(v)
@@ -393,41 +395,71 @@ def _eligible_filetypes(
         + " ORDER BY total DESC"
     )
     params.extend([min_bad, min_good])
-    out: list[dict[str, Any]] = []
+    # Group raw rows by normalized file_type so compressed archive variants
+    # (tar.gz, tar.bz2, tar.xz, …) merge onto their container (tar) before
+    # we apply the bad/good thresholds. This matches the score-table's
+    # normalized labels (see data.normalize_archive_filetype) and gives
+    # one specialist per container — a tar.gz file at scan time hits the
+    # same model the tar.zst file does, since both share the tar route.
+    grouped: dict[str, dict[str, Any]] = {}
     with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
         rows = data._execute(conn, query, params)  # noqa: SLF001
         for file_type, bad, good, total in rows:
-            file_type_str = str(file_type)
-            if file_type_str in RAW_COMPRESSED_FILETYPES:
-                # Raw single-file compression: litmus decompresses and
-                # re-routes the inner file. The wrapper itself has no
-                # multi-file container structure for a specialist to
-                # learn from. Archive formats (tar, tar.gz, zip, 7z,
-                # deb, etc.) DO have container-level signal and are
-                # NOT in this set; they get specialists trained.
-                LOG.info(
-                    "%s: skipping filetype specialist (raw-compressed; %d bad, %d good)",
-                    file_type_str, int(bad), int(good),
-                )
+            normalized = data.normalize_archive_filetype(file_type)
+            if not normalized:
                 continue
-            if file_type_str in RESIDUAL_FILETYPES:
-                # Residual bucket — cleave couldn't identify the format
-                # (or could only call it a generic blob). No shared
-                # structure to learn; let the general model handle it.
-                LOG.info(
-                    "%s: skipping filetype specialist (residual bucket; %d bad, %d good)",
-                    file_type_str, int(bad), int(good),
-                )
-                continue
-            out.append(
-                {
-                    "name": file_type_str,
-                    "file_types": [file_type_str],
-                    "bad": int(bad),
-                    "good": int(good),
-                    "total": int(total),
-                },
+            entry = grouped.setdefault(
+                normalized,
+                {"variants": set(), "bad": 0, "good": 0, "total": 0},
             )
+            entry["variants"].add(str(file_type))
+            entry["bad"] += int(bad)
+            entry["good"] += int(good)
+            entry["total"] += int(total)
+    out: list[dict[str, Any]] = []
+    for normalized, agg in sorted(grouped.items(), key=lambda kv: -kv[1]["total"]):
+        if normalized in RAW_COMPRESSED_FILETYPES:
+            # Raw single-file compression: litmus decompresses and
+            # re-routes the inner file. The wrapper itself has no
+            # multi-file container structure for a specialist to
+            # learn from.
+            LOG.info(
+                "%s: skipping filetype specialist (raw-compressed; %d bad, %d good)",
+                normalized, agg["bad"], agg["good"],
+            )
+            continue
+        if normalized in RESIDUAL_FILETYPES:
+            # Residual bucket — cleave couldn't identify the format.
+            LOG.info(
+                "%s: skipping filetype specialist (residual bucket; %d bad, %d good)",
+                normalized, agg["bad"], agg["good"],
+            )
+            continue
+        if agg["bad"] < min_bad or agg["good"] < min_good:
+            # Subthreshold after merge — defensive: the SQL HAVING already
+            # filtered per-raw-variant, but a normalized group could still
+            # land here if a rare variant slipped through with a less-strict
+            # threshold elsewhere in the query.
+            continue
+        variants = sorted(agg["variants"])
+        if variants != [normalized]:
+            LOG.info(
+                "%s: merged %d raw variants %s (%d bad, %d good)",
+                normalized, len(variants), variants, agg["bad"], agg["good"],
+            )
+        out.append(
+            {
+                "name": normalized,
+                # Keep all raw variants in `file_types` so the data query
+                # (`_fetch_rows(file_types=route["file_types"], ...)`) still
+                # sees every compressed sibling — `samples.file_type` is the
+                # un-normalized raw value, normalization happens on read.
+                "file_types": variants,
+                "bad": agg["bad"],
+                "good": agg["good"],
+                "total": agg["total"],
+            },
+        )
     return out
 
 
@@ -485,13 +517,17 @@ def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str,
         "precision_at_max_f1": float(precision_score(y_true, y_pred, zero_division=0)),
         "recall_at_max_f1": float(recall_score(y_true, y_pred, zero_division=0)),
     }
-    # Operating-point recall at the FP/100M budgets autocollie's gate reads.
-    # Without these, autocollie's promote gate falls into the legacy
-    # PR-AUC-only path (its baseline loader sees no tail-recall and gives
-    # up on the operationally-aware comparison). Recording them here
-    # closes the loop: training writes them → autocollie reads them →
-    # the gate compares operational metrics, not just PR AUC.
-    for fp100m in (0, 50, 100, 300, 500, 900):
+    # Operating-point recall at every FP/100M level in the canonical grid.
+    # Two consumers read these:
+    #   1. autocollie's promote gate (operational comparison against the
+    #      baseline at DEFAULT_SEVERITY_LEVEL) — without recall_at_<default>,
+    #      the gate falls back to the PR-AUC-only legacy path.
+    #   2. write_azoth_readmes.py per-filetype recall-curve SVGs — they
+    #      iterate the same canonical grid and draw NaN-broken lines where
+    #      a level wasn't recorded.
+    # Iterating thresholds._LEVELS_PER_100M means grid extensions (e.g.
+    # adding L2000–L10000 to the loose tail) automatically pick up here.
+    for fp100m in thresholds._LEVELS_PER_100M:
         op = _operating_point(y_true, y_prob, float(fp100m) / 100.0)
         rec = op.get("recall")
         thr = op.get("threshold")

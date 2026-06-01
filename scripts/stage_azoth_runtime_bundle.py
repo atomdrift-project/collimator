@@ -21,7 +21,7 @@ from collimator import bundle  # noqa: E402
 # Per-route files that aren't model artifacts. Model files are picked up
 # separately because their location depends on layout (top-level or models/).
 # Optional files (calibrator.json, README.md) are copied if present.
-ROUTE_AUX_FILES = ("feature_spec.json", "README.md", "calibrator.json")
+ROUTE_AUX_FILES = ("feature_spec.json", "README.md", "calibrator.json", "recall_curve.svg")
 ROOT_FILES = ("config.json", "route_policies.json")
 
 # Optional root files. Deploy proceeds without them, but downstream
@@ -101,6 +101,13 @@ def stage_runtime_bundle(src: Path, dst: Path) -> None:
         _copy_if_exists(src / name, dst / name)
 
     for path in sorted(src.glob("*.md")):
+        _copy_if_exists(path, dst / path.name)
+    # Per-level recall curves are sibling SVGs to README.md and are referenced
+    # by `<img src="recall_curve.svg">` in the markdown. Codeberg's renderer
+    # strips inline `<svg>` so the chart MUST be an external file. Copy all
+    # SVGs alongside the markdown — small (~30KB each), and lets the README
+    # actually display the curves it references.
+    for path in sorted(src.glob("*.svg")):
         _copy_if_exists(path, dst / path.name)
     _copy_if_exists(src / "LICENSE", dst / "LICENSE")
 

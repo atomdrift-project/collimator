@@ -1,123 +1,144 @@
-# Promote REJECTED — `3370631402c9fef2` on `filegroups/documents`
+# Promote PASS — `3370631402c9fef2` on `filegroups/documents`
 
-Generated 2026-05-28T11:52:20Z
+Generated 2026-06-01T13:28:57Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-28T11-45-50_20260528T114506-promote-3370631402c9fef2_azoth-validate.log; tail:   c :: filetypes/c recall@3FP/M +2.04pp (11.94% → 13.98%)
-  elf :: filetypes/elf recall@3FP/M +2.67pp (93.35% → 96.01%)
-  go :: filetypes/go recall@3FP/M +2.29pp (4.84% → 7.14%)
-  javascript :: filetypes/javascript recall@3FP/M +8.46pp (69.53% → 77.99%)
-  ole :: filegroups/documents recall@3FP/M +0.87pp (93.45% → 94.32%)
-  pdf :: filegroups/documents recall@3FP/M +54.15pp (19.90% → 74.06%)
-  rtf :: filegroups/documents recall@3FP/M +1.39pp (97.22% → 98.61%)
-  shell :: filetypes/shell recall@3FP/M +32.15pp (55.01% → 87.16%)
-
-per-route regressions (informational; does not block deploy):
-  xlsx :: filegroups/documents recall@3FP/M dropped 6.46pp (91.62% → 85.15%)
-
-26 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + 7z: L3 hostile ensemble recall +14.84pp above LWM (72.74% → 87.59%)
-  + c: L3 hostile ensemble recall +2.26pp above LWM (10.02% → 12.28%)
-  + cab: L3 hostile ensemble recall +46.55pp above LWM (3.45% → 50.00%)
-  + chrome-manifest: L3 hostile ensemble recall +16.67pp above LWM (50.00% → 66.67%)
-  + crx: L3 hostile ensemble recall +10.81pp above LWM (0.00% → 10.81%)
-  + docx: L3 hostile ensemble recall +5.46pp above LWM (71.59% → 77.05%)
-  + go: L3 hostile ensemble recall +3.40pp above LWM (1.36% → 4.76%)
-  + html: L3 hostile ensemble recall +83.33pp above LWM (16.67% → 100.00%)
-  + javascript: L3 hostile ensemble recall +10.08pp above LWM (66.20% → 76.28%)
-  + jpeg: L3 hostile ensemble recall +9.12pp above LWM (1.56% → 10.69%)
-  + lnk: L3 hostile ensemble recall +22.72pp above LWM (48.66% → 71.38%)
-  + package.json: L3 hostile ensemble recall +2.50pp above LWM (86.78% → 89.28%)
-  + pdf: L3 hostile ensemble recall +1.20pp above LWM (6.41% → 7.61%)
-  + pe: L3 hostile ensemble recall +7.30pp above LWM (61.96% → 69.26%)
-  + perl: L3 hostile ensemble recall +11.51pp above LWM (77.78% → 89.29%)
-  + php: L3 hostile ensemble recall +4.12pp above LWM (62.11% → 66.23%)
-  + plist: L3 hostile ensemble recall +1.47pp above LWM (2.94% → 4.41%)
-  + png: L3 hostile ensemble recall +7.72pp above LWM (1.07% → 8.79%)
-  + pptx: L3 hostile ensemble recall +13.64pp above LWM (9.09% → 22.73%)
-  + tar: L3 hostile ensemble recall +35.37pp above LWM (62.00% → 97.37%)
-  + tar.gz: L3 hostile ensemble recall +12.57pp above LWM (56.69% → 69.27%)
-  + xls: L3 hostile ensemble recall +2.64pp above LWM (92.44% → 95.08%)
-  + xlsx: L3 hostile ensemble recall +4.51pp above LWM (29.01% → 33.53%)
-  + xml: L3 hostile ensemble recall +6.06pp above LWM (2.74% → 8.79%)
-  + zip: L3 hostile ensemble recall +11.38pp above LWM (40.61% → 51.99%)
-  + zst: L3 hostile ensemble recall +1.98pp above LWM (76.60% → 78.58%)
-
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - doc: L3 hostile ENSEMBLE recall dropped 18.49pp BELOW LOW-WATER-MARK (90.99% → 72.49%; LWM tolerance 0.90pp)
-
-compared 64 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
-
-blocked by: low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[1]: *** [Makefile:1136: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+full-train holds — PR_AUC 1.0000 -> 1.0000, AUC 0.9997 -> 0.9992, Brier 0.0057 -> 0.0093
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 1.0000)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `3370631402c9fef2` | `75faf49da5fc2eab` | `0e4bddaddae42eb1` |
+| key | `3370631402c9fef2` | `00650271b0f5884a` | `408ebb903abfd491` |
 | PR AUC | 1.0000 | 1.0000 | 1.0000 |
-| ROC AUC | 0.9997 | 0.9997 | 0.9997 |
-| F1 | 0.9962 | 0.9985 | 0.9985 |
+| ROC AUC | 0.9997 | 0.9994 | 0.9992 |
+| F1 | 0.9962 | 0.9979 | 0.9975 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-28T11-45-50_20260528T114506-promote-3370631402c9fef2_azoth-validate.log; tail:   c :: filetypes/c recall@3FP/M +2.04pp (11.94% → 13.98%)
-  elf :: filetypes/elf recall@3FP/M +2.67pp (93.35% → 96.01%)
-  go :: filetypes/go recall@3FP/M +2.29pp (4.84% → 7.14%)
-  javascript :: filetypes/javascript recall@3FP/M +8.46pp (69.53% → 77.99%)
-  ole :: filegroups/documents recall@3FP/M +0.87pp (93.45% → 94.32%)
-  pdf :: filegroups/documents recall@3FP/M +54.15pp (19.90% → 74.06%)
-  rtf :: filegroups/documents recall@3FP/M +1.39pp (97.22% → 98.61%)
-  shell :: filetypes/shell recall@3FP/M +32.15pp (55.01% → 87.16%)
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-per-route regressions (informational; does not block deploy):
-  xlsx :: filegroups/documents recall@3FP/M dropped 6.46pp (91.62% → 85.15%)
+The candidate bundle lives at:
 
-26 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + 7z: L3 hostile ensemble recall +14.84pp above LWM (72.74% → 87.59%)
-  + c: L3 hostile ensemble recall +2.26pp above LWM (10.02% → 12.28%)
-  + cab: L3 hostile ensemble recall +46.55pp above LWM (3.45% → 50.00%)
-  + chrome-manifest: L3 hostile ensemble recall +16.67pp above LWM (50.00% → 66.67%)
-  + crx: L3 hostile ensemble recall +10.81pp above LWM (0.00% → 10.81%)
-  + docx: L3 hostile ensemble recall +5.46pp above LWM (71.59% → 77.05%)
-  + go: L3 hostile ensemble recall +3.40pp above LWM (1.36% → 4.76%)
-  + html: L3 hostile ensemble recall +83.33pp above LWM (16.67% → 100.00%)
-  + javascript: L3 hostile ensemble recall +10.08pp above LWM (66.20% → 76.28%)
-  + jpeg: L3 hostile ensemble recall +9.12pp above LWM (1.56% → 10.69%)
-  + lnk: L3 hostile ensemble recall +22.72pp above LWM (48.66% → 71.38%)
-  + package.json: L3 hostile ensemble recall +2.50pp above LWM (86.78% → 89.28%)
-  + pdf: L3 hostile ensemble recall +1.20pp above LWM (6.41% → 7.61%)
-  + pe: L3 hostile ensemble recall +7.30pp above LWM (61.96% → 69.26%)
-  + perl: L3 hostile ensemble recall +11.51pp above LWM (77.78% → 89.29%)
-  + php: L3 hostile ensemble recall +4.12pp above LWM (62.11% → 66.23%)
-  + plist: L3 hostile ensemble recall +1.47pp above LWM (2.94% → 4.41%)
-  + png: L3 hostile ensemble recall +7.72pp above LWM (1.07% → 8.79%)
-  + pptx: L3 hostile ensemble recall +13.64pp above LWM (9.09% → 22.73%)
-  + tar: L3 hostile ensemble recall +35.37pp above LWM (62.00% → 97.37%)
-  + tar.gz: L3 hostile ensemble recall +12.57pp above LWM (56.69% → 69.27%)
-  + xls: L3 hostile ensemble recall +2.64pp above LWM (92.44% → 95.08%)
-  + xlsx: L3 hostile ensemble recall +4.51pp above LWM (29.01% → 33.53%)
-  + xml: L3 hostile ensemble recall +6.06pp above LWM (2.74% → 8.79%)
-  + zip: L3 hostile ensemble recall +11.38pp above LWM (40.61% → 51.99%)
-  + zst: L3 hostile ensemble recall +1.98pp above LWM (76.60% → 78.58%)
+```
+/home/t/collimator/out/models/azoth-candidate-filegroups-documents-3370631402c9fef2
+```
 
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - doc: L3 hostile ENSEMBLE recall dropped 18.49pp BELOW LOW-WATER-MARK (90.99% → 72.49%; LWM tolerance 0.90pp)
+## Candidate knobs (raw EXP_* form)
 
-compared 64 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=1.25
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0.2
+EXP_HARD_NEGATIVE_WEIGHT=5
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=0
+EXP_KV_VOCAB_MAX=5000
+EXP_LEARNING_RATE=0.05
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=96
+EXP_NUM_THREADS=8
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=0
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
 
-blocked by: low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+## To deploy (HUMAN)
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[1]: *** [Makefile:1136: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+Read `/home/t/collimator/out/models/azoth-candidate-filegroups-documents-3370631402c9fef2/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
+
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filegroups-documents-3370631402c9fef2
+```
+
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

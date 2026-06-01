@@ -1,6 +1,6 @@
 # Confirm PASS — 515db4011d4c89d5 on `filetypes/c`
 
-Cycle `20260528T011251-confirm-515db4011d4c89d5` — 2026-05-28T01:12:51Z
+Cycle `20260601T145701-confirm-515db4011d4c89d5` — 2026-06-01T14:57:01Z
 
 PR_AUC held across 3 seeds (orig 0.9909)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9909)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `515db4011d4c89d5` | `7935e1f50aa30685` | `7935e1f50aa30685` | `7935e1f50aa30685` |
-| PR AUC | 0.9909 | 0.9912 | 0.9904 | 0.9912 |
-| ROC AUC | 0.9950 | 0.9956 | 0.9947 | 0.9954 |
-| Recall@3FPM | — | 0.7897 | 0.8054 | 0.8031 |
+| key | `515db4011d4c89d5` | `734f56e86c6d78f0` | `734f56e86c6d78f0` | `734f56e86c6d78f0` |
+| PR AUC | 0.9909 | 0.9886 | 0.9906 | 0.9887 |
+| ROC AUC | 0.9950 | 0.9944 | 0.9956 | 0.9941 |
+| Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step

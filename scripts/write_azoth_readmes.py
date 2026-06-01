@@ -20,15 +20,30 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from collimator import bundle  # noqa: E402  — late import after sys.path patch
-from collimator.thresholds import _CHART_LEVELS_PER_100M  # noqa: E402
+from collimator.thresholds import (  # noqa: E402
+    DEFAULT_SEVERITY_LEVEL,
+    _CHART_LEVELS_PER_100M,
+    default_recall_per_100M_field,
+)
 from azoth_calibrate_ensemble import _clopper_pearson_fp_per_million_upper  # noqa: E402
 
 # Full deploy grid of per-100M operating points. Curves are sampled at
 # every level so the SVG shows the same x-axis the deploy pipeline tunes.
 RECALL_CURVE_LEVELS: tuple[int, ...] = tuple(_CHART_LEVELS_PER_100M)
 # Default operating point — rendered as a vertical dashed gridline so the
-# reader sees where the deploy threshold sits.
-DEFAULT_RECALL_LEVEL = 50
+# reader sees where the deploy threshold sits. Derived from the canonical
+# constant so the chart marker moves with the deploy default.
+DEFAULT_RECALL_LEVEL = DEFAULT_SEVERITY_LEVEL
+
+# Pretty-printed labels for the default operating point. Used in headers,
+# prose, and chart annotations so a future DEFAULT_SEVERITY_LEVEL flip
+# updates every README mention with no further edits.
+#   _DEFAULT_LEVEL_LABEL  →  "L4"
+#   _DEFAULT_LEVEL_PHRASE →  "L4 (0.04 FP/M)"
+_DEFAULT_LEVEL_LABEL = f"L{DEFAULT_SEVERITY_LEVEL}"
+_DEFAULT_LEVEL_PHRASE = (
+    f"{_DEFAULT_LEVEL_LABEL} ({DEFAULT_SEVERITY_LEVEL / 100.0:g} FP/M)"
+)
 
 # Stroke colors for SVG recall curves. Kept in one place so per-filetype and
 # top-level charts stay visually consistent.
@@ -467,14 +482,26 @@ HEADLINE_FILETYPES = (
 
 # Pure-container archive types: scored only by the general model on the
 # outer wrapper, since the actual malicious content is a nested member
-# the ensemble already classifies under its own filetype. Excluded from
-# the headline because the wrapper's score is incidental, not a model
-# quality signal. ``data``/``unknown`` are excluded for the same reason —
-# they collect rows whose filetype couldn't be identified.
+# Filetypes excluded from the headline table.
+#
+# Pure-compression labels (`gz`, `bz2`, `xz`, `zst`, `lzma`) carry no
+# multi-file container structure of their own and have no specialist;
+# litmus decompresses them and re-routes the inner content. They never
+# enter the headline.
+#
+# Compound archive labels (`tar.gz`, `tar.bz2`, …) are no longer in this
+# set: they are collapsed onto their container at the data layer (see
+# `collimator.data.normalize_archive_filetype`), so the headline shows a
+# single `tar` row that combines every compressed variant.
+#
+# `data`/`unknown` are excluded because cleave couldn't identify them.
+# `rar` is excluded for now: malware-only corpus (no benigns) makes the
+# headline metric uninformative — revisit once we have a labeled benign
+# RAR set.
 _HEADLINE_EXCLUDE: frozenset[str] = frozenset({
     "data", "unknown",
-    "zip", "tar", "tar.gz", "tar.bz2", "tar.xz", "tar.zst",
-    "7z", "gz", "bz2", "xz", "zst", "rar",
+    "gz", "bz2", "xz", "zst", "lzma",
+    "rar",
 })
 
 
@@ -483,7 +510,7 @@ def _headline_filetypes(
     config: dict[str, Any] | None = None,
     eval_data: dict[str, Any] | None = None,
     *,
-    level: int = 50,  # per-100M scale: 50 = 0.5 FP/M (today's selection budget L50)
+    level: int = DEFAULT_SEVERITY_LEVEL,  # per-100M selection budget; derived from collimator.thresholds
     severity: str = "hostile",
 ) -> tuple[str, ...]:
     """Pick filetypes for the bundle README's headline table.
@@ -491,10 +518,10 @@ def _headline_filetypes(
     Inclusion: at least 25 malware AND 25 benign in test, OR at least 100
     of each in the full labeled corpus (covers small-test-slice filetypes
     where the model still has plenty of training signal). Sort:
-    recall@L50 (0.5 FP/M) descending — same metric the picker optimizes for, so
-    the table opens with the filetypes the deployed system actually
-    catches the most malware on at our FP budget. PR AUC tiebreaks for
-    determinism.
+    recall at the default operating point descending — same metric the
+    picker optimizes for, so the table opens with the filetypes the
+    deployed system actually catches the most malware on at our FP
+    budget. PR AUC tiebreaks for determinism.
 
     Filetypes in ``_HEADLINE_EXCLUDE`` (data, unknown, pure archive
     wrappers) are skipped — their score reflects outer-container shape,
@@ -523,14 +550,15 @@ def _headline_filetypes(
     def sort_key(item: tuple[str, dict[str, Any]]) -> tuple[float, float, str]:
         ft, entry = item
         ens = entry.get("ensemble") or {}
-        r3 = ens.get("recall_at_50_per_100M")
+        r3 = ens.get(default_recall_per_100M_field())
         pr = ens.get("pr_auc")
         if not isinstance(r3, (int, float)) or (isinstance(r3, float) and math.isnan(r3)):
             r3 = 0.0
         if not isinstance(pr, (int, float)):
             pr = 0.0
-        # Sort by recall@L50 desc, PR AUC desc tiebreak, then ft for
-        # determinism. Mirrors the picker's selection key.
+        # Sort by recall at the default operating point desc, PR AUC desc
+        # tiebreak, then ft for determinism. Mirrors the picker's
+        # selection key.
         return (-float(r3), -float(pr), ft)
 
     candidates = [
@@ -581,7 +609,8 @@ def _ensemble_table(
 ) -> list[str]:
     """Headline table for the routed ensemble's model properties.
 
-    Reports PR AUC, ROC AUC, F1, and Recall@L50 from
+    Reports PR AUC, ROC AUC, F1, and Recall at the default operating
+    point (DEFAULT_SEVERITY_LEVEL on the per-100M-benigns scale) from
     ``per_filetype_metrics.json["filetypes"][<ft>]["ensemble"]`` — the
     selected combiner's per-filetype slice numbers on the locked test
     partition. These are properties of the MODEL: how well its scores
@@ -597,7 +626,7 @@ def _ensemble_table(
     that pre-load it; the headline doesn't read from it anymore.
     """
     lines = [
-        "| File type | Test mal / ben | PR AUC | ROC AUC | F1 | Recall @ L50 | Δ vs EMBER 2024 |",
+        f"| File type | Test mal / ben | PR AUC | ROC AUC | F1 | Recall @ {_DEFAULT_LEVEL_LABEL} | Δ vs EMBER 2024 |",
         "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for ft in filetypes:
@@ -611,7 +640,7 @@ def _ensemble_table(
         ens_pr = ens.get("pr_auc")
         ens_roc = ens.get("roc_auc")
         ens_f1 = ens.get("f1")
-        ens_recall = ens.get("recall_at_50_per_100M")
+        ens_recall = ens.get(default_recall_per_100M_field())
         if ens_pr is None and ens_roc is None:
             pr_str = roc_str = f1_str = recall_str = "—"
             ember_str = "—"
@@ -1022,11 +1051,11 @@ def _write_route(root: Path, path: Path) -> None:
             if ember
             else "—"
         )
-        # Lead with the routed ensemble's model properties — PR AUC,
-        # ROC AUC, F1, recall@L50 — on this filetype's slice of the
-        # locked test partition. These describe what the model's scores
-        # rank; how litmus thresholds them at each severity level is
-        # documented in route_policies.md.
+        # Lead with the routed ensemble's model properties — PR AUC, ROC
+        # AUC, F1, recall at the default operating point — on this
+        # filetype's slice of the locked test partition. These describe
+        # what the model's scores rank; how litmus thresholds them at
+        # each severity level is documented in route_policies.md.
         lines.extend([
             "## Ensemble Performance",
             "",
@@ -1034,13 +1063,13 @@ def _write_route(root: Path, path: Path) -> None:
             f"on the `{name}` slice of the locked test partition: "
             f"{_int(n_mal)} malware / {_int(n_ben)} benign ({_int(n_eval)} rows).",
             "",
-            "| PR AUC | ROC AUC | F1 | Recall @ L50 | Brier |",
+            f"| PR AUC | ROC AUC | F1 | Recall @ {_DEFAULT_LEVEL_LABEL} | Brier |",
             "|---:|---:|---:|---:|---:|",
             (
                 f"| {_metric_cell(ens_metrics.get('pr_auc'), None, None, include_ci=False)} | "
                 f"{_metric_cell(ens_metrics.get('roc_auc'), None, None, include_ci=False)} | "
                 f"{_metric_cell(ens_metrics.get('f1'), None, None, include_ci=False)} | "
-                f"{_metric_cell(ens_metrics.get('recall_at_50_per_100M'), None, None, include_ci=False, as_percent=True)} | "
+                f"{_metric_cell(ens_metrics.get(default_recall_per_100M_field()), None, None, include_ci=False, as_percent=True)} | "
                 f"{_num(ens_metrics.get('brier'), 4)} |"
             ),
             "",
@@ -1054,13 +1083,13 @@ def _write_route(root: Path, path: Path) -> None:
             f"(the ensemble usually does better — that's the point of the "
             f"routing).",
             "",
-            "| PR AUC | ROC AUC | F1 | Recall @ L50 | Brier | Δ vs EMBER 2024 |",
+            f"| PR AUC | ROC AUC | F1 | Recall @ {_DEFAULT_LEVEL_LABEL} | Brier | Δ vs EMBER 2024 |",
             "|---:|---:|---:|---:|---:|---:|",
             (
                 f"| {_metric_cell(spec_metrics.get('pr_auc'), None, None, include_ci=False)} | "
                 f"{_metric_cell(spec_metrics.get('roc_auc'), None, None, include_ci=False)} | "
                 f"{_metric_cell(spec_metrics.get('f1'), None, None, include_ci=False)} | "
-                f"{_metric_cell(spec_metrics.get('recall_at_50_per_100M'), None, None, include_ci=False, as_percent=True)} | "
+                f"{_metric_cell(spec_metrics.get(default_recall_per_100M_field()), None, None, include_ci=False, as_percent=True)} | "
                 f"{_num(spec_metrics.get('brier'), 4)} | {ember_str} |"
             ),
             "",
@@ -1088,8 +1117,8 @@ def _write_route(root: Path, path: Path) -> None:
                 img_tag,
                 "",
                 "Each curve plots recall at the per-100M-benign FP target "
-                "for the route. The vertical dashed line marks the L50 "
-                "deploy operating point.",
+                f"for the route. The vertical dashed line marks the "
+                f"{_DEFAULT_LEVEL_LABEL} deploy operating point.",
                 "",
             ])
     else:
@@ -1188,8 +1217,8 @@ def _bundle_recall_curve_section(metrics: dict[str, Any], root: Path | None = No
         "answering: \"If I draw a random file from the labeled corpus, "
         "what fraction of malware do we catch at this FP budget?\" The "
         "general curve is the single-model baseline on the full evaluated "
-        "dataset. The vertical dashed line marks the L50 deploy operating "
-        "point.",
+        f"dataset. The vertical dashed line marks the {_DEFAULT_LEVEL_LABEL} "
+        f"deploy operating point.",
         "",
     ]
 
@@ -1241,8 +1270,9 @@ def _write_bundle(root: Path) -> None:
         "Input is a JSON report produced by `cleave`. Output is one "
         "verdict — `benign` or `hostile` — qualified by a severity level "
         "L0..L20. Litmus reads the hostile threshold at the chosen level "
-        "(consumers can derive a suspicious band as crit/4 if they want a "
-        "softer tier); the deployed default is L50 (0.5 FP/M). Lower levels tighten the "
+        "(consumers can label anything firing above the configured critical "
+        "level as suspicious if they want a softer tier); the deployed "
+        f"default is {_DEFAULT_LEVEL_PHRASE}. Lower levels tighten the "
         "operating point; higher levels loosen it.",
         "",
         "## Bundle layout",
@@ -1265,7 +1295,7 @@ def _write_bundle(root: Path) -> None:
         "Each row is the routed ensemble's intrinsic ranking quality on "
         "that filetype's slice of the locked test partition — PR AUC, "
         "ROC AUC, F1 at the F-beta-tuned threshold, and recall at the "
-        "L50 (0.5 FP/M) operating point. These are properties of the model's "
+        f"{_DEFAULT_LEVEL_PHRASE} operating point. These are properties of the model's "
         "scores; how litmus chooses to threshold those scores at each "
         "severity level is a runtime concern documented in "
         "[`route_policies.md`](route_policies.md).",
@@ -1277,7 +1307,7 @@ def _write_bundle(root: Path) -> None:
         "reflects the container's shape, not the classifier's quality.",
         "",
         "**Optimization target.** Each filetype's ensemble combiner is "
-        "selected to maximize **recall at L50 (0.5 FP/M)** on the dev partition, "
+        f"selected to maximize **recall at {_DEFAULT_LEVEL_PHRASE}** on the dev partition, "
         "with PR AUC as a tiebreak. Selection is constrained so the "
         "ensemble can never report worse than the specialist alone — "
         "when no combiner clears the specialist on dev, the ensemble "
@@ -1292,8 +1322,8 @@ def _write_bundle(root: Path) -> None:
         ),
         "",
         "PR AUC summarizes recall against precision across operating "
-        "points. Recall@L50 is the selection-budget headline; for "
-        "filetypes whose dev slice cannot resolve L50 (0.5 FP/M) empirically "
+        f"points. Recall@{_DEFAULT_LEVEL_LABEL} is the selection-budget headline; for "
+        f"filetypes whose dev slice cannot resolve {_DEFAULT_LEVEL_PHRASE} empirically "
         "it is GPD-tail-extrapolated. EMBER 2024 deltas are reported "
         "where Joyce et al. publish per-filetype numbers (Table 5, "
         "All files → X).",
@@ -1308,7 +1338,7 @@ def _write_bundle(root: Path) -> None:
         "",
         "## Limits",
         "",
-        "- Strict L0..L50 (FP/100M) targets sit below empirical resolution on a single dev partition (one FP per 150k benigns ≈ 600 FP/100M); their thresholds are GPD tail-extrapolations.",
+        f"- Strict L0..{_DEFAULT_LEVEL_LABEL} (FP/100M) targets sit below empirical resolution on a single dev partition (one FP per 150k benigns ≈ 600 FP/100M); their thresholds are GPD tail-extrapolations.",
         "- The split is content-deduplicated by `canonical_sha256`, not family-aware. Campaign-level generalization may be overstated.",
         "- Deployment distribution may differ from the training corpus.",
         "",
@@ -1375,7 +1405,7 @@ def _write_ensemble_card(root: Path) -> None:
         "check; rejected from the picker because raw scores don't share "
         "a probability calibration.",
         "",
-        "**Selection criterion**: maximize **recall at L50 (0.5 FP/M)** on the "
+        f"**Selection criterion**: maximize **recall at {_DEFAULT_LEVEL_PHRASE}** on the "
         "dev partition (matching the deployment FP/M target), with "
         "**PR AUC** as a secondary tiebreak. The picker is constrained "
         "by a floor: no combiner may report worse than "
@@ -1423,7 +1453,7 @@ def _write_ensemble_card(root: Path) -> None:
         "Litmus reads the per-level thresholds from "
         "`route_policies.json` and assigns severity per file.",
         "",
-        "Default deploy level: L50 (0.5 FP/M) (litmus loads the hostile threshold at "
+        f"Default deploy level: {_DEFAULT_LEVEL_PHRASE} (litmus loads the hostile threshold at "
         "that level; any suspicious band is derived consumer-side). Per-route "
         "thresholds and observed FP/100M live in "
         "[route_policies.md](route_policies.md) and each "
