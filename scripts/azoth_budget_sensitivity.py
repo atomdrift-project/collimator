@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
 """Analyze the corpus-FP budget curve for azoth route policies.
 
-The L9 hostile target is 9 FP/M, which is a deployment SLA the team
-doesn't want to relax. But at 9 FP/M the long tail of filetypes (shell,
-ole, php, ...) gets shut out by the knapsack: PE alone consumes 6 of 24
-FPs at 100k tp/FP, leaving nothing for routes whose marginal value is
-1-3k tp/FP.
+The L50 hostile target is 50 FP/100M (≡ 0.5 FP/M), which is the current
+deployment default. At that budget the long tail of filetypes (shell,
+ole, php, ...) can be shut out by the knapsack: a high-recall route can
+consume the entire budget at low marginal tp/FP, leaving nothing for
+routes whose marginal value is order-of-magnitude smaller.
 
-This script enumerates the corpus-FP knapsack at a range of target FP/M
-values and reports:
+This script enumerates the corpus-FP knapsack at a range of target
+FP/100M values and reports:
 
 * total TP catchable (full corpus and projected per-million-rows),
 * marginal TP per added FP,
 * which filetype gained its first non-no_policy operating point at
-  each FP/M boundary.
+  each budget boundary.
 
 That tells the team:
 
 1. Where the marginal-TP curve elbows out (the natural break for an
-   additional severity tier — e.g., L10 at 18 or 36 FP/M).
-2. How many filetypes each FP/M tier would unlock (the "coverage gain"
+   additional severity tier on the per-100M grid).
+2. How many filetypes each tier would unlock (the "coverage gain"
    that justifies the tier).
 
-We do NOT loosen L9 — we just measure what an L10/L11 tier WOULD buy
-if we added one. The numbers come from the existing candidate set
-already in route_policies.json, so no recalibration is needed.
+We do NOT loosen the deployed L50 — we just measure what looser tiers
+WOULD buy. The numbers come from the existing candidate set already in
+route_policies.json, so no recalibration is needed. Note: the CLI
+``--fpm-targets`` flag and the candidate-set ``--level`` selector still
+use the per-million-input plumbing internally; the surface labels here
+are renamed to the per-100M scale, but the underlying knapsack math is
+unchanged.
 """
 
 from __future__ import annotations
@@ -95,16 +99,17 @@ def main() -> int:
     parser.add_argument(
         "--level",
         type=int,
-        default=9,
-        help="Calibration level whose candidate set to use (default 9).",
+        default=50,
+        help="Calibration level whose candidate set to use (default 50, the new per-100M operating point).",
     )
     parser.add_argument(
         "--fpm-targets",
         type=str,
         default="3,5,9,18,36,72,144,288,576",
         help=(
-            "Comma-separated FP/M targets to sweep. Default spans L9 "
-            "(9 FP/M) up to ~600 FP/M for marginal-curve analysis."
+            "Comma-separated FP/M targets to sweep. Default spans the "
+            "L50 operating point (0.5 FP/M) up to ~600 FP/M for "
+            "marginal-curve analysis."
         ),
     )
     args = parser.parse_args()

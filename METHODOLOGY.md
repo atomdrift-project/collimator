@@ -16,7 +16,7 @@ print, with the simplest possible implementation that meets that bar.
    "Winner beats baseline" claims ship with paired Δ-CIs and
    FDR-corrected p-values across the experiment family.
 3. **Stated scope.** Limitations the data does not currently support
-   (family-aware split, temporal split, strict-FP/M precision floor)
+   (family-aware split, temporal split, strict-FP/100M precision floor)
    are named in the paper's Limitations section, not hidden.
 
 ## Partitions
@@ -103,10 +103,10 @@ adding 12.5% more training data shifts score magnitudes slightly but
 preserves the rank order the calibrator was fit against. Acceptable for
 v1.
 
-If the deployed model's locked-test FP/M deviates materially from its
-dev FP/M prediction (defined as outside the dev bootstrap CI), refit
-the calibrator using an internal 80/20 split inside the 87.5% retrain
-set as a one-time correction. Re-evaluate on test.
+If the deployed model's locked-test FP/100M deviates materially from
+its dev FP/100M prediction (defined as outside the dev bootstrap CI),
+refit the calibrator using an internal 80/20 split inside the 87.5%
+retrain set as a one-time correction. Re-evaluate on test.
 
 The locked-test evaluation is the headline number for the model card
 and any paper claim. It is the only operation that touches the test
@@ -154,7 +154,7 @@ such.
   are not detectable; do not claim them.
 - "100% precision" framing for routed FP-budget operating points; this
   is a class-balance artifact, not a model-quality result. Replace with
-  (recall, FP/M, absolute TP, absolute FP).
+  (recall, FP/100M, absolute TP, absolute FP).
 - Per-filetype tables for routes with < 200 test rows or < 30 minority
   class. Pool into a "tail" bucket; full per-route data goes to an
   appendix only if it's defensible.
@@ -181,10 +181,10 @@ Trade-offs of single-split dev with bootstrap CIs vs full k-fold:
 - **Lost**: ability to detect very small effects (Δ < ~0.005 F1)
   reliably. Mitigation: don't claim them. They're below clinical
   significance for malware detection anyway.
-- **Lost**: tighter threshold-variance estimates at strict FP/M.
+- **Lost**: tighter threshold-variance estimates at strict FP/100M.
   Mitigation: bootstrap the threshold search and report the resulting
-  FP/M CIs honestly. Strict-FP/M precision is volume-floored regardless
-  of split structure.
+  FP/100M CIs honestly. Strict-FP/100M precision is volume-floored
+  regardless of split structure.
 - **Kept**: leakage protection (dev/test disjoint, calibration on dev
   only).
 - **Kept**: honest bootstrap CIs on every reported number.

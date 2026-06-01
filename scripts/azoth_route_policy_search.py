@@ -1253,7 +1253,7 @@ def _apply_global_budget_selection(payload: dict[str, Any], config: dict[str, An
                             "policy": "no_policy",
                             "primary": None,
                             "allowed_routes": [],
-                            "target_per_million": target,
+                            "target_per_100M": target * 100.0,
                             "thresholds": {},
                             "tp": 0,
                             "fp": 0,

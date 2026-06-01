@@ -1,6 +1,6 @@
-# Confirm FAIL — 546b99d0ce7a05d1 on `filetypes/pdf`
+# Confirm FAIL — 8c59b97b484dea6b on `filetypes/pdf`
 
-Cycle `20260601T103351-confirm-546b99d0ce7a05d1` — 2026-06-01T10:33:51Z
+Cycle `20260601T103353-confirm-8c59b97b484dea6b` — 2026-06-01T10:33:53Z
 
 experiment failed: make experiment exit 2: exit status 2
 --- experiment log tail ---
@@ -10,19 +10,19 @@ experiment failed: make experiment exit 2: exit status 2
 	 \
 	 \
 	--cache-dir out/cache/experiment/azoth \
-	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_pdf_retry_extra_trees_v2_confirm_seedsearch_3.log"
-06:33:52 INFO  collimator.experiment: using cached experiment snapshot: max_id=1636831170
-06:33:52 INFO  collimator.experiment: dataset snapshot: max_id=1636831170
-06:33:52 INFO  collimator.experiment: loaded cached matrices: 102161 train, 16922 test, 875 features
+	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_pdf_ctrl_extratrees_lr003_confirm_seedsearch_3.log"
+06:33:53 INFO  collimator.experiment: using cached experiment snapshot: max_id=1636831170
+06:33:53 INFO  collimator.experiment: dataset snapshot: max_id=1636831170
+06:33:53 INFO  collimator.experiment: loaded cached matrices: 102161 train, 16922 test, 878 features
 
 EXPERIMENT (cached matrices: 102161 train, 16922 test)
-06:33:52 INFO  collimator.experiment: seed-search attempt 1/3 (seed=43)
-06:33:52 INFO  collimator.train: training: 102161 samples (101086 malware, 1075 benign), 875 features, sparse nnz=8666917 density=9.7% mem=67MB
-06:33:52 INFO  collimator.train: holdout: 12260 samples (12131 malware, 129 benign)
-06:33:52 INFO  collimator.train: cross-validation disabled
-06:33:52 INFO  collimator.train: training final model on 89901 samples
-06:33:52 INFO  collimator.model: xgboost device: cuda:0
-06:33:52 INFO  collimator.model: device=cuda (rows=89901 feats=875 density=9.694%)
+06:33:53 INFO  collimator.experiment: seed-search attempt 1/3 (seed=43)
+06:33:53 INFO  collimator.train: training: 102161 samples (101086 malware, 1075 benign), 878 features, sparse nnz=8973400 density=10.0% mem=69MB
+06:33:53 INFO  collimator.train: holdout: 12260 samples (12131 malware, 129 benign)
+06:33:53 INFO  collimator.train: cross-validation disabled
+06:33:53 INFO  collimator.train: training final model on 89901 samples
+06:33:53 INFO  collimator.model: xgboost device: cuda:0
+06:33:53 INFO  collimator.model: device=cuda (rows=89901 feats=878 density=10.002%)
 [LightGBM] [Fatal] CUDA Tree Learner was not enabled in this build.
 Please recompile with CMake option -DUSE_CUDA=1
 Traceback (most recent call last):
@@ -55,13 +55,13 @@ lightgbm.basic.LightGBMError: CUDA Tree Learner was not enabled in this build.
 Please recompile with CMake option -DUSE_CUDA=1
 make[2]: *** [Makefile:1585: experiment] Error 1
 --- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-01T10-33-51_20260601T103351-confirm-546b99d0ce7a05d1_pdf_retry_extra_trees_v2_confirm_seedsearch_3.log
+full log: /home/t/collimator/out/autocollie/runs/2026-06-01T10-33-53_20260601T103353-confirm-8c59b97b484dea6b_pdf_ctrl_extratrees_lr003_confirm_seedsearch_3.log
 
 ## Per-seed results (1 ran)
 
 | | original | seed=43 | 
 |---|---|---|
-| key | `546b99d0ce7a05d1` | `` |
+| key | `8c59b97b484dea6b` | `` |
 | PR AUC | 1.0000 | 0.0000 |
 | ROC AUC | 0.9992 | 0.0000 |
 | Recall@3FPM | — | 0.0000 |

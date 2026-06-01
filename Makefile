@@ -202,25 +202,10 @@ AZOTH_SPECIALIST_FEATURE_ENV ?= native:COLLIMATOR_FORMAT_HINTS=1 native:COLLIMAT
 AZOTH_AUTOCOLLIE_RUNS_DIR ?= out/experiments/azoth/runs
 AZOTH_SPECIALIST_SKIP_EXISTING ?= 1
 AZOTH_SPECIALIST_SKIP_EXISTING_ARG := $(if $(filter 1 true yes,$(AZOTH_SPECIALIST_SKIP_EXISTING)),--skip-existing,)
-# Concurrent specialist trainings. Default 4 is a good fit for a typical
-# many-core CPU host (16-128 cores) now that azoth_specialist_suite
-# auto-caps each training's LightGBM threads at ``nproc // parallelism``.
-# The total CPU footprint stays roughly fixed at the core count; bumping
-# parallelism trades thread count per training for more concurrent
-# trainings. Empirically (128-core box, observed in 2026-05) parallelism=4
-# with 32-thread LightGBM jobs runs ~30% faster than parallelism=2 with
-# 64-thread jobs, because LightGBM's intra-training synchronization
-# overhead grows nonlinearly with thread count.
-#
-# Tune knobs:
-#  * GPU training (``--device cuda``): set to 1 — GPU is the single
-#    bottleneck, multiple concurrent jobs serialize on or fight for memory.
-#  * Tiny boxes (< 8 cores): set to 1-2 so each training gets enough
-#    threads to make progress.
-#  * Very large boxes (256+ cores): try 8 — the auto thread cap still
-#    keeps total workers near nproc, and more concurrency hides per-job
-#    feature-extraction stalls.
-AZOTH_SPECIALIST_PARALLELISM ?= 4
+# Concurrent specialist trainings. Default derived with the other auto-
+# saturation knobs further down (NPROC / EXP_LGBM_THREADS). Set to 1 when
+# training on GPU (``--device cuda``) so concurrent jobs don't fight for
+# memory.
 AZOTH_FILEGROUP_SCORE_FILTER ?= 0
 AZOTH_FILEGROUP_SCORE_FILTER_ARG := $(if $(filter 1 true yes,$(AZOTH_FILEGROUP_SCORE_FILTER)),--filegroup-score-filter,)
 SAMPLES_DIR ?= /data/samples
@@ -237,14 +222,16 @@ SAMPLE ?=
 FILE ?=
 CLEAVE ?= cleave
 DEMO_DB ?= out/demo.db
-WORKERS ?=
+# Auto-saturate cores. One principle: each LightGBM fit uses 8 threads
+# (the empirical sweet spot — past that returns diminish), and concurrent
+# fits fill the rest. So total active threads ≈ NPROC. Override any of
+# these on the command line if a specific run needs different shape.
+NPROC := $(shell nproc 2>/dev/null || echo 4)
+EXP_LGBM_THREADS ?= 8
+AZOTH_CALIBRATE_PARALLELISM ?= $(shell expr $(NPROC) / $(EXP_LGBM_THREADS))
+AZOTH_SPECIALIST_PARALLELISM ?= $(AZOTH_CALIBRATE_PARALLELISM)
+WORKERS ?= $(NPROC)
 EXP_WORKERS ?= $(WORKERS)
-# Hard cap on the LightGBM thread pool a single `make experiment`
-# invocation may grab. Without this, LightGBM uses every host core
-# (n_jobs=-1) and concurrent screens thrash. Wired to COLLIMATOR_NUM_THREADS
-# in the experiment recipe; collimator.train reads that env var and
-# passes it through to LightGBM. Unset = no cap (host default).
-EXP_LGBM_THREADS ?=
 WORKERS_ARG := $(if $(WORKERS),--workers $(WORKERS),)
 EXP_WORKERS_ARG := $(if $(EXP_WORKERS),--workers $(EXP_WORKERS),)
 SEED ?= 42
@@ -1022,9 +1009,10 @@ azoth-oof-route-scores: venv check-db
 # publication runs where the general/threshold_scores.npz already covers
 # train+dev OOF — no further filtering needed.
 AZOTH_CALIBRATE_PARTITION ?= dev
-# Concurrent route scoring. Same trade-offs as
-# AZOTH_SPECIALIST_PARALLELISM — process-based, fan-out hits DB and CPU.
-AZOTH_CALIBRATE_PARALLELISM ?= 2
+# Concurrent route scoring. The auto-derived default (NPROC/8, capped at 16)
+# is set with the rest of the parallelism block near the top of this file;
+# this comment block is kept for context. Override via the command line if
+# you have a specific DB/CPU bottleneck you want to dodge.
 
 # When AZOTH_USE_OOF_ROUTE_SCORES=1, pass --oof-route-scores-dir so the
 # calibrator reads honest fold-merged specialist probs instead of running
@@ -1777,8 +1765,11 @@ AUTOCOLLIE_SCREEN_TIMEOUT ?= 90m
 # EXP_WORKERS and EXP_LGBM_THREADS are auto-derived from MAX_CPU_THREADS /
 # ROUTE_CONCURRENCY in autocollie so concurrent screens don't fight for
 # the host's full CPU. Set ROUTE_CONCURRENCY=1 to force sequential.
-ROUTE_CONCURRENCY ?= 2
-MAX_CPU_THREADS ?= 128
+# Autocollie's own concurrency mirrors the calibrate side: as many routes
+# in parallel as we have LightGBM thread groups. MAX_CPU_THREADS is the
+# total CPU budget passed through to LightGBM as a per-spawn cap.
+ROUTE_CONCURRENCY ?= $(AZOTH_CALIBRATE_PARALLELISM)
+MAX_CPU_THREADS ?= $(NPROC)
 # Autocollie defaults to the local Hopper replica. Using the bare `hopper`
 # hostname can resolve through public DNS and burn screen slots on timeouts.
 AUTOCOLLIE_DB ?= postgres://hopper@localhost:5432/hopper
@@ -1811,7 +1802,7 @@ azoth-augment-small-routes: venv check-db
 		--azoth-root $(AZOTH_ROOT) \
 		--db $(DB) \
 		--max-pool-benigns $(MAX_POOL_BENIGNS) \
-		--workers $(or $(WORKERS),32) \
+		--workers $(or $(WORKERS),$(NPROC)) \
 		$(if $(filter 1 true yes,$(USE_CREDIBLE_BOUND)),--use-credible-bound,) \
 		$(if $(ONLY_ROUTE),--only-routes $(ONLY_ROUTE),)
 	$(PYTHON) scripts/azoth_policy_global_metrics.py \
@@ -1850,7 +1841,7 @@ autocollie-screen: venv check-db autocollie-build
 		--routes $(ROUTES) \
 		--experiments $(EXPERIMENTS) \
 		--llm-timeout $(AUTOCOLLIE_LLM_TIMEOUT) \
-		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
+		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),$(NPROC)) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
 
 # Confirm a screening winner by re-running with a different seed.
 # Usage: make autocollie-confirm KEY=<16-hex experiment_key> [SEED=43]
@@ -1932,7 +1923,9 @@ autocollie-confirm: venv check-db autocollie-build
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--key $(KEY) \
 		--seed $(CONFIRM_SEED) \
-		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
+		--route-concurrency $(ROUTE_CONCURRENCY) \
+		--max-cpu-threads $(MAX_CPU_THREADS) \
+		--make-args "DB=$(DB) EXP_WORKERS=$(NPROC) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
 
 # Promote a winner: confirm (different seed) -> full-train (inflated profile)
 # -> compare. On pass, writes a report telling the user to run `make azoth-deploy`.
@@ -1946,7 +1939,9 @@ autocollie-promote: venv check-db autocollie-build
 		--seed $(CONFIRM_SEED) \
 		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
 		--promote-timeout 180m \
-		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),64) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
+		--route-concurrency $(ROUTE_CONCURRENCY) \
+		--max-cpu-threads $(MAX_CPU_THREADS) \
+		--make-args "DB=$(DB) EXP_WORKERS=$(NPROC) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
 
 # The full hands-off ladder: screen N specs per route -> if any winner beats
 # the route's currently trained Azoth specialist in $(AZOTH_ROOT), automatically promote it (confirm + full-train
@@ -1975,7 +1970,7 @@ autocollie: venv check-db autocollie-build
 		--promote-timeout 180m \
 		--route-concurrency $(ROUTE_CONCURRENCY) \
 		--max-cpu-threads $(MAX_CPU_THREADS) \
-		--make-args "DB=$(DB) $(if $(WORKERS),EXP_WORKERS=$(WORKERS) ,)EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)"
+		--make-args "DB=$(DB) $(if $(WORKERS),EXP_WORKERS=$(WORKERS) ,)EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
 
 # autocollie-loop is the same target with PASSES=0 — loops the screen+promote
 # ladder over the route list until Ctrl-C.

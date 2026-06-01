@@ -410,20 +410,27 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
         lines.extend([
             f"## {pool}",
             "",
-            "| Rank | Variant | AUC | AP | F1 | R@0FP/M | R@5FP/M | R@50FP/M | R@1000FP/M | Test bad/good |",
-            "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+            # Columns use the per-100M scale that matches the rest of the
+            # system. Underlying `fp_budgets` keys remain the raw per-million
+            # values used by `_metric_at_fp_budget` (5 FP/M = 500 FP/100M,
+            # 50 FP/M = 5000 FP/100M) — these are off-grid on the deployed
+            # L-ladder (0,1,2,3,5,10,20,30,40,50,60,70,80,90,100); the
+            # nearest deployable level for the 500/100M column is L100, and
+            # 5000/100M is well beyond L100. Reported for ranking power, not
+            # deployment fidelity.
+            "| Rank | Variant | AUC | AP | F1 | R@L0 | R@500/100M | R@5000/100M | Test bad/good |",
+            "|---:|---|---:|---:|---:|---:|---:|---:|---:|",
         ])
         for rank, row in enumerate(subset[:20], 1):
             m = row["metrics"]
             r0 = m["fp_budgets"]["0"]["recall"]
             r5 = m["fp_budgets"]["5"]["recall"]
             r50 = m["fp_budgets"]["50"]["recall"]
-            r1000 = m["fp_budgets"]["1000"]["recall"]
             lines.append(
                 f"| {rank} | `{row['name']}` | "
                 f"{(m.get('auc') or 0.0):.4f} | {(m.get('ap') or 0.0):.4f} | {m['f1']:.4f} | "
                 f"{100.0 * (r0 or 0.0):.2f}% | {100.0 * (r5 or 0.0):.2f}% | "
-                f"{100.0 * (r50 or 0.0):.2f}% | {100.0 * (r1000 or 0.0):.2f}% | "
+                f"{100.0 * (r50 or 0.0):.2f}% | "
                 f"{row.get('test_malware', 0)}/{row.get('test_benign', 0)} |"
             )
         lines.append("")

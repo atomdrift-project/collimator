@@ -1407,8 +1407,19 @@ def main() -> int:
     if args.parallelism > 1 and len(score_jobs) > 1:
         LOG.info("scoring %d routes (parallelism=%d)", len(score_jobs), args.parallelism)
         route_scores.extend([None] * len(score_jobs))
+        # `spawn` start method instead of `fork` so each worker boots a clean
+        # interpreter and re-imports numpy/lightgbm/onnxruntime fresh — no
+        # inherited OpenMP/BLAS thread-pool state from the parent. Fork
+        # inherited the parent's BLAS mutex in a state the child can't safely
+        # use, producing silent futex_wait deadlocks in worker subprocesses
+        # (observed 2026-06-01 with parallelism=2 on a 64-core box). The
+        # ~1s/worker spawn overhead is negligible vs. minutes-per-route
+        # scoring work.
+        import multiprocessing as _mp  # noqa: PLC0415 — guard against fork side-effects
+        _spawn_ctx = _mp.get_context("spawn")
         with concurrent.futures.ProcessPoolExecutor(
             max_workers=args.parallelism,
+            mp_context=_spawn_ctx,
             initializer=_score_pool_init,
             initargs=(args.log_level,),
         ) as pool:

@@ -535,7 +535,7 @@ def _operating_point(
             break
         tp = int(tp_cum[end])
         best = {
-            "target_per_million": float(target_per_million),
+            "target_per_100M": float(target_per_million) * 100.0,
             "budget": budget,
             "threshold": float(threshold),
             "recall": float(tp / n_malware) if n_malware else math.nan,
@@ -550,7 +550,7 @@ def _operating_point(
     if best is not None:
         return best
     return {
-        "target_per_million": float(target_per_million),
+        "target_per_100M": float(target_per_million) * 100.0,
         "budget": budget,
         "threshold": None,
         "recall": None,
@@ -1749,8 +1749,15 @@ def main() -> int:
         )
 
     if args.parallelism > 1 and len(pending) > 1:
+        # `spawn` start method — see azoth_calibrate_ensemble.py for the
+        # rationale. Fork-based workers inherit the parent's OpenMP/BLAS
+        # mutex state and silently futex_wait-deadlock when LightGBM warms
+        # up its thread pool inside the worker.
+        import multiprocessing as _mp  # noqa: PLC0415
+        _spawn_ctx = _mp.get_context("spawn")
         with concurrent.futures.ProcessPoolExecutor(
             max_workers=args.parallelism,
+            mp_context=_spawn_ctx,
             initializer=_pool_init,
             initargs=(args.log_level,),
         ) as pool:

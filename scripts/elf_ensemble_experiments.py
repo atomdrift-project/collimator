@@ -202,10 +202,13 @@ def _acquittal_levels(
 
 
 def _best_l5_l9(levels: list[dict[str, Any]]) -> dict[str, Any]:
-    return {
-        "l500_hostile": next(item["hostile"] for item in levels if item["level"] == 500),
-        "l1000_hostile": next(item["hostile"] for item in levels if item["level"] == 1000),
-    }
+    summary: dict[str, Any] = {}
+    for key, level_no in (("l500_hostile", 50), ("l1000_hostile", 100)):
+        entry = next((item for item in levels if item["level"] == level_no), None)
+        if entry is None:
+            continue
+        summary[key] = entry["hostile"]
+    return summary
 
 
 def _metrics_from_hit(
@@ -230,7 +233,7 @@ def _metrics_from_hit(
     f1 = 2 * precision * recall / max(precision + recall, 1e-12) if n_malware else math.nan
     accuracy = (tp + tn) / max(tp + fp + tn + fn, 1)
     return {
-        "target_per_million": float(target_per_million),
+        "target_per_100M": float(target_per_million) * 100.0,
         "thresholds": thresholds_used,
         "tp": tp,
         "fp": fp,
@@ -386,10 +389,13 @@ def _elf_local_levels(
 
 
 def _elf_local_l5_l9(levels: list[dict[str, Any]]) -> dict[str, Any]:
-    return {
-        "l500_hostile": next(item["hostile"] for item in levels if item["level"] == 500),
-        "l1000_hostile": next(item["hostile"] for item in levels if item["level"] == 1000),
-    }
+    summary: dict[str, Any] = {}
+    for key, level_no in (("l500_hostile", 50), ("l1000_hostile", 100)):
+        entry = next((item for item in levels if item["level"] == level_no), None)
+        if entry is None:
+            continue
+        summary[key] = entry["hostile"]
+    return summary
 
 
 def _train_lgbm_classifier(
@@ -600,9 +606,15 @@ def main() -> int:
         },
     )
 
-    # Tail contrast: emphasize ELF malware that general scores below L500
-    # hostile (= 5 FP/M, today's L5) and benign ELF in the high general-score tail.
-    general_l500 = next(item for item in baseline_levels if item["level"] == 500)["hostile"]
+    # Tail contrast: emphasize ELF malware that general scores below L50
+    # hostile (= 0.5 FP/M, today's dense headline) and benign ELF in the
+    # high general-score tail.
+    general_l50_entry = next(
+        (item for item in baseline_levels if item["level"] == 50), None,
+    )
+    if general_l50_entry is None:
+        raise RuntimeError("L50 missing from baseline levels; cannot derive tail-contrast threshold")
+    general_l500 = general_l50_entry["hostile"]
     l500_threshold = float(general_l500["thresholds"]["general"])
     train_global_indices = np.asarray(
         [row_index[row_id] for row_id, _label in train_rows if row_id in row_index],

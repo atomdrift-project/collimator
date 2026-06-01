@@ -20,7 +20,24 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from collimator import bundle  # noqa: E402  — late import after sys.path patch
+from collimator.thresholds import _CHART_LEVELS_PER_100M  # noqa: E402
 from azoth_calibrate_ensemble import _clopper_pearson_fp_per_million_upper  # noqa: E402
+
+# Full deploy grid of per-100M operating points. Curves are sampled at
+# every level so the SVG shows the same x-axis the deploy pipeline tunes.
+RECALL_CURVE_LEVELS: tuple[int, ...] = tuple(_CHART_LEVELS_PER_100M)
+# Default operating point — rendered as a vertical dashed gridline so the
+# reader sees where the deploy threshold sits.
+DEFAULT_RECALL_LEVEL = 50
+
+# Stroke colors for SVG recall curves. Kept in one place so per-filetype and
+# top-level charts stay visually consistent.
+_CURVE_COLORS: dict[str, str] = {
+    "general": "#888",
+    "specialist": "#3a7",
+    "ensemble": "#06c",
+    "corpus-weighted ensemble": "#06c",
+}
 
 
 def _pct(value: Any) -> str:
@@ -57,6 +74,292 @@ def _short_hash(value: Any) -> str:
     if not value:
         return "-"
     return str(value)[:12]
+
+
+def _render_recall_svg(
+    curves: dict[str, list[tuple[int, float]]],
+    title: str = "",
+) -> str:
+    """Render a self-contained SVG plotting one or more per-level recall
+    curves over the deploy grid (L0..L1000).
+
+    ``curves`` maps name → ``[(level, recall), ...]`` tuples. Points whose
+    recall is NaN are skipped (line breaks across the gap). A curve whose
+    data is *all* NaN is dropped entirely — rendering a blank line would
+    just add legend noise.
+
+    The x-axis is positional (equal spacing across grid levels) and NOT
+    log scale; the grid is already dense in the strict region by
+    construction. The y-axis spans 0%..100% with horizontal gridlines at
+    25/50/75/100%. A vertical dashed gridline marks the default operating
+    point so the reader sees where deploy sits.
+
+    Returns a self-contained SVG string with internal `<style>` so it
+    renders consistently when embedded via ``<img src="*.svg">``. Codeberg
+    sanitizes inline SVG out of markdown, so callers write this to a
+    sibling file and reference it with an ``<img>`` tag.
+    """
+    # Drop all-NaN curves up front so legend ordering matches what we draw.
+    plotted: dict[str, list[tuple[int, float]]] = {}
+    for name, points in curves.items():
+        usable = [
+            (lvl, r) for lvl, r in points
+            if isinstance(r, (int, float)) and not math.isnan(float(r))
+        ]
+        if usable:
+            plotted[name] = usable
+    if not plotted:
+        return ""
+
+    # Wide aspect (4:1) so 19 x-labels breathe. Caller embeds via <img> with
+    # responsive width — height is fixed at ~300px which preserves this ratio
+    # at typical content widths.
+    width = 1200
+    height = 320
+    margin_left = 70
+    margin_right = 28
+    margin_top = 24
+    margin_bottom = 60
+    plot_w = width - margin_left - margin_right
+    plot_h = height - margin_top - margin_bottom
+
+    levels = list(RECALL_CURVE_LEVELS)
+    n_levels = len(levels)
+    # Equal positional spacing: each level sits at index i / (n-1) of the
+    # plot width. Avoid zero-division for a single-level grid.
+    def x_of(level: int) -> float:
+        if n_levels <= 1:
+            return margin_left + plot_w / 2.0
+        idx = levels.index(level)
+        return margin_left + (idx / (n_levels - 1)) * plot_w
+
+    def y_of(recall: float) -> float:
+        clamped = max(0.0, min(1.0, float(recall)))
+        return margin_top + (1.0 - clamped) * plot_h
+
+    parts: list[str] = []
+    # Open SVG with intrinsic dimensions; consumers can override via the
+    # <img> tag's width attribute.
+    parts.append(
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="0 0 {width} {height}" width="{width}" height="{height}" '
+        f'preserveAspectRatio="xMidYMid meet" '
+        f'role="img" aria-label="{_svg_escape(title) or "Recall by FP level"}">'
+    )
+    # Internal stylesheet — keeps the SVG self-contained when served as an
+    # image (no external CSS dependency) and lets us tune the look in one
+    # place. font-family uses the system UI stack so the chart matches the
+    # host page's typography on every platform.
+    parts.append(
+        '<style>'
+        'svg { background: #fdfdfd; }'
+        '.frame { fill: #fff; stroke: #d8dde3; stroke-width: 1; }'
+        '.grid { stroke: #eef0f3; stroke-width: 1; }'
+        '.tick { stroke: #b8bfc7; stroke-width: 1; }'
+        '.axis-label { fill: #5f6b78; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 12px; }'
+        '.x-label { fill: #5f6b78; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 11px; }'
+        '.axis-title { fill: #2d3540; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 12px; font-weight: 500; }'
+        '.title { fill: #1a232e; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 14px; font-weight: 600; }'
+        '.deploy-marker { stroke: #aab2bd; stroke-width: 1; stroke-dasharray: 5,4; }'
+        '.deploy-label { fill: #6b7480; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 11px; font-style: italic; }'
+        '.curve { fill: none; stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }'
+        '.marker { stroke: #fff; stroke-width: 1; }'
+        '.legend-text { fill: #2d3540; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 12px; font-weight: 500; }'
+        '</style>'
+    )
+    # Title at the top.
+    if title:
+        parts.append(
+            f'<text class="title" x="{margin_left}" y="16">{_svg_escape(title)}</text>'
+        )
+    # Plot frame.
+    parts.append(
+        f'<rect class="frame" x="{margin_left}" y="{margin_top}" '
+        f'width="{plot_w}" height="{plot_h}"/>'
+    )
+    # Horizontal gridlines at 25/50/75/100% with y-axis labels.
+    for frac, label in ((0.0, "0%"), (0.25, "25%"), (0.5, "50%"),
+                        (0.75, "75%"), (1.0, "100%")):
+        y = margin_top + (1.0 - frac) * plot_h
+        parts.append(
+            f'<line class="grid" x1="{margin_left}" y1="{y:.1f}" '
+            f'x2="{margin_left + plot_w}" y2="{y:.1f}"/>'
+        )
+        parts.append(
+            f'<text class="axis-label" x="{margin_left - 10}" y="{y + 4:.1f}" '
+            f'text-anchor="end">{label}</text>'
+        )
+    # Vertical dashed gridline at the default operating point + label.
+    if DEFAULT_RECALL_LEVEL in levels:
+        x_def = x_of(DEFAULT_RECALL_LEVEL)
+        parts.append(
+            f'<line class="deploy-marker" x1="{x_def:.1f}" y1="{margin_top}" '
+            f'x2="{x_def:.1f}" y2="{margin_top + plot_h}"/>'
+        )
+        parts.append(
+            f'<text class="deploy-label" x="{x_def + 4:.1f}" y="{margin_top + 12}" '
+            f'text-anchor="start">deploy L{DEFAULT_RECALL_LEVEL}</text>'
+        )
+    # X-axis labels (every level). Tick marks below the axis baseline.
+    for lvl in levels:
+        x = x_of(lvl)
+        parts.append(
+            f'<line class="tick" x1="{x:.1f}" y1="{margin_top + plot_h}" '
+            f'x2="{x:.1f}" y2="{margin_top + plot_h + 4}"/>'
+        )
+        parts.append(
+            f'<text class="x-label" x="{x:.1f}" y="{margin_top + plot_h + 18}" '
+            f'text-anchor="middle">L{lvl}</text>'
+        )
+    # X-axis title.
+    parts.append(
+        f'<text class="axis-title" x="{margin_left + plot_w / 2:.1f}" '
+        f'y="{height - 16}" text-anchor="middle">'
+        f'Severity level (FP per 100M benigns)</text>'
+    )
+    # Curves.
+    for name, points in plotted.items():
+        color = _CURVE_COLORS.get(name, "#444")
+        # Path: connect consecutive samples; NaNs already filtered.
+        if len(points) > 1:
+            d_parts: list[str] = []
+            for i, (lvl, r) in enumerate(points):
+                cmd = "M" if i == 0 else "L"
+                d_parts.append(f"{cmd}{x_of(lvl):.1f},{y_of(r):.1f}")
+            parts.append(
+                f'<path class="curve" d="{" ".join(d_parts)}" stroke="{color}"/>'
+            )
+        # Markers — slightly larger with a thin white outline so they pop
+        # against the line and against each other when curves cross.
+        for lvl, r in points:
+            parts.append(
+                f'<circle class="marker" cx="{x_of(lvl):.1f}" cy="{y_of(r):.1f}" '
+                f'r="3.5" fill="{color}"/>'
+            )
+    # Legend — horizontal strip across the top-right.
+    legend_y = margin_top - 16 if title else margin_top + 12
+    legend_x = margin_left + plot_w
+    # Pre-compute text widths so the legend lays out right-to-left from the
+    # plot's right edge without overlap. Approx 7px per char at 12px font is
+    # a coarse but reliable estimate for our short labels.
+    legend_items = list(plotted.keys())
+    for name in reversed(legend_items):
+        label = _svg_escape(name)
+        color = _CURVE_COLORS.get(name, "#444")
+        approx_w = 7 * len(name) + 28  # swatch line + circle + gap + text
+        legend_x -= approx_w
+        # Swatch: short line + filled circle to match the curve style.
+        parts.append(
+            f'<line x1="{legend_x:.1f}" y1="{legend_y + 4:.1f}" '
+            f'x2="{legend_x + 18:.1f}" y2="{legend_y + 4:.1f}" '
+            f'stroke="{color}" stroke-width="2.25" stroke-linecap="round"/>'
+        )
+        parts.append(
+            f'<circle cx="{legend_x + 9:.1f}" cy="{legend_y + 4:.1f}" '
+            f'r="3.5" fill="{color}" stroke="#fff" stroke-width="1"/>'
+        )
+        parts.append(
+            f'<text class="legend-text" x="{legend_x + 24:.1f}" y="{legend_y + 8:.1f}">'
+            f'{label}</text>'
+        )
+        legend_x -= 14  # gap between adjacent items
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def _write_recall_chart(
+    out_dir: Path,
+    filename: str,
+    curves: dict[str, list[tuple[int, float]]],
+    title: str = "",
+    alt_text: str = "",
+    img_height: int = 300,
+) -> str:
+    """Render a recall curve to ``out_dir/filename`` and return a markdown
+    snippet that embeds it via ``<img>``.
+
+    Codeberg (and many other Gitea-based hosts) strip inline ``<svg>`` from
+    rendered markdown for XSS reasons, so we emit a sibling ``.svg`` file
+    and reference it. ``<img height="..." />`` is one of the few style hints
+    the markdown sanitizer keeps intact.
+
+    Returns "" when there's no chart to render (the renderer dropped every
+    curve as all-NaN), so callers can use truthiness to decide whether to
+    emit the surrounding section heading.
+    """
+    svg = _render_recall_svg(curves, title=title)
+    if not svg:
+        return ""
+    out_path = out_dir / filename
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(svg, encoding="utf-8")
+    alt = _svg_escape(alt_text or title or "Recall by FP level")
+    return f'<img src="{filename}" alt="{alt}" height="{img_height}" />'
+
+
+def _svg_escape(text: str) -> str:
+    """Minimal escape for text/attribute content inside SVG."""
+    return (
+        str(text)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
+
+def _extract_recall_curve(block: dict[str, Any] | None) -> list[tuple[int, float]]:
+    """Pull a per-level (level, recall) list out of one route's metrics
+    block. Missing levels yield NaN so the SVG renderer can decide whether
+    to break the line. Returns one tuple per level in the deploy grid."""
+    out: list[tuple[int, float]] = []
+    src = block or {}
+    for lvl in RECALL_CURVE_LEVELS:
+        raw = src.get(f"recall_at_{lvl}_per_100M")
+        try:
+            value = float(raw) if raw is not None else float("nan")
+        except (TypeError, ValueError):
+            value = float("nan")
+        out.append((lvl, value))
+    return out
+
+
+def _corpus_weighted_ensemble_curve(
+    metrics: dict[str, Any],
+) -> list[tuple[int, float]]:
+    """Per-level corpus-weighted average ensemble recall across all
+    filetypes: for each level N,
+        Σ_ft (ft.recall_at_N * ft.n_files) / Σ_ft ft.n_files
+    where the denominator only counts filetypes that contributed a
+    non-NaN recall at that level. That keeps slices whose strict-end
+    GPD tail failed from poisoning the curve, while still weighting by
+    corpus footprint so big filetypes (pe, elf) dominate the average.
+
+    Excludes pure container wrappers (_HEADLINE_EXCLUDE) so the curve
+    reflects classifier quality, not container-shape scoring."""
+    out: list[tuple[int, float]] = []
+    ft_dict = (metrics or {}).get("filetypes", {}) or {}
+    for lvl in RECALL_CURVE_LEVELS:
+        numer = 0.0
+        denom = 0.0
+        for ft, entry in ft_dict.items():
+            if ft in _HEADLINE_EXCLUDE:
+                continue
+            ens = (entry or {}).get("ensemble") or {}
+            raw = ens.get(f"recall_at_{lvl}_per_100M")
+            n_files = entry.get("n_files") or 0
+            if raw is None or n_files <= 0:
+                continue
+            try:
+                value = float(raw)
+            except (TypeError, ValueError):
+                continue
+            if math.isnan(value):
+                continue
+            numer += value * float(n_files)
+            denom += float(n_files)
+        out.append((lvl, numer / denom if denom > 0 else float("nan")))
+    return out
 
 
 # EMBER 2024 Table 5 reference values (Joyce et al., KDD'25).
@@ -762,6 +1065,33 @@ def _write_route(root: Path, path: Path) -> None:
             ),
             "",
         ])
+        # Per-level recall curve: general/specialist/ensemble on the same
+        # axes so the reader can see where routing helps as the FP budget
+        # tightens. Skipped silently when no route has usable per-level
+        # data (degenerate slice).
+        curves = {
+            "general": _extract_recall_curve(pf_entry.get("general")),
+            "specialist": _extract_recall_curve(spec_metrics),
+            "ensemble": _extract_recall_curve(ens_metrics),
+        }
+        img_tag = _write_recall_chart(
+            path,
+            "recall_curve.svg",
+            curves,
+            title=f"{name}: recall by FP level",
+            alt_text=f"{name}: recall by FP level (per 100M benigns)",
+        )
+        if img_tag:
+            lines.extend([
+                "## Recall by FP level (per 100M benigns)",
+                "",
+                img_tag,
+                "",
+                "Each curve plots recall at the per-100M-benign FP target "
+                "for the route. The vertical dashed line marks the L50 "
+                "deploy operating point.",
+                "",
+            ])
     else:
         lines.extend([
             f"## Performance",
@@ -811,6 +1141,57 @@ def _write_route(root: Path, path: Path) -> None:
         f"| device | {cfg.get('device', 'cpu')} |",
     ])
     _write(path / "README.md", "\n".join(line for line in lines if line is not None) + "\n")
+
+
+def _bundle_recall_curve_section(metrics: dict[str, Any], root: Path | None = None) -> list[str]:
+    """Top-level recall curve: two lines.
+
+    - Corpus-weighted ensemble curve: per-level expected recall when a
+      random file is drawn from the labeled corpus.
+    - General curve at each level: general's recall on the full evaluated
+      dataset (no weighting — general is scored across slices).
+
+    Returns the markdown lines (heading + SVG + caption + trailing blank);
+    returns an empty list when neither curve has usable data so the README
+    is not littered with an empty chart.
+    """
+    all_general = ((metrics or {}).get("all_files") or {}).get("general") or {}
+    curves = {
+        "corpus-weighted ensemble": _corpus_weighted_ensemble_curve(metrics),
+        "general": _extract_recall_curve(all_general),
+    }
+    if root is None:
+        # Defensive fallback: render inline if no root was passed (legacy
+        # callers). Codeberg will strip the inline SVG, but the README will
+        # at least be valid markdown.
+        svg = _render_recall_svg(curves, title="Corpus recall by FP level")
+        if not svg:
+            return []
+        img_tag = svg
+    else:
+        img_tag = _write_recall_chart(
+            root,
+            "recall_curve.svg",
+            curves,
+            title="Corpus recall by FP level",
+            alt_text="Corpus-weighted recall by FP level (per 100M benigns)",
+        )
+        if not img_tag:
+            return []
+    return [
+        "## Recall by FP level (per 100M benigns)",
+        "",
+        img_tag,
+        "",
+        "The corpus-weighted ensemble curve weights each filetype's "
+        "ensemble recall by the number of labeled files in that filetype, "
+        "answering: \"If I draw a random file from the labeled corpus, "
+        "what fraction of malware do we catch at this FP budget?\" The "
+        "general curve is the single-model baseline on the full evaluated "
+        "dataset. The vertical dashed line marks the L50 deploy operating "
+        "point.",
+        "",
+    ]
 
 
 def _write_bundle(root: Path) -> None:
@@ -917,6 +1298,7 @@ def _write_bundle(root: Path) -> None:
         "where Joyce et al. publish per-filetype numbers (Table 5, "
         "All files → X).",
         "",
+        *_bundle_recall_curve_section(metrics, root=root),
         "## Provenance",
         "",
         f"Calibration snapshot `{config.get('calibration_snapshot_id')}`, "

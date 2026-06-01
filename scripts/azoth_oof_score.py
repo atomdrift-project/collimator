@@ -3,8 +3,9 @@
 Publication-grade calibration uses out-of-fold predictions covering all of
 train+dev so the calibration sample is N_b ≈ 2.4M benigns instead of the
 single-pass dev-only ~150k. This pushes the Clopper-Pearson floor on the
-deployment FP/M from ~20 down to ~1.25, making strict L levels (L0–L3)
-statistically resolvable for the first time.
+deployment FP/100M from ~2000 down to ~125, making strict L levels on
+the L0–L100 (per-100M scale) grid statistically resolvable for the
+first time.
 
 This script consumes two general-model bundles trained on disjoint halves
 of train+dev (per ``data.oof_fold_of``) and produces a combined

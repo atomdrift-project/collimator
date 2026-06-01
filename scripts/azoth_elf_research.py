@@ -888,11 +888,6 @@ def _general_baseline(labels: np.ndarray, general_probs: np.ndarray) -> list[dic
                 [route],
                 target_per_million=float(target["hostile_per_million"]),
             ),
-            "suspicious": _calibrate_one(
-                labels,
-                [route],
-                target_per_million=float(target["suspicious_per_million"]),
-            ),
         }
         for target in thresholds.SEVERITY_LEVEL_TARGETS
     ]
@@ -932,23 +927,22 @@ def _routed_levels(
                 routes,
                 target_per_million=float(target["hostile_per_million"]),
             ),
-            "suspicious": _calibrate_one(
-                labels,
-                routes,
-                target_per_million=float(target["suspicious_per_million"]),
-            ),
         }
         for target in thresholds.SEVERITY_LEVEL_TARGETS
     ]
 
 
 def _level_summary(levels: list[dict[str, Any]]) -> dict[str, Any]:
-    # Per-100M scale: L500 = 5 FP/M (today's L5), L1000 = 10 FP/M (≈ today's L9).
-    # Suspicious is a consumer-side derivation; collimator emits only hostile.
-    return {
-        "l500_hostile": next(item["hostile"] for item in levels if item["level"] == 500),
-        "l1000_hostile": next(item["hostile"] for item in levels if item["level"] == 1000),
-    }
+    # Per-100M scale: L50 = 0.5 FP/M (dense headline operating point),
+    # L100 = 1 FP/M (loose-end headline). Suspicious is a consumer-side
+    # derivation; collimator emits only hostile.
+    summary: dict[str, Any] = {}
+    for key, level_no in (("l50_hostile", 50), ("l100_hostile", 100)):
+        entry = next((item for item in levels if item["level"] == level_no), None)
+        if entry is None:
+            continue
+        summary[key] = entry["hostile"]
+    return summary
 
 
 def _metric_summary(y_true: np.ndarray, probs: np.ndarray) -> dict[str, float]:

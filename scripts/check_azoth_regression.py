@@ -28,7 +28,8 @@ statistically-significant but practically-irrelevant 0.1pp shifts on
 huge slices.
 
 For diagnostic context, the same comparison runs against each
-*contributing route's* recall@3FP/M. Per-route drops do NOT trigger
+*contributing route's* recall@1FP-on-slice (L50-aligned, with `recall_at_3fp`
+fallback for pre-migration bundles). Per-route drops do NOT trigger
 exit 1; they're attribution context.
 
 Bypass with ``AZOTH_ALLOW_REGRESSION=1`` for intentional trade-offs.
@@ -456,19 +457,31 @@ def main() -> int:
             s_route = s_routes.get(route_name)
             if not isinstance(s_route, dict) or not isinstance(d_route, dict):
                 continue
-            s_rec = s_route.get("recall_at_3fp")
-            d_rec = d_route.get("recall_at_3fp")
+            # Per-route attribution at the L50-aligned slice budget. The
+            # route_policy_eval emits `recall_at_{0,1,3}fp` budgets; the 1-FP
+            # budget aligns with L50 = 0.5 FP/M (1 FP per 2M benigns), and
+            # is the right per-route diagnostic for an L50-default deploy.
+            # Fall back to `recall_at_3fp` (legacy / 3 FP/M) for pre-migration
+            # bundles that only carry the old budget — labeled so the user
+            # knows which they got.
+            kind = "recall@1FP-on-slice"
+            s_rec = s_route.get("recall_at_1fp")
+            d_rec = d_route.get("recall_at_1fp")
+            if not (_is_finite_number(s_rec) and _is_finite_number(d_rec)):
+                s_rec = s_route.get("recall_at_3fp")
+                d_rec = d_route.get("recall_at_3fp")
+                kind = "recall@3FP-on-slice"
             if not (_is_finite_number(s_rec) and _is_finite_number(d_rec)):
                 continue
             delta = float(s_rec) - float(d_rec)  # positive = improvement
             if -delta > args.recall_tolerance:
                 route_drops.append(
-                    f"  {ft} :: {route_name} recall@3FP/M dropped {-delta*100:.2f}pp "
+                    f"  {ft} :: {route_name} {kind} dropped {-delta*100:.2f}pp "
                     f"({float(d_rec)*100:.2f}% → {float(s_rec)*100:.2f}%)",
                 )
             elif delta >= args.improvement_threshold:
                 route_wins.append(
-                    f"  {ft} :: {route_name} recall@3FP/M +{delta*100:.2f}pp "
+                    f"  {ft} :: {route_name} {kind} +{delta*100:.2f}pp "
                     f"({float(d_rec)*100:.2f}% → {float(s_rec)*100:.2f}%)",
                 )
 

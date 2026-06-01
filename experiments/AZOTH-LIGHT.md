@@ -564,6 +564,14 @@ Fresh `azoth-light-full-leaves96-cpu` threshold refresh on the pinned
 - Corpus: 1,709,725 rows; 291,730 malware; 1,417,995 benign.
 - Threshold cache rebuild: 377.5s wall-clock, 4,529 rows/sec.
 - Worker-stage totals: fetch 1,856s, extract 25,121s, matrix 55s, predict 186s.
+
+> Archived: the L5/L9 entries below come from the legacy per-million
+> level schedule (L5 = 5 FP/M, L9 = 9 FP/M) and the now-removed
+> collimator-side suspicious tier. The current deploy uses the per-100M
+> grid (L50 = 0.5 FP/M default, L100 = 1 FP/M loosest); suspicious is
+> derived consumer-side in litmus. Numbers preserved verbatim for
+> historical comparison.
+
 - L5 hostile: threshold 0.997465, 69.76% recall, 7 FP.
 - L5 suspicious: threshold 0.979672, 87.58% recall, 68 FP.
 - L9 hostile: threshold 0.994960, 77.18% recall, 12 FP.

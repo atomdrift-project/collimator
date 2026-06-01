@@ -81,7 +81,7 @@ def _metrics(labels: np.ndarray, hit: np.ndarray, target_per_million: float) -> 
     recall = tp / malware_n if malware_n else math.nan
     f1 = 2 * precision * recall / max(precision + recall, 1e-12) if malware_n else math.nan
     return {
-        "target_per_million": target_per_million,
+        "target_per_100M": target_per_million * 100.0,
         "budget": budget,
         "tp": tp,
         "fp": fp,
@@ -146,7 +146,7 @@ def _write_markdown(path: Path, payload: dict[str, Any]) -> None:
             lines.append(
                 "| "
                 f"{item['level']} | {severity} | "
-                f"{float(m['target_per_million']) * 100.0:.1f} | {m['budget']} | "
+                f"{float(m['target_per_100M']):.1f} | {m['budget']} | "
                 f"{_pct(float(m['recall']))} | {_pct(float(m['precision']))} | {_pct(float(m['f1']))} | "
                 f"{m['fp']} | {float(m['fp_per_100M']):.2f} | "
                 f"{'yes' if m['within_budget'] else 'NO'} |"

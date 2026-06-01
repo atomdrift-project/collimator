@@ -261,7 +261,7 @@ def _metric_row(
         "severity": severity,
         "scope": scope,
         "name": name,
-        "target_per_million": target_per_million,
+        "target_per_100M": target_per_million * 100.0,
         "rows": int(np.sum(mask)),
         "malware": n_malware,
         "benign": n_benign,

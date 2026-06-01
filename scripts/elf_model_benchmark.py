@@ -244,7 +244,7 @@ def _operating_point(
 
     if best is None:
         return {
-            "target_per_million": float(target_per_million),
+            "target_per_100M": float(target_per_million) * 100.0,
             "budget": budget,
             "threshold": None,
             "recall": None,
@@ -255,7 +255,7 @@ def _operating_point(
             "tn": None,
             "fp_per_100M": None,
         }
-    best["target_per_million"] = float(target_per_million)
+    best["target_per_100M"] = float(target_per_million) * 100.0
     best["budget"] = budget
     return best
 

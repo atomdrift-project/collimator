@@ -151,7 +151,12 @@ def main() -> int:
     max_id = int(cache["corpus_requested_max_id"]) or int(cache["corpus_max_row_id"])
     row_index = {int(row_id): idx for idx, row_id in enumerate(row_ids)}
     baseline_levels = _general_baseline(labels, general_probs)
-    general_l500 = next(item for item in baseline_levels if item["level"] == 500)["hostile"]
+    general_l50_entry = next(
+        (item for item in baseline_levels if item["level"] == 50), None,
+    )
+    if general_l50_entry is None:
+        raise RuntimeError("L50 missing from baseline levels; cannot derive tail-contrast threshold")
+    general_l500 = general_l50_entry["hostile"]
     l500_threshold = float(general_l500["thresholds"]["general"])
 
     targets = _eligible_filetypes(

@@ -183,8 +183,8 @@ def main() -> int:
     parser.add_argument(
         "--level",
         type=int,
-        default=9,
-        help="Which level's deployed policy to compare against (default 9).",
+        default=50,
+        help="Which level's deployed policy to compare against (default 50, the new per-100M operating point).",
     )
     parser.add_argument(
         "--fp-targets",

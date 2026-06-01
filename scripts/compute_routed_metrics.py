@@ -60,6 +60,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import KFold
 
 from collimator import data as collimator_data
+from collimator.thresholds import _CHART_LEVELS_PER_100M
 
 LOG = logging.getLogger("compute_routed_metrics")
 
@@ -67,6 +68,13 @@ LOG = logging.getLogger("compute_routed_metrics")
 # = 0.5 FP/M, the deploy-time hostile point we ship at. Matches
 # collimator.thresholds.DEFAULT_SEVERITY_LEVEL and litmus's `-l` default.
 DEFAULT_LEVEL = 50
+
+# Full deploy grid of per-100M operating points. Sourced from the thresholds
+# module so the recall curve emitted here tracks whatever litmus actually
+# threshold-sets at scan time. Bootstrap CIs are computed for every level
+# below DEFAULT_LEVEL when ``with_ci`` is True; consumers (azoth READMEs)
+# render the full curve as an SVG.
+RECALL_CURVE_LEVELS: tuple[int, ...] = tuple(_CHART_LEVELS_PER_100M)
 
 
 def _test_mask_cache_key(db_path: str, row_ids: np.ndarray) -> str:
@@ -226,9 +234,16 @@ def _metrics(
     n_pos = int((labels == 1).sum())
     n_neg = int((labels == 0).sum())
     if n_pos == 0 or n_neg == 0:
-        return {"roc_auc": 0.0, "pr_auc": 0.0, "f1": 0.0, "f1_at_05": 0.0,
-                "recall_at_50_per_100M": float("nan"),
-                "n_evaluated": int(labels.size)}
+        degenerate: dict[str, Any] = {
+            "roc_auc": 0.0, "pr_auc": 0.0, "f1": 0.0, "f1_at_05": 0.0,
+            "recall_at_50_per_100M": float("nan"),
+            "n_evaluated": int(labels.size),
+        }
+        for lvl in RECALL_CURVE_LEVELS:
+            if lvl == 50:
+                continue
+            degenerate[f"recall_at_{lvl}_per_100M"] = float("nan")
+        return degenerate
     roc = float(roc_auc_score(labels, scores))
     ap = float(average_precision_score(labels, scores))
     # F1 over the precision-recall curve — saves an O(n log n) sweep over
@@ -242,6 +257,17 @@ def _metrics(
     # Recall at 50 FP per 100M = 0.5 FP/M — today's deployed operating point
     # on the per-100M scale and autocollie's selection axis.
     recall_50_per_100m = _recall_at_fpr_per_million(labels, scores, 0.5)
+    # Full per-level recall curve over the deploy grid (L0..L100). The
+    # legacy recall_at_50_per_100M field is retained above for back-compat
+    # with downstream consumers that key on it; the curve is additive.
+    recall_curve: dict[int, float] = {}
+    for lvl in RECALL_CURVE_LEVELS:
+        if lvl == 50:
+            recall_curve[lvl] = recall_50_per_100m
+        else:
+            recall_curve[lvl] = _recall_at_fpr_per_million(
+                labels, scores, lvl / 100.0,
+            )
     # Brier score on raw probs: how well-calibrated is this route on the
     # eval slice. Lower is better. Useful for per-spec cards where the
     # user wants to see the calibration quality at a glance — bigger
@@ -255,6 +281,10 @@ def _metrics(
            "recall_at_50_per_100M": recall_50_per_100m,
            "brier": brier,
            "n_evaluated": int(labels.size)}
+    # Emit recall_at_{N}_per_100M for every level in the deploy grid.
+    # ADDITIVE to recall_at_50_per_100M (which remains for back-compat).
+    for lvl, value in recall_curve.items():
+        out[f"recall_at_{lvl}_per_100M"] = value
     if with_ci and labels.size >= 50 and n_pos >= 5 and n_neg >= 5:
         from collimator.stats import bootstrap_metric  # noqa: PLC0415
         ci = bootstrap_metric(
@@ -292,6 +322,28 @@ def _metrics(
             )
             out["recall_at_50_per_100M_ci_low"] = ci["low"]
             out["recall_at_50_per_100M_ci_high"] = ci["high"]
+
+        # CI for every other level in the deploy grid. Mirror the L50
+        # pattern: skip levels whose point estimate is NaN (sub-resolution
+        # slice that failed the GPD tail fallback) — a bootstrap on NaN is
+        # meaningless. Cost: ~14 extra bootstrap runs per metrics block.
+        for lvl in RECALL_CURVE_LEVELS:
+            if lvl == 50:
+                continue
+            point = recall_curve[lvl]
+            if math.isnan(point):
+                continue
+            target = lvl / 100.0
+
+            def _recall_at_level(y, s, _target=target):
+                return _recall_at_fpr_per_million(y, s, _target)
+
+            ci = bootstrap_metric(
+                labels, scores, _recall_at_level,
+                n_resamples=200, seed=42, stratify=labels,
+            )
+            out[f"recall_at_{lvl}_per_100M_ci_low"] = ci["low"]
+            out[f"recall_at_{lvl}_per_100M_ci_high"] = ci["high"]
     return out
 
 
@@ -932,11 +984,18 @@ def compute_per_filetype_metrics(
         n_neg = int((f_labels == 0).sum())
 
         levels = route_info.get("levels") or []
-        if level >= len(levels):
-            LOG.warning("%s: level %d out of range (have %d); skipping",
-                        route_name, level, len(levels))
+        # Look up by level VALUE, not array index — the new per-100M grid
+        # (0,1,2,3,5,10,20,...,100) doesn't align positionally the way the
+        # old per-million-derived 0..19 grid did.
+        level_entry = next(
+            (L for L in levels if int(L.get("level", -1)) == level),
+            None,
+        )
+        if level_entry is None:
+            LOG.warning("%s: level %d not found in route policy (available: %s); skipping",
+                        route_name, level, [int(L.get("level", -1)) for L in levels])
             continue
-        sev = levels[level].get(severity, {})
+        sev = level_entry.get(severity, {})
         best = sev.get("best") or {}
         allowed = list(best.get("allowed_routes") or [])
 
@@ -1040,9 +1099,13 @@ def compute_per_filetype_metrics(
             continue
         f_labels = labels[mask]
         levels = route_info.get("levels") or []
-        if level >= len(levels):
+        level_entry = next(
+            (L for L in levels if int(L.get("level", -1)) == level),
+            None,
+        )
+        if level_entry is None:
             continue
-        best = levels[level].get(severity, {}).get("best") or {}
+        best = level_entry.get(severity, {}).get("best") or {}
         allowed = list(best.get("allowed_routes") or [])
         entry: dict[str, Any] = {
             "n_files": n_files,

@@ -5,10 +5,11 @@ against the route's filegroup pool.
 Problem this fixes
 ------------------
 A route with N benigns in the calibration corpus has a smallest observable FP
-rate of 1/N.  For routes like ``filetypes/msi`` (~18 benigns), that's
-55,555 FP/M — orders of magnitude above any sensible operating point, so the
-empirical threshold search returns ``no_policy`` at every level even when the
-specialist's discrimination is excellent.
+rate of 1/N — i.e. ``(1e8 / N) FP per 100M benigns``.  For routes like
+``filetypes/msi`` (~18 benigns), that's ~5.6M FP/100M (≈ 55,555 FP/M) —
+orders of magnitude above any sensible operating point on the deployed
+L0–L100 grid, so the empirical threshold search returns ``no_policy`` at
+every level even when the specialist's discrimination is excellent.
 
 This script does a *post-hoc* threshold re-search for routes whose policy at
 a given level is ``no_policy``:
@@ -71,10 +72,10 @@ from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: E402
 LOG = logging.getLogger("azoth_augment_small_route_policies")
 
 # Routes with own-benign count below this threshold get family-pool
-# augmentation by default.  At ≥50k benigns, the empirical threshold search
-# can resolve FPRs down to ~20 FP/M with reasonable confidence — augmentation
-# adds little value.  Below it, the smaller the route, the more help it
-# needs.
+# augmentation by default.  At ≥50k benigns the empirical threshold search
+# can resolve a single FP down to ~2000 FP/100M (≈ 20 FP/M) — coarse but
+# bounded; augmentation adds little value above that floor.  Below it,
+# the smaller the route, the more help it needs.
 DEFAULT_AUGMENT_THRESHOLD = 50_000
 
 

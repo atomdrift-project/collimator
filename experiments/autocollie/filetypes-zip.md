@@ -514,3 +514,35 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260531T212820-filetypes-zip` — 2026-05-31T21:28:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f9322da0d1820327` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9997 | 0.9963 | 0.9855 | 237 | [log](out/autocollie/runs/2026-05-31T21-35-24_20260531T212820-filetypes-zip_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `fdb2f27d27404353` | zip_control_hardneg_exploit | ok | 0.9997 | 0.9963 | 0.9819 | 140 | [log](out/autocollie/runs/2026-05-31T21-39-43_20260531T212820-filetypes-zip_zip_control_hardneg_exploit.log) |
+| `f39d29720e9780d4` | zip_dart_extratrees_reg | ok | 0.9993 | 0.9903 | 0.9875 | 20 | [log](out/autocollie/runs/2026-05-31T21-42-04_20260531T212820-filetypes-zip_zip_dart_extratrees_reg.log) |
+| `f89c029c9afa70d8` | zip_retry_scalepos_maxrecall | ok | 0.9997 | 0.9958 | 0.0000 | 23 | [log](out/autocollie/runs/2026-05-31T21-42-24_20260531T212820-filetypes-zip_zip_retry_scalepos_maxrecall.log) |
+| `9bd3624665e04a47` | zip_kv_vocab_expansion | ok | 0.9997 | 0.9962 | 0.9937 | 230 | [log](out/autocollie/runs/2026-05-31T21-42-49_20260531T212820-filetypes-zip_zip_kv_vocab_expansion.log) |
+| `f379b38138035dae` | zip_textmetrics_encoding | ok | 0.9997 | 0.9956 | 0.9919 | 171 | [log](out/autocollie/runs/2026-05-31T21-46-40_20260531T212820-filetypes-zip_zip_textmetrics_encoding.log) |
+| `b113e16db5c4919d` | zip_lowfreq_bigrams | ok | 0.9997 | 0.9957 | 0.9937 | 116 | [log](out/autocollie/runs/2026-05-31T21-49-31_20260531T212820-filetypes-zip_zip_lowfreq_bigrams.log) |
+| `b039ed2a04569fb9` | zip_tiered_crit_trigrams | ok | 0.9997 | 0.9960 | 0.9931 | 123 | [log](out/autocollie/runs/2026-05-31T21-51-28_20260531T212820-filetypes-zip_zip_tiered_crit_trigrams.log) |
+| `53bd56856c78331d` | zip_ablate_extreme | ok | 0.9997 | 0.9961 | 0.9935 | 109 | [log](out/autocollie/runs/2026-05-31T21-53-31_20260531T212820-filetypes-zip_zip_ablate_extreme.log) |
+| `445c63a0e0fa923d` | zip_transfer_xml_ngrams | ok | 0.9997 | 0.9958 | 0.9907 | 149 | [log](out/autocollie/runs/2026-05-31T21-55-21_20260531T212820-filetypes-zip_zip_transfer_xml_ngrams.log) |
+| `63797c6adc48afda` | zip_seed_search_ensemble | ok | 0.9997 | 0.9964 | 0.9927 | 94 | [log](out/autocollie/runs/2026-05-31T21-57-51_20260531T212820-filetypes-zip_zip_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_exploit`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set and tune hard-negative weighting to push PR_AUC and recall@3FPM without changing the matrix.
+- **`zip_dart_extratrees_reg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Apply DART boosting with extra trees and L2 regularization to improve tail recall@3FPM while keeping ROC_AUC stable.
+- **`zip_retry_scalepos_maxrecall`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.6 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Retry prior scale_pos_weight config with drift-adjusted threshold to recover recall@3FPM while guarding PR_AUC.
+- **`zip_kv_vocab_expansion`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to capture rare archive metadata patterns, targeting PR_AUC gain via richer key-value signal.
+- **`zip_textmetrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable full text metrics and encoding features to detect obfuscated payloads in zips, aiming for PR_AUC improvement.
+- **`zip_lowfreq_bigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor to include rarer but informative path co-occurrences, targeting PR_AUC.
+- **`zip_tiered_crit_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Add severity-prefixed trigrams to capture multi-step attack chains in archives, aiming for PR_AUC.
+- **`zip_ablate_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove noisy extreme features to reduce overfitting, expecting flat PR_AUC with improved ROC_AUC.
+- **`zip_transfer_xml_ngrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Transfer XML route low-freq bigram plus tiered trigram combo to zip, targeting PR_AUC via richer n-gram signal.
+- **`zip_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ensemble 3 seeds on hard-negative config to stabilize recall@3FPM and reduce seed variance.
+
+</details>
+

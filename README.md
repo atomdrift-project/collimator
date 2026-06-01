@@ -3,7 +3,7 @@
 A routed-ensemble malware classifier with autonomous experiment search. Reads
 labeled samples from [hopper](https://codeberg.org/atomdrift/hopper), trains a
 general model plus per-filegroup and per-filetype specialists, calibrates each
-route's score distribution with isotonic regression, computes per-FP/M
+route's score distribution with isotonic regression, computes per-FP/100M
 operating points, and ships a deployable bundle that
 [litmus](https://codeberg.org/atomdrift/litmus) loads at scan time.
 
@@ -21,9 +21,12 @@ Part of the toolchain: `cleave → hopper → collimator → litmus`
 - **Per-route isotonic calibration.** The deployed `calibrator.json` maps
   each route's raw probability to its empirically-observed malware rate, so
   scores reported at scan time mean what the [0,1] interval should mean.
-- **Per-FP/M operating points.** L0–L9 severity levels, each a globally-
-  jointly-optimized set of per-route thresholds that fits inside a target
-  FP/M budget. The deployed bundle ships every level.
+- **Per-FP/100M operating points.** A 15-rung severity grid (L0, L1, L2,
+  L3, L5, L10, L20, L30, L40, L50, L60, L70, L80, L90, L100 — each Lk =
+  k FP per 100M benigns), each a globally-jointly-optimized set of
+  per-route thresholds that fits inside a target FP/100M budget. The
+  deployed bundle ships every level; the default operating point is L50
+  (= 50 FP/100M ≡ 0.5 FP/M).
 - **Autonomous search.** [`autocollie`](https://codeberg.org/atomdrift/autocollie)
   drives a screen → confirm → promote ladder against `make experiment`,
   proposes config changes via an LLM-guided agent, and produces validated
@@ -74,7 +77,7 @@ litmus scan path/to/file
 | `src/collimator/bundle.py` | Single source of truth for bundle layout (single-model vs multi-seed). |
 | `scripts/azoth_train_best.py` | Replays the highest-F1 historical run for any route, with multi-seed on. |
 | `scripts/azoth_specialist_suite.py` | Trains every filegroup/filetype specialist; auto-loads autocollie's per-route best. |
-| `scripts/azoth_calibrate_ensemble.py` | Per-route isotonic calibration + L0–L9 operating-point search. |
+| `scripts/azoth_calibrate_ensemble.py` | Per-route isotonic calibration + L0–L100 (per-100M) operating-point search. |
 | `out/experiments/azoth/runs/` | Every experiment's run JSON, keyed by `experiment_key`. |
 | `out/models/azoth/` | Source bundle (general + filegroups + filetypes). |
 | `out/models/azoth-candidate-*/` | Validated candidate bundles awaiting deploy. |

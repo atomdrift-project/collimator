@@ -26,17 +26,21 @@ log = logging.getLogger(__name__)
 #
 # Grid is dense in the strict region (L0-L10, where finer resolution
 # actually pays off once the benign corpus is large enough to resolve
-# sub-FP/M budgets) and decade-aligned in the loose region (L10-L100, to
-# match litmus's `-0..-9` shorthand 0/10/20/.../90). L0-L10 will collapse
-# to recall@0 on small corpora; that's honest, the volume floor catches it
-# (see `min_observable_fp_per_million`). Levels >L100 are intentionally
-# absent: litmus's CLI caps at 100, so anything above is unreachable.
-#
-# "Suspicious" is a consumer-side concept (litmus derives a suspicious
-# band from the hostile threshold); collimator only computes and ships
-# the single hostile threshold per level.
+# sub-FP/M budgets), decade-aligned in the mid region (L10-L100, to match
+# litmus's `-0..-9` shorthand 0/10/20/.../90), and sparse in the loose tail
+# (L200-L1000). The loose tail exists for two reasons:
+#   1. The azoth READMEs' corpus-weighted recall chart needs informational
+#      headroom — operators want to see how recall would grow if the FP
+#      budget were loosened beyond the typical deploy regime.
+#   2. Litmus derives the suspicious threshold as a level-table lookup at
+#      `min(max_level, 4 × hostile_level)` (see
+#      `derive_suspicious_from_hostile_level` in `litmus/src/model.rs`).
+#      Hostile at L100 → suspicious at L400, which needs the loose tail to
+#      be calibrated. Capping the grid at L100 would make suspicious
+#      indistinguishable from hostile for any hostile ≥ L25.
 _LEVELS_PER_100M: tuple[int, ...] = (
     0, 1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+    200, 300, 500, 1000,
 )
 SEVERITY_LEVEL_TARGETS = [
     {
@@ -46,6 +50,11 @@ SEVERITY_LEVEL_TARGETS = [
     }
     for level in _LEVELS_PER_100M
 ]
+
+# Maintained as an alias for callers that imported it during the chart-only
+# transition. Both names point at the same tuple now that the deploy grid
+# extends through L1000.
+_CHART_LEVELS_PER_100M: tuple[int, ...] = _LEVELS_PER_100M
 
 # 50 FP/100M = 0.5 FP/M — the stricter default replacing the legacy L300
 # (= 3 FP/M) operating point. Litmus's CLI default (`-l 50`) matches; if
@@ -96,7 +105,7 @@ POLICY_SPECS = [
         name="default_fp_rate",
         description=(
             "Default deploy policy: "
-            f"<={DEFAULT_SEVERITY_TARGET['hostile_per_million']:.0f}/1M good FP"
+            f"<={DEFAULT_SEVERITY_TARGET['target_per_100M']:.0f}/100M good FP"
         ),
         hostile=PolicyLevel(
             "hostile",
@@ -106,7 +115,7 @@ POLICY_SPECS = [
     ),
     PolicySpec(
         name="ultra_low_fpr",
-        description="Max recall at 1 FP/1M",
+        description="Max recall at 100 FP/100M",
         hostile=PolicyLevel("hostile", "max_recall_at_fpr", 1.0),
     ),
     PolicySpec(
@@ -410,10 +419,10 @@ def _select_policy_level(
     if mode == "max_recall_at_fpr":
         valid = fpr_vals * 1_000_000 <= level.target
         if not valid.any():
-            return None, f"no threshold reaches <= {level.target:.0f} FP/1M"
+            return None, f"no threshold reaches <= {level.target * 100.0:.0f} FP/100M"
         index = int(np.where(valid)[0][-1])
         if n_benign < max(int(np.ceil(_MIN_EXPECTED_FP_FOR_FPR * 1_000_000 / max(level.target, 1e-12))), 1):
-            warning = f"underpowered benign pool for {level.target:.0f} FP/1M target"
+            warning = f"underpowered benign pool for {level.target * 100.0:.0f} FP/100M target"
         else:
             warning = None
         return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, index), warning
@@ -454,7 +463,7 @@ def _select_policy_level(
             if valid_fpr.any():
                 chosen_index = int(np.where(valid_fpr)[0][0])
         else:
-            warning = f"underpowered benign pool for aspirational {aspirational_fpm:.0f} FP/1M tightening"
+            warning = f"underpowered benign pool for aspirational {aspirational_fpm * 100.0:.0f} FP/100M tightening"
         return _stats_dict_at_index(thresholds, tp_vals, fp_vals, recall_vals, fpr_vals, n_benign, n_malware, chosen_index), warning
 
     if mode == "min_precision":
