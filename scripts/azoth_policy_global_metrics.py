@@ -194,6 +194,24 @@ def main() -> int:
             "behavior is unchanged for everything that was already deploy-relevant."
         ),
     )
+    parser.add_argument(
+        "--budget-gate-min-fp-resolution",
+        type=int,
+        default=5,
+        help=(
+            "Skip --fail-on-budget for levels whose UNSCALED budget rounds "
+            "below this many absolute FPs on the evaluation corpus. The "
+            "minimum-resolvable level is corpus-size dependent: a level "
+            "with budget N means we need a benign corpus of size N×1e8/N = "
+            "1e8 just to see one FP, and below this floor the calibrator "
+            "produces a tail-extrapolated threshold (see DESIGN.md) that "
+            "doesn't reflect any empirical FP count. Gating on those "
+            "is checking the extrapolation, not the model. Default 5 "
+            "treats anything with <5 expected FPs as informational. "
+            "Set to 0 to disable the resolution floor and gate every level "
+            "≤ --budget-gate-max-level."
+        ),
+    )
     args = parser.parse_args()
 
     config = _load_json(args.config)
@@ -208,10 +226,10 @@ def main() -> int:
     failed = False
     multiplier = max(1.0, float(args.max_budget_multiplier))
     gate_max_level = int(args.budget_gate_max_level)
+    min_fp_resolution = max(0, int(args.budget_gate_min_fp_resolution))
     for level_item in config.get("levels", []):
         level = int(level_item["level"])
         out: dict[str, Any] = {"level": level}
-        gated = level <= gate_max_level
         for severity in ("hostile",):
             target = float(level_item[severity]["target_per_million"])
             hit, route_hits = _decisions(
@@ -233,10 +251,21 @@ def main() -> int:
             m["scaled_budget"] = scaled_budget
             m["scaled_budget_multiplier"] = multiplier
             m["within_scaled_budget"] = bool(int(m["fp"]) <= scaled_budget)
-            # Loose-tail levels (above --budget-gate-max-level) are
-            # informational only — the calibrator can't always hit a
-            # meaningful threshold up there, so don't gate the deploy on them.
+            # Three reasons to drop a level out of the pass/fail gate while
+            # still measuring it for the report:
+            #   1. Above --budget-gate-max-level: loose tail kept for chart
+            #      headroom; calibrator can't always hit a target up there.
+            #   2. Below empirical FP resolution: corpus too small to see
+            #      `target_per_million × corpus_benign / 1e6` FPs reliably,
+            #      so the calibrator emits a tail-extrapolated threshold and
+            #      gating fires on extrapolation noise, not the model.
+            #   3. (Implicit) level isn't in the policy at all — `_decisions`
+            #      returns no hits, which passes by default; tracked elsewhere.
+            below_resolution = int(m["budget"]) < min_fp_resolution
+            level_in_gate_window = level <= gate_max_level
+            gated = level_in_gate_window and not below_resolution
             m["budget_gated"] = gated
+            m["budget_below_resolution"] = below_resolution
             if gated:
                 failed = failed or not bool(m["within_scaled_budget"])
             out[severity] = m
