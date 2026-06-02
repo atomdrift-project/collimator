@@ -159,12 +159,10 @@ def _test_partition_row_ids(
         if is_pg:
             with conn.cursor() as cur:
                 cur.execute(
-                    """
+                    f"""
                     SELECT id
                     FROM samples
-                    WHERE label IN ('bad', 'good')
-                      AND cleave_result IS NOT NULL
-                      AND skip = ''
+                    WHERE {collimator_data.LABELED_WHERE}
                       AND file_type = ANY(%s)
                       AND id > %s
                       AND canonical_sha256 IS NOT NULL
@@ -180,8 +178,8 @@ def _test_partition_row_ids(
             placeholders = ",".join("?" for _ in file_types)
             for row_id, csha in conn.execute(
                 f"SELECT id, canonical_sha256 FROM samples "  # noqa: S608
-                f"WHERE label IN ('bad','good') AND cleave_result IS NOT NULL "
-                f"AND skip = '' AND file_type IN ({placeholders}) AND id > ? "
+                f"WHERE {collimator_data.LABELED_WHERE} "
+                f"AND file_type IN ({placeholders}) AND id > ? "
                 f"AND canonical_sha256 IS NOT NULL ORDER BY id",
                 [*file_types, int(min_id_exclusive)],
             ):

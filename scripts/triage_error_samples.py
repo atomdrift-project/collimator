@@ -87,33 +87,29 @@ def _clear_directory(path: Path) -> None:
             child.unlink()
 
 
-def copy_report(
+def _copy_rows(
+    rows: list[dict[str, Any]],
     *,
-    report_path: Path,
-    output_dir: Path,
+    base_dir: Path,
     samples_dir: Path,
-    kind: str,
     top: int,
-    hopper_url: str | None = None,
-    db_dsn: str | None = None,
-    skip: int = 0,
-) -> dict[str, Any]:
-    with open(report_path) as f:
-        payload = json.load(f)
+    hopper_url: str | None,
+    db_dsn: str | None,
+    seen: set[Path],
+    copied: list[str],
+    fetched: list[str],
+    missing: list[str],
+) -> int:
+    """Copy up to ``top`` obtainable samples into ``base_dir``.
 
-    _clear_directory(output_dir)
-
-    seen: set[Path] = set()
-    copied: list[str] = []
-    missing: list[str] = []
-    fetched: list[str] = []
-
-    rows = _rows(payload, kind)
-    if skip > 0:
-        rows = rows[skip:]
-
+    Keeps scanning past locally-missing rows (falling back to hopper) until
+    ``top`` files actually land — so feeding a larger candidate pool than
+    ``top`` covers samples pruned from disk and absent from hopper. Mutates
+    the shared accumulators. Returns the count copied into ``base_dir``.
+    """
+    here = 0
     for row in rows:
-        if len(copied) >= top:
+        if here >= top:
             break
         resolved = _sample_path(samples_dir, row)
         if resolved is None:
@@ -124,7 +120,7 @@ def copy_report(
             continue
         seen.add(dedupe_key)
 
-        destination = output_dir / arcname
+        destination = base_dir / arcname
 
         if path.exists():
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -133,6 +129,7 @@ def copy_report(
             else:
                 shutil.copy2(path, destination)
             copied.append(arcname)
+            here += 1
             continue
 
         # Missing locally — try hopper if configured.
@@ -150,14 +147,84 @@ def copy_report(
         is_archive_member = "!!" in raw_path
         target_sha = row.get("sha256")
         if is_archive_member:
-            target_sha = _outer_sha_lookup(db_dsn or "", arcname)
+            # Pull the whole outer archive (cleave re-runs against it). Prefer
+            # the row's `parent` — the archive's own sha256, carried on every
+            # extracted member. Hopper serves it directly, and it's reliable
+            # even when the archive isn't a tracked sample row (so its path
+            # won't resolve). Fall back to the legacy path lookup for reports
+            # that predate the `parent` field.
+            target_sha = str(row.get("parent") or "") or _outer_sha_lookup(db_dsn or "", arcname)
 
         if target_sha and _fetch_from_hopper(target_sha, destination, hopper_url):
             fetched.append(arcname)
             copied.append(arcname)
+            here += 1
             continue
 
         missing.append(str(row.get("path") or ""))
+    return here
+
+
+def copy_report(
+    *,
+    report_path: Path,
+    output_dir: Path,
+    samples_dir: Path,
+    kind: str,
+    top: int,
+    hopper_url: str | None = None,
+    db_dsn: str | None = None,
+    skip: int = 0,
+    group_by_filetype: bool = False,
+) -> dict[str, Any]:
+    with open(report_path) as f:
+        payload = json.load(f)
+
+    _clear_directory(output_dir)
+
+    seen: set[Path] = set()
+    copied: list[str] = []
+    missing: list[str] = []
+    fetched: list[str] = []
+
+    rows = _rows(payload, kind)
+    if skip > 0:
+        rows = rows[skip:]
+
+    per_filetype: dict[str, int] = {}
+    if group_by_filetype:
+        # ``top`` is a PER-FILETYPE quota; each filetype lands in its own
+        # subdir so the sorter can sweep one type at a time.
+        groups: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            ft = str(row.get("filetype") or "unknown")
+            groups.setdefault(ft, []).append(row)
+        for ft, ft_rows in sorted(groups.items()):
+            per_filetype[ft] = _copy_rows(
+                ft_rows,
+                base_dir=output_dir / ft,
+                samples_dir=samples_dir,
+                top=top,
+                hopper_url=hopper_url,
+                db_dsn=db_dsn,
+                seen=seen,
+                copied=copied,
+                fetched=fetched,
+                missing=missing,
+            )
+    else:
+        _copy_rows(
+            rows,
+            base_dir=output_dir,
+            samples_dir=samples_dir,
+            top=top,
+            hopper_url=hopper_url,
+            db_dsn=db_dsn,
+            seen=seen,
+            copied=copied,
+            fetched=fetched,
+            missing=missing,
+        )
 
     return {
         "report": str(report_path),
@@ -166,6 +233,9 @@ def copy_report(
         "hopper_url": hopper_url or "",
         "kind": kind,
         "requested": top,
+        "grouped_by_filetype": group_by_filetype,
+        "filetypes": len(per_filetype),
+        "per_filetype_copied": per_filetype,
         "copied": len(copied),
         "fetched_from_hopper": len(fetched),
         "missing": missing,
@@ -188,6 +258,14 @@ def main() -> None:
         required=True,
     )
     parser.add_argument("--top", type=int, default=100)
+    parser.add_argument(
+        "--group-by-filetype",
+        action="store_true",
+        help="Write each sample under <output-dir>/<filetype>/ and treat "
+             "--top as a PER-FILETYPE quota (copy until --top land for each "
+             "filetype). Pair with a report built via "
+             "mislabeled_by_scope.py --per-filetype-top.",
+    )
     parser.add_argument(
         "--skip",
         type=int,
@@ -222,11 +300,19 @@ def main() -> None:
         hopper_url=args.hopper_url or None,
         db_dsn=args.db or None,
         skip=args.skip,
+        group_by_filetype=args.group_by_filetype,
     )
-    print(
-        f"Copied {summary['copied']}/{summary['requested']} unique {args.kind} "
-        f"samples to {summary['output_dir']}"
-    )
+    if summary["grouped_by_filetype"]:
+        print(
+            f"Copied {summary['copied']} unique {args.kind} samples across "
+            f"{summary['filetypes']} filetype(s) "
+            f"(target {summary['requested']}/filetype) to {summary['output_dir']}"
+        )
+    else:
+        print(
+            f"Copied {summary['copied']}/{summary['requested']} unique {args.kind} "
+            f"samples to {summary['output_dir']}"
+        )
     if summary["fetched_from_hopper"]:
         print(f"  ({summary['fetched_from_hopper']} fetched from hopper "
               f"at {summary['hopper_url']})")

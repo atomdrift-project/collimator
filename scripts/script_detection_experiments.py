@@ -99,7 +99,7 @@ def _hash(text: str, bits: int) -> int:
 
 def _fetch_rows(db_path: str, file_types: tuple[str, ...], max_id: int) -> list[Row]:
     marker = _placeholder(db_path)
-    where = ["label IN ('bad', 'good')", "cleave_result IS NOT NULL", "skip = ''"]
+    where = [data.LABELED_WHERE]
     params: list[Any] = []
     if data._is_pg(db_path):  # noqa: SLF001
         where.append(f"COALESCE(NULLIF(file_type, ''), 'unknown') = ANY({marker})")

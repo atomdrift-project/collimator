@@ -331,6 +331,16 @@ try:
 except ValueError:
     MIN_SAMPLE_SCORE = _default_min
 
+# Canonical predicate for a usable labeled sample. Every stage that SELECTS the
+# labeled corpus — training, calibration, score-table build, specialist/OOF
+# scoring, and triage — filters on this so they all agree on the universe: a
+# human good/bad label, cleave actually ran, and hopper hasn't flagged the row
+# (skip set = missing/replaced/corrupt/misclassified/label-mismatch/…). Stages
+# append their own clauses (score >=, file_type, id <=, partition) with AND.
+# Secondary by-id lookups that merely enrich already-selected rows trust that
+# upstream selection and need not repeat it.
+LABELED_WHERE = "label IN ('bad', 'good') AND cleave_result IS NOT NULL AND skip = ''"
+
 
 def snapshot_max_id(db_path: Path | str) -> int:
     """Return max(id) of trainable samples at this moment.
@@ -342,8 +352,8 @@ def snapshot_max_id(db_path: Path | str) -> int:
     """
     query = (
         "SELECT MAX(id) FROM samples"
-        " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
-        f" AND score >= {MIN_SAMPLE_SCORE} AND skip = ''"
+        f" WHERE {LABELED_WHERE}"
+        f" AND score >= {MIN_SAMPLE_SCORE}"
     )
     with _connect(db_path) as conn:
         for (max_id,) in _execute(conn, query):
@@ -354,18 +364,16 @@ def snapshot_max_id(db_path: Path | str) -> int:
 _TRAINABLE_QUERY = (
     "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score, mtime, 0 AS cluster_id"
     " FROM samples"
-    " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
+    f" WHERE {LABELED_WHERE}"
     f" AND score >= {MIN_SAMPLE_SCORE}"
-    " AND skip = ''"
     " ORDER BY id"
 )
 
 _METADATA_QUERY = (
     "SELECT id, sha256, label, canonical_sha256, score"
     " FROM samples"
-    " WHERE label IN ('bad', 'good') AND cleave_result IS NOT NULL"
+    f" WHERE {LABELED_WHERE}"
     f" AND score >= {MIN_SAMPLE_SCORE}"
-    " AND skip = ''"
     " ORDER BY id"
 )
 
@@ -455,9 +463,7 @@ def stream_labeled_samples_full(
         query = (
             "SELECT id, sha256, path, label, canonical_sha256, cleave_result, formula, elements, score, mtime, 0 AS cluster_id"
             " FROM samples"
-            " WHERE label IN ('bad', 'good')"
-            " AND cleave_result IS NOT NULL"
-            " AND skip = ''"
+            f" WHERE {LABELED_WHERE}"
         )
         if max_id > 0:
             query += f" AND id <= {int(max_id)}"
@@ -520,9 +526,7 @@ def stream_labeled_metadata_full(
         query = (
             "SELECT id, sha256, path, label, score, canonical_sha256"
             " FROM samples"
-            " WHERE label IN ('bad', 'good')"
-            " AND cleave_result IS NOT NULL"
-            " AND skip = ''"
+            f" WHERE {LABELED_WHERE}"
         )
         if max_id > 0:
             query += f" AND id <= {int(max_id)}"
@@ -569,9 +573,7 @@ def stream_labeled_metadata_full_with_size(
         query = (
             f"SELECT id, sha256, path, label, score, {json_len_expr}, canonical_sha256"
             " FROM samples"
-            " WHERE label IN ('bad', 'good')"
-            " AND cleave_result IS NOT NULL"
-            " AND skip = ''"
+            f" WHERE {LABELED_WHERE}"
         )
         if max_id > 0:
             query += f" AND id <= {int(max_id)}"
@@ -752,9 +754,7 @@ def count_labeled_by_partition_full(
         query = (
             "SELECT id, sha256, label, canonical_sha256"
             " FROM samples"
-            " WHERE label IN ('bad', 'good')"
-            " AND cleave_result IS NOT NULL"
-            " AND skip = ''"
+            f" WHERE {LABELED_WHERE}"
         )
         if max_id > 0:
             query += f" AND id <= {int(max_id)}"
@@ -783,9 +783,7 @@ def labeled_corpus_metadata_full(
             " COALESCE(SUM(CASE WHEN label = 'good' THEN 1 ELSE 0 END), 0),"
             " COALESCE(MAX(id), 0)"
             " FROM samples"
-            " WHERE label IN ('bad', 'good')"
-            " AND cleave_result IS NOT NULL"
-            " AND skip = ''"
+            f" WHERE {LABELED_WHERE}"
         )
         if max_id > 0:
             query += f" AND id <= {int(max_id)}"

@@ -247,9 +247,7 @@ def _fetch_rows(
 ) -> list[tuple[int, int, bool, str]]:
     """Return row_id, label, is_test, file_type for labeled samples."""
     where = [
-        "label IN ('bad', 'good')",
-        "cleave_result IS NOT NULL",
-        "skip = ''",
+        data.LABELED_WHERE,
     ]
     params: list[Any] = []
     marker = _placeholder(db_path)
@@ -320,9 +318,7 @@ def _count_rows(
 ) -> dict[str, int]:
     marker = _placeholder(db_path)
     where = [
-        "label IN ('bad', 'good')",
-        "cleave_result IS NOT NULL",
-        "skip = ''",
+        data.LABELED_WHERE,
     ]
     params: list[Any] = []
     if max_id > 0:
@@ -371,9 +367,7 @@ def _eligible_filetypes(
 ) -> list[dict[str, Any]]:
     marker = _placeholder(db_path)
     where = [
-        "label IN ('bad', 'good')",
-        "cleave_result IS NOT NULL",
-        "skip = ''",
+        data.LABELED_WHERE,
     ]
     params: list[Any] = []
     if min_score is not None:
@@ -491,7 +485,9 @@ def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str,
         return {}
     from sklearn.metrics import precision_recall_curve
 
-    precision, recall, thresholds = precision_recall_curve(y_true, y_prob)
+    # NB: bind to pr_thresholds, not `thresholds` — the latter is the imported
+    # collimator.thresholds module, referenced below for _LEVELS_PER_100M.
+    precision, recall, pr_thresholds = precision_recall_curve(y_true, y_prob)
     f1_values = np.divide(
         2.0 * precision * recall,
         precision + recall,
@@ -499,7 +495,7 @@ def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str,
         where=(precision + recall) > 0,
     )
     best_idx = int(np.argmax(f1_values))
-    best_threshold = 1.0 if best_idx >= len(thresholds) else float(thresholds[best_idx])
+    best_threshold = 1.0 if best_idx >= len(pr_thresholds) else float(pr_thresholds[best_idx])
     y_pred = (y_prob >= best_threshold).astype(int)
     out = {
         "roc_auc": (
@@ -1701,6 +1697,38 @@ def main() -> int:
             ", ".join(small_route_default_applied),
         )
 
+    # Clamp parallelism to available RAM *before* deriving the per-fit thread
+    # and extraction-worker budgets from it. Parallelism was previously a pure
+    # function of core count, so a host with MORE cores ran more concurrent
+    # fits and was MORE likely to OOM — exactly backwards. Each concurrent fit
+    # peaks at roughly AZOTH_MEM_PER_FIT_GB on the heaviest route (measured: PE
+    # at full corpus ≈ 21 GB once extraction workers are divided by parallelism
+    # per the cap below; ~83 GB undivided). Linux-only (reads /proc/meminfo);
+    # silently skipped elsewhere. Override the estimate / headroom via
+    # AZOTH_MEM_PER_FIT_GB and AZOTH_MEM_RESERVE_GB.
+    if args.parallelism > 1:
+        try:
+            mem_per_fit = float(os.environ.get("AZOTH_MEM_PER_FIT_GB", "28"))
+            reserve = float(os.environ.get("AZOTH_MEM_RESERVE_GB", "32"))
+            with open("/proc/meminfo") as meminfo:
+                avail_kb = next(
+                    int(line.split()[1])
+                    for line in meminfo
+                    if line.startswith("MemAvailable:")
+                )
+            avail_gb = avail_kb / 1024 / 1024
+            mem_cap = max(1, int((avail_gb - reserve) // mem_per_fit))
+            if mem_cap < args.parallelism:
+                LOG.warning(
+                    "capping parallelism %d -> %d to fit RAM (MemAvailable="
+                    "%.0f GB, reserve=%.0f GB, per_fit=%.0f GB). Override with "
+                    "AZOTH_MEM_PER_FIT_GB / AZOTH_MEM_RESERVE_GB.",
+                    args.parallelism, mem_cap, avail_gb, reserve, mem_per_fit,
+                )
+                args.parallelism = mem_cap
+        except (OSError, StopIteration, ValueError):
+            pass  # non-Linux or unparseable /proc/meminfo: leave as requested
+
     # Auto-cap LightGBM threads per training when running multiple
     # specialists concurrently. Without this, every concurrent training
     # asks for all 128 cores via n_jobs=-1 and the host context-switches
@@ -1723,6 +1751,26 @@ def main() -> int:
             "auto-capping LightGBM threads per training at %d "
             "(%d cores / parallelism=%d%s). Override with --lgbm-threads N.",
             lgbm_threads, nproc, args.parallelism, suite_note,
+        )
+
+    # Auto-cap feature-extraction workers per fit, mirroring the LightGBM
+    # thread cap above. Each fit otherwise spawns its own `args.workers`
+    # extraction subprocesses regardless of parallelism, so peak extraction
+    # memory and process count scale with parallelism * workers, not workers.
+    # Measured on a 128-core host: a single full-corpus PE fit peaks at ~83 GB
+    # with workers=128 but ~21 GB with workers=8 — the delta is the
+    # workers-proportional extraction-buffer spike, and at parallelism=16 the
+    # undivided version stacks 16 of those spikes and OOMs a 251 GB box.
+    # Dividing keeps host-wide extraction parallelism ≈ nproc with no
+    # wall-clock change (same total subprocess count, partitioned across fits).
+    extract_workers = args.workers
+    if args.parallelism > 1 and args.workers and args.workers > 1:
+        concurrent_suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
+        extract_workers = max(1, args.workers // (args.parallelism * concurrent_suites))
+        LOG.info(
+            "auto-capping extraction workers per fit at %d "
+            "(requested %d / parallelism=%d).",
+            extract_workers, args.workers, args.parallelism,
         )
 
     config = train.TrainConfig(
@@ -1775,7 +1823,7 @@ def main() -> int:
                 "mask_spec_path": mask_specs.get(str(target["name"])),
                 "feature_env": feature_envs.get(str(target["name"]), {}),
                 "route_config": _route_train_config(config, target, train_overrides),
-                "workers": args.workers,
+                "workers": extract_workers,
                 "max_id": args.max_id,
                 "filegroup_score_filter": filegroup_score_filter,
                 "n_seed_extras": args.n_seed_extras,

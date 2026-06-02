@@ -40,11 +40,7 @@ def _fetch_rows(
     min_score: int | None,
 ) -> list[tuple[int, int, bool, str]]:
     """Return row_id, label, is_test, file_type for labeled samples."""
-    where = [
-        "label IN ('bad', 'good')",
-        "cleave_result IS NOT NULL",
-        "skip = ''",
-    ]
+    where = [data.LABELED_WHERE]
     params: list[Any] = []
     if max_id > 0:
         where.append("id <= %s" if data._is_pg(db_path) else "id <= ?")  # noqa: SLF001

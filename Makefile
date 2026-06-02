@@ -56,6 +56,10 @@ AZOTH_ROOT ?= $(OUT_ROOT)/azoth
 # See scripts/azoth_publish_run.py and the azoth-run-new / azoth-publish
 # targets below.
 AZOTH_RUNS_ROOT ?= $(OUT_ROOT)/azoth-runs
+# Successful run dirs to retain under $(AZOTH_RUNS_ROOT) after a publish;
+# older ones (and legacy-* archives) are pruned. The live symlink target is
+# always kept regardless of age.
+AZOTH_KEEP_RUNS ?= 5
 AZOTH_SPECIALISTS_SUMMARY ?= $(AZOTH_ROOT)/specialists.json
 AZOTH_GENERAL_DIR ?= $(AZOTH_ROOT)/general
 AZOTH_GENERAL_SCORES ?= $(AZOTH_GENERAL_DIR)/threshold_scores.npz
@@ -474,15 +478,34 @@ DEPLOY_MAX_TEST_SAMPLES_FAST    ?= 80000
 DEPLOY_TRAIN_SAMPLES            ?= $(DEPLOY_TRAIN_SAMPLES_FULL)
 DEPLOY_MAX_TEST_SAMPLES         ?= $(DEPLOY_MAX_TEST_SAMPLES_FULL)
 
+# Both build the ENTIRE bundle into an isolated run dir
+# ($(AZOTH_RUNS_ROOT)/<id>/) and only flip the canonical $(OUT_ROOT)/azoth
+# symlink on success via azoth-publish. An interrupted or failed train never
+# touches the live bundle, so the previous model stays published and
+# serveable (this is what would have saved the in-place wipe that stranded a
+# crashed train). Successful runs are retained $(AZOTH_KEEP_RUNS) deep for
+# rollback. See the azoth-run-new / azoth-publish / azoth-prune-runs block.
 azoth-full-train: venv check-db
+	@echo "azoth-full-train: building into $(AZOTH_RUN_DIR) (canonical bundle untouched until success)"
+	@mkdir -p $(AZOTH_RUN_DIR)
 	$(MAKE) _azoth-train \
+		AZOTH_ROOT=$(AZOTH_RUN_DIR) \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
+	$(MAKE) azoth-publish AZOTH_ROOT=$(AZOTH_RUN_DIR)
+	$(MAKE) azoth-prune-runs
+	@echo "azoth-full-train: published $(OUT_ROOT)/azoth -> $(AZOTH_RUN_DIR)"
 
 azoth-fast-train: venv check-db
+	@echo "azoth-fast-train: building into $(AZOTH_RUN_DIR) (canonical bundle untouched until success)"
+	@mkdir -p $(AZOTH_RUN_DIR)
 	$(MAKE) _azoth-train \
+		AZOTH_ROOT=$(AZOTH_RUN_DIR) \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FAST) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FAST)
+	$(MAKE) azoth-publish AZOTH_ROOT=$(AZOTH_RUN_DIR)
+	$(MAKE) azoth-prune-runs
+	@echo "azoth-fast-train: published $(OUT_ROOT)/azoth -> $(AZOTH_RUN_DIR)"
 
 # azoth-publish-train: publication-grade k=2 out-of-fold calibration.
 #
@@ -889,6 +912,23 @@ azoth-specialists: venv check-db
 		$(AZOTH_SPECIALIST_FEATURE_CACHE_ARG) \
 		$(if $(DEVICE),--device $(DEVICE),)
 
+# Rewrite specialists.json so the route list matches the CURRENT
+# normalize_archive_filetype rule, without retraining. Use after
+# changing the rule (e.g. extending or shrinking the
+# PURE_COMPRESSION_SUFFIXES set) to consolidate the bundle's routes
+# in-place. Existing on-disk specialist models are left untouched —
+# variant entries that fold into a container (tar.gz → tar) are dropped
+# from the summary but their model dirs stay until the next full
+# `make azoth-specialists` pass overwrites or removes them.
+azoth-rediscover: venv check-db
+	$(PYTHON) scripts/azoth_rediscover_routes.py \
+		--db $(DB) \
+		--azoth-root $(AZOTH_ROOT) \
+		--summary $(AZOTH_SPECIALISTS_SUMMARY) \
+		$(THRESHOLD_MAX_ID_ARG) \
+		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
+		--min-good $(AZOTH_SPECIALIST_MIN_GOOD)
+
 # Fold-aware specialist training for OOF score generation. Mirror of
 # azoth-specialists with EXP_OOF_FOLD_EXCLUDE wired through (honored in
 # azoth_specialist_suite._fetch_rows via _read_oof_exclude). Each fold
@@ -1224,7 +1264,7 @@ AZOTH_RUN_ID := $(shell date -u +%Y%m%dT%H%M%SZ)-$(shell openssl rand -hex 4 2>/
 endif
 AZOTH_RUN_DIR := $(AZOTH_RUNS_ROOT)/$(AZOTH_RUN_ID)
 
-.PHONY: azoth-run-new azoth-publish azoth-publish-deploy
+.PHONY: azoth-run-new azoth-publish azoth-publish-deploy azoth-prune-runs
 
 # Create (if needed) and print the path to the run dir for AZOTH_RUN_ID.
 # Capture it with $(shell …) or make -s.
@@ -1236,6 +1276,21 @@ azoth-run-new:
 # point $(OUT_ROOT)/azoth at it. Errors out if the bundle is incomplete.
 azoth-publish: venv
 	$(PYTHON) scripts/azoth_publish_run.py $(AZOTH_ROOT) --link $(OUT_ROOT)/azoth
+
+# Retain only the newest $(AZOTH_KEEP_RUNS) run dirs under $(AZOTH_RUNS_ROOT)
+# (legacy-* archives included); the dir the canonical symlink points at is
+# always kept regardless of age. Safe to run anytime.
+azoth-prune-runs:
+	@set -e; \
+	link=$(OUT_ROOT)/azoth; \
+	current=""; \
+	[ -L "$$link" ] && current=$$(readlink -f "$$link") || true; \
+	echo "azoth-prune-runs: keeping newest $(AZOTH_KEEP_RUNS) under $(AZOTH_RUNS_ROOT) (+ current symlink target)"; \
+	ls -1dt $(AZOTH_RUNS_ROOT)/*/ 2>/dev/null | sed 's#/*$$##' | awk 'NR>$(AZOTH_KEEP_RUNS)' | while read d; do \
+	  if [ -n "$$current" ] && [ "$$(readlink -f "$$d")" = "$$current" ]; then echo "  keep (current) $$d"; continue; fi; \
+	  echo "  rm -rf $$d"; rm -rf "$$d"; \
+	done; \
+	true
 
 # Apples-to-apples baseline scoring for autocollie. Given a route, an optional
 # row-ids file, and a deploy-root (defaults to AZOTH_ROOT, i.e. the currently
@@ -1549,6 +1604,88 @@ mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 	@echo "reports:  $(FP_REPORT) + $(FN_REPORT)"
 	@echo "samples:  $(MIS_TRIAGE_DIR)/{false-positives,false-negatives}/"
 	@echo "to cleave: cleave --format=json $(MIS_TRIAGE_DIR) > $(MIS_TRIAGE_JSON)"
+
+# triage: per-filetype mislabeled-data dump for hand review.
+#
+# For every filetype, lands the top $(TRIAGE_TOP) most-confidently-wrong
+# samples on each side into its own subdir:
+#   $(TRIAGE_DIR)/mislabeled-good/<filetype>/   (false positives: labeled
+#       good, the ensemble flags as bad — candidates that may really be bad)
+#   $(TRIAGE_DIR)/mislabeled-bad/<filetype>/    (false negatives: labeled
+#       bad, the ensemble scores benign — candidates that may really be good)
+#
+# Over-fetch: the reports rank $(TRIAGE_FETCH) candidates per filetype, then
+# triage copies until $(TRIAGE_TOP) land per filetype — samples pruned from
+# /data/samples are pulled from hopper (GET /api/file/{sha}); the extra
+# candidates cover any that are gone from both.
+#
+# Also creates two empty output bins for the sorter to move confirmed
+# mislabels into:
+#   $(TRIAGE_DIR)/misplaced-good/   $(TRIAGE_DIR)/misplaced-bad/
+#
+# Needs a deployed bundle ($(AZOTH_ROOT)/score_table.npz +
+# route_policies.json) — run after a completed azoth-full-train.
+TRIAGE_DIR        ?= /tmp/triage
+TRIAGE_TOP        ?= 40
+TRIAGE_FETCH      ?= 80
+TRIAGE_SCOPE      ?= ensemble,specialists,filegroups
+# No cutoff: every filetype yields its top-N most label-discordant files,
+# ranked by margin. TRIAGE_LEVEL is only the reference the margin is measured
+# against (the deployed operating point, 50 = 0.5 FP/M), NOT a membership
+# gate — so all filetypes surface, not just those crossing a fixed threshold.
+TRIAGE_LEVEL      ?= 50
+TRIAGE_SEVERITY   ?= hostile
+TRIAGE_FP_REPORT  ?= $(TRIAGE_DIR)/mislabeled-good.report.json
+TRIAGE_FN_REPORT  ?= $(TRIAGE_DIR)/mislabeled-bad.report.json
+
+.PHONY: triage triage-good triage-bad
+# triage runs both sides sequentially (FP then FN) via sub-make so a heavy
+# FP archive pull can't run concurrently with the FN pull. The sides are also
+# standalone targets — re-run just one (e.g. `make triage-bad`) without redoing
+# the other, e.g. after hopper sheds load mid-run.
+triage: venv
+	$(MAKE) triage-good
+	$(MAKE) triage-bad
+	@echo "scope:           $(TRIAGE_SCOPE) | level: L$(TRIAGE_LEVEL) | severity: $(TRIAGE_SEVERITY)"
+	@echo "mislabeled-good: $(TRIAGE_DIR)/mislabeled-good/<filetype>/  (labeled good, flagged bad)"
+	@echo "mislabeled-bad:  $(TRIAGE_DIR)/mislabeled-bad/<filetype>/   (labeled bad, scored benign)"
+	@echo "sort into:       $(TRIAGE_DIR)/misplaced-good/  $(TRIAGE_DIR)/misplaced-bad/"
+
+# triage-good: per filetype, the top-$(TRIAGE_TOP) benigns the ensemble most
+# strongly flags as bad (most-likely-mislabeled good files).
+triage-good: venv
+	@mkdir -p $(TRIAGE_DIR)/misplaced-good
+	$(PYTHON) scripts/mislabeled_by_scope.py \
+		--kind false-positives \
+		--score-table $(AZOTH_ROOT)/score_table.npz \
+		--route-policies $(AZOTH_ROOT)/route_policies.json \
+		--scope $(TRIAGE_SCOPE) --level $(TRIAGE_LEVEL) --severity $(TRIAGE_SEVERITY) \
+		--no-cutoff --per-filetype-top $(TRIAGE_FETCH) --db $(DB) \
+		--output $(TRIAGE_FP_REPORT)
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(TRIAGE_FP_REPORT) \
+		--output-dir $(TRIAGE_DIR)/mislabeled-good \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-positives --db $(DB) \
+		--group-by-filetype --top $(TRIAGE_TOP)
+
+# triage-bad: per filetype, the top-$(TRIAGE_TOP) malware the ensemble most
+# strongly scores benign (most-likely-mislabeled bad files).
+triage-bad: venv
+	@mkdir -p $(TRIAGE_DIR)/misplaced-bad
+	$(PYTHON) scripts/mislabeled_by_scope.py \
+		--kind false-negatives \
+		--score-table $(AZOTH_ROOT)/score_table.npz \
+		--route-policies $(AZOTH_ROOT)/route_policies.json \
+		--scope $(TRIAGE_SCOPE) --level $(TRIAGE_LEVEL) --severity $(TRIAGE_SEVERITY) \
+		--no-cutoff --per-filetype-top $(TRIAGE_FETCH) --db $(DB) \
+		--output $(TRIAGE_FN_REPORT)
+	$(PYTHON) scripts/triage_error_samples.py \
+		--report $(TRIAGE_FN_REPORT) \
+		--output-dir $(TRIAGE_DIR)/mislabeled-bad \
+		--samples-dir $(SAMPLES_DIR) \
+		--kind false-negatives --db $(DB) \
+		--group-by-filetype --top $(TRIAGE_TOP)
 
 near-false-positives-triage: near-false-positives
 	$(PYTHON) scripts/triage_error_samples.py \

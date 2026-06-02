@@ -53,22 +53,35 @@ import numpy as np
 _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
+from collimator.data import LABELED_WHERE  # noqa: E402
 from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
 
 
-def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str]]:
-    """Bulk-fetch (sha256, path) by id from hopper.samples."""
+def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str, str]]:
+    """Bulk-fetch (sha256, path, parent) by id from hopper.samples.
+
+    ``parent`` is the sha256 of the containing archive for extracted members
+    (empty for standalone files). Triage uses it to pull the whole archive by
+    sha — reliable even when the archive isn't itself a tracked sample row.
+    """
     if not row_ids:
         return {}
     try:
         import psycopg
     except ImportError:
         sys.exit("psycopg is required to resolve row_id → (sha256, path); install it or pre-populate")
-    out: dict[int, tuple[str, str]] = {}
+    out: dict[int, tuple[str, str, str]] = {}
     with psycopg.connect(db_dsn, connect_timeout=10) as conn, conn.cursor() as cur:
-        cur.execute("SELECT id, sha256, path FROM samples WHERE id = ANY(%s)", (list(row_ids),))
-        for rid, sha, path in cur.fetchall():
-            out[int(rid)] = (sha, path)
+        # Gate on the shared labeled-sample predicate so triage agrees with
+        # training/calibration: a row whose file was flagged by hopper (skip
+        # set) or relabeled away from good/bad after the score table was built
+        # resolves to no path here and drops out of the triage set.
+        cur.execute(
+            f"SELECT id, sha256, path, parent FROM samples WHERE id = ANY(%s) AND {LABELED_WHERE}",
+            (list(row_ids),),
+        )
+        for rid, sha, path, parent in cur.fetchall():
+            out[int(rid)] = (sha, path, parent or "")
     return out
 
 
@@ -208,6 +221,26 @@ def main() -> None:
     )
     p.add_argument("--top-errors", type=int, default=100)
     p.add_argument(
+        "--no-cutoff",
+        action="store_true",
+        help="Don't gate on the per-filetype operating threshold. Rank EVERY "
+             "routable row of the target label by margin and keep the top "
+             "(per --per-filetype-top / --top-errors). --level then only sets "
+             "the reference the margin is measured against, not membership. "
+             "Use for mislabeled-data triage where you want each filetype's "
+             "most label-discordant files regardless of any operating point.",
+    )
+    p.add_argument(
+        "--per-filetype-top",
+        type=int,
+        default=0,
+        help="If > 0, take the top N rows PER FILETYPE (ranked within each "
+             "filetype by the same margin order) instead of the global "
+             "--top-errors. Used by `make triage` to land an even quota per "
+             "filetype. --skip is applied to the global ranking before "
+             "per-filetype bucketing.",
+    )
+    p.add_argument(
         "--skip",
         type=int,
         default=0,
@@ -238,6 +271,7 @@ def main() -> None:
         scope_specs.append((raw, canon, explicit))
 
     is_fp = args.kind == "false-positives"
+    no_cutoff = bool(args.no_cutoff)
     target_label = 0 if is_fp else 1
 
     table = np.load(args.score_table, allow_pickle=False)
@@ -300,7 +334,16 @@ def main() -> None:
                 delta = np.where(finite, row_scores - t, -np.inf)
                 margins = np.where(finite & (delta > margins), delta, margins)
                 any_finite |= finite
-            if is_fp:
+            # no_cutoff: rank EVERY routable row by margin, ignore the
+            # threshold-sign gate. The level then only sets the reference
+            # the margin is measured against — it no longer decides
+            # membership. Used by `make triage` so each filetype yields its
+            # top-N most-label-discordant files (most hostile-looking
+            # benigns / most benign-looking malware) rather than only those
+            # that happen to cross a fixed operating point.
+            if no_cutoff:
+                hit = any_finite
+            elif is_fp:
                 hit = margins >= 0
             else:
                 hit = any_finite & (margins < 0)
@@ -310,12 +353,15 @@ def main() -> None:
                 row_i = int(ft_row_indices[pos])
                 margin = float(margins[pos])
                 row_trigs: list[tuple[str, float, float]] = []
-                if is_fp:
+                if is_fp and not no_cutoff:
                     for ridx, route_name, t in contributing:
                         s = float(scores[ridx, row_i])
                         if s >= t:
                             row_trigs.append((route_name, s, t))
                 else:
+                    # FN, or no_cutoff FP: record every contributing route so
+                    # the headline reflects the max-score route even when no
+                    # route crossed its threshold.
                     for ridx, route_name, t in contributing:
                         s = float(scores[ridx, row_i])
                         row_trigs.append((route_name, s, t))
@@ -344,12 +390,29 @@ def main() -> None:
     flat = [(entry["margin"], row_i, entry) for row_i, entry in agg.items()]
     flat.sort(key=lambda x: -x[0] if is_fp else x[0])
     skip = max(0, int(args.skip))
-    top = flat[skip : skip + args.top_errors]
-    print(
-        f"flagged: {len(flat):,} (deduped across {len(scope_specs)} scope(s)), "
-        f"skipping {skip}, taking {len(top)}",
-        file=sys.stderr,
-    )
+    flat = flat[skip:]
+    if args.per_filetype_top and args.per_filetype_top > 0:
+        per_ft_counts: dict[str, int] = {}
+        top = []
+        for item in flat:
+            ft = str(file_types[item[1]])
+            if per_ft_counts.get(ft, 0) >= args.per_filetype_top:
+                continue
+            per_ft_counts[ft] = per_ft_counts.get(ft, 0) + 1
+            top.append(item)
+        print(
+            f"flagged: {len(flat):,} (deduped across {len(scope_specs)} scope(s)), "
+            f"skipping {skip}, taking top {args.per_filetype_top}/filetype "
+            f"across {len(per_ft_counts)} filetype(s) = {len(top)} rows",
+            file=sys.stderr,
+        )
+    else:
+        top = flat[: args.top_errors]
+        print(
+            f"flagged: {len(flat) + skip:,} (deduped across {len(scope_specs)} "
+            f"scope(s)), skipping {skip}, taking {len(top)}",
+            file=sys.stderr,
+        )
 
     selected_row_ids = [int(row_ids[t[1]]) for t in top]
     paths = _load_paths(args.db, selected_row_ids) if args.db else {}
@@ -360,7 +423,7 @@ def main() -> None:
     rows_out: list[dict[str, Any]] = []
     for margin, row_i, entry in top:
         rid = int(row_ids[row_i])
-        sha, path = paths.get(rid, ("", ""))
+        sha, path, parent = paths.get(rid, ("", "", ""))
         trigs = list(entry["trigs"])
         # For FPs the headline route is the one with the largest delta.
         # For FNs the same — most permissive (smallest threshold shortfall).
@@ -369,6 +432,7 @@ def main() -> None:
             "row_id": rid,
             "sha256": sha,
             "path": path,
+            "parent": parent,
             "label": "good" if is_fp else "bad",
             "filetype": str(file_types[row_i]),
             "probability": headline[1] if headline else 0.0,

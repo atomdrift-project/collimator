@@ -79,9 +79,7 @@ def _fetch_union_rows(
     not skipped) does its own test-row extraction.
     """
     where = [
-        "label IN ('bad', 'good')",
-        "cleave_result IS NOT NULL",
-        "skip = ''",
+        data.LABELED_WHERE,
     ]
     params: list[Any] = []
     marker = _placeholder(db_path)

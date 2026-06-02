@@ -135,9 +135,7 @@ def _fetch_route_rows(
         return []
     marker = "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
     where = [
-        "label IN ('bad', 'good')",
-        "cleave_result IS NOT NULL",
-        "skip = ''",
+        data.LABELED_WHERE,
     ]
     params: list[Any] = []
     if max_id > 0:

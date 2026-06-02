@@ -90,11 +90,7 @@ def _label_int(label: str) -> int:
 
 def _fetch_rows(db_path: str, pool: Pool, max_id: int) -> list[dict[str, Any]]:
     marker = _placeholder(db_path)
-    where = [
-        "label IN ('bad', 'good')",
-        "cleave_result IS NOT NULL",
-        "skip = ''",
-    ]
+    where = [data.LABELED_WHERE]
     params: list[Any] = []
     if data._is_pg(db_path):  # noqa: SLF001
         where.append(f"COALESCE(NULLIF(file_type, ''), 'unknown') = ANY({marker})")

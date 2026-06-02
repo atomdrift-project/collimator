@@ -265,9 +265,7 @@ def _fetch_rows(
 ) -> list[tuple[int, int]]:
     marker = "%s" if data._is_pg(db_path) else "?"  # noqa: SLF001
     where = [
-        "label IN ('bad', 'good')",
-        "cleave_result IS NOT NULL",
-        "skip = ''",
+        data.LABELED_WHERE,
         f"id <= {marker}",
     ]
     params: list[Any] = [max_id]

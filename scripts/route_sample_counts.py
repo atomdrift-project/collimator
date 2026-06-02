@@ -64,9 +64,7 @@ def _count_labeled(db_path: str, file_types: list[str] | None) -> dict[str, int]
     """Return {"malware": N_bad, "benign": N_good} for the route's
     pooled filetype set. None file_types means "all" (the general route)."""
     is_pg = cdata._is_pg(db_path)  # noqa: SLF001
-    where_base = (
-        "label IN ('bad', 'good') AND cleave_result IS NOT NULL AND skip = ''"
-    )
+    where_base = cdata.LABELED_WHERE
     n_mal = 0
     n_ben = 0
     with cdata._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001

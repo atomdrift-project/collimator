@@ -1,6 +1,6 @@
 # Confirm PASS — 6324791d9c8bc111 on `filetypes/vbs`
 
-Cycle `20260525T203306-confirm-6324791d9c8bc111` — 2026-05-25T20:33:06Z
+Cycle `20260602T010359-confirm-6324791d9c8bc111` — 2026-06-02T01:03:59Z
 
 PR_AUC held across 3 seeds (orig 0.9993)
 
@@ -8,10 +8,10 @@ PR_AUC held across 3 seeds (orig 0.9993)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `6324791d9c8bc111` | `ef97db65071dbdc2` | `ef97db65071dbdc2` | `ef97db65071dbdc2` |
-| PR AUC | 0.9993 | 0.9959 | 0.9947 | 0.9961 |
-| ROC AUC | 0.9989 | 0.9774 | 0.9765 | 0.9789 |
-| Recall@3FPM | — | 0.2084 | 0.1175 | 0.2106 |
+| key | `6324791d9c8bc111` | `065458b759d55656` | `065458b759d55656` | `065458b759d55656` |
+| PR AUC | 0.9993 | 0.9975 | 0.9972 | 0.9970 |
+| ROC AUC | 0.9989 | 0.9624 | 0.9591 | 0.9555 |
+| Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 
 ## Next step
