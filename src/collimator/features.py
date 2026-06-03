@@ -80,6 +80,7 @@ Feature groups:
 from __future__ import annotations
 
 import collections
+import hashlib
 import json
 import logging
 import math
@@ -136,6 +137,15 @@ TOP_K_RISK_FILES = 1
 # now ships .onnx + .txt silently ignores the .onnx and uses the .txt;
 # fully forward-compatible. Bump this when feature families are added
 # or removed (last bump: v17 added cluster:* + agg:static_*).
+#
+# Bump it ALSO when the feature-allowlist prune changes the LAYOUT — not
+# just when whole families appear/disappear. litmus places the offset-written
+# families (present:/maxcrit:/bigrams:/trigram:/unsigned_bigram:) by their
+# position in feature_names, so pruning entries out of an earlier block shifts
+# every later family. A 26-slot metrics-block prune shipped under an unchanged
+# v17 and ran litmus's unsigned-bigram block off the end of the vector. The
+# `feature_layout_hash` written into every spec records the exact layout so
+# such a change is detectable even when this number is forgotten.
 MODEL_ABI_VERSION = 17
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
@@ -1337,11 +1347,59 @@ class FeatureSpec:
     # inference should use raw features directly (no z-score transform).
     standardized: bool = False
 
+    # Families litmus writes by `base + vocab_index` rather than by name, each
+    # paired with the vocab that indexes it. They MUST stay contiguous in
+    # feature_names in vocab order (see litmus features.rs::validate_layout).
+    _OFFSET_FAMILIES: tuple[tuple[str, str], ...] = (
+        ("present:", "presence_vocab"),
+        ("maxcrit:", "presence_vocab"),
+        ("bigrams:", "bigram_vocab"),
+        ("trigram:", "trigram_vocab"),
+        ("unsigned_bigram:", "bigram_vocab"),
+    )
+
+    def _check_offset_family_layout(self) -> None:
+        """Refuse to emit a spec litmus can't consume.
+
+        litmus places the offset-written families by ``base + vocab_index``, so
+        each must occupy a contiguous run in ``feature_names`` in vocab order. A
+        family may be fully absent (pruned/disabled — litmus skips it), but a
+        *partially* pruned or reordered family would make litmus write features
+        onto the wrong slots, so fail here rather than ship an incompatible
+        bundle.
+        """
+        index_of = {name: i for i, name in enumerate(self.feature_names)}
+        for prefix, vocab_attr in self._OFFSET_FAMILIES:
+            vocab: list[str] = getattr(self, vocab_attr)
+            if not vocab:
+                continue
+            indices = [index_of.get(f"{prefix}{entry}") for entry in vocab]
+            present = [i for i in indices if i is not None]
+            if not present:
+                continue  # fully pruned/disabled — litmus skips it gracefully
+            base = indices[0]
+            contiguous = base is not None and all(
+                idx == base + offset for offset, idx in enumerate(indices)
+            )
+            if not contiguous:
+                raise ValueError(
+                    f"offset feature family {prefix!r} is partially pruned or "
+                    f"reordered in feature_names ({len(present)}/{len(vocab)} "
+                    f"present); litmus places it by base+index and cannot consume "
+                    f"this layout. Keep the family whole and in vocab order, or "
+                    f"drop its vocab entirely."
+                )
+
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
+        self._check_offset_family_layout()
+        # Records the exact emitted layout. Any prune/reorder changes it, so an
+        # incompatible bundle is detectable even if MODEL_ABI_VERSION is forgotten.
+        layout_hash = hashlib.sha256("\n".join(self.feature_names).encode()).hexdigest()
         d: dict[str, Any] = {
             "version": self.version,
             "abi_version": self.abi_version,
+            "feature_layout_hash": layout_hash,
             "presence_vocab": self.presence_vocab,
             "filetype_vocab": self.filetype_vocab,
             "element_vocab": self.element_vocab,
