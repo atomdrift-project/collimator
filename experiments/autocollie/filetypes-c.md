@@ -622,3 +622,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T161448-filetypes-c` — 2026-06-03T16:14:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9766143d6df5747f` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9901 | 0.9961 | 0.9439 | 22 | [log](out/autocollie/runs/2026-06-03T16-21-29_20260603T161448-filetypes-c_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `cfdc7e612ecb6bbd` | c_ctrl_symbol_bigrams_train_tune | ok | 0.9895 | 0.9959 | 0.9441 | 33 | [log](out/autocollie/runs/2026-06-03T16-21-51_20260603T161448-filetypes-c_c_ctrl_symbol_bigrams_train_tune.log) |
+| `615d98a5bcc5293c` | c_feat_kv_vocab_split_research | ok | 0.9883 | 0.9953 | 0.9452 | 45 | [log](out/autocollie/runs/2026-06-03T16-22-24_20260603T161448-filetypes-c_c_feat_kv_vocab_split_research.log) |
+| `bf94915eccc09c8d` | c_feat_textenc_metrics_full | ok | 0.9896 | 0.9959 | 0.9458 | 40 | [log](out/autocollie/runs/2026-06-03T16-23-09_20260603T161448-filetypes-c_c_feat_textenc_metrics_full.log) |
+| `1e4dbf67e67f31c4` | c_abl_extreme_off_clean_tail | ok | 0.9899 | 0.9960 | 0.9290 | 37 | [log](out/autocollie/runs/2026-06-03T16-23-49_20260603T161448-filetypes-c_c_abl_extreme_off_clean_tail.log) |
+| `9825cda977b83c6f` | c_transfer_low_bigram_freq | ok | 0.9894 | 0.9958 | 0.9448 | 25 | [log](out/autocollie/runs/2026-06-03T16-24-26_20260603T161448-filetypes-c_c_transfer_low_bigram_freq.log) |
+| `83a86af7170cd9f8` | c_gen_seed_search_k3 | ok | 0.9892 | 0.9958 | 0.9301 | 9 | [log](out/autocollie/runs/2026-06-03T16-24-51_20260603T161448-filetypes-c_c_gen_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_ctrl_symbol_bigrams_train_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 …` — Replicates best PR_AUC feature set while tuning num_leaves and reg_lambda to improve PR_AUC and recall@3FPM by reducing overfit on rare symbol patterns.
+- **`c_feat_kv_vocab_split_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 …` — Enables kv_vocab and kv_value_split to capture C-specific macro and config patterns, targeting PR_AUC gains from structured key-value signals.
+- **`c_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=2 EXP_SYMBOL_BIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full to model C comment/string obfuscation patterns, aiming to lift PR_AUC via structural text signals.
+- **`c_abl_extreme_off_clean_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce tail noise, targeting flat PR_AUC with improved ROC_AUC and recall@3FPM stability.
+- **`c_transfer_low_bigram_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfers xml route's low bigram_min_freq (50) to catch rarer C code patterns, targeting PR_AUC improvement from expanded n-gram coverage.
+- **`c_gen_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_BIGRAMS=1 …` — Applies seed_search_k=3 to the top symbol-bigram config to average out seed variance, targeting stable recall@3FPM gains.
+
+</details>
+

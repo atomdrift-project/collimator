@@ -1846,3 +1846,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155422-filegroups-documents` — 2026-06-03T15:54:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `304abd9b9075fcf7` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 0.9994 | 0.9964 | 26 | [log](out/autocollie/runs/2026-06-03T16-03-03_20260603T155422-filegroups-documents_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `dbd0575d4df5f556` | docs_control_train_deeper | ok | 0.9999 | 0.9992 | 0.9966 | 14 | [log](out/autocollie/runs/2026-06-03T16-03-28_20260603T155422-filegroups-documents_docs_control_train_deeper.log) |
+| `8cfae30b7f07aa4e` | docs_text_metrics_encoding | ok | 0.9999 | 0.9992 | 0.9959 | 22 | [log](out/autocollie/runs/2026-06-03T16-03-42_20260603T155422-filegroups-documents_docs_text_metrics_encoding.log) |
+| `6fccd58c37a10b2c` | docs_kv_vocab_expand | ok | 0.9999 | 0.9992 | 0.9969 | 23 | [log](out/autocollie/runs/2026-06-03T16-04-05_20260603T155422-filegroups-documents_docs_kv_vocab_expand.log) |
+| `c03c5137166d5fb1` | docs_lowfreq_bigrams_obj_trigrams | ok | 0.9999 | 0.9992 | 0.9956 | 24 | [log](out/autocollie/runs/2026-06-03T16-04-28_20260603T155422-filegroups-documents_docs_lowfreq_bigrams_obj_trigrams.log) |
+| `4d991e274782bcc7` | docs_hardneg_tail_recall | ok | 0.9999 | 0.9993 | 0.9964 | 4 | [log](out/autocollie/runs/2026-06-03T16-04-52_20260603T155422-filegroups-documents_docs_hardneg_tail_recall.log) |
+| `716618b60cee9a63` | docs_text_metrics_seed_search | ok | 0.9999 | 0.9991 | 0.9947 | 21 | [log](out/autocollie/runs/2026-06-03T16-04-56_20260603T155422-filegroups-documents_docs_text_metrics_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_train_deeper`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with increased num_leaves and estimators to improve PR AUC and recall@3 FP/M by allowing more complex decision boundaries.
+- **`docs_text_metrics_encoding`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document obfuscation and encoding patterns, targeting PR AUC and recall@3 FP/M gains.
+- **`docs_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=280 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — Add kv_vocab with expanded max to extract structured metadata signals from documents, aiming to boost PR AUC.
+- **`docs_lowfreq_bigrams_obj_trigrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Lower bigram_min_freq and enable objective_trigrams to capture rare malicious sequences, targeting recall@3 FP/M improvement.
+- **`docs_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard negative mining to focus on difficult benign examples, reducing false positives at the tail to improve recall@3 FP/M.
+- **`docs_text_metrics_seed_search`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 on the text_metrics config to verify signal stability and reduce variance, aiming for consistent PR AUC.
+
+</details>
+

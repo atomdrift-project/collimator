@@ -514,3 +514,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155859-filetypes-csharp` — 2026-06-03T15:58:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5ceb59240c4e4aa4` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9874 | 0.9932 | 0.9388 | 12 | [log](out/autocollie/runs/2026-06-03T16-05-33_20260603T155859-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `441457c5719b33f4` | csharp_control_best_env_lr003 | ok | 0.9886 | 0.9940 | 0.8957 | 15 | [log](out/autocollie/runs/2026-06-03T16-05-44_20260603T155859-filetypes-csharp_csharp_control_best_env_lr003.log) |
+| `a6fd3009c858d0e5` | csharp_train_dart_extra_trees | ok | 0.9777 | 0.9837 | 0.7935 | 5 | [log](out/autocollie/runs/2026-06-03T16-06-00_20260603T155859-filetypes-csharp_csharp_train_dart_extra_trees.log) |
+| `45f408baa3f87676` | csharp_train_hardneg_02_12 | ok | 0.9929 | 0.9966 | 0.9308 | 3 | [log](out/autocollie/runs/2026-06-03T16-06-05_20260603T155859-filetypes-csharp_csharp_train_hardneg_02_12.log) |
+| `8a3b69e536f99893` | csharp_feat_kv_vocab_split | ok | 0.9874 | 0.9933 | 0.9057 | 9 | [log](out/autocollie/runs/2026-06-03T16-06-08_20260603T155859-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+| `c8aa8f24acc9733c` | csharp_feat_symbol_bigrams_trigrams | ok | 0.9884 | 0.9939 | 0.8957 | 10 | [log](out/autocollie/runs/2026-06-03T16-06-17_20260603T155859-filetypes-csharp_csharp_feat_symbol_bigrams_trigrams.log) |
+| `3b650bb92e49f35e` | csharp_transfer_textmetrics_seed3 | ok | 0.9893 | 0.9945 | 0.9419 | 13 | [log](out/autocollie/runs/2026-06-03T16-06-27_20260603T155859-filetypes-csharp_csharp_transfer_textmetrics_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_best_env_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by refining learning rate and tree depth on the proven feature surface to improve ranking without altering the matrix cache.
+- **`csharp_train_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Targets recall@3FPM by adding dropout-style regularization and random splits to reduce overfitting on the small holdout, improving tail generalization.
+- **`csharp_train_hardneg_02_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3FPM by upweighting hard negatives and downweighting positives to sharpen the decision boundary at the strict-FP operating point.
+- **`csharp_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by enabling KV vocabulary and value splitting to capture structured C# metadata and library references that improve malware ranking.
+- **`csharp_feat_symbol_bigrams_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by adding symbol bigrams and expanded symbol vocab to capture API call sequences common in C# malware, improving rank signal.
+- **`csharp_transfer_textmetrics_seed3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3FPM by porting document-style text metrics to C# source/assembly text and using seed search to stabilize tail recall gains across RNG variance.
+
+</details>
+

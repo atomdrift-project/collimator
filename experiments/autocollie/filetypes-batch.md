@@ -566,3 +566,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T160525-filetypes-batch` — 2026-06-03T16:05:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8a15f58d8c94f99b` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9998 | 0.9971 | 0.9893 | 26 | [log](out/autocollie/runs/2026-06-03T16-13-52_20260603T160525-filetypes-batch_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `10cc10d302742ed5` | batch_control_leaves128_lr003 | ok | 0.9998 | 0.9969 | 0.9871 | 19 | [log](out/autocollie/runs/2026-06-03T16-14-18_20260603T160525-filetypes-batch_batch_control_leaves128_lr003.log) |
+| `ec8d6fc93e024550` | batch_hardneg_01_12 | ok | 0.9998 | 0.9978 | 0.9922 | 5 | [log](out/autocollie/runs/2026-06-03T16-14-37_20260603T160525-filetypes-batch_batch_hardneg_01_12.log) |
+| `7332c455792bb986` | batch_dart_extratrees_reg | ok | 0.9994 | 0.9920 | 0.9832 | 6 | [log](out/autocollie/runs/2026-06-03T16-14-42_20260603T160525-filetypes-batch_batch_dart_extratrees_reg.log) |
+| `2e25a1eb0960b6c3` | batch_kv_vocab_split_15k | ok | 0.9998 | 0.9973 | 0.9893 | 24 | [log](out/autocollie/runs/2026-06-03T16-14-48_20260603T160525-filetypes-batch_batch_kv_vocab_split_15k.log) |
+| `d6680a7626c237dd` | batch_rare_bigrams_tiered_trigrams | ok | 0.9998 | 0.9977 | 0.9943 | 16 | [log](out/autocollie/runs/2026-06-03T16-15-12_20260603T160525-filetypes-batch_batch_rare_bigrams_tiered_trigrams.log) |
+| `beb334bdb780da22` | batch_textenc_metrics_seed3 | ok | 0.9998 | 0.9970 | 0.9950 | 18 | [log](out/autocollie/runs/2026-06-03T16-15-27_20260603T160525-filetypes-batch_batch_textenc_metrics_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Establishes a stable baseline using the best recent feature_env to verify matrix cache hits and isolate training-only variance for PR_AUC.
+- **`batch_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by upweighting hard negatives to sharpen the decision boundary near the deployed operating point.
+- **`batch_dart_extratrees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Targets ROC_AUC and PR_AUC stability by applying DART dropout and extra trees regularization to reduce overfitting on rare batch patterns.
+- **`batch_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Seeks PR_AUC gains by enabling kv_vocab and kv_value_split to capture structured metadata and separator-delimited tokens indicative of malicious batch scripts.
+- **`batch_rare_bigrams_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost recall@3 FP/M by lowering bigram_min_freq to 50 and enabling tiered_crit_trigrams to capture rarer but highly specific malicious co-occurrences.
+- **`batch_textenc_metrics_seed3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC stability by combining text_encoding and text_metrics_full with seed averaging to reduce variance and capture script-level obfuscation signals.
+
+</details>
+

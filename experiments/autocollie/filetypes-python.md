@@ -652,3 +652,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filetypes-python` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b88e307652d502a8` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9977 | 0.9984 | 0.9756 | 184 | [log](out/autocollie/runs/2026-06-03T15-49-53_20260603T154310-filetypes-python_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4d957b5d34a8fd99` | py_control_leaves128_reg15 | ok | 0.9975 | 0.9983 | 0.9728 | 46 | [log](out/autocollie/runs/2026-06-03T15-52-58_20260603T154310-filetypes-python_py_control_leaves128_reg15.log) |
+| `64519363e5387f7e` | py_feat_kv_vocab_15k | ok | 0.9976 | 0.9983 | 0.9743 | 92 | [log](out/autocollie/runs/2026-06-03T15-53-43_20260603T154310-filetypes-python_py_feat_kv_vocab_15k.log) |
+| `e9082f1a30b1c5ba` | py_feat_text_metrics_full | ok | 0.9976 | 0.9983 | 0.9692 | 72 | [log](out/autocollie/runs/2026-06-03T15-55-16_20260603T154310-filetypes-python_py_feat_text_metrics_full.log) |
+| `a3cf002bdb98e081` | py_feat_lowfreq_bigrams | ok | 0.9977 | 0.9984 | 0.9739 | 51 | [log](out/autocollie/runs/2026-06-03T15-56-28_20260603T154310-filetypes-python_py_feat_lowfreq_bigrams.log) |
+| `7589678f1c43fbb1` | py_train_hardneg_01_12 | ok | 0.9979 | 0.9986 | 0.9789 | 61 | [log](out/autocollie/runs/2026-06-03T15-57-18_20260603T154310-filetypes-python_py_train_hardneg_01_12.log) |
+| `868c3cacdc6c5df8` | py_train_dart_extratrees | ok | 0.9953 | 0.9967 | 0.9327 | 16 | [log](out/autocollie/runs/2026-06-03T15-58-19_20260603T154310-filetypes-python_py_train_dart_extratrees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`py_control_leaves128_reg15`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env with training tweaks (num_leaves=128, reg_lambda=1.5) to establish a matrix-cache-hitting baseline for PR_AUC.
+- **`py_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 15000 to capture structured key-value signals in Python scripts, targeting PR_AUC improvement.
+- **`py_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to extract obfuscation and formatting signals from Python source, targeting recall@3FPM.
+- **`py_feat_lowfreq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 250 and raise bigram_max to 8000 to capture rarer but informative code patterns, targeting PR_AUC.
+- **`py_train_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction=0.1 and weight=12 to sharpen the decision boundary at low FPR, targeting recall@3FPM.
+- **`py_train_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_ALPHA=0.5 EXP_TRAIN_SAMPLES=30000` — Switch to dart boosting with extra_trees=true and reg_alpha=0.5 to reduce overfitting and improve generalization, targeting ROC_AUC and PR_AUC stability.
+
+</details>
+

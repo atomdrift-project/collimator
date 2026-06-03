@@ -554,3 +554,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filetypes-kotlin` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d46010879de8d05a` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9961 | 0.8652 | 0.9928 | 35 | [log](out/autocollie/runs/2026-06-03T15-49-10_20260603T154310-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `85e8eb994d43c5d3` | kotlin_ctrl_scalepos075_reg2 | ok | 0.9858 | 0.5000 | 0.9928 | 69 | [log](out/autocollie/runs/2026-06-03T15-49-45_20260603T154310-filetypes-kotlin_kotlin_ctrl_scalepos075_reg2.log) |
+| `24aebf4f5b967451` | kotlin_train_goss_leaves128 | ok | 0.9858 | 0.5000 | 0.9928 | 29 | [log](out/autocollie/runs/2026-06-03T15-50-54_20260603T154310-filetypes-kotlin_kotlin_train_goss_leaves128.log) |
+| `7e63b2a753fee5a9` | kotlin_feat_kv_vocab_20k_split | ok | 0.9858 | 0.5000 | 0.9928 | 112 | [log](out/autocollie/runs/2026-06-03T15-51-23_20260603T154310-filetypes-kotlin_kotlin_feat_kv_vocab_20k_split.log) |
+| `593f2bc292147745` | kotlin_feat_text_metrics_full_enc | ok | 0.9858 | 0.5000 | 0.9928 | 74 | [log](out/autocollie/runs/2026-06-03T15-53-15_20260603T154310-filetypes-kotlin_kotlin_feat_text_metrics_full_enc.log) |
+| `89154173fca72635` | kotlin_feat_lowbigram_tieredtri | ok | 0.9858 | 0.5000 | 0.9928 | 68 | [log](out/autocollie/runs/2026-06-03T15-54-29_20260603T154310-filetypes-kotlin_kotlin_feat_lowbigram_tieredtri.log) |
+| `0580f85095d85ad2` | kotlin_seed_search_3_avg | ok | 0.9858 | 0.5000 | 0.9928 | 17 | [log](out/autocollie/runs/2026-06-03T15-55-37_20260603T154310-filetypes-kotlin_kotlin_seed_search_3_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_scalepos075_reg2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with tighter class weighting and L2 regularization to improve PR_AUC and recall@3 FP/M by reducing benign over-scoring.
+- **`kotlin_train_goss_leaves128`** `EXP_BOOSTING_TYPE=goss EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Test Goss boosting with deeper trees to capture complex malware patterns, aiming to lift PR_AUC while maintaining ROC_AUC stability.
+- **`kotlin_feat_kv_vocab_20k_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and enable value splitting to capture finer-grained configuration signals, targeting PR_AUC gains from rare but malicious KV patterns.
+- **`kotlin_feat_text_metrics_full_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate full text metrics and encoding features to capture obfuscation and structural anomalies in Kotlin source, aiming to boost recall@3 FP/M.
+- **`kotlin_feat_lowbigram_tieredtri`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add tiered critical trigrams to capture rarer attack co-occurrences, targeting PR_AUC improvement via richer n-gram signal.
+- **`kotlin_seed_search_3_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Average ensemble across 3 seeds to stabilize tail recall and PR_AUC, mitigating seed-driven variance on the small benign holdout.
+
+</details>
+

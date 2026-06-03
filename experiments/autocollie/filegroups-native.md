@@ -454,3 +454,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155422-filegroups-native` — 2026-06-03T15:54:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ae224b9ebed5bcbe` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9995 | 0.9995 | 0.9911 | 306 | [log](out/autocollie/runs/2026-06-03T16-04-11_20260603T155422-filegroups-native_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2960ca60e5f58e03` | native_control_train_tune | ok | 0.9994 | 0.9994 | 0.9909 | 200 | [log](out/autocollie/runs/2026-06-03T16-09-17_20260603T155422-filegroups-native_native_control_train_tune.log) |
+| `d91fe07cb4123a84` | native_kv_vocab_15k_split | ok | 0.9995 | 0.9995 | 0.9896 | 203 | [log](out/autocollie/runs/2026-06-03T16-12-37_20260603T155422-filegroups-native_native_kv_vocab_15k_split.log) |
+| `8f0739a03f1b2626` | native_sym_mbc_vocab_10k | ok | 0.9994 | 0.9994 | 0.9903 | 200 | [log](out/autocollie/runs/2026-06-03T16-16-00_20260603T155422-filegroups-native_native_sym_mbc_vocab_10k.log) |
+| `25a09d956af03c4e` | native_transfer_lowfreq_bigrams | ok | 0.9993 | 0.9993 | 0.9892 | 132 | [log](out/autocollie/runs/2026-06-03T16-19-21_20260603T155422-filegroups-native_native_transfer_lowfreq_bigrams.log) |
+| `452ec9c69f2f4a37` | native_hn_01_10_tail | ok | 0.9995 | 0.9995 | 0.9915 | 50 | [log](out/autocollie/runs/2026-06-03T16-21-32_20260603T155422-filegroups-native_native_hn_01_10_tail.log) |
+| `df5e5ae377c4f1e2` | native_dart_reg3 | ok | 0.9982 | 0.9984 | 0.9738 | 52 | [log](out/autocollie/runs/2026-06-03T16-22-22_20260603T155422-filegroups-native_native_dart_reg3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control spec replicating best recent feature surface to isolate training knob effects on PR_AUC and recall@3FPM.
+- **`native_kv_vocab_15k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab and kv_value_split to capture structured metadata signals, aiming to improve PR_AUC and recall@3FPM.
+- **`native_sym_mbc_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol and MBC ID vocabs to capture binary-specific behavioral patterns, targeting PR_AUC gains.
+- **`native_transfer_lowfreq_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lowers bigram_min_freq to 50 and increases bigram_max to 8000 to capture rarer patterns, aiming to boost recall@3FPM.
+- **`native_hn_01_10_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Applies hard negative mining with weight 10 to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`native_dart_reg3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switches to DART boosting with higher L2 regularization to reduce overfitting and improve generalization for PR_AUC.
+
+</details>
+

@@ -490,3 +490,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T161448-filetypes-gz` — 2026-06-03T16:14:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d07a14e4b56b96bc` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9997 | 0.9992 | 0.9931 | 41 | [log](out/autocollie/runs/2026-06-03T16-23-03_20260603T161448-filetypes-gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9db5247dc93d197e` | gz_control_spw05_hardneg_v3 | ok | 0.9996 | 0.9989 | 0.9917 | 33 | [log](out/autocollie/runs/2026-06-03T16-23-44_20260603T161448-filetypes-gz_gz_control_spw05_hardneg_v3.log) |
+| `eb2b1fe99b20741c` | gz_kv_vocab_split_textenc | ok | 0.9996 | 0.9990 | 0.9931 | 25 | [log](out/autocollie/runs/2026-06-03T16-24-18_20260603T161448-filetypes-gz_gz_kv_vocab_split_textenc.log) |
+| `897c4fd6d5585775` | gz_lowfreq_bigrams_tiered_trigrams_v2 | ok | 0.9996 | 0.9988 | 0.9917 | 24 | [log](out/autocollie/runs/2026-06-03T16-24-42_20260603T161448-filetypes-gz_gz_lowfreq_bigrams_tiered_trigrams_v2.log) |
+| `09862efeeb9af793` | gz_abl_blindfold_off | ok | 0.9996 | 0.9989 | 0.9931 | 20 | [log](out/autocollie/runs/2026-06-03T16-25-07_20260603T161448-filetypes-gz_gz_abl_blindfold_off.log) |
+| `0def128759195ebe` | gz_transfer_tar_hardneg_boost | ok | 0.9988 | 0.9964 | 0.9717 | 3 | [log](out/autocollie/runs/2026-06-03T16-25-27_20260603T161448-filetypes-gz_gz_transfer_tar_hardneg_boost.log) |
+| `715aacc7795928db` | gz_seedsearch_ensemble_v2 | ok | 0.9996 | 0.9989 | 0.9945 | 30 | [log](out/autocollie/runs/2026-06-03T16-25-30_20260603T161448-filetypes-gz_gz_seedsearch_ensemble_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_spw05_hardneg_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by refining hard-negative weighting and tree complexity on the proven feature surface to better separate tail malware from benign archives.
+- **`gz_kv_vocab_split_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3FPM by enabling KV vocab splitting and text encoding/metrics to extract fine-grained structural and payload signals from compressed archives.
+- **`gz_lowfreq_bigrams_tiered_trigrams_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3FPM by lowering bigram frequency floors and adding tiered critical trigrams to capture rare but high-signal malicious patterns in gz payloads.
+- **`gz_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by removing blindfold dropout features to reduce training variance and improve rank stability on the balanced gz corpus.
+- **`gz_transfer_tar_hardneg_boost`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Targets recall@3FPM by transferring tar route's aggressive hard-negative mining and dart/extra_trees regularization to improve tail separation for gz archives.
+- **`gz_seedsearch_ensemble_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by averaging predictions across 3 seeds to reduce variance and stabilize the operating point on the current daily corpus.
+
+</details>
+

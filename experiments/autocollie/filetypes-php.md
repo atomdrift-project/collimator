@@ -474,3 +474,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154312-filetypes-php` — 2026-06-03T15:43:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d1e556d86f7fdd95` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9958 | 0.9976 | 0.9808 | 37 | [log](out/autocollie/runs/2026-06-03T15-49-36_20260603T154312-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4cfc7b3f7b7a80d4` | php_control_et_lr004_leaves128 | ok | 0.9954 | 0.9975 | 0.9760 | 59 | [log](out/autocollie/runs/2026-06-03T15-50-12_20260603T154312-filetypes-php_php_control_et_lr004_leaves128.log) |
+| `ec71d4bb9299899b` | php_feat_kv_vocab_split | ok | 0.9949 | 0.9965 | 0.9749 | 82 | [log](out/autocollie/runs/2026-06-03T15-51-11_20260603T154312-filetypes-php_php_feat_kv_vocab_split.log) |
+| `b24361a4bfb5ff7a` | php_feat_textenc_metrics_full | ok | 0.9951 | 0.9969 | 0.9770 | 55 | [log](out/autocollie/runs/2026-06-03T15-52-33_20260603T154312-filetypes-php_php_feat_textenc_metrics_full.log) |
+| `afdc1d2060402270` | php_feat_lowfreq_bigrams_trigrams | ok | 0.9954 | 0.9972 | 0.9780 | 55 | [log](out/autocollie/runs/2026-06-03T15-53-29_20260603T154312-filetypes-php_php_feat_lowfreq_bigrams_trigrams.log) |
+| `e4a7f9e547382281` | php_transfer_xml_tiered_trigrams | ok | 0.9951 | 0.9969 | 0.9770 | 39 | [log](out/autocollie/runs/2026-06-03T15-54-23_20260603T154312-filetypes-php_php_transfer_xml_tiered_trigrams.log) |
+| `047bd8e1437a146f` | php_retry_best_pr_auc_seedsearch | ok | 0.9953 | 0.9971 | 0.9831 | 26 | [log](out/autocollie/runs/2026-06-03T15-55-02_20260603T154312-filetypes-php_php_retry_best_pr_auc_seedsearch.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_et_lr004_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec that replicates the baseline feature set while tuning extra_trees, learning_rate, and num_leaves to improve PR_AUC and recall@3FPM without degrading ROC_AUC.
+- **`php_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture PHP config and superglobal patterns, aiming to boost PR_AUC by isolating malicious key-value pairs from benign noise.
+- **`php_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full to detect obfuscation and encoding artifacts common in malicious PHP scripts, targeting higher recall@3FPM.
+- **`php_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 25 and enables objective_trigrams to capture rarer but highly indicative code sequences, aiming to improve PR_AUC.
+- **`php_transfer_xml_tiered_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Ports the XML route's low-freq bigram and tiered trigram configuration to PHP to capture structural script patterns, targeting PR_AUC gains.
+- **`php_retry_best_pr_auc_seedsearch`** `EXP_ATTACK_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Retries the top PR_AUC ablation config with seed_search_k=3 and save_all_seeds to verify signal stability and improve recall@3FPM via ensemble averaging.
+
+</details>
+

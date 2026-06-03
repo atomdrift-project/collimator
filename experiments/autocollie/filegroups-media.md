@@ -478,3 +478,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155500-filegroups-media` — 2026-06-03T15:55:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e8bc5addd80d51f7` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9958 | 0.9962 | 0.9507 | 18 | [log](out/autocollie/runs/2026-06-03T16-03-03_20260603T155500-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `cf53ab709b35b888` | media_control_dart_leaves128 | ok | 0.9802 | 0.9813 | 0.9057 | 8 | [log](out/autocollie/runs/2026-06-03T16-03-21_20260603T155500-filegroups-media_media_control_dart_leaves128.log) |
+| `e10ca2d52939ae16` | media_exploit_hardneg_dart | ok | 0.9927 | 0.9930 | 0.9488 | 4 | [log](out/autocollie/runs/2026-06-03T16-03-29_20260603T155500-filegroups-media_media_exploit_hardneg_dart.log) |
+| `623d9a679135cf7f` | media_kv_vocab_split_research | ok | 0.9933 | 0.9936 | 0.9412 | 9 | [log](out/autocollie/runs/2026-06-03T16-03-33_20260603T155500-filegroups-media_media_kv_vocab_split_research.log) |
+| `30055767da9e0e54` | media_text_metrics_encoding | ok | 0.9932 | 0.9930 | 0.9369 | 18 | [log](out/autocollie/runs/2026-06-03T16-03-42_20260603T155500-filegroups-media_media_text_metrics_encoding.log) |
+| `66a4970a6dc69b0d` | media_transfer_xml_lowfreq_bigrams | ok | 0.9935 | 0.9937 | 0.9455 | 11 | [log](out/autocollie/runs/2026-06-03T16-04-00_20260603T155500-filegroups-media_media_transfer_xml_lowfreq_bigrams.log) |
+| `5b7f01ecf1f1f7f9` | media_seed_search_lowfreq_bigrams | ok | 0.9935 | 0.9937 | 0.9455 | 6 | [log](out/autocollie/runs/2026-06-03T16-04-11_20260603T155500-filegroups-media_media_seed_search_lowfreq_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_dart_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control baseline replicating best recent feature env with dart boosting and higher leaves to stabilize PR_AUC and establish matrix cache hit.
+- **`media_exploit_hardneg_dart`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Apply hard-negative mining with dart boosting to improve recall@3 FP/M by upweighting difficult benigns while preserving PR_AUC guardrails.
+- **`media_kv_vocab_split_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to extract structured metadata signals from media files, targeting PR_AUC improvement via richer feature surface.
+- **`media_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_metrics_full and text_encoding to capture obfuscation and encoding anomalies in media containers, aiming to boost recall@3 FP/M.
+- **`media_transfer_xml_lowfreq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Port low-frequency bigram configuration from xml route to capture rare media-specific patterns, targeting PR_AUC gain without overfitting.
+- **`media_seed_search_lowfreq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the low-freq bigram transfer config to reduce variance and stabilize PR_AUC gains across different RNG seeds.
+
+</details>
+

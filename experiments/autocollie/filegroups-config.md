@@ -524,3 +524,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filegroups-config` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8a49ffc7da0b21e1` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9994 | 0.9991 | 0.9941 | 56 | [log](out/autocollie/runs/2026-06-03T15-52-04_20260603T154310-filegroups-config_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d3dcfdbefa6fb59e` | config_ctrl_scalepos_075 | ok | 0.9993 | 0.9991 | 0.9937 | 43 | [log](out/autocollie/runs/2026-06-03T15-53-01_20260603T154310-filegroups-config_config_ctrl_scalepos_075.log) |
+| `8afe98280c1ffb6b` | config_feat_kv_vocab_split | ok | 0.9994 | 0.9991 | 0.9948 | 43 | [log](out/autocollie/runs/2026-06-03T15-53-43_20260603T154310-filegroups-config_config_feat_kv_vocab_split.log) |
+| `349a600cbd4a5bb6` | config_feat_text_metrics_enc | ok | 0.9995 | 0.9993 | 0.9948 | 32 | [log](out/autocollie/runs/2026-06-03T15-54-26_20260603T154310-filegroups-config_config_feat_text_metrics_enc.log) |
+| `26a93175027d89bb` | config_xfer_xml_tiered_tri | ok | 0.9994 | 0.9992 | 0.9943 | 39 | [log](out/autocollie/runs/2026-06-03T15-54-58_20260603T154310-filegroups-config_config_xfer_xml_tiered_tri.log) |
+| `8d46b1f4d6433745` | config_abl_blindfold_off | ok | 0.9994 | 0.9992 | 0.9945 | 37 | [log](out/autocollie/runs/2026-06-03T15-55-38_20260603T154310-filegroups-config_config_abl_blindfold_off.log) |
+| `276800ca7f12c3d5` | config_gen_seedsearch_k3 | ok | 0.9994 | 0.9992 | 0.9946 | 14 | [log](out/autocollie/runs/2026-06-03T15-56-15_20260603T154310-filegroups-config_config_gen_seedsearch_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_scalepos_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by down-weighting positives (scale_pos_weight_mult=0.75) to tighten the score distribution at the strict-FP tail, while keeping PR AUC flat.
+- **`config_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost PR AUC by enabling kv_vocab and kv_value_split to capture fine-grained key-value token signals in config files that are currently aggregated, improving rank quality for malicious configs.
+- **`config_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR AUC by adding text_metrics_full and text_encoding features to capture structural obfuscation and encoding patterns highly discriminative for malicious config payloads.
+- **`config_xfer_xml_tiered_tri`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfers XML route's successful low-frequency bigram + tiered trigram combo to configs, aiming to boost PR AUC by capturing rare but malicious path co-occurrences.
+- **`config_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to maintain or slightly improve PR AUC by removing blindfold dropout noise, testing if deterministic features yield more stable ranking at the tail without losing signal.
+- **`config_gen_seedsearch_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to verify PR AUC stability by running seed_search_k=3 on the best recent feature set, distinguishing real signal from seed-driven variance at the strict-FP tail.
+
+</details>
+

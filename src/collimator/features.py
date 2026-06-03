@@ -5625,6 +5625,68 @@ def build_vocab_from_db(
     return spec
 
 
+def _assemble_partitioned_matrices(
+    batch_iter: Iterable[tuple[
+        list[int], list[int], list[float], list[int],
+        list[int], list[int], list[float], list[int],
+    ]],
+    total_features: int,
+) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
+    """Assemble (X_train, y_train, X_test, y_test) from a stream of worker batches.
+
+    Each batch is the 8-tuple emitted by ``_extract_partitioned_batch_worker``:
+    ``(train_rows, train_cols, train_vals, train_labels, test_rows, ...)`` where
+    the ``rows`` are *global* row indices (offset by the running partition size).
+
+    Rather than accumulating raw COO triplets and a final ``np.concatenate``
+    (which holds the chunk lists, the concatenated copy, and the built CSR all at
+    once — ~32 bytes/nnz), we convert each small batch to a CSR block and
+    ``vstack`` at the end. CSR drops the per-nnz row array the COO path carried,
+    so peak construction memory is ~16 bytes/nnz — roughly half. ``vstack`` also
+    lets scipy size the result's index dtype, promoting to int64 once nnz crosses
+    2^31 (general is already at ~1.5B of that 2.15B ceiling).
+
+    Relies on ``batch_iter`` arriving in enumeration order (``_bounded_iter`` is
+    ordered) so the running offsets match each batch's global row base.
+    """
+    empty = sp.csr_matrix((0, total_features), dtype=np.float32)
+
+    def _block(rows: list[int], cols: list[int], vals: list[float], base: int, n_rows: int) -> sp.csr_matrix:
+        # Rebase the worker's global row indices to this block (base..base+n_rows).
+        local = np.asarray(rows, dtype=np.int64) - base if rows else np.empty(0, dtype=np.int64)
+        return sp.csr_matrix(
+            (
+                np.asarray(vals, dtype=np.float32),
+                (local, np.asarray(cols, dtype=np.int64)),
+            ),
+            shape=(n_rows, total_features),
+        )
+
+    train_blocks: list[sp.csr_matrix] = []
+    test_blocks: list[sp.csr_matrix] = []
+    train_labels: list[np.ndarray] = []
+    test_labels: list[np.ndarray] = []
+    train_off = 0
+    test_off = 0
+    for (tr, tc, tv, tl, ter, tec, tev, tel) in batch_iter:
+        n_tr = len(tl)
+        n_te = len(tel)
+        if n_tr:
+            train_blocks.append(_block(tr, tc, tv, train_off, n_tr))
+            train_labels.append(np.asarray(tl, dtype=np.float32))
+            train_off += n_tr
+        if n_te:
+            test_blocks.append(_block(ter, tec, tev, test_off, n_te))
+            test_labels.append(np.asarray(tel, dtype=np.float32))
+            test_off += n_te
+
+    X_train = sp.vstack(train_blocks, format="csr") if train_blocks else empty.copy()
+    X_test = sp.vstack(test_blocks, format="csr") if test_blocks else empty.copy()
+    y_train = np.concatenate(train_labels) if train_labels else np.array([], dtype=np.float32)
+    y_test = np.concatenate(test_labels) if test_labels else np.array([], dtype=np.float32)
+    return X_train, y_train, X_test, y_test
+
+
 def extract_partitioned_from_db(
     db_path: Path | str,
     train_ids_labels: list[tuple[int, int]],
@@ -5644,31 +5706,6 @@ def extract_partitioned_from_db(
     # Sort to ensure predictable row assignment if needed (not strictly required for sparse).
     mixed_ids.sort(key=lambda x: x[0])
 
-    # Accumulate COO components as compact numpy arrays rather than Python
-    # lists to avoid ~7x per-element overhead (28-byte Python int vs 4-byte
-    # int32). At full dataset scale (~1B non-zeros), this saves ~25 GB.
-    train_row_chunks: list[np.ndarray] = []
-    train_col_chunks: list[np.ndarray] = []
-    train_val_chunks: list[np.ndarray] = []
-    train_label_chunks: list[np.ndarray] = []
-    test_row_chunks: list[np.ndarray] = []
-    test_col_chunks: list[np.ndarray] = []
-    test_val_chunks: list[np.ndarray] = []
-    test_label_chunks: list[np.ndarray] = []
-
-    def _consume(batch_iter):
-        for (tr, tc, tv, tl, ter, tec, tev, tel) in batch_iter:
-            if tr:
-                train_row_chunks.append(np.array(tr, dtype=np.int32))
-                train_col_chunks.append(np.array(tc, dtype=np.int32))
-                train_val_chunks.append(np.array(tv, dtype=np.float32))
-                train_label_chunks.append(np.array(tl, dtype=np.float32))
-            if ter:
-                test_row_chunks.append(np.array(ter, dtype=np.int32))
-                test_col_chunks.append(np.array(tec, dtype=np.int32))
-                test_val_chunks.append(np.array(tev, dtype=np.float32))
-                test_label_chunks.append(np.array(tel, dtype=np.float32))
-
     batch_args = (
         (train_offset, test_offset, db_path, batch, spec)
         for train_offset, test_offset, batch in _enumerate_partitioned_batches(
@@ -5679,28 +5716,12 @@ def extract_partitioned_from_db(
 
     if nw > 1:
         with ProcessPoolExecutor(max_workers=nw, mp_context=mp.get_context("spawn")) as pool:
-            _consume(_bounded_iter(pool, _extract_partitioned_db_batch_worker, batch_args, max_inflight=2 * nw))
-    else:
-        _consume(map(_extract_partitioned_db_batch_worker, batch_args))
-
-    # Build final matrices from concatenated numpy chunks.
-    def _concat(chunks: list[np.ndarray], dtype) -> np.ndarray:
-        return np.concatenate(chunks).astype(dtype) if chunks else np.array([], dtype=dtype)
-
-    n_train = int(sum(c.shape[0] for c in train_label_chunks)) if train_label_chunks else 0
-    n_test = int(sum(c.shape[0] for c in test_label_chunks)) if test_label_chunks else 0
-    X_train = sp.csr_matrix(
-        (_concat(train_val_chunks, np.float32), (_concat(train_row_chunks, np.int32), _concat(train_col_chunks, np.int32))),
-        shape=(n_train, spec.total_features),
+            results = _bounded_iter(pool, _extract_partitioned_db_batch_worker, batch_args, max_inflight=2 * nw)
+            return _assemble_partitioned_matrices(results, spec.total_features)
+    return _assemble_partitioned_matrices(
+        map(_extract_partitioned_db_batch_worker, batch_args),
+        spec.total_features,
     )
-    y_train = _concat(train_label_chunks, np.float32)
-    X_test = sp.csr_matrix(
-        (_concat(test_val_chunks, np.float32), (_concat(test_row_chunks, np.int32), _concat(test_col_chunks, np.int32))),
-        shape=(n_test, spec.total_features),
-    )
-    y_test = _concat(test_label_chunks, np.float32)
-
-    return X_train, y_train, X_test, y_test
 
 
 def standardize(X: np.ndarray | sp.spmatrix, spec: FeatureSpec) -> np.ndarray:

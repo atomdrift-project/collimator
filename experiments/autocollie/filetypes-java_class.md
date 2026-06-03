@@ -576,3 +576,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filetypes-java_class` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `680348d005322e1a` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9962 | 0.9994 | 0.9591 | 34 | [log](out/autocollie/runs/2026-06-03T15-50-36_20260603T154310-filetypes-java_class_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `699513c4399c73bc` | java_class_control_train_tune | ok | 0.9960 | 0.9994 | 0.9707 | 28 | [log](out/autocollie/runs/2026-06-03T15-51-11_20260603T154310-filetypes-java_class_java_class_control_train_tune.log) |
+| `8fd3f631d3de8c8d` | java_class_kv_symbol_vocab_expansion | ok | 0.9954 | 0.9992 | 0.9648 | 21 | [log](out/autocollie/runs/2026-06-03T15-51-38_20260603T154310-filetypes-java_class_java_class_kv_symbol_vocab_expansion.log) |
+| `581b030ce42960a8` | java_class_low_freq_bigrams_textenc | ok | 0.9970 | 0.9995 | 0.9624 | 23 | [log](out/autocollie/runs/2026-06-03T15-52-00_20260603T154310-filetypes-java_class_java_class_low_freq_bigrams_textenc.log) |
+| `60d587ca67982124` | java_class_ablate_blindfold_airgap | ok | 0.9963 | 0.9994 | 0.9620 | 21 | [log](out/autocollie/runs/2026-06-03T15-52-22_20260603T154310-filetypes-java_class_java_class_ablate_blindfold_airgap.log) |
+| `71f021b683b03e88` | java_class_transfer_hardneg_tune | ok | 0.9960 | 0.9994 | 0.9648 | 13 | [log](out/autocollie/runs/2026-06-03T15-52-44_20260603T154310-filetypes-java_class_java_class_transfer_hardneg_tune.log) |
+| `52209ed3c7b1bc5f` | java_class_seed_search_generalization | ok | 0.9965 | 0.9994 | 0.9648 | 17 | [log](out/autocollie/runs/2026-06-03T15-52-56_20260603T154310-filetypes-java_class_java_class_seed_search_generalization.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature_env to hit matrix cache; increase num_leaves and lower learning_rate to improve PR_AUC by capturing finer decision boundaries without overfitting.
+- **`java_class_kv_symbol_vocab_expansion`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 …` — Enable kv_vocab and symbol_vocab to capture structural and import co-occurrence signals unique to Java class files, targeting PR_AUC gains from richer feature surface.
+- **`java_class_low_freq_bigrams_textenc`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and enable text_encoding to surface rare but malicious bytecode patterns, aiming to boost recall@3FPM by catching obfuscated classes.
+- **`java_class_ablate_blindfold_airgap`** `EXP_AIR_GAP_SIGNAL=0 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Disable blindfold and air_gap_signal to reduce noisy dropout features that may dilute strong structural signals, targeting flat or higher PR_AUC with cleaner ranking.
+- **`java_class_transfer_hardneg_tune`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Port hard-negative weighting strategy from sister routes to push benign tail down, targeting recall@3FPM improvement by sharpening the decision boundary at low FPR.
+- **`java_class_seed_search_generalization`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the control feature set to average out seed variance and stabilize recall@3FPM, ensuring recent PR_AUC gains are robust across RNG seeds.
+
+</details>
+

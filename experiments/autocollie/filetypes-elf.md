@@ -556,3 +556,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T160517-filetypes-elf` — 2026-06-03T16:05:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `046a7b772c5416b5` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 1.0000 | 0.9968 | 120 | [log](out/autocollie/runs/2026-06-03T16-11-47_20260603T160517-filetypes-elf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `5f00a2e488f498e7` | elf_control_train_tweak | ok | 0.9999 | 0.9999 | 0.9958 | 56 | [log](out/autocollie/runs/2026-06-03T16-13-47_20260603T160517-filetypes-elf_elf_control_train_tweak.log) |
+| `2717776e0a5490ca` | elf_symbol_vocab_bigrams | ok | 0.9999 | 0.9999 | 0.9963 | 95 | [log](out/autocollie/runs/2026-06-03T16-14-43_20260603T160517-filetypes-elf_elf_symbol_vocab_bigrams.log) |
+| `322a26f3c9a4807a` | elf_kv_vocab_split | ok | 0.9999 | 0.9999 | 0.9960 | 90 | [log](out/autocollie/runs/2026-06-03T16-16-18_20260603T160517-filetypes-elf_elf_kv_vocab_split.log) |
+| `611761da6b03a4cb` | elf_low_bigram_freq | ok | 0.9999 | 0.9999 | 0.9965 | 76 | [log](out/autocollie/runs/2026-06-03T16-17-48_20260603T160517-filetypes-elf_elf_low_bigram_freq.log) |
+| `3db3e4cd6d0b2030` | elf_train_hardneg_scalepos | ok | 0.9999 | 0.9999 | 0.9945 | 33 | [log](out/autocollie/runs/2026-06-03T16-19-04_20260603T160517-filetypes-elf_elf_train_hardneg_scalepos.log) |
+| `1341393c75419d55` | elf_seed_search_k3 | ok | 0.9999 | 0.9999 | 0.9962 | 40 | [log](out/autocollie/runs/2026-06-03T16-19-37_20260603T160517-filetypes-elf_elf_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_train_tweak`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with adjusted training knobs to target recall@3 FP/M by reducing overfitting on rare patterns.
+- **`elf_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol vocab and bigrams to capture ELF import co-occurrence patterns, aiming to boost recall@3 FP/M by adding structural signal.
+- **`elf_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab with value splitting to recover per-element signal in ELF metadata, targeting PR_AUC improvement via finer-grained feature resolution.
+- **`elf_low_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram min frequency to 200 to include rarer structural patterns, aiming to improve recall@3 FP/M without tanking PR_AUC.
+- **`elf_train_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Adjust scale_pos_weight_mult and hard_negative_weight to sharpen the decision boundary at low FPR, targeting recall@3 FP/M gains.
+- **`elf_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search K=3 on the control feature set to average out RNG variance and stabilize recall@3 FP/M at the strict-FP tail.
+
+</details>
+

@@ -726,3 +726,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T161117-filetypes-text` — 2026-06-03T16:11:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3febb1f4df4bef36` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9490 | 0.9729 | 0.8261 | 9 | [log](out/autocollie/runs/2026-06-03T16-18-33_20260603T161117-filetypes-text_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `1d6d70e9f88eee42` | text_ctrl_best_env_reg | ok | 0.9505 | 0.9742 | 0.8511 | 6 | [log](out/autocollie/runs/2026-06-03T16-18-42_20260603T161117-filetypes-text_text_ctrl_best_env_reg.log) |
+| `d3d743ae357c37bc` | text_exploit_hardneg_scale | ok | 0.9138 | 0.9415 | 0.8085 | 5 | [log](out/autocollie/runs/2026-06-03T16-18-48_20260603T161117-filetypes-text_text_exploit_hardneg_scale.log) |
+| `af150405b0351fe1` | text_feat_kv_vocab_split | ok | 0.9564 | 0.9772 | 0.8511 | 5 | [log](out/autocollie/runs/2026-06-03T16-18-53_20260603T161117-filetypes-text_text_feat_kv_vocab_split.log) |
+| `574147164d6d7163` | text_transfer_xml_tiered | ok | 0.9528 | 0.9791 | 0.8511 | 6 | [log](out/autocollie/runs/2026-06-03T16-18-59_20260603T161117-filetypes-text_text_transfer_xml_tiered.log) |
+| `273eff493b9c7170` | text_gen_seed_ensemble | ok | 0.9589 | 0.9815 | 0.8333 | 3 | [log](out/autocollie/runs/2026-06-03T16-19-04_20260603T161117-filetypes-text_text_gen_seed_ensemble.log) |
+| `384a478f0bb68380` | text_abl_blindfold_off | ok | 0.9567 | 0.9778 | 0.8421 | 9 | [log](out/autocollie/runs/2026-06-03T16-19-07_20260603T161117-filetypes-text_text_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_best_env_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by increasing model capacity and regularization on the proven text_metrics/encoding feature set to better separate tail malware from benign noise.
+- **`text_exploit_hardneg_scale`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives and downweighting positives to tighten the score distribution at the strict-FP operating point.
+- **`text_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 …` — Targets PR_AUC by introducing KV vocabulary and value splitting to capture structured metadata patterns in text files that are missed by n-grams alone.
+- **`text_transfer_xml_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_DEPTH=14 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Targets PR_AUC by transferring XML's low-frequency bigram and tiered trigram configuration to capture rare but high-signal text patterns while controlling noise via tiered criticality floors.
+- **`text_gen_seed_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Targets recall@3FPM by averaging predictions across 3 seeds to reduce variance and stabilize tail recall without sacrificing PR_AUC.
+- **`text_abl_blindfold_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Targets PR_AUC by removing blindfold dropout features to reduce training noise and allow the model to learn more stable decision boundaries for borderline text samples.
+
+</details>
+

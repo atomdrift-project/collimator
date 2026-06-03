@@ -549,3 +549,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155859-filetypes-powershell` — 2026-06-03T15:58:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `624e6d653f9701e6` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9996 | 0.9981 | 0.9904 | 30 | [log](out/autocollie/runs/2026-06-03T16-06-10_20260603T155859-filetypes-powershell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `41608fb2f2922751` | ps_ctrl_kv20k_training_tune | ok | 0.9996 | 0.9977 | 0.9848 | 53 | [log](out/autocollie/runs/2026-06-03T16-06-40_20260603T155859-filetypes-powershell_ps_ctrl_kv20k_training_tune.log) |
+| `b777ca6a9514afbb` | ps_feat_textenc_metrics_full | ok | 0.9995 | 0.9975 | 0.9887 | 34 | [log](out/autocollie/runs/2026-06-03T16-07-34_20260603T155859-filetypes-powershell_ps_feat_textenc_metrics_full.log) |
+| `6db9610be11accac` | ps_feat_kv_split_lowfreq | ok | 0.9995 | 0.9975 | 0.9840 | 51 | [log](out/autocollie/runs/2026-06-03T16-08-08_20260603T155859-filetypes-powershell_ps_feat_kv_split_lowfreq.log) |
+| `68ec28464e3eea47` | ps_abl_extreme_off | ok | 0.9995 | 0.9974 | 0.9887 | 31 | [log](out/autocollie/runs/2026-06-03T16-08-59_20260603T155859-filetypes-powershell_ps_abl_extreme_off.log) |
+| `4dd03b116b6a54b8` | ps_xfer_lowbigram_tieredtri | ok | 0.9996 | 0.9977 | 0.9872 | 35 | [log](out/autocollie/runs/2026-06-03T16-09-30_20260603T155859-filetypes-powershell_ps_xfer_lowbigram_tieredtri.log) |
+| `d5ffbe261ae3398f` | ps_gen_seedsearch3_kv20k | ok | 0.9995 | 0.9975 | 0.9840 | 32 | [log](out/autocollie/runs/2026-06-03T16-10-05_20260603T155859-filetypes-powershell_ps_gen_seedsearch3_kv20k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_kv20k_training_tune`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Replicates best feature_env to establish baseline; tunes num_leaves and reg_lambda to stabilize PR_AUC while preserving ROC_AUC.
+- **`ps_feat_textenc_metrics_full`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture script obfuscation and structural patterns, targeting PR_AUC improvement via richer lexical signal.
+- **`ps_feat_kv_split_lowfreq`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_value_split and lowers kv_min_freq to 5 to recover granular parameter signal, aiming to boost recall@3FPM without PR_AUC regression.
+- **`ps_abl_extreme_off`** `EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce tail noise and overfitting, targeting flat or higher PR_AUC with improved ROC_AUC stability.
+- **`ps_xfer_lowbigram_tieredtri`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Ports xml/gz low-bigram-min-freq and tiered-trigram config to capture rare PowerShell command sequences, targeting PR_AUC gain via expanded n-gram coverage.
+- **`ps_gen_seedsearch3_kv20k`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Runs seed_search_k=3 on the top KV config to average out seed variance, targeting stable recall@3FPM and confirming PR_AUC signal robustness.
+
+</details>
+

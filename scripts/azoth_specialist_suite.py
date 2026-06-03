@@ -1753,25 +1753,39 @@ def main() -> int:
             lgbm_threads, nproc, args.parallelism, suite_note,
         )
 
-    # Auto-cap feature-extraction workers per fit, mirroring the LightGBM
-    # thread cap above. Each fit otherwise spawns its own `args.workers`
-    # extraction subprocesses regardless of parallelism, so peak extraction
-    # memory and process count scale with parallelism * workers, not workers.
-    # Measured on a 128-core host: a single full-corpus PE fit peaks at ~83 GB
-    # with workers=128 but ~21 GB with workers=8 — the delta is the
-    # workers-proportional extraction-buffer spike, and at parallelism=16 the
-    # undivided version stacks 16 of those spikes and OOMs a 251 GB box.
-    # Dividing keeps host-wide extraction parallelism ≈ nproc with no
-    # wall-clock change (same total subprocess count, partitioned across fits).
+    # Cap feature-extraction workers per fit. Each fit spawns its own
+    # extraction subprocesses, each fetching and parsing a batch of cleave
+    # reports, so peak extraction memory scales with (extract_workers *
+    # batch_size) reports resident. Measured on a 128-core host: a single
+    # full-corpus PE fit peaks at ~83 GB with workers=128 but ~21 GB with
+    # workers=8 — that delta is the worker-proportional report buffer.
+    #
+    # Two caps compound:
+    #   1. //parallelism — when fits stack, split the worker budget so the
+    #      host total stays ~= nproc.
+    #   2. An ABSOLUTE ceiling (AZOTH_EXTRACT_WORKERS_MAX, default 16 ~= the
+    #      ~28 GB/fit AZOTH_MEM_PER_FIT_GB operating point) applied even at
+    #      parallelism=1. Without it a solo general/PE fit re-creates the
+    #      83 GB spike (the //parallelism guard used to skip parallelism=1
+    #      entirely), and the MemAvailable clamp above — which assumes
+    #      ~28 GB/fit — silently under-counts. Bounding extract_workers makes
+    #      that per-fit estimate honest at any parallelism.
+    # Trade-off: extraction (DB/IO-bound, a minority of wall-clock and often
+    # served from the feature cache) uses fewer cores; the LightGBM fit still
+    # saturates them via its thread budget. Raise the ceiling on a high-RAM
+    # host if extraction wall-clock dominates an uncached run.
     extract_workers = args.workers
-    if args.parallelism > 1 and args.workers and args.workers > 1:
+    if args.workers and args.workers > 1:
         concurrent_suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
-        extract_workers = max(1, args.workers // (args.parallelism * concurrent_suites))
-        LOG.info(
-            "auto-capping extraction workers per fit at %d "
-            "(requested %d / parallelism=%d).",
-            extract_workers, args.workers, args.parallelism,
-        )
+        ceiling = max(1, int(os.environ.get("AZOTH_EXTRACT_WORKERS_MAX", "16")))
+        per_fit = args.workers // max(1, args.parallelism * concurrent_suites)
+        extract_workers = max(1, min(per_fit, ceiling))
+        if extract_workers != args.workers:
+            LOG.info(
+                "capping extraction workers per fit at %d "
+                "(requested %d, parallelism=%d, ceiling=%d).",
+                extract_workers, args.workers, args.parallelism, ceiling,
+            )
 
     config = train.TrainConfig(
         learner="azoth",
@@ -1831,6 +1845,13 @@ def main() -> int:
                 "feature_cache_dir": args.feature_cache_dir,
             },
         )
+
+    # Longest-processing-time-first: submit the heaviest routes (most rows)
+    # first so a big fit (pe/xml ~1.7M rows) starts immediately rather than
+    # stranding the pool to run solo at the tail — classic LPT makespan
+    # minimization. Results are reassembled via slot_index regardless of
+    # completion order, so this only affects scheduling, not output.
+    pending.sort(key=lambda job: -int(job["target"].get("total", 0)))
 
     if args.parallelism > 1 and len(pending) > 1:
         # `spawn` start method — see azoth_calibrate_ensemble.py for the

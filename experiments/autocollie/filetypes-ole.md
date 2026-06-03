@@ -479,3 +479,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T161039-filetypes-ole` — 2026-06-03T16:10:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `150007a00996c21d` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9935 | 0.5000 | 0.9967 | 12 | [log](out/autocollie/runs/2026-06-03T16-18-09_20260603T161039-filetypes-ole_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `0c6756c206e6734a` | ole_ctrl_extra_trees_300 | ok | 0.9935 | 0.5000 | 0.9967 | 12 | [log](out/autocollie/runs/2026-06-03T16-18-21_20260603T161039-filetypes-ole_ole_ctrl_extra_trees_300.log) |
+| `82f749976a42b28f` | ole_feat_kv_textmetrics_full | ok | 0.9935 | 0.5000 | 0.9967 | 13 | [log](out/autocollie/runs/2026-06-03T16-18-33_20260603T161039-filetypes-ole_ole_feat_kv_textmetrics_full.log) |
+| `8bcf7762de006b0e` | ole_feat_lowfreq_bigrams_tiered | ok | 0.9935 | 0.5000 | 0.9967 | 10 | [log](out/autocollie/runs/2026-06-03T16-18-46_20260603T161039-filetypes-ole_ole_feat_lowfreq_bigrams_tiered.log) |
+| `872adbc5bae1f879` | ole_feat_textenc_obfuscation | ok | 0.9935 | 0.5000 | 0.9967 | 10 | [log](out/autocollie/runs/2026-06-03T16-18-56_20260603T161039-filetypes-ole_ole_feat_textenc_obfuscation.log) |
+| `4e6f65ad46e06e87` | ole_transfer_docx_ember_extmetrics | ok | 0.9935 | 0.5000 | 0.9967 | 15 | [log](out/autocollie/runs/2026-06-03T16-19-06_20260603T161039-filetypes-ole_ole_transfer_docx_ember_extmetrics.log) |
+| `8510b150cd0ee73c` | ole_seed_search_kv_ensemble | ok | 0.9935 | 0.5000 | 0.9967 | 14 | [log](out/autocollie/runs/2026-06-03T16-19-21_20260603T161039-filetypes-ole_ole_seed_search_kv_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_extra_trees_300`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with extra_trees and higher estimators to reduce variance and improve PR AUC at low FPR.
+- **`ole_feat_kv_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture VBA stream structure and obfuscation signals, targeting higher recall@3 FP/M.
+- **`ole_feat_lowfreq_bigrams_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 and enable tiered_crit_trigrams to capture rare malicious patterns, aiming to boost PR AUC.
+- **`ole_feat_textenc_obfuscation`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=250 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Activate text_encoding and document_obfuscation_features to detect payload encoding anomalies, targeting improved recall@3 FP/M.
+- **`ole_transfer_docx_ember_extmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EMBER_LITE_FEATURES=1 EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Port ember_lite and extended_metrics from docx route to capture structural file anomalies, aiming for PR AUC gain.
+- **`ole_seed_search_kv_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds to average predictions and stabilize recall@3 FP/M against seed variance.
+
+</details>
+

@@ -522,3 +522,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T161449-filetypes-vbs` — 2026-06-03T16:14:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `78841fd4210c86be` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9969 | 0.9501 | 0.9811 | 21 | [log](out/autocollie/runs/2026-06-03T16-21-53_20260603T161449-filetypes-vbs_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bcc49030198a521e` | vbs_control_hardneg_tail | ok | 0.9907 | 0.8744 | 0.9811 | 23 | [log](out/autocollie/runs/2026-06-03T16-22-14_20260603T161449-filetypes-vbs_vbs_control_hardneg_tail.log) |
+| `2cb9802300ac11d4` | vbs_kv_textmetrics_vocab | ok | 0.9977 | 0.9592 | 0.9902 | 32 | [log](out/autocollie/runs/2026-06-03T16-22-37_20260603T161449-filetypes-vbs_vbs_kv_textmetrics_vocab.log) |
+| `b4dc7bd08e3fd043` | vbs_lowfreq_ngrams | ok | 0.9978 | 0.9625 | 0.9902 | 24 | [log](out/autocollie/runs/2026-06-03T16-23-09_20260603T161449-filetypes-vbs_vbs_lowfreq_ngrams.log) |
+| `783222125868d466` | vbs_transfer_lowbigram_noclusters | ok | 0.9977 | 0.9596 | 0.9736 | 25 | [log](out/autocollie/runs/2026-06-03T16-23-33_20260603T161449-filetypes-vbs_vbs_transfer_lowbigram_noclusters.log) |
+| `4347f70c2af3e5ef` | vbs_ablate_extreme | ok | 0.9979 | 0.9622 | 0.9910 | 27 | [log](out/autocollie/runs/2026-06-03T16-23-58_20260603T161449-filetypes-vbs_vbs_ablate_extreme.log) |
+| `3777e577d3f30f3d` | vbs_seed_search_kv | ok | 0.9995 | 0.9898 | 0.9930 | 19 | [log](out/autocollie/runs/2026-06-03T16-24-25_20260603T161449-filetypes-vbs_vbs_seed_search_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives and lowering scale_pos_weight_mult to tighten the low-FPR boundary, preserving PR_AUC.
+- **`vbs_kv_textmetrics_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling kv_vocab and text_metrics_full to capture structured script patterns and obfuscation signals specific to VBS.
+- **`vbs_lowfreq_ngrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=50` — Aims to boost PR_AUC by lowering bigram and trigram frequency floors to capture rare but high-signal malicious VBS patterns.
+- **`vbs_transfer_lowbigram_noclusters`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by transferring a successful low-frequency bigram strategy from sister routes while disabling the noisy clusters group to reduce variance.
+- **`vbs_ablate_extreme`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to maintain PR_AUC while improving ROC_AUC by removing the noisy extreme_features family to reduce overfitting on tail distributions.
+- **`vbs_seed_search_kv`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM stability by averaging over 3 seeds on the KV-enhanced feature set to distinguish real signal from seed noise.
+
+</details>
+

@@ -666,3 +666,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155859-filetypes-plist` — 2026-06-03T15:58:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f8c8daefe61b1084` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.2000 | 0.5000 | 0.3333 | 7 | [log](out/autocollie/runs/2026-06-03T16-06-01_20260603T155859-filetypes-plist_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2c7fc429bda6a19e` | plist_control_baseline_v2 | ok | 0.2000 | 0.5000 | 0.3333 | 5 | [log](out/autocollie/runs/2026-06-03T16-06-08_20260603T155859-filetypes-plist_plist_control_baseline_v2.log) |
+| `b656155db5bd713e` | plist_feat_text_metrics_full | ok | 0.2000 | 0.5000 | 0.3333 | 4 | [log](out/autocollie/runs/2026-06-03T16-06-13_20260603T155859-filetypes-plist_plist_feat_text_metrics_full.log) |
+| `10d9f896370edf6d` | plist_feat_kv_vocab | ok | 0.2000 | 0.5000 | 0.3333 | 5 | [log](out/autocollie/runs/2026-06-03T16-06-17_20260603T155859-filetypes-plist_plist_feat_kv_vocab.log) |
+| `36f71f4583515616` | plist_feat_lowbigram_tiered | ok | 0.2000 | 0.5000 | 0.3333 | 5 | [log](out/autocollie/runs/2026-06-03T16-06-23_20260603T155859-filetypes-plist_plist_feat_lowbigram_tiered.log) |
+| `b35c2ad4f4d012cd` | plist_train_hardneg_02_15 | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-06-03T16-06-28_20260603T155859-filetypes-plist_plist_train_hardneg_02_15.log) |
+| `1487de2f99afc6b1` | plist_train_scalepos05_dart | ok | 0.2000 | 0.5000 | 0.3333 | 3 | [log](out/autocollie/runs/2026-06-03T16-06-31_20260603T155859-filetypes-plist_plist_train_scalepos05_dart.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_control_baseline_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature_env to establish a stable baseline for PR_AUC and ROC_AUC while tuning regularization.
+- **`plist_feat_text_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to capture document obfuscation signals, aiming to improve PR_AUC by adding structural text features.
+- **`plist_feat_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to extract key-value pair signals specific to plist structure, targeting PR_AUC gains from structured metadata.
+- **`plist_feat_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 100 and enable tiered_crit_bigrams to capture rarer but high-crit patterns, aiming to boost recall@3FPM.
+- **`plist_train_hardneg_02_15`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply hard_negative_fraction=0.2 and hard_negative_weight=15 to focus model on difficult benigns, targeting recall@3FPM improvement.
+- **`plist_train_scalepos05_dart`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Down-weight positives with scale_pos_weight_mult=0.5 and use dart boosting to reduce false positives, aiming to improve ROC_AUC and PR_AUC.
+
+</details>
+

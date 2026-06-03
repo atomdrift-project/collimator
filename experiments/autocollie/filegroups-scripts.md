@@ -424,3 +424,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155716-filegroups-scripts` — 2026-06-03T15:57:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0b0cce45b1dcd49f` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9978 | 0.9975 | 0.9763 | 165 | [log](out/autocollie/runs/2026-06-03T16-04-24_20260603T155716-filegroups-scripts_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ffb238cca072134e` | scripts_control_leaves128_reg1 | ok | 0.9975 | 0.9971 | 0.9752 | 118 | [log](out/autocollie/runs/2026-06-03T16-07-09_20260603T155716-filegroups-scripts_scripts_control_leaves128_reg1.log) |
+| `9410f25e105f92df` | scripts_hardneg_01_10_scale075 | ok | 0.9973 | 0.9968 | 0.9760 | 54 | [log](out/autocollie/runs/2026-06-03T16-09-07_20260603T155716-filegroups-scripts_scripts_hardneg_01_10_scale075.log) |
+| `e97fc6757eef01bf` | scripts_feat_textenc_metrics_full | ok | 0.9974 | 0.9971 | 0.9714 | 102 | [log](out/autocollie/runs/2026-06-03T16-10-01_20260603T155716-filegroups-scripts_scripts_feat_textenc_metrics_full.log) |
+| `f0bc55e9fc643338` | scripts_feat_kv_vocab_15k | ok | 0.9975 | 0.9971 | 0.9751 | 95 | [log](out/autocollie/runs/2026-06-03T16-11-43_20260603T155716-filegroups-scripts_scripts_feat_kv_vocab_15k.log) |
+| `388bc0635546ed4a` | scripts_transfer_lowfreq_tiered | ok | 0.9974 | 0.9971 | 0.9719 | 94 | [log](out/autocollie/runs/2026-06-03T16-13-18_20260603T155716-filegroups-scripts_scripts_transfer_lowfreq_tiered.log) |
+| `60ffcace298b7dcd` | scripts_seed_search_3_save_all | ok | 0.9975 | 0.9972 | 0.9686 | 60 | [log](out/autocollie/runs/2026-06-03T16-14-52_20260603T155716-filegroups-scripts_scripts_seed_search_3_save_all.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_leaves128_reg1`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and adjusting L2 regularization on the best recent feature set.
+- **`scripts_hardneg_01_10_scale075`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives and slightly downweighting positives to tighten the strict-FP tail ranking.
+- **`scripts_feat_textenc_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_encoding and text_metrics_full to capture script obfuscation and structural text patterns.
+- **`scripts_feat_kv_vocab_15k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab with a generous cap to capture configuration and header key-value pairs common in scripts.
+- **`scripts_transfer_lowfreq_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by transferring low-frequency bigram and tiered trigram settings from sister script routes to capture rarer malicious patterns.
+- **`scripts_seed_search_3_save_all`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM by averaging 3 seeds to reduce variance on the best recent feature configuration.
+
+</details>
+

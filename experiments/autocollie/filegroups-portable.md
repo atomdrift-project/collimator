@@ -556,3 +556,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T161448-filegroups-portable` — 2026-06-03T16:14:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `549eb3020c009fde` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9962 | 0.9994 | 0.9591 | 22 | [log](out/autocollie/runs/2026-06-03T16-22-32_20260603T161448-filegroups-portable_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `94fbc00487a8387c` | control_baseline_train_tweak | ok | 0.9964 | 0.9994 | 0.9622 | 15 | [log](out/autocollie/runs/2026-06-03T16-22-54_20260603T161448-filegroups-portable_control_baseline_train_tweak.log) |
+| `dd36ad5c65f9700c` | train_hardneg_upweight | ok | 0.9963 | 0.9994 | 0.9676 | 10 | [log](out/autocollie/runs/2026-06-03T16-23-09_20260603T161448-filegroups-portable_train_hardneg_upweight.log) |
+| `d3450ac06c22edfa` | feat_kv_vocab_split_15k | ok | 0.9976 | 0.9996 | 0.9704 | 13 | [log](out/autocollie/runs/2026-06-03T16-23-19_20260603T161448-filegroups-portable_feat_kv_vocab_split_15k.log) |
+| `ab55323b29cb6aa5` | feat_text_metrics_encoding | ok | 0.9965 | 0.9994 | 0.9648 | 13 | [log](out/autocollie/runs/2026-06-03T16-23-32_20260603T161448-filegroups-portable_feat_text_metrics_encoding.log) |
+| `64b8df47165e3d82` | transfer_lowbigram_tieredtrigrams | ok | 0.9964 | 0.9994 | 0.9622 | 13 | [log](out/autocollie/runs/2026-06-03T16-23-45_20260603T161448-filegroups-portable_transfer_lowbigram_tieredtrigrams.log) |
+| `656175f244b0b47a` | gen_seed_search_k3_ensemble | ok | 0.9967 | 0.9995 | 0.9713 | 14 | [log](out/autocollie/runs/2026-06-03T16-23-58_20260603T161448-filegroups-portable_gen_seed_search_k3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_baseline_train_tweak`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Control baseline replicating best recent feature_env to cache-hit matrix and test training-only tweaks for PR_AUC stability.
+- **`train_hardneg_upweight`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Apply hard-negative upweighting to push benign tail scores lower, targeting recall@3 FP/M improvement without PR_AUC regression.
+- **`feat_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture fine-grained key-value signal, aiming to boost PR_AUC by reducing false positives on benign files.
+- **`feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_metrics_full and text_encoding to better distinguish obfuscated portable documents, targeting recall@3 FP/M gains while preserving PR_AUC.
+- **`transfer_lowbigram_tieredtrigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Port low-frequency bigram and tiered trigram config from XML route to capture rare malicious patterns, targeting PR_AUC improvement.
+- **`gen_seed_search_k3_ensemble`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Use seed_search_k=3 with ensemble averaging to reduce variance and stabilize recall@3 FP/M gains observed in recent runs.
+
+</details>
+

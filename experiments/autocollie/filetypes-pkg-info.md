@@ -420,3 +420,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T160101-filetypes-pkg-info` — 2026-06-03T16:01:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4a498a4e4ede16c2` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9927 | 0.5000 | 0.9963 | 20 | [log](out/autocollie/runs/2026-06-03T16-06-41_20260603T160101-filetypes-pkg-info_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ac6f0818da022384` | pkginfo_control_hardneg_tail | ok | 0.9927 | 0.5000 | 0.9963 | 28 | [log](out/autocollie/runs/2026-06-03T16-07-01_20260603T160101-filetypes-pkg-info_pkginfo_control_hardneg_tail.log) |
+| `923107e618bed4b0` | pkginfo_kv_vocab_split_20k | ok | 0.9927 | 0.5000 | 0.9963 | 16 | [log](out/autocollie/runs/2026-06-03T16-07-29_20260603T160101-filetypes-pkg-info_pkginfo_kv_vocab_split_20k.log) |
+| `7ed4500094ac9444` | pkginfo_text_metrics_full_enc | ok | 0.9927 | 0.5000 | 0.9963 | 13 | [log](out/autocollie/runs/2026-06-03T16-07-45_20260603T160101-filetypes-pkg-info_pkginfo_text_metrics_full_enc.log) |
+| `8b5b4d80d6c63cc8` | pkginfo_transfer_lowbigram_tiered | ok | 0.9927 | 0.5000 | 0.9963 | 14 | [log](out/autocollie/runs/2026-06-03T16-07-58_20260603T160101-filetypes-pkg-info_pkginfo_transfer_lowbigram_tiered.log) |
+| `b58e530b35ee28c2` | pkginfo_ablate_attack_features | ok | 0.9927 | 0.5000 | 0.9963 | 23 | [log](out/autocollie/runs/2026-06-03T16-08-12_20260603T160101-filetypes-pkg-info_pkginfo_ablate_attack_features.log) |
+| `61842ca092807f9d` | pkginfo_seed_search_3_avg | ok | 0.9927 | 0.5000 | 0.9963 | 10 | [log](out/autocollie/runs/2026-06-03T16-08-35_20260603T160101-filetypes-pkg-info_pkginfo_seed_search_3_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by applying hard-negative mining and extra_trees regularization to sharpen ranking at the strict-FP tail without altering the feature surface.
+- **`pkginfo_kv_vocab_split_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling kv_vocab and kv_value_split to capture structured dependency and version metadata unique to package manifests.
+- **`pkginfo_text_metrics_full_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by activating text_metrics_full and text_encoding to detect obfuscation and formatting anomalies in package metadata files.
+- **`pkginfo_transfer_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by transferring the xml route's low bigram_min_freq and tiered trigrams to capture rarer but high-signal package metadata patterns.
+- **`pkginfo_ablate_attack_features`** `EXP_ATTACK_FEATURES=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to maintain or improve PR_AUC by disabling attack_features, which likely adds noise to non-executable package metadata files.
+- **`pkginfo_seed_search_3_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets stable recall@3 FP/M by averaging 3 seeds to reduce variance and confirm signal robustness on the control feature set.
+
+</details>
+

@@ -618,3 +618,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T160421-filetypes-png` — 2026-06-03T16:04:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4e94193a8c419f11` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9942 | 0.9913 | 0.9449 | 10 | [log](out/autocollie/runs/2026-06-03T16-13-05_20260603T160421-filetypes-png_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c16c814f6fd5c7f8` | png_ctrl_leaves128_lr004 | ok | 0.9829 | 0.9691 | 0.9375 | 7 | [log](out/autocollie/runs/2026-06-03T16-13-16_20260603T160421-filetypes-png_png_ctrl_leaves128_lr004.log) |
+| `307c53b201c845a2` | png_feat_kv_vocab_8k | ok | 0.9811 | 0.9653 | 0.9375 | 6 | [log](out/autocollie/runs/2026-06-03T16-13-22_20260603T160421-filetypes-png_png_feat_kv_vocab_8k.log) |
+| `81822778de0f5ac7` | png_feat_text_metrics_full | ok | 0.9865 | 0.9765 | 0.9375 | 8 | [log](out/autocollie/runs/2026-06-03T16-13-29_20260603T160421-filetypes-png_png_feat_text_metrics_full.log) |
+| `218cac0860b87733` | png_feat_lowbigram_10k | ok | 0.9887 | 0.9815 | 0.9375 | 5 | [log](out/autocollie/runs/2026-06-03T16-13-37_20260603T160421-filetypes-png_png_feat_lowbigram_10k.log) |
+| `4f15993028634ad1` | png_train_extra_trees_reg | ok | 0.9819 | 0.9684 | 0.9375 | 2 | [log](out/autocollie/runs/2026-06-03T16-13-42_20260603T160421-filetypes-png_png_train_extra_trees_reg.log) |
+| `e3e0140513829304` | png_profile_seed_ensemble_3 | ok | 0.9844 | 0.9728 | 0.9220 | 3 | [log](out/autocollie/runs/2026-06-03T16-13-44_20260603T160421-filetypes-png_png_profile_seed_ensemble_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_leaves128_lr004`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with refined tree complexity and learning rate to stabilize PR_AUC gains from the recent hard-negative winner.
+- **`png_feat_kv_vocab_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture PNG chunk metadata patterns, targeting PR_AUC improvement via richer structural signal.
+- **`png_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Activate text_metrics_full to extract obfuscation signals from PNG text chunks, aiming to boost recall@3FPM.
+- **`png_feat_lowbigram_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq and raise bigram_max to capture rarer malicious patterns, targeting recall@3FPM gains.
+- **`png_train_extra_trees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable extra_trees and increase L2 regularization to reduce overfitting on rare patterns, targeting recall@3FPM at the strict-FP tail.
+- **`png_profile_seed_ensemble_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Average predictions across 3 seeds to reduce variance and stabilize PR_AUC across data splits.
+
+</details>
+

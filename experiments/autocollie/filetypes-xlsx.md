@@ -238,3 +238,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T160845-filetypes-xlsx` — 2026-06-03T16:08:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43e6af2ea572b80a` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9974 | 0.5000 | 0.9987 | 19 | [log](out/autocollie/runs/2026-06-03T16-16-45_20260603T160845-filetypes-xlsx_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `a8d94166bdc2074f` | xlsx_control_baseline_v2 | ok | 0.9974 | 0.5000 | 0.9987 | 15 | [log](out/autocollie/runs/2026-06-03T16-17-03_20260603T160845-filetypes-xlsx_xlsx_control_baseline_v2.log) |
+| `1a08ada985183bc4` | xlsx_text_metrics_enc_full | ok | 0.9974 | 0.5000 | 0.9987 | 13 | [log](out/autocollie/runs/2026-06-03T16-17-18_20260603T160845-filetypes-xlsx_xlsx_text_metrics_enc_full.log) |
+| `e6137ab0c59a9ae6` | xlsx_kv_vocab_5k | ok | 0.9974 | 0.5000 | 0.9987 | 18 | [log](out/autocollie/runs/2026-06-03T16-17-31_20260603T160845-filetypes-xlsx_xlsx_kv_vocab_5k.log) |
+| `52cbd78d3397686a` | xlsx_hardneg_01_10 | ok | 0.9974 | 0.5000 | 0.9987 | 4 | [log](out/autocollie/runs/2026-06-03T16-17-49_20260603T160845-filetypes-xlsx_xlsx_hardneg_01_10.log) |
+| `b6734c393a0dde97` | xlsx_capacity_reg_lambda2 | ok | 0.9974 | 0.5000 | 0.9987 | 2 | [log](out/autocollie/runs/2026-06-03T16-17-54_20260603T160845-filetypes-xlsx_xlsx_capacity_reg_lambda2.log) |
+| `78be88aad3b63255` | xlsx_seed_search_3_avg | ok | 0.9974 | 0.5000 | 0.9987 | 2 | [log](out/autocollie/runs/2026-06-03T16-17-56_20260603T160845-filetypes-xlsx_xlsx_seed_search_3_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_baseline_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 …` — Replicate best feature_env with stable training knobs to establish PR_AUC/ROC_AUC baseline and avoid prior inf-crash conditions.
+- **`xlsx_text_metrics_enc_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, targeting PR_AUC improvement on macro-heavy XLSX files.
+- **`xlsx_kv_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 …` — Enable kv_vocab with max 5000 to extract key-value metadata patterns, aiming to boost recall@3FPM by distinguishing malicious properties.
+- **`xlsx_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Apply hard negative sampling (fraction 0.1, weight 10) to sharpen decision boundary at low FPR, targeting recall@3FPM gains.
+- **`xlsx_capacity_reg_lambda2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 …` — Increase num_leaves to 128 with reg_lambda 2.0 and min_child_samples 200 to reduce overfitting on rare benigns, aiming to lift PR_AUC.
+- **`xlsx_seed_search_3_avg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Use seed_search_k=3 with save_all_seeds=true to average predictions across seeds, stabilizing recall@3FPM and reducing variance.
+
+</details>
+
