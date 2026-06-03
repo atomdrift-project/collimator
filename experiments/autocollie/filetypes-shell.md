@@ -602,3 +602,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T161448-filetypes-shell` — 2026-06-03T16:14:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `eda02dcc9e50cd66` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9988 | 0.9988 | 0.9805 | 69 | [log](out/autocollie/runs/2026-06-03T16-22-36_20260603T161448-filetypes-shell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `618023357dabb710` | shell_control_leaves128_lr003 | ok | 0.9988 | 0.9989 | 0.9791 | 51 | [log](out/autocollie/runs/2026-06-03T16-23-45_20260603T161448-filetypes-shell_shell_control_leaves128_lr003.log) |
+| `858bf84f98b417e2` | shell_train_hardneg_scalepos075 | ok | 0.9991 | 0.9991 | 0.9802 | 15 | [log](out/autocollie/runs/2026-06-03T16-24-35_20260603T161448-filetypes-shell_shell_train_hardneg_scalepos075.log) |
+| `037b63e0c862ca31` | shell_textenc_metrics_full | ok | 0.9989 | 0.9990 | 0.9818 | 29 | [log](out/autocollie/runs/2026-06-03T16-24-50_20260603T161448-filetypes-shell_shell_textenc_metrics_full.log) |
+| `51f6d7a75b833069` | shell_bigram25_kv12k | ok | 0.9988 | 0.9989 | 0.9835 | 38 | [log](out/autocollie/runs/2026-06-03T16-25-19_20260603T161448-filetypes-shell_shell_bigram25_kv12k.log) |
+| `28c21eb805269769` | shell_abl_extreme_off | ok | 0.9989 | 0.9990 | 0.9835 | 36 | [log](out/autocollie/runs/2026-06-03T16-25-57_20260603T161448-filetypes-shell_shell_abl_extreme_off.log) |
+| `7e5796c26fbb1fc9` | shell_transfer_xml_bigram50_seed3 | ok | 0.9989 | 0.9989 | 0.9744 | 45 | [log](out/autocollie/runs/2026-06-03T16-26-33_20260603T161448-filetypes-shell_shell_transfer_xml_bigram50_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_leaves128_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Control feature set with deeper trees and lower LR to improve PR_AUC via better gradient descent stability.
+- **`shell_train_hardneg_scalepos075`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 …` — Add hard negatives and downweight positives to sharpen decision boundary, targeting recall@3 FP/M improvement.
+- **`shell_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture shell script obfuscation patterns, aiming for PR_AUC gain.
+- **`shell_bigram25_kv12k`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram min_freq to 25 and expand kv_vocab to 12k to capture rare shell constructs, targeting tail recall@3 FP/M.
+- **`shell_abl_extreme_off`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce noise from tail distributions, aiming to keep PR_AUC flat while improving generalization.
+- **`shell_transfer_xml_bigram50_seed3`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Port xml route's lower bigram_min_freq=50 with seed_search_k=3 to verify signal robustness and reduce seed variance for PR_AUC.
+
+</details>
+

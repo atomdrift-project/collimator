@@ -436,3 +436,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filetypes-jar` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dea4bd6eabef0f1e` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9968 | 0.9939 | 0.9577 | 90 | [log](out/autocollie/runs/2026-06-03T15-50-11_20260603T154310-filetypes-jar_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `192948aae7b88d76` | jar_control_best_feat_hardneg | ok | 0.9974 | 0.9951 | 0.9766 | 92 | [log](out/autocollie/runs/2026-06-03T15-51-41_20260603T154310-filetypes-jar_jar_control_best_feat_hardneg.log) |
+| `ec2c5aad4bde5cd9` | jar_control_best_feat_scalepos05 | ok | 0.9954 | 0.9916 | 0.9714 | 16 | [log](out/autocollie/runs/2026-06-03T15-53-14_20260603T154310-filetypes-jar_jar_control_best_feat_scalepos05.log) |
+| `c32cbfe03f426461` | jar_kv_vocab_split_15k | ok | 0.9971 | 0.9947 | 0.9783 | 135 | [log](out/autocollie/runs/2026-06-03T15-53-29_20260603T154310-filetypes-jar_jar_kv_vocab_split_15k.log) |
+| `45180fb0dba7b740` | jar_textenc_metrics_full | ok | 0.9966 | 0.9938 | 0.9344 | 62 | [log](out/autocollie/runs/2026-06-03T15-55-44_20260603T154310-filetypes-jar_jar_textenc_metrics_full.log) |
+| `76398a0e7ad24ae8` | jar_transfer_xml_tiered_trigrams | ok | 0.9970 | 0.9946 | 0.9739 | 39 | [log](out/autocollie/runs/2026-06-03T15-56-46_20260603T154310-filetypes-jar_jar_transfer_xml_tiered_trigrams.log) |
+| `be0e14d0f3d6b8a0` | jar_abl_no_extreme_seedsearch | ok | 0.9971 | 0.9946 | 0.9673 | 39 | [log](out/autocollie/runs/2026-06-03T15-57-26_20260603T154310-filetypes-jar_jar_abl_no_extreme_seedsearch.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_best_feat_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM by sharpening the decision boundary via hard-negative mining, while keeping PR_AUC flat.
+- **`jar_control_best_feat_scalepos05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost recall@3FPM by down-weighting positives via scale_pos_weight_mult to suppress the FP tail, preserving PR_AUC.
+- **`jar_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to lift PR_AUC by capturing structured manifest/property key-value patterns in JARs via kv_vocab and kv_value_split.
+- **`jar_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to increase recall@3FPM by extracting obfuscation and structural text signals from JAR resources using text_encoding and text_metrics_full.
+- **`jar_transfer_xml_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by porting tiered trigram configs from xml with relaxed min_freq to capture rare Java class/manifest co-occurrences.
+- **`jar_abl_no_extreme_seedsearch`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to stabilize recall@3FPM across RNG variance using seed_search_k=3, while disabling extreme_features to reduce tail noise and keep PR_AUC flat.
+
+</details>
+

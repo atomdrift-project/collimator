@@ -414,3 +414,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155859-filetypes-tar` — 2026-06-03T15:58:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b4969b6bb3cd4b96` | inherit_from_filetypes_data_171c6310 | ok | 1.0000 | 0.9998 | 0.9893 | 69 | [log](out/autocollie/runs/2026-06-03T16-06-38_20260603T155859-filetypes-tar_inherit_from_filetypes_data_171c6310.log) |
+| `1e0948e740743151` | tar_control_train_tune | ok | 0.9999 | 0.9993 | 0.9893 | 51 | [log](out/autocollie/runs/2026-06-03T16-07-47_20260603T155859-filetypes-tar_tar_control_train_tune.log) |
+| `8a4e20fe2a95c014` | tar_feat_kv_vocab_10k | ok | 0.9999 | 0.9993 | 0.9840 | 53 | [log](out/autocollie/runs/2026-06-03T16-08-38_20260603T155859-filetypes-tar_tar_feat_kv_vocab_10k.log) |
+| `e4704dfda7ae00f9` | tar_feat_text_metrics_full | ok | 0.9999 | 0.9993 | 0.9920 | 44 | [log](out/autocollie/runs/2026-06-03T16-09-31_20260603T155859-filetypes-tar_tar_feat_text_metrics_full.log) |
+| `f5a4a0eb5dceb0c3` | tar_feat_bigram_freq_100 | ok | 0.9999 | 0.9993 | 0.9893 | 48 | [log](out/autocollie/runs/2026-06-03T16-10-15_20260603T155859-filetypes-tar_tar_feat_bigram_freq_100.log) |
+| `d4e6a38022e53611` | tar_train_scale_pos_05 | ok | 0.9979 | 0.9833 | 0.9711 | 6 | [log](out/autocollie/runs/2026-06-03T16-11-03_20260603T155859-filetypes-tar_tar_train_scale_pos_05.log) |
+| `7d4bb982db5d5780` | tar_train_reg_lambda_2 | ok | 0.9999 | 0.9991 | 0.9893 | 8 | [log](out/autocollie/runs/2026-06-03T16-11-09_20260603T155859-filetypes-tar_tar_train_reg_lambda_2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_data_171c6310`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/data (key=171c63109389b743, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Replicate best feature set with increased leaves and estimators to stabilize ranking and maintain PR_AUC while probing recall@3FPM.
+- **`tar_feat_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enable kv_vocab to capture key-value metadata in tar archives, aiming to improve PR_AUC by adding structural signal.
+- **`tar_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — Enable text_metrics_full to extract obfuscation signals from script payloads inside tars, targeting recall@3FPM gains.
+- **`tar_feat_bigram_freq_100`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Lower bigram_min_freq to 100 to capture rarer malicious patterns in tar contents, aiming to boost PR_AUC.
+- **`tar_train_scale_pos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Down-weight positives with scale_pos_weight_mult=0.5 to reduce false positives at the tail, targeting recall@3FPM.
+- **`tar_train_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Increase L2 regularization to 2.0 to prevent overfitting on rare patterns, aiming to stabilize PR_AUC and improve generalization.
+
+</details>
+

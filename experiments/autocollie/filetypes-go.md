@@ -764,3 +764,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155422-filetypes-go` — 2026-06-03T15:54:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `87e69dfc62268033` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9530 | 0.9889 | 0.8614 | 18 | [log](out/autocollie/runs/2026-06-03T16-02-25_20260603T155422-filetypes-go_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `0d99ba2cfe41a253` | go_control_baseline_leaves128 | ok | 0.9512 | 0.9881 | 0.8653 | 27 | [log](out/autocollie/runs/2026-06-03T16-02-43_20260603T155422-filetypes-go_go_control_baseline_leaves128.log) |
+| `20486bccefad8791` | go_exploit_hardneg_01_10_scale075 | ok | 0.9532 | 0.9882 | 0.8833 | 7 | [log](out/autocollie/runs/2026-06-03T16-03-10_20260603T155422-filetypes-go_go_exploit_hardneg_01_10_scale075.log) |
+| `51d4f0f3704c8204` | go_feat_kv_vocab_split_15k | ok | 0.9516 | 0.9879 | 0.8601 | 47 | [log](out/autocollie/runs/2026-06-03T16-03-17_20260603T155422-filetypes-go_go_feat_kv_vocab_split_15k.log) |
+| `877e9be4e8fb7f84` | go_feat_symbol_bigrams_5k | ok | 0.9581 | 0.9898 | 0.8782 | 52 | [log](out/autocollie/runs/2026-06-03T16-04-04_20260603T155422-filetypes-go_go_feat_symbol_bigrams_5k.log) |
+| `7dbd049fed134dfd` | go_feat_textenc_metrics_full | ok | 0.9524 | 0.9883 | 0.8550 | 22 | [log](out/autocollie/runs/2026-06-03T16-04-56_20260603T155422-filetypes-go_go_feat_textenc_metrics_full.log) |
+| `5f6d2204e9cbe252` | go_abl_blindfold_off | ok | 0.9512 | 0.9881 | 0.8653 | 23 | [log](out/autocollie/runs/2026-06-03T16-05-18_20260603T155422-filetypes-go_go_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_baseline_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline replicating best feature env to verify matrix cache hit and establish PR_AUC floor.
+- **`go_exploit_hardneg_01_10_scale075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM by upweighting hard negatives and slightly downweighting positives to tighten the low-FPR tail.
+- **`go_feat_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost PR_AUC by capturing structured Go config/dependency signals split into atomic tokens, reducing noise in KV features.
+- **`go_feat_symbol_bigrams_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by modeling Go import/symbol co-occurrence patterns typical in malware loaders.
+- **`go_feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to lift recall@3FPM by adding structural text obfuscation signals relevant to Go source obfuscation.
+- **`go_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to stabilize PR_AUC by removing blindfold dropout noise, testing if deterministic features yield better ranking consistency.
+
+</details>
+

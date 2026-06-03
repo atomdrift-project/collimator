@@ -526,3 +526,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154316-filegroups-source` — 2026-06-03T15:43:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c22b769e12193b8b` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9988 | 0.9983 | 0.9783 | 188 | [log](out/autocollie/runs/2026-06-03T15-50-11_20260603T154316-filegroups-source_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `16c80f8af76fc227` | source_control_hardneg_lr | ok | 0.9987 | 0.9982 | 0.9813 | 128 | [log](out/autocollie/runs/2026-06-03T15-53-19_20260603T154316-filegroups-source_source_control_hardneg_lr.log) |
+| `d91acb587988c3c0` | source_feat_symbol_vocab | ok | 0.9988 | 0.9983 | 0.9794 | 68 | [log](out/autocollie/runs/2026-06-03T15-55-27_20260603T154316-filegroups-source_source_feat_symbol_vocab.log) |
+| `fe6cc00518fdcd70` | source_feat_tiered_ngrams | ok | 0.9987 | 0.9982 | 0.9809 | 53 | [log](out/autocollie/runs/2026-06-03T15-56-35_20260603T154316-filegroups-source_source_feat_tiered_ngrams.log) |
+| `7063580e331afec3` | source_transfer_scalepos | ok | 0.9986 | 0.9981 | 0.9705 | 8 | [log](out/autocollie/runs/2026-06-03T15-57-28_20260603T154316-filegroups-source_source_transfer_scalepos.log) |
+| `b0c0e6b44678fa8d` | source_gen_seed_kv | ok | 0.9985 | 0.9979 | 0.9718 | 68 | [log](out/autocollie/runs/2026-06-03T15-57-37_20260603T154316-filegroups-source_source_gen_seed_kv.log) |
+| `a4d6937afa1b1656` | source_abl_extreme_off | ok | 0.9987 | 0.9982 | 0.9807 | 45 | [log](out/autocollie/runs/2026-06-03T15-58-45_20260603T154316-filegroups-source_source_abl_extreme_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_hardneg_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target PR_AUC by upweighting hard negatives to improve ranking at the strict-FP tail without changing features.
+- **`source_feat_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target PR_AUC by adding symbol vocab features to capture malicious API usage patterns in source code.
+- **`source_feat_tiered_ngrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target recall@3FPM by lowering tiered n-gram frequency floors to capture rare but highly indicative malicious patterns.
+- **`source_transfer_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target recall@3FPM by down-weighting positives to shift the decision boundary and reduce false positives at the deployed operating point.
+- **`source_gen_seed_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target PR_AUC by averaging across 3 seeds to reduce variance and stabilize gains from the new KV vocab features.
+- **`source_abl_extreme_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target PR_AUC by removing noisy extreme/tail features to reduce overfitting while preserving core ranking signal.
+
+</details>
+

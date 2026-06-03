@@ -590,3 +590,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filetypes-package.json` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `69704456060fd8c0` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9995 | 0.9992 | 0.9953 | 62 | [log](out/autocollie/runs/2026-06-03T15-50-59_20260603T154310-filetypes-package.json_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `04fba4172a0a14c1` | pkg_json_ctrl_hardneg_015_12 | ok | 0.9995 | 0.9992 | 0.9955 | 60 | [log](out/autocollie/runs/2026-06-03T15-52-01_20260603T154310-filetypes-package.json_pkg_json_ctrl_hardneg_015_12.log) |
+| `c6590ee6965dd4e0` | pkg_json_feat_kv_vocab_15k_split | ok | 0.9995 | 0.9993 | 0.9955 | 53 | [log](out/autocollie/runs/2026-06-03T15-53-01_20260603T154310-filetypes-package.json_pkg_json_feat_kv_vocab_15k_split.log) |
+| `648dbd8e6e044582` | pkg_json_feat_text_metrics_enc | ok | 0.9994 | 0.9992 | 0.9957 | 37 | [log](out/autocollie/runs/2026-06-03T15-53-53_20260603T154310-filetypes-package.json_pkg_json_feat_text_metrics_enc.log) |
+| `a1a374cf7ac74431` | pkg_json_transfer_tiered_trigrams | ok | 0.9995 | 0.9992 | 0.9955 | 44 | [log](out/autocollie/runs/2026-06-03T15-54-30_20260603T154310-filetypes-package.json_pkg_json_transfer_tiered_trigrams.log) |
+| `162cb6e7e3769935` | pkg_json_seed_search_k3_hardneg | ok | 0.9995 | 0.9993 | 0.0000 | 47 | [log](out/autocollie/runs/2026-06-03T15-55-14_20260603T154310-filetypes-package.json_pkg_json_seed_search_k3_hardneg.log) |
+| `e872398e26e53765` | pkg_json_abl_blindfold_off | ok | 0.9995 | 0.9993 | 0.9955 | 27 | [log](out/autocollie/runs/2026-06-03T15-56-01_20260603T154310-filetypes-package.json_pkg_json_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_ctrl_hardneg_015_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best recent feature set while tuning hard negatives to improve recall@3 FP/M by focusing on borderline benigns.
+- **`pkg_json_feat_kv_vocab_15k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Expand KV vocab and enable value splitting to capture fine-grained dependency patterns, targeting PR_AUC gain.
+- **`pkg_json_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Add text_metrics_full and text_encoding to capture JSON formatting signals, aiming to lift PR_AUC.
+- **`pkg_json_transfer_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port tiered_crit_trigrams from xml route to capture multi-hop trait co-occurrences, targeting PR_AUC improvement.
+- **`pkg_json_seed_search_k3_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Apply seed_search_k=3 to hard-negative config to average out seed variance and stabilize recall@3 FP/M.
+- **`pkg_json_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable blindfold dropout to test if deterministic feature retention improves PR_AUC by reducing noise.
+
+</details>
+

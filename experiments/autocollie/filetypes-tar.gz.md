@@ -448,3 +448,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154312-filetypes-tar.gz` — 2026-06-03T15:43:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `01b947306202c1c5` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9995 | 0.9990 | 0.9870 | 291 | [log](out/autocollie/runs/2026-06-03T15-51-45_20260603T154312-filetypes-tar.gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `8d77b81085bbd7aa` | tar_gz_ctrl_hardneg_extra_trees | ok | 0.9995 | 0.9989 | 0.9875 | 150 | [log](out/autocollie/runs/2026-06-03T15-56-36_20260603T154312-filetypes-tar.gz_tar_gz_ctrl_hardneg_extra_trees.log) |
+| `48b6c20141b484f0` | tar_gz_feat_kv_text_vocab | ok | 0.9995 | 0.9989 | 0.9884 | 118 | [log](out/autocollie/runs/2026-06-03T15-59-06_20260603T154312-filetypes-tar.gz_tar_gz_feat_kv_text_vocab.log) |
+| `aaaacee5ffcec877` | tar_gz_feat_tiered_crit_tri_quad | ok | 0.9995 | 0.9989 | 0.9882 | 165 | [log](out/autocollie/runs/2026-06-03T16-01-03_20260603T154312-filetypes-tar.gz_tar_gz_feat_tiered_crit_tri_quad.log) |
+| `694ecbe76896c30c` | tar_gz_abl_extended_metrics_off | ok | 0.9995 | 0.9988 | 0.9878 | 165 | [log](out/autocollie/runs/2026-06-03T16-03-48_20260603T154312-filetypes-tar.gz_tar_gz_abl_extended_metrics_off.log) |
+| `f8e1479d495bfd10` | tar_gz_transfer_xml_lowbigram_tiered | ok | 0.9994 | 0.9988 | 0.9873 | 249 | [log](out/autocollie/runs/2026-06-03T16-06-33_20260603T154312-filetypes-tar.gz_tar_gz_transfer_xml_lowbigram_tiered.log) |
+| `fd1e67ef07238af2` | tar_gz_gen_seed_search_tiered | ok | 0.9995 | 0.9989 | 0.9870 | 330 | [log](out/autocollie/runs/2026-06-03T16-10-43_20260603T154312-filetypes-tar.gz_tar_gz_gen_seed_search_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_gz_ctrl_hardneg_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3FPM by adding hard-negative mining and extra_trees regularization to reduce tail false positives while preserving PR_AUC.
+- **`tar_gz_feat_kv_text_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by enabling kv_vocab and text_encoding to capture structural and encoding signals specific to archived payloads.
+- **`tar_gz_feat_tiered_crit_tri_quad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by enabling tiered_crit_trigrams and tiered_crit_quadgrams to capture high-severity co-occurrence patterns in archive contents.
+- **`tar_gz_abl_extended_metrics_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by disabling extended_metrics to reduce high-dimensional noise that may dilute strong signal families.
+- **`tar_gz_transfer_xml_lowbigram_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC by transferring xml's low bigram_min_freq and tiered trigrams to capture rarer but high-signal archive patterns.
+- **`tar_gz_gen_seed_search_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3FPM by running seed_search_k=3 on the tiered crit config to distinguish true ranking signal from seed variance.
+
+</details>
+

@@ -560,3 +560,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filetypes-rust` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `adc9391fe938d649` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9330 | 0.9940 | 0.8824 | 21 | [log](out/autocollie/runs/2026-06-03T15-51-33_20260603T154310-filetypes-rust_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `61dca107c79649c1` | rust_control_train_tune_1 | ok | 0.9247 | 0.9927 | 0.7317 | 16 | [log](out/autocollie/runs/2026-06-03T15-51-54_20260603T154310-filetypes-rust_rust_control_train_tune_1.log) |
+| `b8369b1c50b3165f` | rust_control_dart_extra_trees | ok | 0.7888 | 0.9802 | 0.7586 | 10 | [log](out/autocollie/runs/2026-06-03T15-52-10_20260603T154310-filetypes-rust_rust_control_dart_extra_trees.log) |
+| `54fad92d40f24200` | rust_kv_vocab_split_15k | ok | 0.8810 | 0.9888 | 0.6818 | 21 | [log](out/autocollie/runs/2026-06-03T15-52-20_20260603T154310-filetypes-rust_rust_kv_vocab_split_15k.log) |
+| `f63dbeadf7a4be27` | rust_symbol_vocab_bigrams | ok | 0.9292 | 0.9931 | 0.6977 | 13 | [log](out/autocollie/runs/2026-06-03T15-52-40_20260603T154310-filetypes-rust_rust_symbol_vocab_bigrams.log) |
+| `3758388637f6a288` | rust_transfer_xml_tiered_trigrams_seed3 | ok | 0.8955 | 0.9880 | 0.7179 | 19 | [log](out/autocollie/runs/2026-06-03T15-52-54_20260603T154310-filetypes-rust_rust_transfer_xml_tiered_trigrams_seed3.log) |
+| `ee6bb3ebc2c655f1` | rust_abl_blindfold_crit_off | ok | 0.9071 | 0.9901 | 0.6818 | 15 | [log](out/autocollie/runs/2026-06-03T15-53-13_20260603T154310-filetypes-rust_rust_abl_blindfold_crit_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_control_train_tune_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control spec using best feature set; increases leaves and estimators with hard negatives to boost PR_AUC and recall@3 FP/M.
+- **`rust_control_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Tests dart boosting and extra_trees regularization on the best feature set to improve tail recall@3 FP/M without hurting ROC_AUC.
+- **`rust_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab and kv_value_split to capture finer-grained key-value signals, aiming to improve PR_AUC by resolving ambiguous Rust crate/dependency patterns.
+- **`rust_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol vocab and bigrams to capture import/function co-occurrence patterns in Rust binaries, targeting PR_AUC gains from structural signal.
+- **`rust_transfer_xml_tiered_trigrams_seed3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 …` — Transfers XML route's low bigram freq and tiered trigrams to capture rarer Rust patterns; uses seed_search_k=3 to stabilize recall@3 FP/M gains.
+- **`rust_abl_blindfold_crit_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Ablates blindfold and crit_category_ngrams to reduce feature noise; aims to maintain PR_AUC while improving ROC_AUC and recall@3 FP/M via cleaner signal.
+
+</details>
+

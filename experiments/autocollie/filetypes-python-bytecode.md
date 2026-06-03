@@ -434,3 +434,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filetypes-python-bytecode` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5e1605e8707caaab` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9998 | 0.9994 | 0.9926 | 38 | [log](out/autocollie/runs/2026-06-03T15-51-23_20260603T154310-filetypes-python-bytecode_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `60ee82a79e9607af` | pybc_ctrl_hardneg_lr_tune | ok | 0.9998 | 0.9995 | 0.9897 | 30 | [log](out/autocollie/runs/2026-06-03T15-52-01_20260603T154310-filetypes-python-bytecode_pybc_ctrl_hardneg_lr_tune.log) |
+| `5142712411855745` | pybc_feat_textenc_metrics_full | ok | 0.9999 | 0.9996 | 0.9926 | 23 | [log](out/autocollie/runs/2026-06-03T15-52-31_20260603T154310-filetypes-python-bytecode_pybc_feat_textenc_metrics_full.log) |
+| `a375e6fa8f8f0495` | pybc_feat_kv_vocab_lowfreq_bigrams | ok | 0.9997 | 0.9991 | 0.9868 | 22 | [log](out/autocollie/runs/2026-06-03T15-52-54_20260603T154310-filetypes-python-bytecode_pybc_feat_kv_vocab_lowfreq_bigrams.log) |
+| `397372f80216c94d` | pybc_abl_blindfold_off_extreme_on | ok | 0.9995 | 0.9985 | 0.9926 | 26 | [log](out/autocollie/runs/2026-06-03T15-53-16_20260603T154310-filetypes-python-bytecode_pybc_abl_blindfold_off_extreme_on.log) |
+| `a068e28c2ac59f1b` | pybc_train_extra_trees_subsample | ok | 0.9996 | 0.9988 | 0.9926 | 9 | [log](out/autocollie/runs/2026-06-03T15-53-42_20260603T154310-filetypes-python-bytecode_pybc_train_extra_trees_subsample.log) |
+| `f20ee58ad7d38423` | pybc_gen_seedsearch3_ensemble | ok | 0.9995 | 0.9985 | 0.9941 | 3 | [log](out/autocollie/runs/2026-06-03T15-53-52_20260603T154310-filetypes-python-bytecode_pybc_gen_seedsearch3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_hardneg_lr_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve PR_AUC by fine-tuning hard-negative weighting and learning rate on the best recent feature set, leveraging matrix cache for cheap validation.
+- **`pybc_feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to boost PR_AUC by enabling text_encoding and text_metrics_full to capture obfuscation and structural patterns specific to python-bytecode.
+- **`pybc_feat_kv_vocab_lowfreq_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_ESTIMATORS=300 …` — Aims to increase recall@3FPM by lowering bigram_min_freq to 50 and enabling kv_vocab to capture rare malicious key-value patterns in bytecode.
+- **`pybc_abl_blindfold_off_extreme_on`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to maintain or improve PR_AUC by disabling blindfold dropout and enabling extreme_features, testing if removing regularization noise helps on this route.
+- **`pybc_train_extra_trees_subsample`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to improve ROC_AUC by enabling extra_trees and reducing subsample to 0.85, adding ensemble noise to improve generalization at the low-FPR tail.
+- **`pybc_gen_seedsearch3_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Aims to stabilize recall@3FPM by using seed_search_k=3 and save_all_seeds=true to average out seed-driven variance on a strong configuration.
+
+</details>
+

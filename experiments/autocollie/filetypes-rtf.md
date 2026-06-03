@@ -354,3 +354,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154311-filetypes-rtf` — 2026-06-03T15:43:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f47b3d6a14664383` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9946 | 0.5000 | 0.9973 | 20 | [log](out/autocollie/runs/2026-06-03T15-50-50_20260603T154311-filetypes-rtf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4ed21be033627e19` | rtf_ctrl_leaves128_lr003 | ok | 0.9946 | 0.5000 | 0.9973 | 25 | [log](out/autocollie/runs/2026-06-03T15-51-10_20260603T154311-filetypes-rtf_rtf_ctrl_leaves128_lr003.log) |
+| `acda70b9a6d6d8e6` | rtf_feat_text_metrics_encoding | ok | 0.9946 | 0.5000 | 0.9973 | 18 | [log](out/autocollie/runs/2026-06-03T15-51-35_20260603T154311-filetypes-rtf_rtf_feat_text_metrics_encoding.log) |
+| `bcf84bd3cec0ae4e` | rtf_feat_lowfreq_bigrams_trigrams | ok | 0.9946 | 0.5000 | 0.9973 | 17 | [log](out/autocollie/runs/2026-06-03T15-51-53_20260603T154311-filetypes-rtf_rtf_feat_lowfreq_bigrams_trigrams.log) |
+| `83c9d7c8fb76080a` | rtf_abl_kv_obj_trigrams_off | ok | 0.9946 | 0.5000 | 0.9973 | 18 | [log](out/autocollie/runs/2026-06-03T15-52-09_20260603T154311-filetypes-rtf_rtf_abl_kv_obj_trigrams_off.log) |
+| `2286096dd1568e56` | rtf_transfer_xml_lowfreq_bigrams | ok | 0.9946 | 0.5000 | 0.9973 | 15 | [log](out/autocollie/runs/2026-06-03T15-52-28_20260603T154311-filetypes-rtf_rtf_transfer_xml_lowfreq_bigrams.log) |
+| `d70ff6e5feb2bc72` | rtf_seed_search_3_ensemble | ok | 0.9946 | 0.5000 | 0.9973 | 8 | [log](out/autocollie/runs/2026-06-03T15-52-43_20260603T154311-filetypes-rtf_rtf_seed_search_3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_leaves128_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Control feature set with increased tree complexity and lower LR to improve PR_AUC ranking stability.
+- **`rtf_feat_text_metrics_encoding`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable text_metrics_full and text_encoding to capture document obfuscation patterns, targeting PR_AUC and recall@3 FP/M gains.
+- **`rtf_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Lower bigram min_freq and add tiered_crit_trigrams to capture rarer payload patterns, aiming to boost recall@3 FP/M.
+- **`rtf_abl_kv_obj_trigrams_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc,kv EXP_KV_VOCAB=0 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=0 EXP_TRAIN_SAMPLES=30000` — Disable kv_vocab and objective_trigrams to test if removing noisy features stabilizes PR_AUC and improves recall@3 FP/M.
+- **`rtf_transfer_xml_lowfreq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Port XML's successful low-freq bigram strategy (min_freq=50, max=8000) with trigrams to improve PR_AUC on RTF.
+- **`rtf_seed_search_3_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SAVE_ALL_SEEDS=1 …` — Average 3 seeds to reduce variance and stabilize recall@3 FP/M gains observed in recent runs.
+
+</details>
+

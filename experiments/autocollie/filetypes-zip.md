@@ -546,3 +546,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154311-filetypes-zip` — 2026-06-03T15:43:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `12fd2256f5f13f75` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9998 | 0.9976 | 0.9871 | 352 | [log](out/autocollie/runs/2026-06-03T15-49-53_20260603T154311-filetypes-zip_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `8cadfa5939ed3b39` | zip_control_hardneg_exploit | ok | 0.9998 | 0.9975 | 0.9914 | 189 | [log](out/autocollie/runs/2026-06-03T15-55-45_20260603T154311-filetypes-zip_zip_control_hardneg_exploit.log) |
+| `7f21e72739352b83` | zip_control_posweight_reg | ok | 0.9998 | 0.9973 | 0.9882 | 22 | [log](out/autocollie/runs/2026-06-03T15-58-54_20260603T154311-filetypes-zip_zip_control_posweight_reg.log) |
+| `2c7dfa59dd5eb170` | zip_kv_vocab_split | ok | 0.9998 | 0.9975 | 0.9924 | 123 | [log](out/autocollie/runs/2026-06-03T15-59-17_20260603T154311-filetypes-zip_zip_kv_vocab_split.log) |
+| `9f5f621adebccf99` | zip_lowfreq_bigrams_trigrams | ok | 0.9997 | 0.9971 | 0.9933 | 171 | [log](out/autocollie/runs/2026-06-03T16-01-20_20260603T154311-filetypes-zip_zip_lowfreq_bigrams_trigrams.log) |
+| `ce77645d00591bb3` | zip_transfer_xml_bigrams_metrics | ok | 0.9998 | 0.9972 | 0.9926 | 255 | [log](out/autocollie/runs/2026-06-03T16-04-11_20260603T154311-filetypes-zip_zip_transfer_xml_bigrams_metrics.log) |
+| `75d4e445d9390a35` | zip_ablate_extreme_seed_ensemble | ok | 0.9998 | 0.9975 | 0.9927 | 277 | [log](out/autocollie/runs/2026-06-03T16-08-26_20260603T154311-filetypes-zip_zip_ablate_extreme_seed_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_exploit`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Aims to improve recall@3FPM by mining hard negatives on the best feature set, keeping PR_AUC flat.
+- **`zip_control_posweight_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Aims to boost recall@3FPM by down-weighting positives and increasing L2 regularization to suppress FP tail noise.
+- **`zip_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling KV vocab with value splitting to capture structured archive metadata signals.
+- **`zip_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by lowering bigram frequency floor and adding tiered trigrams to capture rarer malicious patterns.
+- **`zip_transfer_xml_bigrams_metrics`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by transferring XML route's aggressive bigram settings and adding extended metrics for archive contents.
+- **`zip_ablate_extreme_seed_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM gains from the extreme ablation using seed search ensemble to reduce variance.
+
+</details>
+

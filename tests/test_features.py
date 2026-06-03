@@ -10,6 +10,7 @@ import pytest
 
 from collimator.features import (
     FeatureSpec,
+    _assemble_partitioned_matrices,
     _finding_paths,
     _metric_kv_tokens,
     _string_values,
@@ -1776,3 +1777,51 @@ def _reset_feature_config_cache():
     feature_config_from_env.cache_clear()
     for env_var in {*_BATCH1_KNOBS, *_BATCH2_KNOBS, *_BATCH3_KNOBS, *_BATCH4_KNOBS}:
         os.environ.pop(env_var, None)
+
+
+def _ref_partitioned(batches, total_features):
+    """Reference assembly via the original global-COO -> csr_matrix path."""
+    import scipy.sparse as sp
+    tr_r, tr_c, tr_v, tr_l, te_r, te_c, te_v, te_l = [], [], [], [], [], [], [], []
+    for (a, b, c, d, e, f, g, h) in batches:
+        tr_r += a; tr_c += b; tr_v += c; tr_l += d
+        te_r += e; te_c += f; te_v += g; te_l += h
+    X_train = sp.csr_matrix(
+        (np.array(tr_v, np.float32), (np.array(tr_r, np.int64), np.array(tr_c, np.int64))),
+        shape=(len(tr_l), total_features),
+    )
+    X_test = sp.csr_matrix(
+        (np.array(te_v, np.float32), (np.array(te_r, np.int64), np.array(te_c, np.int64))),
+        shape=(len(te_l), total_features),
+    )
+    return X_train, np.array(tr_l, np.float32), X_test, np.array(te_l, np.float32)
+
+
+def test_assemble_partitioned_matrices_matches_reference():
+    # Two batches with global row indices, a zero-row in batch 2 (row 2 has no
+    # nonzeros but must still exist), and test rows only in batch 1.
+    batches = [
+        ([0, 0, 1], [0, 2, 1], [1.0, 3.0, 2.0], [0, 1],
+         [0], [3], [5.0], [1]),
+        ([3], [0], [7.0], [1, 0],
+         [], [], [], []),
+    ]
+    Xtr, ytr, Xte, yte = _assemble_partitioned_matrices(iter(batches), total_features=4)
+    rXtr, rytr, rXte, ryte = _ref_partitioned(batches, total_features=4)
+
+    assert Xtr.shape == (4, 4)
+    assert Xte.shape == (1, 4)
+    np.testing.assert_array_equal(Xtr.toarray(), rXtr.toarray())
+    np.testing.assert_array_equal(Xte.toarray(), rXte.toarray())
+    np.testing.assert_array_equal(ytr, [0, 1, 1, 0])
+    np.testing.assert_array_equal(yte, [1])
+    # Zero row (global row 2) is present and empty.
+    np.testing.assert_array_equal(Xtr.toarray()[2], [0, 0, 0, 0])
+    assert Xtr.dtype == np.float32 and ytr.dtype == np.float32
+
+
+def test_assemble_partitioned_matrices_empty():
+    Xtr, ytr, Xte, yte = _assemble_partitioned_matrices(iter([]), total_features=7)
+    assert Xtr.shape == (0, 7) and Xte.shape == (0, 7)
+    assert ytr.shape == (0,) and yte.shape == (0,)
+    assert Xtr.dtype == np.float32

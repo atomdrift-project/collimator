@@ -532,3 +532,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T160542-filetypes-xml` — 2026-06-03T16:05:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d94b6221ced9ce03` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9963 | 0.9988 | 0.9400 | 10 | [log](out/autocollie/runs/2026-06-03T16-13-39_20260603T160542-filetypes-xml_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f523420cd49ad7c8` | xml_control_train_leaves128_reg1 | ok | 0.9954 | 0.9984 | 0.9485 | 10 | [log](out/autocollie/runs/2026-06-03T16-13-49_20260603T160542-filetypes-xml_xml_control_train_leaves128_reg1.log) |
+| `bcecc2743a26e47d` | xml_control_hardneg_tail_recall | ok | 0.9978 | 0.9993 | 0.9438 | 6 | [log](out/autocollie/runs/2026-06-03T16-13-59_20260603T160542-filetypes-xml_xml_control_hardneg_tail_recall.log) |
+| `5fe46b1ec16011fa` | xml_feat_textmetrics_full_kv_split | ok | 0.9958 | 0.9987 | 0.9388 | 19 | [log](out/autocollie/runs/2026-06-03T16-14-05_20260603T160542-filetypes-xml_xml_feat_textmetrics_full_kv_split.log) |
+| `1cebdca9ab916457` | xml_feat_obj_trigrams_lowfreq | ok | 0.9962 | 0.9988 | 0.9388 | 8 | [log](out/autocollie/runs/2026-06-03T16-14-24_20260603T160542-filetypes-xml_xml_feat_obj_trigrams_lowfreq.log) |
+| `93aa4da9564ed22e` | xml_transfer_docx_textenc_extended | ok | 0.9954 | 0.9984 | 0.9485 | 3 | [log](out/autocollie/runs/2026-06-03T16-14-32_20260603T160542-filetypes-xml_xml_transfer_docx_textenc_extended.log) |
+| `852a7b741e1e5e71` | xml_generalize_seed_search_k3 | ok | 0.9954 | 0.9984 | 0.9485 | 4 | [log](out/autocollie/runs/2026-06-03T16-14-35_20260603T160542-filetypes-xml_xml_generalize_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_train_leaves128_reg1`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Control feature set with increased leaves and moderate L2 regularization to improve PR_AUC ranking without overfitting.
+- **`xml_control_hardneg_tail_recall`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Same control features with hard-negative mining to boost recall@3 FP/M by focusing on difficult benign XML files.
+- **`xml_feat_textmetrics_full_kv_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and kv_value_split to capture document obfuscation and structured attribute signals, targeting PR_AUC gains.
+- **`xml_feat_obj_trigrams_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=5` — Adds objective_trigrams with low frequency floor to catch rare malicious XML payload patterns, aiming to improve recall@3 FP/M.
+- **`xml_transfer_docx_textenc_extended`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Transfers docx route's strong text_encoding + extended_metrics combo to XML, expecting PR_AUC improvement via richer structural metrics.
+- **`xml_generalize_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Applies seed_search_k=3 to the best recent feature set to verify signal stability and reduce seed variance for reliable recall@3 FP/M.
+
+</details>
+

@@ -780,3 +780,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T160640-filetypes-jpeg` — 2026-06-03T16:06:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `14f41e5f52665705` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9820 | 0.9904 | 0.8696 | 7 | [log](out/autocollie/runs/2026-06-03T16-14-31_20260603T160640-filetypes-jpeg_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f2af0c17c0c681ba` | jpeg_control_hardneg_tuning | ok | 0.9805 | 0.9897 | 0.8235 | 3 | [log](out/autocollie/runs/2026-06-03T16-14-38_20260603T160640-filetypes-jpeg_jpeg_control_hardneg_tuning.log) |
+| `55020808e5e1727e` | jpeg_feat_kv_vocab_enable | ok | 0.9520 | 0.9757 | 0.8718 | 8 | [log](out/autocollie/runs/2026-06-03T16-14-41_20260603T160640-filetypes-jpeg_jpeg_feat_kv_vocab_enable.log) |
+| `a43e9de6294150b0` | jpeg_feat_text_metrics_full | ok | 0.9490 | 0.9740 | 0.8571 | 6 | [log](out/autocollie/runs/2026-06-03T16-14-49_20260603T160640-filetypes-jpeg_jpeg_feat_text_metrics_full.log) |
+| `2b67d0c59343c83e` | jpeg_feat_low_bigram_freq | ok | 0.9490 | 0.9740 | 0.8571 | 13 | [log](out/autocollie/runs/2026-06-03T16-14-55_20260603T160640-filetypes-jpeg_jpeg_feat_low_bigram_freq.log) |
+| `677a362adcd828f4` | jpeg_train_reg_lambda_leaves | ok | 0.8405 | 0.9335 | 0.7500 | 4 | [log](out/autocollie/runs/2026-06-03T16-15-08_20260603T160640-filetypes-jpeg_jpeg_train_reg_lambda_leaves.log) |
+| `c7c34b17296cf53a` | jpeg_seedsearch_k3_baseline | ok | 0.9691 | 0.9836 | 0.8718 | 6 | [log](out/autocollie/runs/2026-06-03T16-15-12_20260603T160640-filetypes-jpeg_jpeg_seedsearch_k3_baseline.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_hardneg_tuning`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Aims to improve PR_AUC by upweighting hard negatives to better separate tail malware from benign JPEGs while keeping ROC_AUC flat.
+- **`jpeg_feat_kv_vocab_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Aims to boost recall@3FPM by capturing malicious EXIF/IPTC metadata patterns via KV vocab, which are currently disabled.
+- **`jpeg_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — Aims to improve PR_AUC by leveraging text metrics to detect obfuscation and string anomalies in JPEG comment segments.
+- **`jpeg_feat_low_bigram_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Aims to increase recall@3FPM by including rarer structural/metadata bigrams that may indicate novel packing or obfuscation techniques.
+- **`jpeg_train_reg_lambda_leaves`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Aims to stabilize PR_AUC and ROC_AUC by increasing regularization and reducing tree complexity to prevent overfitting on rare benign JPEG artifacts.
+- **`jpeg_seedsearch_k3_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Aims to confirm PR_AUC stability across seeds, distinguishing true signal from seed-driven variance at the strict-FP tail.
+
+</details>
+

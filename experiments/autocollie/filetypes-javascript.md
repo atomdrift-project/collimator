@@ -585,3 +585,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155422-filetypes-javascript` — 2026-06-03T15:54:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e9bd947dfaaea630` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9982 | 0.9978 | 0.9774 | 80 | [log](out/autocollie/runs/2026-06-03T16-01-41_20260603T155422-filetypes-javascript_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2781479aafea4690` | js_control_deeper_trees | ok | 0.9981 | 0.9978 | 0.9786 | 121 | [log](out/autocollie/runs/2026-06-03T16-03-00_20260603T155422-filetypes-javascript_js_control_deeper_trees.log) |
+| `d00d8cd6d8a11863` | js_hard_neg_tail_recall | ok | 0.9980 | 0.9977 | 0.9796 | 59 | [log](out/autocollie/runs/2026-06-03T16-05-01_20260603T155422-filetypes-javascript_js_hard_neg_tail_recall.log) |
+| `1ea3d3d1f4f1f2d8` | js_kv_textenc_vocab | ok | 0.9980 | 0.9977 | 0.9797 | 142 | [log](out/autocollie/runs/2026-06-03T16-06-00_20260603T155422-filetypes-javascript_js_kv_textenc_vocab.log) |
+| `f862e95e6d81750e` | js_low_freq_ngrams | ok | 0.9981 | 0.9977 | 0.9768 | 117 | [log](out/autocollie/runs/2026-06-03T16-08-22_20260603T155422-filetypes-javascript_js_low_freq_ngrams.log) |
+| `112cab174929377d` | js_text_metrics_full_transfer | ok | 0.9980 | 0.9977 | 0.9784 | 112 | [log](out/autocollie/runs/2026-06-03T16-10-19_20260603T155422-filetypes-javascript_js_text_metrics_full_transfer.log) |
+| `ce4f182c40f9fbb0` | js_seed_search_3_ensemble | ok | 0.9981 | 0.9978 | 0.9737 | 67 | [log](out/autocollie/runs/2026-06-03T16-12-11_20260603T155422-filetypes-javascript_js_seed_search_3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_deeper_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with increased num_leaves and estimators to improve PR_AUC by capturing complex JS control flow without overfitting.
+- **`js_hard_neg_tail_recall`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining to suppress benign scores and improve recall@3 FP/M by tightening the decision boundary at low false positive rates.
+- **`js_kv_textenc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture JS object structures and string patterns, targeting PR_AUC gains from richer lexical signal.
+- **`js_low_freq_ngrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lower bigram and tiered trigram frequency floors to capture rarer malicious JS patterns, aiming to boost recall@3 FP/M by detecting novel obfuscation.
+- **`js_text_metrics_full_transfer`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Transfer text_metrics_full from sister script routes to capture obfuscation density, targeting PR_AUC improvement via structural text signals.
+- **`js_seed_search_3_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search with ensemble averaging on the control feature set to stabilize recall@3 FP/M gains and reduce variance across random splits.
+
+</details>
+

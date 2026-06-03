@@ -420,3 +420,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T154310-filetypes-zst` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0abd90af034270bb` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 1.0000 | 0.9996 | 33 | [log](out/autocollie/runs/2026-06-03T15-50-39_20260603T154310-filetypes-zst_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f1da9b962a8ef57c` | zst_control_dart_tail | ok | 1.0000 | 1.0000 | 0.9996 | 31 | [log](out/autocollie/runs/2026-06-03T15-51-12_20260603T154310-filetypes-zst_zst_control_dart_tail.log) |
+| `255ad3df283d3462` | zst_feat_kv_vocab_split | ok | 1.0000 | 1.0000 | 0.9996 | 36 | [log](out/autocollie/runs/2026-06-03T15-51-43_20260603T154310-filetypes-zst_zst_feat_kv_vocab_split.log) |
+| `0564bf99769a90ae` | zst_feat_low_bigram_freq | ok | 1.0000 | 1.0000 | 0.9996 | 25 | [log](out/autocollie/runs/2026-06-03T15-52-19_20260603T154310-filetypes-zst_zst_feat_low_bigram_freq.log) |
+| `f4824ef03113dbdb` | zst_feat_text_metrics_enc | ok | 1.0000 | 1.0000 | 0.9996 | 28 | [log](out/autocollie/runs/2026-06-03T15-52-44_20260603T154310-filetypes-zst_zst_feat_text_metrics_enc.log) |
+| `a5edc32bf54a9475` | zst_seed_ensemble_k3 | ok | 1.0000 | 1.0000 | 1.0000 | 4 | [log](out/autocollie/runs/2026-06-03T15-53-12_20260603T154310-filetypes-zst_zst_seed_ensemble_k3.log) |
+| `ac54eb3d0667c5fa` | zst_train_scalepos05_hardneg | ok | 1.0000 | 1.0000 | 0.9996 | 13 | [log](out/autocollie/runs/2026-06-03T15-53-16_20260603T154310-filetypes-zst_zst_train_scalepos05_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_dart_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Replicate best feature_env and switch to dart boosting to improve recall@3 FP/M by adding dropout-style regularization that sharpens the low-FPR decision boundary.
+- **`zst_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab and kv_value_split to capture internal key-value structure, aiming to improve PR_AUC and recall@3 FP/M by adding discriminative signal for compressed payloads.
+- **`zst_feat_low_bigram_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 100 to capture rarer malicious patterns, targeting improved recall@3 FP/M without hurting PR_AUC.
+- **`zst_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_metrics_full and text_encoding to extract structural text signals, aiming to boost PR_AUC and recall@3 FP/M on text-heavy zst payloads.
+- **`zst_seed_ensemble_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Use seed_search_k=3 and save_all_seeds to average predictions, reducing seed variance and stabilizing recall@3 FP/M across different RNG splits.
+- **`zst_train_scalepos05_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Down-weight positives with scale_pos_weight_mult=0.5 and add hard negatives to sharpen the decision boundary at low FPR, targeting recall@3 FP/M.
+
+</details>
+

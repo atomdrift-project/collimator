@@ -648,3 +648,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155930-filetypes-macho` — 2026-06-03T15:59:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6a515110d7bacb66` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9966 | 0.9992 | 0.9701 | 57 | [log](out/autocollie/runs/2026-06-03T16-05-46_20260603T155930-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `72bcf23b26e4844a` | macho_control_train_exploit | ok | 0.9961 | 0.9991 | 0.9633 | 69 | [log](out/autocollie/runs/2026-06-03T16-06-43_20260603T155930-filetypes-macho_macho_control_train_exploit.log) |
+| `edfdb274fd377813` | macho_symbol_vocab_bigrams | ok | 0.9966 | 0.9992 | 0.9747 | 75 | [log](out/autocollie/runs/2026-06-03T16-07-52_20260603T155930-filetypes-macho_macho_symbol_vocab_bigrams.log) |
+| `633763c8070a0dd3` | macho_low_bigram_freq | ok | 0.9960 | 0.9991 | 0.9619 | 56 | [log](out/autocollie/runs/2026-06-03T16-09-07_20260603T155930-filetypes-macho_macho_low_bigram_freq.log) |
+| `86283f0036aed177` | macho_hardneg_transfer | ok | 0.9965 | 0.9992 | 0.9715 | 14 | [log](out/autocollie/runs/2026-06-03T16-10-03_20260603T155930-filetypes-macho_macho_hardneg_transfer.log) |
+| `5f71f1d9da058273` | macho_ablate_extreme | ok | 0.9959 | 0.9990 | 0.9718 | 51 | [log](out/autocollie/runs/2026-06-03T16-10-17_20260603T155930-filetypes-macho_macho_ablate_extreme.log) |
+| `5ffce609a12c8352` | macho_seed_search_generalize | ok | 0.9965 | 0.9992 | 0.9622 | 63 | [log](out/autocollie/runs/2026-06-03T16-11-08_20260603T155930-filetypes-macho_macho_seed_search_generalize.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_exploit`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env and increase num_leaves/estimators to improve PR_AUC by capturing finer decision boundaries without changing features.
+- **`macho_symbol_vocab_bigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 …` — Enable symbol_vocab and symbol_bigrams to capture Mach-O import co-occurrence patterns, targeting PR_AUC gains from structural binary signals.
+- **`macho_low_bigram_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq from 1000 to 500 to include rarer but high-signal n-grams, aiming to boost recall@3FPM by catching obfuscated or novel patterns.
+- **`macho_hardneg_transfer`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Port hard_negative_fraction/weight from perl route and disable clusters group to reduce noise, targeting PR_AUC improvement via sharper benign/malware separation.
+- **`macho_ablate_extreme`** `EXP_ESTIMATORS=250 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to remove tail noise that may hurt ranking, targeting PR_AUC stability while preserving recall@3FPM.
+- **`macho_seed_search_generalize`** `EXP_BIGRAM_MIN_FREQ=750 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with slightly relaxed bigram_min_freq to average out seed variance, targeting stable recall@3FPM gains across different random splits.
+
+</details>
+

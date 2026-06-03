@@ -1982,3 +1982,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260603T154310-filetypes-pdf` — 2026-06-03T15:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2e04a04e5c9cf227` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 0.9992 | 0.9809 | 15 | [log](out/autocollie/runs/2026-06-03T15-49-26_20260603T154310-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2515e9d2e80287ae` | pdf_ctrl_extratrees_lr003 | ok | 1.0000 | 0.9990 | 0.9748 | 12 | [log](out/autocollie/runs/2026-06-03T15-49-41_20260603T154310-filetypes-pdf_pdf_ctrl_extratrees_lr003.log) |
+| `03210991208720d0` | pdf_feat_textenc_metrics | ok | 1.0000 | 0.9991 | 0.9832 | 19 | [log](out/autocollie/runs/2026-06-03T15-49-52_20260603T154310-filetypes-pdf_pdf_feat_textenc_metrics.log) |
+| `ca6836f2590d18d5` | pdf_feat_kv_vocab_split | ok | 1.0000 | 0.9993 | 0.9964 | 27 | [log](out/autocollie/runs/2026-06-03T15-50-11_20260603T154310-filetypes-pdf_pdf_feat_kv_vocab_split.log) |
+| `bf2d4087ef11d4ff` | pdf_abl_crit_ngrams_off | ok | 1.0000 | 0.9991 | 0.9959 | 31 | [log](out/autocollie/runs/2026-06-03T15-50-39_20260603T154310-filetypes-pdf_pdf_abl_crit_ngrams_off.log) |
+| `a07bc9f692608723` | pdf_xfer_docx_obfuscation | ok | 1.0000 | 0.9991 | 0.9765 | 30 | [log](out/autocollie/runs/2026-06-03T15-51-10_20260603T154310-filetypes-pdf_pdf_xfer_docx_obfuscation.log) |
+| `5107874f08386cad` | pdf_gen_seedsearch3_avg | ok | 1.0000 | 0.9990 | 0.9971 | 21 | [log](out/autocollie/runs/2026-06-03T15-51-39_20260603T154310-filetypes-pdf_pdf_gen_seedsearch3_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_extratrees_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Control baseline replicating best feature_env with extra_trees and lower LR to stabilize tail recall@3FPM while preserving PR_AUC.
+- **`pdf_feat_textenc_metrics`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture document obfuscation patterns, aiming to boost PR_AUC and recall@3FPM.
+- **`pdf_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 …` — Activates kv_vocab and kv_value_split to extract structured metadata signals from PDF objects, targeting PR_AUC gains.
+- **`pdf_abl_crit_ngrams_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=0 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Disables crit_category_ngrams to reduce noisy high-crit overlaps, aiming to maintain PR_AUC while improving ROC_AUC stability.
+- **`pdf_xfer_docx_obfuscation`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfers document_obfuscation_features and line_length_buckets from docx route to capture PDF evasion tactics, targeting recall@3FPM.
+- **`pdf_gen_seedsearch3_avg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Averages 3 seeds via seed_search_k to reduce variance and stabilize tail recall@3FPM while preserving PR_AUC.
+
+</details>
+

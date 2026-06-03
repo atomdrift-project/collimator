@@ -650,3 +650,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260603T155330-filetypes-pe` — 2026-06-03T15:53:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fece6b672d182234` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9994 | 0.9995 | 0.9900 | 237 | [log](out/autocollie/runs/2026-06-03T16-01-44_20260603T155330-filetypes-pe_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `32625624636c264c` | pe_control_hardneg_tuned_recall | ok | 0.9993 | 0.9994 | 0.9889 | 306 | [log](out/autocollie/runs/2026-06-03T16-05-41_20260603T155330-filetypes-pe_pe_control_hardneg_tuned_recall.log) |
+| `cd608570ca7606e6` | pe_feat_kv_vocab_split_15k | ok | 0.9994 | 0.9994 | 0.9886 | 246 | [log](out/autocollie/runs/2026-06-03T16-10-47_20260603T155330-filetypes-pe_pe_feat_kv_vocab_split_15k.log) |
+| `04575ae067a4db9c` | pe_feat_pe_flags_overlay_temporal | ok | 0.9994 | 0.9994 | 0.9882 | 187 | [log](out/autocollie/runs/2026-06-03T16-14-52_20260603T155330-filetypes-pe_pe_feat_pe_flags_overlay_temporal.log) |
+| `7fa7547ee1a5c83b` | pe_transfer_lowbigram_freq200 | ok | 0.9994 | 0.9994 | 0.9886 | 152 | [log](out/autocollie/runs/2026-06-03T16-17-59_20260603T155330-filetypes-pe_pe_transfer_lowbigram_freq200.log) |
+| `bfc3c9451d7d04a4` | pe_abl_extreme_off | ok | 0.9994 | 0.9994 | 0.9896 | 198 | [log](out/autocollie/runs/2026-06-03T16-20-31_20260603T155330-filetypes-pe_pe_abl_extreme_off.log) |
+| `0f84846db14bc1b2` | pe_generalize_seed314 | ok | 0.9994 | 0.9994 | 0.9910 | 171 | [log](out/autocollie/runs/2026-06-03T16-23-49_20260603T155330-filetypes-pe_pe_generalize_seed314.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_tuned_recall`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.12 EXP_HARD_NEGATIVE_WEIGHT=14 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with tuned hard negatives and leaves to maximize recall@3FPM by better separating hard benigns from malware while preserving PR_AUC.
+- **`pe_feat_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab with value splitting to capture fine-grained string signals in PE headers, aiming to boost PR_AUC and recall@3FPM.
+- **`pe_feat_pe_flags_overlay_temporal`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Add PE format flags, temporal anomalies, and overlay signals to improve ranking of packed binaries, targeting recall@3FPM.
+- **`pe_transfer_lowbigram_freq200`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer low-frequency bigram strategy from xml route to capture rarer PE patterns, aiming to improve PR_AUC.
+- **`pe_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ablate extreme features to reduce tail noise and improve recall@3FPM without hurting PR_AUC.
+- **`pe_generalize_seed314`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Generalization check with alternate seed on control features to verify signal stability for recall@3FPM.
+
+</details>
+
