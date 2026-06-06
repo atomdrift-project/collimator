@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
+.PHONY: azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -79,13 +79,86 @@ AZOTH_ROUTE_POLICIES_CSV ?= $(AZOTH_ROOT)/route_policies.csv
 # gracefully when the file is missing, so unsetting this is a safe no-op.
 #
 # The default points at the in-repo committed snapshot so fresh checkouts get
-# the optimization without having to first run the build script. Regenerate
-# from current corpus statistics with:
+# the optimization without having to first run the build script. This snapshot
+# is frequency-only (min-freq 10, ~30k features) and PINNED — it does not track
+# the corpus and goes stale. Two ways to regenerate:
+#
+#   # frequency-only (legacy, conservative):
 #   python scripts/azoth_feature_frequency_audit.py
 #   python scripts/azoth_build_allowed_features.py --threshold 10 \
 #       --output src/collimator/data/azoth_allowed_features_minfreq10.json
-AZOTH_ALLOWED_FEATURES_FILE ?= src/collimator/data/azoth_allowed_features_minfreq10.json
+#
+#   # self-calibrating importance-union ∪ frequency-floor (recommended):
+#   make azoth-build-allowlist          # -> out/models/azoth/allowed_features.json
+#
+# The importance-union form keeps the features the deployed ensemble actually
+# splits on (so it can prune deeper — ~13k vs 30k — without a tail hit) PLUS a
+# live-recounted frequency floor so new features are still discoverable. Adopt a
+# regenerated allowlist only behind the deploy regression gate
+# (scripts/check_azoth_regression.py) — see azoth-build-allowlist.
+#
+# 2026-06-05: switched default from minfreq10 (~21.5k features, of which the
+# trees only split on ~4.1k) to the importance∪floor "10k" pin: 8,595 features
+# (4,114 importance + 4,481 frequency-floor buffer), a 60% cut with no proxy
+# recall@1e-3 regression across general/elf/source and javascript/python/elf
+# (scripts/azoth_allowlist_experiment.py sweep). The L50 tail is unmeasured by
+# the proxy, so this only takes effect on the NEXT train and is GATED there by
+# check_azoth_regression before deploy. Inert for deploying an already-trained
+# bundle (deploy loads baked-in specs, not this allowlist).
+AZOTH_ALLOWED_FEATURES_FILE ?= src/collimator/data/azoth_allowed_features_importance10k.json
 export COLLIMATOR_ALLOWED_FEATURES_FILE := $(AZOTH_ALLOWED_FEATURES_FILE)
+
+# Regenerate the self-calibrating allowlist from the live deployed bundle's
+# feature importances (one-cycle feedback) unioned with a frequency floor
+# recounted from the current DB. Run this each deploy cycle BEFORE a retrain to
+# keep the kept-feature set tracking the data instead of pinning a stale file.
+# AZOTH_ALLOWLIST_SIZE is the aggressiveness knob (memory vs tail) that autocollie
+# should sweep + validate against FP/100M; it is NOT pinned here.
+AZOTH_ALLOWLIST_SIZE ?= 15000
+azoth-build-allowlist: venv check-db
+	$(PYTHON) scripts/azoth_build_feature_allowlist.py \
+		--bundle $(AZOTH_DEPLOY_DIR) \
+		--db $(DB) \
+		--workers $(if $(WORKERS),$(WORKERS),16) \
+		--target-size $(AZOTH_ALLOWLIST_SIZE) \
+		--output out/models/azoth/allowed_features.json
+	@echo "to use it for the next retrain:"
+	@echo "  make azoth-full-train AZOTH_ALLOWED_FEATURES_FILE=out/models/azoth/allowed_features.json"
+	@echo "then gate before deploy: scripts/check_azoth_regression.py (already in the deploy flow)"
+
+# Non-blocking drift monitor: re-extracts the proxy routes from the deployed
+# bundle + current corpus, then scores the CURRENT pin ($(AZOTH_ALLOWED_FEATURES_FILE))
+# full-vs-pruned. Read-only — it never changes the pin or deploys; it just
+# reports worst_dR@1e-3 and an OK / RE-TUNE verdict so you (or autocollie) know
+# when the committed level has drifted. Run it after a deploy cycle. The proxy
+# screens coarse quality only (R@1e-3); the L50 tail stays owned by the gate.
+AZOTH_MONITOR_ROUTES ?= general,elf,source
+azoth-allowlist-monitor: venv check-db
+	-$(PYTHON) scripts/azoth_allowlist_experiment.py \
+		--prepare --routes $(AZOTH_MONITOR_ROUTES) --db $(DB) \
+		--workers $(if $(WORKERS),$(WORKERS),16) \
+		--committed $(AZOTH_ALLOWED_FEATURES_FILE) \
+		--out out/allowlist_exp/monitor.json
+	@echo "monitor report: out/allowlist_exp/monitor.json (non-blocking; never changes the pin)"
+
+# The allowlist "virtual route": sweep candidate levels on the proxy routes and
+# write the SMALLEST allowlist whose worst proxy R@1e-3 drop stays within
+# AZOTH_TUNE_TOLERANCE. Produces a CANDIDATE pin only — promotion is gated
+# (validate via a check_azoth_regression'd full-train, never auto-adopted).
+# This is the collimator-side entry point autocollie drives for the level knob;
+# the proxy screens coarse quality, the gate owns the L50 tail.
+AZOTH_TUNE_LEVELS ?= 8000,11000,14000,17000,20000
+AZOTH_TUNE_TOLERANCE ?= -0.002
+azoth-allowlist-tune: venv check-db
+	-$(PYTHON) scripts/azoth_allowlist_experiment.py \
+		--prepare --routes $(AZOTH_MONITOR_ROUTES) --db $(DB) \
+		--workers $(if $(WORKERS),$(WORKERS),16) \
+		--tune $(AZOTH_TUNE_LEVELS) --tolerance $(AZOTH_TUNE_TOLERANCE) \
+		--out out/models/azoth/allowed_features_candidate.json
+	@echo "candidate pin: out/models/azoth/allowed_features_candidate.json (NOT adopted — gated)"
+	@echo "validate via gated retrain:"
+	@echo "  make azoth-full-train AZOTH_ALLOWED_FEATURES_FILE=out/models/azoth/allowed_features_candidate.json EXP_RERUN=1"
+
 AZOTH_ROUTE_POLICIES_MD ?= $(AZOTH_ROOT)/route_policies.md
 AZOTH_GLOBAL_POLICY_METRICS ?= $(AZOTH_ROOT)/global_policy_metrics.json
 AZOTH_GLOBAL_POLICY_METRICS_MD ?= $(AZOTH_ROOT)/global_policy_metrics.md
@@ -127,6 +200,19 @@ AZOTH_DEPLOY_DIAGNOSTICS ?= 0
 # regression gate silently skips the LWM check, so this is fully
 # opt-in — set the LWM once you have a deploy you want to lock in.
 AZOTH_LOW_WATER_MARK_DIR ?= $(OUT_ROOT)/azoth_low_water_mark
+# Extra args appended to the check_azoth_regression.py deploy gate. Empty by
+# default (gate enforced). Set e.g.
+#   AZOTH_REGRESSION_ARGS="--recall-tolerance 1 --lwm-tolerance 1"
+# to waive regressions for an intentional baseline-changing deploy (a new
+# calibration scheme, a fresh start). litmus validate + severity-sync stay on.
+AZOTH_REGRESSION_ARGS ?=
+# Global FP-budget gate args for azoth_policy_global_metrics. Default enforces
+# the gate (fail if a level exceeds 30x its FP budget). Set to empty
+#   AZOTH_BUDGET_GATE_ARGS=
+# to WAIVE it for an intentional ship that accepts a known FP overrun (e.g. a
+# fresh-start deploy where some routes are still overconfident). litmus validate
+# + severity-sync stay on.
+AZOTH_BUDGET_GATE_ARGS ?= --fail-on-budget --max-budget-multiplier 30
 AZOTH_POLICY_OVERRIDE_ROUTE ?=
 AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/litmus/models/azoth
 ELF_ROUTE_OUTPUT_DIR ?= $(AZOTH_ROOT)/elf_route_optimization
@@ -260,7 +346,13 @@ EXP_RERUN ?= 0
 EXP_RERUN_ARG := $(if $(filter 1 true yes,$(EXP_RERUN)),--rerun-existing,)
 EXP_ROUTE ?= general
 EXP_IDEA ?= $(if $(EXP_TAG),$(patsubst _%,%,$(EXP_TAG)),adhoc)
-EXP_ALLOWED_FEATURES_FILE ?=
+# Default experiments (incl. every autocollie `make experiment`) to the SAME
+# allowlist the deploy uses, so screen/confirm/promote evaluate candidates on the
+# pruned feature set they'll actually ship with — not the full vocab. Was empty
+# (full vocab), which made autocollie screen at ~21k while deployed models run
+# the ~10k pin: a feature-axis apples-to-oranges. Override with
+# `EXP_ALLOWED_FEATURES_FILE=` (empty) to explore the full vocab deliberately.
+EXP_ALLOWED_FEATURES_FILE ?= $(abspath $(AZOTH_ALLOWED_FEATURES_FILE))
 EXP_FOLDS ?= 0
 EXP_HOLDOUT_FRACTION ?= 0.12
 EXP_ESTIMATORS ?= 180
@@ -291,7 +383,27 @@ EXP_SEED_SEARCH_K ?= 1
 EXP_SAVE_ALL_SEEDS ?= 0
 EXP_TEST_NATURAL_PREVALENCE ?= 0
 EXP_BETA ?= 2.0
-EXP_MIN_MALWARE_SCORE ?= 0
+# Asymmetric label-quality gate: keep ALL benigns (EXP_MIN_SAMPLE_SCORE=0) but
+# require malware to clear a higher bar. A low-score benign is still benign, and
+# score=0 is where the clean curated corpus lives (foraged/harvest/distro/pypi,
+# ~2.1M benigns — files cleave found nothing notable in). Excluding them starves
+# benign-poor routes into collapse: at floor 1, filetypes/rtf kept only 76
+# benigns vs ~5000 malware and went to AUC 0.50 / 100% benign-FP; at floor 0
+# (449 benigns) the same route is perfect. Malicious git checkouts / multi-file
+# samples label every file `bad`, but most are benign filler that scores low —
+# they don't separate from real benigns and poison weak routes (e.g. filetypes/c
+# had 2,367 of 6,599 "malware" at score=1). Dropping malware below this score
+# from TRAINING (test set unchanged) focuses the model on confident malware.
+# autocollie tunes this (knobs.json: min_malware_score, 0-9). Conceptually the
+# non-archive analog of skip-benign-archive-item.
+# 2026-06-05: this is now the PRIMARY label-quality gate (benigns dropped to
+# the >= 1 floor via COLLIMATOR_MIN_SAMPLE_SCORE — filtering them starves
+# routes into FPs). A score-sweep (scripts/sweep_malware_score.py) over go/c/
+# ruby showed the score=1 malware is genuine noise: flooring go's hostiles at
+# 4 lifts recall@0.1%FP from 0.645 -> 0.94 (+30pp at ship operating point),
+# helps c slightly, and leaves ruby's tail recall flat. 4 is the global
+# default; autocollie tunes per-route (go wants ~5, ruby ~2).
+EXP_MIN_MALWARE_SCORE ?= 4
 # Ablation 2026-04-10: silent_packer (Exp 43) and mtime_kurtosis (Exp 44) were
 # net-negative at 75k experiment scale. air_gap_signal (Exp 46) and the
 # extreme-features bundle (Exps 48/49/54/55/56) are kept ON.
@@ -321,7 +433,7 @@ EXP_HOSTILE_ESCALATION_FEATURES ?= 1
 EXP_SUSPICIOUS_BREADTH_DENSITY ?= 1
 EXP_STRUCT_FILE_RISK_COVERAGE ?= 1
 EXP_TOP_K_RISK_FILES ?= 1
-EXP_MIN_SAMPLE_SCORE ?= 3
+EXP_MIN_SAMPLE_SCORE ?= 0
 # N-gram tuning: path depth (0=full, 2/3/4=truncated) and min crit (0=all, 3=notable+)
 EXP_NGRAM_PATH_DEPTH ?= 0
 EXP_NGRAM_MIN_CRIT ?= 0
@@ -535,50 +647,50 @@ azoth-fast-train: venv check-db
 #      the full OOF coverage, not just the dev byte-range filter.
 #   7. Deploy.
 #
-# Note: only the GENERAL model gets OOF treatment in this iteration. The
-# global FP/100M budget is dominated by the general route's CP analysis, so
-# unblocking that unlocks meaningful L50 thresholds for the deployed
-# bundle. Per-route specialists keep their single-pass calibration —
-# their own per-filetype CP floors are still volume-floored and that's
-# documented in the cards.
+# Full k=2 OOF for BOTH the general model AND the per-route specialists. Each
+# fold trains general + specialists on that fold's data (excluding the OOF
+# fold), so every row is scored by a model that did NOT train on it — honest
+# out-of-fold probabilities for the whole ensemble, used at calibration.
+#
+# This replaced the earlier general-only-OOF flow once we (a) measured that
+# specialists are ~30-40 min/fold (folds skip benchmarks), not the ~27h the old
+# estimate assumed, and (b) found that in-fold specialist calibration overshoots
+# catastrophically — e.g. filetypes/c picked a 0.123 threshold flagging 663k
+# benigns — poisoning the deployed dial. OOF-calibrating the specialists is
+# corrective, not optional. Set THRESHOLD_MAX_ID / AZOTH_SPECIALIST_PARALLELISM
+# as usual; they propagate to the sub-makes.
 azoth-publish-train: venv check-db
-	@echo "azoth-publish-train: starting k=2 OOF run."
-	@echo "  Old structure: 3× full _azoth-train (each ~28h with specialists)."
-	@echo "  New structure: 3× azoth-general (~1h each, skip rescore for folds)"
-	@echo "                 + 1× azoth-specialists (~27h, on final production general)."
-	@echo "  Expected savings: ~2 days vs the pre-split flow."
-	@# Step 1: train fold A — general only, with fold 0 excluded, no rescore.
-	@echo "azoth-publish-train: training fold A (excluding OOF fold 0)"
+	@echo "azoth-publish-train: starting full k=2 OOF run (general + specialists)."
+	@echo "  3x general + 3x specialists (folds skip benchmark) + OOF merge/route-scores + calibrate."
+	@# Fold A: general (exclude OOF fold 0), then specialists trained on the fold-A general.
+	@echo "azoth-publish-train: fold A — general + specialists (excluding OOF fold 0)"
 	$(MAKE) azoth-general-fold-a \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	@# Step 2: train fold B — general only, with fold 1 excluded, no rescore.
-	@echo "azoth-publish-train: training fold B (excluding OOF fold 1)"
+	$(MAKE) azoth-specialists-fold-a
+	@# Fold B: general (exclude OOF fold 1), then specialists trained on the fold-B general.
+	@echo "azoth-publish-train: fold B — general + specialists (excluding OOF fold 1)"
 	$(MAKE) azoth-general-fold-b \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	@# Step 3: train final production general (no fold exclusion). Rescore is
-	@# deliberately skipped here too — azoth-oof-merge-general below
-	@# overwrites threshold_scores with honest OOF probabilities, so the
-	@# in-sample rescore would be wasted (and would briefly land a stale
-	@# score table on disk between steps 3 and 4 if anything crashed).
-	@echo "azoth-publish-train: training final production general"
+	$(MAKE) azoth-specialists-fold-b
+	@# Final production general + specialists (no fold exclusion) — these are the
+	@# deployed models. Rescore is skipped: the OOF merge/route-scores below write
+	@# honest OOF probabilities over these models, so an in-sample rescore is wasted.
+	@echo "azoth-publish-train: final production general + specialists"
 	$(MAKE) azoth-general \
 		AZOTH_GENERAL_SKIP_RESCORE=1 \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	@# Step 4: combine fold predictions into honest OOF general probs.
-	$(MAKE) azoth-oof-merge-general
-	@# Step 5: train specialists ONCE on the production general. This was
-	@# previously buried inside three rounds of _azoth-train (and thus ran
-	@# three times); the fold runs threw two of those specialist trees
-	@# straight into the bin.
 	$(MAKE) azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0
-	@# Step 6: deploy. --partition=all is intentional — OOF predictions
-	@# cover all of train+dev, so we use the full coverage rather than
-	@# restricting to dev byte-range.
-	$(MAKE) azoth-deploy AZOTH_CALIBRATE_PARTITION=all
-	@echo "azoth-publish-train: complete; OOF bundle deployed."
+	@# Honest OOF scores: general (fold-A-on-0 + fold-B-on-1 + prod-on-test) and
+	@# per-route specialists (the same triplet per route).
+	$(MAKE) azoth-oof-merge-general
+	$(MAKE) azoth-oof-route-scores
+	@# Deploy. --partition=all uses the full OOF coverage; AZOTH_USE_OOF_ROUTE_SCORES=1
+	@# swaps each specialist's in-fold scores for its honest OOF scores at calibration.
+	$(MAKE) azoth-deploy AZOTH_CALIBRATE_PARTITION=all AZOTH_USE_OOF_ROUTE_SCORES=1
+	@echo "azoth-publish-train: complete; full-OOF bundle deployed."
 	@echo "azoth-publish-train: archived fold bundles at out/models/azoth.oof-fold-{a,b}/"
 
 # azoth-general: train the general model at deploy fidelity, promote it
@@ -607,6 +719,9 @@ azoth-general: venv check-db azoth-clean-bundle
 		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
 		--route general \
 		--set DB=$(DB) \
+		--set EXP_ALLOWED_FEATURES_FILE=$(abspath $(AZOTH_ALLOWED_FEATURES_FILE)) \
+		--set COLLIMATOR_MIN_SAMPLE_SCORE=$(EXP_MIN_SAMPLE_SCORE) \
+		--set EXP_MIN_MALWARE_SCORE=$(EXP_MIN_MALWARE_SCORE) \
 		--set EXP_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES) \
 		--set EXP_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES) \
 		--set EXP_ESTIMATORS=$(DEPLOY_ESTIMATORS) \
@@ -902,6 +1017,7 @@ azoth-specialists: venv check-db
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
+		--min-malware-score $(EXP_MIN_MALWARE_SCORE) \
 		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
 		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
@@ -960,6 +1076,7 @@ azoth-specialists-fold-a: venv check-db
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
+		--min-malware-score $(EXP_MIN_MALWARE_SCORE) \
 		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
 		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
@@ -994,6 +1111,7 @@ azoth-specialists-fold-b: venv check-db
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
+		--min-malware-score $(EXP_MIN_MALWARE_SCORE) \
 		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
 		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
@@ -1206,7 +1324,7 @@ azoth-validate: azoth-calibrate
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
-		--fail-on-budget --max-budget-multiplier 30
+		$(AZOTH_BUDGET_GATE_ARGS)
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_VALIDATE_ROUTED_METRICS_ARGS) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/azoth_route_policy_eval.py \
 		--score-table $(AZOTH_ROOT)/score_table.npz \
@@ -1230,7 +1348,7 @@ azoth-validate: azoth-calibrate
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_PREVIOUS_BUNDLE_ARG:--previous-bundle=--source-bundle) && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_PREVIOUS_BUNDLE_ARG:--previous-bundle=--source-bundle) $(AZOTH_REGRESSION_ARGS) && \
 	  if [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "1" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "true" ] || [ "$(AZOTH_SKIP_LITMUS_VALIDATE)" = "yes" ]; then \
 	    echo "Skipping litmus deployed-ensemble compatibility checks (AZOTH_SKIP_LITMUS_VALIDATE=$(AZOTH_SKIP_LITMUS_VALIDATE))"; \
 	  else \
@@ -1355,7 +1473,7 @@ azoth-deploy: azoth-calibrate
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
-		--fail-on-budget --max-budget-multiplier 30
+		$(AZOTH_BUDGET_GATE_ARGS)
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_PREVIOUS_BUNDLE_ARG) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/azoth_route_policy_eval.py \
 		--score-table $(AZOTH_ROOT)/score_table.npz \
@@ -1372,6 +1490,13 @@ azoth-deploy: azoth-calibrate
 # mirror it into $(AZOTH_DEPLOY_DIR), and verify litmus's default deployed path.
 # It intentionally skips azoth-calibrate, diagnostics, policy search, routed
 # metrics, and README regeneration; use after those artifacts already exist.
+#
+# The litmus checks include `litmus validate` (fatal) against the STAGED bundle
+# before the rsync. `scan` only WARNs when an offset-written feature family
+# (present/maxcrit/bigram/trigram/unsigned_bigram) is present-but-non-contiguous
+# in vocab order — the failure mode an out-of-sync allowlist prune produces —
+# whereas validate's ExtractContext::validate_layout() rejects it, so a bundle
+# that would run silently degraded never reaches $(AZOTH_DEPLOY_DIR).
 azoth-deploy-final: venv
 	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
@@ -1409,7 +1534,7 @@ azoth-deploy-final: venv
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
 	  cp "$(AZOTH_GLOBAL_POLICY_METRICS_MD)" "$$_STAGE/global_policy_metrics.md" && \
 	  $(PYTHON) scripts/validate_azoth_bundle.py "$$_STAGE" && \
-	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_PREVIOUS_BUNDLE_ARG:--previous-bundle=--source-bundle) && \
+	  $(PYTHON) scripts/check_azoth_regression.py --staged "$$_STAGE" --deployed "$(AZOTH_DEPLOY_DIR)" --low-water-mark "$(AZOTH_LOW_WATER_MARK_DIR)" $(AZOTH_PREVIOUS_BUNDLE_ARG:--previous-bundle=--source-bundle) $(AZOTH_REGRESSION_ARGS) && \
 	  echo "Preparing litmus before compatibility checks (update + build + update-rules; each non-fatal, all run)..." && \
 	  ( cd $(LITMUS_DIR) || { echo "WARN: cannot enter $(LITMUS_DIR); skipping litmus prep"; exit 0; }; \
 	    { echo "==> update litmus (git pull)"; git pull --ff-only; } || echo "WARN: litmus update (git pull) failed; continuing with current checkout"; \
@@ -1419,6 +1544,10 @@ azoth-deploy-final: venv
 	  echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
 	  ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
 	  $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf && \
+	  echo "Running litmus validate (fatal feature-layout + benign-corpus gate) against staged copy..." && \
+	  ( cd $(LITMUS_DIR) && cargo run --release -- --model-dir "$$_STAGE" validate --skip-traits ) && \
+	  echo "Checking deploy tuning goal agreement (collimator / bundle / litmus)..." && \
+	  $(PYTHON) scripts/check_severity_level_sync.py --staged "$$_STAGE" --litmus-dir $(LITMUS_DIR) && \
 	  mkdir -p "$(AZOTH_DEPLOY_DIR)" && \
 	  flock "$$_LOCK" rsync -a --delete-before \
 	    --filter='protect /.git/***' \
@@ -1948,7 +2077,7 @@ azoth-augment-small-routes: venv check-db
 		--score-table $(AZOTH_SCORE_TABLE) \
 		--output $(AZOTH_GLOBAL_POLICY_METRICS) \
 		--markdown $(AZOTH_GLOBAL_POLICY_METRICS_MD) \
-		--fail-on-budget --max-budget-multiplier 30
+		$(AZOTH_BUDGET_GATE_ARGS)
 	$(PYTHON) scripts/compute_routed_metrics.py --azoth-root $(AZOTH_ROOT) --db $(DB) $(AZOTH_PREVIOUS_BUNDLE_ARG) $(AZOTH_ROUTED_METRICS_ARGS)
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 

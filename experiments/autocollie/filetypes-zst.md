@@ -444,3 +444,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T022510-filetypes-zst` — 2026-06-06T02:25:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `556f5ce3c2a97cab` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 1.0000 | 0.9996 | 15 | [log](out/autocollie/runs/2026-06-06T02-31-13_20260606T022510-filetypes-zst_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `a07d0270f45b7fc8` | zst_control_scalepos05 | ok | 0.9939 | 0.9953 | 0.9833 | 16 | [log](out/autocollie/runs/2026-06-06T02-31-29_20260606T022510-filetypes-zst_zst_control_scalepos05.log) |
+| `7ac74b17c3c0e09a` | zst_feat_text_metrics_enc | ok | 0.9942 | 0.9955 | 0.9833 | 14 | [log](out/autocollie/runs/2026-06-06T02-31-45_20260606T022510-filetypes-zst_zst_feat_text_metrics_enc.log) |
+| `e9be55315260a48f` | zst_feat_kv_lowbigram | ok | 0.9942 | 0.9955 | 0.9833 | 17 | [log](out/autocollie/runs/2026-06-06T02-32-00_20260606T022510-filetypes-zst_zst_feat_kv_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_scalepos05`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by down-weighting positives to tighten the score distribution at the strict-FP tail, while keeping PR_AUC and ROC_AUC flat.
+- **`zst_feat_text_metrics_enc`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3 FP/M by adding structural text metrics and encoding signals that may capture obfuscation patterns in archived payloads.
+- **`zst_feat_kv_lowbigram`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding the KV vocabulary and lowering bigram frequency floor to capture rarer but highly predictive patterns in zst archives.
+
+</details>
+
+## Cycle `20260606T094325-filetypes-zst` — 2026-06-06T09:43:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `556f5ce3c2a97cab` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 1.0000 | 0.9996 | 1 | [log](out/autocollie/runs/2026-06-06T09-51-58_20260606T094325-filetypes-zst_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b9902448a4b953fe` | zst_control_leaves128_reg1 | ok | 0.9943 | 0.9957 | 0.9833 | 4 | [log](out/autocollie/runs/2026-06-06T09-52-00_20260606T094325-filetypes-zst_zst_control_leaves128_reg1.log) |
+| `78c88eed7b0f0949` | zst_feat_kv_vocab_5k | ok | 0.9943 | 0.9957 | 0.9833 | 15 | [log](out/autocollie/runs/2026-06-06T09-52-04_20260606T094325-filetypes-zst_zst_feat_kv_vocab_5k.log) |
+| `172c27aac9c7547a` | zst_feat_text_metrics_enc | ok | 0.9942 | 0.9955 | 0.9833 | 6 | [log](out/autocollie/runs/2026-06-06T09-52-19_20260606T094325-filetypes-zst_zst_feat_text_metrics_enc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_leaves128_reg1`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best recent feature_env while increasing num_leaves to 128 and adjusting reg_lambda to 1.0 to probe for PR_AUC improvements via better tree capacity without altering the feature matrix.
+- **`zst_feat_kv_vocab_5k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enables kv_vocab with a 5000 cap to capture structured key-value metadata in archives, aiming to boost PR_AUC by adding high-signal categorical features that complement existing n-gram patterns.
+- **`zst_feat_text_metrics_enc`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Activates text_metrics_full and text_encoding to detect obfuscation and encoding anomalies in compressed payloads, targeting recall@3FPM gains by improving separation at the strict-FP tail.
+
+</details>
+

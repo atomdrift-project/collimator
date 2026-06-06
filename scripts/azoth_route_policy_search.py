@@ -159,11 +159,12 @@ def _calibrate_policy(
 
     # Per-route severity-tier thresholds: each participating route's
     # threshold at this filetype's local FP/M target is the (1 − q×10⁻⁶)
-    # quantile of that route's benign scores within the filetype slice.
-    # Below the empirical floor we extrapolate via GPD on the benign upper
-    # tail (see _quantile_severity_threshold). No coordinate-descent
-    # search — each route's threshold is independent; the policy
-    # comparison happens in _choose_best on the resulting OR-rule metrics.
+    # interpolated quantile of that route's benign scores within the slice
+    # (see _quantile_severity_threshold). Below the resolution floor the
+    # strict levels cluster just under max benign (≥1 FP), never above the
+    # data — no tail extrapolation. No coordinate-descent search — each
+    # route's threshold is independent; the policy comparison happens in
+    # _choose_best on the resulting OR-rule metrics.
     n_benign = int(np.sum(labels == 0))
     _, below_resolution = _max_dev_fp_for_target(
         target_per_million, n_benign, alpha=0.05,
@@ -172,7 +173,6 @@ def _calibrate_policy(
     n_rows = len(labels)
     union_hit = np.zeros(n_rows, dtype=bool)
     selected: dict[str, float | None] = {route_name: None for route_name in present_routes}
-    extrapolated: list[str] = []
 
     for route_name in present_routes:
         probs = route_probs[route_name]
@@ -184,11 +184,9 @@ def _calibrate_policy(
             # below). Documented presence preserves litmus's
             # contains_route check.
             continue
-        threshold, method = _quantile_severity_threshold(benign_probs, target_per_million)
+        threshold, _method = _quantile_severity_threshold(benign_probs, target_per_million)
         if threshold is None:
             continue
-        if method == "extrapolated":
-            extrapolated.append(route_name)
         selected[route_name] = float(threshold)
         union_hit |= (probs >= threshold) & valid
 
@@ -220,8 +218,6 @@ def _calibrate_policy(
         if n_benign > 0
         else None
     )
-    if extrapolated:
-        out["extrapolated_routes"] = list(extrapolated)
     return out
 
 
@@ -700,7 +696,7 @@ def _calibrate_max_rule_policy(
         out["policy"] = "max_rule"
         out["allowed_routes"] = list(present_routes)
         return out
-    threshold, method = _quantile_severity_threshold(benign_probs, target_per_million)
+    threshold, _method = _quantile_severity_threshold(benign_probs, target_per_million)
     if threshold is None:
         out = _no_hit_candidate(
             labels, target_per_million=target_per_million, total_benign=total_benign,
@@ -724,8 +720,6 @@ def _calibrate_max_rule_policy(
         target_per_million, n_benign, alpha=0.05,
     ) if n_benign > 0 else (0, True)
     out["below_resolution"] = bool(below_resolution)
-    if method == "extrapolated":
-        out["extrapolated_routes"] = ["max_rule"]
     return out
 
 

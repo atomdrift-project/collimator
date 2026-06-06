@@ -1,57 +1,57 @@
 # Promote REJECTED — `3818c4f8f221f75d` on `filetypes/shell`
 
-Generated 2026-06-01T16:18:02Z
+Generated 2026-06-06T13:44:56Z
 
-azoth-validate failed: signal: terminated (log /home/t/collimator/out/autocollie/runs/2026-06-01T14-17-15_20260601T141649-promote-3818c4f8f221f75d_azoth-validate.log; tail: 2026-06-01 10:19:08,566 INFO azoth_calibrate_ensemble: filetypes/macho: using cached scores
-2026-06-01 10:19:08,671 INFO azoth_calibrate_ensemble: filetypes/plist: using cached scores
-2026-06-01 10:19:08,797 INFO azoth_calibrate_ensemble: filetypes/vbs: using cached scores
-2026-06-01 10:19:08,985 INFO azoth_calibrate_ensemble: filetypes/pkg-info: using cached scores
-2026-06-01 10:19:09,109 INFO azoth_calibrate_ensemble: filetypes/ole: using cached scores
-2026-06-01 10:19:09,234 INFO azoth_calibrate_ensemble: filetypes/powershell: using cached scores
-2026-06-01 10:19:09,323 INFO azoth_calibrate_ensemble: filetypes/deb: using cached scores
-2026-06-01 10:19:09,435 INFO azoth_calibrate_ensemble: filetypes/jar: using cached scores
-2026-06-01 10:19:09,569 INFO azoth_calibrate_ensemble: filetypes/groovy: using cached scores
-2026-06-01 10:19:09,725 INFO azoth_calibrate_ensemble: filetypes/rtf: using cached scores
-2026-06-01 10:19:09,799 INFO azoth_calibrate_ensemble: filetypes/lnk: using cached scores
-2026-06-01 10:19:09,908 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-06-01 10:19:10,036 INFO azoth_calibrate_ensemble: filetypes/clojure: using cached scores
-2026-06-01 10:19:10,188 INFO azoth_calibrate_ensemble: filetypes/tar: using cached scores
-2026-06-01 10:19:10,333 INFO azoth_calibrate_ensemble: filetypes/dockerfile: using cached scores
-2026-06-01 10:19:10,411 INFO azoth_calibrate_ensemble: filetypes/package-lock.json: using cached scores
-2026-06-01 10:19:10,497 INFO azoth_calibrate_ensemble: filetypes/pptx: using cached scores
-2026-06-01 10:19:10,625 INFO azoth_calibrate_ensemble: filetypes/chrome-manifest: using cached scores
-2026-06-01 10:19:10,759 INFO azoth_calibrate_ensemble: filetypes/crx: using cached scores
-2026-06-01 10:19:11,098 INFO azoth_calibrate_ensemble: L0 on test: hostile recall=0.00% fp=0 (FP/100M=0.00)
-2026-06-01 10:19:11,121 INFO azoth_calibrate_ensemble: L1 on test: hostile recall=62.54% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,143 INFO azoth_calibrate_ensemble: L2 on test: hostile recall=62.56% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,166 INFO azoth_calibrate_ensemble: L3 on test: hostile recall=62.58% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,188 INFO azoth_calibrate_ensemble: L5 on test: hostile recall=62.61% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,210 INFO azoth_calibrate_ensemble: L10 on test: hostile recall=62.67% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,233 INFO azoth_calibrate_ensemble: L20 on test: hostile recall=62.82% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,255 INFO azoth_calibrate_ensemble: L30 on test: hostile recall=62.91% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,277 INFO azoth_calibrate_ensemble: L40 on test: hostile recall=63.04% fp=4266 (FP/100M=812416.68)
-2026-06-01 10:19:11,299 INFO azoth_calibrate_ensemble: L50 on test: hostile recall=63.10% fp=4266 (FP/100M=812416.68)
-2026-06-01 10:19:11,321 INFO azoth_calibrate_ensemble: L60 on test: hostile recall=63.21% fp=4266 (FP/100M=812416.68)
-2026-06-01 10:19:11,344 INFO azoth_calibrate_ensemble: L70 on test: hostile recall=63.27% fp=4266 (FP/100M=812416.68)
-2026-06-01 10:19:11,366 INFO azoth_calibrate_ensemble: L80 on test: hostile recall=63.32% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,388 INFO azoth_calibrate_ensemble: L90 on test: hostile recall=63.36% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,410 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=63.40% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,433 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=64.41% fp=4262 (FP/100M=811654.92)
-2026-06-01 10:19:11,455 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=64.64% fp=4262 (FP/100M=811654.92)
-2026-06-01 10:19:11,477 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=65.38% fp=4263 (FP/100M=811845.36)
-2026-06-01 10:19:11,500 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=67.42% fp=4264 (FP/100M=812035.80)
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/test_metrics.json
-.venv/bin/python scripts/azoth_route_policy_search.py \
-	 \
-	--config /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/config.json \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/score_table.npz \
-	--output /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/route_policies.json \
-	--csv /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/route_policies.csv \
-	--markdown /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/route_policies.md \
-	 \
-	--previous-bundle out/models/azoth \
-	--workers 128
-make[2]: *** [Makefile:1140: azoth-validate] Terminated)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-06T13-41-44_20260606T134124-promote-3818c4f8f221f75d_azoth-validate.log; tail:   shell :: filetypes/shell recall@1FP-on-slice +0.14pp (84.10% → 84.24%)
+
+per-route regressions (informational; does not block deploy):
+  shell :: general recall@1FP-on-slice dropped 28.10pp (74.79% → 46.69%)
+
+34 pre-existing drift(s) on unimpacted filetypes (informational — not caused by this promote, see --source-bundle impact analysis):
+  ~ 7z: pre-existing drift, recall 16.24% → 12.63% (+3.61pp; unimpacted by this promote)
+  ~ batch: pre-existing drift, recall 97.46% → 1.24% (+96.23pp; unimpacted by this promote)
+  ~ c: pre-existing drift, recall 3.93% → 6.30% (+2.37pp; unimpacted by this promote)
+  ~ chrome-manifest: pre-existing drift, recall 28.57% → 42.86% (+14.29pp; unimpacted by this promote)
+  ~ doc: pre-existing drift, recall 38.51% → 66.38% (+27.87pp; unimpacted by this promote)
+  ~ docx: pre-existing drift, recall 82.92% → 44.66% (+38.26pp; unimpacted by this promote)
+  ~ elf: pre-existing drift, recall 95.93% → 98.61% (+2.68pp; unimpacted by this promote)
+  ~ go: pre-existing drift, recall 2.20% → 6.06% (+3.86pp; unimpacted by this promote)
+  ~ jar: pre-existing drift, recall 70.65% → 85.39% (+14.74pp; unimpacted by this promote)
+  ~ java_class: pre-existing drift, recall 17.65% → 23.08% (+5.43pp; unimpacted by this promote)
+  ~ javascript: pre-existing drift, recall 59.50% → 71.30% (+11.80pp; unimpacted by this promote)
+  ~ jpeg: pre-existing drift, recall 10.60% → 13.25% (+2.65pp; unimpacted by this promote)
+  ~ kotlin: pre-existing drift, recall 51.39% → 52.99% (+1.60pp; unimpacted by this promote)
+  ~ lnk: pre-existing drift, recall 82.68% → 66.73% (+15.95pp; unimpacted by this promote)
+  ~ lua: pre-existing drift, recall 30.77% → 53.85% (+23.08pp; unimpacted by this promote)
+  ~ macho: pre-existing drift, recall 80.24% → 68.26% (+11.98pp; unimpacted by this promote)
+  ~ msi: pre-existing drift, recall 0.00% → 58.05% (+58.05pp; unimpacted by this promote)
+  ~ ole: pre-existing drift, recall 82.17% → 50.88% (+31.29pp; unimpacted by this promote)
+  ~ pdf: pre-existing drift, recall 6.50% → 4.25% (+2.25pp; unimpacted by this promote)
+  ~ pe: pre-existing drift, recall 51.78% → 56.91% (+5.12pp; unimpacted by this promote)
+  ~ perl: pre-existing drift, recall 69.44% → 83.33% (+13.89pp; unimpacted by this promote)
+  ~ pkg-info: pre-existing drift, recall 87.00% → 65.47% (+21.53pp; unimpacted by this promote)
+  ~ png: pre-existing drift, recall 0.00% → 7.27% (+7.27pp; unimpacted by this promote)
+  ~ powershell: pre-existing drift, recall 52.76% → 43.71% (+9.05pp; unimpacted by this promote)
+  ~ pptx: pre-existing drift, recall 22.22% → 1.39% (+20.83pp; unimpacted by this promote)
+  ~ python: pre-existing drift, recall 48.01% → 48.19% (+0.18pp; unimpacted by this promote)
+  ~ python-bytecode: pre-existing drift, recall 92.09% → 88.14% (+3.95pp; unimpacted by this promote)
+  ~ tar: pre-existing drift, recall 88.19% → 81.54% (+6.65pp; unimpacted by this promote)
+  ~ vbs: pre-existing drift, recall 42.72% → 47.69% (+4.97pp; unimpacted by this promote)
+  ~ xls: pre-existing drift, recall 93.19% → 90.97% (+2.22pp; unimpacted by this promote)
+  ~ xlsx: pre-existing drift, recall 36.08% → 29.09% (+6.99pp; unimpacted by this promote)
+  ~ xml: pre-existing drift, recall 2.55% → 13.23% (+10.68pp; unimpacted by this promote)
+  ~ zip: pre-existing drift, recall 31.45% → 31.98% (+0.53pp; unimpacted by this promote)
+  ~ zst: pre-existing drift, recall 6.39% → 8.26% (+1.87pp; unimpacted by this promote)
+
+1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
+  - shell: L50 hostile ENSEMBLE recall dropped 1.99pp (81.64% → 79.65%; tolerance 1.70pp; deployed 95% CI lower = 79.81%)
+
+compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
+make[2]: *** [Makefile:1297: azoth-validate] Error 1)
 
 ## Gates
 
@@ -62,62 +62,62 @@ make[2]: *** [Makefile:1140: azoth-validate] Terminated)
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `3818c4f8f221f75d` | `4b17289988f59346` | `aaa32205fd6d98f8` |
-| PR AUC | 0.9963 | 0.9986 | 0.9987 |
-| ROC AUC | 0.9976 | 0.9987 | 0.9988 |
-| F1 | 0.9650 | 0.9769 | 0.9772 |
+| key | `3818c4f8f221f75d` | `43e964486f908713` | `a1dec9071922fcdc` |
+| PR AUC | 0.9963 | 0.9987 | 0.9987 |
+| ROC AUC | 0.9976 | 0.9988 | 0.9987 |
+| F1 | 0.9650 | 0.9812 | 0.9777 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: signal: terminated (log /home/t/collimator/out/autocollie/runs/2026-06-01T14-17-15_20260601T141649-promote-3818c4f8f221f75d_azoth-validate.log; tail: 2026-06-01 10:19:08,566 INFO azoth_calibrate_ensemble: filetypes/macho: using cached scores
-2026-06-01 10:19:08,671 INFO azoth_calibrate_ensemble: filetypes/plist: using cached scores
-2026-06-01 10:19:08,797 INFO azoth_calibrate_ensemble: filetypes/vbs: using cached scores
-2026-06-01 10:19:08,985 INFO azoth_calibrate_ensemble: filetypes/pkg-info: using cached scores
-2026-06-01 10:19:09,109 INFO azoth_calibrate_ensemble: filetypes/ole: using cached scores
-2026-06-01 10:19:09,234 INFO azoth_calibrate_ensemble: filetypes/powershell: using cached scores
-2026-06-01 10:19:09,323 INFO azoth_calibrate_ensemble: filetypes/deb: using cached scores
-2026-06-01 10:19:09,435 INFO azoth_calibrate_ensemble: filetypes/jar: using cached scores
-2026-06-01 10:19:09,569 INFO azoth_calibrate_ensemble: filetypes/groovy: using cached scores
-2026-06-01 10:19:09,725 INFO azoth_calibrate_ensemble: filetypes/rtf: using cached scores
-2026-06-01 10:19:09,799 INFO azoth_calibrate_ensemble: filetypes/lnk: using cached scores
-2026-06-01 10:19:09,908 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-06-01 10:19:10,036 INFO azoth_calibrate_ensemble: filetypes/clojure: using cached scores
-2026-06-01 10:19:10,188 INFO azoth_calibrate_ensemble: filetypes/tar: using cached scores
-2026-06-01 10:19:10,333 INFO azoth_calibrate_ensemble: filetypes/dockerfile: using cached scores
-2026-06-01 10:19:10,411 INFO azoth_calibrate_ensemble: filetypes/package-lock.json: using cached scores
-2026-06-01 10:19:10,497 INFO azoth_calibrate_ensemble: filetypes/pptx: using cached scores
-2026-06-01 10:19:10,625 INFO azoth_calibrate_ensemble: filetypes/chrome-manifest: using cached scores
-2026-06-01 10:19:10,759 INFO azoth_calibrate_ensemble: filetypes/crx: using cached scores
-2026-06-01 10:19:11,098 INFO azoth_calibrate_ensemble: L0 on test: hostile recall=0.00% fp=0 (FP/100M=0.00)
-2026-06-01 10:19:11,121 INFO azoth_calibrate_ensemble: L1 on test: hostile recall=62.54% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,143 INFO azoth_calibrate_ensemble: L2 on test: hostile recall=62.56% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,166 INFO azoth_calibrate_ensemble: L3 on test: hostile recall=62.58% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,188 INFO azoth_calibrate_ensemble: L5 on test: hostile recall=62.61% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,210 INFO azoth_calibrate_ensemble: L10 on test: hostile recall=62.67% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,233 INFO azoth_calibrate_ensemble: L20 on test: hostile recall=62.82% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,255 INFO azoth_calibrate_ensemble: L30 on test: hostile recall=62.91% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,277 INFO azoth_calibrate_ensemble: L40 on test: hostile recall=63.04% fp=4266 (FP/100M=812416.68)
-2026-06-01 10:19:11,299 INFO azoth_calibrate_ensemble: L50 on test: hostile recall=63.10% fp=4266 (FP/100M=812416.68)
-2026-06-01 10:19:11,321 INFO azoth_calibrate_ensemble: L60 on test: hostile recall=63.21% fp=4266 (FP/100M=812416.68)
-2026-06-01 10:19:11,344 INFO azoth_calibrate_ensemble: L70 on test: hostile recall=63.27% fp=4266 (FP/100M=812416.68)
-2026-06-01 10:19:11,366 INFO azoth_calibrate_ensemble: L80 on test: hostile recall=63.32% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,388 INFO azoth_calibrate_ensemble: L90 on test: hostile recall=63.36% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,410 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=63.40% fp=4265 (FP/100M=812226.24)
-2026-06-01 10:19:11,433 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=64.41% fp=4262 (FP/100M=811654.92)
-2026-06-01 10:19:11,455 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=64.64% fp=4262 (FP/100M=811654.92)
-2026-06-01 10:19:11,477 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=65.38% fp=4263 (FP/100M=811845.36)
-2026-06-01 10:19:11,500 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=67.42% fp=4264 (FP/100M=812035.80)
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/test_metrics.json
-.venv/bin/python scripts/azoth_route_policy_search.py \
-	 \
-	--config /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/config.json \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/score_table.npz \
-	--output /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/route_policies.json \
-	--csv /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/route_policies.csv \
-	--markdown /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/route_policies.md \
-	 \
-	--previous-bundle out/models/azoth \
-	--workers 128
-make[2]: *** [Makefile:1140: azoth-validate] Terminated)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-06T13-41-44_20260606T134124-promote-3818c4f8f221f75d_azoth-validate.log; tail:   shell :: filetypes/shell recall@1FP-on-slice +0.14pp (84.10% → 84.24%)
+
+per-route regressions (informational; does not block deploy):
+  shell :: general recall@1FP-on-slice dropped 28.10pp (74.79% → 46.69%)
+
+34 pre-existing drift(s) on unimpacted filetypes (informational — not caused by this promote, see --source-bundle impact analysis):
+  ~ 7z: pre-existing drift, recall 16.24% → 12.63% (+3.61pp; unimpacted by this promote)
+  ~ batch: pre-existing drift, recall 97.46% → 1.24% (+96.23pp; unimpacted by this promote)
+  ~ c: pre-existing drift, recall 3.93% → 6.30% (+2.37pp; unimpacted by this promote)
+  ~ chrome-manifest: pre-existing drift, recall 28.57% → 42.86% (+14.29pp; unimpacted by this promote)
+  ~ doc: pre-existing drift, recall 38.51% → 66.38% (+27.87pp; unimpacted by this promote)
+  ~ docx: pre-existing drift, recall 82.92% → 44.66% (+38.26pp; unimpacted by this promote)
+  ~ elf: pre-existing drift, recall 95.93% → 98.61% (+2.68pp; unimpacted by this promote)
+  ~ go: pre-existing drift, recall 2.20% → 6.06% (+3.86pp; unimpacted by this promote)
+  ~ jar: pre-existing drift, recall 70.65% → 85.39% (+14.74pp; unimpacted by this promote)
+  ~ java_class: pre-existing drift, recall 17.65% → 23.08% (+5.43pp; unimpacted by this promote)
+  ~ javascript: pre-existing drift, recall 59.50% → 71.30% (+11.80pp; unimpacted by this promote)
+  ~ jpeg: pre-existing drift, recall 10.60% → 13.25% (+2.65pp; unimpacted by this promote)
+  ~ kotlin: pre-existing drift, recall 51.39% → 52.99% (+1.60pp; unimpacted by this promote)
+  ~ lnk: pre-existing drift, recall 82.68% → 66.73% (+15.95pp; unimpacted by this promote)
+  ~ lua: pre-existing drift, recall 30.77% → 53.85% (+23.08pp; unimpacted by this promote)
+  ~ macho: pre-existing drift, recall 80.24% → 68.26% (+11.98pp; unimpacted by this promote)
+  ~ msi: pre-existing drift, recall 0.00% → 58.05% (+58.05pp; unimpacted by this promote)
+  ~ ole: pre-existing drift, recall 82.17% → 50.88% (+31.29pp; unimpacted by this promote)
+  ~ pdf: pre-existing drift, recall 6.50% → 4.25% (+2.25pp; unimpacted by this promote)
+  ~ pe: pre-existing drift, recall 51.78% → 56.91% (+5.12pp; unimpacted by this promote)
+  ~ perl: pre-existing drift, recall 69.44% → 83.33% (+13.89pp; unimpacted by this promote)
+  ~ pkg-info: pre-existing drift, recall 87.00% → 65.47% (+21.53pp; unimpacted by this promote)
+  ~ png: pre-existing drift, recall 0.00% → 7.27% (+7.27pp; unimpacted by this promote)
+  ~ powershell: pre-existing drift, recall 52.76% → 43.71% (+9.05pp; unimpacted by this promote)
+  ~ pptx: pre-existing drift, recall 22.22% → 1.39% (+20.83pp; unimpacted by this promote)
+  ~ python: pre-existing drift, recall 48.01% → 48.19% (+0.18pp; unimpacted by this promote)
+  ~ python-bytecode: pre-existing drift, recall 92.09% → 88.14% (+3.95pp; unimpacted by this promote)
+  ~ tar: pre-existing drift, recall 88.19% → 81.54% (+6.65pp; unimpacted by this promote)
+  ~ vbs: pre-existing drift, recall 42.72% → 47.69% (+4.97pp; unimpacted by this promote)
+  ~ xls: pre-existing drift, recall 93.19% → 90.97% (+2.22pp; unimpacted by this promote)
+  ~ xlsx: pre-existing drift, recall 36.08% → 29.09% (+6.99pp; unimpacted by this promote)
+  ~ xml: pre-existing drift, recall 2.55% → 13.23% (+10.68pp; unimpacted by this promote)
+  ~ zip: pre-existing drift, recall 31.45% → 31.98% (+0.53pp; unimpacted by this promote)
+  ~ zst: pre-existing drift, recall 6.39% → 8.26% (+1.87pp; unimpacted by this promote)
+
+1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
+  - shell: L50 hostile ENSEMBLE recall dropped 1.99pp (81.64% → 79.65%; tolerance 1.70pp; deployed 95% CI lower = 79.81%)
+
+compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
+make[2]: *** [Makefile:1297: azoth-validate] Error 1)

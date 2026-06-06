@@ -1337,19 +1337,52 @@ class FeatureSpec:
     # inference should use raw features directly (no z-score transform).
     standardized: bool = False
 
+    def _litmus_offset_vocabs(self) -> tuple[list[str], list[str], list[str]]:
+        """Return presence/bigram/trigram vocabs pruned to what survives in
+        ``feature_names``.
+
+        litmus reconstructs the offset-written families (present:/maxcrit: from
+        presence_vocab, bigrams:/unsigned_bigram: from bigram_vocab, trigram:
+        from trigram_vocab) by writing ``base + idx`` for each vocab member, so
+        it requires the family to occupy a contiguous, in-order run in
+        feature_names. The allowlist (COLLIMATOR_ALLOWED_FEATURES_FILE) prunes
+        feature_names by name but leaves these vocabs at full length, so litmus
+        sees a family as "partially present" and skips it — silently zeroing
+        thousands of n-gram features at inference. Emitting the vocabs pruned to
+        the survivors keeps the serialized spec self-consistent. A no-op when no
+        allowlist was applied (every member is present). collimator's own
+        extractor is name-addressed, so this never changes its output.
+        """
+        names = set(self.feature_names)
+        presence = [p for p in self.presence_vocab if f"present:{p}" in names]
+        bigram = [b for b in self.bigram_vocab if f"bigrams:{b}" in names]
+        trigram = [t for t in self.trigram_vocab if f"trigram:{t}" in names]
+        # present:/maxcrit: share presence_vocab and bigrams:/unsigned_bigram:
+        # share bigram_vocab; litmus needs each to be contiguous. They prune
+        # symmetrically in practice (importance couples the paired features), but
+        # warn rather than ship a quietly-degraded bundle if they ever diverge.
+        if presence != [p for p in self.presence_vocab if f"maxcrit:{p}" in names]:
+            log.warning("present:/maxcrit: pruned asymmetrically; litmus maxcrit"
+                        " family may be skipped — allowlist must keep the pair together")
+        if bigram != [b for b in self.bigram_vocab if f"unsigned_bigram:{b}" in names]:
+            log.warning("bigrams:/unsigned_bigram: pruned asymmetrically; litmus"
+                        " unsigned_bigram family may be skipped — allowlist must keep the pair together")
+        return presence, bigram, trigram
+
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
+        presence_vocab, bigram_vocab, trigram_vocab = self._litmus_offset_vocabs()
         d: dict[str, Any] = {
             "version": self.version,
             "abi_version": self.abi_version,
-            "presence_vocab": self.presence_vocab,
+            "presence_vocab": presence_vocab,
             "filetype_vocab": self.filetype_vocab,
             "element_vocab": self.element_vocab,
-            "bigram_vocab": self.bigram_vocab,
+            "bigram_vocab": bigram_vocab,
             "ghost_vocab": self.ghost_vocab,
             "skeleton_vocab": self.skeleton_vocab,
             "rare_element_vocab": self.rare_element_vocab,
-            "trigram_vocab": self.trigram_vocab,
+            "trigram_vocab": trigram_vocab,
             "metric_vocab": self.metric_vocab,
             "crit_unigram_vocab": self.crit_unigram_vocab,
             "crit_bigram_vocab": self.crit_bigram_vocab,
@@ -1927,10 +1960,31 @@ def _build_feature_names(
     allowed = allowed_features()
     if allowed is not None:
         original_count = len(feature_names)
-        feature_names = [name for name in feature_names if name in allowed]
+        feature_names = [name for name in feature_names if _allowed_with_pair(name, allowed)]
         log.info("pruned feature spec: %d -> %d features", original_count, len(feature_names))
 
     return feature_names
+
+
+# Offset-written families come in pairs that litmus reconstructs from a single
+# shared vocab — present:/maxcrit: from presence_vocab, bigrams:/unsigned_bigram:
+# from bigram_vocab. Both members of a pair MUST keep identical membership or
+# litmus extracts the orphaned slots as zeros (and validate warns "unknown
+# features"). An importance/frequency allowlist ranks the two members
+# independently, so it routinely keeps one and drops the other. Couple them:
+# keep a member whenever EITHER it or its partner survives the allowlist.
+_OFFSET_FAMILY_PAIRS = (("present:", "maxcrit:"), ("bigrams:", "unsigned_bigram:"))
+
+
+def _allowed_with_pair(name: str, allowed: "frozenset[str]") -> bool:
+    if name in allowed:
+        return True
+    for a, b in _OFFSET_FAMILY_PAIRS:
+        if name.startswith(a):
+            return (b + name[len(a):]) in allowed
+        if name.startswith(b):
+            return (a + name[len(b):]) in allowed
+    return False
 
 
 def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> FeatureSpec:

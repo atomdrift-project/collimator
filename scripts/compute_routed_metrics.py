@@ -44,7 +44,7 @@ def _strip_nan(value: Any) -> Any:
         return [_strip_nan(v) for v in value]
     return value
 
-# Make sibling scripts importable (e.g., azoth_calibrate_ensemble for GPD tail).
+# Make sibling scripts importable (e.g., azoth_impact, azoth_specialist_suite).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import numpy as np
@@ -63,6 +63,7 @@ from collimator import data as collimator_data
 from collimator.thresholds import (
     _CHART_LEVELS_PER_100M,
     DEFAULT_SEVERITY_LEVEL as _DEFAULT_SEVERITY_LEVEL_FROM_THRESHOLDS,
+    quantile_severity_threshold,
 )
 
 LOG = logging.getLogger("compute_routed_metrics")
@@ -113,11 +114,13 @@ def _recall_at_fpr_per_million(
     million benigns, what fraction of malware do I catch?" Bypasses the
     F1 / PR-AUC summarization to give a single operating-point number.
 
-    When the benign sample is too small to resolve q empirically
-    (``n_benign × q × 10⁻⁶ < 1``), the threshold is recovered from a
-    GPD tail fit on the upper benign scores — same observation-based
-    extrapolation the L-tier thresholds use. Returns NaN only when the
-    GPD fit also fails or the route has no malware/benign rows.
+    Threshold derivation is the SHARED operating-point method
+    (``collimator.thresholds.quantile_severity_threshold``) — the exact
+    definition the deploy policy search, the screen experiment, and litmus use,
+    so this reported recall matches the operating point a candidate ships at. The
+    threshold is the interpolated benign quantile (>=1 FP for L1+, never above the
+    observed data). Returns NaN when the route has no malware/benign rows or
+    fewer than the method's 50-benign floor.
     """
     benign_mask = labels == 0
     malware_mask = labels == 1
@@ -125,90 +128,14 @@ def _recall_at_fpr_per_million(
     n_malware = int(np.sum(malware_mask))
     if n_benign == 0 or n_malware == 0:
         return float("nan")
-    p_target = target_per_million / 1_000_000.0
-    if p_target <= 0:
+    if target_per_million <= 0:
         return float("nan")
     benign_scores = scores[benign_mask].astype(np.float64)
-    if n_benign * p_target >= 1.0:
-        sorted_benign = np.sort(benign_scores)
-        n_allowed = int(np.floor(n_benign * p_target))
-        threshold = float(sorted_benign[n_benign - n_allowed - 1])
-    else:
-        threshold = _extrapolated_threshold(benign_scores, target_per_million)
-        if threshold is None:
-            return float("nan")
+    threshold, _method = quantile_severity_threshold(benign_scores, target_per_million)
+    if threshold is None:
+        return float("nan")
     hits = int(np.sum(scores[malware_mask] >= threshold))
     return float(hits / n_malware)
-
-
-def _extrapolated_threshold(
-    benign_scores: np.ndarray, target_per_million: float,
-) -> float | None:
-    """Best-effort threshold T s.t. P(benign_score > T) ≈ target_per_million × 1e-6.
-
-    Two passes:
-
-    1. **GPD tail fit** (azoth_calibrate_ensemble._gpd_tail_threshold) —
-       adaptive anchor percentile (0.99 / 0.95 / 0.90 / 0.80 by sample
-       size). Parametric, principled, but bails on small samples or
-       degenerate fits.
-
-    2. **Log-linear survival extrapolation** — fits
-       ``log(P(B > x)) ≈ a·x + b`` to the top ~20% of benign scores
-       (capped at 100 anchor points) and solves for x at the target
-       survival probability. Cheap, robust, requires only that the
-       upper tail is monotone — which it is for any calibrated
-       classifier.
-
-    Returns None only when both methods refuse: empty input,
-    degenerate (all-equal) benigns, or fitted slope non-negative.
-    Callers should treat None as "no signal at this resolution".
-    """
-    n = len(benign_scores)
-    if n < 5:
-        return None
-    target_p = target_per_million / 1_000_000.0
-    if target_p <= 0:
-        return None
-
-    try:
-        from azoth_calibrate_ensemble import _gpd_tail_threshold  # noqa: PLC0415
-        gpd = _gpd_tail_threshold(benign_scores, target_per_million)
-        if gpd is not None:
-            return float(gpd[0])
-    except ImportError:
-        pass
-
-    # Log-linear fallback on the tail. Calibrated classifiers tend to
-    # have approximately linear log(survival) vs. score in the upper
-    # tail. We fit ONLY the tail — pulling in the bulk produces a
-    # gentle slope (because most benigns sit at very low scores) and
-    # extrapolates to a threshold above 1.0. Window: tail captures
-    # the top max(20, 1% of n) benigns, capped at 50, so the fit
-    # sees rank-1..50 territory at the worst.
-    sorted_b = np.sort(benign_scores)
-    k = min(max(int(0.01 * n), 20), 50)
-    if k >= n:
-        return None
-    top = sorted_b[-k:]
-    if float(top[-1] - top[0]) < 1e-9:
-        return None
-    p_above = np.arange(k, 0, -1, dtype=np.float64) / n
-    log_p = np.log(p_above)
-    slope, intercept = np.polyfit(top, log_p, 1)
-    if not np.isfinite(slope) or slope >= 0:
-        return None
-    threshold = float((np.log(target_p) - intercept) / slope)
-    if not np.isfinite(threshold):
-        return None
-    if threshold >= 1.0:
-        # Extrapolation says "above 1.0"; clamp to just above the max
-        # observed benign — corresponds to the empirical-floor recall
-        # at FP=0 in this slice, which is the strictest threshold the
-        # model can actually deliver in practice. The caller can read
-        # this as "asked-for FP/M is below the slice's resolution".
-        threshold = float(np.nextafter(float(sorted_b[-1]), np.inf))
-    return max(threshold, float(top[-1]))
 
 
 def _metrics(
@@ -328,8 +255,8 @@ def _metrics(
 
         # CI for every other level in the deploy grid. Mirror the L50
         # pattern: skip levels whose point estimate is NaN (sub-resolution
-        # slice that failed the GPD tail fallback) — a bootstrap on NaN is
-        # meaningless. Cost: ~14 extra bootstrap runs per metrics block.
+        # slice with too few benigns to derive a quantile) — a bootstrap on
+        # NaN is meaningless. Cost: ~14 extra bootstrap runs per metrics block.
         for lvl in RECALL_CURVE_LEVELS:
             if lvl == 50:
                 continue

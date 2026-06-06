@@ -502,3 +502,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T022055-filegroups-media` — 2026-06-06T02:20:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `99fb1f1363e93404` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9934 | 0.9941 | 0.8750 | 6 | [log](out/autocollie/runs/2026-06-06T02-26-52_20260606T022055-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `da1c6df6a490cc88` | media_control_dart_leaves128 | ok | 0.1800 | 0.5312 | 0.1880 | 12 | [log](out/autocollie/runs/2026-06-06T02-27-04_20260606T022055-filegroups-media_media_control_dart_leaves128.log) |
+| `d6525533263bc638` | media_textenc_kv_vocab_research | ok | 0.2449 | 0.6531 | 0.2002 | 9 | [log](out/autocollie/runs/2026-06-06T02-27-20_20260606T022055-filegroups-media_media_textenc_kv_vocab_research.log) |
+| `d1e6bf5d7dcc126b` | media_trigrams_lowfreq_bigrams | ok | 0.2221 | 0.6082 | 0.1985 | 11 | [log](out/autocollie/runs/2026-06-06T02-27-31_20260606T022055-filegroups-media_media_trigrams_lowfreq_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_dart_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control replicating recent best feature surface to cache-hit matrix, testing DART boosting with deeper trees to improve recall@3FPM while keeping PR_AUC flat.
+- **`media_textenc_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_metrics_full, text_encoding, and kv_vocab research families to capture document structure and key-value patterns, aiming to lift PR_AUC and recall@3FPM.
+- **`media_trigrams_lowfreq_bigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=1 …` — Adds tiered_crit_trigrams and objective_trigrams while lowering bigram frequency floor to capture rare malicious sequences, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260606T080050-filegroups-media` — 2026-06-06T08:00:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `99fb1f1363e93404` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9934 | 0.9941 | 0.8750 | 4 | [log](out/autocollie/runs/2026-06-06T08-07-09_20260606T080050-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ac207dad978912e5` | media_control_training_tune | ok | 0.2399 | 0.6895 | 0.2002 | 20 | [log](out/autocollie/runs/2026-06-06T08-07-16_20260606T080050-filegroups-media_media_control_training_tune.log) |
+| `2f43377e6fee5a60` | media_textmetrics_kv_vocab | ok | 0.2399 | 0.6895 | 0.2002 | 21 | [log](out/autocollie/runs/2026-06-06T08-07-39_20260606T080050-filegroups-media_media_textmetrics_kv_vocab.log) |
+| `cb83f37f7953acba` | media_lowfreq_bigrams_tiered_trigrams | ok | 0.2330 | 0.6445 | 0.2002 | 17 | [log](out/autocollie/runs/2026-06-06T08-08-03_20260606T080050-filegroups-media_media_lowfreq_bigrams_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_training_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature set to establish a baseline while tuning num_leaves and estimators to improve PR_AUC via better tree capacity.
+- **`media_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and structural signals, aiming to boost PR_AUC.
+- **`media_lowfreq_bigrams_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and adds tiered trigrams to capture rare malicious patterns, targeting recall@3 FP/M improvement.
+
+</details>
+

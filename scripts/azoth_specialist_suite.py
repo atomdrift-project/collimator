@@ -244,8 +244,16 @@ def _fetch_rows(
     file_types: tuple[str, ...],
     max_id: int,
     min_score: int | None,
+    min_malware_score: int | None = None,
 ) -> list[tuple[int, int, bool, str]]:
-    """Return row_id, label, is_test, file_type for labeled samples."""
+    """Return row_id, label, is_test, file_type for labeled samples.
+
+    ``min_malware_score`` applies the asymmetric label-quality gate: malware
+    with ``score < min_malware_score`` is dropped from TRAINING only (benigns
+    and test-partition malware are kept). Mirrors the general model's
+    ``experiment.py`` semantics — focuses specialists on confident malware
+    without touching benign volume or the honest test eval.
+    """
     where = [
         data.LABELED_WHERE,
     ]
@@ -266,9 +274,20 @@ def _fetch_rows(
     # _ids_labels(test=False)).
     oof_exclude = _read_oof_exclude()
     select = (
-        "SELECT id, sha256, label, canonical_sha256, "
+        "SELECT id, sha256, label, canonical_sha256, score, "
         "COALESCE(NULLIF(file_type, ''), 'unknown')"
     )
+
+    def _keep(label_int: int, score_val: int, is_test_val: bool) -> bool:
+        # Drop low-confidence malware from TRAINING only; keep all benigns and
+        # all test-partition malware (honest eval).
+        return not (
+            min_malware_score is not None
+            and label_int == 1
+            and not is_test_val
+            and score_val < min_malware_score
+        )
+
     rows: list[tuple[int, int, bool, str]] = []
     with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
         if data._is_pg(db_path):  # noqa: SLF001
@@ -277,35 +296,29 @@ def _fetch_rows(
             query = select + " FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
             with conn.cursor() as cur:
                 cur.execute(query, params)
-                for row_id, sha256, label, canonical, file_type in cur:
+                for row_id, sha256, label, canonical, score, file_type in cur:
                     split_key = canonical or sha256
                     if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
                         continue
-                    rows.append(
-                        (
-                            int(row_id),
-                            _label_int(str(label)),
-                            data.is_test_sample(split_key),
-                            str(file_type),
-                        ),
-                    )
+                    label_int = _label_int(str(label))
+                    is_test_val = data.is_test_sample(split_key)
+                    if not _keep(label_int, int(score or 0), is_test_val):
+                        continue
+                    rows.append((int(row_id), label_int, is_test_val, str(file_type)))
         else:
             placeholders = ",".join("?" for _ in file_types)
             where.append(f"file_type IN ({placeholders})")
             params.extend(file_types)
             query = select + " FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
-            for row_id, sha256, label, canonical, file_type in conn.execute(query, params):
+            for row_id, sha256, label, canonical, score, file_type in conn.execute(query, params):
                 split_key = canonical or sha256
                 if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
                     continue
-                rows.append(
-                    (
-                        int(row_id),
-                        _label_int(str(label)),
-                        data.is_test_sample(split_key),
-                        str(file_type),
-                    ),
-                )
+                label_int = _label_int(str(label))
+                is_test_val = data.is_test_sample(split_key)
+                if not _keep(label_int, int(score or 0), is_test_val):
+                    continue
+                rows.append((int(row_id), label_int, is_test_val, str(file_type)))
     return rows
 
 
@@ -536,62 +549,45 @@ def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str,
     return out
 
 
-def _fp_budget(n_benign: int, target_per_million: float) -> int:
-    if target_per_million <= 0:
-        return 0
-    return min(n_benign, max(1, int(math.floor(n_benign * target_per_million / 1_000_000))))
-
-
 def _operating_point(
     y_true: np.ndarray,
     y_prob: np.ndarray,
     target_per_million: float,
 ) -> dict[str, float | int | None]:
+    """Recall/precision at the SHARED operating-point threshold for this target
+    FP/M, so the per-route benchmark uses the EXACT same level algorithm as the
+    deploy policy, the screen experiment, and compute_routed_metrics —
+    ``collimator.thresholds.quantile_severity_threshold`` (ceil rule: L0 -> 0 FP,
+    L1+ -> >= 1 FP). Below the method's 50-benign floor it falls back to the
+    honest 0-FP ceiling (max benign), so a perfectly-separable tiny route still
+    reads recall 1.0 rather than NaN.
+    """
     n_benign = int(np.sum(y_true == 0))
     n_malware = int(np.sum(y_true == 1))
-    budget = _fp_budget(n_benign, target_per_million)
-    order = np.argsort(-y_prob, kind="mergesort")
-    sorted_y = y_true[order]
-    sorted_p = y_prob[order]
-    tp_cum = np.cumsum(sorted_y == 1)
-    fp_cum = np.cumsum(sorted_y == 0)
-    best: dict[str, float | int | None] | None = None
-    idx = 0
-    while idx < len(sorted_p):
-        threshold = sorted_p[idx]
-        end = idx
-        while end + 1 < len(sorted_p) and sorted_p[end + 1] == threshold:
-            end += 1
-        fp = int(fp_cum[end])
-        if fp > budget:
-            break
-        tp = int(tp_cum[end])
-        best = {
+    if n_benign == 0 or n_malware == 0:
+        return {
             "target_per_100M": float(target_per_million) * 100.0,
-            "budget": budget,
-            "threshold": float(threshold),
-            "recall": float(tp / n_malware) if n_malware else math.nan,
-            "precision": float(tp / max(tp + fp, 1)),
-            "fp": fp,
-            "tp": tp,
-            "fn": n_malware - tp,
-            "tn": n_benign - fp,
-            "fp_per_100M": float(fp * 100_000_000.0 / n_benign) if n_benign else math.nan,
+            "budget": None, "threshold": None, "recall": None, "precision": None,
+            "fp": None, "tp": None, "fn": None, "tn": None, "fp_per_100M": None,
         }
-        idx = end + 1
-    if best is not None:
-        return best
+    benign_probs = y_prob[y_true == 0].astype(np.float64)
+    malware_probs = y_prob[y_true == 1].astype(np.float64)
+    threshold, _method = thresholds.quantile_severity_threshold(benign_probs, target_per_million)
+    if threshold is None:
+        threshold = float(np.nextafter(float(np.max(benign_probs)), np.inf))
+    fp = int(np.sum(benign_probs >= threshold))
+    tp = int(np.sum(malware_probs >= threshold))
     return {
         "target_per_100M": float(target_per_million) * 100.0,
-        "budget": budget,
-        "threshold": None,
-        "recall": None,
-        "precision": None,
-        "fp": None,
-        "tp": None,
-        "fn": None,
-        "tn": None,
-        "fp_per_100M": None,
+        "budget": fp,
+        "threshold": float(threshold),
+        "recall": float(tp / n_malware),
+        "precision": float(tp / max(tp + fp, 1)),
+        "fp": fp,
+        "tp": tp,
+        "fn": n_malware - tp,
+        "tn": n_benign - fp,
+        "fp_per_100M": float(fp * 100_000_000.0 / n_benign),
     }
 
 
@@ -1058,6 +1054,7 @@ def _train_one(
     workers: int,
     max_id: int,
     filegroup_score_filter: bool,
+    min_malware_score: int | None = None,
     n_seed_extras: int = 0,
     skip_benchmark: bool = False,
     feature_cache_dir: Path | None = None,
@@ -1067,6 +1064,7 @@ def _train_one(
         file_types=file_types,
         max_id=max_id,
         min_score=data.MIN_SAMPLE_SCORE if kind == "filegroup" and filegroup_score_filter else None,
+        min_malware_score=min_malware_score,
     )
     train_ids_labels = _ids_labels(train_rows, test=False)
     if not train_ids_labels:
@@ -1447,6 +1445,7 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
             workers=job["workers"],
             max_id=job["max_id"],
             filegroup_score_filter=job["filegroup_score_filter"],
+            min_malware_score=job.get("min_malware_score"),
             n_seed_extras=job["n_seed_extras"],
             skip_benchmark=job.get("skip_benchmark", False),
             feature_cache_dir=job.get("feature_cache_dir"),
@@ -1498,6 +1497,12 @@ def main() -> int:
         ),
     )
     parser.add_argument("--min-bad", type=int, default=50)
+    parser.add_argument(
+        "--min-malware-score", type=int, default=0,
+        help="drop malware with hopper score below this from TRAINING only "
+             "(benigns + test malware kept); focuses specialists on confident "
+             "malware. 0 = off.",
+    )
     parser.add_argument("--min-good", type=int, default=50)
     parser.add_argument("--only", action="append", default=[])
     parser.add_argument("--mask-spec", action="append", default=[])
@@ -1840,6 +1845,7 @@ def main() -> int:
                 "workers": extract_workers,
                 "max_id": args.max_id,
                 "filegroup_score_filter": filegroup_score_filter,
+                "min_malware_score": args.min_malware_score,
                 "n_seed_extras": args.n_seed_extras,
                 "skip_benchmark": args.skip_benchmark,
                 "feature_cache_dir": args.feature_cache_dir,

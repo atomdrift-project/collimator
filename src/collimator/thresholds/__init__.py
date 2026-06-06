@@ -64,38 +64,39 @@ _CHART_LEVELS_PER_100M: tuple[int, ...] = _LEVELS_PER_100M
 # ============================================================================
 # CANONICAL DEPLOY OPERATING POINT
 # ============================================================================
-# 4 FP/100M = 0.04 FP/M — the strict-tail target the deploy aims for. At
-# 100M scans/day this is ~4 FPs/day, matching SOC tolerance for security
-# tooling.
+# 50 FP/100M = 0.5 FP/M — the deploy tuning goal. Chosen over the stricter L4
+# because the trainable benign pool (~4.2M) cannot resolve FP budgets below
+# ~24/100M: at L4 the budget rounds to 0 FP and the threshold collapses to
+# "max benign score" (recall@0FP), which is unmeasurable and untunable. L50
+# resolves to ~2 FP, so calibration and the gates get a real, controllable
+# signal. Tighten back toward L4 once labeled benigns grow (the ~18M `unknown`
+# reservoir): at 20M benigns L5 resolves, at 100M L1.
 #
-# To change the default in the future, update this single integer.
-# Whatever value you choose MUST appear in `_LEVELS_PER_100M` above
-# (collimator's calibrator only emits thresholds for grid levels, so a
-# non-grid default is unusable at deploy time). Add it to the grid first
-# if it isn't there.
-#
-# The rest of the system reads it via:
-#   - `default_recall_per_100M_field()` for the JSON key in metrics blobs
-#   - `DEFAULT_SEVERITY_TARGET` for the FPR-per-million math
-# Downstream repos have their own mirror constants (one per repo) that
-# must be flipped in lockstep — see CROSS_REPO_NOTE.
-DEFAULT_SEVERITY_LEVEL = 4
+# To change the default, update this SINGLE integer — collimator's one knob.
+# Whatever value you choose MUST appear in `_LEVELS_PER_100M` above (the
+# calibrator only emits thresholds for grid levels). The rest of collimator
+# reads it via `default_recall_per_100M_field()` and `DEFAULT_SEVERITY_TARGET`,
+# and azoth_calibrate_ensemble bakes it into every bundle's config.json as
+# `default_severity_level` — which is how the tuning goal travels cross-repo.
+DEFAULT_SEVERITY_LEVEL = 50
 
-# Cross-repo mirrors of DEFAULT_SEVERITY_LEVEL (kept in sync manually):
-#
-#   - litmus:    src/model.rs    `pub const DEFAULT_SEVERITY_LEVEL: u8`
-#   - autocollie: internal/specs/level.go  `const DefaultSeverityLevel`
-#   - autocollie: internal/specs/spec.go   `defaultMaxRecallAtFPRTarget`
-#                                          (must equal level / 1e8 = 5e-8 at L5)
-#   - autocollie: internal/specs/route_health.go  `DEFAULT_RECALL_LEVEL`
-#                                                 (chart marker level)
-#   - prism, promoter: help text and tooltips only — no functional constants
-#
-# When you change DEFAULT_SEVERITY_LEVEL here, grep each repo for the
-# mirror constant and update it too. Tests will fail loudly if you miss one.
+# This is the cross-repo source of truth for the deploy tuning goal. It does
+# NOT propagate via mirror constants — it travels embedded in the model:
+#   - The bundle config.json carries `default_severity_level` (baked above).
+#   - litmus reads it from config.json (model::model_default_level); its own
+#       `DEFAULT_SEVERITY_LEVEL` const is only a fallback for older bundles
+#       lacking the field. An explicit `-l` CLI level still overrides.
+#   - autocollie reads it from the same config.json at startup
+#       (specs.LoadDefaultSeverityLevel); its package var is just a fallback.
+#   - prism, promoter: help text / tooltips only — no functional constant.
+# `make deploy` (azoth-deploy-final) still fails if the staged bundle's level,
+# this constant, and litmus's fallback const don't all agree — so a misbuilt or
+# stale bundle can't ship.
 CROSS_REPO_NOTE = (
-    "DEFAULT_SEVERITY_LEVEL has cross-repo mirrors. See thresholds/__init__.py "
-    "docstring for the canonical list."
+    "DEFAULT_SEVERITY_LEVEL is the source of truth; it is baked into each "
+    "bundle's config.json (default_severity_level) and read from there by "
+    "litmus and autocollie. The litmus/autocollie consts are fallbacks only. "
+    "See thresholds/__init__.py and azoth_calibrate_ensemble.py."
 )
 
 
@@ -116,6 +117,80 @@ def _severity_target(level: int) -> dict[str, int | float]:
 
 
 DEFAULT_SEVERITY_TARGET = _severity_target(DEFAULT_SEVERITY_LEVEL)
+
+
+# Below this many benigns a route cannot resolve the per-100M rate (L50 = 0.5
+# FP/M needs ~2M benigns to see a single FP), so the rate-quantile collapses to
+# the ~1-FP point and recall@level goes flat. For these LOW-VOLUME routes we
+# reinterpret the level as an ABSOLUTE false-positive count instead — see
+# `_resolution_aware_fp`. Resolvable OR common (>= cutoff) routes keep the
+# strict per-100M rate, so a common type that merely lacks 2M benigns (e.g. pe)
+# is NOT loosened — its flat curve is a model-saturation problem, not an
+# operating-point one.
+_LOW_VOLUME_BENIGN_CUTOFF = 25_000
+# Absolute-FP level mapping for low-volume routes: every `_ABS_FP_LEVELS_PER_FP`
+# levels grant one more FP, so L1-5 = 1 FP, L6-10 = 2 FP, ... L50 = 10 FP. The
+# anchor: L50 = 10 FP = 5% of a 200-benign route. Capped at `_ABS_FP_BENIGN_CAP`
+# of benigns so the tiniest routes don't over-flag.
+_ABS_FP_LEVELS_PER_FP = 5
+_ABS_FP_BENIGN_CAP = 0.05
+
+
+def _resolution_aware_fp(level_per_100M: float, n_benign: int) -> int:
+    """Absolute FP budget for a low-volume route at a per-100M `level`.
+
+    L_k -> ceil(k / 5) FP (L50 = 10 FP, the "5% of 200 benigns" anchor), clamped
+    to [1, 5% of benigns, n]. A rare route's absolute FP volume is bounded by its
+    rarity, so this converts good-but-starved models from their ~1-FP recall
+    (often ~1%) to their real recall at a handful of false positives.
+    """
+    abs_fp = int(np.ceil(level_per_100M / _ABS_FP_LEVELS_PER_FP))
+    cap = max(1, int(round(_ABS_FP_BENIGN_CAP * n_benign)))
+    return min(max(1, abs_fp), cap, n_benign)
+
+
+def quantile_severity_threshold(
+    benign_probs: "np.ndarray",
+    target_per_million: float,
+) -> tuple[float | None, str]:
+    """Operating-point score threshold for a per-100M severity level.
+
+    THIS IS THE ONE shared operating-point definition. Deploy (route policy
+    search / calibration), the screen experiment's recall@level metrics, the
+    headline tables, and real-world litmus thresholds all derive recall at a
+    level from this function, so a candidate is screened at the exact operating
+    point it will ship at.
+
+    Two regimes, chosen per route by whether the level is *resolvable*:
+
+      - **Resolvable or common** (``n*p >= 1`` FP, or ``n_benign >= cutoff``):
+        the ``(1 - p)``-quantile of benign scores (numpy Type-7 interpolation).
+        L0 (``target<=0``) returns just above max benign (0 FP); L1+ returns a
+        quantile ``<= max benign`` (>= 1 FP), never above the observed data.
+      - **Low-volume + unresolvable** (``n_benign < cutoff`` and ``n*p < 1``):
+        the level is reinterpreted as an ABSOLUTE FP count (`_resolution_aware_fp`),
+        so the level -> threshold curve is *resolvable* (L1=1 FP, ... L50=10 FP)
+        instead of pinning at ~1 FP for every level. This is what lets rare
+        good-ranking routes (batch, vbs, ole, doc, ...) operate at real recall.
+
+    Returns ``(threshold, method)`` where method is ``"empirical"`` (rate
+    quantile), ``"absolute_fp"`` (low-volume FP-count regime), or ``"none"``
+    (< 50 benigns).
+    """
+    if len(benign_probs) < 50:
+        return None, "none"
+    n = len(benign_probs)
+    arr = np.sort(np.asarray(benign_probs, dtype=np.float64))
+    if target_per_million <= 0:
+        return float(np.nextafter(float(arr[-1]), np.inf)), "empirical"  # L0: 0 FP
+    rate_budget = n * target_per_million / 1_000_000.0  # expected FP at this rate
+    if n < _LOW_VOLUME_BENIGN_CUTOFF and rate_budget < 1.0:
+        fp = _resolution_aware_fp(target_per_million * 100.0, n)
+        return float(arr[n - fp]), "absolute_fp"  # fp-th largest benign
+    q = 1.0 - target_per_million / 1_000_000.0  # benign-score quantile position
+    if q <= 0.0:  # target >= 100% FP: everything fires
+        return float(arr[0]), "empirical"
+    return float(np.quantile(arr, q)), "empirical"  # Type-7 linear interpolation
 
 # (label, FP-rate) pair used by ``fp_budget_tables`` and downstream callers
 # to derive the default budget at the configured severity level. Only one
@@ -232,10 +307,15 @@ def _select_threshold_at_fp_budget(
 
 
 def _fp_budget_for_rate(n_benign: int, rate: float) -> int:
-    """Allowed benign false positives for a target per-good-file FP rate."""
-    if n_benign <= 0:
-        return 0
-    if rate <= 0:
+    """Allowed benign false positives for a target per-good-file FP rate.
+
+    The one shared budget rule (also used by `quantile_severity_threshold`) so
+    the single-model `make thresholds` path and the azoth ensemble can't diverge:
+    rate<=0 -> 0 FP (L0); rate>0 -> max(1, floor(n*rate)) (L1+) — floor is the
+    accurate budget when the level resolves, clamped to >=1 so small benign sets
+    don't collapse to a flat recall@0FP curve.
+    """
+    if n_benign <= 0 or rate <= 0:
         return 0
     return max(1, int(np.floor(n_benign * rate)))
 

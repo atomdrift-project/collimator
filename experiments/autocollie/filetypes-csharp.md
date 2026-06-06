@@ -538,3 +538,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T014801-filetypes-csharp` — 2026-06-06T01:48:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ae7efaf4391251a` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9868 | 0.9929 | 0.9324 | 7 | [log](out/autocollie/runs/2026-06-06T01-56-01_20260606T014801-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c4b13a29817db223` | csharp_control_scale_pos_05_lr003 | ok | 0.5006 | 0.9245 | 0.4518 | 14 | [log](out/autocollie/runs/2026-06-06T01-56-11_20260606T014801-filetypes-csharp_csharp_control_scale_pos_05_lr003.log) |
+| `0d6838f3736a438c` | csharp_feat_kv_vocab_split | ok | 0.5116 | 0.9207 | 0.4533 | 12 | [log](out/autocollie/runs/2026-06-06T01-56-28_20260606T014801-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+| `95b9397d4d09e0da` | csharp_feat_symbol_bigrams_tiered | ok | 0.4991 | 0.9221 | 0.4525 | 13 | [log](out/autocollie/runs/2026-06-06T01-56-41_20260606T014801-filetypes-csharp_csharp_feat_symbol_bigrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_scale_pos_05_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by down-weighting positives and lowering LR to tighten score separation at the strict-FP tail.
+- **`csharp_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling KV vocab with value splitting to recover per-element signal from metadata lists common in C# assemblies.
+- **`csharp_feat_symbol_bigrams_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by adding symbol bigrams and tiered crit trigrams to capture malicious API co-occurrence and high-severity path patterns.
+
+</details>
+
+## Cycle `20260606T073458-filetypes-csharp` — 2026-06-06T07:34:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ae7efaf4391251a` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9868 | 0.9929 | 0.9324 | 1 | [log](out/autocollie/runs/2026-06-06T07-41-44_20260606T073458-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `fcc0534d1ff67375` | csharp_control_hardneg_015_15_lr003 | ok | 0.5184 | 0.9250 | 0.4620 | 16 | [log](out/autocollie/runs/2026-06-06T07-41-47_20260606T073458-filetypes-csharp_csharp_control_hardneg_015_15_lr003.log) |
+| `7a2309c3ad74c78a` | csharp_feat_symbol_vocab_bigrams | ok | 0.5198 | 0.9270 | 0.4554 | 25 | [log](out/autocollie/runs/2026-06-06T07-42-08_20260606T073458-filetypes-csharp_csharp_feat_symbol_vocab_bigrams.log) |
+| `3ed048e1e1a40466` | csharp_feat_kv_vocab_split | ok | 0.5180 | 0.9267 | 0.4570 | 27 | [log](out/autocollie/runs/2026-06-06T07-42-37_20260606T073458-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_hardneg_015_15_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline feature surface; tests harder negative mining with fraction 0.15 and weight 15 plus lower LR to improve PR_AUC and recall@3 FP/M while preserving ROC_AUC.
+- **`csharp_feat_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol vocab and bigrams to capture API co-occurrence patterns in C# binaries, aiming to boost PR_AUC and recall@3 FP/M by adding structural signal.
+- **`csharp_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates KV vocab with value splitting to recover granular signal from assembly metadata, targeting PR_AUC gains via richer key-value representations.
+
+</details>
+

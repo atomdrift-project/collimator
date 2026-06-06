@@ -614,3 +614,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T013031-filetypes-package.json` — 2026-06-06T01:30:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `098c90bc97ffb123` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9989 | 0.9982 | 0.9942 | 17 | [log](out/autocollie/runs/2026-06-06T01-39-52_20260606T013031-filetypes-package.json_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d04353059b72140d` | pkg_json_ctrl_hardneg_trees | ok | 0.9972 | 0.9959 | 0.9932 | 18 | [log](out/autocollie/runs/2026-06-06T01-40-14_20260606T013031-filetypes-package.json_pkg_json_ctrl_hardneg_trees.log) |
+| `05298b8394aec12c` | pkg_json_feat_kv_vocab_split_15k | ok | 0.9972 | 0.9958 | 0.9923 | 16 | [log](out/autocollie/runs/2026-06-06T01-40-34_20260606T013031-filetypes-package.json_pkg_json_feat_kv_vocab_split_15k.log) |
+| `6e9719678db17df4` | pkg_json_feat_text_metrics_enc | ok | 0.9971 | 0.9956 | 0.9930 | 15 | [log](out/autocollie/runs/2026-06-06T01-40-50_20260606T013031-filetypes-package.json_pkg_json_feat_text_metrics_enc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_ctrl_hardneg_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control replicating recent feature_env for cache hits; tests hard-negative upweighting and deeper trees to boost recall@3FPM while preserving PR_AUC.
+- **`pkg_json_feat_kv_vocab_split_15k`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab with value splitting to extract per-element signals from dependency arrays, aiming to lift PR_AUC and recall@3FPM by resolving noisy composite tokens.
+- **`pkg_json_feat_text_metrics_enc`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Adds text_metrics_full and text_encoding to capture structural and encoding anomalies in JSON payloads, targeting PR_AUC improvement while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260606T073458-filetypes-package.json` — 2026-06-06T07:34:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `098c90bc97ffb123` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9989 | 0.9982 | 0.9942 | 2 | [log](out/autocollie/runs/2026-06-06T07-41-47_20260606T073458-filetypes-package.json_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `29fda2321b0d6eac` | pkg_json_ctrl_hardneg_01_10 | ok | 0.9973 | 0.9961 | 0.9927 | 40 | [log](out/autocollie/runs/2026-06-06T07-41-51_20260606T073458-filetypes-package.json_pkg_json_ctrl_hardneg_01_10.log) |
+| `f55c894fb8ae3207` | pkg_json_feat_kv_vocab_split | ok | 0.9972 | 0.9958 | 0.9934 | 37 | [log](out/autocollie/runs/2026-06-06T07-42-33_20260606T073458-filetypes-package.json_pkg_json_feat_kv_vocab_split.log) |
+| `6be72163af2082f2` | pkg_json_feat_text_metrics_enc | ok | 0.9972 | 0.9958 | 0.9925 | 43 | [log](out/autocollie/runs/2026-06-06T07-43-11_20260606T073458-filetypes-package.json_pkg_json_feat_text_metrics_enc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_ctrl_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Control spec replicating the top feature surface while tuning hard-negative weighting to improve PR_AUC by better separating difficult benigns from malware.
+- **`pkg_json_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enables KV vocab and value splitting to capture fine-grained dependency signals, aiming to boost PR_AUC and recall@3FPM by resolving ambiguous package metadata.
+- **`pkg_json_feat_text_metrics_enc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — Activates text metrics and encoding features to capture structural obfuscation, targeting PR_AUC gains from improved benign/malware separation in script-heavy packages.
+
+</details>
+

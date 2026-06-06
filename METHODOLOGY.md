@@ -300,31 +300,64 @@ evaluation rows.
   benign cost; F2 is.
 - **ROC AUC** stays in the table for academic continuity.
 
-### L0..L100 severity tiers
+### L0..L10000 severity tiers
 
 The deployed bundle ships per-route, per-level thresholds for litmus's
-severity grade (L0 strictest … L100 loosest) on the shared 15-rung grid
-(0, 1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100). These are
-*observation*-derived, not optimization targets:
+severity grade (L0 strictest … L10000 loosest) on the shared 24-rung grid
+(0, 1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 500,
+1000, 2000, 5000, 7500, 10000). These are *observation*-derived, not
+optimization targets:
 
-For each route and each level Lk's FP/100M target qk, the threshold is
+For each route and each level Lk's FP/100M target qk, the threshold is the
+**interpolated benign-score quantile**
 
 ```
-T = quantile_{1 - qk × 10⁻⁸}(benign_dev_scores_route)
+T = quantile_{1 - qk × 10⁻⁸}(benign_dev_scores_route)   (Type-7, linear)
 ```
 
-i.e., the score cut at which roughly qk benigns per 100M sit above it
-on dev. When qk × N_benign / 10⁸ < 1 (the empirical floor — a single
-benign per 100M benigns is the smallest rate the sample can resolve
-directly), the threshold comes from a **generalized-Pareto fit** to the
-upper tail of the route's benign scores; the GPD inverse gives the
-score at which `P(benign > T) = qk × 10⁻⁸`. This earlier failed when
-GPD was used as a calibration *optimization target* — it produced
-thresholds above the malware distribution and zero-recall policies. As
-an observation (one extrapolated number per (route, level) used to
-*describe* the score curve, not chosen *to satisfy* a budget), it is
-the right tool: the same parametric assumption that fails to defend a
-deployment claim is fine for grading severity.
+i.e., the score cut at which roughly qk benigns per 100M sit above it on dev.
+A single shared function — `collimator.thresholds.quantile_severity_threshold`
+— computes this for screening, deploy policy search, deployed-metric reporting,
+and the specialist benchmark, so a candidate is **screened at the exact operating
+point it ships at**.
+
+**Why the interpolated quantile is the most accurate estimator for this goal.**
+The level → threshold map has to satisfy four properties at once, and the
+interpolated quantile is the simplest estimator that gets all four — accurately,
+at any sample size:
+
+- **L0 = 0 FP, always distinct from L1.** L0 returns just above the max benign
+  (the only level that fires on zero benigns); every Lk > 0 returns a quantile
+  ≤ max benign, so it always admits at least the top benign (**≥ 1 FP**). L0 is
+  therefore strictly stricter than L1 by construction.
+- **Distinct per level, even when the difference is subtle.** Below the
+  resolution floor (qk × N_benign / 10⁸ < 1) the empirical FP *count* can only be
+  an integer, so any count-budget rule (floor / ceil / max-1) collapses every
+  strict level onto the same 1-FP cut — L5 and L50 would ship the *identical*
+  threshold. Linear interpolation of the quantile instead places them at
+  different points *within the same FP gap*: L5 sits closer to the max benign
+  than L50, so their thresholds differ and the curve stays strictly monotone at
+  every n. (Their *recall* ties only when no malware actually falls in that score
+  gap — which is the honest answer, not an artifact of the estimator.)
+- **Never overshoots live traffic.** The estimate is always ≤ the max observed
+  benign — it never extrapolates a threshold *above* the data. An above-max
+  threshold is unmeasurable on the dev sample, and if the live benign tail is
+  heavier than a fitted model assumed, it admits more FP than claimed. Staying
+  inside the observed order statistics keeps the ceiling a *measured* one.
+- **Scientifically defensible.** This is textbook order-statistic quantile
+  estimation (numpy Type-7); accuracy improves monotonically with benign volume,
+  and it never claims resolution the sample lacks. The honest *rate claim* for any
+  single observation is the Clopper-Pearson upper bound, reported alongside
+  (`cp_floor_per_100M`) — kept separate from the threshold rather than baked into
+  it.
+
+We previously extrapolated strict-tier thresholds below the resolution floor with
+a **generalized-Pareto tail fit**. We removed it: interpolation *within* the data
+already delivers distinct, monotone levels (L5 ≠ L50) without GPD's failure modes
+— parametric tail mis-fit that overshoots on live traffic, degeneracy below ~500
+tail points, and thresholds extrapolated above the malware distribution. For
+grading severity on finite dev samples, the measured-and-interpolated ceiling is
+both safer and more accurate than a parametric extrapolation beyond the data.
 
 **This is a deployment dial, not a model-quality result.** The headline
 PR AUC and recall@L50 numbers don't change with L; they describe the
@@ -338,11 +371,12 @@ avoids double-optimizing a quantity that's purely a UI courtesy.
 
 ### Per-filetype dimension
 
-`azoth_route_policy_search.py` derives the same per-route quantile
+`azoth_route_policy_search.py` derives the same per-route interpolated quantile
 thresholds within each filetype's row slice. For small filetypes
 (e.g., ELF with ~14k benigns → empirical floor ~7000 FP/100M ≈ 70 FP/M
-for resolvable qk) the strict-tier thresholds are GPD-extrapolated; this is reported
-in `route_policies.md` per (filetype, level). Per-filetype policy
+for resolvable qk) the strict-tier thresholds cluster at the 1-FP ceiling —
+distinct but subtle per level via interpolation, never extrapolated above the
+slice's benign scores; this is reported in `route_policies.md` per (filetype, level). Per-filetype policy
 choice (general_only vs specialist_primary_with_escape, etc.) is then
 made by `_choose_best` on the resulting OR-rule recall/F1, with an
 inclusiveness tiebreaker that prefers specialist participation when

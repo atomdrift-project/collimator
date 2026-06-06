@@ -295,30 +295,25 @@ def test_quantile_severity_threshold_empirical_when_resolvable() -> None:
     assert 0.93 < threshold < 0.97
 
 
-def test_quantile_severity_threshold_extrapolates_below_floor() -> None:
-    """When q is below the empirical floor (q × N < 1e6) but the benign
-    sample has enough tail data, GPD extrapolation should kick in.
+def test_quantile_severity_threshold_below_floor_uses_absolute_fp() -> None:
+    """A low-volume route that can't resolve the per-100M rate switches to the
+    absolute-FP regime — a real threshold <= max benign admitting a bounded FP
+    count, never an above-max value that could overshoot on live traffic.
 
-    A 1k-row benign sample can't directly resolve q=100 FP/M (would need
-    n × p_target = 1000 × 1e-4 = 0.1 expected FP — below 1). Drawing from
-    a heavy-tailed distribution with enough tail mass should make GPD fit
-    succeed and return a finite extrapolated threshold above the empirical
-    max for that target.
+    A 2k-row benign sample can't resolve q=100 FP/M (n × p = 2000 × 1e-4 = 0.2
+    expected FP, below 1), and 2k < the 25k low-volume cutoff, so the level is
+    read as an absolute FP count capped at 5% of benigns (here 100 FP).
     """
     rng = np.random.default_rng(11)
-    # Heavy-ish tail so GPD has something to fit (Beta concentrated near 1
-    # with a long upper tail in [0, 1]).
     benign_probs = np.clip(rng.beta(0.5, 5.0, size=2000) + 0.3, 0.0, 1.0).astype(np.float64)
     threshold, method = _mod._quantile_severity_threshold(  # type: ignore[attr-defined]
         benign_probs, target_per_million=100.0,
     )
     assert threshold is not None
-    # Either GPD extrapolated, or fell back to empirical_floor — both are
-    # honest for "below empirical resolution" responses. Failure modes
-    # (None, "none") would mean the helper bailed.
-    assert method in ("extrapolated", "empirical_floor")
-    # Threshold must be a real number in [0, 1].
-    assert 0.0 <= threshold <= 1.0
+    assert method == "absolute_fp"
+    assert 0.0 <= threshold <= float(benign_probs.max())
+    fp = int((benign_probs >= threshold).sum())
+    assert 1 <= fp <= max(1, round(0.05 * 2000))  # bounded by the 5% cap
 
 
 def test_quantile_severity_threshold_returns_none_for_too_few_benigns() -> None:

@@ -26,6 +26,7 @@ from sklearn.metrics import (
 )
 
 from . import bundle, data, export, features, train
+from . import thresholds as _severity  # aliased: a local `thresholds` var shadows the name in _recall_at_per_100M
 from .model import predict_proba
 
 
@@ -141,6 +142,25 @@ def _route_file_types(route: str) -> tuple[str, ...]:
     )
 
 
+def _allowlist_content_hash(feature_env: dict[str, str]) -> str:
+    """sha256 of the COLLIMATOR_ALLOWED_FEATURES_FILE contents ("" if unset/unreadable).
+
+    ``feature_env`` carries only the allowlist file *path*. Keying the matrix
+    cache on the path alone means overwriting a fixed path with new content —
+    exactly what an automated allowlist tuner does — silently reuses a stale
+    matrix. Folding the content hash into the key invalidates the cache on a
+    real content change even when the path is unchanged.
+    """
+    path = feature_env.get("COLLIMATOR_ALLOWED_FEATURES_FILE", "")
+    if not path:
+        return ""
+    try:
+        with open(path, "rb") as f:
+            return hashlib.sha256(f.read()).hexdigest()[:16]
+    except OSError:
+        return ""
+
+
 def _matrix_cache_key(
     corpus_hash: str,
     feature_cfg: features.FeatureConfig,
@@ -148,15 +168,17 @@ def _matrix_cache_key(
 ) -> str:
     """Deterministic hash for corpus + feature configuration."""
     cfg_dict = _feature_config_dict(feature_cfg)
-    blob = json.dumps(
-        {
-            "corpus": corpus_hash,
-            "feature_config": cfg_dict,
-            "feature_env": feature_env,
-        },
-        sort_keys=True,
-        default=str,
-    )
+    key_dict: dict[str, object] = {
+        "corpus": corpus_hash,
+        "feature_config": cfg_dict,
+        "feature_env": feature_env,
+    }
+    # Only add the allowlist content hash when an allowlist is actually set, so
+    # configs without one keep their existing cache keys (no needless rebuild).
+    content_hash = _allowlist_content_hash(feature_env)
+    if content_hash:
+        key_dict["allowlist_content"] = content_hash
+    blob = json.dumps(key_dict, sort_keys=True, default=str)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
@@ -532,12 +554,13 @@ def _print_test_metrics(
         print(f"  Avg Prec:  {average_precision_score(y_true, y_prob):.4f}")
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
         rec_fp = _recall_at_per_100M(y_true, y_prob)
+        _L = _severity.DEFAULT_SEVERITY_LEVEL
         print(
-            f"  Recall@FP/100M: 50={rec_fp['recall_at_50_per_100M']:.4f} "
+            f"  Recall@FP/100M: L{_L}(deploy)={rec_fp[f'recall_at_{_L}_per_100M']:.4f} "
+            f"50={rec_fp['recall_at_50_per_100M']:.4f} "
             f"100={rec_fp['recall_at_100_per_100M']:.4f} "
             f"300={rec_fp['recall_at_300_per_100M']:.4f} "
             f"500={rec_fp['recall_at_500_per_100M']:.4f} "
-            f"900={rec_fp['recall_at_900_per_100M']:.4f} "
             f"(n_benign={rec_fp['n_benign_holdout']}, "
             f"min_resolvable={_format_min_observable(rec_fp['min_observable_per_100M'])})"
         )
@@ -562,7 +585,26 @@ def _format_min_observable(value: float | None) -> str:
 # are FPs per 100M benigns — lower = stricter. The 500/900 entries below are
 # retained as reporting-only views into the loose-tier ranking tail, not as
 # deployable operating points.
-RECALL_AT_PER_100M_KS: tuple[int, ...] = (50, 100, 300, 500, 900)
+# Emit recall/threshold at the FULL shared per-100M grid so every downstream
+# consumer (autocollie screen/promote gates, check_azoth_regression, charts)
+# can read the deploy-default operating point. Sourcing from the shared grid
+# keeps this in lockstep with DEFAULT_SEVERITY_LEVEL instead of drifting: the
+# old hardcoded (50,100,300,500,900) never emitted recall_at_4_per_100M (the L4
+# default) — and 900 isn't even a grid level — so every recall-at-level gate
+# silently fell back to PR_AUC.
+RECALL_AT_PER_100M_KS: tuple[int, ...] = tuple(_severity._LEVELS_PER_100M)
+
+# Hard invariant: the deploy operating point MUST be emitted, else recall-at-
+# level gates compare against a missing field and degrade silently. Fail loud at
+# import so a future DEFAULT_SEVERITY_LEVEL / grid edit can't drift them apart.
+if _severity.DEFAULT_SEVERITY_LEVEL not in RECALL_AT_PER_100M_KS:
+    raise RuntimeError(
+        f"DEFAULT_SEVERITY_LEVEL={_severity.DEFAULT_SEVERITY_LEVEL} is not in the "
+        f"emitted recall grid {RECALL_AT_PER_100M_KS}; "
+        f"recall_at_{_severity.DEFAULT_SEVERITY_LEVEL}_per_100M would never be "
+        "produced and recall-at-level gates would fall back silently. Add it to "
+        "thresholds._LEVELS_PER_100M."
+    )
 
 
 def _recall_at_per_100M(
@@ -605,32 +647,35 @@ def _recall_at_per_100M(
             out[f"threshold_at_{int(k)}_per_100M"] = 1.0
         return out
 
-    order = np.argsort(y_prob, kind="stable")[::-1]
-    sorted_probs = y_prob[order]
-    sorted_y = y_true[order]
-    cum_fp = np.cumsum(sorted_y == 0)
-    cum_tp = np.cumsum(sorted_y == 1)
-    # Collapse to threshold breakpoints so equal-probability rows don't get
-    # split between sides of a threshold.
-    change_mask = np.concatenate([np.diff(sorted_probs) != 0, [True]])
-    cuts = np.where(change_mask)[0]
-    thresholds = sorted_probs[cuts]
-    fp_at_cut = cum_fp[cuts]
-    tp_at_cut = cum_tp[cuts]
-    # Per-100M block. L50/L100 will round to "0 allowed FPs" on small holdouts
-    # (rule of 3); the resulting value collapses to recall@0, matching
-    # `min_observable_per_100M`'s honesty contract.
+    # Per-level recall via the SHARED operating-point threshold
+    # (`_severity.quantile_severity_threshold`) — the EXACT definition deploy /
+    # policy-search uses, so a candidate is screened at the operating point it
+    # will ship at. The max(1, floor) rule means a small holdout reports recall@1FP
+    # (a real *measured* ceiling) instead of collapsing to recall@0FP; the metric
+    # is still coarse below ~2M benigns (the effective FP rate is ≥1/n_benign,
+    # above the L50 target), but the *method* now matches deploy. `_severity` is
+    # the aliased thresholds module (a local `thresholds` var would shadow it).
+    benign_probs = y_prob[y_true == 0]
+    malware_probs = y_prob[y_true == 1]
+    # Below the shared method's 50-benign floor (returns None) there's no
+    # measurable ceiling — and deploy can't operate there either, so these
+    # routes are filtered upstream (autocollie --min-route-benign). Report
+    # recall@0FP (malware outscoring every benign) as the honest coarse floor so
+    # the metric stays well-defined and a perfectly-separable tiny holdout still
+    # reads 1.0.
+    zero_fp_threshold = float(np.nextafter(float(np.max(benign_probs)), np.inf))
+    recall_at_0fp = float(np.mean(malware_probs >= zero_fp_threshold))
     for k in RECALL_AT_PER_100M_KS:
-        budget = int(np.floor(n_benign * k / 100_000_000.0))
-        valid = fp_at_cut <= budget
         suffix = f"{int(k)}_per_100M"
-        if valid.any():
-            idx = int(np.where(valid)[0][-1])
-            out[f"recall_at_{suffix}"] = float(tp_at_cut[idx] / n_malware)
-            out[f"threshold_at_{suffix}"] = float(thresholds[idx])
+        thr, _method = _severity.quantile_severity_threshold(
+            benign_probs, target_per_million=k / 100.0,
+        )
+        if thr is None:
+            out[f"recall_at_{suffix}"] = recall_at_0fp
+            out[f"threshold_at_{suffix}"] = zero_fp_threshold
         else:
-            out[f"recall_at_{suffix}"] = 0.0
-            out[f"threshold_at_{suffix}"] = float(np.nextafter(float(sorted_probs[0]), np.inf))
+            out[f"recall_at_{suffix}"] = float(np.mean(malware_probs >= thr))
+            out[f"threshold_at_{suffix}"] = float(thr)
     return out
 
 

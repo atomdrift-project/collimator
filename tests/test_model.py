@@ -57,6 +57,8 @@ def test_create_classifier_azoth_leaf_params() -> None:
 
 
 def test_create_classifier_azoth_cuda_device() -> None:
+    from collimator.model import detect_lightgbm_cuda
+
     model = create_classifier(
         n_benign=100,
         n_malware=50,
@@ -65,7 +67,14 @@ def test_create_classifier_azoth_cuda_device() -> None:
         n_estimators=5,
     )
 
-    assert model.get_params()["device_type"] == "cuda"
+    params = model.get_params()
+    if detect_lightgbm_cuda():
+        # CUDA-built LightGBM: the request is honored.
+        assert params["device_type"] == "cuda"
+    else:
+        # CPU-only LightGBM (e.g. XGBoost has CUDA but LightGBM doesn't):
+        # must fall back to CPU rather than abort at fit time.
+        assert params.get("device_type") in (None, "cpu")
 
 
 def test_predict_proba_shape() -> None:

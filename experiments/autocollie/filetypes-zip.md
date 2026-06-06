@@ -570,3 +570,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T022510-filetypes-zip` — 2026-06-06T02:25:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6646f71ad1a0a9f4` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9998 | 0.9980 | 0.9868 | 197 | [log](out/autocollie/runs/2026-06-06T02-32-18_20260606T022510-filetypes-zip_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `00a6b0a3b546c2b8` | zip_control_hardneg_sweep | ok | 0.9900 | 0.9317 | 0.8158 | 149 | [log](out/autocollie/runs/2026-06-06T02-36-14_20260606T022510-filetypes-zip_zip_control_hardneg_sweep.log) |
+| `7cb1d3e79aea2e1d` | zip_kv_vocab_split_lowfreq_bigrams | ok | 0.9927 | 0.9510 | 0.8117 | 162 | [log](out/autocollie/runs/2026-06-06T02-38-46_20260606T022510-filetypes-zip_zip_kv_vocab_split_lowfreq_bigrams.log) |
+| `8209b99a991f6a7d` | zip_tiered_trigrams_hardneg | ok | 0.9923 | 0.9473 | 0.8153 | 176 | [log](out/autocollie/runs/2026-06-06T02-41-29_20260606T022510-filetypes-zip_zip_tiered_trigrams_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Replicates the top PR_AUC feature set while sweeping hard-negative weights and scale_pos_weight to lift recall@3 FP/M without degrading ranking.
+- **`zip_kv_vocab_split_lowfreq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Enables KV vocab and value splitting to extract structured archive metadata, paired with lower bigram frequency to improve PR_AUC and recall@3 FP/M.
+- **`zip_tiered_trigrams_hardneg`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Tests tiered critical trigrams to capture longer malicious path sequences in archives, combined with hard-negative tuning to boost recall@3 FP/M.
+
+</details>
+
+## Cycle `20260606T075059-filetypes-zip` — 2026-06-06T07:50:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6646f71ad1a0a9f4` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9998 | 0.9980 | 0.9868 | 1 | [log](out/autocollie/runs/2026-06-06T08-00-51_20260606T075059-filetypes-zip_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b43e54c2af2e9bec` | zip_control_hardneg_sweep_01_12 | ok | 0.9897 | 0.9292 | 0.8161 | 127 | [log](out/autocollie/runs/2026-06-06T08-00-53_20260606T075059-filetypes-zip_zip_control_hardneg_sweep_01_12.log) |
+| `a9f8cbbdeaffde2b` | zip_kv_vocab_enable_bigram100 | ok | 0.9915 | 0.9425 | 0.8171 | 136 | [log](out/autocollie/runs/2026-06-06T08-03-01_20260606T075059-filetypes-zip_zip_kv_vocab_enable_bigram100.log) |
+| `55dc378ea8f5f293` | zip_textenc_metrics_hardneg | ok | 0.9922 | 0.9469 | 0.8182 | 214 | [log](out/autocollie/runs/2026-06-06T08-05-17_20260606T075059-filetypes-zip_zip_textenc_metrics_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_sweep_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to improve recall@3 FP/M by upweighting difficult benigns, preserving saturated PR_AUC.
+- **`zip_kv_vocab_enable_bigram100`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value patterns in zip metadata, aiming to boost PR_AUC and recall@3 FP/M by adding structural signal.
+- **`zip_textenc_metrics_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_encoding and text_metrics_full to capture obfuscation patterns in zip contents, paired with hard-negative tuning to lift recall@3 FP/M.
+
+</details>
+

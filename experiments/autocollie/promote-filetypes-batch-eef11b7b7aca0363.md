@@ -1,8 +1,8 @@
 # Promote REJECTED — `eef11b7b7aca0363` on `filetypes/batch`
 
-Generated 2026-05-25T20:28:58Z
+Generated 2026-06-06T20:36:08Z
 
-AUC regressed at full-train: 0.9983 -> 0.9965
+AUC regressed at full-train: 0.9983 -> 0.9962
 
 ## Gates
 
@@ -13,13 +13,13 @@ AUC regressed at full-train: 0.9983 -> 0.9965
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `eef11b7b7aca0363` | `b2ce54256769e342` | `175dbdfd826e3fff` |
-| PR AUC | 0.9998 | 0.9995 | 0.9996 |
-| ROC AUC | 0.9983 | 0.9960 | 0.9965 |
-| F1 | 0.9890 | 0.9884 | 0.9884 |
+| key | `eef11b7b7aca0363` | `73ac840846a92651` | `a34b35cbe7497a50` |
+| PR AUC | 0.9998 | 0.9997 | 0.9997 |
+| ROC AUC | 0.9983 | 0.9956 | 0.9962 |
+| F1 | 0.9890 | 0.9916 | 0.9930 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-AUC regressed at full-train: 0.9983 -> 0.9965
+AUC regressed at full-train: 0.9983 -> 0.9962

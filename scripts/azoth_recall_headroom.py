@@ -24,8 +24,8 @@ emits a one-line digest covering:
       * "low_pr"        — best route PR-AUC < 0.99. Learning capacity
                           short; autocollie can probably help.
       * "limited_data"  — n_malware < 1000 OR n_benign < 500. Anything
-                          we learn here will overfit or hit GPD-
-                          extrapolation resolution limits; need more
+                          we learn here will overfit or hit quantile-
+                          resolution limits; need more
                           samples before tuning. (The n_benign floor
                           matters because the "best@L50" number on a
                           small-benign slice is really "best at 1 FP

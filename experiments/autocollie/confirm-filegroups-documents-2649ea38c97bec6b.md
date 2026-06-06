@@ -1,6 +1,6 @@
 # Confirm FAIL — 2649ea38c97bec6b on `filegroups/documents`
 
-Cycle `20260601T163643-confirm-2649ea38c97bec6b` — 2026-06-01T16:36:43Z
+Cycle `20260606T144524-confirm-2649ea38c97bec6b` — 2026-06-06T14:45:24Z
 
 experiment failed: interrupted: context canceled
 --- experiment log tail ---
@@ -53,9 +53,9 @@ COLLIMATOR_EXPERIMENT_TAG=_docs_text_metrics_encoding_vocab_confirm_seedsearch_3
 	 \
 	--cache-dir out/cache/experiment/azoth \
 	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_docs_text_metrics_encoding_vocab_confirm_seedsearch_3.log"
-make[2]: *** [Makefile:1573: experiment] Terminated
+make[2]: *** [Makefile:1826: experiment] Terminated
 --- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-01T16-36-43_20260601T163643-confirm-2649ea38c97bec6b_docs_text_metrics_encoding_vocab_confirm_seedsearch_3.log
+full log: /home/t/collimator/out/autocollie/runs/2026-06-06T14-45-24_20260606T144524-confirm-2649ea38c97bec6b_docs_text_metrics_encoding_vocab_confirm_seedsearch_3.log
 
 ## Per-seed results (1 ran)
 

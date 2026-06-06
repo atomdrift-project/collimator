@@ -550,3 +550,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T023338-filegroups-source` — 2026-06-06T02:33:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `236c6a54f5d870b6` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9987 | 0.9982 | 0.9753 | 59 | [log](out/autocollie/runs/2026-06-06T02-41-17_20260606T023338-filegroups-source_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `1cc721b39a4f0de2` | source_control_hardneg_lr | ok | 0.9260 | 0.9434 | 0.5758 | 35 | [log](out/autocollie/runs/2026-06-06T02-42-30_20260606T023338-filegroups-source_source_control_hardneg_lr.log) |
+| `98b43dcde62b6566` | source_feat_symbol_vocab | ok | 0.8981 | 0.9159 | 0.5759 | 25 | [log](out/autocollie/runs/2026-06-06T02-43-08_20260606T023338-filegroups-source_source_feat_symbol_vocab.log) |
+| `6bc687e5a3e12565` | source_feat_text_metrics_bigram | ok | 0.9045 | 0.9098 | 0.5759 | 27 | [log](out/autocollie/runs/2026-06-06T02-43-33_20260606T023338-filegroups-source_source_feat_text_metrics_bigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_hardneg_lr`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to hit matrix cache; tunes hard_negative_weight and learning_rate to improve PR_AUC by better separating hard negatives without overfitting.
+- **`source_feat_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab to capture import/function co-occurrence patterns in source files, aiming to boost PR_AUC by adding high-signal lexical features.
+- **`source_feat_text_metrics_bigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and lowers bigram_min_freq to 50 to capture rarer source-code obfuscation patterns, targeting recall@3FPM gains at the strict-FP tail.
+
+</details>
+
+## Cycle `20260606T080050-filegroups-source` — 2026-06-06T08:00:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `236c6a54f5d870b6` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9987 | 0.9982 | 0.9753 | 1 | [log](out/autocollie/runs/2026-06-06T08-07-35_20260606T080050-filegroups-source_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `66905a812205122b` | source_control_hardneg_lr | ok | 0.9218 | 0.9383 | 0.5757 | 55 | [log](out/autocollie/runs/2026-06-06T08-07-40_20260606T080050-filegroups-source_source_control_hardneg_lr.log) |
+| `b5f98f18d669aaf9` | source_feat_text_metrics_lowbigram | ok | 0.9073 | 0.9195 | 0.5757 | 26 | [log](out/autocollie/runs/2026-06-06T08-08-37_20260606T080050-filegroups-source_source_feat_text_metrics_lowbigram.log) |
+| `300f995a9fc084e4` | source_feat_kv_vocab | ok | 0.9049 | 0.9091 | 0.5758 | 26 | [log](out/autocollie/runs/2026-06-06T08-09-04_20260606T080050-filegroups-source_source_feat_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_hardneg_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Control run replicating best feature_env while tuning hard-negative weighting and learning rate to improve PR_AUC by better separating hard benigns from malware.
+- **`source_feat_text_metrics_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — Enables text_metrics_full and lowers bigram_min_freq to 50 to capture finer-grained source code structure, targeting PR_AUC gains through richer text signals.
+- **`source_feat_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enables kv_vocab to extract key-value patterns from source manifests, aiming to improve recall@3FPM by distinguishing malicious configurations from benign ones.
+
+</details>
+

@@ -1,61 +1,61 @@
 # Confirm FAIL — 84317bce80ee3297 on `filetypes/pe`
 
-Cycle `20260601T170434-confirm-84317bce80ee3297` — 2026-06-01T17:04:34Z
+Cycle `20260606T163023-confirm-84317bce80ee3297` — 2026-06-06T16:30:23Z
 
-experiment failed: timed out after 30m0s (timeout(1) exit 124)
+experiment failed: interrupted: context canceled
 --- experiment log tail ---
-Sampled train: 1070795 (950965 malware, 119830 benign)
-External test: 176433 (156691 malware, 19742 benign)
-13:04:38 INFO  collimator.experiment: pass 1: building vocabulary (worker-local DB fetching)
-13:17:55 INFO  collimator.features: tiered crit bigrams: 5000 vocab entries
-13:18:28 INFO  collimator.features: extended metrics: 175 keys from 5000 scanned rows
-13:19:01 INFO  collimator.features: crit-category n-grams: 52 unigrams, 366 bigrams, 436 trigrams from 5000 scanned rows
-13:19:43 INFO  collimator.features: ATT&CK/MBC n-grams: 0/500 atk bi/tri, 37/500 mbc bi/tri from 5000 scanned rows
-13:19:43 INFO  collimator.features: vocab: 1155 paths, 53 filetypes, 19644 elements, 5000 bigrams, 0 ghosts, 175 ext_metrics -> 57168 features
-13:19:43 INFO  collimator.experiment: pass 2: extracting all features (worker-local DB fetching)
-13:25:19 INFO  collimator.features: saved feature spec: 57168 features to out/cache/experiment/azoth/matrix_f2393b4f4d64a6aa_spec.json
-13:25:19 INFO  collimator.experiment: cached matrices: out/cache/experiment/azoth/matrix_f2393b4f4d64a6aa.npz (1070795 train, 176433 test, 57168 features)
-13:25:19 INFO  collimator.experiment: seed-search attempt 1/3 (seed=43)
-13:25:19 INFO  collimator.train: training: 1070795 samples (950965 malware, 119830 benign), 57168 features, sparse nnz=1414225633 density=2.3% mem=10794MB
-13:25:20 INFO  collimator.train: holdout: 128496 samples (114116 malware, 14380 benign)
-13:26:03 INFO  collimator.train: cross-validation disabled
-13:26:03 INFO  collimator.train: training final model on 942299 samples
-13:26:03 INFO  collimator.model: xgboost device: cuda:0
-13:26:03 INFO  collimator.model: device=cpu (sparse: 2.310% density)
-13:29:59 INFO  collimator.model: device=cpu (sparse: 2.310% density)
-13:34:30 INFO  collimator.train: final model: 350 trees (early stopped at 350) on cpu
-13:34:31 INFO  collimator.train: evaluation: AUC=0.9998 F1=0.9986 threshold=0.302 (isotonic calibrated)
-
-======================================================
-TRAINING RESULTS
-======================================================
-Dataset:  1070795 (950965 malware, 119830 benign, 0.1:1)
-Features: 57168
-Model:    azoth  351/350 trees  depth=12  lr=0.03  leaves=96  min_child_samples=100  β=2.0  seed=43
-──────────────────── Holdout ─────────────────────────
-  n=64248 (57058 malware, 7190 benign)  threshold=0.302
-  ROC AUC  0.9998   Avg Prec  1.0000   Brier  0.0017   ECE  0.0005
-  F1  0.9986   Precision  0.9976   Recall  0.9997
-  TP 57042 / 57058  (99.97%)    FN    16 / 57058  (0.03%)
-  TN  7051 / 7190  (98.07%)    FP   139 / 7190  (1.93%)
-======================================================
-
-=======================EXTERNAL TEST========================
-  Threshold: 0.302
-  Precision: 0.9993
-  Recall:    0.9963
-  F1:        0.9978
-  ROC AUC:   0.9999
-  Avg Prec:  1.0000
-  Brier:     0.0050
-  Recall@FP/100M: 50=0.8808 100=0.8808 300=0.8808 500=0.8808 900=0.8808 (n_benign=19742, min_resolvable=5065.3/100M)
-13:34:31 INFO  collimator.experiment: seed-search attempt 1/3 done: F1=0.9978 AUC=0.9999 recall@L50/100M=0.8808 (552.4s)
-13:34:31 INFO  collimator.experiment: seed-search attempt 2/3 (seed=44)
-13:34:31 INFO  collimator.train: training: 1070795 samples (950965 malware, 119830 benign), 57168 features, sparse nnz=1414225633 density=2.3% mem=10794MB
-13:34:32 INFO  collimator.train: holdout: 128496 samples (114116 malware, 14380 benign)
-make[2]: *** [Makefile:1573: experiment] Terminated
+COLLIMATOR_KV_VALUE_SPLIT=0 \
+COLLIMATOR_SYMBOL_BIGRAMS=0 \
+COLLIMATOR_SYMBOL_BIGRAM_MAX=5000 \
+COLLIMATOR_SYMBOL_MIN_FREQ_BIGRAM=10 \
+COLLIMATOR_SYMBOL_TRIGRAMS=0 \
+COLLIMATOR_SYMBOL_TRIGRAM_MAX=2000 \
+COLLIMATOR_SYMBOL_MIN_FREQ_TRIGRAM=10 \
+COLLIMATOR_TRIGRAM_MIN_FREQ=5 \
+COLLIMATOR_TIERED_CRIT_QUADGRAMS=0 \
+COLLIMATOR_TIERED_QUADGRAM_PATH_DEPTH=3 \
+COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT=3 \
+COLLIMATOR_TIERED_QUADGRAM_MAX=5000 \
+COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ=5 \
+COLLIMATOR_MBC_ID_VOCAB=0 \
+COLLIMATOR_TRAIT_CONFIDENCE_MOMENTS=0 \
+COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE=0 \
+COLLIMATOR_DOCUMENT_OBFUSCATION_FEATURES=0 \
+COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT= \
+COLLIMATOR_EXPERIMENT_TAG=_pe_train_hardneg_01_12_lr003_confirm_seedsearch_3 \
+.venv/bin/python -u -m collimator experiment --db postgres://hopper@localhost:5432/hopper --output out/experiments/azoth --model-name azoth --learner azoth --workers 128 --seed 43 \
+	--experiment-idea pe_train_hardneg_01_12_lr003_confirm_seedsearch_3 --route filetypes/pe  \
+	--train-samples 0 --max-test-samples 0 \
+	--total-limit 0 \
+	 \
+	 \
+	--n-folds 0 --holdout-fraction 0.12 \
+	--n-estimators 350 --max-depth 12 \
+	--learning-rate 0.03 --early-stopping-rounds 25 \
+	--num-leaves 96 \
+	--min-child-samples 100 \
+	--min-child-weight 5 \
+	--colsample-bytree 0.8 --subsample 0.8 \
+	--gamma 0 --reg-alpha 0 --reg-lambda 1 \
+	--device auto \
+	 \
+	 \
+	--min-malware-score 0 \
+	--beta 2 --threshold-mode fbeta \
+	 \
+	--hard-negative-fraction 0.1 --hard-negative-weight 12 \
+	--scale-pos-weight-mult 1 \
+	--boosting-type gbdt \
+	 \
+	--seed-search-k 3 \
+	--save-all-seeds \
+	 \
+	 \
+	--cache-dir out/cache/experiment/azoth \
+	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_pe_train_hardneg_01_12_lr003_confirm_seedsearch_3.log"
+make[2]: *** [Makefile:1826: experiment] Terminated
 --- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-01T17-04-34_20260601T170434-confirm-84317bce80ee3297_pe_train_hardneg_01_12_lr003_confirm_seedsearch_3.log
+full log: /home/t/collimator/out/autocollie/runs/2026-06-06T16-30-23_20260606T163023-confirm-84317bce80ee3297_pe_train_hardneg_01_12_lr003_confirm_seedsearch_3.log
 
 ## Per-seed results (1 ran)
 

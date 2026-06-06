@@ -10,6 +10,7 @@ import pytest
 
 from collimator.features import (
     FeatureSpec,
+    _allowed_with_pair,
     _assemble_partitioned_matrices,
     _finding_paths,
     _metric_kv_tokens,
@@ -1825,3 +1826,32 @@ def test_assemble_partitioned_matrices_empty():
     assert Xtr.shape == (0, 7) and Xte.shape == (0, 7)
     assert ytr.shape == (0,) and yte.shape == (0,)
     assert Xtr.dtype == np.float32
+
+
+def test_allowlist_couples_offset_family_pairs():
+    """The allowlist filter must keep present:/maxcrit: (and bigrams:/
+    unsigned_bigram:) with IDENTICAL membership, even when the allowlist ranks
+    the two members asymmetrically — litmus reconstructs each pair from one
+    shared vocab and orphaned members extract as zeros otherwise."""
+    # Asymmetric allowlist: present:A & C but only maxcrit:B; bigrams:Y only.
+    allowed = frozenset(
+        {"present:A", "present:C", "maxcrit:B", "bigrams:Y", "agg:max_crit"}
+    )
+    names = [
+        "present:A", "maxcrit:A", "present:B", "maxcrit:B",
+        "present:C", "maxcrit:C", "bigrams:Y", "unsigned_bigram:Y",
+        "agg:max_crit", "metrics:foo",
+    ]
+    kept = [n for n in names if _allowed_with_pair(n, allowed)]
+    pres = sorted(n.removeprefix("present:") for n in kept if n.startswith("present:"))
+    maxc = sorted(n.removeprefix("maxcrit:") for n in kept if n.startswith("maxcrit:"))
+    big = sorted(n.removeprefix("bigrams:") for n in kept if n.startswith("bigrams:"))
+    ub = sorted(
+        n.removeprefix("unsigned_bigram:") for n in kept if n.startswith("unsigned_bigram:")
+    )
+    # Pairs end up symmetric (the union of each side's allowed paths).
+    assert pres == maxc == ["A", "B", "C"]
+    assert big == ub == ["Y"]
+    # Non-offset features filter normally: allowed kept, others dropped.
+    assert "agg:max_crit" in kept
+    assert "metrics:foo" not in kept
