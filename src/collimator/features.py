@@ -1338,35 +1338,33 @@ class FeatureSpec:
     standardized: bool = False
 
     def _litmus_offset_vocabs(self) -> tuple[list[str], list[str], list[str]]:
-        """Return presence/bigram/trigram vocabs pruned to what survives in
-        ``feature_names``.
+        """Return the presence/bigram/trigram vocabs litmus reconstructs the
+        offset-written families from, derived directly from ``feature_names``.
 
-        litmus reconstructs the offset-written families (present:/maxcrit: from
-        presence_vocab, bigrams:/unsigned_bigram: from bigram_vocab, trigram:
-        from trigram_vocab) by writing ``base + idx`` for each vocab member, so
-        it requires the family to occupy a contiguous, in-order run in
-        feature_names. The allowlist (COLLIMATOR_ALLOWED_FEATURES_FILE) prunes
-        feature_names by name but leaves these vocabs at full length, so litmus
-        sees a family as "partially present" and skips it — silently zeroing
-        thousands of n-gram features at inference. Emitting the vocabs pruned to
-        the survivors keeps the serialized spec self-consistent. A no-op when no
-        allowlist was applied (every member is present). collimator's own
-        extractor is name-addressed, so this never changes its output.
+        litmus builds present:/maxcrit: from presence_vocab, bigrams:/
+        unsigned_bigram: from bigram_vocab, and trigram: from trigram_vocab,
+        resolving each member to its real slot by name. A path that survives the
+        allowlist for only ONE side of a pair (e.g. importance keeps maxcrit:X
+        but drops present:X) still needs its path in the vocab, or litmus can't
+        produce the surviving member at all — it extracts as a silent zero and
+        logs "feature spec contains features unknown to this extractor". So each
+        vocab is the UNION of the paths its two families use in feature_names, in
+        first-appearance order. Deriving from feature_names (rather than the
+        in-memory vocab) makes this correct even when re-saving an already-pruned
+        spec. collimator's own extractor is name-addressed, so output is unchanged.
         """
-        names = set(self.feature_names)
-        presence = [p for p in self.presence_vocab if f"present:{p}" in names]
-        bigram = [b for b in self.bigram_vocab if f"bigrams:{b}" in names]
-        trigram = [t for t in self.trigram_vocab if f"trigram:{t}" in names]
-        # present:/maxcrit: share presence_vocab and bigrams:/unsigned_bigram:
-        # share bigram_vocab; litmus needs each to be contiguous. They prune
-        # symmetrically in practice (importance couples the paired features), but
-        # warn rather than ship a quietly-degraded bundle if they ever diverge.
-        if presence != [p for p in self.presence_vocab if f"maxcrit:{p}" in names]:
-            log.warning("present:/maxcrit: pruned asymmetrically; litmus maxcrit"
-                        " family may be skipped — allowlist must keep the pair together")
-        if bigram != [b for b in self.bigram_vocab if f"unsigned_bigram:{b}" in names]:
-            log.warning("bigrams:/unsigned_bigram: pruned asymmetrically; litmus"
-                        " unsigned_bigram family may be skipped — allowlist must keep the pair together")
+        def _family_union(prefixes: tuple[str, ...]) -> list[str]:
+            seen: dict[str, None] = {}
+            for name in self.feature_names:
+                for prefix in prefixes:
+                    if name.startswith(prefix):
+                        seen.setdefault(name[len(prefix):], None)
+                        break
+            return list(seen)
+
+        presence = _family_union(("present:", "maxcrit:"))
+        bigram = _family_union(("bigrams:", "unsigned_bigram:"))
+        trigram = _family_union(("trigram:",))
         return presence, bigram, trigram
 
     def save(self, path: Path) -> None:

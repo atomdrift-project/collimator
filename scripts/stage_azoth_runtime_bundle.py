@@ -40,6 +40,43 @@ def _copy_if_exists(src: Path, dst: Path) -> None:
         shutil.copy2(src, dst)
 
 
+def _stage_feature_spec(src: Path, dst: Path) -> None:
+    """Copy feature_spec.json, re-deriving the offset-written families' vocabs
+    (presence/bigram/trigram) as the UNION of each family's paths in
+    feature_names.
+
+    The allowlist prune can leave a path in feature_names for only one side of a
+    pair (e.g. maxcrit:X kept while present:X is dropped). Without the path in the
+    vocab, litmus can't produce the surviving member — it extracts as a silent
+    zero and logs "feature spec contains features unknown to this extractor".
+    Re-deriving here (not just at FeatureSpec.save time) makes every staged
+    bundle self-consistent regardless of how the source spec was produced, so a
+    plain `make deploy` of an already-trained bundle ships clean specs too.
+    """
+    if not src.is_file():
+        return
+
+    def _union(names: list[str], prefixes: tuple[str, ...]) -> list[str]:
+        seen: dict[str, None] = {}
+        for name in names:
+            for prefix in prefixes:
+                if name.startswith(prefix):
+                    seen.setdefault(name[len(prefix):], None)
+                    break
+        return list(seen)
+
+    with src.open() as f:
+        spec = json.load(f)
+    names = spec.get("feature_names") or []
+    if names:
+        spec["presence_vocab"] = _union(names, ("present:", "maxcrit:"))
+        spec["bigram_vocab"] = _union(names, ("bigrams:", "unsigned_bigram:"))
+        spec["trigram_vocab"] = _union(names, ("trigram:",))
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with dst.open("w") as f:
+        json.dump(spec, f, indent=2)
+
+
 def _copy_route(src: Path, dst: Path) -> bool:
     if not src.is_dir():
         return False
@@ -67,7 +104,10 @@ def _copy_route(src: Path, dst: Path) -> bool:
     for model_path in model_paths:
         _copy_if_exists(model_path, dst / model_path.relative_to(src))
     for name in ROUTE_AUX_FILES:
-        _copy_if_exists(src / name, dst / name)
+        if name == "feature_spec.json":
+            _stage_feature_spec(src / name, dst / name)
+        else:
+            _copy_if_exists(src / name, dst / name)
     return True
 
 
