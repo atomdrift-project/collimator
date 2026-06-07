@@ -9,8 +9,9 @@ import json
 import math
 import multiprocessing as mp
 import os
+import sys
+import warnings
 from datetime import UTC, datetime
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +24,7 @@ from azoth_calibrate_ensemble import (
     _max_dev_fp_for_target,
     _quantile_severity_threshold,
 )
-from collimator import bundle, features, model
+from collimator import bundle, features
 
 
 def _json_clean(value: Any) -> Any:
@@ -221,6 +222,84 @@ def _calibrate_policy(
     return out
 
 
+# A specialist must have trained on at least this many of its filetype's malware
+# to have learned a real split; below this it's data-starved and kept out.
+# Constant-predictor routes are already dropped upstream at calibrate.
+_SPECIALIST_MIN_MALWARE = 50
+
+
+def _specialist_earns_keep(
+    route_probs: dict[str, np.ndarray],
+    type_route: str,
+    labels: np.ndarray,
+    *,
+    config: dict[str, Any],
+    total_benign: int,
+) -> bool:
+    """True if the filetype's own specialist *earns its keep* — i.e. adding it to
+    the OR-rule lifts ensemble recall at some deployed operating point.
+
+    Standalone ROC is the wrong test: a specialist that ranks only ~0.55 on its
+    own can still carry large recall via the OR-rule, because the OR gives it an
+    independent threshold (the policy search would have used it). We instead
+    measure the marginal contribution the way the deploy uses it: compute the
+    joint-OR recall WITH vs WITHOUT the specialist at each level's FP target, and
+    keep it if it strictly helps at any level. A specialist that adds nothing —
+    because it's near-random or pins its own benigns at the ceiling, so the OR
+    can't admit its malware without admitting benigns — is dropped so
+    general/filegroup carries the route, and it never pollutes the blend either.
+    """
+    spec = route_probs.get(type_route)
+    if spec is None:
+        return False
+    valid = ~np.isnan(spec)
+    if int(np.sum(labels[valid] == 1)) < _SPECIALIST_MIN_MALWARE:
+        return False
+    base = [p for name, p in route_probs.items() if name != type_route]
+    if not base:
+        return True  # the specialist is the only route for this slice
+    with_spec = base + [spec]
+    for level in config.get("levels", []):
+        tpm = float(level.get("hostile", {}).get("target_per_million", 0.0))
+        r_with = _maxrule_recall_at_target(with_spec, labels, tpm)
+        r_without = _maxrule_recall_at_target(base, labels, tpm)
+        if r_with is None or r_without is None:
+            continue
+        if r_with > r_without + 1e-9:
+            return True
+    return False
+
+
+def _maxrule_recall_at_target(
+    arrays: list[np.ndarray], labels: np.ndarray, target_per_million: float,
+) -> float | None:
+    """Recall of the max-over-routes rule at ``target_per_million``, computed at
+    a *matched* FP budget: the threshold is re-derived from the combined
+    max-score's benign quantile, so adding a route only lifts recall if its
+    malware separate above its benigns net of the budget — a fair like-for-like
+    comparison (unlike OR-rule, where each added route brings its own FP). NaN
+    where a route didn't score a row is ignored; an all-NaN row is dropped.
+    Returns None when the slice has too few benigns to derive an operating point.
+    """
+    stack = np.vstack([np.asarray(a, dtype=np.float64) for a in arrays])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)  # all-NaN column → NaN
+        mx = np.nanmax(stack, axis=0)
+    valid = ~np.isnan(mx)
+    y = labels[valid]
+    s = mx[valid]
+    ben = s[y == 0]
+    if len(ben) < 50:
+        return None
+    threshold, _method = _quantile_severity_threshold(ben, target_per_million)
+    if threshold is None:
+        return None
+    mal = s[y == 1]
+    if len(mal) == 0:
+        return 0.0
+    return float(np.mean(mal >= threshold))
+
+
 def _policy_candidates(
     *,
     general: str,
@@ -337,100 +416,6 @@ def _joint_or_search(
 
 
 _LEARNED_BLEND_LOGIT_EPS = 1e-6
-
-
-@lru_cache(maxsize=None)
-def _load_route_calibrator(
-    azoth_root: Path, route_name: str,
-) -> tuple[np.ndarray, np.ndarray] | None:
-    """Load a route's isotonic calibrator breakpoints.
-
-    Returns ``(x, y)`` arrays (raw_prob, calibrated_prob) or None if the
-    route isn't calibrated yet — pre-calibrator bundles and routes that
-    failed calibration won't have the file. Schema is
-    ``azoth.calibrator.isotonic.v1`` (see
-    azoth_calibrate_ensemble._fit_and_persist_isotonic_calibrator).
-
-    Cached across calls: the bundle has at most ~50 routes and the file
-    is a few KB each. Saves ~3× redundant disk reads when called from
-    the per-filetype loop.
-    """
-    if route_name == "general":
-        path = azoth_root / "general" / "calibrator.json"
-    elif route_name.startswith("filegroups/"):
-        path = azoth_root / route_name / "calibrator.json"
-    elif route_name.startswith("filetypes/"):
-        path = azoth_root / route_name / "calibrator.json"
-    else:
-        return None
-    if not path.is_file():
-        return None
-    with open(path) as f:
-        cal = json.load(f)
-    x = np.asarray(cal["x"], dtype=np.float64)
-    y = np.asarray(cal["y"], dtype=np.float64)
-    if len(x) < 2 or len(x) != len(y):
-        return None
-    return (x, y)
-
-
-def _apply_isotonic(
-    probs: np.ndarray, breakpoints: tuple[np.ndarray, np.ndarray],
-) -> np.ndarray:
-    """Linear-interpolate raw probs through isotonic breakpoints with
-    clip-out-of-bounds semantics, matching litmus's deploy behavior
-    (litmus/src/model.rs:1437 calls cal.apply, which is clip+lerp).
-
-    NaN inputs pass through as NaN — calibration only applies where the
-    route emitted a real score.
-    """
-    x_breaks, y_breaks = breakpoints
-    out = np.full_like(probs, np.nan, dtype=np.float32)
-    valid = ~np.isnan(probs)
-    if not np.any(valid):
-        return out
-    # np.interp clamps outside the input domain to the boundary y-values,
-    # which is exactly the "clip" out-of-bounds policy the calibrator
-    # file declares. Cast through float64 for numerical stability with
-    # tight raw-prob distributions, then back to float32 to match the
-    # score table's storage type.
-    raw = probs[valid].astype(np.float64)
-    cal = np.interp(raw, x_breaks, y_breaks)
-    out[valid] = cal.astype(np.float32)
-    return out
-
-
-def _build_calibrated_route_probs(
-    raw_route_probs: dict[str, np.ndarray],
-    azoth_root: Path,
-) -> dict[str, np.ndarray]:
-    """Apply each route's isotonic calibrator to its raw probabilities,
-    so the learned-blend fit operates in the same prob space litmus
-    emits at deploy.
-
-    Routes without a calibrator pass through unchanged with a warning —
-    the blend will then be slightly inconsistent for that route, but
-    that's preferable to dropping the route entirely. (Pre-calibrator
-    bundles are vanishingly rare in this pipeline now; the warning
-    surfaces them if they appear.)
-    """
-    out: dict[str, np.ndarray] = {}
-    missing: list[str] = []
-    for route_name, probs in raw_route_probs.items():
-        bps = _load_route_calibrator(azoth_root, route_name)
-        if bps is None:
-            missing.append(route_name)
-            out[route_name] = probs
-            continue
-        out[route_name] = _apply_isotonic(probs, bps)
-    if missing:
-        # Logged at info level rather than warning because deploy still
-        # works; the blend just won't be deploy-accurate for these routes.
-        print(
-            f"# learned_blend: {len(missing)} route(s) without isotonic "
-            f"calibrators; passing raw probs through: {missing}",
-        )
-    return out
 
 
 def _logit_stack(
@@ -900,7 +885,6 @@ def _mark_dominated_by_specialist(
     specialist_route: str,
     target_per_million: float,
     total_benign: int,
-    calibrated_route_probs: dict[str, np.ndarray] | None = None,
     pareto: dict[int, float] | None = None,
     blend_fit: dict[str, Any] | None = None,
 ) -> None:
@@ -1058,13 +1042,10 @@ def _mark_dominated_by_specialist(
     # and severity. Only the threshold tuning per fp_target needs to
     # vary. The fallback path (no precomputed fit) fits fresh; that's
     # what the back-compat wrapper does too.
-    blend_probs = (
-        calibrated_route_probs if calibrated_route_probs is not None else route_probs
-    )
     if len(routes_for_joint_full) >= 2:
         if blend_fit is None:
             blend_fit = _fit_learned_blend(
-                blend_probs, labels, routes_for_joint_full,
+                route_probs, labels, routes_for_joint_full,
             )
         if blend_fit is not None:
             for fp_target in fp_targets:
@@ -1562,7 +1543,6 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
     file_types = _SHARED["file_types"]
     filetype_to_group = _SHARED["filetype_to_group"]
     config = _SHARED["config"]
-    azoth_root = _SHARED["azoth_root"]
     total_benign = _SHARED["total_benign"]
 
     mask = file_types == file_type
@@ -1583,22 +1563,44 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
         for route_name in route_names
         if (dense := _dense_route_probs(routes, route_name, indices)) is not None
     }
-    calibrated_route_probs = _build_calibrated_route_probs(
-        route_probs, azoth_root,
-    ) if route_probs else {}
+    # Step-2 triage (opt-in, default OFF). A specialist pre-filter is redundant
+    # with — and strictly more aggressive than — the policy search's own
+    # candidate selection: the search already builds joint-OR candidates with and
+    # without the specialist and the knapsack picks the best within budget, so a
+    # specialist that doesn't earn its keep is simply never selected. Pre-dropping
+    # it can only *remove* a specialist the search would have used (e.g. html
+    # 100%→0%), never improve a verdict. Constant predictors are dropped upstream
+    # at calibrate. Kept behind a flag for experimentation only.
+    if (
+        os.environ.get("AZOTH_SPECIALIST_TRIAGE") == "1"
+        and type_route in route_probs
+        and not _specialist_earns_keep(
+            route_probs, type_route, scoped_labels,
+            config=config, total_benign=total_benign,
+        )
+    ):
+        print(
+            f"triage: dropping specialist {type_route} from ensemble "
+            f"(no OR-rule recall lift at any level, or too few malware); routing "
+            f"{file_type} to general/filegroup",
+            file=sys.stderr,
+        )
+        del route_probs[type_route]
     specialist_probs = route_probs.get(type_route)
     pareto = (
         _specialist_pareto_curve(specialist_probs, scoped_labels)
         if specialist_probs is not None else None
     )
     routes_for_joint_full = tuple(route_probs.keys())
+    # The learned blend is fit on RAW route probs — the space litmus feeds it at
+    # serving now that the isotonic calibrator is gone. The calibrator was
+    # decision-irrelevant (monotonic, thresholds mapped through it) but saturated
+    # the blend's logit inputs, collapsing distinct raw scores to the same value.
+    # See the project_calibrator_decision_irrelevant memory.
     blend_fit = None
     if len(routes_for_joint_full) >= 2:
-        blend_probs = (
-            calibrated_route_probs if calibrated_route_probs else route_probs
-        )
         blend_fit = _fit_learned_blend(
-            blend_probs, scoped_labels, routes_for_joint_full,
+            route_probs, scoped_labels, routes_for_joint_full,
         )
     levels: list[dict[str, Any]] = []
     for target in config["levels"]:
@@ -1669,7 +1671,6 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
                 specialist_route=type_route,
                 target_per_million=target_per_million,
                 total_benign=total_benign,
-                calibrated_route_probs=calibrated_route_probs,
                 pareto=pareto,
                 blend_fit=blend_fit,
             )
@@ -1793,6 +1794,25 @@ def main() -> int:
     # Copy those entries from <previous-bundle>/route_policies.json
     # rather than re-running policy_search on them.
     carry_forward_policies: dict[str, dict[str, Any]] = {}
+    # A self-comparison (previous-bundle == the bundle being written) is unsafe:
+    # carry-forward keys on model identity, so when the score table is
+    # regenerated (e.g. in-sample → OOF scores, or a corpus refresh) but the
+    # models are unchanged, every route is judged "unchanged" and its policy is
+    # frozen at whatever it was first computed from — the thresholds silently
+    # stop tracking the current benign distribution and the FP budget drifts.
+    # Carry-forward only makes sense against a *different* (deployed) bundle, the
+    # autocollie single-route-promote case. Disable it on self-comparison so the
+    # authoritative calibrate/deploy always recomputes from the live score table.
+    if args.previous_bundle is not None and (
+        (args.previous_bundle / "route_policies.json").resolve() == Path(args.output).resolve()
+    ):
+        print(
+            "policy_search: previous-bundle is the bundle being written "
+            "(self-comparison); disabling carry-forward to recompute every route "
+            "from the current score table (avoids frozen/stale thresholds)",
+            file=sys.stderr,
+        )
+        args.previous_bundle = None
     if args.previous_bundle is not None:
         try:
             import sys as _sys

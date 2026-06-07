@@ -20,8 +20,11 @@ from collimator import bundle  # noqa: E402
 
 # Per-route files that aren't model artifacts. Model files are picked up
 # separately because their location depends on layout (top-level or models/).
-# Optional files (calibrator.json, README.md) are copied if present.
-ROUTE_AUX_FILES = ("feature_spec.json", "README.md", "calibrator.json", "recall_curve.svg")
+# Optional files (README.md, recall curve) are copied if present. The per-route
+# isotonic calibrator is no longer emitted or staged — deploy runs on raw
+# probabilities (see project_calibrator_decision_irrelevant); excluding it here
+# also strips any stale calibrator.json from older bundles being restaged.
+ROUTE_AUX_FILES = ("feature_spec.json", "README.md", "recall_curve.svg")
 ROOT_FILES = ("config.json", "route_policies.json")
 
 # Optional root files. Deploy proceeds without them, but downstream

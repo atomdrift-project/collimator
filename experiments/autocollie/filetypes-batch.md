@@ -734,3 +734,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T002834-filetypes-batch` — 2026-06-07T00:28:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f632d855f0afef68` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9998 | 0.9973 | 0.9887 | 1 | [log](out/autocollie/runs/2026-06-07T00-36-57_20260607T002834-filetypes-batch_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `04e3d50d467c62ca` | batch_control_dart_reg | ok | 0.9925 | 0.8790 | 0.0608 | 12 | [log](out/autocollie/runs/2026-06-07T00-36-59_20260607T002834-filetypes-batch_batch_control_dart_reg.log) |
+| `1739deba8e02393a` | batch_hardneg_01_12 | ok | 0.9855 | 0.9048 | 0.0633 | 3 | [log](out/autocollie/runs/2026-06-07T00-37-11_20260607T002834-filetypes-batch_batch_hardneg_01_12.log) |
+| `9f5475d0e65decb1` | batch_scalepos_05 | ok | 0.9910 | 0.9176 | 0.0609 | 2 | [log](out/autocollie/runs/2026-06-07T00-37-15_20260607T002834-filetypes-batch_batch_scalepos_05.log) |
+| `eaf8d56ddf9508b7` | batch_kv_vocab_5k | dup | 0.9900 | 0.9143 | 0.0606 | 1 | [log](out/autocollie/runs/2026-06-07T00-37-18_20260607T002834-filetypes-batch_batch_kv_vocab_5k.log) |
+| `d81cc526387472d2` | batch_symbol_bigrams_2k | ok | 0.9906 | 0.9205 | 0.0608 | 12 | [log](out/autocollie/runs/2026-06-07T00-37-19_20260607T002834-filetypes-batch_batch_symbol_bigrams_2k.log) |
+| `8816fdaa41b0d7af` | batch_low_bigram_freq_50 | ok | 0.9918 | 0.9175 | 0.0608 | 12 | [log](out/autocollie/runs/2026-06-07T00-37-32_20260607T002834-filetypes-batch_batch_low_bigram_freq_50.log) |
+| `461fa95706a02f30` | batch_abl_clusters_off | ok | 0.9906 | 0.9205 | 0.0608 | 2 | [log](out/autocollie/runs/2026-06-07T00-37-45_20260607T002834-filetypes-batch_batch_abl_clusters_off.log) |
+| `2e197c7127a24ef5` | batch_transfer_perl_hardneg | ok | 0.9917 | 0.9179 | 0.0608 | 3 | [log](out/autocollie/runs/2026-06-07T00-37-48_20260607T002834-filetypes-batch_batch_transfer_perl_hardneg.log) |
+| `f68979259497208b` | batch_transfer_xml_tiered | ok | 0.9914 | 0.9208 | 0.0608 | 12 | [log](out/autocollie/runs/2026-06-07T00-37-52_20260607T002834-filetypes-batch_batch_transfer_xml_tiered.log) |
+| `fae997755a68c19e` | batch_seed_search_3_kv | ok | 0.9862 | 0.9156 | 0.9955 | 13 | [log](out/autocollie/runs/2026-06-07T00-38-05_20260607T002834-filetypes-batch_batch_seed_search_3_kv.log) |
+| `e8ecac90006c5632` | batch_retry_dart_reg_v2 | ok | 0.9937 | 0.8968 | 0.0608 | 2 | [log](out/autocollie/runs/2026-06-07T00-38-19_20260607T002834-filetypes-batch_batch_retry_dart_reg_v2.log) |
+| `0fbdb334936a3b28` | batch_text_metrics_full | dup | 0.9907 | 0.9129 | 0.0606 | 1 | [log](out/autocollie/runs/2026-06-07T00-38-22_20260607T002834-filetypes-batch_batch_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Target recall@3FPM by replicating the best PR_AUC feature set and tuning training knobs (deeper trees, lower LR) to sharpen the low-FPR decision boundary.
+- **`batch_hardneg_01_12`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Target recall@3FPM by upweighting hard negatives to force the model to separate borderline benigns from malware at the strict-FP tail.
+- **`batch_scalepos_05`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Target recall@3FPM by down-weighting positives to reduce false-positive tail noise in the highly imbalanced batch corpus.
+- **`batch_kv_vocab_5k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by enabling KV vocab to capture structured metadata and environment variable patterns unique to batch scripts.
+- **`batch_symbol_bigrams_2k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by adding symbol bigrams to catch co-occurrence patterns in batch command sequences and library calls.
+- **`batch_low_bigram_freq_50`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by lowering bigram min freq to 50 to capture rarer but highly predictive script syntax patterns without excessive noise.
+- **`batch_abl_clusters_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by removing noisy cluster features that may dilute signal in batch files, testing if simpler features improve ranking.
+- **`batch_transfer_perl_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Target recall@3FPM by porting perl's successful hard-negative config and disabling clusters to reduce noise and sharpen tail recall.
+- **`batch_transfer_xml_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=3000 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by adopting xml's low bigram freq and enabling tiered trigrams to capture deeper script structure and severity-prefixed patterns.
+- **`batch_seed_search_3_kv`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Target recall@3FPM by averaging 3 seeds on the KV vocab config to stabilize tail performance and reduce seed-driven variance.
+- **`batch_retry_dart_reg_v2`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2.5 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by retrying the top dart_reg config with slightly higher regularization to guard against data-drift overfitting.
+- **`batch_text_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Target PR_AUC by enabling full text metrics and encoding features to capture obfuscation, line-length anomalies, and formatting quirks in batch scripts.
+
+</details>
+

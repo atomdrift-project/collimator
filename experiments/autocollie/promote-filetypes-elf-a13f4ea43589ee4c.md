@@ -1,57 +1,57 @@
 # Promote REJECTED — `a13f4ea43589ee4c` on `filetypes/elf`
 
-Generated 2026-05-25T18:18:24Z
+Generated 2026-06-07T03:09:05Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T18-14-32_20260525T181430-promote-a13f4ea43589ee4c_azoth-validate.log; tail: computing dev-partition metrics (strategy selection)
-loaded cached dev-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/dev-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-dev bucket: 589608/4731967 rows (12.46%)
-fitting per-route isotonic calibrators (5-fold CV) over 589608 rows (parallelism=16, cache=out/cache/azoth-calibrator)
-calibration complete; computing per-filetype metrics
-filetypes/xlsb: 0 rows in score table; skipping
-filetypes/pyproject.toml: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/per_filetype_metrics.json (filetypes: 79, filegroups: 0)
-.venv/bin/python scripts/azoth_route_policy_eval.py \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/score_table.npz \
-	--general-scores /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/general/threshold_scores.npz \
-	--route-policies /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policies.json \
-	--partition test \
-	--output-md /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policy_eval_oof.md \
-	--output-json /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policy_eval_oof.md
-.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c
-staged runtime azoth bundle: /tmp/tmp.mdeRDW0bXK
-azoth bundle ok: /tmp/tmp.mdeRDW0bXK
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 64 unimpacted (drift treated as pre-existing)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-07T03-05-06_20260607T030032-promote-a13f4ea43589ee4c_azoth-validate.log; tail: 2026-06-06 23:08:55,890 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/zip already has seed_42.onnx; skipping
+2026-06-06 23:08:55,890 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/zip already has seed_43.onnx; skipping
+2026-06-06 23:08:55,890 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/zip already has seed_44.onnx; skipping
+2026-06-06 23:08:55,890 INFO found 6 .txt files to convert
+2026-06-06 23:08:56,490 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/elf/models/seed_42.onnx
+2026-06-06 23:08:57,535 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-06 23:08:58,459 INFO filetypes/elf/models/seed_42.txt -> seed_42.onnx OK (delta=1.12e-07 on 200 rows, 2569 ms)
+2026-06-06 23:08:59,015 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/elf/models/seed_43.onnx
+2026-06-06 23:09:00,160 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-06 23:09:01,060 INFO filetypes/elf/models/seed_43.txt -> seed_43.onnx OK (delta=1.26e-07 on 200 rows, 2601 ms)
+2026-06-06 23:09:01,610 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/elf/models/seed_44.onnx
+2026-06-06 23:09:02,682 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-06 23:09:03,593 INFO filetypes/elf/models/seed_44.txt -> seed_44.onnx OK (delta=9.52e-08 on 200 rows, 2532 ms)
+2026-06-06 23:09:03,642 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_42.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
+2026-06-06 23:09:03,642 INFO skipped filetypes/json/models/seed_42.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_42.txt: constant-predictor model (1 leaf). .txt remains canonical.
+2026-06-06 23:09:03,649 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_43.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
+2026-06-06 23:09:03,649 INFO skipped filetypes/json/models/seed_43.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_43.txt: constant-predictor model (1 leaf). .txt remains canonical.
+2026-06-06 23:09:03,653 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_44.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
+2026-06-06 23:09:03,653 INFO skipped filetypes/json/models/seed_44.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_44.txt: constant-predictor model (1 leaf). .txt remains canonical.
 
-ensemble improvements (≥0.10pp):
-  c: L3 hostile ensemble recall +2.49pp (10.02% → 12.51%)
-  javascript: L3 hostile ensemble recall +9.33pp (66.20% → 75.53%)
-  package.json: L3 hostile ensemble recall +2.68pp (86.78% → 89.46%)
-  xml: L3 hostile ensemble recall +6.16pp (2.74% → 8.90%)
+converted 3/6 files (3 intentionally skipped, 0 failed)
+skipped (3, .txt remains canonical):
+  filetypes/json/models/seed_42.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_42.txt: constant-predictor model (1 leaf). .txt remains canonical.
+  filetypes/json/models/seed_43.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_43.txt: constant-predictor model (1 leaf). .txt remains canonical.
+  filetypes/json/models/seed_44.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_44.txt: constant-predictor model (1 leaf). .txt remains canonical.
+staged runtime azoth bundle: /tmp/tmp.9hgM2V7C29
+azoth bundle ok: /tmp/tmp.9hgM2V7C29
+--source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 77 unimpacted (drift treated as pre-existing)
 
-per-route improvements (≥0.10pp, informational):
-  elf :: filetypes/elf recall@3FP/M +3.01pp (93.40% → 96.42%)
-  go :: filetypes/go recall@3FP/M +0.59pp (4.84% → 5.44%)
-  javascript :: filetypes/javascript recall@3FP/M +12.81pp (65.71% → 78.52%)
-  package.json :: filegroups/config recall@3FP/M +0.83pp (98.71% → 99.54%)
-  xml :: filegroups/config recall@3FP/M +12.33pp (3.42% → 15.75%)
+10 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + csharp: L50 hostile ensemble recall +2.07pp above LWM (19.42% → 21.49%)
+  + jar: L50 hostile ensemble recall +38.43pp above LWM (46.97% → 85.39%)
+  + javascript: L50 hostile ensemble recall +24.16pp above LWM (37.28% → 61.44%)
+  + jpeg: L50 hostile ensemble recall +1.32pp above LWM (11.92% → 13.25%)
+  + msi: L50 hostile ensemble recall +19.71pp above LWM (38.34% → 58.05%)
+  + pe: L50 hostile ensemble recall +15.22pp above LWM (41.69% → 56.91%)
+  + perl: L50 hostile ensemble recall +13.89pp above LWM (69.44% → 83.33%)
+  + png: L50 hostile ensemble recall +7.15pp above LWM (0.12% → 7.27%)
+  + shell: L50 hostile ensemble recall +19.60pp above LWM (68.11% → 87.71%)
+  + xml: L50 hostile ensemble recall +9.67pp above LWM (3.56% → 13.23%)
 
-4 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + c: L3 hostile ensemble recall +2.49pp above LWM (10.02% → 12.51%)
-  + javascript: L3 hostile ensemble recall +9.33pp above LWM (66.20% → 75.53%)
-  + package.json: L3 hostile ensemble recall +2.68pp above LWM (86.78% → 89.46%)
-  + xml: L3 hostile ensemble recall +6.16pp above LWM (2.74% → 8.90%)
+1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
+  - elf: L50 hostile ENSEMBLE recall dropped 6.56pp (98.61% → 92.05%; tolerance 1.70pp; deployed 95% CI lower = 98.45%)
 
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - elf: L3 hostile ENSEMBLE recall dropped 1.29pp BELOW LOW-WATER-MARK (92.79% → 91.50%; LWM tolerance 0.90pp)
+compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
 
-compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
-
-blocked by: low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
 
 If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1136: azoth-validate] Error 1)
+make[2]: *** [Makefile:1310: azoth-validate] Error 1)
 
 ## Gates
 
@@ -62,62 +62,62 @@ make[2]: *** [Makefile:1136: azoth-validate] Error 1)
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `a13f4ea43589ee4c` | `8ef34c82f2c457d3` | `20ec992d1689b4a8` |
+| key | `a13f4ea43589ee4c` | `c738f38e16634281` | `dd7a1e275ead5312` |
 | PR AUC | 1.0000 | 1.0000 | 1.0000 |
 | ROC AUC | 1.0000 | 1.0000 | 1.0000 |
-| F1 | 0.9970 | 0.9988 | 0.9989 |
+| F1 | 0.9970 | 0.9985 | 0.9990 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T18-14-32_20260525T181430-promote-a13f4ea43589ee4c_azoth-validate.log; tail: computing dev-partition metrics (strategy selection)
-loaded cached dev-bucket mask: /home/t/collimator/out/cache/azoth-test-masks/dev-947ff4cebbdd8fe06d90df9b8d8e0e32f498a93413f371a2883896fb3f53512a.npz
-dev bucket: 589608/4731967 rows (12.46%)
-fitting per-route isotonic calibrators (5-fold CV) over 589608 rows (parallelism=16, cache=out/cache/azoth-calibrator)
-calibration complete; computing per-filetype metrics
-filetypes/xlsb: 0 rows in score table; skipping
-filetypes/pyproject.toml: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/per_filetype_metrics.json (filetypes: 79, filegroups: 0)
-.venv/bin/python scripts/azoth_route_policy_eval.py \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/score_table.npz \
-	--general-scores /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/general/threshold_scores.npz \
-	--route-policies /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policies.json \
-	--partition test \
-	--output-md /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policy_eval_oof.md \
-	--output-json /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/route_policy_eval_oof.md
-.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c
-staged runtime azoth bundle: /tmp/tmp.mdeRDW0bXK
-azoth bundle ok: /tmp/tmp.mdeRDW0bXK
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 64 unimpacted (drift treated as pre-existing)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-07T03-05-06_20260607T030032-promote-a13f4ea43589ee4c_azoth-validate.log; tail: 2026-06-06 23:08:55,890 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/zip already has seed_42.onnx; skipping
+2026-06-06 23:08:55,890 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/zip already has seed_43.onnx; skipping
+2026-06-06 23:08:55,890 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/zip already has seed_44.onnx; skipping
+2026-06-06 23:08:55,890 INFO found 6 .txt files to convert
+2026-06-06 23:08:56,490 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/elf/models/seed_42.onnx
+2026-06-06 23:08:57,535 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-06 23:08:58,459 INFO filetypes/elf/models/seed_42.txt -> seed_42.onnx OK (delta=1.12e-07 on 200 rows, 2569 ms)
+2026-06-06 23:08:59,015 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/elf/models/seed_43.onnx
+2026-06-06 23:09:00,160 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-06 23:09:01,060 INFO filetypes/elf/models/seed_43.txt -> seed_43.onnx OK (delta=1.26e-07 on 200 rows, 2601 ms)
+2026-06-06 23:09:01,610 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/elf/models/seed_44.onnx
+2026-06-06 23:09:02,682 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-06 23:09:03,593 INFO filetypes/elf/models/seed_44.txt -> seed_44.onnx OK (delta=9.52e-08 on 200 rows, 2532 ms)
+2026-06-06 23:09:03,642 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_42.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
+2026-06-06 23:09:03,642 INFO skipped filetypes/json/models/seed_42.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_42.txt: constant-predictor model (1 leaf). .txt remains canonical.
+2026-06-06 23:09:03,649 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_43.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
+2026-06-06 23:09:03,649 INFO skipped filetypes/json/models/seed_43.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_43.txt: constant-predictor model (1 leaf). .txt remains canonical.
+2026-06-06 23:09:03,653 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_44.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
+2026-06-06 23:09:03,653 INFO skipped filetypes/json/models/seed_44.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_44.txt: constant-predictor model (1 leaf). .txt remains canonical.
 
-ensemble improvements (≥0.10pp):
-  c: L3 hostile ensemble recall +2.49pp (10.02% → 12.51%)
-  javascript: L3 hostile ensemble recall +9.33pp (66.20% → 75.53%)
-  package.json: L3 hostile ensemble recall +2.68pp (86.78% → 89.46%)
-  xml: L3 hostile ensemble recall +6.16pp (2.74% → 8.90%)
+converted 3/6 files (3 intentionally skipped, 0 failed)
+skipped (3, .txt remains canonical):
+  filetypes/json/models/seed_42.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_42.txt: constant-predictor model (1 leaf). .txt remains canonical.
+  filetypes/json/models/seed_43.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_43.txt: constant-predictor model (1 leaf). .txt remains canonical.
+  filetypes/json/models/seed_44.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filetypes-elf-a13f4ea43589ee4c/filetypes/json/models/seed_44.txt: constant-predictor model (1 leaf). .txt remains canonical.
+staged runtime azoth bundle: /tmp/tmp.9hgM2V7C29
+azoth bundle ok: /tmp/tmp.9hgM2V7C29
+--source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 77 unimpacted (drift treated as pre-existing)
 
-per-route improvements (≥0.10pp, informational):
-  elf :: filetypes/elf recall@3FP/M +3.01pp (93.40% → 96.42%)
-  go :: filetypes/go recall@3FP/M +0.59pp (4.84% → 5.44%)
-  javascript :: filetypes/javascript recall@3FP/M +12.81pp (65.71% → 78.52%)
-  package.json :: filegroups/config recall@3FP/M +0.83pp (98.71% → 99.54%)
-  xml :: filegroups/config recall@3FP/M +12.33pp (3.42% → 15.75%)
+10 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + csharp: L50 hostile ensemble recall +2.07pp above LWM (19.42% → 21.49%)
+  + jar: L50 hostile ensemble recall +38.43pp above LWM (46.97% → 85.39%)
+  + javascript: L50 hostile ensemble recall +24.16pp above LWM (37.28% → 61.44%)
+  + jpeg: L50 hostile ensemble recall +1.32pp above LWM (11.92% → 13.25%)
+  + msi: L50 hostile ensemble recall +19.71pp above LWM (38.34% → 58.05%)
+  + pe: L50 hostile ensemble recall +15.22pp above LWM (41.69% → 56.91%)
+  + perl: L50 hostile ensemble recall +13.89pp above LWM (69.44% → 83.33%)
+  + png: L50 hostile ensemble recall +7.15pp above LWM (0.12% → 7.27%)
+  + shell: L50 hostile ensemble recall +19.60pp above LWM (68.11% → 87.71%)
+  + xml: L50 hostile ensemble recall +9.67pp above LWM (3.56% → 13.23%)
 
-4 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + c: L3 hostile ensemble recall +2.49pp above LWM (10.02% → 12.51%)
-  + javascript: L3 hostile ensemble recall +9.33pp above LWM (66.20% → 75.53%)
-  + package.json: L3 hostile ensemble recall +2.68pp above LWM (86.78% → 89.46%)
-  + xml: L3 hostile ensemble recall +6.16pp above LWM (2.74% → 8.90%)
+1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
+  - elf: L50 hostile ENSEMBLE recall dropped 6.56pp (98.61% → 92.05%; tolerance 1.70pp; deployed 95% CI lower = 98.45%)
 
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - elf: L3 hostile ENSEMBLE recall dropped 1.29pp BELOW LOW-WATER-MARK (92.79% → 91.50%; LWM tolerance 0.90pp)
+compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
 
-compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
-
-blocked by: low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
 
 If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1136: azoth-validate] Error 1)
+make[2]: *** [Makefile:1310: azoth-validate] Error 1)

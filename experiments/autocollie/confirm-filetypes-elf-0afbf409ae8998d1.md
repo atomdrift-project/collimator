@@ -1,6 +1,6 @@
-# Confirm PASS — a13f4ea43589ee4c on `filetypes/elf`
+# Confirm PASS — 0afbf409ae8998d1 on `filetypes/elf`
 
-Cycle `20260607T030032-confirm-a13f4ea43589ee4c` — 2026-06-07T03:00:32Z
+Cycle `20260607T023105-confirm-0afbf409ae8998d1` — 2026-06-07T02:31:05Z
 
 PR_AUC held across 3 seeds (orig 1.0000)
 
@@ -8,7 +8,7 @@ PR_AUC held across 3 seeds (orig 1.0000)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `a13f4ea43589ee4c` | `c738f38e16634281` | `c738f38e16634281` | `c738f38e16634281` |
+| key | `0afbf409ae8998d1` | `0fe3999495865f1a` | `0fe3999495865f1a` | `0fe3999495865f1a` |
 | PR AUC | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
 | ROC AUC | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
@@ -19,5 +19,5 @@ PR_AUC held across 3 seeds (orig 1.0000)
 The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
 
 ```
-make autocollie-promote KEY=a13f4ea43589ee4c
+make autocollie-promote KEY=0afbf409ae8998d1
 ```

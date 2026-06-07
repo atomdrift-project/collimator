@@ -80,6 +80,7 @@ Feature groups:
 from __future__ import annotations
 
 import collections
+import hashlib
 import json
 import logging
 import math
@@ -136,6 +137,15 @@ TOP_K_RISK_FILES = 1
 # now ships .onnx + .txt silently ignores the .onnx and uses the .txt;
 # fully forward-compatible. Bump this when feature families are added
 # or removed (last bump: v17 added cluster:* + agg:static_*).
+#
+# Bump it ALSO when the feature-allowlist prune changes the LAYOUT — not
+# just when whole families appear/disappear. litmus places the offset-written
+# families (present:/maxcrit:/bigrams:/trigram:/unsigned_bigram:) by their
+# position in feature_names, so pruning entries out of an earlier block shifts
+# every later family. A 26-slot metrics-block prune shipped under an unchanged
+# v17 and ran litmus's unsigned-bigram block off the end of the vector. The
+# `feature_layout_hash` written into every spec records the exact layout so
+# such a change is detectable even when this number is forgotten.
 MODEL_ABI_VERSION = 17
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
@@ -1343,15 +1353,16 @@ class FeatureSpec:
 
         litmus builds present:/maxcrit: from presence_vocab, bigrams:/
         unsigned_bigram: from bigram_vocab, and trigram: from trigram_vocab,
-        resolving each member to its real slot by name. A path that survives the
-        allowlist for only ONE side of a pair (e.g. importance keeps maxcrit:X
-        but drops present:X) still needs its path in the vocab, or litmus can't
-        produce the surviving member at all — it extracts as a silent zero and
-        logs "feature spec contains features unknown to this extractor". So each
-        vocab is the UNION of the paths its two families use in feature_names, in
-        first-appearance order. Deriving from feature_names (rather than the
-        in-memory vocab) makes this correct even when re-saving an already-pruned
-        spec. collimator's own extractor is name-addressed, so output is unchanged.
+        resolving each member to its real slot by name (no contiguity required —
+        see litmus features.rs slot maps). A path that survives the allowlist for
+        only ONE side of a pair (e.g. importance keeps maxcrit:X but drops
+        present:X) still needs its path in the vocab, or litmus can't produce the
+        surviving member at all — it extracts as a silent zero and logs "feature
+        spec contains features unknown to this extractor". So each vocab is the
+        UNION of the paths its two families use in feature_names, in first-
+        appearance order. Deriving from feature_names (rather than the in-memory
+        vocab) makes this correct even when re-saving an already-pruned spec.
+        collimator's own extractor is name-addressed, so output is unchanged.
         """
         def _family_union(prefixes: tuple[str, ...]) -> list[str]:
             seen: dict[str, None] = {}
@@ -1370,9 +1381,13 @@ class FeatureSpec:
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         presence_vocab, bigram_vocab, trigram_vocab = self._litmus_offset_vocabs()
+        # Records the exact emitted layout. Any prune/reorder changes it, so an
+        # incompatible bundle is detectable even if MODEL_ABI_VERSION is forgotten.
+        layout_hash = hashlib.sha256("\n".join(self.feature_names).encode()).hexdigest()
         d: dict[str, Any] = {
             "version": self.version,
             "abi_version": self.abi_version,
+            "feature_layout_hash": layout_hash,
             "presence_vocab": presence_vocab,
             "filetype_vocab": self.filetype_vocab,
             "element_vocab": self.element_vocab,

@@ -1307,7 +1307,7 @@ def _write_bundle(root: Path) -> None:
         "model scores every file. Per-filetype specialists score files "
         f"in their domain — PE, ELF, JavaScript, PDF, and {n_filetype - 4} "
         "more. A file is flagged when any route's score crosses its "
-        "calibrated threshold.",
+        "operating-point threshold.",
         "",
         "The point of routing is that the evidence differs by format. A "
         "PE's section table is signal. A PDF's stream dictionary is "
@@ -1315,7 +1315,7 @@ def _write_bundle(root: Path) -> None:
         "generalist trained over all of them learns averages; a "
         "specialist trained on one of them learns the format.",
         "",
-        f"Thresholds and isotonic calibrators were fit on a {fit_rows}-row "
+        f"Thresholds were fit on a {fit_rows}-row "
         f"{fit_part} partition (12.5% of the labeled corpus). The "
         f"numbers in this README come from a locked {_int(n_eval)}-row "
         "test partition, disjoint from training and calibration. The "
@@ -1338,10 +1338,10 @@ def _write_bundle(root: Path) -> None:
         "`config.json` records the deployed thresholds. Each route lives "
         f"in its own subdirectory: `general/`, one of {n_filegroup} "
         f"`filegroups/<name>/`, or one of {n_filetype} "
-        "`filetypes/<name>/`. A route directory carries three files: "
-        "`model.txt` (LightGBM), `feature_spec.json` (the features the "
-        "model expects), and `calibrator.json` (isotonic probability "
-        "calibrator).",
+        "`filetypes/<name>/`. A route directory carries two files: "
+        "`model.txt` (LightGBM) and `feature_spec.json` (the features the "
+        "model expects). Scores are the model's raw probabilities — there is "
+        "no separate probability calibrator.",
         "",
         "Further reading: [DESIGN.md](DESIGN.md) for architecture and "
         "FP-budget design, [ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md) for "

@@ -616,3 +616,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T002834-filetypes-elf` — 2026-06-07T00:28:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2fbea20eac1a1ead` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9999 | 0.9999 | 0.9972 | 144 | [log](out/autocollie/runs/2026-06-07T00-42-40_20260607T002834-filetypes-elf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bcdd3e4f41d40dd1` | elf_control_baseline_train | ok | 0.9999 | 0.9999 | 0.9955 | 55 | [log](out/autocollie/runs/2026-06-07T00-45-06_20260607T002834-filetypes-elf_elf_control_baseline_train.log) |
+| `dd29d18b5553a42b` | elf_hardneg_scalepos_tune | ok | 0.9999 | 0.9999 | 0.9956 | 17 | [log](out/autocollie/runs/2026-06-07T00-46-02_20260607T002834-filetypes-elf_elf_hardneg_scalepos_tune.log) |
+| `fc5a8d8c4e416d81` | elf_dart_extra_trees_reg | ok | 0.9997 | 0.9997 | 0.9891 | 11 | [log](out/autocollie/runs/2026-06-07T00-46-20_20260607T002834-filetypes-elf_elf_dart_extra_trees_reg.log) |
+| `249a8d2af769dd18` | elf_kv_vocab_split_research | ok | 0.9999 | 0.9999 | 0.9962 | 54 | [log](out/autocollie/runs/2026-06-07T00-46-32_20260607T002834-filetypes-elf_elf_kv_vocab_split_research.log) |
+| `d428e54dff961960` | elf_symbol_bigram_vocab_expanded | ok | 0.9999 | 0.9999 | 0.9947 | 57 | [log](out/autocollie/runs/2026-06-07T00-47-28_20260607T002834-filetypes-elf_elf_symbol_bigram_vocab_expanded.log) |
+| `d25bc9ae45e59772` | elf_textenc_metrics_tiered | ok | 0.9999 | 0.9999 | 0.9964 | 63 | [log](out/autocollie/runs/2026-06-07T00-48-26_20260607T002834-filetypes-elf_elf_textenc_metrics_tiered.log) |
+| `3768fa38b96fafb2` | elf_mbc_overlay_section_signal | ok | 0.9999 | 0.9999 | 0.9960 | 48 | [log](out/autocollie/runs/2026-06-07T00-49-30_20260607T002834-filetypes-elf_elf_mbc_overlay_section_signal.log) |
+| `b29230ed1658bfae` | elf_abl_extreme_blindfold_off | ok | 0.9999 | 0.9999 | 0.9955 | 47 | [log](out/autocollie/runs/2026-06-07T00-50-19_20260607T002834-filetypes-elf_elf_abl_extreme_blindfold_off.log) |
+| `8ca5b90e0545a2ec` | elf_transfer_gz_hardneg | ok | 0.9999 | 0.9999 | 0.9958 | 17 | [log](out/autocollie/runs/2026-06-07T00-51-07_20260607T002834-filetypes-elf_elf_transfer_gz_hardneg.log) |
+| `fe74a5461e3fb5ef` | elf_transfer_xml_lowbigram | ok | 0.9999 | 0.9999 | 0.9958 | 43 | [log](out/autocollie/runs/2026-06-07T00-51-25_20260607T002834-filetypes-elf_elf_transfer_xml_lowbigram.log) |
+| `0316ed34b64956f6` | elf_seed_search_kv_ensemble | ok | 0.9999 | 0.9999 | 0.9963 | 26 | [log](out/autocollie/runs/2026-06-07T00-52-10_20260607T002834-filetypes-elf_elf_seed_search_kv_ensemble.log) |
+| `b871bfd71cf14c89` | elf_retry_baseline_seed123 | ok | 0.9999 | 0.9999 | 0.9960 | 54 | [log](out/autocollie/runs/2026-06-07T00-52-38_20260607T002834-filetypes-elf_elf_retry_baseline_seed123.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,textenc …` — Replicate best recent feature_env to establish matrix cache baseline; tune num_leaves and estimators to stabilize PR_AUC.
+- **`elf_hardneg_scalepos_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,textenc …` — Apply hard-negative upweighting and lower positive scale to push recall@3FPM while guarding PR_AUC.
+- **`elf_dart_extra_trees_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting with extra_trees and L2 regularization to improve ROC_AUC and tail generalization.
+- **`elf_kv_vocab_split_research`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab and kv_value_split to recover per-element signal in library lists, targeting PR_AUC gains.
+- **`elf_symbol_bigram_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=15000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 …` — Expand symbol_vocab and symbol_bigrams caps to capture rare import co-occurrences, aiming for PR_AUC improvement.
+- **`elf_textenc_metrics_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full with tiered trigrams to capture structural obfuscation signals for PR_AUC.
+- **`elf_mbc_overlay_section_signal`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 …` — Activate mbc_id_vocab, overlay_signal, and nonstandard_section_signal to isolate packer/dropper traits for recall@3FPM.
+- **`elf_abl_extreme_blindfold_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features and blindfold to reduce noise and overfitting, expecting flat or higher PR_AUC with cleaner ranking.
+- **`elf_transfer_gz_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_ESTIMATORS=350 …` — Port gz/perl hard-negative training strategy with high bigram_min_freq to suppress benign noise and boost recall@3FPM.
+- **`elf_transfer_xml_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_ESTIMATORS=300 …` — Adopt xml route low bigram_min_freq and higher bigram_max to capture rarer ELF string patterns, targeting PR_AUC.
+- **`elf_seed_search_kv_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Apply seed_search_k=3 and save_all_seeds to the KV research config to average out seed variance and stabilize recall@3FPM.
+- **`elf_retry_baseline_seed123`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,textenc …` — Retry baseline feature set with alternate seed to verify signal persistence across daily corpus drift, targeting PR_AUC.
+
+</details>
+

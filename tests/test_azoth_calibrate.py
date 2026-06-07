@@ -1,9 +1,10 @@
-"""Smoke test for the per-route isotonic calibrator emission.
+"""Tests for the azoth ensemble calibration internals: quantile-severity
+threshold derivation, Clopper-Pearson FP-per-million bounds, per-route
+threshold evaluation, and bundle route loading.
 
-Verifies that ``_fit_and_persist_isotonic_calibrator`` writes a
-``calibrator.json`` for every route with enough labeled rows, that the
-file matches the ``azoth.calibrator.isotonic.v1`` schema litmus expects,
-and that monotone properties (x ascending, y non-decreasing) hold.
+(The per-route isotonic calibrator was removed — it was decision-irrelevant
+and saturated the score tail; deploy now runs on raw probabilities. See the
+project_calibrator_decision_irrelevant memory.)
 """
 
 import importlib.util
@@ -20,80 +21,6 @@ assert _spec is not None and _spec.loader is not None
 _mod = importlib.util.module_from_spec(_spec)
 sys.modules["azoth_calibrate_ensemble"] = _mod
 _spec.loader.exec_module(_mod)
-
-
-def _route_scores_for(rng: np.random.Generator, name: str, n: int):
-    """Build a synthetic per-route score table where probs correlate with labels."""
-    labels = rng.integers(0, 2, size=n).astype(np.int32)
-    # Probs are correlated with labels but miscalibrated (centered far from 0.5).
-    probs = np.clip(0.3 + 0.4 * labels + rng.normal(0, 0.1, size=n), 0.0, 1.0).astype(np.float32)
-    indices = np.arange(n, dtype=np.int64)
-    return labels, {"name": name, "probs": probs, "indices": indices}
-
-
-def test_calibrator_emitted_per_route(tmp_path: Path) -> None:
-    rng = np.random.default_rng(42)
-    azoth_root = tmp_path / "azoth"
-
-    # Three routes; the calibrator code resolves <azoth_root>/<name>/calibrator.json.
-    n = 500
-    labels_g, entry_g = _route_scores_for(rng, "general", n)
-    labels_e, entry_e = _route_scores_for(rng, "filetypes/elf", n)
-    labels_p, entry_p = _route_scores_for(rng, "filegroups/native", n)
-    # Each entry indexes into a *shared* labels array; collapse the three
-    # synthetic per-route label vectors into a global one and re-index.
-    all_labels = np.concatenate([labels_g, labels_e, labels_p])
-    entry_g["indices"] = np.arange(0, n)
-    entry_e["indices"] = np.arange(n, 2 * n)
-    entry_p["indices"] = np.arange(2 * n, 3 * n)
-
-    _mod._fit_and_persist_isotonic_calibrator(  # type: ignore[attr-defined]
-        [entry_g, entry_e, entry_p], all_labels, azoth_root
-    )
-
-    for name in ("general", "filetypes/elf", "filegroups/native"):
-        path = azoth_root / name / "calibrator.json"
-        assert path.is_file(), f"missing {path}"
-        cal = json.loads(path.read_text())
-        assert cal["schema"] == "azoth.calibrator.isotonic.v1"
-        assert cal["out_of_bounds"] == "clip"
-        x = cal["x"]
-        y = cal["y"]
-        assert len(x) == len(y) >= 2
-        # x ascending, y monotone non-decreasing.
-        assert all(x[i] <= x[i + 1] for i in range(len(x) - 1))
-        assert all(y[i] <= y[i + 1] for i in range(len(y) - 1))
-        # n_train recorded and matches input size.
-        assert cal["n_train"] == n
-
-
-def test_calibrator_skips_too_few_rows(tmp_path: Path) -> None:
-    """Routes with <50 valid rows must be skipped silently (no file)."""
-    rng = np.random.default_rng(7)
-    azoth_root = tmp_path / "azoth"
-    labels = rng.integers(0, 2, size=10).astype(np.int32)
-    entry = {
-        "name": "filetypes/tiny",
-        "probs": rng.uniform(0, 1, size=10).astype(np.float32),
-        "indices": np.arange(10, dtype=np.int64),
-    }
-    _mod._fit_and_persist_isotonic_calibrator([entry], labels, azoth_root)  # type: ignore[attr-defined]
-    assert not (azoth_root / "filetypes/tiny" / "calibrator.json").exists()
-
-
-def test_calibrator_skips_single_class_route(tmp_path: Path) -> None:
-    """Routes whose labels are all-benign or all-malware can't be calibrated."""
-    rng = np.random.default_rng(11)
-    azoth_root = tmp_path / "azoth"
-    n = 200
-    labels = np.zeros(n, dtype=np.int32)  # all benign
-    entry = {
-        "name": "filetypes/benign_only",
-        "probs": rng.uniform(0, 1, size=n).astype(np.float32),
-        "indices": np.arange(n, dtype=np.int64),
-    }
-    _mod._fit_and_persist_isotonic_calibrator([entry], labels, azoth_root)  # type: ignore[attr-defined]
-    assert not (azoth_root / "filetypes/benign_only" / "calibrator.json").exists()
 
 
 def test_evaluate_thresholds_at_level_applies_without_search() -> None:
@@ -133,80 +60,6 @@ def test_evaluate_thresholds_at_level_applies_without_search() -> None:
     # Diagnostics carry the threshold for each named route.
     assert result["diagnostics"]["general"]["selected_threshold"] == 0.7
     assert result["diagnostics"]["filetypes/x"]["selected_threshold"] == 0.6
-
-
-def test_calibrator_falls_back_to_platt_when_isotonic_tail_degenerate(tmp_path: Path) -> None:
-    """When the per-route dev sample has too few high-prob malware to anchor
-    isotonic at 1.0, fit Platt scaling instead and serialize the sampled
-    curve. Litmus's loader treats it the same way as isotonic
-    (piecewise-linear interpolation on x/y) but the y range now spans
-    [0, ~1] regardless of dev tail density.
-
-    Specifically: malware all clustered below 0.3, but benigns with rare
-    outliers above 0.5. Isotonic's last knot ends up on a benign row,
-    forcing max y < 0.7 even though the model still distinguishes the
-    classes well at lower thresholds.
-    """
-    rng = np.random.default_rng(101)
-    azoth_root = tmp_path / "azoth"
-    n_mal = 1000
-    n_ben_low = 3000  # benigns overlapping with the malware bulk
-    n_ben_high = 1500  # benign-only outliers at the top of the prob range
-    n = n_mal + n_ben_low + n_ben_high
-    # Malware sits in [0.1, 0.4]; low-region benigns sit in the same range
-    # (overlap → empirical malware rate < 100% there); high-region rows are
-    # benign-only — at probs > 0.5, dev sees ONLY benigns, so isotonic's
-    # right-end is forced to y=0 even though the model still discriminates
-    # across the bulk. Isotonic max y ends up below the production
-    # acceptance bar (~0.7).
-    mal_probs = rng.uniform(0.1, 0.4, size=n_mal)
-    ben_low = rng.uniform(0.0, 0.4, size=n_ben_low)
-    ben_high = rng.uniform(0.5, 0.95, size=n_ben_high)
-    probs = np.concatenate([mal_probs, ben_low, ben_high]).astype(np.float32)
-    labels = np.concatenate([
-        np.ones(n_mal, dtype=np.int32),
-        np.zeros(n_ben_low + n_ben_high, dtype=np.int32),
-    ])
-    entry = {
-        "name": "filetypes/sparse_tail",
-        "probs": probs,
-        "indices": np.arange(n, dtype=np.int64),
-    }
-    _mod._fit_and_persist_isotonic_calibrator([entry], labels, azoth_root)  # type: ignore[attr-defined]
-    cal = json.loads((azoth_root / "filetypes/sparse_tail" / "calibrator.json").read_text())
-    assert cal["schema"] == "azoth.calibrator.isotonic.v1"
-    # Anchor was applied because the empirical fit didn't reach (~1, ~1).
-    assert cal["method"] == "isotonic+anchor"
-    # After anchoring, the calibrator must reach 1.0 at x=1.0 — that's
-    # what makes litmus accept it as a usable verdict-rendering function.
-    assert cal["x"][-1] == 1.0
-    assert cal["y"][-1] == 1.0
-    # Monotone non-decreasing (litmus assumes this).
-    y = cal["y"]
-    assert all(y[i] <= y[i + 1] for i in range(len(y) - 1))
-
-
-def test_calibrator_keeps_isotonic_when_tail_is_well_anchored(tmp_path: Path) -> None:
-    """When dev has clean separable rows, isotonic is preferred."""
-    rng = np.random.default_rng(102)
-    azoth_root = tmp_path / "azoth"
-    n = 2000
-    labels = (rng.random(n) < 0.5).astype(np.int32)
-    # Strong separation: malware probs near 1, benign near 0.
-    probs = np.where(
-        labels == 1,
-        np.clip(rng.normal(0.95, 0.02, size=n), 0, 1),
-        np.clip(rng.normal(0.05, 0.02, size=n), 0, 1),
-    ).astype(np.float32)
-    entry = {
-        "name": "filetypes/clean",
-        "probs": probs,
-        "indices": np.arange(n, dtype=np.int64),
-    }
-    _mod._fit_and_persist_isotonic_calibrator([entry], labels, azoth_root)  # type: ignore[attr-defined]
-    cal = json.loads((azoth_root / "filetypes/clean" / "calibrator.json").read_text())
-    assert cal["method"] == "isotonic"
-    assert max(cal["y"]) > 0.9
 
 
 def test_clopper_pearson_x0_matches_rule_of_three() -> None:
