@@ -378,3 +378,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T040927-filetypes-rtf` — 2026-06-06T04:09:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ea6cad533c246a9` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9946 | 0.5000 | 0.9973 | 9 | [log](out/autocollie/runs/2026-06-06T04-15-03_20260606T040927-filetypes-rtf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `375f0a3089c0b3a4` | rtf_ctrl_leaves128_lr003 | ok | 0.9990 | 0.9935 | 0.9893 | 8 | [log](out/autocollie/runs/2026-06-06T04-15-14_20260606T040927-filetypes-rtf_rtf_ctrl_leaves128_lr003.log) |
+| `2c9fa9c36d4da6c7` | rtf_feat_text_metrics_encoding | ok | 0.9996 | 0.9967 | 0.9886 | 9 | [log](out/autocollie/runs/2026-06-06T04-15-27_20260606T040927-filetypes-rtf_rtf_feat_text_metrics_encoding.log) |
+| `d623ca41b9d0e9b6` | rtf_feat_kv_vocab_split | ok | 0.9990 | 0.9935 | 0.9893 | 8 | [log](out/autocollie/runs/2026-06-06T04-15-37_20260606T040927-filetypes-rtf_rtf_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_leaves128_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 …` — Control spec replicating the best recent feature_env to verify matrix cache hits and establish a training-only baseline for PR_AUC comparison.
+- **`rtf_feat_text_metrics_encoding`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 …` — Enables text_metrics_full and text_encoding to capture RTF document structure and obfuscation patterns, aiming to improve PR_AUC by adding high-signal document features.
+- **`rtf_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 …` — Enables kv_vocab and kv_value_split to extract RTF field definitions and macro parameters, aiming to boost PR_AUC by capturing structured key-value signals missed by n-grams.
+
+</details>
+
+## Cycle `20260606T073458-filetypes-rtf` — 2026-06-06T07:34:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ea6cad533c246a9` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9946 | 0.5000 | 0.9973 | 6 | [log](out/autocollie/runs/2026-06-06T07-42-27_20260606T073458-filetypes-rtf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b9d563de71c5e547` | rtf_ctrl_textmetrics_leaves128 | ok | 0.9989 | 0.9931 | 0.9893 | 16 | [log](out/autocollie/runs/2026-06-06T07-42-34_20260606T073458-filetypes-rtf_rtf_ctrl_textmetrics_leaves128.log) |
+| `e6a09ca46619846f` | rtf_feat_kv_vocab_split | ok | 0.9989 | 0.9931 | 0.9893 | 18 | [log](out/autocollie/runs/2026-06-06T07-42-53_20260606T073458-filetypes-rtf_rtf_feat_kv_vocab_split.log) |
+| `6752d93884fc76a7` | rtf_feat_doc_obfuscation_hardneg | ok | 0.9999 | 0.9988 | 0.9893 | 14 | [log](out/autocollie/runs/2026-06-06T07-43-12_20260606T073458-filetypes-rtf_rtf_feat_doc_obfuscation_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_textmetrics_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Control using best PR_AUC feature surface; tests if leaves=128 and lr=0.03 improve PR_AUC ranking stability while preserving ROC_AUC.
+- **`rtf_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab and kv_value_split to capture structured RTF metadata signals, aiming to boost PR_AUC by isolating malicious macro patterns.
+- **`rtf_feat_doc_obfuscation_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 …` — Adds document_obfuscation_features and hard-negative training to better separate benign complex RTFs from malicious ones, targeting recall@3 FP/M.
+
+</details>
+

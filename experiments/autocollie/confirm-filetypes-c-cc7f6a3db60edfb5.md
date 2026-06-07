@@ -1,6 +1,6 @@
 # Confirm PASS — cc7f6a3db60edfb5 on `filetypes/c`
 
-Cycle `20260602T002828-confirm-cc7f6a3db60edfb5` — 2026-06-02T00:28:28Z
+Cycle `20260606T152847-confirm-cc7f6a3db60edfb5` — 2026-06-06T15:28:47Z
 
 PR_AUC held across 3 seeds (orig 0.9898)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 0.9898)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `cc7f6a3db60edfb5` | `6861905247893340` | `6861905247893340` | `6861905247893340` |
-| PR AUC | 0.9898 | 0.9872 | 0.9868 | 0.9876 |
-| ROC AUC | 0.9944 | 0.9938 | 0.9935 | 0.9940 |
+| key | `cc7f6a3db60edfb5` | `298ad3fcb7a39f6b` | `298ad3fcb7a39f6b` | `298ad3fcb7a39f6b` |
+| PR AUC | 0.9898 | 0.9884 | 0.9869 | 0.9877 |
+| ROC AUC | 0.9944 | 0.9951 | 0.9945 | 0.9947 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 

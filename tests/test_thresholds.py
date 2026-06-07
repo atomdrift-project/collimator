@@ -18,7 +18,49 @@ from collimator.thresholds import (
     compute_severity_levels,
     evaluate_policies,
     fp_budget_tables,
+    quantile_severity_threshold,
 )
+
+
+def test_quantile_severity_threshold_curve_properties_on_small_sample() -> None:
+    """The shared operating-point estimator must hold these on a TINY sample:
+      - L0 != L1 (L0 is the only level above max benign -> 0 FP);
+      - every non-zero level admits >= 1 FP and never sits above max benign;
+      - L5 != L50 (distinct thresholds, even if subtle);
+      - the level -> threshold map is monotone non-increasing.
+    """
+    rng = np.random.default_rng(0)
+    benign = np.concatenate([
+        rng.uniform(0.0, 0.3, 110),
+        np.sort(rng.uniform(0.4, 0.95, 10)),
+    ]).astype(np.float64)
+    mx = float(benign.max())
+    # (label, per-100M level) -> target_per_million is level/100.
+    levels = [0, 1, 5, 50, 100, 500, 1000, 10000]
+    thr = {L: quantile_severity_threshold(benign, L / 100.0)[0] for L in levels}
+
+    # L0 is the only level strictly above the max benign (0 FP); all else <= max.
+    assert thr[0] > mx
+    for L in levels[1:]:
+        assert thr[L] <= mx
+        assert int(np.sum(benign >= thr[L])) >= 1  # >= 1 FP
+
+    # Distinct adjacent levels, even when subtle.
+    assert thr[0] != thr[1]
+    assert thr[5] != thr[50]
+    assert thr[5] > thr[50]  # stricter level -> higher threshold
+
+    # Monotone non-increasing across the whole grid.
+    ordered = [thr[L] for L in levels]
+    assert all(a >= b for a, b in zip(ordered, ordered[1:]))
+
+
+def test_quantile_severity_threshold_returns_none_below_floor() -> None:
+    assert quantile_severity_threshold(np.linspace(0, 1, 49), 0.5) == (None, "none")
+    # 50 benigns at L50 can't resolve the per-100M rate, so it uses the
+    # low-volume absolute-FP regime; either way it returns a valid threshold.
+    thr, method = quantile_severity_threshold(np.linspace(0, 1, 50), 0.5)
+    assert method in ("empirical", "absolute_fp") and 0.0 <= thr <= 1.0
 
 
 def test_evaluate_policies_returns_named_candidates() -> None:

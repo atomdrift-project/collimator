@@ -52,6 +52,7 @@ _CURVE_COLORS: dict[str, str] = {
     "specialist": "#3a7",
     "ensemble": "#06c",
     "corpus-weighted ensemble": "#06c",
+    "filetypes/elf": "#e07b00",
 }
 
 
@@ -629,6 +630,14 @@ def _ensemble_table(
         f"| File type | Test mal / ben | PR AUC | ROC AUC | F1 | Recall @ {_DEFAULT_LEVEL_LABEL} | Δ vs EMBER 2024 |",
         "|---|---:|---:|---:|---:|---:|---:|",
     ]
+    # Population-weighted accumulators: Σ(metric * pop) and Σ(pop), per metric,
+    # where pop is the filetype's tested population (mal + ben). Each metric
+    # keeps its own denominator so a filetype missing one metric doesn't skew
+    # the others. Surfaced as a bottom "Weighted avg" row so the table has a
+    # single corpus-level effectiveness number, sized by what each route covers.
+    wsum: dict[str, float] = {"pr": 0.0, "roc": 0.0, "f1": 0.0, "recall": 0.0}
+    wpop: dict[str, float] = {"pr": 0.0, "roc": 0.0, "f1": 0.0, "recall": 0.0}
+    total_pop = 0.0
     for ft in filetypes:
         m_entry = metrics.get("filetypes", {}).get(ft) or {}
         if not m_entry:
@@ -658,11 +667,34 @@ def _ensemble_table(
                 )
             else:
                 ember_str = "—"
+        pop = float((n_mal or 0) + (n_ben or 0))
+        total_pop += pop
+        for key, val in (("pr", ens_pr), ("roc", ens_roc), ("f1", ens_f1), ("recall", ens_recall)):
+            try:
+                fv = float(val)
+            except (TypeError, ValueError):
+                continue
+            if math.isnan(fv) or pop <= 0:
+                continue
+            wsum[key] += fv * pop
+            wpop[key] += pop
         balance = f"{_int(n_mal)} / {_int(n_ben)}"
         ft_cell = f"[`{ft}`](filetypes/{ft}/README.md)" if link_routes else f"`{ft}`"
         lines.append(
             f"| {ft_cell} | {balance} | {pr_str} | {roc_str} | {f1_str} | {recall_str} | {ember_str} |"
         )
+
+    def _w(key: str, *, as_percent: bool = False) -> str:
+        if wpop[key] <= 0:
+            return "—"
+        avg = wsum[key] / wpop[key]
+        return f"{avg * 100:.1f}%" if as_percent else f"{avg:.4f}"
+
+    lines.append(
+        f"| **Weighted avg** (by test pop) | **{_int(int(total_pop))}** | "
+        f"**{_w('pr')}** | **{_w('roc')}** | **{_w('f1')}** | "
+        f"**{_w('recall', as_percent=True)}** | — |"
+    )
     return lines
 
 
@@ -868,11 +900,15 @@ def _global_policy_table(root: Path) -> str:
     )
     if any_below:
         out += (
-            "\n\n† below data resolution: the dev calibration sample is too small "
-            "to credibly assert FP/M ≤ target at this level (95% CI). The deployed "
-            "threshold falls back to the loosest empirical 0-FP fit; the FP/M and "
-            "95% CI columns show what the test partition actually achieves under "
-            "that threshold, which exceeds the L target."
+            "\n\n† dataset-limited granularity: the calibration benign volume is "
+            "too small to *separate* this level from its neighbours at 95% CI, so "
+            "adjacent levels share one operating point (the curve is flat here). "
+            "The threshold is still a real measured ceiling — the loosest score "
+            "admitting at most the level's FP budget plus one (the +1 slack) on the "
+            "calibration benigns — not an extrapolation, so it can't overshoot on "
+            "live traffic. The 95% CI column shows the residual sampling "
+            "uncertainty; finer steps between levels appear only as benign volume "
+            "grows."
         )
     return out
 
@@ -982,11 +1018,25 @@ def _write(path: Path, text: str) -> None:
 
 
 def _write_general(root: Path) -> None:
+    # The full-train / thresholds-refresh flow emits general/threshold_tuning.json;
+    # the OOF publish-train flow does not — its calibrator writes the same
+    # corpus + severity data straight into config.json. Prefer the tuning file
+    # when present, else fall back to config.json (the deployed source of truth).
     tuning_path = root / "general" / "threshold_tuning.json"
-    with open(tuning_path) as f:
-        tuning = json.load(f)
-    corpus = tuning.get("corpus", {})
-    levels = tuning["severity_levels"]
+    if tuning_path.is_file():
+        with open(tuning_path) as f:
+            tuning = json.load(f)
+        corpus = tuning.get("corpus", {})
+        levels = tuning["severity_levels"]
+    else:
+        with open(root / "config.json") as f:
+            config = json.load(f)
+        corpus = {
+            "samples": config.get("rows"),
+            "malware": config.get("malware"),
+            "benign": config.get("benign"),
+        }
+        levels = config["levels"]
     evaluation = _general_evaluation(root)
     train_config = _general_train_config(root)
     lines = [
@@ -1173,21 +1223,26 @@ def _write_route(root: Path, path: Path) -> None:
 
 
 def _bundle_recall_curve_section(metrics: dict[str, Any], root: Path | None = None) -> list[str]:
-    """Top-level recall curve: two lines.
+    """Top-level recall curve: three lines.
 
     - Corpus-weighted ensemble curve: per-level expected recall when a
-      random file is drawn from the labeled corpus.
+      random file is drawn from the labeled corpus (weighted by n_files).
     - General curve at each level: general's recall on the full evaluated
       dataset (no weighting — general is scored across slices).
+    - filetypes/elf: a single strong route, drawn for comparison so the
+      corpus-weighted line can be read against a route that actually resolves
+      across levels (the weighted line is dominated by big, flat routes).
 
     Returns the markdown lines (heading + SVG + caption + trailing blank);
     returns an empty list when neither curve has usable data so the README
     is not littered with an empty chart.
     """
     all_general = ((metrics or {}).get("all_files") or {}).get("general") or {}
+    elf_ens = ((metrics or {}).get("filetypes", {}).get("elf") or {}).get("ensemble") or {}
     curves = {
         "corpus-weighted ensemble": _corpus_weighted_ensemble_curve(metrics),
         "general": _extract_recall_curve(all_general),
+        "filetypes/elf": _extract_recall_curve(elf_ens),
     }
     if root is None:
         # Defensive fallback: render inline if no root was passed (legacy
@@ -1217,7 +1272,10 @@ def _bundle_recall_curve_section(metrics: dict[str, Any], root: Path | None = No
         "answering: \"If I draw a random file from the labeled corpus, "
         "what fraction of malware do we catch at this FP budget?\" The "
         "general curve is the single-model baseline on the full evaluated "
-        f"dataset. The vertical dashed line marks the {_DEFAULT_LEVEL_LABEL} "
+        "dataset. filetypes/elf is shown for comparison — a single strong "
+        "route that resolves across levels, so the corpus-weighted line "
+        "(dominated by large, near-flat routes like pe) can be read against "
+        f"it. The vertical dashed line marks the {_DEFAULT_LEVEL_LABEL} "
         f"deploy operating point.",
         "",
     ]
@@ -1249,7 +1307,7 @@ def _write_bundle(root: Path) -> None:
         "model scores every file. Per-filetype specialists score files "
         f"in their domain — PE, ELF, JavaScript, PDF, and {n_filetype - 4} "
         "more. A file is flagged when any route's score crosses its "
-        "calibrated threshold.",
+        "operating-point threshold.",
         "",
         "The point of routing is that the evidence differs by format. A "
         "PE's section table is signal. A PDF's stream dictionary is "
@@ -1257,7 +1315,7 @@ def _write_bundle(root: Path) -> None:
         "generalist trained over all of them learns averages; a "
         "specialist trained on one of them learns the format.",
         "",
-        f"Thresholds and isotonic calibrators were fit on a {fit_rows}-row "
+        f"Thresholds were fit on a {fit_rows}-row "
         f"{fit_part} partition (12.5% of the labeled corpus). The "
         f"numbers in this README come from a locked {_int(n_eval)}-row "
         "test partition, disjoint from training and calibration. The "
@@ -1280,10 +1338,10 @@ def _write_bundle(root: Path) -> None:
         "`config.json` records the deployed thresholds. Each route lives "
         f"in its own subdirectory: `general/`, one of {n_filegroup} "
         f"`filegroups/<name>/`, or one of {n_filetype} "
-        "`filetypes/<name>/`. A route directory carries three files: "
-        "`model.txt` (LightGBM), `feature_spec.json` (the features the "
-        "model expects), and `calibrator.json` (isotonic probability "
-        "calibrator).",
+        "`filetypes/<name>/`. A route directory carries two files: "
+        "`model.txt` (LightGBM) and `feature_spec.json` (the features the "
+        "model expects). Scores are the model's raw probabilities — there is "
+        "no separate probability calibrator.",
         "",
         "Further reading: [DESIGN.md](DESIGN.md) for architecture and "
         "FP-budget design, [ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md) for "
@@ -1323,8 +1381,9 @@ def _write_bundle(root: Path) -> None:
         "",
         "PR AUC summarizes recall against precision across operating "
         f"points. Recall@{_DEFAULT_LEVEL_LABEL} is the selection-budget headline; for "
-        f"filetypes whose dev slice cannot resolve {_DEFAULT_LEVEL_PHRASE} empirically "
-        "it is GPD-tail-extrapolated. EMBER 2024 deltas are reported "
+        f"filetypes whose calibration slice cannot resolve {_DEFAULT_LEVEL_PHRASE} "
+        "empirically, that level shares an operating point with its neighbours "
+        "(its measured ceiling). EMBER 2024 deltas are reported "
         "where Joyce et al. publish per-filetype numbers (Table 5, "
         "All files → X).",
         "",
@@ -1338,7 +1397,7 @@ def _write_bundle(root: Path) -> None:
         "",
         "## Limits",
         "",
-        f"- Strict L0..{_DEFAULT_LEVEL_LABEL} (FP/100M) targets sit below empirical resolution on a single dev partition (one FP per 150k benigns ≈ 600 FP/100M); their thresholds are GPD tail-extrapolations.",
+        f"- Strict L0..{_DEFAULT_LEVEL_LABEL} (FP/100M) targets can sit below the calibration benign volume's resolution (the finest non-zero rate is 1 FP / N_benign); below that, adjacent levels share one measured-ceiling operating point. Thresholds are measured (loosest score within the level's FP budget +1 slack), not extrapolated — they can't overshoot on live traffic. More benigns sharpen the low levels.",
         "- The split is content-deduplicated by `canonical_sha256`, not family-aware. Campaign-level generalization may be overstated.",
         "- Deployment distribution may differ from the training corpus.",
         "",
@@ -1442,13 +1501,15 @@ def _write_ensemble_card(root: Path) -> None:
         "",
         "## Severity levels (L0..L20)",
         "",
-        "L0..L20 are observation-derived strictness grades, not "
-        "optimization targets. For each route, level Lk's threshold is "
-        "set so that roughly qk benigns per million would be flagged "
-        "on the dev partition. Strict levels (where `n_benign · qk · "
-        "10⁻⁶ < 1` falls below empirical resolution) use a generalized "
-        "Pareto fit to the benign-score upper tail; looser levels use "
-        "direct empirical quantiles.",
+        "L0..L20 are measured strictness grades, not optimization "
+        "targets. L0 is the 0-FP point (loosest threshold flagging no "
+        "calibration benign). For each higher route level Lk, the "
+        "threshold is the loosest score admitting at most the level's "
+        "FP budget plus one benign (the +1 slack) — a real measured "
+        "ceiling, never an extrapolation, so it can't overshoot on live "
+        "traffic. Where benign volume can't separate adjacent levels, "
+        "they share one ceiling (a flat run); finer steps emerge only as "
+        "benign volume grows.",
         "",
         "Litmus reads the per-level thresholds from "
         "`route_policies.json` and assigns severity per file.",

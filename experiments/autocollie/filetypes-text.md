@@ -750,3 +750,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T022510-filetypes-text` — 2026-06-06T02:25:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `77ee74055d139bb5` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9508 | 0.9735 | 0.8511 | 14 | [log](out/autocollie/runs/2026-06-06T02-32-32_20260606T022510-filetypes-text_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ca14375b5bf89e46` | text_ctrl_best_env_reg | ok | 0.1128 | 0.5700 | 0.1905 | 12 | [log](out/autocollie/runs/2026-06-06T02-32-53_20260606T022510-filetypes-text_text_ctrl_best_env_reg.log) |
+| `bb3eff54fe67de82` | text_feat_textenc_metrics | ok | 0.1226 | 0.5700 | 0.1905 | 12 | [log](out/autocollie/runs/2026-06-06T02-33-08_20260606T022510-filetypes-text_text_feat_textenc_metrics.log) |
+| `dac76a584f4d6c18` | text_feat_lowbigram_kv | ok | 0.1226 | 0.5700 | 0.1905 | 13 | [log](out/autocollie/runs/2026-06-06T02-33-21_20260606T022510-filetypes-text_text_feat_lowbigram_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_best_env_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by increasing tree capacity and regularization on the best recent feature set, hoping to better rank tail malware without degrading ROC_AUC.
+- **`text_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to boost recall@3FPM and PR_AUC by adding document-level text metrics and encoding features that capture obfuscation patterns in text files, while keeping ROC_AUC flat.
+- **`text_feat_lowbigram_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by lowering the bigram frequency floor to capture rare malicious patterns and adding KV vocab for metadata signals, targeting better ranking of subtle threats without hurting ROC_AUC.
+
+</details>
+
+## Cycle `20260606T093147-filetypes-text` — 2026-06-06T09:31:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `77ee74055d139bb5` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9508 | 0.9735 | 0.8511 | 1 | [log](out/autocollie/runs/2026-06-06T09-41-48_20260606T093147-filetypes-text_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c166c14f0b920330` | text_ctrl_best_env_reg_hn | ok | 0.1864 | 0.7052 | 0.1979 | 2 | [log](out/autocollie/runs/2026-06-06T09-41-49_20260606T093147-filetypes-text_text_ctrl_best_env_reg_hn.log) |
+| `78240b163217e4e6` | text_feat_textenc_metrics_full | ok | 0.1128 | 0.5700 | 0.1905 | 9 | [log](out/autocollie/runs/2026-06-06T09-41-52_20260606T093147-filetypes-text_text_feat_textenc_metrics_full.log) |
+| `5e5ee2c0dc7db1c9` | text_feat_lowbigram_tiered | ok | 0.1128 | 0.5700 | 0.1905 | 9 | [log](out/autocollie/runs/2026-06-06T09-42-02_20260606T093147-filetypes-text_text_feat_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_best_env_reg_hn`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control spec replicating best feature_env; adds hard-negative weighting to improve recall@3FPM by focusing the model on difficult benigns without changing the feature matrix.
+- **`text_feat_textenc_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full research vocabs to capture document obfuscation and structural signals, aiming to boost PR_AUC by adding high-signal features for text files.
+- **`text_feat_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfers low bigram_min_freq (50) and tiered_crit_trigrams from sister route xml to capture rarer text patterns, aiming to improve PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

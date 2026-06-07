@@ -9,6 +9,7 @@ import hashlib
 import json
 import logging
 import math
+import os
 import re
 import sys
 import time
@@ -19,7 +20,7 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 
-from collimator import bundle, data, export, features, model, thresholds
+from collimator import bundle, data, export, features, thresholds
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: E402
@@ -569,122 +570,12 @@ def _candidate_thresholds(
     return candidates
 
 
-def _gpd_tail_threshold(
-    benign_probs: np.ndarray, target_per_million: float,
-) -> tuple[float, dict[str, float]] | None:
-    """Generalized Pareto tail extrapolation: estimate the threshold T such
-    that ``P(benign_score > T) = target_per_million × 1e-6``.
-
-    Used for observation-only severity-tier derivation. Calibration's
-    DEPLOYMENT threshold is decided elsewhere (F-beta on dev); the L0..L9
-    tier thresholds reported here are observed quantiles, with this GPD
-    extrapolation kicking in when the FP/M target sits below what the
-    empirical sample can resolve directly.
-
-    Returns ``(threshold, diagnostics)`` or None if the fit is unreliable
-    (insufficient tail data, fit failure, or target loose enough that
-    empirical quantiles already work without extrapolation).
-    """
-    n = len(benign_probs)
-    if n < 100:
-        # Below 100 benigns there's no usable tail to extrapolate from —
-        # any fit would be dominated by sampling noise. Smaller slices
-        # should fall back to the empirical floor in callers.
-        return None
-    sorted_probs = np.sort(benign_probs)
-    # Adaptive anchor percentile: fixed 0.99 needs n ≥ 3000 to leave ≥30
-    # excesses for a stable fit. For smaller slices, drop the anchor to
-    # 0.95 / 0.90 / 0.80 so we still have enough tail mass. The trade-off:
-    # lower anchor → more bulk in the fit → less faithful to the true
-    # tail shape. The headline-table use case is single-decimal-place
-    # recall percentages, so a looser anchor is fine.
-    if n >= 3000:
-        anchor = 0.99
-    elif n >= 1000:
-        anchor = 0.95
-    elif n >= 300:
-        anchor = 0.90
-    else:
-        anchor = 0.80
-    u_idx = int(anchor * n)
-    n_tail = n - u_idx
-    if n_tail < 20:
-        return None
-    u = float(sorted_probs[u_idx])
-    excesses = sorted_probs[sorted_probs > u] - u
-    if len(excesses) < 20:
-        return None
-    p_above_u = float(len(excesses)) / float(len(sorted_probs))
-    p_target = target_per_million / 1_000_000.0
-    if p_target <= 0:
-        return None
-    if p_target >= p_above_u:
-        return None
-    try:
-        import scipy.stats  # noqa: PLC0415
-        xi, _, sigma = scipy.stats.genpareto.fit(excesses, floc=0)
-    except (ValueError, RuntimeError):
-        return None
-    if not np.isfinite(xi) or not np.isfinite(sigma) or sigma <= 0:
-        return None
-    if abs(xi) < 1e-9:
-        threshold = u + sigma * np.log(p_above_u / p_target)
-    else:
-        threshold = u + (sigma / xi) * ((p_target / p_above_u) ** (-xi) - 1.0)
-    if not np.isfinite(threshold):
-        return None
-    # When the GPD fit on a tightly-concentrated benign distribution
-    # extrapolates above 1.0, the threshold is unreachable for any
-    # calibrated probability score: clipping to 1.0 silently produces a
-    # fire-never policy. Returning None instead lets
-    # _quantile_severity_threshold fall back to its empirical_floor
-    # branch (the max observed benign), which is a real operating point
-    # honestly labeled below-resolution rather than a no-op disguised as
-    # a threshold. Same for thresholds at or below the GPD anchor u —
-    # those indicate a degenerate fit, not a usable answer.
-    if threshold >= 1.0 or threshold <= u:
-        return None
-    return threshold, {
-        "u": u,
-        "xi": float(xi),
-        "sigma": float(sigma),
-        "p_above_u": p_above_u,
-        "p_target": p_target,
-    }
-
-
-def _quantile_severity_threshold(
-    benign_probs: np.ndarray,
-    target_per_million: float,
-) -> tuple[float | None, str]:
-    """Threshold T such that fraction(benign_score > T) ≈ target_per_million × 1e-6.
-
-    Returns ``(threshold, method)`` where method is one of:
-      - ``"empirical"``: the (1 − q×10⁻⁶) quantile of benign_probs is well-defined
-        (i.e., q*N/1e6 ≥ 1 — at least one benign expected above threshold).
-      - ``"extrapolated"``: q is below the empirical floor; threshold derived via
-        GPD tail extrapolation.
-      - ``"empirical_floor"``: q is below empirical AND GPD fit failed; fall back
-        to "above the highest observed benign score."
-      - ``"none"``: too few benigns to derive any threshold.
-
-    Threshold is the OBSERVATION at this q rate, not a calibration target.
-    L0..L9 tiers in the deployed bundle use this to give litmus a severity
-    grading curve derived from data.
-    """
-    if target_per_million <= 0 or len(benign_probs) < 50:
-        return None, "none"
-    n = len(benign_probs)
-    sorted_probs = np.sort(benign_probs)
-    p_target = target_per_million / 1_000_000.0
-    n_allowed = int(np.floor(n * p_target))
-    if n_allowed >= 1:
-        idx = max(0, min(n - n_allowed - 1, n - 1))
-        return float(sorted_probs[idx]), "empirical"
-    gpd = _gpd_tail_threshold(benign_probs, target_per_million)
-    if gpd is not None:
-        return gpd[0], "extrapolated"
-    return float(sorted_probs[-1]), "empirical_floor"
+# Canonical operating-point threshold now lives in collimator.thresholds so the
+# screen experiment (experiment._recall_at_per_100M) derives recall at the EXACT
+# same operating point the deploy/policy-search uses. Re-exported under the old
+# private name for azoth_route_policy_search's `from azoth_calibrate_ensemble
+# import _quantile_severity_threshold`.
+_quantile_severity_threshold = thresholds.quantile_severity_threshold
 
 
 def _clopper_pearson_fp_per_million_upper(
@@ -855,7 +746,6 @@ def _calibrate_one(
     selected: dict[str, float] = {}
     diagnostics: dict[str, Any] = {}
     union_hit = np.zeros(n_rows, dtype=bool)
-    extrapolated_routes: list[str] = []
 
     for route in route_scores:
         name = route["name"]
@@ -898,8 +788,6 @@ def _calibrate_one(
                 "standalone": {"threshold": None, "tp": 0, "fp": 0},
             }
             continue
-        if method == "extrapolated":
-            extrapolated_routes.append(name)
         selected[name] = float(threshold)
         hit_local = (probs >= threshold) & valid
         union_hit[indices[hit_local]] = True
@@ -924,7 +812,6 @@ def _calibrate_one(
         "target_per_million": float(target_per_million),
         "below_resolution": bool(below_resolution),
         "cp_floor_per_million": float(cp_floor_per_million),
-        "extrapolated_routes": extrapolated_routes,
         "thresholds": selected,
         "diagnostics": diagnostics,
         "tp": tp,
@@ -1077,159 +964,6 @@ def _filetype_to_group() -> dict[str, str]:
         for file_type in file_types:
             out[file_type] = group
     return out
-
-
-def _fit_and_persist_isotonic_calibrator(
-    route_scores: list[dict[str, Any]],
-    labels: np.ndarray,
-    azoth_root: Path,
-) -> None:
-    """For each route, fit isotonic regression on (raw probability, label) and
-    write the calibrator's breakpoints to ``<route_slot>/calibrator.json``.
-
-    Litmus loads this file at score time and applies the calibration before
-    emitting the file's probability — so the deployed score is on the same
-    [0, 1] probability scale the per-route specialist was empirically observed
-    to produce on the calibration corpus.
-
-    Why this matters: raw LightGBM/XGBoost output is a logit-derived probability
-    that's miscalibrated by training-set prior, sample weights, and class
-    imbalance.  Two specialists with the same ROC AUC can have wildly different
-    score distributions; one outputs scores tightly clustered near 0.5, the
-    other spreads them across [0, 1].  Without per-route calibration, the
-    routing layer's "max across routes" picks routes by their score spread,
-    not by their actual confidence.
-
-    Output schema (``calibrator.json``)::
-
-        {
-          "schema": "azoth.calibrator.isotonic.v1",
-          "x": [...],                # ascending, raw probabilities at breakpoints
-          "y": [...],                # monotone-non-decreasing calibrated probs
-          "out_of_bounds": "clip",   # x < x[0] -> y[0]; x > x[-1] -> y[-1]
-          "n_train": int,            # rows used to fit
-          "fit_log": str             # human-readable diagnostic
-        }
-
-    Litmus interpolates linearly between breakpoints; clip semantics handle
-    the tails.
-
-    The calibrator is fit on the *full* calibration corpus we have labels
-    for — this maximizes the data the calibrator sees.  Honest holdout
-    evaluation lives in ``compute_routed_metrics.py`` (5-fold CV); the
-    bundle ships the strongest calibrator we can train.
-    """
-    from sklearn.isotonic import IsotonicRegression  # noqa: PLC0415
-
-    # Operational tail anchor: when isotonic's empirical fit doesn't reach
-    # high calibrated y at high raw x — because the per-route dev partition
-    # had a benign-dominated upper tail — extend the curve linearly toward
-    # (1.0, 1.0). Without this, routes whose dev sample lacks confident-
-    # malware rows ship calibrators capped well below 1.0 and litmus drops
-    # them as "uncalibrated."
-    #
-    # This is honest: it's an extrapolation, not a measurement, and we
-    # mark it in the calibrator's `method` field. The deployed verdict
-    # (hostile/benign) is driven by the raw-score thresholds
-    # found via GPD tail extrapolation in `_calibrate_one`; the calibrator
-    # is for human-readable reporting. Anchoring it doesn't add leakage —
-    # we use no test rows, and the extension uses no data at all.
-    ANCHOR_THRESHOLD_Y = 0.7
-    ANCHOR_THRESHOLD_X = 0.999
-
-    calibrators_written = 0
-    for entry in route_scores:
-        name = entry["name"]
-        probs = entry["probs"]
-        indices = entry["indices"]
-        if probs is None or len(probs) == 0:
-            continue
-        route_labels = labels[indices]
-        valid = ~np.isnan(probs)
-        if int(valid.sum()) < 50:
-            LOG.info("calibrator: skipping %s (only %d valid rows)", name, int(valid.sum()))
-            continue
-        x = probs[valid].astype(np.float64)
-        y = route_labels[valid].astype(np.float64)
-        if y.sum() == 0 or (y == 0).sum() == 0:
-            LOG.info("calibrator: skipping %s (single-class fold)", name)
-            continue
-        iso = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0)
-        iso.fit(x, y)
-        x_thr = iso.X_thresholds_.astype(float)
-        y_thr = iso.y_thresholds_.astype(float)
-        method = "isotonic"
-        emp_x_max = float(x_thr[-1])
-        emp_y_max = float(y_thr.max())
-        # Anchor when the empirical curve fails to reach (~1, ~1).
-        if emp_x_max < ANCHOR_THRESHOLD_X or emp_y_max < ANCHOR_THRESHOLD_Y:
-            method = "isotonic+anchor"
-            if emp_x_max < ANCHOR_THRESHOLD_X:
-                x_thr = np.append(x_thr, 1.0)
-                y_thr = np.append(y_thr, 1.0)
-            else:
-                # x already reaches 1.0; replace the terminal y to 1.0.
-                y_thr = y_thr.copy()
-                y_thr[-1] = 1.0
-        # `fit_log` is saved into calibrator.json as a schema annotation
-        # (downstream tools read it); keep its format stable.
-        fit_log = (
-            f"isotonic on {int(valid.sum())} rows "
-            f"({int(y.sum())} malware, {int((y == 0).sum())} benign); "
-            f"empirical max x={emp_x_max:.3f} y={emp_y_max:.3f}; "
-            f"method={method}, breakpoints={len(x_thr)}"
-        )
-        # Operator-facing log line uses a clearer summary + level that
-        # reflects what's actually concerning. The previous version logged
-        # EVERY anchored calibrator at WARNING with raw numerical jargon,
-        # which made healthy and broken routes indistinguishable.
-        n_mal = int(y.sum())
-        n_ben = int((y == 0).sum())
-        if method == "isotonic":
-            # Clean fit — the empirical curve already spans up to ~(1, 1).
-            LOG.info(
-                "calibrator %s: clean fit (%d mal / %d ben, %d breakpoints)",
-                name, n_mal, n_ben, len(x_thr),
-            )
-        elif emp_y_max < 0.10:
-            # Anchor is doing nearly all the work above the empirical range:
-            # the model produced high raw probabilities but very few of those
-            # files were actually malware in training (only %.1f%% at the top).
-            # The anchor extension to (1.0, 1.0) is unsupported by the data —
-            # at scan time, OOD high-confidence files may not classify the
-            # way the operator expects. Operationally: this route is likely
-            # to underperform until more malware appears in its training set.
-            LOG.warning(
-                "calibrator %s: WEAK FIT — only %.1f%% of top-scored files "
-                "in training were actually malware (%d mal / %d ben); "
-                "anchor extrapolates calibrator to (1.0, 1.0) but is "
-                "unsupported by data. Add more %s malware to training.",
-                name, emp_y_max * 100, n_mal, n_ben, name,
-            )
-        else:
-            # Routine anchor — fit covered most of the range, anchor just
-            # caps the terminal point at (1.0, 1.0) so out-of-distribution
-            # high raw scores get a sensible calibrated value at scan time.
-            # No operational concern.
-            LOG.info(
-                "calibrator %s: anchored (emp top y=%.2f → 1.0; %d mal / %d ben)",
-                name, emp_y_max, n_mal, n_ben,
-            )
-        slot_dir = azoth_root / name
-        slot_dir.mkdir(parents=True, exist_ok=True)
-        cal_path = slot_dir / "calibrator.json"
-        cal = {
-            "schema": "azoth.calibrator.isotonic.v1",
-            "method": method,
-            "x": x_thr.tolist(),
-            "y": y_thr.tolist(),
-            "out_of_bounds": "clip",
-            "n_train": int(valid.sum()),
-            "fit_log": fit_log,
-        }
-        bundle.atomic_write_json(cal_path, cal)
-        calibrators_written += 1
-    LOG.info("wrote %d per-route calibrators", calibrators_written)
 
 
 def _write_score_table(
@@ -1431,13 +1165,28 @@ def main() -> int:
     ]
     routes = list(_load_routes(args.summary))
     refresh_routes = set(args.refresh_route)
+    # Cap per-route extraction workers. Each of the `parallelism` concurrent
+    # route jobs re-extracts its FULL-row matrix, and each worker buffers a
+    # batch of cleave reports — so the resident report memory scales with
+    # (parallelism * workers). At the default workers=128 * parallelism, this
+    # spiked to ~240 GB and OOM-killed the co-tenant litmus scanner. Mirror the
+    # specialist suite: divide by parallelism and cap at an absolute ceiling
+    # (~28 GB/job operating point). Override via AZOTH_CALIBRATE_EXTRACT_WORKERS_MAX.
+    extract_workers = args.workers
+    if args.workers and args.workers > 1:
+        ceiling = max(1, int(os.environ.get("AZOTH_CALIBRATE_EXTRACT_WORKERS_MAX", "16")))
+        per_job = args.workers // max(1, args.parallelism)
+        extract_workers = max(1, min(per_job, ceiling))
+        if extract_workers != args.workers:
+            LOG.info("capping per-route extraction workers at %d (requested %d, parallelism=%d, ceiling=%d)",
+                     extract_workers, args.workers, args.parallelism, ceiling)
     score_jobs = [
         {
             "db_path": args.db,
             "route": route,
             "row_index": row_index,
             "max_id": max_id,
-            "workers": args.workers,
+            "workers": extract_workers,
             "refresh": args.refresh,
             "refresh_routes": refresh_routes,
             "feature_cache_dir": feature_cache_dir,
@@ -1545,11 +1294,12 @@ def main() -> int:
     # is unaffected.
     fit_labels = labels[partition_mask]
     fit_route_scores = _apply_mask_to_routes(route_scores, partition_mask)
-    # Per-route isotonic calibrators (azoth.calibrator.isotonic.v1).  Litmus
-    # loads these next to model.txt at runtime and applies before emitting the
-    # per-route probability — closes the gap between reported AUC (post-
-    # calibration) and deployed AUC.
-    _fit_and_persist_isotonic_calibrator(fit_route_scores, fit_labels, args.azoth_root)
+    # No per-route isotonic calibrator is emitted: it was decision-irrelevant
+    # (monotonic; litmus mapped thresholds through it) and saturated the
+    # upper score tail, which also collapsed the learned blend's logit inputs.
+    # Deploy now runs on raw GBDT probabilities end to end — the level grids and
+    # blends are fit on raw scores. See the project_calibrator_decision_irrelevant
+    # memory. (litmus treats an absent calibrator.json as raw passthrough.)
     model_set_hash = _hash_model_set(args.general_scores, route_scores)
     levels: list[dict[str, Any]] = []
     if args.skip_level_calibration:
@@ -1603,7 +1353,7 @@ def main() -> int:
         "model_set_hash": model_set_hash,
         "search": {
             "method": "skipped_score_table_only" if args.skip_level_calibration else "quantile_severity_v1",
-            "objective": "per-route observed (1-q*1e-6) benign-score quantile; GPD tail extrapolation when below empirical floor",
+            "objective": "per-route (1-q*1e-6) interpolated benign-score quantile; strict levels cluster at the 1-FP ceiling below resolution (no tail extrapolation)",
         },
         "rows": int(len(labels)),
         "malware": int(np.sum(labels == 1)),
@@ -1627,6 +1377,13 @@ def main() -> int:
             for route in route_scores
         ],
         "levels": levels,
+        # The deploy tuning goal prescribed BY THIS MODEL. collimator's single
+        # knob (thresholds.DEFAULT_SEVERITY_LEVEL) is baked into the bundle here
+        # so litmus and autocollie read the operating point from the model
+        # config instead of mirroring a constant. litmus still honors an explicit
+        # CLI level; this is only the default when none is requested. Consumers
+        # fall back to their own const only for older configs lacking the field.
+        "default_severity_level": int(thresholds.DEFAULT_SEVERITY_LEVEL),
     }
     # Atomic write: config.json is consumed by litmus, validate, deploy, etc.
     bundle.atomic_write_json(args.output, payload)

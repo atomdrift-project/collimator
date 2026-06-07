@@ -1,23 +1,19 @@
-# Confirm PASS — 8ebbdabe9ffa9182 on `filetypes/msi`
+# Confirm FAIL — 8ebbdabe9ffa9182 on `filetypes/msi`
 
-Cycle `20260526T215040-confirm-8ebbdabe9ffa9182` — 2026-05-26T21:50:40Z
+Cycle `20260606T180747-confirm-8ebbdabe9ffa9182` — 2026-06-06T18:07:47Z
 
-PR_AUC held across 3 seeds (orig 1.0000)
+averaged ensemble PR_AUC regressed: 1.0000 -> 0.9850 (tol 0.0050, K=3)
 
 ## Per-seed results (3 ran)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `8ebbdabe9ffa9182` | `e93c3edc95835111` | `e93c3edc95835111` | `e93c3edc95835111` |
-| PR AUC | 1.0000 | 0.9999 | 0.9997 | 0.9999 |
-| ROC AUC | 1.0000 | 0.9973 | 0.9922 | 0.9973 |
-| Recall@3FPM | — | 0.9900 | 0.9800 | 0.9900 |
-| verdict | — | PASS | PASS | PASS |
+| key | `8ebbdabe9ffa9182` | `b0b06aaed19a6678` | `b0b06aaed19a6678` | `b0b06aaed19a6678` |
+| PR AUC | 1.0000 | 0.9850 | 0.9850 | 0.9850 |
+| ROC AUC | 1.0000 | 0.5000 | 0.5000 | 0.5000 |
+| Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
+| verdict | — | FAIL | FAIL | FAIL |
 
-## Next step
+## Disposition
 
-The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
-
-```
-make autocollie-promote KEY=8ebbdabe9ffa9182
-```
+This spec did not survive multi-seed reseeding (0/3 held). Suggest abandoning the idea or letting the LLM propose a variant.

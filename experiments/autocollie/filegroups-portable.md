@@ -580,3 +580,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T011803-filegroups-portable` — 2026-06-06T01:18:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5344f113a9f3f14a` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9955 | 0.9992 | 0.9602 | 12 | [log](out/autocollie/runs/2026-06-06T01-29-34_20260606T011803-filegroups-portable_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2b82994f58d3d3c6` | ctrl_kv15k_hardneg_train | ok | 0.9440 | 0.9911 | 0.9320 | 14 | [log](out/autocollie/runs/2026-06-06T01-29-53_20260606T011803-filegroups-portable_ctrl_kv15k_hardneg_train.log) |
+| `ed89cd4837741be2` | feat_text_metrics_encoding | ok | 0.9507 | 0.9953 | 0.9436 | 12 | [log](out/autocollie/runs/2026-06-06T01-30-12_20260606T011803-filegroups-portable_feat_text_metrics_encoding.log) |
+| `2c69b34643dab350` | feat_symbol_bigrams_tiered | ok | 0.9495 | 0.9950 | 0.9436 | 9 | [log](out/autocollie/runs/2026-06-06T01-30-27_20260606T011803-filegroups-portable_feat_symbol_bigrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_kv15k_hardneg_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Replicate best feature set with hard-negative training to boost recall@3FPM by focusing on difficult benigns, while preserving PR_AUC.
+- **`feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable text_metrics_full and text_encoding to capture obfuscation signals in portable docs/scripts, aiming to improve PR_AUC.
+- **`feat_symbol_bigrams_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 …` — Add symbol_bigrams and tiered_crit_trigrams to capture structural co-occurrence patterns, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260606T093559-filegroups-portable` — 2026-06-06T09:35:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5344f113a9f3f14a` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9955 | 0.9992 | 0.9602 | 1 | [log](out/autocollie/runs/2026-06-06T09-45-57_20260606T093559-filegroups-portable_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `facf7f19630d328b` | ctrl_best_recent_train_tune | ok | 0.9433 | 0.9852 | 0.9250 | 8 | [log](out/autocollie/runs/2026-06-06T09-46-00_20260606T093559-filegroups-portable_ctrl_best_recent_train_tune.log) |
+| `89dbb4494988222a` | feat_kv_vocab_split_15k | ok | 0.9507 | 0.9953 | 0.9436 | 8 | [log](out/autocollie/runs/2026-06-06T09-46-09_20260606T093559-filegroups-portable_feat_kv_vocab_split_15k.log) |
+| `919e3b08bc695b05` | feat_text_metrics_lowbigram | ok | 0.9382 | 0.9757 | 0.9293 | 7 | [log](out/autocollie/runs/2026-06-06T09-46-17_20260606T093559-filegroups-portable_feat_text_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_recent_train_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 …` — Replicates best recent feature_env to hit matrix cache; tunes hard_negative_weight and scale_pos_weight_mult to improve recall@3FPM by focusing on hard negatives and adjusting class balance.
+- **`feat_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split with a 15k cap to recover per-element signal from opaque blobs, aiming to boost PR_AUC by capturing fine-grained key-value patterns.
+- **`feat_text_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and lowers bigram_min_freq to 50 to capture rarer structural/textual signals, targeting PR_AUC improvement by reducing false negatives on obfuscated portable files.
+
+</details>
+

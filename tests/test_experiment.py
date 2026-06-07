@@ -5,11 +5,42 @@ from __future__ import annotations
 import numpy as np
 
 from collimator.demo import create_demo_db
+from collimator import features
 from collimator.experiment import (
     RECALL_AT_PER_100M_KS,
+    _allowlist_content_hash,
+    _matrix_cache_key,
     _recall_at_per_100M,
     sample_partitioned_reports,
 )
+
+
+def test_allowlist_content_hash_tracks_content(tmp_path) -> None:
+    f = tmp_path / "allow.json"
+    f.write_text('["a", "b"]')
+    env = {"COLLIMATOR_ALLOWED_FEATURES_FILE": str(f)}
+    h1 = _allowlist_content_hash(env)
+    assert h1  # non-empty
+    f.write_text('["a", "b", "c"]')  # same path, new content
+    assert _allowlist_content_hash(env) != h1
+    assert _allowlist_content_hash({}) == ""  # unset
+    assert _allowlist_content_hash({"COLLIMATOR_ALLOWED_FEATURES_FILE": str(tmp_path / "missing.json")}) == ""
+
+
+def test_matrix_cache_key_invalidates_on_allowlist_content(tmp_path) -> None:
+    cfg = features.feature_config_from_env()
+    f = tmp_path / "allow.json"
+    f.write_text('["a", "b"]')
+    env = {"COLLIMATOR_ALLOWED_FEATURES_FILE": str(f)}
+    k1 = _matrix_cache_key("corpusABC", cfg, env)
+    assert k1 == _matrix_cache_key("corpusABC", cfg, env)  # stable
+    f.write_text('["a", "b", "c", "d"]')  # same path, different content
+    assert _matrix_cache_key("corpusABC", cfg, env) != k1  # cache busts
+
+    # No allowlist: key must NOT depend on the content-hash path (keeps legacy
+    # cache valid) — i.e. stable and unaffected by the new logic.
+    empty_env: dict[str, str] = {}
+    assert _matrix_cache_key("corpusABC", cfg, empty_env) == _matrix_cache_key("corpusABC", cfg, empty_env)
 
 
 def test_recall_at_per_100M_perfect_separation() -> None:

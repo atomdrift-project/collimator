@@ -1,123 +1,145 @@
-# Promote REJECTED — `cc7f6a3db60edfb5` on `filetypes/c`
+# Promote PASS — `cc7f6a3db60edfb5` on `filetypes/c`
 
-Generated 2026-06-02T00:34:20Z
+Generated 2026-06-06T15:32:39Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-02T00-28-42_20260602T002829-promote-cc7f6a3db60edfb5_azoth-validate.log; tail: 2026-06-01 20:34:15,361 INFO filetypes/c/models/seed_43.txt -> seed_43.onnx OK (delta=9.72e-08 on 200 rows, 1522 ms)
-2026-06-01 20:34:15,672 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-c-cc7f6a3db60edfb5/filetypes/c/models/seed_44.onnx
-2026-06-01 20:34:15,715 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-01 20:34:16,520 INFO filetypes/c/models/seed_44.txt -> seed_44.onnx OK (delta=1.05e-07 on 200 rows, 1159 ms)
-
-converted 3/3 files (0 intentionally skipped, 0 failed)
-staged runtime azoth bundle: /tmp/tmp.DrVxFwoTKN
-azoth bundle ok: /tmp/tmp.DrVxFwoTKN
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 76 unimpacted (drift treated as pre-existing)
-
-ensemble improvements (≥0.10pp):
-  c: L4 hostile ensemble recall +3.71pp (5.28% → 8.99%)
-
-per-route improvements (≥0.10pp, informational):
-  c :: filetypes/c recall@1FP-on-slice +0.73pp (12.98% → 13.71%)
-
-23 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + bz2: L4 hostile ensemble recall +66.67pp above LWM (0.00% → 66.67%)
-  + crx: L4 hostile ensemble recall +76.92pp above LWM (0.00% → 76.92%)
-  + doc: L4 hostile ensemble recall +7.33pp above LWM (90.99% → 98.32%)
-  + docx: L4 hostile ensemble recall +9.85pp above LWM (71.59% → 81.44%)
-  + go: L4 hostile ensemble recall +2.62pp above LWM (1.78% → 4.40%)
-  + html: L4 hostile ensemble recall +51.33pp above LWM (16.67% → 68.00%)
-  + jpeg: L4 hostile ensemble recall +7.83pp above LWM (1.56% → 9.40%)
-  + lnk: L4 hostile ensemble recall +8.14pp above LWM (48.66% → 56.80%)
-  + lua: L4 hostile ensemble recall +53.85pp above LWM (0.00% → 53.85%)
-  + objc: L4 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
-  + package.json: L4 hostile ensemble recall +3.51pp above LWM (86.78% → 90.28%)
-  + pdf: L4 hostile ensemble recall +65.23pp above LWM (6.41% → 71.64%)
-  + plist: L4 hostile ensemble recall +3.12pp above LWM (2.94% → 6.06%)
-  + powershell: L4 hostile ensemble recall +19.35pp above LWM (29.62% → 48.97%)
-  + pptx: L4 hostile ensemble recall +33.99pp above LWM (9.09% → 43.08%)
-  + python-bytecode: L4 hostile ensemble recall +1.14pp above LWM (90.99% → 92.13%)
-  + rtf: L4 hostile ensemble recall +1.02pp above LWM (97.67% → 98.70%)
-  + shell: L4 hostile ensemble recall +4.09pp above LWM (82.78% → 86.88%)
-  + tar: L4 hostile ensemble recall +27.31pp above LWM (62.00% → 89.31%)
-  + vbs: L4 hostile ensemble recall +39.13pp above LWM (25.70% → 64.84%)
-  + xls: L4 hostile ensemble recall +0.98pp above LWM (92.44% → 93.42%)
-  + xlsx: L4 hostile ensemble recall +15.90pp above LWM (29.01% → 44.91%)
-  + xml: L4 hostile ensemble recall +1.98pp above LWM (2.74% → 4.72%)
-
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - c: L4 hostile ENSEMBLE recall dropped 1.32pp BELOW LOW-WATER-MARK (10.31% → 8.99%; LWM tolerance 0.90pp)
-
-compared 75 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
-
-blocked by: low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1152: azoth-validate] Error 1)
+full-train holds — PR_AUC 0.9898 -> 0.9883, AUC 0.9944 -> 0.9951, Brier 0.0305 -> 0.0234
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9898)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `cc7f6a3db60edfb5` | `6861905247893340` | `a0fe3e0aef1923c0` |
-| PR AUC | 0.9898 | 0.9877 | 0.9889 |
-| ROC AUC | 0.9944 | 0.9940 | 0.9947 |
-| F1 | 0.9365 | 0.9412 | 0.9374 |
+| key | `cc7f6a3db60edfb5` | `298ad3fcb7a39f6b` | `fb44852e839f79ab` |
+| PR AUC | 0.9898 | 0.9884 | 0.9883 |
+| ROC AUC | 0.9944 | 0.9951 | 0.9951 |
+| F1 | 0.9365 | 0.9295 | 0.9413 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-02T00-28-42_20260602T002829-promote-cc7f6a3db60edfb5_azoth-validate.log; tail: 2026-06-01 20:34:15,361 INFO filetypes/c/models/seed_43.txt -> seed_43.onnx OK (delta=9.72e-08 on 200 rows, 1522 ms)
-2026-06-01 20:34:15,672 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-c-cc7f6a3db60edfb5/filetypes/c/models/seed_44.onnx
-2026-06-01 20:34:15,715 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-01 20:34:16,520 INFO filetypes/c/models/seed_44.txt -> seed_44.onnx OK (delta=1.05e-07 on 200 rows, 1159 ms)
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-converted 3/3 files (0 intentionally skipped, 0 failed)
-staged runtime azoth bundle: /tmp/tmp.DrVxFwoTKN
-azoth bundle ok: /tmp/tmp.DrVxFwoTKN
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 76 unimpacted (drift treated as pre-existing)
+The candidate bundle lives at:
 
-ensemble improvements (≥0.10pp):
-  c: L4 hostile ensemble recall +3.71pp (5.28% → 8.99%)
+```
+/home/t/collimator/out/models/azoth-candidate-filetypes-c-cc7f6a3db60edfb5
+```
 
-per-route improvements (≥0.10pp, informational):
-  c :: filetypes/c recall@1FP-on-slice +0.73pp (12.98% → 13.71%)
+## Candidate knobs (raw EXP_* form)
 
-23 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + bz2: L4 hostile ensemble recall +66.67pp above LWM (0.00% → 66.67%)
-  + crx: L4 hostile ensemble recall +76.92pp above LWM (0.00% → 76.92%)
-  + doc: L4 hostile ensemble recall +7.33pp above LWM (90.99% → 98.32%)
-  + docx: L4 hostile ensemble recall +9.85pp above LWM (71.59% → 81.44%)
-  + go: L4 hostile ensemble recall +2.62pp above LWM (1.78% → 4.40%)
-  + html: L4 hostile ensemble recall +51.33pp above LWM (16.67% → 68.00%)
-  + jpeg: L4 hostile ensemble recall +7.83pp above LWM (1.56% → 9.40%)
-  + lnk: L4 hostile ensemble recall +8.14pp above LWM (48.66% → 56.80%)
-  + lua: L4 hostile ensemble recall +53.85pp above LWM (0.00% → 53.85%)
-  + objc: L4 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
-  + package.json: L4 hostile ensemble recall +3.51pp above LWM (86.78% → 90.28%)
-  + pdf: L4 hostile ensemble recall +65.23pp above LWM (6.41% → 71.64%)
-  + plist: L4 hostile ensemble recall +3.12pp above LWM (2.94% → 6.06%)
-  + powershell: L4 hostile ensemble recall +19.35pp above LWM (29.62% → 48.97%)
-  + pptx: L4 hostile ensemble recall +33.99pp above LWM (9.09% → 43.08%)
-  + python-bytecode: L4 hostile ensemble recall +1.14pp above LWM (90.99% → 92.13%)
-  + rtf: L4 hostile ensemble recall +1.02pp above LWM (97.67% → 98.70%)
-  + shell: L4 hostile ensemble recall +4.09pp above LWM (82.78% → 86.88%)
-  + tar: L4 hostile ensemble recall +27.31pp above LWM (62.00% → 89.31%)
-  + vbs: L4 hostile ensemble recall +39.13pp above LWM (25.70% → 64.84%)
-  + xls: L4 hostile ensemble recall +0.98pp above LWM (92.44% → 93.42%)
-  + xlsx: L4 hostile ensemble recall +15.90pp above LWM (29.01% → 44.91%)
-  + xml: L4 hostile ensemble recall +1.98pp above LWM (2.74% → 4.72%)
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ALLOWED_FEATURES_FILE=/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=2
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0.03
+EXP_HARD_NEGATIVE_WEIGHT=8
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=0
+EXP_KV_VOCAB_MAX=5000
+EXP_LEARNING_RATE=0.05
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=128
+EXP_NUM_THREADS=8
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=0
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
 
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - c: L4 hostile ENSEMBLE recall dropped 1.32pp BELOW LOW-WATER-MARK (10.31% → 8.99%; LWM tolerance 0.90pp)
+## To deploy (HUMAN)
 
-compared 75 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+Read `/home/t/collimator/out/models/azoth-candidate-filetypes-c-cc7f6a3db60edfb5/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
 
-blocked by: low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-c-cc7f6a3db60edfb5
+```
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1152: azoth-validate] Error 1)
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

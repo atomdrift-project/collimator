@@ -116,7 +116,9 @@ def _score_partition(
     return {
         "row_ids": np.array([s[0] for s in sample_buffer], dtype=np.int64),
         "sha256": np.array([s[1] for s in sample_buffer]),
-        "paths": np.array([s[2] for s in sample_buffer]),
+        # paths intentionally dropped: never read back downstream, and the
+        # <U2162 array dominated the file (~58GB of 61GB). sha256 + canonical_shas
+        # identify rows; resolve a path on demand from the DB if ever needed.
         "scores": np.array([s[3] for s in sample_buffer], dtype=np.int32),
         "labels": labels,
         "probs": probs,
@@ -128,7 +130,7 @@ def _score_partition(
 
 def _combine(*parts: dict[str, Any]) -> dict[str, Any]:
     """Concatenate fold partitions in row_id order. Accepts 2+ parts."""
-    keys = ("row_ids", "sha256", "paths", "scores", "labels", "probs", "canonical_shas")
+    keys = ("row_ids", "sha256", "scores", "labels", "probs", "canonical_shas")
     nonempty = [p for p in parts if len(p["row_ids"]) > 0]
     if not nonempty:
         return {k: np.array([]) for k in keys}
@@ -267,7 +269,6 @@ def main() -> int:
         args.output,
         row_ids=combined["row_ids"],
         sha256=combined["sha256"],
-        paths=combined["paths"],
         scores=combined["scores"],
         labels=combined["labels"],
         probs=combined["probs"],

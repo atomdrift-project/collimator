@@ -1,6 +1,6 @@
 # Confirm PASS — 63797c6adc48afda on `filetypes/zip`
 
-Cycle `20260601T152644-confirm-63797c6adc48afda` — 2026-06-01T15:26:44Z
+Cycle `20260606T140950-confirm-63797c6adc48afda` — 2026-06-06T14:09:50Z
 
 PR_AUC held across 3 seeds (orig 0.9997)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 0.9997)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `63797c6adc48afda` | `7bc3d410e1797d60` | `7bc3d410e1797d60` | `7bc3d410e1797d60` |
-| PR AUC | 0.9997 | 0.9996 | 0.9996 | 0.9996 |
-| ROC AUC | 0.9964 | 0.9948 | 0.9950 | 0.9950 |
+| key | `63797c6adc48afda` | `d2ac5eab009654b9` | `d2ac5eab009654b9` | `d2ac5eab009654b9` |
+| PR AUC | 0.9997 | 0.9996 | 0.9995 | 0.9996 |
+| ROC AUC | 0.9964 | 0.9955 | 0.9954 | 0.9961 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 

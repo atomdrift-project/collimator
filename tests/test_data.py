@@ -305,8 +305,10 @@ def test_retry_pg_connect_gives_up_after_max_attempts(monkeypatch) -> None:
     monkeypatch.setitem(_sys.modules, "psycopg", fake)
     monkeypatch.setattr(data_mod, "_DB_CONNECT_BASE_DELAY_S", 0.001)
     monkeypatch.setattr(data_mod, "_DB_CONNECT_MAX_DELAY_S", 0.001)
-    monkeypatch.setattr(data_mod, "_DB_CONNECT_MAX_ATTEMPTS", 3)
+    # Tiny total budget so the retry loop gives up almost immediately.
+    monkeypatch.setattr(data_mod, "_DB_CONNECT_MAX_TOTAL_S", 0.02)
 
     with pytest.raises(FakeOpError, match="down"):
         data_mod._retry_pg_connect("postgres://x/y")
-    assert fake.attempts == 3, "must give up after _DB_CONNECT_MAX_ATTEMPTS"
+    # Must have retried at least once before exhausting the time budget.
+    assert fake.attempts >= 2, "must retry before giving up within the time budget"

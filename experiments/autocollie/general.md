@@ -614,3 +614,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T021721-general` — 2026-06-06T02:17:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1892b3a81a651262` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9984 | 0.9983 | 0.9840 | 102 | [log](out/autocollie/runs/2026-06-06T02-22-58_20260606T021721-general_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3be8898d10f6eb23` | general_control_training_tweak | ok | 0.9818 | 0.9786 | 0.9096 | 122 | [log](out/autocollie/runs/2026-06-06T02-24-40_20260606T021721-general_general_control_training_tweak.log) |
+| `07c2c2518509fa9e` | general_kv_vocab_textenc | ok | 0.9812 | 0.9779 | 0.9108 | 91 | [log](out/autocollie/runs/2026-06-06T02-26-42_20260606T021721-general_general_kv_vocab_textenc.log) |
+| `095957e6f3b9e502` | general_symbol_vocab_low_bigram_freq | ok | 0.9824 | 0.9795 | 0.9106 | 70 | [log](out/autocollie/runs/2026-06-06T02-28-13_20260606T021721-general_general_symbol_vocab_low_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`general_control_training_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by increasing tree complexity and regularization to better separate tail malware without overfitting, while keeping PR_AUC flat.
+- **`general_kv_vocab_textenc`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and text_encoding to capture structured configuration and encoding anomalies specific to malware payloads.
+- **`general_symbol_vocab_low_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=500 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by adding symbol_vocab and lowering bigram_min_freq to capture rare but high-signal import patterns and symbol co-occurrences.
+
+</details>
+
+## Cycle `20260606T073458-general` — 2026-06-06T07:34:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1892b3a81a651262` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9984 | 0.9983 | 0.9840 | 2 | [log](out/autocollie/runs/2026-06-06T07-42-23_20260606T073458-general_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c325051f47b52564` | control_training_capacity | ok | 0.9828 | 0.9798 | 0.9088 | 154 | [log](out/autocollie/runs/2026-06-06T07-42-25_20260606T073458-general_control_training_capacity.log) |
+| `09d49ba286aea9e3` | research_vocab_kv_symbol_textenc | ok | 0.9822 | 0.9792 | 0.9110 | 98 | [log](out/autocollie/runs/2026-06-06T07-44-59_20260606T073458-general_research_vocab_kv_symbol_textenc.log) |
+| `86506251d8004598` | ngram_expansion_hardneg | ok | 0.9867 | 0.9843 | 0.9097 | 110 | [log](out/autocollie/runs/2026-06-06T07-46-37_20260606T073458-general_ngram_expansion_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_training_capacity`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Targets PR_AUC stability and recall@3FPM baseline validation by replicating the best recent feature_env while varying only training capacity knobs.
+- **`research_vocab_kv_symbol_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC and recall@3FPM improvement by enabling kv_vocab, symbol_vocab, and text_encoding to capture richer lexical and structural signals that reduce false negatives on obfuscated malware.
+- **`ngram_expansion_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets PR_AUC gains and recall@3FPM sharpening by expanding n-gram coverage with lower frequency floors and enabling trigram pools, paired with hard-negative training to refine the decision boundary.
+
+</details>
+

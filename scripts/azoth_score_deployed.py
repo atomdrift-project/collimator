@@ -562,12 +562,34 @@ def main() -> int:
     if not route_dir.is_dir():
         raise SystemExit(f"deployed route dir not found: {route_dir}")
 
-    model_hash = _deployed_model_hash(route_dir)
-    cache_path = args.cache_root / _route_slug(args.route) / f"{model_hash[:16]}.npz"
-    sidecar_path = _sidecar_path(cache_path)
     file_types = args.file_type or _file_types_for_route(
         args.route, route_dir, args.deploy_root,
     )
+
+    # A route with no specialist model — suite-skipped raw-compressed filetypes
+    # (zst/gz/xz/tar) or any route that fell below the min-bad/min-good floor —
+    # is served by the GENERAL model at inference, so baseline its rows against
+    # general rather than dying with "no model files". This gives autocollie a
+    # real apples-to-apples baseline (what the deployed ensemble actually scores
+    # these rows) instead of an exit-2 that drops it to the weaker legacy
+    # promoted_baselines comparison. file_types stays the route's own — we score
+    # the route's rows, just through the general model.
+    model_dir = route_dir
+    if not _model_files(route_dir):
+        general_dir = args.deploy_root / "general"
+        if not _model_files(general_dir):
+            raise SystemExit(
+                f"no model files under {route_dir} and no general fallback at {general_dir}"
+            )
+        LOG.info(
+            "route %s has no specialist model; baselining its rows against general",
+            args.route,
+        )
+        model_dir = general_dir
+
+    model_hash = _deployed_model_hash(model_dir)
+    cache_path = args.cache_root / _route_slug(args.route) / f"{model_hash[:16]}.npz"
+    sidecar_path = _sidecar_path(cache_path)
 
     # Cache state machine, in order of preference:
     #   1. v2 cache + sidecar present → check sidecar.max_id_at_populate
@@ -620,7 +642,7 @@ def main() -> int:
     if needs_full_populate:
         LOG.info("cache miss: %s", cache_path)
         sidecar = _populate_cache(
-            route_dir=route_dir,
+            route_dir=model_dir,
             db_path=args.db,
             file_types=file_types,
             workers=args.workers,
@@ -636,7 +658,7 @@ def main() -> int:
         )
         sidecar = _extend_cache(
             cache_path=cache_path,
-            route_dir=route_dir,
+            route_dir=model_dir,
             db_path=args.db,
             file_types=file_types,
             workers=args.workers,
@@ -674,7 +696,7 @@ def main() -> int:
                 len(missing), int(row_ids.size),
             )
             new_probs = _extract_and_predict(
-                route_dir=route_dir, db_path=args.db,
+                route_dir=model_dir, db_path=args.db,
                 row_ids=missing, workers=args.workers,
             )
             new_row_ids = np.asarray(missing, dtype=np.int64)

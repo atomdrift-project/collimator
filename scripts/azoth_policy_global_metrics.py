@@ -203,10 +203,10 @@ def main() -> int:
             "below this many absolute FPs on the evaluation corpus. The "
             "minimum-resolvable level is corpus-size dependent: a level "
             "with budget N means we need a benign corpus of size N×1e8/N = "
-            "1e8 just to see one FP, and below this floor the calibrator "
-            "produces a tail-extrapolated threshold (see DESIGN.md) that "
-            "doesn't reflect any empirical FP count. Gating on those "
-            "is checking the extrapolation, not the model. Default 5 "
+            "1e8 just to see one FP, and below this floor the calibrator's "
+            "strict levels all collapse to the 1-FP ceiling (~1 FP regardless "
+            "of target), so they don't reflect any empirical FP count. Gating "
+            "on those is checking the resolution floor, not the model. Default 5 "
             "treats anything with <5 expected FPs as informational. "
             "Set to 0 to disable the resolution floor and gate every level "
             "≤ --budget-gate-max-level."
@@ -257,8 +257,8 @@ def main() -> int:
             #      headroom; calibrator can't always hit a target up there.
             #   2. Below empirical FP resolution: corpus too small to see
             #      `target_per_million × corpus_benign / 1e6` FPs reliably,
-            #      so the calibrator emits a tail-extrapolated threshold and
-            #      gating fires on extrapolation noise, not the model.
+            #      so strict levels collapse to the ~1-FP ceiling and gating
+            #      fires on the resolution floor, not the model.
             #   3. (Implicit) level isn't in the policy at all — `_decisions`
             #      returns no hits, which passes by default; tracked elsewhere.
             below_resolution = int(m["budget"]) < min_fp_resolution

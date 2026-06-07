@@ -578,3 +578,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T011803-filetypes-kotlin` — 2026-06-06T01:18:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1d2fe30dda2cdabd` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9961 | 0.8650 | 0.9928 | 80 | [log](out/autocollie/runs/2026-06-06T01-31-46_20260606T011803-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b462d716d2f01b07` | kotlin_control_train_tweak | ok | 0.9795 | 0.9855 | 0.7436 | 66 | [log](out/autocollie/runs/2026-06-06T01-33-25_20260606T011803-filetypes-kotlin_kotlin_control_train_tweak.log) |
+| `b5c1c127c401ed12` | kotlin_feat_kv_textenc_vocab | ok | 0.9845 | 0.9892 | 0.7436 | 49 | [log](out/autocollie/runs/2026-06-06T01-34-39_20260606T011803-filetypes-kotlin_kotlin_feat_kv_textenc_vocab.log) |
+| `54c057e3ece28f7f` | kotlin_feat_sym_vocab_textmetrics | ok | 0.9845 | 0.9888 | 0.7433 | 32 | [log](out/autocollie/runs/2026-06-06T01-35-29_20260606T011803-filetypes-kotlin_kotlin_feat_sym_vocab_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Control spec replicating best feature_env to test if increasing num_leaves and lowering LR improves PR_AUC without hurting ROC_AUC.
+- **`kotlin_feat_kv_textenc_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Enables kv_vocab and text_encoding research families to capture structural and encoding signals, aiming to boost recall@3FPM and PR_AUC.
+- **`kotlin_feat_sym_vocab_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc …` — Tests symbol_vocab and text_metrics_full to add lexical and document-structure signals, targeting PR_AUC gains while monitoring ROC_AUC stability.
+
+</details>
+
+## Cycle `20260606T074722-filetypes-kotlin` — 2026-06-06T07:47:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1d2fe30dda2cdabd` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9961 | 0.8650 | 0.9928 | 1 | [log](out/autocollie/runs/2026-06-06T07-55-46_20260606T074722-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c340f17be051a107` | kotlin_control_train_leaves128_lr003 | ok | 0.9804 | 0.9859 | 0.7435 | 4 | [log](out/autocollie/runs/2026-06-06T07-55-48_20260606T074722-filetypes-kotlin_kotlin_control_train_leaves128_lr003.log) |
+| `edd62d41fb05f03e` | kotlin_feat_kv_textenc_vocab | ok | 0.9843 | 0.9891 | 0.7439 | 23 | [log](out/autocollie/runs/2026-06-06T07-55-53_20260606T074722-filetypes-kotlin_kotlin_feat_kv_textenc_vocab.log) |
+| `cec3f0f0be453934` | kotlin_feat_sym_vocab_textmetrics | ok | 0.9845 | 0.9888 | 0.7433 | 26 | [log](out/autocollie/runs/2026-06-06T07-56-17_20260606T074722-filetypes-kotlin_kotlin_feat_sym_vocab_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_train_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity with num_leaves=128 and lowering learning_rate to 0.03, allowing finer gradient steps to better rank tail malware while keeping the baseline feature surface constant for cache hits.
+- **`kotlin_feat_kv_textenc_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab and text_encoding to capture obfuscated string patterns and metadata common in Kotlin malware, while disabling symbols to isolate the signal.
+- **`kotlin_feat_sym_vocab_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling symbol_vocab and text_metrics_full to leverage import co-occurrence and structural text statistics, which help separate malicious Kotlin payloads from benign scripts at the strict-FP tail.
+
+</details>
+

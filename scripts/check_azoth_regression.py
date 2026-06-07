@@ -538,16 +538,10 @@ def main() -> int:
         for line in route_drops:
             print(line)
 
-    if preexisting_drift:
-        print()
-        print(
-            f"{len(preexisting_drift)} pre-existing drift(s) on unimpacted "
-            f"filetypes (informational — not caused by this promote, "
-            f"see --source-bundle impact analysis):",
-        )
-        for line in preexisting_drift:
-            print(f"  ~ {line}")
-
+    # Pre-existing drift on unimpacted filetypes is intentionally NOT printed:
+    # it's noise the operator can't act on (by definition not caused by this
+    # promote — it's run-to-run instability on routes this candidate didn't
+    # touch). Still computed above in case future logic wants it; just not dumped.
     if lwm_wins:
         print()
         print(

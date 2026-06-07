@@ -21,6 +21,7 @@ import xgboost as xgb
 log = logging.getLogger(__name__)
 
 _device_cache: str | None = None
+_lgb_cuda_cache: bool | None = None
 
 
 def booster_device(model: xgb.XGBClassifier) -> str:
@@ -57,6 +58,35 @@ def detect_device() -> str:
     return _device_cache
 
 
+def detect_lightgbm_cuda() -> bool:
+    """True only if LightGBM was actually built with CUDA.
+
+    ``detect_device`` probes XGBoost, but the azoth learner is LightGBM — and a
+    box can have XGBoost-CUDA while its LightGBM is CPU-only. ``pick_device``
+    would then return ``cuda`` and LightGBM aborts with "CUDA Tree Learner was
+    not enabled in this build". This is latent until a matrix gets narrow/dense
+    enough to clear pick_device's GPU gates (e.g. after feature pruning drops
+    n_features below the wide-CPU threshold), so probe LightGBM directly.
+    """
+    global _lgb_cuda_cache
+    if _lgb_cuda_cache is not None:
+        return _lgb_cuda_cache
+    try:
+        import lightgbm as lgb  # noqa: PLC0415
+        X = np.zeros((8, 1), dtype=np.float32)
+        y = np.array([0, 1, 0, 1, 0, 1, 0, 1], dtype=np.float32)
+        lgb.train(
+            {"objective": "binary", "device_type": "cuda", "verbose": -1,
+             "num_iterations": 1, "min_data_in_leaf": 1, "min_data_in_bin": 1},
+            lgb.Dataset(X, label=y),
+        )
+        _lgb_cuda_cache = True
+    except Exception:
+        _lgb_cuda_cache = False
+    log.info("lightgbm cuda available: %s", _lgb_cuda_cache)
+    return _lgb_cuda_cache
+
+
 def pick_device(
     n_rows: int | None = None,
     n_features: int | None = None,
@@ -75,7 +105,12 @@ def pick_device(
         return "cpu"
     cells = n_rows * n_features
     density = (nnz / cells) if nnz is not None and cells else 1.0
-    if density < 0.05:
+    # Benchmarked: at ~7% density (250k×12k, the post-pruning azoth shape) the
+    # CUDA tree learner is no faster than a 16-thread CPU — GBDT histogram
+    # construction is memory-bound/scatter-heavy, not the dense-FLOP work GPUs
+    # win at, and the CPU path exploits sparsity. So require genuinely dense
+    # (>=15%) before paying for GPU; realistic azoth matrices stay on CPU.
+    if density < 0.15:
         log.info("device=cpu (sparse: %.3f%% density)", density * 100)
         return "cpu"
     if n_rows < 50_000:
@@ -156,6 +191,12 @@ def create_classifier(
             raise ImportError(
                 "azoth requires LightGBM; run `make venv` to install dependencies",
             ) from exc
+        # pick_device()/detect_device() reflect XGBoost's CUDA support; LightGBM
+        # may be CPU-only on the same host, so verify before committing to GPU
+        # (otherwise LightGBM aborts: "CUDA Tree Learner was not enabled").
+        if device in {"cuda", "gpu"} and not detect_lightgbm_cuda():
+            log.warning("LightGBM not built with CUDA; using CPU (pick_device chose %s)", device)
+            device = "cpu"
         device_params: dict[str, object] = {}
         if device and device not in {"cpu", "auto"}:
             if device not in {"cuda", "gpu"}:

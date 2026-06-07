@@ -417,7 +417,55 @@ def _write_slice_markdown(path: Path, config: dict[str, Any], rows: list[dict[st
     path.write_text("\n".join(lines) + "\n")
 
 
-def _write_markdown(path: Path, config: dict[str, Any], rows: list[dict[str, Any]]) -> None:
+def _ceiling_diagnostics(
+    score_table: np.lib.npyio.NpzFile, *, ceiling: float = 0.99,
+) -> list[dict[str, Any]]:
+    """Per-route benign mass at the score ceiling.
+
+    Benigns a route scores >= ``ceiling`` are tied at the top with malware: no
+    threshold can separate them, so the route is forced to a 0-FP / low-recall
+    operating point (and contributes nothing but dead weight the policy routes
+    around). A high count marks an *overconfident specialist* — the failure mode
+    where general scores the same files benign but the specialist pins them at
+    ~1.0. This is a diagnostic to *surface* such routes; autocollie retunes them
+    on its existing recall@L / AUC objective (the fix shows up as a positive
+    per-route delta there, so no separate optimization target is needed).
+    """
+    labels = score_table["labels"].astype(np.int8)
+    names = [str(name) for name in score_table["route_names"]]
+    scores = score_table["scores"]
+    benign = labels == 0
+    out: list[dict[str, Any]] = []
+    for idx, name in enumerate(names):
+        probs = scores[idx]
+        mask = (~np.isnan(probs)) & benign
+        n_benign = int(np.sum(mask))
+        if n_benign == 0:
+            continue
+        bp = probs[mask]
+        at_ceiling = int(np.sum(bp >= ceiling))
+        out.append(
+            {
+                "route": name,
+                "n_benign": n_benign,
+                "benign_at_ceiling": at_ceiling,
+                "frac": at_ceiling / n_benign,
+                "max_benign": float(np.max(bp)),
+            },
+        )
+    # Sort by fraction first: it isolates overconfidence (general carries a
+    # small ceiling count but a tiny fraction — not a defect), whereas raw count
+    # just tracks route size.
+    out.sort(key=lambda row: (-row["frac"], -row["benign_at_ceiling"]))
+    return out
+
+
+def _write_markdown(
+    path: Path,
+    config: dict[str, Any],
+    rows: list[dict[str, Any]],
+    ceiling_rows: list[dict[str, Any]] | None = None,
+) -> None:
     lines = [
         "# Azoth Route Diagnostics",
         "",
@@ -437,6 +485,32 @@ def _write_markdown(path: Path, config: dict[str, Any], rows: list[dict[str, Any
             thresholds = level[severity].get("thresholds", {})
             selected = ", ".join(thresholds) if thresholds else "-"
             lines.append(f"| {level['level']} | {severity} | {selected} |")
+
+    # Overconfident specialists: benigns scored at the ceiling (>=0.99) are tied
+    # with malware at the top, so no threshold separates them — the route is
+    # pinned to 0-FP/low-recall. Surface them here; autocollie retunes them on
+    # its existing objective (the fix lands as a positive recall@L / AUC delta).
+    flagged = [r for r in (ceiling_rows or []) if r["benign_at_ceiling"] > 0]
+    if flagged:
+        lines.extend(
+            [
+                "",
+                "## Benign mass at score ceiling (overconfident specialists)",
+                "",
+                "Benigns a route scores >= 0.99 are tied with malware at the top: "
+                "no threshold separates them, forcing the route to a 0-FP / "
+                "low-recall operating point. High counts mark specialists to "
+                "retune (general scores the same files benign).",
+                "",
+                "| Route | Benigns | >=0.99 | frac | max benign |",
+                "| --- | ---: | ---: | ---: | ---: |",
+            ],
+        )
+        for r in flagged[:25]:
+            lines.append(
+                f"| {r['route']} | {r['n_benign']} | {r['benign_at_ceiling']} | "
+                f"{r['frac'] * 100:.2f}% | {_fmt(r['max_benign'], 4)} |",
+            )
 
     # Headline levels in the new per-100M grid.
     interesting = [
@@ -509,7 +583,8 @@ def main() -> int:
     if not rows:
         raise SystemExit("no route diagnostics rows generated")
     _write_csv(args.csv, rows)
-    _write_markdown(args.output, config, rows)
+    ceiling_rows = _ceiling_diagnostics(score_table)
+    _write_markdown(args.output, config, rows, ceiling_rows)
     slice_rows = _slice_rows(config, score_table)
     _write_slice_csv(args.slice_csv, slice_rows)
     _write_slice_markdown(args.slice_output, config, slice_rows)

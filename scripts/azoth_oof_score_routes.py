@@ -284,7 +284,6 @@ def _score_route_shared_extract(
         results.append({
             "row_ids": np.array([s[0] for s in sample_buffer], dtype=np.int64),
             "sha256": np.array([s[1] for s in sample_buffer]),
-            "paths": np.array([s[2] for s in sample_buffer]),
             "scores": np.array([s[3] for s in sample_buffer], dtype=np.int32),
             "labels": np.concatenate(acc["labels"]).astype(np.int8),
             "probs": np.concatenate(acc["probs"]).astype(np.float32),
@@ -319,7 +318,6 @@ def _score_rows(
         return {
             "row_ids": np.array([], dtype=np.int64),
             "sha256": empty_str,
-            "paths": empty_str,
             "scores": np.array([], dtype=np.int32),
             "labels": np.array([], dtype=np.int8),
             "probs": np.array([], dtype=np.float32),
@@ -350,7 +348,6 @@ def _score_rows(
     return {
         "row_ids": np.array([s[0] for s in sample_buffer], dtype=np.int64),
         "sha256": np.array([s[1] for s in sample_buffer]),
-        "paths": np.array([s[2] for s in sample_buffer]),
         "scores": np.array([s[3] for s in sample_buffer], dtype=np.int32),
         "labels": np.concatenate(label_batches).astype(np.int8),
         "probs": np.concatenate(pred_batches).astype(np.float32),
@@ -388,7 +385,7 @@ def _split_by_fold(
 
 def _combine(parts: Iterable[dict[str, np.ndarray]]) -> dict[str, np.ndarray]:
     """Concatenate per-fold score dicts and sort by row_id."""
-    keys = ("row_ids", "sha256", "paths", "scores", "labels", "probs", "canonical_shas")
+    keys = ("row_ids", "sha256", "scores", "labels", "probs", "canonical_shas")
     parts = [p for p in parts if len(p["row_ids"])]
     if not parts:
         return {k: np.array([]) for k in keys}
@@ -412,7 +409,6 @@ def _write_route(
         out_path,
         row_ids=combined["row_ids"],
         sha256=combined["sha256"],
-        paths=combined["paths"],
         scores=combined["scores"],
         labels=combined["labels"],
         probs=combined["probs"],

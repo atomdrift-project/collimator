@@ -804,3 +804,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T011803-filetypes-jpeg` — 2026-06-06T01:18:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2f43da6d8173d444` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9772 | 0.9879 | 0.8696 | 12 | [log](out/autocollie/runs/2026-06-06T01-32-03_20260606T011803-filetypes-jpeg_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9c70cf9e73544af3` | jpeg_control_train_tuning | ok | 0.3181 | 0.6992 | 0.3732 | 24 | [log](out/autocollie/runs/2026-06-06T01-32-21_20260606T011803-filetypes-jpeg_jpeg_control_train_tuning.log) |
+| `545ac972afc30815` | jpeg_feat_kv_vocab_enable | ok | 0.2912 | 0.6149 | 0.3575 | 20 | [log](out/autocollie/runs/2026-06-06T01-32-52_20260606T011803-filetypes-jpeg_jpeg_feat_kv_vocab_enable.log) |
+| `8f4ff2dbf42c3a5e` | jpeg_feat_low_bigram_freq_extreme | ok | 0.2933 | 0.6118 | 0.3679 | 28 | [log](out/autocollie/runs/2026-06-06T01-33-14_20260606T011803-filetypes-jpeg_jpeg_feat_low_bigram_freq_extreme.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_tuning`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Replicates best feature_env for matrix cache hit; adjusts hard_negative_weight and scale_pos_weight_mult to improve recall@3FPM by sharpening separation on hard negatives and down-weighting benigns.
+- **`jpeg_feat_kv_vocab_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enables kv_vocab to capture JPEG metadata patterns; aims to boost PR_AUC by adding discriminative key-value signal while keeping ROC_AUC flat.
+- **`jpeg_feat_low_bigram_freq_extreme`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Lowers bigram_min_freq to 200 and enables extreme_features to capture rare structural anomalies; targets recall@3FPM gain by surfacing tail malware patterns.
+
+</details>
+
+## Cycle `20260606T073458-filetypes-jpeg` — 2026-06-06T07:34:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2f43da6d8173d444` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9772 | 0.9879 | 0.8696 | 6 | [log](out/autocollie/runs/2026-06-06T07-43-32_20260606T073458-filetypes-jpeg_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f7b0231ab8a270a6` | jpeg_control_hardneg_tuning | ok | 0.3169 | 0.7221 | 0.3697 | 4 | [log](out/autocollie/runs/2026-06-06T07-43-41_20260606T073458-filetypes-jpeg_jpeg_control_hardneg_tuning.log) |
+| `f19b1daf15758331` | jpeg_feat_kv_vocab_enable | ok | 0.2912 | 0.6149 | 0.3575 | 15 | [log](out/autocollie/runs/2026-06-06T07-43-46_20260606T073458-filetypes-jpeg_jpeg_feat_kv_vocab_enable.log) |
+| `e4d43f78b609b5ff` | jpeg_feat_text_metrics_full | ok | 0.2883 | 0.5913 | 0.3592 | 25 | [log](out/autocollie/runs/2026-06-06T07-44-02_20260606T073458-filetypes-jpeg_jpeg_feat_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_hardneg_tuning`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Aims to improve PR_AUC by increasing hard_negative_weight and num_leaves to better separate malicious JPEGs from benign lookalikes while keeping the feature surface identical to the recent control for a cache hit.
+- **`jpeg_feat_kv_vocab_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Aims to improve PR_AUC by enabling kv_vocab to capture structured metadata and EXIF/IPTC key-value patterns that distinguish maliciously crafted JPEGs from benign ones.
+- **`jpeg_feat_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to detect embedded obfuscated payloads and script-like structures within JPEG data streams.
+
+</details>
+

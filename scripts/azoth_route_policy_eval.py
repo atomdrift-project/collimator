@@ -108,52 +108,10 @@ def _pr_auc(probs: np.ndarray, labels: np.ndarray) -> float:
 _BLEND_LOGIT_EPS = 1e-6
 
 
-def _load_route_calibrator(
-    azoth_root: Path, route_name: str,
-) -> tuple[np.ndarray, np.ndarray] | None:
-    """Load a route's isotonic calibrator. Mirrors the helper in
-    azoth_route_policy_search so the eval's blend evaluation uses the
-    same prob space the blend was fit in (calibrated, not raw)."""
-    if route_name == "general":
-        path = azoth_root / "general" / "calibrator.json"
-    elif route_name.startswith("filegroups/") or route_name.startswith("filetypes/"):
-        path = azoth_root / route_name / "calibrator.json"
-    else:
-        return None
-    if not path.is_file():
-        return None
-    with open(path) as f:
-        cal = json.load(f)
-    x = np.asarray(cal["x"], dtype=np.float64)
-    y = np.asarray(cal["y"], dtype=np.float64)
-    if len(x) < 2 or len(x) != len(y):
-        return None
-    return (x, y)
-
-
-def _apply_isotonic_clipped(
-    probs: np.ndarray, breakpoints: tuple[np.ndarray, np.ndarray],
-) -> np.ndarray:
-    """Linear-interpolate raw probs through isotonic breakpoints; clip
-    out-of-range to boundary y-values. NaNs pass through unchanged.
-    Matches litmus's `predict_calibrated` behavior so eval-side blend
-    semantics align with deploy-side."""
-    x_breaks, y_breaks = breakpoints
-    out = np.full_like(probs, np.nan, dtype=np.float32)
-    valid = ~np.isnan(probs)
-    if not np.any(valid):
-        return out
-    raw = probs[valid].astype(np.float64)
-    out[valid] = np.interp(raw, x_breaks, y_breaks).astype(np.float32)
-    return out
-
-
 def _deployed_blend_metrics(
     probs_by_route: dict[str, np.ndarray],
     labels: np.ndarray,
     blend: dict[str, Any],
-    *,
-    calibrators: dict[str, tuple[np.ndarray, np.ndarray]] | None = None,
 ) -> dict[str, Any]:
     """Learned-blend semantics:
     ``sigmoid(intercept + sum(w_i * logit(clip(p_i)))) >= threshold``.
@@ -175,16 +133,9 @@ def _deployed_blend_metrics(
         probs = probs_by_route.get(r)
         if probs is None:
             return {"tp": 0, "fp": 0, "recall": math.nan, "active_routes": []}
-        # Apply isotonic calibration before logit. The blend was fit on
-        # calibrated probs in azoth_route_policy_search (via
-        # _build_calibrated_route_probs) so that the same blend math
-        # applied to litmus's calibrated runtime probs gives the same
-        # answer. Without this step the eval would feed RAW probs through
-        # weights tuned for CALIBRATED inputs and the verdict would drift.
-        # Routes without a calibrator pass through unchanged — matches
-        # the policy_search-side fallback.
-        if calibrators is not None and r in calibrators:
-            probs = _apply_isotonic_clipped(probs, calibrators[r])
+        # The blend is fit on RAW route probs (azoth_route_policy_search), and
+        # litmus feeds raw probs at serving now that the isotonic calibrator is
+        # gone — so eval uses raw here too, matching deploy exactly.
         p = np.clip(
             probs.astype(np.float64),
             _BLEND_LOGIT_EPS,
@@ -216,8 +167,6 @@ def _deployed_or_metrics(
     labels: np.ndarray,
     thresholds: dict[str, float],
     blend: dict[str, Any] | None = None,
-    *,
-    calibrators: dict[str, tuple[np.ndarray, np.ndarray]] | None = None,
 ) -> dict[str, Any]:
     """OR-rule across routes at the deployed per-route thresholds.
 
@@ -231,9 +180,7 @@ def _deployed_or_metrics(
     inactive" in route_policies.json.
     """
     if blend:
-        return _deployed_blend_metrics(
-            probs_by_route, labels, blend, calibrators=calibrators,
-        )
+        return _deployed_blend_metrics(probs_by_route, labels, blend)
     n_rows = len(labels)
     hit = np.zeros(n_rows, dtype=bool)
     active_routes: list[str] = []
@@ -574,16 +521,6 @@ def main() -> int:
     route_names = [str(v) for v in score_table["route_names"]]
     route_name_to_idx = {name: idx for idx, name in enumerate(route_names)}
 
-    # Load per-route isotonic calibrators once so blend evaluation can apply
-    # them before logit-stacking. Routes without a calibrator fall back to
-    # the raw prob — they'll be slightly off if the policy used them in a
-    # blend, but the cost is low because the relevant blends (PE, batch,
-    # xlsx, ole...) all have calibrators on disk.
-    route_calibrators: dict[str, tuple[np.ndarray, np.ndarray]] = {}
-    for route_name in route_names:
-        bps = _load_route_calibrator(args.azoth_root, route_name)
-        if bps is not None:
-            route_calibrators[route_name] = bps
     scores = score_table["scores"]
 
     with open(args.route_policies) as f:
@@ -649,7 +586,6 @@ def main() -> int:
                         labels_slice,
                         thresholds,
                         blend=blend,
-                        calibrators=route_calibrators,
                     )
                     deployed_or_by_level[(level_no, severity)] = or_metrics
                     # Headline summary: prefer L50 hostile (the deployment

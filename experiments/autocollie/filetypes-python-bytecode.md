@@ -458,3 +458,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T014801-filetypes-python-bytecode` — 2026-06-06T01:48:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `44c1c326a82c66e0` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9998 | 0.9993 | 0.9941 | 15 | [log](out/autocollie/runs/2026-06-06T01-56-12_20260606T014801-filetypes-python-bytecode_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `52194a8b0ac57926` | pybc_ctrl_hardneg_lr_tune | ok | 0.9790 | 0.9947 | 0.9753 | 21 | [log](out/autocollie/runs/2026-06-06T01-56-33_20260606T014801-filetypes-python-bytecode_pybc_ctrl_hardneg_lr_tune.log) |
+| `57d5ecb48ea865e6` | pybc_feat_kv_vocab_lowfreq | ok | 0.9785 | 0.9943 | 0.9738 | 15 | [log](out/autocollie/runs/2026-06-06T01-56-57_20260606T014801-filetypes-python-bytecode_pybc_feat_kv_vocab_lowfreq.log) |
+| `759b100edecb8de0` | pybc_feat_textenc_symbol_vocab | ok | 0.9799 | 0.9954 | 0.9738 | 15 | [log](out/autocollie/runs/2026-06-06T01-57-14_20260606T014801-filetypes-python-bytecode_pybc_feat_textenc_symbol_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_hardneg_lr_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Replicates best feature surface; tests hard-negative weighting and lower LR to improve recall@3 FP/M while preserving PR AUC.
+- **`pybc_feat_kv_vocab_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enables kv_vocab with lower min_freq to capture rare bytecode metadata, aiming to boost PR AUC and recall@3 FP/M.
+- **`pybc_feat_textenc_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Adds text_encoding and symbol_vocab to capture structural and encoding anomalies, targeting PR AUC improvement.
+
+</details>
+
+## Cycle `20260606T073458-filetypes-python-bytecode` — 2026-06-06T07:34:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `44c1c326a82c66e0` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9998 | 0.9993 | 0.9941 | 2 | [log](out/autocollie/runs/2026-06-06T07-43-07_20260606T073458-filetypes-python-bytecode_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `1224b6f5636361c6` | pybc_ctrl_textenc_metrics_leaves128 | ok | 0.9799 | 0.9957 | 0.9738 | 32 | [log](out/autocollie/runs/2026-06-06T07-43-10_20260606T073458-filetypes-python-bytecode_pybc_ctrl_textenc_metrics_leaves128.log) |
+| `0f43294e5e0e24ce` | pybc_feat_kv_vocab_highcap | ok | 0.9810 | 0.9964 | 0.9738 | 26 | [log](out/autocollie/runs/2026-06-06T07-43-45_20260606T073458-filetypes-python-bytecode_pybc_feat_kv_vocab_highcap.log) |
+| `6f822a66d8106732` | pybc_feat_symbol_vocab_trigrams | ok | 0.9802 | 0.9960 | 0.9738 | 34 | [log](out/autocollie/runs/2026-06-06T07-44-15_20260606T073458-filetypes-python-bytecode_pybc_feat_symbol_vocab_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_textenc_metrics_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Control spec replicating best feature surface (text_metrics_full + text_encoding) while tuning training knobs (num_leaves=128, reg_lambda=1.0) to improve PR_AUC and recall@3FPM without changing matrix cache.
+- **`pybc_feat_kv_vocab_highcap`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Enables kv_vocab with higher cap (kv_vocab_max=15000) and lowers kv_min_freq to 5 to capture rare bytecode key-value patterns, aiming to boost PR_AUC and recall@3FPM.
+- **`pybc_feat_symbol_vocab_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=score,clusters …` — Adds symbol_vocab and tiered_crit_trigrams to capture co-occurrence patterns in bytecode imports/traits, targeting PR_AUC gains while keeping ROC_AUC flat.
+
+</details>
+

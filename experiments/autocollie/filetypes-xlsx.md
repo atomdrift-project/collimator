@@ -262,3 +262,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T011803-filetypes-xlsx` — 2026-06-06T01:18:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7b1f326c891917f7` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9974 | 0.5000 | 0.9987 | 14 | [log](out/autocollie/runs/2026-06-06T01-30-50_20260606T011803-filetypes-xlsx_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `90b32f18c19c5e6b` | xlsx_control_scale_pos_075 | ok | 0.9913 | 0.7906 | 0.4811 | 17 | [log](out/autocollie/runs/2026-06-06T01-31-10_20260606T011803-filetypes-xlsx_xlsx_control_scale_pos_075.log) |
+| `267abab4f3300d85` | xlsx_kv_textmetrics_full | ok | 0.9933 | 0.8239 | 0.4810 | 23 | [log](out/autocollie/runs/2026-06-06T01-31-32_20260606T011803-filetypes-xlsx_xlsx_kv_textmetrics_full.log) |
+| `ae86dc4689440926` | xlsx_tiered_trigrams_obj | ok | 0.9935 | 0.8268 | 0.4810 | 21 | [log](out/autocollie/runs/2026-06-06T01-31-58_20260606T011803-filetypes-xlsx_xlsx_tiered_trigrams_obj.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_scale_pos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicate recent best feature set but lower scale_pos_weight_mult to 0.75 to reduce benign FPs and improve recall@3FPM.
+- **`xlsx_kv_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture XLSX metadata and document structure, aiming to boost PR_AUC with new rank signal.
+- **`xlsx_tiered_trigrams_obj`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Add tiered_crit_trigrams and objective_trigrams to capture multi-step attack chains in spreadsheets, targeting PR_AUC gain while preserving ROC_AUC.
+
+</details>
+
+## Cycle `20260606T092604-filetypes-xlsx` — 2026-06-06T09:26:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7b1f326c891917f7` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9974 | 0.5000 | 0.9987 | 1 | [log](out/autocollie/runs/2026-06-06T09-37-46_20260606T092604-filetypes-xlsx_inherit_from_filetypes_tar_1f9a08a6.log) |
+
+Rejected before run:
+
+- `xlsx_control_tiered_trigrams_stable` — training.min_child_samples: 5 below min 10
+- `xlsx_textmetrics_encoding_research` — training.min_child_samples: 5 below min 10
+- `xlsx_kv_vocab_shape_structural` — training.min_child_samples: 5 below min 10
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

@@ -1870,3 +1870,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260606T011803-filegroups-documents` — 2026-06-06T01:18:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `def0848db885ef54` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 0.9995 | 0.9899 | 41 | [log](out/autocollie/runs/2026-06-06T01-33-13_20260606T011803-filegroups-documents_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b38512db398c9a6f` | docs_control_hardneg_scalepos | ok | 0.9162 | 0.8572 | 0.8380 | 25 | [log](out/autocollie/runs/2026-06-06T01-34-09_20260606T011803-filegroups-documents_docs_control_hardneg_scalepos.log) |
+| `00b38136ee1a052f` | docs_text_metrics_kv_vocab | ok | 0.9166 | 0.8549 | 0.8377 | 27 | [log](out/autocollie/runs/2026-06-06T01-34-41_20260606T011803-filegroups-documents_docs_text_metrics_kv_vocab.log) |
+| `3dfdcab73b7fccf6` | docs_lowfreq_bigrams_obj_trigrams | ok | 0.9198 | 0.8654 | 0.8371 | 18 | [log](out/autocollie/runs/2026-06-06T01-35-11_20260606T011803-filegroups-documents_docs_lowfreq_bigrams_obj_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_hardneg_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=15000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates recent best feature set while tuning hard_negative_weight and scale_pos_weight_mult to improve recall@3FPM by better separating hard negatives from malware.
+- **`docs_text_metrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_metrics_full, text_encoding, and kv_vocab to capture document obfuscation and key-value structure, aiming to increase PR_AUC by adding high-signal features for complex document malware.
+- **`docs_lowfreq_bigrams_obj_trigrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Lowers bigram_min_freq to 25 and enables objective_trigrams and tiered_crit_trigrams to capture rare malicious sequences, aiming to boost recall@3FPM by recovering tail signal from low-frequency patterns.
+
+</details>
+
+## Cycle `20260606T110458-filegroups-documents` — 2026-06-06T11:04:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `def0848db885ef54` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 0.9995 | 0.9899 | 1 | [log](out/autocollie/runs/2026-06-06T11-10-31_20260606T110458-filegroups-documents_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `e1f35cec7f265f81` | docs_control_hardneg_scalepos | ok | 0.9268 | 0.8760 | 0.8381 | 13 | [log](out/autocollie/runs/2026-06-06T11-10-33_20260606T110458-filegroups-documents_docs_control_hardneg_scalepos.log) |
+| `5e43f72aad3899c3` | docs_text_metrics_kv_vocab_lowfreq | ok | 0.9232 | 0.8735 | 0.8377 | 16 | [log](out/autocollie/runs/2026-06-06T11-10-47_20260606T110458-filegroups-documents_docs_text_metrics_kv_vocab_lowfreq.log) |
+| `2edeb1a407b3944b` | docs_textenc_kv_split_tiered_trigrams | ok | 0.9250 | 0.8768 | 0.8369 | 11 | [log](out/autocollie/runs/2026-06-06T11-11-04_20260606T110458-filegroups-documents_docs_textenc_kv_split_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_hardneg_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best feature_env to hit matrix cache; tunes hard_negative_weight and scale_pos_weight_mult to improve recall@3FPM by better separating tail malware from benigns.
+- **`docs_text_metrics_kv_vocab_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to boost PR_AUC by adding high-signal structural features.
+- **`docs_textenc_kv_split_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds text_encoding and kv_value_split alongside tiered_crit_trigrams to improve recall@3FPM by capturing encoding anomalies and split KV tokens common in malicious docs.
+
+</details>
+

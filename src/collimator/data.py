@@ -151,41 +151,54 @@ def _is_pg(dsn: Path | str) -> bool:
     return s.startswith(("postgres://", "postgresql://"))
 
 
-# Connection-establishment retry: exponential backoff with jitter, capped at
-# ~2 minutes total so a long-running training cycle doesn't hang forever on
-# a permanently-down database. Only applies to the initial connect — once a
-# connection is open, mid-stream failures still propagate to the caller
-# (long streaming queries can't resume without losing iterator position).
-_DB_CONNECT_MAX_ATTEMPTS = 6
-_DB_CONNECT_BASE_DELAY_S = 1.0
-_DB_CONNECT_MAX_DELAY_S = 30.0
+# Connection-establishment retry: exponential backoff with jitter, bounded by a
+# total time BUDGET (not a fixed attempt count). The DB is a local replica, so a
+# connect failure is almost always transient pool exhaustion during a heavy
+# parallel training cycle (many workers each open a repeatable-read snapshot, so
+# the ~max_connections slots fill up). Routes finish and release slots over
+# minutes, so we wait patiently — first backoff ~4s, exponential from there —
+# rather than giving up in ~1 minute. Capped at ~2h total so a genuinely-down
+# database still fails eventually. Only applies to the initial connect — once a
+# connection is open, mid-stream failures still propagate to the caller (long
+# streaming queries can't resume without losing iterator position). Override via
+# COLLIMATOR_DB_CONNECT_{BASE_DELAY,MAX_DELAY,MAX_TOTAL}_S.
+_DB_CONNECT_BASE_DELAY_S = float(os.getenv("COLLIMATOR_DB_CONNECT_BASE_DELAY_S", "4.0"))
+_DB_CONNECT_MAX_DELAY_S = float(os.getenv("COLLIMATOR_DB_CONNECT_MAX_DELAY_S", "300.0"))
+_DB_CONNECT_MAX_TOTAL_S = float(os.getenv("COLLIMATOR_DB_CONNECT_MAX_TOTAL_S", "7200.0"))  # ~2h
 
 
 def _retry_pg_connect(dsn: str, **connect_kwargs):
-    """Open a psycopg connection with exponential backoff + jitter on transient
-    errors. Raises the last error after ``_DB_CONNECT_MAX_ATTEMPTS``."""
+    """Open a psycopg connection, retrying transient OperationalErrors with
+    exponential backoff + jitter until ``_DB_CONNECT_MAX_TOTAL_S`` of cumulative
+    wait, then raising the last error."""
     import psycopg  # noqa: PLC0415
 
+    deadline = time.monotonic() + _DB_CONNECT_MAX_TOTAL_S
     last_err: Exception | None = None
-    for attempt in range(1, _DB_CONNECT_MAX_ATTEMPTS + 1):
+    attempt = 0
+    while True:
         try:
             return psycopg.connect(dsn, **connect_kwargs)
         except psycopg.OperationalError as e:
             last_err = e
-            if attempt == _DB_CONNECT_MAX_ATTEMPTS:
+            attempt += 1
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
                 break
-            # Exponential backoff capped at _DB_CONNECT_MAX_DELAY_S, with
-            # full jitter (Decorrelated Jitter is ideal but full-jitter is
-            # simpler and good enough for a single client retrying).
+            # Exponential backoff capped at _DB_CONNECT_MAX_DELAY_S, with equal
+            # jitter ([base/2, base]) — keeps each wait substantial so we don't
+            # spam the local replica, while still decorrelating the many training
+            # workers that hit pool exhaustion in lockstep.
             base = min(_DB_CONNECT_BASE_DELAY_S * (2 ** (attempt - 1)),
                        _DB_CONNECT_MAX_DELAY_S)
-            delay = random.uniform(0, base)
+            delay = min(base * random.uniform(0.5, 1.0), remaining)
             log.warning(
-                "psycopg connect failed (attempt %d/%d): %s — retrying in %.1fs",
-                attempt, _DB_CONNECT_MAX_ATTEMPTS, e, delay,
+                "psycopg connect failed (attempt %d): %s — retrying in %.0fs "
+                "(%.0fs of %.0fs budget left)",
+                attempt, e, delay, remaining, _DB_CONNECT_MAX_TOTAL_S,
             )
             time.sleep(delay)
-    assert last_err is not None  # for type checker; loop guarantees this
+    assert last_err is not None  # loop only breaks after a failure
     raise last_err
 
 
@@ -324,8 +337,20 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str,
 # Minimum hopper score for a sample to be considered trainable / evaluable.
 # Controls the SQL-level filter applied to _TRAINABLE_QUERY and _METADATA_QUERY.
 # Override via COLLIMATOR_MIN_SAMPLE_SCORE env var for experiments.
-# v15 used >= 8, v16 lowered to >= 3 (balanced ~1:1 bad:good pool).
-_default_min = 3
+# v15 used >= 8; v16 >= 3; v17 >= 1; briefly back to >= 3, now 0 (no benign
+# filter). This filter applies UNIFORMLY to good and bad, so it is the BENIGN
+# floor — and a low-score benign is still benign. score=0 is where the clean
+# curated corpus lives (good/foraged, good/harvest, distro packages, pypi,
+# rubygems — ~2.1M benigns cleave found nothing notable in), so excluding it
+# removes the easiest benigns and biases the model trigger-happy. Measured: at
+# floor 1, filetypes/rtf kept 76 benigns vs ~5000 malware and collapsed to AUC
+# 0.50 / 100% benign-FP; at floor 0 (449 benigns) it is perfect. Earlier floor 3
+# dropped 76-100% of benigns on low-volume routes (makefile 2942->240, rtf
+# 85->20) and produced 1.0-prob FPs on trivial files. The label noise that
+# motivated any floor lives on the HOSTILE side — gated separately by
+# EXP_MIN_MALWARE_SCORE / min_malware_training_score (train-only, malware-only).
+# See [[project_score_gate_and_replay_override]] and [[project_allowlist_litmus_layout]].
+_default_min = 0
 try:
     MIN_SAMPLE_SCORE = int(os.getenv("COLLIMATOR_MIN_SAMPLE_SCORE", str(_default_min)))
 except ValueError:
