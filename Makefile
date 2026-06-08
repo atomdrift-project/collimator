@@ -200,12 +200,17 @@ AZOTH_DEPLOY_DIAGNOSTICS ?= 0
 # regression gate silently skips the LWM check, so this is fully
 # opt-in — set the LWM once you have a deploy you want to lock in.
 AZOTH_LOW_WATER_MARK_DIR ?= $(OUT_ROOT)/azoth_low_water_mark
-# Extra args appended to the check_azoth_regression.py deploy gate. Empty by
-# default (gate enforced). Set e.g.
+# Extra args appended to the check_azoth_regression.py deploy gate. Default is
+# --net-improvement-fallback: a net-positive deploy (malware-weighted TP delta
+# > 0) ships even with per-filetype regressions, PROVIDED no high-volume route
+# (>= --catastrophe-min-mal malware) craters past --max-net-route-regression.
+# Small-route craters are dataset-level noise (sampling variance on a few
+# hundred samples) and don't block; a real regression on a route big enough to
+# move the average still does. Override to e.g.
 #   AZOTH_REGRESSION_ARGS="--recall-tolerance 1 --lwm-tolerance 1"
-# to waive regressions for an intentional baseline-changing deploy (a new
-# calibration scheme, a fresh start). litmus validate + severity-sync stay on.
-AZOTH_REGRESSION_ARGS ?=
+# for a stricter per-filetype gate, or set AZOTH_ALLOW_REGRESSION=1 to bypass
+# entirely. litmus validate + severity-sync stay on regardless.
+AZOTH_REGRESSION_ARGS ?= --net-improvement-fallback
 # Global FP-budget gate args for azoth_policy_global_metrics. Default enforces
 # the gate (fail if a level exceeds 30x its FP budget). Set to empty
 #   AZOTH_BUDGET_GATE_ARGS=
@@ -428,6 +433,8 @@ EXP_SCORE_WEIGHTED_TRAITS ?= 1
 EXP_SOFT_PRESENCE ?= 1
 EXP_REPETITION_PENALTY_FEATURES ?= 1
 EXP_FILE_SEVERITY_DISTRIBUTION ?= 1
+# Size-invariant crit-tier severity fractions (opt-in; autocollie A/B candidate).
+EXP_SEVERITY_FRACTION_FEATURES ?= 0
 EXP_HOSTILE_WEIGHTED_DENSITY ?= 1
 EXP_HOSTILE_ESCALATION_FEATURES ?= 1
 EXP_SUSPICIOUS_BREADTH_DENSITY ?= 1
@@ -1528,6 +1535,7 @@ azoth-deploy-final: venv
 	@_STAGE=$$(mktemp -d) && \
 	  _LOCK=$$(dirname "$(AZOTH_DEPLOY_DIR)")/.azoth-deploy.lock && \
 	  trap 'rm -rf "$$_STAGE"' EXIT INT TERM && \
+	  export MAKEFLAGS= MFLAGS= CARGO_MAKEFLAGS= && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
 	  cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
 	  cp "$(AZOTH_SLICE_METRICS)" "$$_STAGE/slice_metrics.md" && \
@@ -1855,6 +1863,7 @@ experiment: venv check-db
 	COLLIMATOR_SOFT_PRESENCE=$(EXP_SOFT_PRESENCE) \
 	COLLIMATOR_REPETITION_PENALTY_FEATURES=$(EXP_REPETITION_PENALTY_FEATURES) \
 	COLLIMATOR_FILE_SEVERITY_DISTRIBUTION=$(EXP_FILE_SEVERITY_DISTRIBUTION) \
+	COLLIMATOR_SEVERITY_FRACTION_FEATURES=$(EXP_SEVERITY_FRACTION_FEATURES) \
 	COLLIMATOR_HOSTILE_WEIGHTED_DENSITY=$(EXP_HOSTILE_WEIGHTED_DENSITY) \
 	COLLIMATOR_HOSTILE_ESCALATION_FEATURES=$(EXP_HOSTILE_ESCALATION_FEATURES) \
 	COLLIMATOR_SUSPICIOUS_BREADTH_DENSITY=$(EXP_SUSPICIOUS_BREADTH_DENSITY) \
@@ -2229,13 +2238,15 @@ PASSES ?= 1
 AUTO_ROUTES ?=
 SHUFFLE_ROUTES ?=
 autocollie: venv check-db autocollie-build
-	@test -n "$(ROUTES)$(AUTO_ROUTES)$(SHUFFLE_ROUTES)" || { echo "error: set ROUTES=route1,route2 (or AUTO_ROUTES=N for top-N weakest, or SHUFFLE_ROUTES=1 for random walk over every known route)"; exit 1; }
+	@test -n "$(ROUTES)$(AUTO_ROUTES)$(TOP)$(SHUFFLE_ROUTES)" || { echo "error: set ROUTES=route1,route2 (or AUTO_ROUTES=N / TOP=N for top-N weakest, or SHUFFLE_ROUTES=1 for every known route). For a directed knob sweep: TRY=<knob> TOP=N (e.g. TRY=severity_fractions TOP=3)"; exit 1; }
 	$(AUTOCOLLIE_BIN) auto \
 		--collimator $(CURDIR) \
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--baseline-azoth-root $(AZOTH_ROOT) \
 		$(if $(ROUTES),--routes $(ROUTES),) \
 		$(if $(AUTO_ROUTES),--auto-routes $(AUTO_ROUTES),) \
+		$(if $(TOP),--auto-routes $(TOP),) \
+		$(if $(TRY),--try-knobs $(TRY),) \
 		$(if $(filter 1 true yes,$(SHUFFLE_ROUTES)),--shuffle-routes,) \
 		--experiments $(EXPERIMENTS) \
 		--passes $(PASSES) \

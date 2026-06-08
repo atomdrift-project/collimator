@@ -549,6 +549,12 @@ class FeatureConfig:
     include_hostile_weighted_density: bool
     include_repetition_penalty_features: bool
     include_file_severity_distribution: bool
+    # Size-invariant severity FRACTIONS (crit-tier count / total findings) +
+    # malicious:mundane ratio + crit4-present flag. Unlike the per-KB density
+    # features, these don't read sparsity as innocence — a tiny file that is
+    # mostly suspicious findings (e.g. an npm dropper: a few crit-4 supply-chain
+    # traits and nothing else) scores HIGH. Opt-in (autocollie A/B candidate).
+    include_severity_fractions: bool
     include_score_weighted_traits: bool
     include_soft_presence: bool
     include_blindfold: bool
@@ -725,6 +731,10 @@ def feature_config_from_env() -> FeatureConfig:
     include_file_severity_distribution = os.getenv("COLLIMATOR_FILE_SEVERITY_DISTRIBUTION", "1").strip().lower() in {
         "1", "true", "yes", "on",
     }
+    # Default OFF — opt-in experimental feature group (autocollie A/B candidate).
+    include_severity_fractions = os.getenv("COLLIMATOR_SEVERITY_FRACTION_FEATURES", "0").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
     include_score_weighted_traits = os.getenv("COLLIMATOR_SCORE_WEIGHTED_TRAITS", "1").strip().lower() in {
         "1", "true", "yes", "on",
     }
@@ -765,6 +775,7 @@ def feature_config_from_env() -> FeatureConfig:
         include_hostile_escalation_features=include_hostile_escalation_features,
         include_hostile_weighted_density=include_hostile_weighted_density,
         include_repetition_penalty_features=include_repetition_penalty_features,
+        include_severity_fractions=include_severity_fractions,
         include_file_severity_distribution=include_file_severity_distribution,
         include_score_weighted_traits=include_score_weighted_traits,
         include_soft_presence=include_soft_presence,
@@ -1571,6 +1582,14 @@ def _build_feature_names(
                 f"agg:top{config.top_k_risk_files}_file_hostile_density_sum",
                 f"agg:top{config.top_k_risk_files}_file_suspicious_category_breadth_sum",
                 f"agg:top{config.top_k_risk_files}_file_hostile_category_breadth_sum",
+            ])
+        if config.include_severity_fractions:
+            feature_names.extend([
+                "agg:crit3_finding_fraction",    # (crit>=3) / total findings — size-invariant
+                "agg:crit4_finding_fraction",    # (crit>=4) / total findings
+                "agg:hostile_finding_fraction",  # (crit>=5) / total findings
+                "agg:severe_to_mundane_ratio",   # (crit>=3) / (crit<3) — malicious:mundane
+                "agg:crit4_present",             # 1.0 if any crit>=4 finding, else 0.0
             ])
         if config.include_hostile_escalation_features:
             feature_names.extend([
@@ -2626,6 +2645,7 @@ def _apply_aggregate_features(
     include_hostile_weighted_density: bool,
     include_repetition_penalty: bool,
     include_file_severity_distribution: bool,
+    include_severity_fractions: bool = False,
     top_k_risk_files_min_crit: int = 0,
 ) -> None:
     """Group 3: aggregate path breadth and concentration features."""
@@ -2708,6 +2728,21 @@ def _apply_aggregate_features(
     _assign(vec, lookup.get("agg:hostile_finding_ratio"), summary.hostile_finding_count / total_kb)
     _assign(vec, lookup.get("agg:unique_suspicious_ids_log"), math.log1p(summary.unique_suspicious_ids) / math.log1p(total_kb))
     _assign(vec, lookup.get("agg:unique_hostile_ids_log"), math.log1p(summary.unique_hostile_ids) / math.log1p(total_kb))
+
+    if include_severity_fractions:
+        # Size-invariant severity fractions: count of crit>=N findings as a
+        # share of ALL findings (not per-KB). A minimal dropper — a few crit-4
+        # supply-chain traits and almost no other findings — scores HIGH here,
+        # where the per-KB density features (which assume malware is "busy")
+        # read its sparsity as benign. See the npm-dropper SHAP analysis.
+        total_findings = max(summary.filtered_finding_count, 1)
+        mundane = max(summary.filtered_finding_count - summary.notable_finding_count, 1)
+        _assign(vec, lookup.get("agg:crit3_finding_fraction"), summary.notable_finding_count / total_findings)
+        _assign(vec, lookup.get("agg:crit4_finding_fraction"), summary.suspicious_finding_count / total_findings)
+        _assign(vec, lookup.get("agg:hostile_finding_fraction"), summary.hostile_finding_count / total_findings)
+        _assign(vec, lookup.get("agg:severe_to_mundane_ratio"), summary.notable_finding_count / mundane)
+        _assign(vec, lookup.get("agg:crit4_present"), 1.0 if summary.suspicious_finding_count > 0 else 0.0)
+
     total_kb = max(sum(_float(file_entry.get("sz", 0.0)) for file_entry in files) / 1024.0, 1.0)
     topk_features = _topk_file_risk_features(
         files,
@@ -4126,6 +4161,7 @@ def _extract_into(
             config.include_hostile_weighted_density,
             config.include_repetition_penalty_features,
             config.include_file_severity_distribution,
+            config.include_severity_fractions,
             top_k_risk_files_min_crit=config.top_k_risk_files_min_crit,
         )
         if config.include_hostile_depth_weight:

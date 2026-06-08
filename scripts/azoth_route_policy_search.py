@@ -416,6 +416,11 @@ def _joint_or_search(
 
 
 _LEARNED_BLEND_LOGIT_EPS = 1e-6
+# A blend route is dropped when its fitted weight falls below -_BLEND_MIN_WEIGHT.
+# The small tolerance keeps numerically-trivial negatives (a route contributing
+# ~nothing) from triggering a needless refit, while still catching real vetoes
+# (the pe route's saturated `general` weight was -0.23 — two orders larger).
+_BLEND_MIN_WEIGHT = 1e-3
 
 
 def _logit_stack(
@@ -502,19 +507,45 @@ def _fit_learned_blend(
     # loss doesn't get dominated by easy benigns. L2 with C=1 is mild —
     # with only len(present_routes) features we're nowhere near overfit
     # territory at typical slice sizes.
-    clf = LogisticRegression(
-        C=1.0, class_weight="balanced", solver="liblinear", max_iter=200,
-    ).fit(x_fit, y_fit)
-    weights = clf.coef_[0].astype(np.float64)
+    #
+    # Non-negativity: drop-and-refit any route whose weight comes out negative.
+    # In a log-odds OR-style ensemble a negative weight means "this route being
+    # MORE confident-malicious LOWERS the blend" — never desirable. The LR can
+    # learn one when a route saturates high on benigns (so conditioning on the
+    # other routes it looks anti-correlated), but it then buries true positives
+    # where that route is the strongest signal — e.g. a confident `general`
+    # score on a PE the specialists alone don't push over threshold. We'd rather
+    # drop the offending route than let it veto detections. Iterate, removing the
+    # single most-negative route and refitting, until every survivor is >= 0. A
+    # blend needs >= 2 routes; if it collapses below that, return None and let
+    # the single-route candidates (filetype_only, group_only, ...) cover it.
+    keep = list(range(len(present_routes)))
+    while True:
+        clf = LogisticRegression(
+            C=1.0, class_weight="balanced", solver="liblinear", max_iter=200,
+        ).fit(x_fit[:, keep], y_fit)
+        w = clf.coef_[0].astype(np.float64)
+        worst = int(np.argmin(w))
+        if w[worst] >= -_BLEND_MIN_WEIGHT:
+            break
+        if len(keep) <= 2:
+            return None
+        del keep[worst]
+    weights = w
     intercept = float(clf.intercept_[0])
+    kept_routes = tuple(present_routes[i] for i in keep)
+    sub = stacked[:, keep]
+    # Recompute the valid-row mask over only the kept columns: dropping a route
+    # can make rows valid that were excluded solely for that route's NaN.
+    valid_row = ~np.any(np.isnan(sub), axis=1)
     # Apply the blend to every valid slice row, NaN otherwise.
-    z = stacked @ weights + intercept
+    z = sub @ weights + intercept
     blend = np.full(len(labels), np.nan, dtype=np.float64)
     blend[valid_row] = 1.0 / (1.0 + np.exp(-z[valid_row]))
     return {
         "blend_score": blend,
         "valid_row": valid_row,
-        "present_routes": present_routes,
+        "present_routes": kept_routes,
         "weights": weights,
         "intercept": intercept,
     }

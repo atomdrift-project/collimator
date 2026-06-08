@@ -574,3 +574,117 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T020818-filetypes-csharp` — 2026-06-08T02:08:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ecc504a347513000` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9903 | 0.9933 | 0.9556 | 23 | [log](out/autocollie/runs/2026-06-08T02-15-41_20260608T020818-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `1ad0bdbd9f7dcd01` | csharp_control_hardneg_tune | ok | 0.4850 | 0.9142 | 0.4133 | 48 | [log](out/autocollie/runs/2026-06-08T02-16-24_20260608T020818-filetypes-csharp_csharp_control_hardneg_tune.log) |
+| `788ba857804909cb` | csharp_feat_kv_vocab_split | ok | 0.4904 | 0.9138 | 0.3960 | 28 | [log](out/autocollie/runs/2026-06-08T02-17-24_20260608T020818-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+| `5bc5b70ed88f88d9` | csharp_feat_textmetrics_lowbigram | ok | 0.4904 | 0.9139 | 0.3970 | 21 | [log](out/autocollie/runs/2026-06-08T02-17-57_20260608T020818-filetypes-csharp_csharp_feat_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_hardneg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target PR_AUC and recall@3FPM by optimizing hard-negative sampling and tree depth on the current best feature surface to reduce overfitting at the strict-FP tail.
+- **`csharp_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target PR_AUC by enabling KV vocab and value splitting to capture structured C# attributes, namespaces, and configuration patterns that isolate malicious obfuscation signals.
+- **`csharp_feat_textmetrics_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Target recall@3FPM and PR_AUC by surfacing structural text anomalies and encoding artifacts via text_metrics_full, while lowering bigram_min_freq to capture rare malicious C# idioms.
+
+</details>
+
+## Cycle `20260608T070048-filetypes-csharp` — 2026-06-08T07:00:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ecc504a347513000` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9903 | 0.9933 | 0.9556 | 5 | [log](out/autocollie/runs/2026-06-08T07-10-20_20260608T070048-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `53bf87f8eac06cfe` | csharp_control_train_tune | ok | 0.5126 | 0.9230 | 0.4082 | 7 | [log](out/autocollie/runs/2026-06-08T07-10-31_20260608T070048-filetypes-csharp_csharp_control_train_tune.log) |
+| `f85428866419f592` | csharp_feat_kv_vocab_split | ok | 0.4904 | 0.9138 | 0.3960 | 30 | [log](out/autocollie/runs/2026-06-08T07-10-42_20260608T070048-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+| `359b22d30203cdec` | csharp_feat_textmetrics_lowbigram | ok | 0.4844 | 0.9136 | 0.3960 | 13 | [log](out/autocollie/runs/2026-06-08T07-11-13_20260608T070048-filetypes-csharp_csharp_feat_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best feature set for matrix cache hit; tune hard_negative_weight and scale_pos_weight_mult to improve recall@3 FP/M while preserving PR_AUC.
+- **`csharp_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable kv_vocab and kv_value_split to extract structured assembly metadata, aiming to boost PR_AUC with high-signal key-value features.
+- **`csharp_feat_textmetrics_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text_metrics_full and lower bigram_min_freq to capture obfuscation signals and rarer code patterns, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260608T080508-filetypes-csharp` — 2026-06-08T08:05:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ecc504a347513000` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9903 | 0.9933 | 0.9556 | 3 | [log](out/autocollie/runs/2026-06-08T08-14-21_20260608T080508-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d9da64084cebb75c` | csharp_control_train_tune_v2 | ok | 0.4849 | 0.9115 | 0.4000 | 9 | [log](out/autocollie/runs/2026-06-08T08-14-26_20260608T080508-filetypes-csharp_csharp_control_train_tune_v2.log) |
+| `f1f3404e963bbf90` | csharp_feat_symbol_vocab_bigrams | ok | 0.4832 | 0.9139 | 0.3971 | 30 | [log](out/autocollie/runs/2026-06-08T08-14-37_20260608T080508-filetypes-csharp_csharp_feat_symbol_vocab_bigrams.log) |
+| `d052a2208ce93af3` | csharp_feat_lowbigram_trigrams | ok | 0.4836 | 0.9133 | 0.4000 | 28 | [log](out/autocollie/runs/2026-06-08T08-15-10_20260608T080508-filetypes-csharp_csharp_feat_lowbigram_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_train_tune_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity with higher num_leaves and more estimators while adding L2 regularization to prevent overfitting on the small malware set.
+- **`csharp_feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Aims to boost recall@3FPM by enabling symbol_vocab and symbol_bigrams to capture malicious API co-occurrence patterns specific to .NET/PE binaries, which are common in C# malware.
+- **`csharp_feat_lowbigram_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Aims to improve PR_AUC by lowering bigram_min_freq to 200 to capture rarer malicious patterns and enabling objective_trigrams to provide deeper behavioral context without excessive noise.
+
+</details>
+
+## Cycle `20260608T095856-filetypes-csharp` — 2026-06-08T09:58:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ecc504a347513000` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9903 | 0.9933 | 0.9556 | 3 | [log](out/autocollie/runs/2026-06-08T10-08-03_20260608T095856-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2e5198ab67665457` | csharp_control_train_tune_v3 | ok | 0.4904 | 0.9138 | 0.3960 | 12 | [log](out/autocollie/runs/2026-06-08T10-08-10_20260608T095856-filetypes-csharp_csharp_control_train_tune_v3.log) |
+| `e6e3b408d79dd432` | csharp_feat_kv_vocab_split | ok | 0.4832 | 0.9139 | 0.3971 | 7 | [log](out/autocollie/runs/2026-06-08T10-08-24_20260608T095856-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+| `1e8c59abfbb868be` | csharp_feat_lowbigram_tiered_trigrams | ok | 0.4884 | 0.9140 | 0.4010 | 40 | [log](out/autocollie/runs/2026-06-08T10-08-35_20260608T095856-filetypes-csharp_csharp_feat_lowbigram_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_train_tune_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates recent best feature surface to isolate training capacity gains on PR_AUC via increased leaves and estimators.
+- **`csharp_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enables kv_vocab and kv_value_split to capture structured key-value patterns in C# assemblies, aiming to improve PR_AUC by adding discriminative signal for obfuscated payloads.
+- **`csharp_feat_lowbigram_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lowers bigram frequency floor and enables tiered critical trigrams to capture rarer but high-signal code patterns, targeting recall@3 FP/M improvement while maintaining PR_AUC.
+
+</details>
+
+## Cycle `20260608T114425-filetypes-csharp` — 2026-06-08T11:44:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `31323f3534358eee` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9903 | 0.9933 | 0.9556 | 32 | [log](out/autocollie/runs/2026-06-08T11-51-15_20260608T114425-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9ecca08bf934357d` | csharp_control_train_tune_v4 | ok | 0.4634 | 0.9114 | 0.3980 | 24 | [log](out/autocollie/runs/2026-06-08T11-51-52_20260608T114425-filetypes-csharp_csharp_control_train_tune_v4.log) |
+| `7ae8368cf58c01ad` | csharp_feat_kv_vocab_split | ok | 0.4832 | 0.9139 | 0.3971 | 37 | [log](out/autocollie/runs/2026-06-08T11-52-23_20260608T114425-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+| `1c455eb7b34e2156` | csharp_feat_symbol_bigrams_lowfreq | ok | 0.4824 | 0.9113 | 0.3990 | 29 | [log](out/autocollie/runs/2026-06-08T11-53-04_20260608T114425-filetypes-csharp_csharp_feat_symbol_bigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_train_tune_v4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating best recent feature_env to test if increasing num_leaves and lowering learning_rate improves PR_AUC by capturing finer decision boundaries without overfitting.
+- **`csharp_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enables kv_vocab and kv_value_split to extract structured key-value pairs from C# code/comments, aiming to boost recall@3FPM by capturing obfuscated configuration strings.
+- **`csharp_feat_symbol_bigrams_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=280 …` — Lowers bigram_min_freq to 250 and enables symbol_bigrams to capture rare API co-occurrences in C# assemblies, targeting PR_AUC improvement via better malicious pattern separation.
+
+</details>
+
+## Cycle `20260608T125941-filetypes-csharp` — 2026-06-08T12:59:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6aff82d8da8c9f18` | try_severity_fractions | ok | 0.4832 | 0.9139 | 0.3971 | 43 | [log](out/autocollie/runs/2026-06-08T13-02-07_20260608T125941-filetypes-csharp_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160049-filetypes-csharp` — 2026-06-08T16:00:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6aff82d8da8c9f18` | try_severity_fractions | dup | 0.4832 | 0.9139 | 0.3971 | 1 | [log](out/autocollie/runs/2026-06-08T16-03-16_20260608T160049-filetypes-csharp_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

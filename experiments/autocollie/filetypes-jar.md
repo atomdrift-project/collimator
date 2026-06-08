@@ -496,3 +496,121 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T202527-filetypes-jar` — 2026-06-07T20:25:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `678cc3f1890eb879` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9964 | 0.9916 | 0.9205 | 80 | [log](out/autocollie/runs/2026-06-07T20-35-40_20260607T202527-filetypes-jar_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `133960d030d57754` | jar_control_extra_trees_hardneg | ok | 0.9658 | 0.9625 | 0.8747 | 82 | [log](out/autocollie/runs/2026-06-07T20-37-34_20260607T202527-filetypes-jar_jar_control_extra_trees_hardneg.log) |
+| `6ebc9680bdcf0648` | jar_kv_vocab_split_18k | ok | 0.9545 | 0.9477 | 0.8714 | 141 | [log](out/autocollie/runs/2026-06-07T20-39-03_20260607T202527-filetypes-jar_jar_kv_vocab_split_18k.log) |
+| `03be74d2f099fe27` | jar_tiered_crit_trigrams_5k | ok | 0.9545 | 0.9477 | 0.8714 | 43 | [log](out/autocollie/runs/2026-06-07T20-41-25_20260607T202527-filetypes-jar_jar_tiered_crit_trigrams_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_extra_trees_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 …` — Replicates best recent feature_env to establish a stable baseline while tuning extra_trees and hard negatives to improve recall@3FPM by better separating hard benigns from malware without hurting PR_AUC.
+- **`jar_kv_vocab_split_18k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=18000 EXP_MAX_TEST_SAMPLES=20000 …` — Expands KV vocab to 18k with value splitting to capture finer-grained manifest and metadata signals, aiming to boost PR_AUC by isolating malicious configuration patterns.
+- **`jar_tiered_crit_trigrams_5k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables tiered critical trigrams with a 5k cap to capture multi-step attack sequences in class/manifest structures, targeting PR_AUC gains through richer contextual n-grams.
+
+</details>
+
+## Cycle `20260608T030825-filetypes-jar` — 2026-06-08T03:08:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `678cc3f1890eb879` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9964 | 0.9916 | 0.9205 | 1 | [log](out/autocollie/runs/2026-06-08T03-17-51_20260608T030825-filetypes-jar_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `5db6ca7d9451c294` | jar_control_training_tune | ok | 0.9666 | 0.9626 | 0.8205 | 3 | [log](out/autocollie/runs/2026-06-08T03-17-53_20260608T030825-filetypes-jar_jar_control_training_tune.log) |
+| `600d97d07e90c118` | jar_kv_vocab_split_10k | ok | 0.9540 | 0.9470 | 0.8426 | 63 | [log](out/autocollie/runs/2026-06-08T03-17-57_20260608T030825-filetypes-jar_jar_kv_vocab_split_10k.log) |
+| `aef6ad53e884dc7b` | jar_tiered_trigrams_low_freq | ok | 0.9540 | 0.9470 | 0.8426 | 29 | [log](out/autocollie/runs/2026-06-08T03-19-01_20260608T030825-filetypes-jar_jar_tiered_trigrams_low_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_training_tune`** `EXP_EXTRA_TREES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features to test if extra_trees and hard_negative_weight improve recall@3FPM by regularizing the tail and upweighting difficult benigns, while keeping PR_AUC flat.
+- **`jar_kv_vocab_split_10k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured metadata signals in JAR manifests, aiming to boost PR_AUC by isolating malicious config patterns from noisy text.
+- **`jar_tiered_trigrams_low_freq`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Lowers tiered_trigram_min_freq to 5 and increases tiered_trigram_max to 8000 to capture rarer malicious class interactions, targeting recall@3FPM gains by surfacing low-frequency attack signatures.
+
+</details>
+
+## Cycle `20260608T063633-filetypes-jar` — 2026-06-08T06:36:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `678cc3f1890eb879` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9964 | 0.9916 | 0.9205 | 1 | [log](out/autocollie/runs/2026-06-08T06-42-42_20260608T063633-filetypes-jar_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d32d7a4900201489` | jar_control_training_tune_v2 | ok | 0.9545 | 0.9478 | 0.8732 | 3 | [log](out/autocollie/runs/2026-06-08T06-42-52_20260608T063633-filetypes-jar_jar_control_training_tune_v2.log) |
+| `2832e2ad99f3f2cb` | jar_kv_vocab_15k_split | ok | 0.9544 | 0.9479 | 0.8688 | 61 | [log](out/autocollie/runs/2026-06-08T06-42-56_20260608T063633-filetypes-jar_jar_kv_vocab_15k_split.log) |
+| `5a259c859a0321fb` | jar_text_metrics_full_tiered_trigrams | ok | 0.9537 | 0.9468 | 0.8734 | 27 | [log](out/autocollie/runs/2026-06-08T06-43-57_20260608T063633-filetypes-jar_jar_text_metrics_full_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_training_tune_v2`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature set to establish a baseline while tuning num_leaves and reg_lambda to improve PR_AUC by reducing overfitting on rare patterns.
+- **`jar_kv_vocab_15k_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with a larger cap and kv_value_split to capture finer-grained key-value signals, aiming to boost PR_AUC by distinguishing malicious JAR metadata from benign ones.
+- **`jar_text_metrics_full_tiered_trigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full alongside tiered_crit_trigrams to capture document obfuscation and critical path co-occurrences, targeting recall@3FPM by improving separation of packed/malicious JARs.
+
+</details>
+
+## Cycle `20260608T082904-filetypes-jar` — 2026-06-08T08:29:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `678cc3f1890eb879` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9964 | 0.9916 | 0.9205 | 1 | [log](out/autocollie/runs/2026-06-08T08-38-33_20260608T082904-filetypes-jar_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `1fef361d6f03f05a` | jar_control_train_tune_v3 | ok | 0.9524 | 0.9444 | 0.8720 | 3 | [log](out/autocollie/runs/2026-06-08T08-38-36_20260608T082904-filetypes-jar_jar_control_train_tune_v3.log) |
+| `fac2bdc8e538d4fc` | jar_kv_vocab_split_textenc | ok | 0.9537 | 0.9462 | 0.8721 | 63 | [log](out/autocollie/runs/2026-06-08T08-38-40_20260608T082904-filetypes-jar_jar_kv_vocab_split_textenc.log) |
+| `7ad3a1c6da5a489c` | jar_java_class_transfer_trigrams | ok | 0.9526 | 0.9448 | 0.8397 | 48 | [log](out/autocollie/runs/2026-06-08T08-39-43_20260608T082904-filetypes-jar_jar_java_class_transfer_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_train_tune_v3`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent best feature_env; tests if deeper trees and lower LR improve PR_AUC while keeping ROC_AUC flat.
+- **`jar_kv_vocab_split_textenc`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with value splitting and text_encoding to capture JAR manifest metadata and embedded text, aiming to lift PR_AUC and recall@3FPM.
+- **`jar_java_class_transfer_trigrams`** `EXP_ATTACK_NGRAMS=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 …` — Transfers java_class route's attack_ngrams and tiered_crit_trigrams to JARs to capture class-file co-occurrence patterns, targeting recall@3FPM gains.
+
+</details>
+
+## Cycle `20260608T095856-filetypes-jar` — 2026-06-08T09:58:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `678cc3f1890eb879` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9964 | 0.9916 | 0.9205 | 2 | [log](out/autocollie/runs/2026-06-08T10-08-10_20260608T095856-filetypes-jar_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `45f3afa75c832251` | jar_control_train_tune_v4 | ok | 0.9543 | 0.9476 | 0.8630 | 7 | [log](out/autocollie/runs/2026-06-08T10-08-16_20260608T095856-filetypes-jar_jar_control_train_tune_v4.log) |
+| `0985728da2beb1f5` | jar_kv_vocab_split_15k | ok | 0.9544 | 0.9479 | 0.8688 | 22 | [log](out/autocollie/runs/2026-06-08T10-08-26_20260608T095856-filetypes-jar_jar_kv_vocab_split_15k.log) |
+| `dfde046bf6c4db62` | jar_text_metrics_encoding_tiered | ok | 0.9548 | 0.9483 | 0.8785 | 96 | [log](out/autocollie/runs/2026-06-08T10-08-50_20260608T095856-filetypes-jar_jar_text_metrics_encoding_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_train_tune_v4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating best recent feature surface; adjusts num_leaves and reg_lambda to improve PR_AUC and recall@3FPM by reducing overfitting on rare benign patterns.
+- **`jar_kv_vocab_split_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables kv_vocab and kv_value_split with expanded vocab cap to parse JAR manifest and properties metadata, aiming to increase PR_AUC and recall@3FPM by capturing structured malicious indicators.
+- **`jar_text_metrics_encoding_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Adds text_metrics_full and text_encoding to detect obfuscation and encoding anomalies in JAR resources, targeting PR_AUC and recall@3FPM improvements while maintaining ROC_AUC stability.
+
+</details>
+
+## Cycle `20260608T123505-filetypes-jar` — 2026-06-08T12:35:05Z
+
+_No specs ran._
+
+## Cycle `20260608T124157-filetypes-jar` — 2026-06-08T12:41:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `177ffda8d88fa44f` | try_severity_fractions | ok | 0.9533 | 0.9452 | 0.8819 | 103 | [log](out/autocollie/runs/2026-06-08T12-44-10_20260608T124157-filetypes-jar_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160319-filetypes-jar` — 2026-06-08T16:03:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `177ffda8d88fa44f` | try_severity_fractions | dup | 0.9533 | 0.9452 | 0.8819 | 1 | [log](out/autocollie/runs/2026-06-08T16-05-35_20260608T160319-filetypes-jar_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

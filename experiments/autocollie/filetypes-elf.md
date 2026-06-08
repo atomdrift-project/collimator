@@ -652,3 +652,121 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T235100-filetypes-elf` — 2026-06-07T23:51:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `912def2f121523ea` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9999 | 0.9999 | 0.9948 | 43 | [log](out/autocollie/runs/2026-06-07T23-58-40_20260607T235100-filetypes-elf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `02877ff476a5c1d3` | elf_control_scale_pos_075_leaves128 | ok | 0.9998 | 0.9998 | 0.9937 | 35 | [log](out/autocollie/runs/2026-06-07T23-59-35_20260607T235100-filetypes-elf_elf_control_scale_pos_075_leaves128.log) |
+| `92232993971da539` | elf_symbol_vocab_bigrams_mbc | ok | 0.9998 | 0.9998 | 0.9944 | 42 | [log](out/autocollie/runs/2026-06-08T00-00-20_20260607T235100-filetypes-elf_elf_symbol_vocab_bigrams_mbc.log) |
+| `52e7dd3fab68baf1` | elf_kv_vocab_split_overlay | ok | 0.9998 | 0.9998 | 0.9944 | 39 | [log](out/autocollie/runs/2026-06-08T00-01-03_20260607T235100-filetypes-elf_elf_kv_vocab_split_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_scale_pos_075_leaves128`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env; tuning scale_pos_weight_mult to 0.75 aims to improve recall@3FPM by reducing false positives at the strict-FP tail while keeping PR_AUC flat.
+- **`elf_symbol_vocab_bigrams_mbc`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and symbol_bigrams to capture ELF import/export co-occurrence patterns; aims to boost PR_AUC by adding structural binary signal while preserving ROC_AUC.
+- **`elf_kv_vocab_split_overlay`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with kv_value_split to recover per-element signal in ELF metadata; aims to improve recall@3FPM by isolating packed/malicious metadata patterns without degrading PR_AUC.
+
+</details>
+
+## Cycle `20260608T043303-filetypes-elf` — 2026-06-08T04:33:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `912def2f121523ea` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9999 | 0.9999 | 0.9948 | 1 | [log](out/autocollie/runs/2026-06-08T04-39-01_20260608T043303-filetypes-elf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `6f93decd74089f11` | elf_control_hardneg_01_16_leaves128 | ok | 0.9999 | 0.9998 | 0.9955 | 7 | [log](out/autocollie/runs/2026-06-08T04-39-05_20260608T043303-filetypes-elf_elf_control_hardneg_01_16_leaves128.log) |
+| `2d4ff9f11fcedfca` | elf_symbol_vocab_bigrams_mbc | ok | 0.9998 | 0.9998 | 0.9945 | 35 | [log](out/autocollie/runs/2026-06-08T04-39-12_20260608T043303-filetypes-elf_elf_symbol_vocab_bigrams_mbc.log) |
+| `d4cb9ad8c7802c28` | elf_kv_vocab_split_overlay_mbc | ok | 0.9998 | 0.9998 | 0.9951 | 38 | [log](out/autocollie/runs/2026-06-08T04-39-49_20260608T043303-filetypes-elf_elf_kv_vocab_split_overlay_mbc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_01_16_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent best feature surface; tests hard-negative upweighting and deeper trees to improve PR_AUC and recall@3FPM by better separating hard benigns from malware.
+- **`elf_symbol_vocab_bigrams_mbc`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_MIN_FREQ_BIGRAM=100 …` — Enables symbol_vocab and symbol_bigrams with binary-appropriate min_freq to capture import co-occurrence patterns, targeting PR_AUC gains on ELF binaries.
+- **`elf_kv_vocab_split_overlay_mbc`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=96 …` — Activates kv_vocab with value splitting and overlay_signal to recover per-element KV signal and packer indicators, aiming to boost recall@3FPM while maintaining ROC_AUC.
+
+</details>
+
+## Cycle `20260608T060136-filetypes-elf` — 2026-06-08T06:01:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `912def2f121523ea` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9999 | 0.9999 | 0.9948 | 3 | [log](out/autocollie/runs/2026-06-08T06-12-58_20260608T060136-filetypes-elf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `08a52336e48254c8` | elf_control_hardneg_lr003_leaves128 | ok | 0.9999 | 0.9998 | 0.9933 | 83 | [log](out/autocollie/runs/2026-06-08T06-13-11_20260608T060136-filetypes-elf_elf_control_hardneg_lr003_leaves128.log) |
+| `4e16b2f422f8e273` | elf_symbol_vocab_bigrams_mbc | ok | 0.9998 | 0.9998 | 0.9945 | 12 | [log](out/autocollie/runs/2026-06-08T06-14-38_20260608T060136-filetypes-elf_elf_symbol_vocab_bigrams_mbc.log) |
+| `723d52fb6af7c8b0` | elf_kv_vocab_split_overlay | ok | 0.9998 | 0.9998 | 0.9945 | 11 | [log](out/autocollie/runs/2026-06-08T06-14-54_20260608T060136-filetypes-elf_elf_kv_vocab_split_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by tightening hard-negative weighting and lowering learning rate to reduce overfitting on rare benign patterns while preserving ranking quality.
+- **`elf_symbol_vocab_bigrams_mbc`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 …` — Aims to boost recall@3FPM by enabling symbol_vocab and symbol_bigrams to capture ELF import co-occurrence patterns, paired with mbc_id_vocab for behavioral signal.
+- **`elf_kv_vocab_split_overlay`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 …` — Aims to improve PR_AUC by enabling kv_vocab and kv_value_split to parse ELF metadata fields, combined with overlay_signal to detect packer artifacts.
+
+</details>
+
+## Cycle `20260608T080508-filetypes-elf` — 2026-06-08T08:05:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `912def2f121523ea` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9999 | 0.9999 | 0.9948 | 1 | [log](out/autocollie/runs/2026-06-08T08-13-37_20260608T080508-filetypes-elf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `08a52336e48254c8` | elf_control_hardneg_lr003_leaves128 | dup | 0.9999 | 0.9998 | 0.9933 | 1 | [log](out/autocollie/runs/2026-06-08T08-13-42_20260608T080508-filetypes-elf_elf_control_hardneg_lr003_leaves128.log) |
+| `fd6f4bc63b4bb083` | elf_kv_vocab_split_symbol_bigrams | ok | 0.9998 | 0.9998 | 0.9945 | 108 | [log](out/autocollie/runs/2026-06-08T08-13-44_20260608T080508-filetypes-elf_elf_kv_vocab_split_symbol_bigrams.log) |
+| `8eb71b1e403dc19d` | elf_overlay_mbc_tiered_trigrams | ok | 0.9998 | 0.9998 | 0.9945 | 78 | [log](out/autocollie/runs/2026-06-08T08-15-36_20260608T080508-filetypes-elf_elf_overlay_mbc_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent best feature_env to isolate training effects; aims to stabilize PR_AUC at 1.0000 by tuning hard-negative weighting and learning rate for better tail ranking.
+- **`elf_kv_vocab_split_symbol_bigrams`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab and enables value splitting to capture granular ELF metadata, paired with symbol bigrams; aims to lift PR_AUC by resolving ambiguous benign/malware metadata overlaps.
+- **`elf_overlay_mbc_tiered_trigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Adds overlay/packer signals and MBC ID vocab to target packed malware, with tiered trigrams for high-crit trait sequences; aims to improve recall@3FPM by strengthening low-FPR tail discrimination.
+
+</details>
+
+## Cycle `20260608T102207-filetypes-elf` — 2026-06-08T10:22:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `912def2f121523ea` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9999 | 0.9999 | 0.9948 | 1 | [log](out/autocollie/runs/2026-06-08T10-29-34_20260608T102207-filetypes-elf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `e6a2af740101448d` | elf_control_hardneg_sweep | ok | 0.9998 | 0.9998 | 0.9939 | 7 | [log](out/autocollie/runs/2026-06-08T10-29-38_20260608T102207-filetypes-elf_elf_control_hardneg_sweep.log) |
+| `1ef7f4cb6b47d4ff` | elf_symbol_vocab_bigrams | ok | 0.9998 | 0.9998 | 0.9944 | 39 | [log](out/autocollie/runs/2026-06-08T10-29-46_20260608T102207-filetypes-elf_elf_symbol_vocab_bigrams.log) |
+| `253092fb1f7093ed` | elf_kv_vocab_split | ok | 0.9998 | 0.9998 | 0.9944 | 38 | [log](out/autocollie/runs/2026-06-08T10-30-26_20260608T102207-filetypes-elf_elf_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — control training sweep to optimize recall@3FPM by tuning hard-negative weighting while keeping matrix cache
+- **`elf_symbol_vocab_bigrams`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_MIN_FREQ_BIGRAM=100 EXP_SYMBOL_VOCAB=1 …` — aims to improve PR_AUC by capturing co-occurrence patterns in ELF symbol tables via symbol bigrams
+- **`elf_kv_vocab_split`** `EXP_KV_MIN_FREQ=20 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — aims to improve recall@3FPM by splitting compound KV values into atomic tokens for better malware signal extraction
+
+</details>
+
+## Cycle `20260608T123505-filetypes-elf` — 2026-06-08T12:35:05Z
+
+_No specs ran._
+
+## Cycle `20260608T125941-filetypes-elf` — 2026-06-08T12:59:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2d6e58091f389dc4` | try_severity_fractions | ok | 0.9998 | 0.9998 | 0.9944 | 81 | [log](out/autocollie/runs/2026-06-08T13-02-07_20260608T125941-filetypes-elf_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160321-filetypes-elf` — 2026-06-08T16:03:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2d6e58091f389dc4` | try_severity_fractions | dup | 0.9998 | 0.9998 | 0.9944 | 1 | [log](out/autocollie/runs/2026-06-08T16-05-36_20260608T160321-filetypes-elf_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

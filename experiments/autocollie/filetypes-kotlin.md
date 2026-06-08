@@ -614,3 +614,117 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T202527-filetypes-kotlin` — 2026-06-07T20:25:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b96ca0424c6d5dcf` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9985 | 0.9417 | 0.9928 | 72 | [log](out/autocollie/runs/2026-06-07T20-37-18_20260607T202527-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f7c7e4a9c15318e2` | kotlin_control_hardneg_01_12 | ok | 0.9788 | 0.9839 | 0.7417 | 54 | [log](out/autocollie/runs/2026-06-07T20-38-50_20260607T202527-filetypes-kotlin_kotlin_control_hardneg_01_12.log) |
+| `239ecf6ef2cd4b46` | kotlin_feat_kv_vocab_textmetri | ok | 0.9802 | 0.9860 | 0.7413 | 28 | [log](out/autocollie/runs/2026-06-07T20-39-51_20260607T202527-filetypes-kotlin_kotlin_feat_kv_vocab_textmetri.log) |
+| `b24ae349c3404c6c` | kotlin_feat_sym_bigrams_lowfreq | ok | 0.9802 | 0.9859 | 0.7412 | 40 | [log](out/autocollie/runs/2026-06-07T20-40-20_20260607T202527-filetypes-kotlin_kotlin_feat_sym_bigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc …` — Replicates best recent feature set to test hard-negative training (fraction=0.01, weight=12) aiming to improve recall@3FPM by sharpening the decision boundary at low FPR without changing the feature surface.
+- **`kotlin_feat_kv_vocab_textmetri`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Enables kv_vocab and text_metrics_full to capture key-value structure and document obfuscation signals, aiming to boost PR_AUC by adding discriminative features for Kotlin script obfuscation.
+- **`kotlin_feat_sym_bigrams_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 …` — Expands symbol bigram vocab and lowers bigram_min_freq to 200 to capture rarer co-occurrence patterns in Kotlin imports, targeting PR_AUC improvement via finer-grained structural signal.
+
+</details>
+
+## Cycle `20260608T020817-filetypes-kotlin` — 2026-06-08T02:08:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b96ca0424c6d5dcf` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9985 | 0.9417 | 0.9928 | 1 | [log](out/autocollie/runs/2026-06-08T02-15-32_20260608T020817-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `59e4837de72aa241` | kotlin_control_train_opt | ok | 0.9731 | 0.9810 | 0.7414 | 49 | [log](out/autocollie/runs/2026-06-08T02-15-38_20260608T020817-filetypes-kotlin_kotlin_control_train_opt.log) |
+| `0dd8d6a6f23793f0` | kotlin_feat_sym_vocab_textmetri | ok | 0.9802 | 0.9860 | 0.7413 | 70 | [log](out/autocollie/runs/2026-06-08T02-16-30_20260608T020817-filetypes-kotlin_kotlin_feat_sym_vocab_textmetri.log) |
+| `3302d1b7b94526e7` | kotlin_feat_kv_split_tiered_tri | ok | 0.9802 | 0.9859 | 0.7412 | 49 | [log](out/autocollie/runs/2026-06-08T02-17-42_20260608T020817-filetypes-kotlin_kotlin_feat_kv_split_tiered_tri.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_train_opt`** `EXP_BIGRAM_MIN_FREQ=500 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Control run replicating best recent feature_env to isolate training knob effects on PR_AUC and recall@3FPM by tuning hard-negative weighting and tree complexity.
+- **`kotlin_feat_sym_vocab_textmetri`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TEXT_METRICS_FULL=1 …` — Expands feature surface with symbol vocab and full text metrics to capture lexical and structural signals, aiming to improve PR_AUC and recall@3FPM.
+- **`kotlin_feat_kv_split_tiered_tri`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VALUE_SPLIT=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Tests KV value splitting and tiered critical trigrams to recover granular signal and reduce noise, targeting PR_AUC gains while preserving ROC_AUC.
+
+</details>
+
+## Cycle `20260608T060136-filetypes-kotlin` — 2026-06-08T06:01:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b96ca0424c6d5dcf` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9985 | 0.9417 | 0.9928 | 1 | [log](out/autocollie/runs/2026-06-08T06-12-02_20260608T060136-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d7a784e0d8ebb92b` | kotlin_control_train_opt_v2 | ok | 0.9801 | 0.9856 | 0.7413 | 27 | [log](out/autocollie/runs/2026-06-08T06-12-06_20260608T060136-filetypes-kotlin_kotlin_control_train_opt_v2.log) |
+| `dbbc6117df2d9aee` | kotlin_feat_kv_vocab_split | ok | 0.9802 | 0.9859 | 0.7412 | 44 | [log](out/autocollie/runs/2026-06-08T06-12-35_20260608T060136-filetypes-kotlin_kotlin_feat_kv_vocab_split.log) |
+| `1c6ec7194af1d62c` | kotlin_feat_sym_vocab_textenc | ok | 0.9802 | 0.9859 | 0.7412 | 58 | [log](out/autocollie/runs/2026-06-08T06-13-22_20260608T060136-filetypes-kotlin_kotlin_feat_sym_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_train_opt_v2`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning tree complexity and regularization on the best recent feature set to reduce overfitting and sharpen ranking.
+- **`kotlin_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab and kv_value_split to capture fine-grained key-value patterns in Kotlin metadata that are currently missed.
+- **`kotlin_feat_sym_vocab_textenc`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding symbol_vocab and text_encoding to better distinguish malicious Kotlin class structures and obfuscated strings from benign code.
+
+</details>
+
+## Cycle `20260608T090807-filetypes-kotlin` — 2026-06-08T09:08:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b96ca0424c6d5dcf` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9985 | 0.9417 | 0.9928 | 1 | [log](out/autocollie/runs/2026-06-08T09-15-00_20260608T090807-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `e23adbc7246340b9` | kotlin_control_train_opt_v3 | ok | 0.9824 | 0.9872 | 0.7412 | 18 | [log](out/autocollie/runs/2026-06-08T09-15-03_20260608T090807-filetypes-kotlin_kotlin_control_train_opt_v3.log) |
+| `3a84e0a12cde0973` | kotlin_feat_textmet_kv_vocab | ok | 0.9802 | 0.9860 | 0.7413 | 18 | [log](out/autocollie/runs/2026-06-08T09-15-22_20260608T090807-filetypes-kotlin_kotlin_feat_textmet_kv_vocab.log) |
+| `55d6b71453e60d16` | kotlin_feat_lowbigram_tiered_tri | ok | 0.9802 | 0.9859 | 0.7412 | 22 | [log](out/autocollie/runs/2026-06-08T09-15-41_20260608T090807-filetypes-kotlin_kotlin_feat_lowbigram_tiered_tri.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_train_opt_v3`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC and recall@3 FP/M by increasing num_leaves to 128 and adding hard_negative_fraction to sharpen ranking on the proven feature surface without rebuilding the matrix.
+- **`kotlin_feat_textmet_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling text_metrics_full and expanding kv_vocab_max to 15000 to capture Kotlin-specific structural and configuration patterns that improve malicious/benign separation.
+- **`kotlin_feat_lowbigram_tiered_tri`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3 FP/M by lowering bigram_min_freq to 50 and enabling tiered_crit_trigrams to capture rare but high-signal malicious co-occurrences in Kotlin imports and traits.
+
+</details>
+
+## Cycle `20260608T110823-filetypes-kotlin` — 2026-06-08T11:08:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b96ca0424c6d5dcf` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9985 | 0.9417 | 0.9928 | 2 | [log](out/autocollie/runs/2026-06-08T11-16-14_20260608T110823-filetypes-kotlin_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c1f99da460127446` | kotlin_control_train_opt_v4 | ok | 0.9808 | 0.9862 | 0.7414 | 3 | [log](out/autocollie/runs/2026-06-08T11-16-19_20260608T110823-filetypes-kotlin_kotlin_control_train_opt_v4.log) |
+| `7d8f456624c504e6` | kotlin_feat_kv_textmet_vocab | ok | 0.9802 | 0.9860 | 0.7413 | 16 | [log](out/autocollie/runs/2026-06-08T11-16-24_20260608T110823-filetypes-kotlin_kotlin_feat_kv_textmet_vocab.log) |
+| `20b245bda92f9ccf` | kotlin_feat_sym_vocab_bigrams | ok | 0.9802 | 0.9859 | 0.7412 | 19 | [log](out/autocollie/runs/2026-06-08T11-16-40_20260608T110823-filetypes-kotlin_kotlin_feat_sym_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_train_opt_v4`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best recent feature surface; tuning num_leaves and reg_lambda to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`kotlin_feat_kv_textmet_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture structural and textual obfuscation signals in Kotlin scripts, aiming to boost recall@3FPM by identifying malicious patterns missed by standard n-grams.
+- **`kotlin_feat_sym_vocab_bigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Expand symbol vocab and bigrams to capture import/class co-occurrence patterns typical in Kotlin malware, targeting PR_AUC improvement by better separating malicious API usage from benign code.
+
+</details>
+
+## Cycle `20260608T125941-filetypes-kotlin` — 2026-06-08T12:59:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f38ddab43cec5472` | try_severity_fractions | ok | 0.9802 | 0.9859 | 0.7412 | 52 | [log](out/autocollie/runs/2026-06-08T13-02-07_20260608T125941-filetypes-kotlin_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T161025-filetypes-kotlin` — 2026-06-08T16:10:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f38ddab43cec5472` | try_severity_fractions | dup | 0.9802 | 0.9859 | 0.7412 | 1 | [log](out/autocollie/runs/2026-06-08T16-12-58_20260608T161025-filetypes-kotlin_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

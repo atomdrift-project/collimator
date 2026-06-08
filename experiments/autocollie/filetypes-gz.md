@@ -550,3 +550,121 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T004017-filetypes-gz` — 2026-06-08T00:40:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2cc5a1ebfd502901` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9996 | 0.9988 | 0.9918 | 19 | [log](out/autocollie/runs/2026-06-08T00-45-13_20260608T004017-filetypes-gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `1a68045d792fa338` | gz_control_dart_boosting | ok | 0.7017 | 0.8447 | 0.7590 | 15 | [log](out/autocollie/runs/2026-06-08T00-45-38_20260608T004017-filetypes-gz_gz_control_dart_boosting.log) |
+| `f456740ccb2f2b53` | gz_textmetrics_kv_vocab | ok | 0.7218 | 0.8913 | 0.7899 | 15 | [log](out/autocollie/runs/2026-06-08T00-45-57_20260608T004017-filetypes-gz_gz_textmetrics_kv_vocab.log) |
+| `01daf7467ad32755` | gz_lowfreq_bigrams_tiered_trigrams | ok | 0.7119 | 0.8869 | 0.7899 | 15 | [log](out/autocollie/runs/2026-06-08T00-46-13_20260608T004017-filetypes-gz_gz_lowfreq_bigrams_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_dart_boosting`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate recent feature_env for cache hit; switch to dart boosting to add dropout regularization, aiming to improve recall@3 FP/M by reducing overfitting on benign noise while keeping PR AUC flat.
+- **`gz_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns in gz streams, aiming to lift PR AUC by adding high-signal features for malicious payloads.
+- **`gz_lowfreq_bigrams_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 250 and enable tiered_crit_trigrams to capture rarer high-crit patterns, aiming to boost recall@3 FP/M by surfacing tail malware signals without degrading ROC AUC.
+
+</details>
+
+## Cycle `20260608T043639-filetypes-gz` — 2026-06-08T04:36:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2cc5a1ebfd502901` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9996 | 0.9988 | 0.9918 | 1 | [log](out/autocollie/runs/2026-06-08T04-42-54_20260608T043639-filetypes-gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d1cc8e3a6f587b40` | gz_control_training_tune | ok | 0.7117 | 0.8765 | 0.7881 | 2 | [log](out/autocollie/runs/2026-06-08T04-42-58_20260608T043639-filetypes-gz_gz_control_training_tune.log) |
+| `c32490bbd14d54c9` | gz_kv_vocab_textmetrics | ok | 0.7081 | 0.8213 | 0.7864 | 11 | [log](out/autocollie/runs/2026-06-08T04-43-00_20260608T043639-filetypes-gz_gz_kv_vocab_textmetrics.log) |
+| `259fb7ceb5a1cfcf` | gz_lowfreq_bigrams_no_clusters | ok | 0.7112 | 0.8879 | 0.7873 | 12 | [log](out/autocollie/runs/2026-06-08T04-43-12_20260608T043639-filetypes-gz_gz_lowfreq_bigrams_no_clusters.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_training_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best feature_env to hit matrix cache while tuning num_leaves and learning_rate to improve PR_AUC by reducing overfitting on rare patterns.
+- **`gz_kv_vocab_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enables kv_vocab and text_metrics_full to capture structural and key-value signals in compressed archives, aiming to boost recall@3FPM by identifying malicious payloads earlier.
+- **`gz_lowfreq_bigrams_no_clusters`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfers xml route's low bigram_min_freq and cluster disable strategy to capture rarer n-gram patterns while reducing noise, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260608T062756-filetypes-gz` — 2026-06-08T06:27:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2cc5a1ebfd502901` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9996 | 0.9988 | 0.9918 | 1 | [log](out/autocollie/runs/2026-06-08T06-34-31_20260608T062756-filetypes-gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4fd260bf6445bbee` | gz_control_training_tune_v2 | ok | 0.7119 | 0.8869 | 0.7899 | 2 | [log](out/autocollie/runs/2026-06-08T06-34-36_20260608T062756-filetypes-gz_gz_control_training_tune_v2.log) |
+| `2ac3e3d5df39ec48` | gz_kv_vocab_textmetrics_full | ok | 0.7218 | 0.8913 | 0.7899 | 13 | [log](out/autocollie/runs/2026-06-08T06-34-39_20260608T062756-filetypes-gz_gz_kv_vocab_textmetrics_full.log) |
+| `fc522837b522c2ef` | gz_tiered_trigrams_lowfreq_bigrams | ok | 0.7119 | 0.8869 | 0.7899 | 19 | [log](out/autocollie/runs/2026-06-08T06-34-54_20260608T062756-filetypes-gz_gz_tiered_trigrams_lowfreq_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_training_tune_v2`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Replicate best recent feature set to establish baseline; increase tree capacity and estimators to improve PR_AUC by reducing underfitting without changing features.
+- **`gz_kv_vocab_textmetrics_full`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable kv_vocab and text_metrics_full to capture archive metadata and extracted text patterns, aiming to boost PR_AUC and recall@3FPM by adding high-signal lexical features.
+- **`gz_tiered_trigrams_lowfreq_bigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Lower bigram frequency floor and enable tiered critical trigrams to capture rarer but high-signal n-gram patterns, targeting PR_AUC improvement through better rare-pattern ranking.
+
+</details>
+
+## Cycle `20260608T093740-filetypes-gz` — 2026-06-08T09:37:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2cc5a1ebfd502901` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9996 | 0.9988 | 0.9918 | 1 | [log](out/autocollie/runs/2026-06-08T09-44-31_20260608T093740-filetypes-gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `cd73aa374b03f6ac` | gz_control_training_tune_v3 | ok | 0.7090 | 0.8570 | 0.7890 | 3 | [log](out/autocollie/runs/2026-06-08T09-44-34_20260608T093740-filetypes-gz_gz_control_training_tune_v3.log) |
+| `3a03405317eedc90` | gz_textenc_kv_vocab_lowfreq | ok | 0.7218 | 0.8913 | 0.7899 | 18 | [log](out/autocollie/runs/2026-06-08T09-44-38_20260608T093740-filetypes-gz_gz_textenc_kv_vocab_lowfreq.log) |
+| `f17876a37b2cd13a` | gz_no_clusters_kv_textmetrics | ok | 0.7218 | 0.8913 | 0.7899 | 16 | [log](out/autocollie/runs/2026-06-08T09-44-57_20260608T093740-filetypes-gz_gz_no_clusters_kv_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_training_tune_v3`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; aims to improve PR_AUC and recall@3 FP/M by increasing model capacity (num_leaves=128, estimators=300) and adding L2 regularization to reduce overfitting on rare benign patterns.
+- **`gz_textenc_kv_vocab_lowfreq`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Aims to improve PR_AUC by enabling text_encoding research vocab and lowering bigram_min_freq to 50 to capture rarer malicious patterns in compressed archives, while retaining strong KV and text metrics signal.
+- **`gz_no_clusters_kv_textmetrics`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3 FP/M by disabling the noisy clusters feature group (proven effective on sister routes) while keeping kv_vocab and text_metrics_full enabled to preserve rank signal.
+
+</details>
+
+## Cycle `20260608T095856-filetypes-gz` — 2026-06-08T09:58:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2cc5a1ebfd502901` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9996 | 0.9988 | 0.9918 | 1 | [log](out/autocollie/runs/2026-06-08T10-07-09_20260608T095856-filetypes-gz_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2e5afabbeb831d3e` | gz_control_train_tune_v4 | ok | 0.7044 | 0.8095 | 0.7881 | 25 | [log](out/autocollie/runs/2026-06-08T10-07-13_20260608T095856-filetypes-gz_gz_control_train_tune_v4.log) |
+| `721adbc3188e49c1` | gz_textenc_kv_vocab_expanded | ok | 0.7218 | 0.8913 | 0.7899 | 29 | [log](out/autocollie/runs/2026-06-08T10-07-40_20260608T095856-filetypes-gz_gz_textenc_kv_vocab_expanded.log) |
+| `9e12cb3b13b482f4` | gz_lowfreq_bigrams_tiered_trigrams | ok | 0.7119 | 0.8869 | 0.7899 | 37 | [log](out/autocollie/runs/2026-06-08T10-08-10_20260608T095856-filetypes-gz_gz_lowfreq_bigrams_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`gz_control_train_tune_v4`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and regularization on the best recent feature set, leveraging matrix cache hits.
+- **`gz_textenc_kv_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_encoding and expanding KV vocab to capture rarer gzip metadata patterns that distinguish malicious archives.
+- **`gz_lowfreq_bigrams_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering bigram frequency floor to capture rare but indicative gzip header sequences, combined with tiered trigrams for better ranking signal.
+
+</details>
+
+## Cycle `20260608T123505-filetypes-gz` — 2026-06-08T12:35:05Z
+
+_No specs ran._
+
+## Cycle `20260608T125454-filetypes-gz` — 2026-06-08T12:54:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb967d278b44ecdc` | try_severity_fractions | ok | 0.7112 | 0.8879 | 0.7873 | 12 | [log](out/autocollie/runs/2026-06-08T12-56-56_20260608T125454-filetypes-gz_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160320-filetypes-gz` — 2026-06-08T16:03:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb967d278b44ecdc` | try_severity_fractions | dup | 0.7112 | 0.8879 | 0.7873 | 1 | [log](out/autocollie/runs/2026-06-08T16-05-36_20260608T160320-filetypes-gz_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

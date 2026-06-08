@@ -538,3 +538,117 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T234349-filegroups-media` — 2026-06-07T23:43:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4098549c343d175b` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9651 | 0.9791 | 0.8812 | 5 | [log](out/autocollie/runs/2026-06-07T23-51-45_20260607T234349-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `066173cf92180aa9` | media_control_training_tune | ok | 0.1781 | 0.5485 | 0.1715 | 11 | [log](out/autocollie/runs/2026-06-07T23-51-57_20260607T234349-filegroups-media_media_control_training_tune.log) |
+| `91cb6514cb9863b9` | media_textmetrics_kv_vocab_research | ok | 0.1781 | 0.5485 | 0.1715 | 9 | [log](out/autocollie/runs/2026-06-07T23-52-11_20260607T234349-filegroups-media_media_textmetrics_kv_vocab_research.log) |
+| `d5ad03e6de23b3b5` | media_lowfreq_bigrams_tiered_trigrams | ok | 0.1781 | 0.5485 | 0.1715 | 9 | [log](out/autocollie/runs/2026-06-07T23-52-21_20260607T234349-filegroups-media_media_lowfreq_bigrams_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_training_tune`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Control run replicating the best recent feature_env; tuning num_leaves and estimators to improve PR_AUC by allowing deeper trees to capture complex media patterns without overfitting.
+- **`media_textmetrics_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to boost recall@3FPM by adding high-signal features for media files.
+- **`media_lowfreq_bigrams_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 and enable tiered trigrams to capture rarer but malicious patterns, targeting PR_AUC improvement by expanding the feature surface for subtle media malware.
+
+</details>
+
+## Cycle `20260608T044120-filegroups-media` — 2026-06-08T04:41:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4098549c343d175b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9651 | 0.9791 | 0.8812 | 1 | [log](out/autocollie/runs/2026-06-08T04-48-37_20260608T044120-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `fc01b4be25605d47` | media_control_training_tune_v2 | ok | 0.1781 | 0.5485 | 0.1715 | 9 | [log](out/autocollie/runs/2026-06-08T04-48-40_20260608T044120-filegroups-media_media_control_training_tune_v2.log) |
+| `ebd1ba386fcba00d` | media_textmetrics_kv_vocab_expand | ok | 0.1781 | 0.5485 | 0.1715 | 11 | [log](out/autocollie/runs/2026-06-08T04-48-50_20260608T044120-filegroups-media_media_textmetrics_kv_vocab_expand.log) |
+| `353c1d59b8ac59cc` | media_textenc_tiered_trigram_tune | ok | 0.1771 | 0.5485 | 0.1715 | 11 | [log](out/autocollie/runs/2026-06-08T04-49-02_20260608T044120-filegroups-media_media_textenc_tiered_trigram_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_training_tune_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent best feature surface to hit matrix cache; tunes num_leaves and reg_lambda to improve PR_AUC by reducing overfit on rare benign patterns.
+- **`media_textmetrics_kv_vocab_expand`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document structure and key-value patterns, targeting PR_AUC gains by adding high-signal features for media/document hybrids.
+- **`media_textenc_tiered_trigram_tune`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and expands tiered trigram vocab to improve recall@3 FP/M by capturing subtle encoding artifacts and longer trait sequences in media files.
+
+</details>
+
+## Cycle `20260608T060136-filegroups-media` — 2026-06-08T06:01:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4098549c343d175b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9651 | 0.9791 | 0.8812 | 3 | [log](out/autocollie/runs/2026-06-08T06-12-01_20260608T060136-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bdf62847b26e3916` | media_control_extra_trees_tail | ok | 0.1788 | 0.5485 | 0.1715 | 5 | [log](out/autocollie/runs/2026-06-08T06-12-06_20260608T060136-filegroups-media_media_control_extra_trees_tail.log) |
+| `0a76f633cd06efb7` | media_textmetrics_encoding_full | ok | 0.1781 | 0.5485 | 0.1715 | 15 | [log](out/autocollie/runs/2026-06-08T06-12-13_20260608T060136-filegroups-media_media_textmetrics_encoding_full.log) |
+| `9b9d5ed8acf3bb3d` | media_kv_vocab_split_metadata | ok | 0.1781 | 0.5485 | 0.1715 | 16 | [log](out/autocollie/runs/2026-06-08T06-12-30_20260608T060136-filegroups-media_media_kv_vocab_split_metadata.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_extra_trees_tail`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling extra_trees to add ensemble noise, reducing overfitting on rare benign patterns and sharpening the low-FPR tail.
+- **`media_textmetrics_encoding_full`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies common in malicious media files.
+- **`media_kv_vocab_split_metadata`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab and kv_value_split to recover structured metadata signals that indicate payload injection or obfuscation.
+
+</details>
+
+## Cycle `20260608T080508-filegroups-media` — 2026-06-08T08:05:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4098549c343d175b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9651 | 0.9791 | 0.8812 | 1 | [log](out/autocollie/runs/2026-06-08T08-13-38_20260608T080508-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `5adf966cdc5f9fdf` | media_control_training_tail_opt | ok | 0.1890 | 0.5532 | 0.1717 | 2 | [log](out/autocollie/runs/2026-06-08T08-13-43_20260608T080508-filegroups-media_media_control_training_tail_opt.log) |
+| `42933554e6752f6c` | media_textenc_metrics_full_lowbigram | ok | 0.1781 | 0.5485 | 0.1715 | 16 | [log](out/autocollie/runs/2026-06-08T08-13-47_20260608T080508-filegroups-media_media_textenc_metrics_full_lowbigram.log) |
+| `d5ac1fbbdf2834a7` | media_kv_vocab_split_tiered_trigrams | ok | 0.1781 | 0.5485 | 0.1715 | 21 | [log](out/autocollie/runs/2026-06-08T08-14-04_20260608T080508-filegroups-media_media_kv_vocab_split_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_training_tail_opt`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates recent best feature_env to hit matrix cache; tunes extra_trees and scale_pos_weight_mult to improve recall@3 FP/M by reducing benign over-scoring at the strict-FP tail.
+- **`media_textenc_metrics_full_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Enables text_encoding and text_metrics_full research vocabs to capture document obfuscation signals; lowers bigram_min_freq to 50 to increase PR_AUC by recovering rare but high-signal media patterns.
+- **`media_kv_vocab_split_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Activates kv_vocab and kv_value_split to parse structured metadata in media files; adds tiered_crit_trigrams to boost recall@3 FP/M by capturing multi-step malicious intent chains.
+
+</details>
+
+## Cycle `20260608T095856-filegroups-media` — 2026-06-08T09:58:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4098549c343d175b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9651 | 0.9791 | 0.8812 | 6 | [log](out/autocollie/runs/2026-06-08T10-07-14_20260608T095856-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `0664d05cd9973c91` | media_control_tail_opt_hardneg | ok | 0.2026 | 0.5236 | 0.1821 | 9 | [log](out/autocollie/runs/2026-06-08T10-07-24_20260608T095856-filegroups-media_media_control_tail_opt_hardneg.log) |
+| `e32d3cee0d6059b8` | media_textenc_metrics_full_pr_auc | ok | 0.1781 | 0.5485 | 0.1715 | 15 | [log](out/autocollie/runs/2026-06-08T10-07-35_20260608T095856-filegroups-media_media_textenc_metrics_full_pr_auc.log) |
+| `be42b747415fc388` | media_kv_vocab_split_recall | ok | 0.1781 | 0.5485 | 0.1715 | 19 | [log](out/autocollie/runs/2026-06-08T10-07-52_20260608T095856-filegroups-media_media_kv_vocab_split_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_tail_opt_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by applying hard-negative mining to the best recent feature set, focusing the model on difficult benign media files without altering the feature matrix.
+- **`media_textenc_metrics_full_pr_auc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_encoding and text_metrics_full to capture structural obfuscation and encoding anomalies common in malicious media/PDFs.
+- **`media_kv_vocab_split_recall`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab and kv_value_split to extract granular metadata tokens from media headers, increasing signal for rare malicious patterns.
+
+</details>
+
+## Cycle `20260608T125328-filegroups-media` — 2026-06-08T12:53:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ef6b0137aef03489` | try_severity_fractions | ok | 0.1781 | 0.5485 | 0.1715 | 13 | [log](out/autocollie/runs/2026-06-08T12-55-30_20260608T125328-filegroups-media_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160049-filegroups-media` — 2026-06-08T16:00:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ef6b0137aef03489` | try_severity_fractions | dup | 0.1781 | 0.5485 | 0.1715 | 1 | [log](out/autocollie/runs/2026-06-08T16-03-14_20260608T160049-filegroups-media_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

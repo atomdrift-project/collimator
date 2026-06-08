@@ -234,3 +234,135 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T002539-filetypes-java` — 2026-06-08T00:25:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `67a2ca64c96a750c` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9605 | 0.9607 | 0.9231 | 4 | [log](out/autocollie/runs/2026-06-08T00-38-11_20260608T002539-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `6575b2c98cc97088` | java_control_scale025_est300 | ok | 0.3201 | 0.9036 | 0.1604 | 10 | [log](out/autocollie/runs/2026-06-08T00-38-19_20260608T002539-filetypes-java_java_control_scale025_est300.log) |
+| `6e32874c611329e2` | java_kv_vocab_5000_bigram2000 | ok | 0.3117 | 0.8664 | 0.1604 | 10 | [log](out/autocollie/runs/2026-06-08T00-38-32_20260608T002539-filetypes-java_java_kv_vocab_5000_bigram2000.log) |
+| `c3d50f7b714b8373` | java_symbol_vocab_2000_tiered_trigrams | ok | 0.3117 | 0.8664 | 0.1604 | 9 | [log](out/autocollie/runs/2026-06-08T00-38-42_20260608T002539-filetypes-java_java_symbol_vocab_2000_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_scale025_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control feature set with lower scale_pos_weight_mult to reduce FP rate and improve recall@3FPM while keeping PR_AUC flat.
+- **`java_kv_vocab_5000_bigram2000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=2000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable kv_vocab to capture key-value pair signals from Java manifests/properties, aiming to boost PR_AUC by adding discriminative metadata features.
+- **`java_symbol_vocab_2000_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable symbol_vocab and tiered trigrams to capture class/method co-occurrence patterns, targeting PR_AUC improvement via richer structural n-grams.
+
+</details>
+
+## Cycle `20260608T045202-filetypes-java` — 2026-06-08T04:52:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `67a2ca64c96a750c` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9605 | 0.9607 | 0.9231 | 2 | [log](out/autocollie/runs/2026-06-08T05-01-28_20260608T045202-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `427e4031f128bb3e` | java_control_est400_lr003 | ok | 0.3888 | 0.9364 | 0.1627 | 4 | [log](out/autocollie/runs/2026-06-08T05-01-32_20260608T045202-filetypes-java_java_control_est400_lr003.log) |
+| `0431c8956a4fc619` | java_kv_vocab_3000_bigram100 | ok | 0.3117 | 0.8664 | 0.1604 | 13 | [log](out/autocollie/runs/2026-06-08T05-01-37_20260608T045202-filetypes-java_java_kv_vocab_3000_bigram100.log) |
+| `ed10ea26e3c1217e` | java_symbol_vocab_2000_bigrams | ok | 0.3117 | 0.8664 | 0.1604 | 13 | [log](out/autocollie/runs/2026-06-08T05-01-51_20260608T045202-filetypes-java_java_symbol_vocab_2000_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_est400_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best feature env; increases estimators to 400 and lowers LR to 0.03 to improve PR_AUC via better convergence without changing features.
+- **`java_kv_vocab_3000_bigram100`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab to capture key-value metadata patterns in Java files, aiming to boost recall@3FPM by adding structural signal while keeping PR_AUC flat.
+- **`java_symbol_vocab_2000_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds symbol_vocab and symbol_bigrams to capture API usage patterns, targeting PR_AUC improvement through better malware/benign separation in code structure.
+
+</details>
+
+## Cycle `20260608T070453-filetypes-java` — 2026-06-08T07:04:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `67a2ca64c96a750c` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9605 | 0.9607 | 0.9231 | 2 | [log](out/autocollie/runs/2026-06-08T07-12-39_20260608T070453-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f6bee0fbb67dfb8d` | java_control_train_tune | ok | 0.3088 | 0.8441 | 0.1619 | 2 | [log](out/autocollie/runs/2026-06-08T07-12-42_20260608T070453-filetypes-java_java_control_train_tune.log) |
+| `3522afa4faf4ba42` | java_kv_vocab_5000_bigram200 | ok | 0.3117 | 0.8664 | 0.1604 | 11 | [log](out/autocollie/runs/2026-06-08T07-12-45_20260608T070453-filetypes-java_java_kv_vocab_5000_bigram200.log) |
+| `8d5dfa5cf8989887` | java_symbol_vocab_bigrams | ok | 0.3117 | 0.8664 | 0.1604 | 10 | [log](out/autocollie/runs/2026-06-08T07-12-57_20260608T070453-filetypes-java_java_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by increasing estimators and lowering learning rate to better fit the training distribution without overfitting, using the proven feature set.
+- **`java_kv_vocab_5000_bigram200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3FPM by enabling kv_vocab to capture Java-specific metadata key-value pairs, while lowering bigram_min_freq to 200 to retain rarer but informative n-grams.
+- **`java_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve PR_AUC by enabling symbol_vocab and symbol_bigrams to capture co-occurrence patterns in Java class and method names, which are strong indicators of malicious intent.
+
+</details>
+
+## Cycle `20260608T090327-filetypes-java` — 2026-06-08T09:03:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `67a2ca64c96a750c` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9605 | 0.9607 | 0.9231 | 1 | [log](out/autocollie/runs/2026-06-08T09-11-24_20260608T090327-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `231b4fedb56e5a38` | java_control_train_tune_v2 | ok | 0.3099 | 0.8912 | 0.1619 | 2 | [log](out/autocollie/runs/2026-06-08T09-11-28_20260608T090327-filetypes-java_java_control_train_tune_v2.log) |
+| `3522afa4faf4ba42` | java_kv_vocab_5000_bigram200 | dup | 0.3117 | 0.8664 | 0.1604 | 1 | [log](out/autocollie/runs/2026-06-08T09-11-31_20260608T090327-filetypes-java_java_kv_vocab_5000_bigram200.log) |
+| `4a96b0d1c382de9f` | java_symbol_vocab_3000_tiered | ok | 0.3117 | 0.8664 | 0.1604 | 10 | [log](out/autocollie/runs/2026-06-08T09-11-33_20260608T090327-filetypes-java_java_symbol_vocab_3000_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline replicating recent best feature_env; adjusts num_leaves and reg_lambda to stabilize PR_AUC while reusing matrix cache.
+- **`java_kv_vocab_5000_bigram200`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab to capture Java manifest/properties patterns, aiming to lift PR_AUC by adding high-signal key-value features; lowers bigram_min_freq to 200 for broader coverage.
+- **`java_symbol_vocab_3000_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables symbol_vocab and tiered_crit_trigrams to capture class/method name distributions and critical path co-occurrences, targeting recall@3FPM gains on obfuscated samples.
+
+</details>
+
+## Cycle `20260608T095856-filetypes-java` — 2026-06-08T09:58:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `67a2ca64c96a750c` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9605 | 0.9607 | 0.9231 | 2 | [log](out/autocollie/runs/2026-06-08T10-07-58_20260608T095856-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `6d65ec8d9af85349` | java_control_train_tune_v3 | ok | 0.3984 | 0.9435 | 0.1635 | 6 | [log](out/autocollie/runs/2026-06-08T10-08-05_20260608T095856-filetypes-java_java_control_train_tune_v3.log) |
+| `a6a4e5b15c4d14f7` | java_kv_vocab_8000_split | ok | 0.3117 | 0.8664 | 0.1604 | 34 | [log](out/autocollie/runs/2026-06-08T10-08-12_20260608T095856-filetypes-java_java_kv_vocab_8000_split.log) |
+| `8308f31cd9da8490` | java_lowbigram_tiered_trigrams | ok | 0.3117 | 0.8664 | 0.1604 | 28 | [log](out/autocollie/runs/2026-06-08T10-08-48_20260608T095856-filetypes-java_java_lowbigram_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env; adjust num_leaves to 128 and reg_lambda to 1.5 to reduce overfitting, aiming to improve PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+- **`java_kv_vocab_8000_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture structured metadata patterns in Java class files, aiming to boost PR_AUC and recall@3FPM by adding discriminative key-value signal.
+- **`java_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 and enable tiered_crit_trigrams to capture rarer co-occurrence patterns, targeting PR_AUC improvement by enriching the n-gram feature surface.
+
+</details>
+
+## Cycle `20260608T114425-filetypes-java` — 2026-06-08T11:44:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c76e9f9c3465ff0a` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9605 | 0.9607 | 0.9231 | 6 | [log](out/autocollie/runs/2026-06-08T11-50-17_20260608T114425-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `db2ac650c6a26e6e` | java_control_train_tune_v4 | ok | 0.3117 | 0.8664 | 0.1604 | 16 | [log](out/autocollie/runs/2026-06-08T11-50-25_20260608T114425-filetypes-java_java_control_train_tune_v4.log) |
+| `e69888e686c5036f` | java_kv_vocab_5000_split | ok | 0.3117 | 0.8664 | 0.1604 | 26 | [log](out/autocollie/runs/2026-06-08T11-50-43_20260608T114425-filetypes-java_java_kv_vocab_5000_split.log) |
+| `6816859392ca8032` | java_symbol_vocab_3000_bigrams | ok | 0.3117 | 0.8664 | 0.1604 | 38 | [log](out/autocollie/runs/2026-06-08T11-51-11_20260608T114425-filetypes-java_java_symbol_vocab_3000_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune_v4`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating the best recent feature_env to establish a stable PR_AUC and ROC_AUC baseline while testing slightly deeper trees (num_leaves=128) for improved ranking calibration.
+- **`java_kv_vocab_5000_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab and kv_value_split to capture Java package/class/field structures, aiming to boost PR_AUC by adding high-signal lexical features that distinguish malicious class hierarchies from benign ones.
+- **`java_symbol_vocab_3000_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 …` — Enables symbol_vocab and symbol_bigrams to detect malicious API call sequences, targeting recall@3FPM improvement by capturing co-occurrence patterns of suspicious imports that often appear in the low-FP tail.
+
+</details>
+
+## Cycle `20260608T125328-filetypes-java` — 2026-06-08T12:53:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `431bb99070684bf0` | try_severity_fractions | ok | 0.3117 | 0.8664 | 0.1604 | 15 | [log](out/autocollie/runs/2026-06-08T12-55-28_20260608T125328-filetypes-java_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T161027-filetypes-java` — 2026-06-08T16:10:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `431bb99070684bf0` | try_severity_fractions | dup | 0.3117 | 0.8664 | 0.1604 | 1 | [log](out/autocollie/runs/2026-06-08T16-12-58_20260608T161027-filetypes-java_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

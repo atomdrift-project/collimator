@@ -708,3 +708,135 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T202527-filetypes-macho` — 2026-06-07T20:25:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3b04759f44446de1` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9980 | 0.9995 | 0.9744 | 65 | [log](out/autocollie/runs/2026-06-07T20-35-29_20260607T202527-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c7de87945db03225` | macho_control_hardneg_tuning | ok | 0.9974 | 0.9994 | 0.9681 | 71 | [log](out/autocollie/runs/2026-06-07T20-36-48_20260607T202527-filetypes-macho_macho_control_hardneg_tuning.log) |
+| `8f7ff45ca90d9bed` | macho_symbol_vocab_bigrams | ok | 0.9971 | 0.9994 | 0.9706 | 88 | [log](out/autocollie/runs/2026-06-07T20-38-04_20260607T202527-filetypes-macho_macho_symbol_vocab_bigrams.log) |
+| `3f6126adbead1553` | macho_textenc_metrics_full | ok | 0.9971 | 0.9994 | 0.9706 | 44 | [log](out/autocollie/runs/2026-06-07T20-39-35_20260607T202527-filetypes-macho_macho_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_hardneg_tuning`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control replicating best PR AUC feature set; tests if higher hard_negative_weight and lower scale_pos_weight_mult improve recall@3FPM while keeping PR_AUC flat.
+- **`macho_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Enables symbol_vocab and symbol_bigrams to capture Mach-O import co-occurrence patterns, aiming to boost PR_AUC and recall@3FPM by adding structural signal.
+- **`macho_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to extract string/encoding anomalies in Mach-O binaries, targeting PR_AUC gains from richer text features.
+
+</details>
+
+## Cycle `20260608T020817-filetypes-macho` — 2026-06-08T02:08:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3b04759f44446de1` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9980 | 0.9995 | 0.9744 | 2 | [log](out/autocollie/runs/2026-06-08T02-14-38_20260608T020817-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9fbccbb9ac939381` | macho_control_hardneg_tune | ok | 0.9974 | 0.9994 | 0.9652 | 44 | [log](out/autocollie/runs/2026-06-08T02-14-41_20260608T020817-filetypes-macho_macho_control_hardneg_tune.log) |
+| `dbf0e0374b3096ac` | macho_symbol_vocab_bigrams | ok | 0.9971 | 0.9994 | 0.9706 | 118 | [log](out/autocollie/runs/2026-06-08T02-15-26_20260608T020817-filetypes-macho_macho_symbol_vocab_bigrams.log) |
+| `d7b5332d3acb646d` | macho_kv_vocab_split | ok | 0.9971 | 0.9994 | 0.9706 | 75 | [log](out/autocollie/runs/2026-06-08T02-17-26_20260608T020817-filetypes-macho_macho_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_hardneg_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning hard_negative_fraction and hard_negative_weight on the baseline feature set to better separate borderline malware from benigns.
+- **`macho_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=12000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling symbol_vocab and symbol_bigrams to capture Mach-O specific import and symbol co-occurrence patterns that signal malicious behavior.
+- **`macho_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and kv_value_split to recover per-element signal in Mach-O metadata strings, reducing noise from concatenated values.
+
+</details>
+
+## Cycle `20260608T060136-filetypes-macho` — 2026-06-08T06:01:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3b04759f44446de1` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9980 | 0.9995 | 0.9744 | 2 | [log](out/autocollie/runs/2026-06-08T06-12-09_20260608T060136-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `73961142334b36e6` | macho_control_hardneg_tune | ok | 0.9976 | 0.9995 | 0.9713 | 16 | [log](out/autocollie/runs/2026-06-08T06-12-14_20260608T060136-filetypes-macho_macho_control_hardneg_tune.log) |
+| `2750a74a4c33ba93` | macho_kv_vocab_split | ok | 0.9971 | 0.9994 | 0.9706 | 13 | [log](out/autocollie/runs/2026-06-08T06-12-31_20260608T060136-filetypes-macho_macho_kv_vocab_split.log) |
+| `f303c8230991708d` | macho_symbol_ngrams | ok | 0.9971 | 0.9994 | 0.9706 | 122 | [log](out/autocollie/runs/2026-06-08T06-12-45_20260608T060136-filetypes-macho_macho_symbol_ngrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_hardneg_tune`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating baseline feature_env; adjusts hard_negative_fraction and num_leaves to improve recall@3FPM by better weighting difficult benign samples while preserving PR_AUC.
+- **`macho_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to parse Mach-O metadata into granular tokens, aiming to boost PR_AUC by capturing subtle malicious configuration patterns missed by raw strings.
+- **`macho_symbol_ngrams`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 …` — Activates symbol_vocab, symbol_bigrams, and symbol_trigrams to model import co-occurrence in Mach-O binaries, targeting PR_AUC gains from structural malware signatures.
+
+</details>
+
+## Cycle `20260608T080508-filetypes-macho` — 2026-06-08T08:05:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3b04759f44446de1` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9980 | 0.9995 | 0.9744 | 1 | [log](out/autocollie/runs/2026-06-08T08-13-16_20260608T080508-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `07511e2d6fe154e1` | macho_control_hardneg_tune_v2 | ok | 0.9973 | 0.9994 | 0.9744 | 4 | [log](out/autocollie/runs/2026-06-08T08-13-18_20260608T080508-filetypes-macho_macho_control_hardneg_tune_v2.log) |
+| `23ea87924617f1eb` | macho_symbol_vocab_bigrams_expanded | ok | 0.9971 | 0.9994 | 0.9706 | 39 | [log](out/autocollie/runs/2026-06-08T08-13-23_20260608T080508-filetypes-macho_macho_symbol_vocab_bigrams_expanded.log) |
+| `814edc395f60a58f` | macho_kv_split_text_metrics | ok | 0.9974 | 0.9994 | 0.9720 | 76 | [log](out/autocollie/runs/2026-06-08T08-14-02_20260608T080508-filetypes-macho_macho_kv_split_text_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_hardneg_tune_v2`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives and increasing tree capacity to better separate borderline malware, while keeping PR_AUC flat via controlled regularization.
+- **`macho_symbol_vocab_bigrams_expanded`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling symbol vocab and bigrams with higher caps to capture Mach-O specific import/symbol co-occurrence patterns that standard n-grams miss.
+- **`macho_kv_split_text_metrics`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by extracting structural text and KV metadata signals from Mach-O load commands that correlate with packer/obfuscation techniques, complementing existing binary metrics.
+
+</details>
+
+## Cycle `20260608T112929-filetypes-macho` — 2026-06-08T11:29:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3b04759f44446de1` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9980 | 0.9995 | 0.9744 | 1 | [log](out/autocollie/runs/2026-06-08T11-35-31_20260608T112929-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ee2ea42ad84507d8` | macho_control_extra_trees_reg | ok | 0.9964 | 0.9992 | 0.9650 | 2 | [log](out/autocollie/runs/2026-06-08T11-35-34_20260608T112929-filetypes-macho_macho_control_extra_trees_reg.log) |
+| `26be465f86ae9044` | macho_symbol_vocab_bigrams | ok | 0.9971 | 0.9994 | 0.9706 | 29 | [log](out/autocollie/runs/2026-06-08T11-35-36_20260608T112929-filetypes-macho_macho_symbol_vocab_bigrams.log) |
+| `0e0af636916a7c2a` | macho_kv_textenc_lowfreq | ok | 0.9971 | 0.9994 | 0.9706 | 24 | [log](out/autocollie/runs/2026-06-08T11-36-06_20260608T112929-filetypes-macho_macho_kv_textenc_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_extra_trees_reg`** `EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features; tests extra_trees and higher reg_lambda to improve recall@3FPM by reducing overfitting at the tail.
+- **`macho_symbol_vocab_bigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and symbol_bigrams to capture Mach-O import/export co-occurrence patterns, aiming to boost PR_AUC by adding structural binary signal.
+- **`macho_kv_textenc_lowfreq`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab and enables text_encoding with lower min_freq to capture rare packing artifacts and encoding anomalies, targeting recall@3FPM improvement.
+
+</details>
+
+## Cycle `20260608T114425-filetypes-macho` — 2026-06-08T11:44:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4ee7fe5921393f33` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9980 | 0.9995 | 0.9744 | 39 | [log](out/autocollie/runs/2026-06-08T11-50-07_20260608T114425-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c4567b6a9607f36a` | macho_control_hardneg_lr | ok | 0.9978 | 0.9995 | 0.9747 | 105 | [log](out/autocollie/runs/2026-06-08T11-50-49_20260608T114425-filetypes-macho_macho_control_hardneg_lr.log) |
+| `fbd59e19d2468251` | macho_symbol_vocab_bigrams | ok | 0.9971 | 0.9994 | 0.9706 | 99 | [log](out/autocollie/runs/2026-06-08T11-52-37_20260608T114425-filetypes-macho_macho_symbol_vocab_bigrams.log) |
+| `0d4f108f291f01f8` | macho_kv_split_text_metrics_seed | ok | 0.9971 | 0.9994 | 0.9791 | 43 | [log](out/autocollie/runs/2026-06-08T11-54-18_20260608T114425-filetypes-macho_macho_kv_split_text_metrics_seed.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_hardneg_lr`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing hard negative weight and reducing learning rate to better separate tail malware from benigns on the current feature set.
+- **`macho_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling symbol vocab and bigrams to capture Mach-O import co-occurrence patterns that distinguish malicious binaries.
+- **`macho_kv_split_text_metrics_seed`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3 FP/M by combining KV splitting and full text metrics for obfuscation signals, using seed search to ensure the tail recall gain is robust across seeds.
+
+</details>
+
+## Cycle `20260608T130236-filetypes-macho` — 2026-06-08T13:02:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6604c88eea8d2b47` | try_severity_fractions | ok | 0.9971 | 0.9994 | 0.9706 | 32 | [log](out/autocollie/runs/2026-06-08T13-05-10_20260608T130236-filetypes-macho_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160702-filetypes-macho` — 2026-06-08T16:07:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6604c88eea8d2b47` | try_severity_fractions | dup | 0.9971 | 0.9994 | 0.9706 | 1 | [log](out/autocollie/runs/2026-06-08T16-08-56_20260608T160702-filetypes-macho_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

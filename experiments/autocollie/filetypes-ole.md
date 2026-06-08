@@ -539,3 +539,121 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T001814-filetypes-ole` — 2026-06-08T00:18:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cf419f376522caa6` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9935 | 0.5000 | 0.9967 | 12 | [log](out/autocollie/runs/2026-06-08T00-25-40_20260608T001814-filetypes-ole_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `fd90243abfe0eea8` | ole_control_hardneg_tuning | ok | 0.9952 | 0.9941 | 0.9004 | 8 | [log](out/autocollie/runs/2026-06-08T00-25-56_20260608T001814-filetypes-ole_ole_control_hardneg_tuning.log) |
+| `3e0026f75c6b06cc` | ole_feat_textmetrics_kv_vocab | ok | 0.9966 | 0.9960 | 0.8998 | 9 | [log](out/autocollie/runs/2026-06-08T00-26-06_20260608T001814-filetypes-ole_ole_feat_textmetrics_kv_vocab.log) |
+| `2e99c805c5d95969` | ole_feat_lowfreq_bigrams_trigrams | ok | 0.9966 | 0.9960 | 0.8998 | 13 | [log](out/autocollie/runs/2026-06-08T00-26-17_20260608T001814-filetypes-ole_ole_feat_lowfreq_bigrams_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_hardneg_tuning`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best feature surface; adjusts hard_negative_weight and num_leaves to improve PR_AUC by refining the decision boundary for tail malware.
+- **`ole_feat_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and macro metadata, aiming to boost recall@3FPM by adding high-signal features for OLE payloads.
+- **`ole_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and enables tiered_crit_trigrams to capture rare malicious macro sequences, targeting PR_AUC gains from improved ranking of subtle OLE exploits.
+
+</details>
+
+## Cycle `20260608T020818-filetypes-ole` — 2026-06-08T02:08:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cf419f376522caa6` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9935 | 0.5000 | 0.9967 | 1 | [log](out/autocollie/runs/2026-06-08T02-14-32_20260608T020818-filetypes-ole_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b5d4bb7f6a82d5bf` | ole_control_hardneg_lr_tune | ok | 0.9972 | 0.9966 | 0.8991 | 13 | [log](out/autocollie/runs/2026-06-08T02-14-37_20260608T020818-filetypes-ole_ole_control_hardneg_lr_tune.log) |
+| `cdf6bfe2838a6d74` | ole_feat_textmetrics_kv_vocab | ok | 0.9966 | 0.9960 | 0.8998 | 12 | [log](out/autocollie/runs/2026-06-08T02-14-52_20260608T020818-filetypes-ole_ole_feat_textmetrics_kv_vocab.log) |
+| `146dc3b6c0d77a74` | ole_feat_lowfreq_bigrams_doc_obf | ok | 0.9966 | 0.9960 | 0.8998 | 21 | [log](out/autocollie/runs/2026-06-08T02-15-04_20260608T020818-filetypes-ole_ole_feat_lowfreq_bigrams_doc_obf.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_hardneg_lr_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by tuning hard_negative_weight and learning_rate on the current best feature set, leveraging matrix cache for a cheap control run.
+- **`ole_feat_textmetrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC and recall@3FPM by enabling text_metrics_full and kv_vocab to capture document obfuscation and metadata patterns specific to OLE malware.
+- **`ole_feat_lowfreq_bigrams_doc_obf`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by lowering bigram_min_freq to 200 and enabling document_obfuscation_features while disabling the noisy clusters group, adapting a successful sister-route pattern.
+
+</details>
+
+## Cycle `20260608T065704-filetypes-ole` — 2026-06-08T06:57:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cf419f376522caa6` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9935 | 0.5000 | 0.9967 | 1 | [log](out/autocollie/runs/2026-06-08T07-04-45_20260608T065704-filetypes-ole_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `44397b9af19069a5` | ole_control_train_tune | ok | 0.9968 | 0.9961 | 0.8998 | 2 | [log](out/autocollie/runs/2026-06-08T07-04-49_20260608T065704-filetypes-ole_ole_control_train_tune.log) |
+| `6a4f19210949ef2b` | ole_feat_textmetrics_kv_vocab | ok | 0.9966 | 0.9960 | 0.8998 | 10 | [log](out/autocollie/runs/2026-06-08T07-04-52_20260608T065704-filetypes-ole_ole_feat_textmetrics_kv_vocab.log) |
+| `ba01b9dfca81a22d` | ole_feat_doc_obfuscation_textenc | ok | 0.9966 | 0.9960 | 0.8998 | 9 | [log](out/autocollie/runs/2026-06-08T07-05-03_20260608T065704-filetypes-ole_ole_feat_doc_obfuscation_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_train_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to establish a training-only baseline; tweaks hard_negative_weight and learning_rate to improve PR_AUC by better separating hard negatives without rebuilding features.
+- **`ole_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to boost recall@3FPM and PR_AUC by adding high-signal lexical features.
+- **`ole_feat_doc_obfuscation_textenc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Activates document_obfuscation_features and text_encoding to target OLE-specific evasion tactics, targeting PR_AUC gains while keeping ROC_AUC flat through focused obfuscation signals.
+
+</details>
+
+## Cycle `20260608T091217-filetypes-ole` — 2026-06-08T09:12:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cf419f376522caa6` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9935 | 0.5000 | 0.9967 | 1 | [log](out/autocollie/runs/2026-06-08T09-17-57_20260608T091217-filetypes-ole_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `86c6c5bb71299022` | ole_control_train_tune_hardneg | ok | 0.9955 | 0.9945 | 0.9011 | 2 | [log](out/autocollie/runs/2026-06-08T09-18-01_20260608T091217-filetypes-ole_ole_control_train_tune_hardneg.log) |
+| `b5ebf65854cd925c` | ole_feat_textmetrics_encoding | ok | 0.9966 | 0.9960 | 0.8998 | 10 | [log](out/autocollie/runs/2026-06-08T09-18-04_20260608T091217-filetypes-ole_ole_feat_textmetrics_encoding.log) |
+| `b6dfa3db791f2449` | ole_feat_kv_vocab_split | ok | 0.9966 | 0.9960 | 0.8998 | 12 | [log](out/autocollie/runs/2026-06-08T09-18-16_20260608T091217-filetypes-ole_ole_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_train_tune_hardneg`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set; test hard-negative upweighting to improve recall@3FPM by focusing the model on difficult benign/malware boundaries while keeping PR_AUC flat.
+- **`ole_feat_textmetrics_encoding`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document obfuscation signals in OLE files, targeting PR_AUC and recall@3FPM gains by resolving ambiguous text patterns.
+- **`ole_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to extract granular metadata signal from OLE streams, aiming to boost PR_AUC by distinguishing malicious metadata configurations from benign ones.
+
+</details>
+
+## Cycle `20260608T105206-filetypes-ole` — 2026-06-08T10:52:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cf419f376522caa6` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9935 | 0.5000 | 0.9967 | 1 | [log](out/autocollie/runs/2026-06-08T11-02-26_20260608T105206-filetypes-ole_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4014b390c0e9d20c` | ole_control_train_tune_hardneg_lr | ok | 0.9942 | 0.9929 | 0.9011 | 3 | [log](out/autocollie/runs/2026-06-08T11-02-30_20260608T105206-filetypes-ole_ole_control_train_tune_hardneg_lr.log) |
+| `4a850d382b1d464f` | ole_feat_kv_vocab_split | ok | 0.9966 | 0.9960 | 0.8998 | 19 | [log](out/autocollie/runs/2026-06-08T11-02-38_20260608T105206-filetypes-ole_ole_feat_kv_vocab_split.log) |
+| `dfcbab8359c5183d` | ole_feat_tiered_crit_trigrams | ok | 0.9966 | 0.9960 | 0.8998 | 14 | [log](out/autocollie/runs/2026-06-08T11-02-59_20260608T105206-filetypes-ole_ole_feat_tiered_crit_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_train_tune_hardneg_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by tuning hard_negative_weight and learning_rate on the best feature set, leveraging matrix cache for cheap iteration.
+- **`ole_feat_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to boost PR_AUC by adding key-value vocabulary and value splitting to capture structured OLE metadata patterns, complementing existing text metrics.
+- **`ole_feat_tiered_crit_trigrams`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Aims to improve PR_AUC by enabling tiered critical trigrams to capture higher-order malicious objective co-occurrences in OLE documents, while keeping ROC_AUC stable.
+
+</details>
+
+## Cycle `20260608T123506-filetypes-ole` — 2026-06-08T12:35:06Z
+
+_No specs ran._
+
+## Cycle `20260608T124158-filetypes-ole` — 2026-06-08T12:41:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7c2c99369a4af6d6` | try_severity_fractions | ok | 0.9966 | 0.9960 | 0.8998 | 77 | [log](out/autocollie/runs/2026-06-08T12-44-10_20260608T124158-filetypes-ole_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T161025-filetypes-ole` — 2026-06-08T16:10:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7c2c99369a4af6d6` | try_severity_fractions | dup | 0.9966 | 0.9960 | 0.8998 | 1 | [log](out/autocollie/runs/2026-06-08T16-12-58_20260608T161025-filetypes-ole_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

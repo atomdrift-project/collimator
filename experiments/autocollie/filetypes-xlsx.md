@@ -298,3 +298,117 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T211409-filetypes-xlsx` — 2026-06-07T21:14:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ed30f388358f0c1` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9974 | 0.5000 | 0.9987 | 11 | [log](out/autocollie/runs/2026-06-07T21-19-34_20260607T211409-filetypes-xlsx_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `22a5fe0cc517591d` | xlsx_control_kv_textmetrics_train | ok | 0.9832 | 0.6134 | 0.4806 | 14 | [log](out/autocollie/runs/2026-06-07T21-19-48_20260607T211409-filetypes-xlsx_xlsx_control_kv_textmetrics_train.log) |
+| `eb32e97650df3e02` | xlsx_textenc_kv_vocab_expand | ok | 0.9833 | 0.6151 | 0.4807 | 16 | [log](out/autocollie/runs/2026-06-07T21-20-07_20260607T211409-filetypes-xlsx_xlsx_textenc_kv_vocab_expand.log) |
+| `28c640c7ee217a66` | xlsx_kv_shape_value_split | ok | 0.9833 | 0.6250 | 0.4806 | 15 | [log](out/autocollie/runs/2026-06-07T21-20-24_20260607T211409-filetypes-xlsx_xlsx_kv_shape_value_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_kv_textmetrics_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best recent feature set to test if num_leaves=128 and reg_lambda=1.5 improve PR_AUC while keeping ROC_AUC flat.
+- **`xlsx_textenc_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 …` — Adds text_encoding and expands kv_vocab_max to 12000 to capture more document obfuscation and KV signal, aiming to boost recall@3FPM.
+- **`xlsx_kv_shape_value_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_SHAPE_FEATURES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enables kv_shape and kv_value_split to extract structural and tokenized KV signals, targeting PR_AUC gains on complex XLSX macros.
+
+</details>
+
+## Cycle `20260608T023348-filetypes-xlsx` — 2026-06-08T02:33:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ed30f388358f0c1` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9974 | 0.5000 | 0.9987 | 1 | [log](out/autocollie/runs/2026-06-08T02-43-05_20260608T023348-filetypes-xlsx_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `6d30917bcf0f6629` | xlsx_control_kv_textmetrics_train | ok | 0.9833 | 0.6133 | 0.4806 | 13 | [log](out/autocollie/runs/2026-06-08T02-43-07_20260608T023348-filetypes-xlsx_xlsx_control_kv_textmetrics_train.log) |
+| `4f22651733c6f5ba` | xlsx_textenc_kv_split_vocab | ok | 0.9833 | 0.6152 | 0.4807 | 17 | [log](out/autocollie/runs/2026-06-08T02-43-21_20260608T023348-filetypes-xlsx_xlsx_textenc_kv_split_vocab.log) |
+| `cdec845fca16068e` | xlsx_tiered_trigrams_bigram_freq | ok | 0.9833 | 0.6151 | 0.4807 | 15 | [log](out/autocollie/runs/2026-06-08T02-43-39_20260608T023348-filetypes-xlsx_xlsx_tiered_trigrams_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_kv_textmetrics_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Control run replicating recent high-PR-AUC feature surface; aims to stabilize PR_AUC by tuning num_leaves and min_child_samples while keeping ROC_AUC flat.
+- **`xlsx_textenc_kv_split_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_encoding and kv_value_split to recover per-element signal in document metadata; aims to improve PR_AUC by capturing finer-grained obfuscation patterns without degrading ROC_AUC.
+- **`xlsx_tiered_trigrams_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Adds tiered_crit_trigrams and lowers bigram_min_freq to capture multi-step malicious sequences; aims to boost recall@3FPM and PR_AUC by enriching the n-gram surface while using reg_lambda to guard ROC_AUC.
+
+</details>
+
+## Cycle `20260608T062756-filetypes-xlsx` — 2026-06-08T06:27:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ed30f388358f0c1` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9974 | 0.5000 | 0.9987 | 1 | [log](out/autocollie/runs/2026-06-08T06-35-51_20260608T062756-filetypes-xlsx_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `7bdaa76251b8900a` | xlsx_control_training_tune | ok | 0.9831 | 0.5904 | 0.4795 | 10 | [log](out/autocollie/runs/2026-06-08T06-35-53_20260608T062756-filetypes-xlsx_xlsx_control_training_tune.log) |
+| `237a057557645a17` | xlsx_textenc_metrics_full_vocab | ok | 0.9832 | 0.6101 | 0.4795 | 11 | [log](out/autocollie/runs/2026-06-08T06-36-04_20260608T062756-filetypes-xlsx_xlsx_textenc_metrics_full_vocab.log) |
+| `da38a17e086a7276` | xlsx_tiered_trigrams_low_freq | ok | 0.9832 | 0.6101 | 0.4795 | 9 | [log](out/autocollie/runs/2026-06-08T06-36-15_20260608T062756-filetypes-xlsx_xlsx_tiered_trigrams_low_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_training_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=30 EXP_NUM_LEAVES=64 …` — Control spec replicating recent best feature surface while tuning num_leaves and learning_rate to improve PR_AUC by reducing overfitting and stabilizing ranking without changing the matrix cache.
+- **`xlsx_textenc_metrics_full_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=20 EXP_NUM_LEAVES=64 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_encoding and text_metrics_full to capture document obfuscation and structural text signals, aiming to boost PR_AUC by better separating malicious macros from benign spreadsheet content.
+- **`xlsx_tiered_trigrams_low_freq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=20 EXP_NUM_LEAVES=64 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 …` — Lowers tiered trigram and bigram frequency floors to capture rarer malicious patterns in XLSX files, targeting improved recall@3 FP/M by increasing sensitivity to novel attack signatures.
+
+</details>
+
+## Cycle `20260608T080508-filetypes-xlsx` — 2026-06-08T08:05:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ed30f388358f0c1` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9974 | 0.5000 | 0.9987 | 2 | [log](out/autocollie/runs/2026-06-08T08-14-48_20260608T080508-filetypes-xlsx_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `85c87d229932ae36` | xlsx_control_tiered_trigrams_v2 | ok | 0.9833 | 0.6250 | 0.4806 | 27 | [log](out/autocollie/runs/2026-06-08T08-14-53_20260608T080508-filetypes-xlsx_xlsx_control_tiered_trigrams_v2.log) |
+| `5ec816c3f381e6de` | xlsx_text_metrics_encoding_research | ok | 0.9833 | 0.6151 | 0.4807 | 27 | [log](out/autocollie/runs/2026-06-08T08-15-26_20260608T080508-filetypes-xlsx_xlsx_text_metrics_encoding_research.log) |
+| `8116cbcc86ac35ac` | xlsx_kv_vocab_split_vocab | ok | 0.9832 | 0.6134 | 0.4806 | 17 | [log](out/autocollie/runs/2026-06-08T08-15-56_20260608T080508-filetypes-xlsx_xlsx_kv_vocab_split_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_tiered_trigrams_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 …` — Replicate best recent feature surface to establish a stable baseline for PR_AUC; tuning num_leaves=128 and reg_lambda=2.0 aims to improve PR_AUC by reducing overfitting on rare patterns.
+- **`xlsx_text_metrics_encoding_research`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 …` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, targeting PR_AUC gains by adding high-signal structural features specific to XLSX.
+- **`xlsx_kv_vocab_split_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 …` — Activate kv_vocab and kv_value_split to extract granular metadata tokens, aiming to boost recall@3 FP/M by better separating malicious macros from benign templates.
+
+</details>
+
+## Cycle `20260608T095856-filetypes-xlsx` — 2026-06-08T09:58:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ed30f388358f0c1` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9974 | 0.5000 | 0.9987 | 2 | [log](out/autocollie/runs/2026-06-08T10-06-57_20260608T095856-filetypes-xlsx_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `26c9b55fa3369ee4` | xlsx_control_tiered_trigrams_v3 | ok | 0.9833 | 0.6151 | 0.4807 | 2 | [log](out/autocollie/runs/2026-06-08T10-07-03_20260608T095856-filetypes-xlsx_xlsx_control_tiered_trigrams_v3.log) |
+| `63f756c46baff4db` | xlsx_text_metrics_encoding_research | ok | 0.9833 | 0.6151 | 0.4807 | 14 | [log](out/autocollie/runs/2026-06-08T10-07-08_20260608T095856-filetypes-xlsx_xlsx_text_metrics_encoding_research.log) |
+| `0346e2109e959d25` | xlsx_kv_vocab_split_tiered | ok | 0.9833 | 0.6151 | 0.4807 | 26 | [log](out/autocollie/runs/2026-06-08T10-07-24_20260608T095856-filetypes-xlsx_xlsx_kv_vocab_split_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_tiered_trigrams_v3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env to establish baseline; increase num_leaves to 128 to improve PR_AUC while keeping ROC_AUC flat.
+- **`xlsx_text_metrics_encoding_research`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies, aiming to boost recall@3 FP/M by adding structural signal for XLSX macros.
+- **`xlsx_kv_vocab_split_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 …` — Enable kv_vocab with kv_value_split to recover per-element signal in macro properties, paired with lower tiered_trigram_min_freq to catch rare attack patterns, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260608T125328-filetypes-xlsx` — 2026-06-08T12:53:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e6245dab58817862` | try_severity_fractions | ok | 0.9833 | 0.6152 | 0.4807 | 15 | [log](out/autocollie/runs/2026-06-08T12-55-28_20260608T125328-filetypes-xlsx_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160321-filetypes-xlsx` — 2026-06-08T16:03:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e6245dab58817862` | try_severity_fractions | dup | 0.9833 | 0.6152 | 0.4807 | 1 | [log](out/autocollie/runs/2026-06-08T16-05-36_20260608T160321-filetypes-xlsx_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

@@ -717,3 +717,121 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T210144-filetypes-javascript` — 2026-06-07T21:01:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e6eec146826b1709` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9976 | 0.9971 | 0.9779 | 51 | [log](out/autocollie/runs/2026-06-07T21-11-15_20260607T210144-filetypes-javascript_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `90402d2e62636ecb` | js_control_hardneg_leaves128_lr004 | ok | 0.9842 | 0.9772 | 0.9518 | 39 | [log](out/autocollie/runs/2026-06-07T21-12-28_20260607T210144-filetypes-javascript_js_control_hardneg_leaves128_lr004.log) |
+| `3ca8c0e1e77c7c9f` | js_feat_textenc_metrics_full_lowbigram | ok | 0.9827 | 0.9751 | 0.9491 | 30 | [log](out/autocollie/runs/2026-06-07T21-13-12_20260607T210144-filetypes-javascript_js_feat_textenc_metrics_full_lowbigram.log) |
+| `6947aca3b35ff4ea` | js_transfer_xml_tiered_trigrams | ok | 0.9827 | 0.9751 | 0.9463 | 35 | [log](out/autocollie/runs/2026-06-07T21-13-43_20260607T210144-filetypes-javascript_js_transfer_xml_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_hardneg_leaves128_lr004`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicate best recent feature set; tune num_leaves and learning_rate to sharpen score separation and improve PR_AUC.
+- **`js_feat_textenc_metrics_full_lowbigram`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full research vocabs with lower bigram_min_freq to capture JS obfuscation signals, targeting PR_AUC improvement.
+- **`js_transfer_xml_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Port XML's tiered-trigram and low-bigram config to JS to enrich path co-occurrence features, aiming to lift recall@3 FP/M and PR_AUC.
+
+</details>
+
+## Cycle `20260608T030825-filetypes-javascript` — 2026-06-08T03:08:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e6eec146826b1709` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9976 | 0.9971 | 0.9779 | 1 | [log](out/autocollie/runs/2026-06-08T03-17-57_20260608T030825-filetypes-javascript_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `84eabe51ba07e778` | js_control_hardneg_leaves128 | ok | 0.9849 | 0.9788 | 0.9513 | 6 | [log](out/autocollie/runs/2026-06-08T03-18-03_20260608T030825-filetypes-javascript_js_control_hardneg_leaves128.log) |
+| `6ce5e2273b080be0` | js_feat_kv_textmetrics_full | ok | 0.9834 | 0.9764 | 0.9441 | 35 | [log](out/autocollie/runs/2026-06-08T03-18-11_20260608T030825-filetypes-javascript_js_feat_kv_textmetrics_full.log) |
+| `418b039a54ede38f` | js_feat_lowbigram_textenc | ok | 0.9827 | 0.9751 | 0.9463 | 33 | [log](out/autocollie/runs/2026-06-08T03-18-47_20260608T030825-filetypes-javascript_js_feat_lowbigram_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_hardneg_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; tuning hard_negative_weight and num_leaves to improve PR_AUC by sharpening decision boundaries at the tail.
+- **`js_feat_kv_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture key-value structures and document obfuscation signals, aiming to boost recall@3FPM by detecting subtle JS malware patterns.
+- **`js_feat_lowbigram_textenc`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 and enables text_encoding to capture rarer JS patterns and encoding artifacts, targeting PR_AUC improvement while preserving ROC_AUC.
+
+</details>
+
+## Cycle `20260608T070048-filetypes-javascript` — 2026-06-08T07:00:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e6eec146826b1709` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9976 | 0.9971 | 0.9779 | 1 | [log](out/autocollie/runs/2026-06-08T07-09-22_20260608T070048-filetypes-javascript_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ab8739ba788fca4b` | js_control_hardneg_leaves128_v2 | ok | 0.9840 | 0.9770 | 0.9514 | 21 | [log](out/autocollie/runs/2026-06-08T07-10-18_20260608T070048-filetypes-javascript_js_control_hardneg_leaves128_v2.log) |
+| `e2fce10712b40fd5` | js_feat_kv_textmetrics_full | ok | 0.9834 | 0.9764 | 0.9441 | 68 | [log](out/autocollie/runs/2026-06-08T07-10-52_20260608T070048-filetypes-javascript_js_feat_kv_textmetrics_full.log) |
+| `bcfcff0fa582fe27` | js_feat_textenc_lowbigram | ok | 0.9827 | 0.9751 | 0.9463 | 42 | [log](out/autocollie/runs/2026-06-08T07-12-03_20260608T070048-filetypes-javascript_js_feat_textenc_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_hardneg_leaves128_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — control feature set with tuned hard negatives and leaves to boost recall@3FPM while preserving PR_AUC
+- **`js_feat_kv_textmetrics_full`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — enable kv_vocab and text_metrics_full to capture key-value patterns and obfuscation signals, aiming to improve PR_AUC and recall@3FPM
+- **`js_feat_textenc_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — enable text_encoding and lower bigram_min_freq to capture rare obfuscation patterns, targeting PR_AUC gain
+
+</details>
+
+## Cycle `20260608T083610-filetypes-javascript` — 2026-06-08T08:36:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e6eec146826b1709` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9976 | 0.9971 | 0.9779 | 1 | [log](out/autocollie/runs/2026-06-08T08-43-13_20260608T083610-filetypes-javascript_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `84eabe51ba07e778` | js_control_hardneg_leaves128_v3 | dup | 0.9849 | 0.9788 | 0.9513 | 1 | [log](out/autocollie/runs/2026-06-08T08-43-16_20260608T083610-filetypes-javascript_js_control_hardneg_leaves128_v3.log) |
+| `0e0ce6c1dfcff948` | js_feat_textenc_metrics_lowbigram | ok | 0.9801 | 0.9710 | 0.9496 | 33 | [log](out/autocollie/runs/2026-06-08T08-43-18_20260608T083610-filetypes-javascript_js_feat_textenc_metrics_lowbigram.log) |
+| `832cdb67c25d2346` | js_feat_kv_vocab_split | ok | 0.9836 | 0.9773 | 0.9507 | 44 | [log](out/autocollie/runs/2026-06-08T08-43-52_20260608T083610-filetypes-javascript_js_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_hardneg_leaves128_v3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Aims to improve recall@3FPM by increasing hard-negative weight and tree capacity on the established feature set, while keeping PR_AUC flat.
+- **`js_feat_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by capturing obfuscation and rare syntactic patterns via full text metrics and lower-frequency bigrams.
+- **`js_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by exposing granular key-value payload signals that differentiate malicious JS configurations from benign scripts.
+
+</details>
+
+## Cycle `20260608T095856-filetypes-javascript` — 2026-06-08T09:58:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e6eec146826b1709` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9976 | 0.9971 | 0.9779 | 6 | [log](out/autocollie/runs/2026-06-08T10-07-15_20260608T095856-filetypes-javascript_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `8d3747ce33b22265` | js_ctrl_extra_trees_leaves128 | ok | 0.9846 | 0.9778 | 0.9497 | 17 | [log](out/autocollie/runs/2026-06-08T10-07-24_20260608T095856-filetypes-javascript_js_ctrl_extra_trees_leaves128.log) |
+| `544baaec312283dc` | js_feat_kv_vocab_textmetrics | ok | 0.9834 | 0.9764 | 0.9441 | 15 | [log](out/autocollie/runs/2026-06-08T10-07-45_20260608T095856-filetypes-javascript_js_feat_kv_vocab_textmetrics.log) |
+| `cc2b54917aedafb8` | js_feat_textenc_kvsplit_lowbigram | ok | 0.9827 | 0.9751 | 0.9463 | 104 | [log](out/autocollie/runs/2026-06-08T10-08-01_20260608T095856-filetypes-javascript_js_feat_textenc_kvsplit_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_ctrl_extra_trees_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Tests extra_trees regularization to improve tail recall@3 FP/M while keeping PR_AUC flat, reusing cached matrix.
+- **`js_feat_kv_vocab_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and full text metrics to capture structural/scripting signals, targeting PR_AUC gain.
+- **`js_feat_textenc_kvsplit_lowbigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Splits KV values and lowers bigram frequency floor to recover rare malicious patterns, aiming to boost recall@3 FP/M.
+
+</details>
+
+## Cycle `20260608T123505-filetypes-javascript` — 2026-06-08T12:35:05Z
+
+_No specs ran._
+
+## Cycle `20260608T124635-filetypes-javascript` — 2026-06-08T12:46:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `370aadf40e0a7898` | try_severity_fractions | ok | 0.9836 | 0.9773 | 0.9507 | 38 | [log](out/autocollie/runs/2026-06-08T12-48-37_20260608T124635-filetypes-javascript_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160319-filetypes-javascript` — 2026-06-08T16:03:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `370aadf40e0a7898` | try_severity_fractions | dup | 0.9836 | 0.9773 | 0.9507 | 1 | [log](out/autocollie/runs/2026-06-08T16-05-36_20260608T160319-filetypes-javascript_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

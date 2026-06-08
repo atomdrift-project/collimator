@@ -116,3 +116,64 @@ def test_specialist_only_route_is_kept():
     ).astype(np.float32)
     # No base routes (general absent) → the specialist is all we have; keep it.
     assert _keep({"filetypes/x": spec}) is True
+
+
+def _two_strong_one_benign_route():
+    """Two routes with real malware signal plus one route that is HIGH on
+    benigns and low on malware — the configuration that earns a negative blend
+    weight (the pe/`general` pathology)."""
+    rng = np.random.default_rng(7)
+    n = 4000
+    y = (rng.random(n) < 0.5).astype(int)
+
+    def probs(sig):
+        return (1.0 / (1.0 + np.exp(-(sig + rng.standard_normal(n) * 0.5)))).astype(
+            np.float64
+        )
+
+    strong_a = probs(np.where(y == 1, 4.0, -4.0))
+    strong_b = probs(np.where(y == 1, 3.0, -3.0))
+    benigny = probs(np.where(y == 1, -2.0, 2.0))  # high on benign → wants w<0
+    route_probs = {
+        "general": benigny,
+        "filegroups/native": strong_a,
+        "filetypes/pe": strong_b,
+    }
+    routes = ("general", "filegroups/native", "filetypes/pe")
+    return route_probs, y, routes
+
+
+def test_blend_drops_negative_weight_route():
+    # The benign-correlated route would get a negative weight; the non-negativity
+    # constraint must drop it and refit on the survivors. A negative weight in an
+    # OR-style ensemble vetoes detections (it buried the PE-trojan true positive).
+    route_probs, y, routes = _two_strong_one_benign_route()
+    fit = _mod._fit_learned_blend(route_probs, y, routes)
+    assert fit is not None
+    assert "general" not in fit["present_routes"]
+    assert set(fit["present_routes"]) == {"filegroups/native", "filetypes/pe"}
+    assert all(w >= -_mod._BLEND_MIN_WEIGHT for w in fit["weights"])
+
+
+def test_blend_keeps_all_positive_weight_routes():
+    # When every route carries real malware signal (all positive weights), none
+    # are dropped — the constraint only fires on genuine vetoes.
+    rng = np.random.default_rng(8)
+    n = 4000
+    y = (rng.random(n) < 0.5).astype(int)
+
+    def probs(sep):
+        return (
+            1.0 / (1.0 + np.exp(-(np.where(y == 1, sep, -sep) + rng.standard_normal(n) * 0.5)))
+        ).astype(np.float64)
+
+    route_probs = {
+        "general": probs(2.0),
+        "filegroups/native": probs(3.0),
+        "filetypes/pe": probs(2.5),
+    }
+    routes = ("general", "filegroups/native", "filetypes/pe")
+    fit = _mod._fit_learned_blend(route_probs, y, routes)
+    assert fit is not None
+    assert set(fit["present_routes"]) == set(routes)
+    assert all(w >= -_mod._BLEND_MIN_WEIGHT for w in fit["weights"])

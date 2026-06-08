@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 # actually pays off once the benign corpus is large enough to resolve
 # sub-FP/M budgets), decade-aligned in the mid region (L10-L100, to match
 # litmus's `-0..-9` shorthand 0/10/20/.../90), sparse in the mid-loose
-# region (L200-L1000), and very sparse in the noisy tail (L2000-L10000).
+# region (L200-L1000), and very sparse in the noisy tail (L2000-L25000).
 # The loose-and-noisier tail exists for three reasons:
 #   1. The azoth READMEs' corpus-weighted recall chart needs informational
 #      headroom — operators want to see how recall would grow if the FP
@@ -37,15 +37,18 @@ log = logging.getLogger(__name__)
 #      somewhere to plot.
 #   2. Litmus's loaded suspicious threshold is the level-table lookup at
 #      `max_grid_level` (see `derive_suspicious_level_from_hostile` in
-#      `litmus/src/model.rs`). Extending the tail to L10000 gives "fires
-#      anywhere above critical" maximum reach.
+#      `litmus/src/model.rs`). Extending the tail to L25000 gives "fires
+#      anywhere above critical" maximum reach — the L15k-L25k band exists so
+#      strong-specialist routes with a small benign eval (e.g. pe at ~160k
+#      benigns, where even L10000 only resolves ~16 FP) get enough budget
+#      headroom for their recall-carrying specialist-OR candidates to deploy.
 #   3. Consumer-side classification (promoter / prism / hopper) treats
 #      `l > critical_level` as suspicious — a fatter tail means more files
 #      with weak-but-real signal end up in the suspicious bucket rather
 #      than being silently dropped as benign.
 _LEVELS_PER_100M: tuple[int, ...] = (
     0, 1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
-    200, 300, 500, 1000, 2000, 5000, 7500, 10000,
+    200, 300, 500, 1000, 2000, 5000, 7500, 10000, 15000, 20000, 25000,
 )
 SEVERITY_LEVEL_TARGETS = [
     {

@@ -534,3 +534,121 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T233640-filetypes-php` — 2026-06-07T23:36:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07066c4d765de183` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9942 | 0.9969 | 0.9582 | 19 | [log](out/autocollie/runs/2026-06-07T23-42-09_20260607T233640-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `7702fbf583cb6293` | php_control_hardneg_leaves128_v2 | ok | 0.8490 | 0.9492 | 0.8391 | 16 | [log](out/autocollie/runs/2026-06-07T23-42-34_20260607T233640-filetypes-php_php_control_hardneg_leaves128_v2.log) |
+| `108e3fbac290aa40` | php_feat_kv_vocab_split_expanded | ok | 0.8496 | 0.9516 | 0.8257 | 14 | [log](out/autocollie/runs/2026-06-07T23-42-53_20260607T233640-filetypes-php_php_feat_kv_vocab_split_expanded.log) |
+| `4ff587d27dc10f6e` | php_feat_textenc_metrics_full_v2 | ok | 0.8458 | 0.9439 | 0.8373 | 14 | [log](out/autocollie/runs/2026-06-07T23-43-08_20260607T233640-filetypes-php_php_feat_textenc_metrics_full_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_hardneg_leaves128_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating best recent feature_env to establish baseline PR_AUC while tuning hard-negative weighting and leaves for better tail recall@3FPM.
+- **`php_feat_kv_vocab_split_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab and enables value splitting to capture finer-grained PHP configuration patterns, aiming to improve PR_AUC and recall@3FPM.
+- **`php_feat_textenc_metrics_full_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text encoding and full text metrics to better characterize obfuscated PHP scripts, targeting PR_AUC gains via improved benign/malware separation.
+
+</details>
+
+## Cycle `20260608T042628-filetypes-php` — 2026-06-08T04:26:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07066c4d765de183` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9942 | 0.9969 | 0.9582 | 1 | [log](out/autocollie/runs/2026-06-08T04-33-06_20260608T042628-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bda0576ebfd90fcd` | php_control_training_tune | ok | 0.8507 | 0.9525 | 0.8256 | 2 | [log](out/autocollie/runs/2026-06-08T04-33-09_20260608T042628-filetypes-php_php_control_training_tune.log) |
+| `8f4d67a4ecdde47c` | php_feat_kv_vocab_split | ok | 0.8494 | 0.9513 | 0.8236 | 16 | [log](out/autocollie/runs/2026-06-08T04-33-12_20260608T042628-filetypes-php_php_feat_kv_vocab_split.log) |
+| `ea06b56181ac5515` | php_feat_textenc_metrics | ok | 0.8458 | 0.9439 | 0.8373 | 19 | [log](out/autocollie/runs/2026-06-08T04-33-29_20260608T042628-filetypes-php_php_feat_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_training_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and regularization to better rank tail malware without changing the feature surface.
+- **`php_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and kv_value_split to capture PHP-specific configuration arrays and key-value patterns that distinguish malicious payloads.
+- **`php_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_encoding and text_metrics_full to detect obfuscation and encoding artifacts common in PHP webshells and droppers.
+
+</details>
+
+## Cycle `20260608T071530-filetypes-php` — 2026-06-08T07:15:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07066c4d765de183` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9942 | 0.9969 | 0.9582 | 1 | [log](out/autocollie/runs/2026-06-08T07-20-23_20260608T071530-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `e9e863cca77833e1` | php_control_training_tune_v2 | ok | 0.8454 | 0.9445 | 0.8307 | 2 | [log](out/autocollie/runs/2026-06-08T07-20-27_20260608T071530-filetypes-php_php_control_training_tune_v2.log) |
+| `e67cf3ce02c97399` | php_feat_textenc_metrics_full | ok | 0.8458 | 0.9439 | 0.8373 | 3 | [log](out/autocollie/runs/2026-06-08T07-20-30_20260608T071530-filetypes-php_php_feat_textenc_metrics_full.log) |
+| `7d85d54cf6f2e11c` | php_feat_kv_vocab_split | ok | 0.8496 | 0.9516 | 0.8257 | 20 | [log](out/autocollie/runs/2026-06-08T07-20-33_20260608T071530-filetypes-php_php_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_training_tune_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing num_leaves and adding L2 regularization on the baseline feature set to sharpen ranking without changing the feature matrix.
+- **`php_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_encoding and text_metrics_full to capture obfuscation and structural anomalies in PHP scripts that standard n-grams miss.
+- **`php_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by enabling kv_vocab and kv_value_split to extract high-signal configuration keys and function arguments from PHP source.
+
+</details>
+
+## Cycle `20260608T080508-filetypes-php` — 2026-06-08T08:05:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07066c4d765de183` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9942 | 0.9969 | 0.9582 | 1 | [log](out/autocollie/runs/2026-06-08T08-13-42_20260608T080508-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bda0576ebfd90fcd` | php_control_training_tune_v3 | dup | 0.8507 | 0.9525 | 0.8256 | 2 | [log](out/autocollie/runs/2026-06-08T08-13-46_20260608T080508-filetypes-php_php_control_training_tune_v3.log) |
+| `e67cf3ce02c97399` | php_feat_textenc_metrics_full_v2 | dup | 0.8458 | 0.9439 | 0.8373 | 1 | [log](out/autocollie/runs/2026-06-08T08-13-50_20260608T080508-filetypes-php_php_feat_textenc_metrics_full_v2.log) |
+| `630d80f1f990451d` | php_feat_kv_vocab_expanded | ok | 0.8496 | 0.9516 | 0.8257 | 36 | [log](out/autocollie/runs/2026-06-08T08-13-53_20260608T080508-filetypes-php_php_feat_kv_vocab_expanded.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_training_tune_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control run replicating best recent feature_env; increases num_leaves and estimators to improve PR_AUC by allowing deeper trees to capture complex PHP malware patterns without overfitting.
+- **`php_feat_textenc_metrics_full_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture PHP script obfuscation and structural anomalies, aiming to boost PR_AUC by adding high-signal text features that distinguish malicious payloads from benign scripts.
+- **`php_feat_kv_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab_max and lowers kv_min_freq to capture rare but highly indicative key-value patterns in PHP malware, targeting higher recall@3FPM while maintaining PR_AUC guardrails.
+
+</details>
+
+## Cycle `20260608T112608-filetypes-php` — 2026-06-08T11:26:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07066c4d765de183` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9942 | 0.9969 | 0.9582 | 1 | [log](out/autocollie/runs/2026-06-08T11-32-46_20260608T112608-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `e8442adbf19ef3c7` | php_control_training_tune_v3 | ok | 0.8477 | 0.9490 | 0.8260 | 3 | [log](out/autocollie/runs/2026-06-08T11-32-49_20260608T112608-filetypes-php_php_control_training_tune_v3.log) |
+| `0001eae27ac2629d` | php_feat_kv_vocab_expanded_v2 | ok | 0.8496 | 0.9516 | 0.8257 | 14 | [log](out/autocollie/runs/2026-06-08T11-32-52_20260608T112608-filetypes-php_php_feat_kv_vocab_expanded_v2.log) |
+| `04d400f599de1528` | php_feat_textenc_metrics_full | ok | 0.8458 | 0.9439 | 0.8373 | 3 | [log](out/autocollie/runs/2026-06-08T11-33-07_20260608T112608-filetypes-php_php_feat_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_training_tune_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best recent feature_env to test deeper trees and higher regularization, aiming to stabilize PR_AUC while preserving ROC_AUC.
+- **`php_feat_kv_vocab_expanded_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab to 20000 and enables kv_value_split to capture finer-grained PHP config signals, targeting PR_AUC and recall@3FPM gains.
+- **`php_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture obfuscation patterns in PHP scripts, aiming to boost PR_AUC and recall@3FPM.
+
+</details>
+
+## Cycle `20260608T123506-filetypes-php` — 2026-06-08T12:35:06Z
+
+_No specs ran._
+
+## Cycle `20260608T125941-filetypes-php` — 2026-06-08T12:59:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7298de301ac1f347` | try_severity_fractions | ok | 0.8494 | 0.9513 | 0.8236 | 51 | [log](out/autocollie/runs/2026-06-08T13-02-07_20260608T125941-filetypes-php_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160321-filetypes-php` — 2026-06-08T16:03:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7298de301ac1f347` | try_severity_fractions | dup | 0.8494 | 0.9513 | 0.8236 | 1 | [log](out/autocollie/runs/2026-06-08T16-05-36_20260608T160321-filetypes-php_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

@@ -1006,3 +1006,135 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T004335-filetypes-c` — 2026-06-08T00:43:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cb0fe0d2559f9906` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9862 | 0.9939 | 0.9437 | 17 | [log](out/autocollie/runs/2026-06-08T00-48-33_20260608T004335-filetypes-c_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9fe01a5f52eb9c63` | c_control_kv_split_train_tune | ok | 0.6110 | 0.8411 | 0.3524 | 16 | [log](out/autocollie/runs/2026-06-08T00-49-00_20260608T004335-filetypes-c_c_control_kv_split_train_tune.log) |
+| `ffb7c5aec234037a` | c_feat_symbol_vocab_lowfreq | ok | 0.6196 | 0.8432 | 0.3536 | 15 | [log](out/autocollie/runs/2026-06-08T00-49-19_20260608T004335-filetypes-c_c_feat_symbol_vocab_lowfreq.log) |
+| `1d089e8d7778e5c0` | c_feat_text_metrics_full_kv | ok | 0.5973 | 0.8238 | 0.3535 | 14 | [log](out/autocollie/runs/2026-06-08T00-49-35_20260608T004335-filetypes-c_c_feat_text_metrics_full_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_kv_split_train_tune`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set (kv_vocab_split) and tune training (num_leaves=128, lr=0.03, reg_lambda=1.5) to improve PR_AUC by reducing overfitting on rare patterns while preserving ranking signal.
+- **`c_feat_symbol_vocab_lowfreq`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab with lower min_freq (50) and larger max (15000) to capture C-specific import/export patterns, aiming to boost PR_AUC by adding discriminative symbol co-occurrence signal.
+- **`c_feat_text_metrics_full_kv`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full alongside kv_vocab to capture obfuscation and string density signals in C source/binaries, targeting recall@3FPM by improving separation of malicious vs benign text-heavy samples.
+
+</details>
+
+## Cycle `20260608T020817-filetypes-c` — 2026-06-08T02:08:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cb0fe0d2559f9906` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9862 | 0.9939 | 0.9437 | 4 | [log](out/autocollie/runs/2026-06-08T02-15-36_20260608T020817-filetypes-c_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `38bbd3dff089c9cf` | c_control_hardneg_train | ok | 0.5465 | 0.7612 | 0.3532 | 45 | [log](out/autocollie/runs/2026-06-08T02-15-41_20260608T020817-filetypes-c_c_control_hardneg_train.log) |
+| `be2a51822a783742` | c_feat_kv_vocab_text_metrics | ok | 0.5973 | 0.8238 | 0.3535 | 53 | [log](out/autocollie/runs/2026-06-08T02-16-29_20260608T020817-filetypes-c_c_feat_kv_vocab_text_metrics.log) |
+| `b2335ec9bc1f7ee7` | c_feat_symbol_vocab_bigrams | ok | 0.6196 | 0.8432 | 0.3536 | 41 | [log](out/autocollie/runs/2026-06-08T02-17-24_20260608T020817-filetypes-c_c_feat_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_hardneg_train`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by applying hard-negative mining to the baseline feature set, sharpening decision boundaries at the tail without rebuilding the feature matrix.
+- **`c_feat_kv_vocab_text_metrics`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and text_metrics_full to capture structural key-value patterns and detailed text obfuscation signals common in C source/header files.
+- **`c_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by expanding symbol_vocab and enabling symbol_bigrams to capture co-occurrence patterns of imports and function names specific to C binaries.
+
+</details>
+
+## Cycle `20260608T064542-filetypes-c` — 2026-06-08T06:45:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cb0fe0d2559f9906` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9862 | 0.9939 | 0.9437 | 1 | [log](out/autocollie/runs/2026-06-08T06-54-09_20260608T064542-filetypes-c_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `1b7b3f3b57d01db9` | c_control_train_tweak | ok | 0.6196 | 0.8432 | 0.3536 | 2 | [log](out/autocollie/runs/2026-06-08T06-54-14_20260608T064542-filetypes-c_c_control_train_tweak.log) |
+| `fee88043d69cb1a5` | c_feat_kv_vocab | ok | 0.6196 | 0.8432 | 0.3536 | 14 | [log](out/autocollie/runs/2026-06-08T06-54-17_20260608T064542-filetypes-c_c_feat_kv_vocab.log) |
+| `fca9fdc1ac475f54` | c_feat_symbol_vocab_bigrams | ok | 0.6196 | 0.8432 | 0.3536 | 11 | [log](out/autocollie/runs/2026-06-08T06-54-32_20260608T064542-filetypes-c_c_feat_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_train_tweak`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and adjusting regularization to better rank borderline malware without hurting ROC_AUC, leveraging matrix cache hit.
+- **`c_feat_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab to capture structured configuration strings and metadata in C files that standard n-grams dilute, adding orthogonal rank signal.
+- **`c_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling symbol_vocab and symbol_bigrams to detect malicious API call chains and function naming patterns common in C malware, boosting tail recall.
+
+</details>
+
+## Cycle `20260608T085159-filetypes-c` — 2026-06-08T08:51:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cb0fe0d2559f9906` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9862 | 0.9939 | 0.9437 | 1 | [log](out/autocollie/runs/2026-06-08T08-59-21_20260608T085159-filetypes-c_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4e0b6a5a1ba5fed6` | c_control_train_capacity | ok | 0.6196 | 0.8432 | 0.3536 | 2 | [log](out/autocollie/runs/2026-06-08T08-59-27_20260608T085159-filetypes-c_c_control_train_capacity.log) |
+| `d831a24baa5fee07` | c_feat_kv_symbol_vocab | ok | 0.6196 | 0.8432 | 0.3536 | 15 | [log](out/autocollie/runs/2026-06-08T08-59-30_20260608T085159-filetypes-c_c_feat_kv_symbol_vocab.log) |
+| `e8971dee18aabba5` | c_feat_symbol_bigrams_tiered | ok | 0.6196 | 0.8432 | 0.3536 | 16 | [log](out/autocollie/runs/2026-06-08T08-59-45_20260608T085159-filetypes-c_c_feat_symbol_bigrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_train_capacity`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec aiming to maintain PR_AUC and ROC_AUC guardrails while testing if increased tree capacity yields a stable recall@3FPM improvement via matrix cache hit.
+- **`c_feat_kv_symbol_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Feature surface change aiming to improve PR_AUC by enabling kv_vocab and symbol_vocab research families, which capture C-specific API usage and configuration patterns to strengthen ranking signal.
+- **`c_feat_symbol_bigrams_tiered`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Feature surface change aiming to boost recall@3FPM by enabling symbol_bigrams and tiered_crit_trigrams to model co-occurrence of suspicious imports and severity-prefixed patterns, targeting low-FPR tail detection.
+
+</details>
+
+## Cycle `20260608T112608-filetypes-c` — 2026-06-08T11:26:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cb0fe0d2559f9906` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9862 | 0.9939 | 0.9437 | 1 | [log](out/autocollie/runs/2026-06-08T11-33-18_20260608T112608-filetypes-c_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `99f546cffa2bcab8` | c_control_hardneg_tail | ok | 0.5465 | 0.7612 | 0.3532 | 4 | [log](out/autocollie/runs/2026-06-08T11-33-21_20260608T112608-filetypes-c_c_control_hardneg_tail.log) |
+| `3b1651e44d844318` | c_feat_kv_symbol_vocab_expanded | ok | 0.6196 | 0.8432 | 0.3536 | 14 | [log](out/autocollie/runs/2026-06-08T11-33-26_20260608T112608-filetypes-c_c_feat_kv_symbol_vocab_expanded.log) |
+| `34694a8fb3e96e73` | c_feat_symbol_bigrams_lowfreq | ok | 0.6196 | 0.8432 | 0.3536 | 14 | [log](out/autocollie/runs/2026-06-08T11-33-43_20260608T112608-filetypes-c_c_feat_symbol_bigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, keeping features identical to cache-hit baseline.
+- **`c_feat_kv_symbol_vocab_expanded`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and symbol_vocab to capture fine-grained key-value and import patterns unique to C binaries.
+- **`c_feat_symbol_bigrams_lowfreq`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ_BIGRAM=25 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by enabling symbol_bigrams with a lower frequency floor to catch rare but malicious import co-occurrences in C executables.
+
+</details>
+
+## Cycle `20260608T114425-filetypes-c` — 2026-06-08T11:44:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a2152650cdb4b796` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9862 | 0.9939 | 0.9437 | 14 | [log](out/autocollie/runs/2026-06-08T11-49-40_20260608T114425-filetypes-c_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d633ef06d8bfe0d8` | c_control_train_capacity_v2 | ok | 0.6196 | 0.8432 | 0.3536 | 10 | [log](out/autocollie/runs/2026-06-08T11-49-56_20260608T114425-filetypes-c_c_control_train_capacity_v2.log) |
+| `6884582ec229dd18` | c_feat_symbol_vocab_bigrams | ok | 0.6196 | 0.8432 | 0.3536 | 14 | [log](out/autocollie/runs/2026-06-08T11-50-07_20260608T114425-filetypes-c_c_feat_symbol_vocab_bigrams.log) |
+| `cf5ab6135aa2237b` | c_feat_kv_split_lowbigram | ok | 0.6196 | 0.8432 | 0.3536 | 23 | [log](out/autocollie/runs/2026-06-08T11-50-23_20260608T114425-filetypes-c_c_feat_kv_split_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_train_capacity_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent best feature_env; increases estimators and num_leaves to improve PR_AUC by allowing the model to capture more complex decision boundaries for C binaries.
+- **`c_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=3000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and symbol_bigrams to capture C-specific API co-occurrence patterns, aiming to boost PR_AUC by adding discriminative structural signal for malware vs benign C binaries.
+- **`c_feat_kv_split_lowbigram`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and enables kv_vocab with kv_value_split to recover granular metadata signal, targeting recall@3FPM gains by surfacing rare but malicious C-binary traits.
+
+</details>
+
+## Cycle `20260608T124157-filetypes-c` — 2026-06-08T12:41:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `48ce362268d2ba5b` | try_severity_fractions | ok | 0.6196 | 0.8432 | 0.3536 | 78 | [log](out/autocollie/runs/2026-06-08T12-44-10_20260608T124157-filetypes-c_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T160049-filetypes-c` — 2026-06-08T16:00:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `48ce362268d2ba5b` | try_severity_fractions | dup | 0.6196 | 0.8432 | 0.3536 | 2 | [log](out/autocollie/runs/2026-06-08T16-03-16_20260608T160049-filetypes-c_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

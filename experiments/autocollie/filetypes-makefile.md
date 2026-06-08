@@ -542,3 +542,117 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260607T202527-filetypes-makefile` — 2026-06-07T20:25:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ff5849e4edde6851` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.5111 | 0.9219 | 0.5455 | 7 | [log](out/autocollie/runs/2026-06-07T20-35-14_20260607T202527-filetypes-makefile_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `a47f69d98b0e8b8b` | makefile_ctrl_reg_lambda_4 | ok | 0.0446 | 0.6663 | 0.0842 | 13 | [log](out/autocollie/runs/2026-06-07T20-35-28_20260607T202527-filetypes-makefile_makefile_ctrl_reg_lambda_4.log) |
+| `cd4e498877962cfd` | makefile_feat_kv_vocab | ok | 0.0396 | 0.6286 | 0.0842 | 27 | [log](out/autocollie/runs/2026-06-07T20-35-48_20260607T202527-filetypes-makefile_makefile_feat_kv_vocab.log) |
+| `509b3c73a028c72c` | makefile_feat_textenc_metrics | ok | 0.0396 | 0.6286 | 0.0842 | 15 | [log](out/autocollie/runs/2026-06-07T20-36-19_20260607T202527-filetypes-makefile_makefile_feat_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_reg_lambda_4`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=4 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent feature_env to isolate training knob effects on PR_AUC and ROC_AUC stability.
+- **`makefile_feat_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals in makefiles, aiming to improve PR_AUC by adding structured text features.
+- **`makefile_feat_textenc_metrics`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture obfuscation and structural text patterns, targeting recall@3FPM and PR_AUC gains.
+
+</details>
+
+## Cycle `20260608T024326-filetypes-makefile` — 2026-06-08T02:43:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ff5849e4edde6851` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.5111 | 0.9219 | 0.5455 | 2 | [log](out/autocollie/runs/2026-06-08T02-51-37_20260608T024326-filetypes-makefile_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `91815fc170a0920c` | makefile_ctrl_leaves128_est300 | ok | 0.0396 | 0.6286 | 0.0842 | 2 | [log](out/autocollie/runs/2026-06-08T02-51-44_20260608T024326-filetypes-makefile_makefile_ctrl_leaves128_est300.log) |
+| `d8be2a1d37cdd56d` | makefile_feat_textenc_metrics_full | ok | 0.0396 | 0.6286 | 0.0842 | 8 | [log](out/autocollie/runs/2026-06-08T02-51-48_20260608T024326-filetypes-makefile_makefile_feat_textenc_metrics_full.log) |
+| `e67bd13c402970e7` | makefile_feat_kv_vocab_low_bigram_freq | ok | 0.0396 | 0.6286 | 0.0842 | 8 | [log](out/autocollie/runs/2026-06-08T02-51-58_20260608T024326-filetypes-makefile_makefile_feat_kv_vocab_low_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_leaves128_est300`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree complexity and estimators to better separate the small malware class while keeping the feature surface identical for a matrix cache hit.
+- **`makefile_feat_textenc_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by enabling text_metrics_full and text_encoding to capture structural obfuscation and encoding anomalies common in malicious script-like makefiles.
+- **`makefile_feat_kv_vocab_low_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by lowering bigram_min_freq to 100 and enabling kv_vocab to capture rarer but highly indicative patterns and key-value structures in malicious makefiles.
+
+</details>
+
+## Cycle `20260608T060136-filetypes-makefile` — 2026-06-08T06:01:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ff5849e4edde6851` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.5111 | 0.9219 | 0.5455 | 4 | [log](out/autocollie/runs/2026-06-08T06-13-10_20260608T060136-filetypes-makefile_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9cf7fe819f9f7c63` | makefile_ctrl_leaves128_lr004 | ok | 0.0452 | 0.6698 | 0.0842 | 30 | [log](out/autocollie/runs/2026-06-08T06-13-23_20260608T060136-filetypes-makefile_makefile_ctrl_leaves128_lr004.log) |
+| `993ad12edfa7b720` | makefile_feat_kv_textmetrics | ok | 0.0396 | 0.6286 | 0.0842 | 22 | [log](out/autocollie/runs/2026-06-08T06-13-59_20260608T060136-filetypes-makefile_makefile_feat_kv_textmetrics.log) |
+| `d6acb28386af9534` | makefile_feat_textenc_lowbigram | ok | 0.0396 | 0.6286 | 0.0842 | 19 | [log](out/autocollie/runs/2026-06-08T06-14-22_20260608T060136-filetypes-makefile_makefile_feat_textenc_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_leaves128_lr004`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to isolate training effects; aims to stabilize PR_AUC and improve recall@3FPM by adjusting tree complexity and learning rate.
+- **`makefile_feat_kv_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture key-value assignments and text structure in makefiles; aims to boost PR_AUC by adding high-signal research features.
+- **`makefile_feat_textenc_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and lowers bigram_min_freq to 50 to capture rare syntactic patterns; aims to improve recall@3FPM by increasing feature granularity for script-like content.
+
+</details>
+
+## Cycle `20260608T085159-filetypes-makefile` — 2026-06-08T08:51:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ff5849e4edde6851` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.5111 | 0.9219 | 0.5455 | 1 | [log](out/autocollie/runs/2026-06-08T09-00-09_20260608T085159-filetypes-makefile_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9cf7fe819f9f7c63` | makefile_ctrl_baseline_training | dup | 0.0452 | 0.6698 | 0.0842 | 1 | [log](out/autocollie/runs/2026-06-08T09-00-12_20260608T085159-filetypes-makefile_makefile_ctrl_baseline_training.log) |
+| `5cc24afbfb265a74` | makefile_feat_textenc_metrics | ok | 0.0396 | 0.6286 | 0.0842 | 8 | [log](out/autocollie/runs/2026-06-08T09-00-13_20260608T085159-filetypes-makefile_makefile_feat_textenc_metrics.log) |
+| `de884ffaeb4b7241` | makefile_feat_kv_split | ok | 0.0396 | 0.6286 | 0.0842 | 8 | [log](out/autocollie/runs/2026-06-08T09-00-22_20260608T085159-filetypes-makefile_makefile_feat_kv_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_baseline_training`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating recent best feature_env; adjusts num_leaves and learning_rate to stabilize tree splits and improve PR_AUC while reusing the matrix cache.
+- **`makefile_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enables text_encoding and text_metrics_full research vocabs to capture script obfuscation and structural anomalies, aiming to boost PR_AUC by adding high-signal text features for makefiles.
+- **`makefile_feat_kv_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Activates kv_vocab and kv_value_split to extract variable and target assignment patterns, targeting recall@3FPM gains by better distinguishing malicious build logic from benign configurations.
+
+</details>
+
+## Cycle `20260608T103041-filetypes-makefile` — 2026-06-08T10:30:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ff5849e4edde6851` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.5111 | 0.9219 | 0.5455 | 1 | [log](out/autocollie/runs/2026-06-08T10-36-14_20260608T103041-filetypes-makefile_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `515442e6d326cc2b` | makefile_ctrl_dart_reg | ok | 0.0471 | 0.3257 | 0.0000 | 3 | [log](out/autocollie/runs/2026-06-08T10-36-17_20260608T103041-filetypes-makefile_makefile_ctrl_dart_reg.log) |
+| `28e8dd62a5c1b5da` | makefile_feat_kv_vocab_textenc | ok | 0.0396 | 0.6286 | 0.0842 | 12 | [log](out/autocollie/runs/2026-06-08T10-36-21_20260608T103041-filetypes-makefile_makefile_feat_kv_vocab_textenc.log) |
+| `544bb5d1a44456c4` | makefile_feat_lowbigram_tiered | ok | 0.0396 | 0.6286 | 0.0842 | 9 | [log](out/autocollie/runs/2026-06-08T10-36-34_20260608T103041-filetypes-makefile_makefile_feat_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve PR_AUC and recall@3FPM by switching to dart boosting type and adding L2 regularization to reduce overfitting on the small malware set (77 samples), while reusing the cached feature matrix.
+- **`makefile_feat_kv_vocab_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_KV_VOCAB=1 …` — Aims to boost PR_AUC and recall@3FPM by enabling kv_vocab and text_encoding to capture structural key-value patterns and encoding anomalies specific to makefiles, which often contain obfuscated or suspicious variable assignments.
+- **`makefile_feat_lowbigram_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_LEARNING_RATE=0.05 …` — Aims to improve recall@3FPM by lowering bigram_min_freq to 50 and enabling tiered_crit_trigrams to capture rare but high-criticality n-gram patterns in makefiles without adding excessive noise.
+
+</details>
+
+## Cycle `20260608T125933-filetypes-makefile` — 2026-06-08T12:59:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cb2759910915ade4` | try_severity_fractions | ok | 0.0396 | 0.6286 | 0.0842 | 18 | [log](out/autocollie/runs/2026-06-08T13-01-44_20260608T125933-filetypes-makefile_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T161027-filetypes-makefile` — 2026-06-08T16:10:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cb2759910915ade4` | try_severity_fractions | dup | 0.0396 | 0.6286 | 0.0842 | 1 | [log](out/autocollie/runs/2026-06-08T16-12-58_20260608T161027-filetypes-makefile_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+

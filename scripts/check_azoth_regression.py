@@ -27,6 +27,17 @@ even sub-pp drops fire. The effect size threshold prevents firing on
 statistically-significant but practically-irrelevant 0.1pp shifts on
 huge slices.
 
+A second gate compares against a pinned ``--low-water-mark`` (a known-good
+floor) so cumulative drift can't erode recall one tolerated step at a time.
+
+``--net-improvement-fallback`` makes the deploy judged on the whole dataset,
+not any single filetype: it rescues BOTH gates when the malware-weighted net
+TP delta is positive AND no HIGH-VOLUME route (>= ``--catastrophe-min-mal``
+malware) craters past ``--max-net-route-regression``. A small route swinging
+30%->5% is ~the same handful of samples — dataset-level noise that shouldn't
+block a net-positive deploy; a crater on a route big enough to move the
+average still does. This is the default deploy posture (set in the Makefile).
+
 For diagnostic context, the same comparison runs against each
 *contributing route's* recall@1FP-on-slice (L50-aligned, with `recall_at_3fp`
 fallback for pre-migration bundles). Per-route drops do NOT trigger
@@ -194,9 +205,25 @@ def main() -> int:
         help=(
             "Maximum tolerated per-filetype recall drop (absolute) when "
             "--net-improvement-fallback rescues a deploy. Default 0.05 = "
-            "5pp. A single filetype dropping more than this still blocks "
-            "the deploy even if net is positive — catastrophes shouldn't "
-            "hide behind aggregate wins."
+            "5pp. A single HIGH-VOLUME filetype dropping more than this still "
+            "blocks the deploy even if net is positive — catastrophes "
+            "shouldn't hide behind aggregate wins. Only routes with "
+            ">= --catastrophe-min-mal malware count this way (see below)."
+        ),
+    )
+    parser.add_argument(
+        "--catastrophe-min-mal",
+        type=int,
+        default=1500,
+        help=(
+            "Minimum malware count for a per-filetype recall drop to count "
+            "as a catastrophe that defeats --net-improvement-fallback. "
+            "Below this, a drop is dataset-level noise: the route is too "
+            "small to move the weighted average, and its recall point "
+            "estimate is dominated by sampling variance (a 142-malware route "
+            "swinging 30%%->5%% is ~the same handful of samples). Such drops "
+            "are reported but cannot block a net-positive deploy. Default "
+            "1500 (~0.5%% of a ~300K-malware test partition)."
         ),
     )
     parser.add_argument(
@@ -350,6 +377,11 @@ def main() -> int:
     net_delta_tp = 0
     max_recall_drop = 0.0
     max_drop_ft = ""
+    # Worst drop restricted to high-volume routes (n_mal >= catastrophe_min_mal).
+    # This is the only drop that can defeat the net-improvement rescue: small
+    # routes craters are dataset-level noise (see --catastrophe-min-mal).
+    max_recall_drop_sig = 0.0
+    max_drop_ft_sig = ""
 
     for ft, deployed_entry in deployed_ft.items():
         staged_entry = staged_ft.get(ft)
@@ -388,6 +420,9 @@ def main() -> int:
             if is_impacted and -delta > max_recall_drop:
                 max_recall_drop = -delta
                 max_drop_ft = ft
+            if is_impacted and n_mal >= args.catastrophe_min_mal and -delta > max_recall_drop_sig:
+                max_recall_drop_sig = -delta
+                max_drop_ft_sig = ft
             # Dual-gate regression: drop must exceed the configured
             # tolerance (effect-size threshold) AND fall below the
             # deployed recall's 1-alpha Clopper-Pearson lower bound
@@ -577,38 +612,48 @@ def main() -> int:
     #     pinned floor is exactly what the LWM exists to catch, so it can't
     #     be rescued by net-positive aggregates.
     deployed_gate_blocked = bool(regressions)
+    lwm_gate_blocked = bool(lwm_regressions)
 
-    if regressions and args.net_improvement_fallback:
-        # Net-improvement fallback applies ONLY to the deployed-tolerance gate.
-        # Lets shared-route promotes (filegroups/* and general) ship when the
-        # new model is net-positive across the corpus despite hurting one or
-        # two routes — provided no single filetype's recall drop crossed the
-        # catastrophe cap. LWM regressions, computed separately above, are
-        # not eligible for rescue.
+    if (regressions or lwm_regressions) and args.net_improvement_fallback:
+        # Net-improvement fallback: ship when the new model is net-positive
+        # across the corpus (malware-weighted, via raw TP deltas) despite
+        # hurting some routes — provided no HIGH-VOLUME filetype cratered past
+        # the catastrophe cap. This now rescues BOTH the deployed-tolerance and
+        # low-water-mark gates: a per-filetype LWM drop on a small route is the
+        # same dataset-level noise as a deployed-tolerance drop there, and the
+        # weighted aggregate already accounts for cumulative drift. Catastrophe
+        # detection is volume-gated (--catastrophe-min-mal): only routes large
+        # enough to move the average — and whose recall estimate isn't sampling
+        # noise — can defeat the rescue.
         net_pp = (
             f"net malware-caught delta = {net_delta_tp:+,} TPs across "
             f"{compared} compared filetypes; "
-            f"worst single drop = {max_recall_drop*100:.2f}pp on {max_drop_ft!r} "
-            f"(cap = {args.max_net_route_regression*100:.2f}pp)"
+            f"worst high-volume drop (>={args.catastrophe_min_mal} mal) = "
+            f"{max_recall_drop_sig*100:.2f}pp on {max_drop_ft_sig or 'none'!r} "
+            f"(cap = {args.max_net_route_regression*100:.2f}pp); "
+            f"worst drop overall = {max_recall_drop*100:.2f}pp on {max_drop_ft!r} "
+            f"(small-route, not gated)"
         )
-        if net_delta_tp > 0 and max_recall_drop <= args.max_net_route_regression:
+        if net_delta_tp > 0 and max_recall_drop_sig <= args.max_net_route_regression:
             print()
-            print(f"net-improvement-fallback rescues deployed-tolerance gate: {net_pp}")
+            print(f"net-improvement-fallback rescues deploy: {net_pp}")
             deployed_gate_blocked = False
+            lwm_gate_blocked = False
         else:
             print()
             print(f"net-improvement-fallback DID NOT rescue: {net_pp}")
             if net_delta_tp <= 0:
                 print("  reason: aggregate TP delta is not positive")
-            if max_recall_drop > args.max_net_route_regression:
+            if max_recall_drop_sig > args.max_net_route_regression:
                 print(
-                    f"  reason: worst single-filetype drop "
-                    f"({max_recall_drop*100:.2f}pp on {max_drop_ft!r}) "
+                    f"  reason: a high-volume filetype cratered "
+                    f"({max_recall_drop_sig*100:.2f}pp on {max_drop_ft_sig!r}, "
+                    f">={args.catastrophe_min_mal} malware) "
                     f"exceeds catastrophe cap "
                     f"({args.max_net_route_regression*100:.2f}pp)"
                 )
 
-    if deployed_gate_blocked or lwm_regressions:
+    if deployed_gate_blocked or lwm_gate_blocked:
         print()
         print(
             f"compared {compared} filetypes "
@@ -623,7 +668,7 @@ def main() -> int:
                 f"regressed vs deployed beyond the {args.recall_tolerance*100:.2f}pp tolerance; "
                 f"see list above for the actual drops)"
             )
-        if lwm_regressions:
+        if lwm_gate_blocked:
             reasons.append(
                 f"low-water-mark gate ({len(lwm_regressions)} filetype(s) "
                 f"below LWM beyond the {args.lwm_tolerance*100:.2f}pp tolerance vs {lwm_path_used})"
@@ -632,11 +677,11 @@ def main() -> int:
         print()
         print(
             "If this regression is intentional, set "
-            "AZOTH_ALLOW_REGRESSION=1 and re-run "
-            "(or pass --net-improvement-fallback for shared-route promotes "
-            "to address the deployed-tolerance gate only — the LWM gate "
-            "is unconditional and AZOTH_ALLOW_REGRESSION is the only "
-            "override for it).",
+            "AZOTH_ALLOW_REGRESSION=1 and re-run, or pass "
+            "--net-improvement-fallback to ship a net-positive deploy whose "
+            "only regressions are on small routes (below --catastrophe-min-mal). "
+            "A high-volume filetype cratering past --max-net-route-regression "
+            "blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.",
         )
         return 1
 

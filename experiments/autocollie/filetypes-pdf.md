@@ -2042,3 +2042,117 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260607T202527-filetypes-pdf` — 2026-06-07T20:25:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d3a4ad6025047e5b` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 0.9989 | 0.9976 | 32 | [log](out/autocollie/runs/2026-06-07T20-36-45_20260607T202527-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `969b67afd2d0113d` | pdf_ctrl_train_tune_hardneg | ok | 0.9949 | 0.9829 | 0.8548 | 30 | [log](out/autocollie/runs/2026-06-07T20-37-43_20260607T202527-filetypes-pdf_pdf_ctrl_train_tune_hardneg.log) |
+| `bf36ee37a9a937b0` | pdf_feat_textenc_metrics_full_tiered | ok | 0.9675 | 0.8841 | 0.8550 | 21 | [log](out/autocollie/runs/2026-06-07T20-38-21_20260607T202527-filetypes-pdf_pdf_feat_textenc_metrics_full_tiered.log) |
+| `73405e61b5ffa70b` | pdf_feat_kv_vocab_expanded_line_buckets | ok | 0.9660 | 0.8754 | 0.8550 | 41 | [log](out/autocollie/runs/2026-06-07T20-38-45_20260607T202527-filetypes-pdf_pdf_feat_kv_vocab_expanded_line_buckets.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_train_tune_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 …` — Control feature set from recent best; tune hard_negative_weight and num_leaves to improve PR_AUC and recall@3FPM by better separating hard benigns from malware without rebuilding the matrix.
+- **`pdf_feat_textenc_metrics_full_tiered`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full research vocabs to capture PDF-specific obfuscation and structural signals, aiming to boost PR_AUC and recall@3FPM.
+- **`pdf_feat_kv_vocab_expanded_line_buckets`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.05 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 …` — Expand kv_vocab_max and enable line_length_buckets to capture longer PDF metadata patterns and line-length obfuscation, targeting PR_AUC improvement while maintaining ROC_AUC.
+
+</details>
+
+## Cycle `20260608T042323-filetypes-pdf` — 2026-06-08T04:23:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d3a4ad6025047e5b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 0.9989 | 0.9976 | 1 | [log](out/autocollie/runs/2026-06-08T04-31-15_20260608T042323-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4548cc186a057b73` | pdf_ctrl_hardneg_015_16 | ok | 0.9939 | 0.9796 | 0.8550 | 11 | [log](out/autocollie/runs/2026-06-08T04-31-18_20260608T042323-filetypes-pdf_pdf_ctrl_hardneg_015_16.log) |
+| `0a880323aaedc90c` | pdf_feat_textmetrics_docobfus_kv | ok | 0.9675 | 0.8841 | 0.8550 | 12 | [log](out/autocollie/runs/2026-06-08T04-31-30_20260608T042323-filetypes-pdf_pdf_feat_textmetrics_docobfus_kv.log) |
+| `506f48524747b0f4` | pdf_feat_lowbigram_kvsplit | ok | 0.9653 | 0.8781 | 0.8549 | 17 | [log](out/autocollie/runs/2026-06-08T04-31-43_20260608T042323-filetypes-pdf_pdf_feat_lowbigram_kvsplit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_hardneg_015_16`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative tuning to lift recall@3FPM by upweighting difficult benigns, while preserving PR_AUC.
+- **`pdf_feat_textmetrics_docobfus_kv`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and document_obfuscation_features with kv_vocab to capture PDF-specific evasion signals, aiming to improve PR_AUC.
+- **`pdf_feat_lowbigram_kvsplit`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and enable kv_value_split to recover rare structural patterns, targeting recall@3FPM improvement.
+
+</details>
+
+## Cycle `20260608T063147-filetypes-pdf` — 2026-06-08T06:31:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d3a4ad6025047e5b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 0.9989 | 0.9976 | 1 | [log](out/autocollie/runs/2026-06-08T06-36-50_20260608T063147-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c72212f5a1fc1a5b` | pdf_ctrl_hardneg_01_12 | ok | 0.9944 | 0.9815 | 0.8551 | 2 | [log](out/autocollie/runs/2026-06-08T06-36-52_20260608T063147-filetypes-pdf_pdf_ctrl_hardneg_01_12.log) |
+| `9e7ff64b0ad8fab6` | pdf_feat_textmetrics_kv_vocab | ok | 0.9675 | 0.8841 | 0.8550 | 14 | [log](out/autocollie/runs/2026-06-08T06-36-55_20260608T063147-filetypes-pdf_pdf_feat_textmetrics_kv_vocab.log) |
+| `d5162ca2ee290239` | pdf_feat_trigrams_hardneg_015_16 | ok | 0.9940 | 0.9802 | 0.8547 | 14 | [log](out/autocollie/runs/2026-06-08T06-37-10_20260608T063147-filetypes-pdf_pdf_feat_trigrams_hardneg_015_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_hardneg_01_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep (frac=0.01, weight=12) to improve recall@3FPM by upweighting difficult benigns.
+- **`pdf_feat_textmetrics_kv_vocab`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture PDF obfuscation and key-value patterns, targeting PR_AUC improvement.
+- **`pdf_feat_trigrams_hardneg_015_16`** `EXP_BIGRAM_MIN_FREQ=200 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Expands tiered trigrams and applies hard-negative sweep (frac=0.015, weight=16) to boost recall@3FPM on tail malware.
+
+</details>
+
+## Cycle `20260608T083243-filetypes-pdf` — 2026-06-08T08:32:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d3a4ad6025047e5b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 0.9989 | 0.9976 | 1 | [log](out/autocollie/runs/2026-06-08T08-39-57_20260608T083243-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3c3e7dcf6b280bcd` | pdf_ctrl_hardneg_02_18 | ok | 0.9857 | 0.9509 | 0.8551 | 3 | [log](out/autocollie/runs/2026-06-08T08-39-59_20260608T083243-filetypes-pdf_pdf_ctrl_hardneg_02_18.log) |
+| `6ac9d7f6e4eba0b5` | pdf_feat_textmetrics_kv_vocab | ok | 0.9920 | 0.9728 | 0.8550 | 14 | [log](out/autocollie/runs/2026-06-08T08-40-03_20260608T083243-filetypes-pdf_pdf_feat_textmetrics_kv_vocab.log) |
+| `7564f38dc52e4971` | pdf_feat_docobfus_tiered_trigrams | ok | 0.9938 | 0.9793 | 0.8552 | 13 | [log](out/autocollie/runs/2026-06-08T08-40-18_20260608T083243-filetypes-pdf_pdf_feat_docobfus_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_hardneg_02_18`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with hard-negative sweep to improve recall@3FPM by upweighting difficult benigns and sharpening the decision boundary at low FPR.
+- **`pdf_feat_textmetrics_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, targeting PR_AUC and recall@3FPM gains by adding high-signal document features.
+- **`pdf_feat_docobfus_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 …` — Add document_obfuscation_features and tiered_crit_trigrams to isolate PDF-specific evasion tactics, aiming to boost recall@3FPM through better separation of obfuscated malware.
+
+</details>
+
+## Cycle `20260608T103919-filetypes-pdf` — 2026-06-08T10:39:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d3a4ad6025047e5b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 0.9989 | 0.9976 | 1 | [log](out/autocollie/runs/2026-06-08T10-49-46_20260608T103919-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4548cc186a057b73` | pdf_ctrl_hardneg_015_16 | dup | 0.9939 | 0.9796 | 0.8550 | 1 | [log](out/autocollie/runs/2026-06-08T10-49-50_20260608T103919-filetypes-pdf_pdf_ctrl_hardneg_015_16.log) |
+| `138a34b1392e5dda` | pdf_feat_textmetrics_kv_vocab | ok | 0.9945 | 0.9818 | 0.8552 | 14 | [log](out/autocollie/runs/2026-06-08T10-49-52_20260608T103919-filetypes-pdf_pdf_feat_textmetrics_kv_vocab.log) |
+| `f0998f54318a2b6a` | pdf_feat_docobfus_tiered_trigrams | ok | 0.9653 | 0.8781 | 0.8549 | 12 | [log](out/autocollie/runs/2026-06-08T10-50-07_20260608T103919-filetypes-pdf_pdf_feat_docobfus_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_hardneg_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep (0.015/16) to lift tail recall@3FPM while preserving PR_AUC.
+- **`pdf_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and KV patterns, targeting PR_AUC and recall@3FPM gains.
+- **`pdf_feat_docobfus_tiered_trigrams`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Tests document_obfuscation_features and tiered_crit_trigrams to improve malicious PDF ranking, aiming for PR_AUC improvement.
+
+</details>
+
+## Cycle `20260608T125941-filetypes-pdf` — 2026-06-08T12:59:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ed319994206ad490` | try_severity_fractions | ok | 0.9653 | 0.8781 | 0.8549 | 47 | [log](out/autocollie/runs/2026-06-08T13-02-07_20260608T125941-filetypes-pdf_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T161025-filetypes-pdf` — 2026-06-08T16:10:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ed319994206ad490` | try_severity_fractions | dup | 0.9653 | 0.8781 | 0.8549 | 1 | [log](out/autocollie/runs/2026-06-08T16-12-58_20260608T161025-filetypes-pdf_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
