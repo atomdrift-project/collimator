@@ -136,7 +136,9 @@ TOP_K_RISK_FILES = 1
 # model is stored in. Older litmus (1.2.x) reading a v17 bundle that
 # now ships .onnx + .txt silently ignores the .onnx and uses the .txt;
 # fully forward-compatible. Bump this when feature families are added
-# or removed (last bump: v18 added metrics:ast_depth_capped).
+# or removed (last bump: v18 added the ALWAYS_KEEP_METRICS allowlist, which
+# grows the extended-metrics block by `ast_depth_capped`; v17 added cluster:* +
+# agg:static_*).
 #
 # Bump it ALSO when the feature-allowlist prune changes the LAYOUT — not
 # just when whole families appear/disappear. litmus places the offset-written
@@ -175,6 +177,24 @@ KEY_METRICS: list[tuple[str, str, bool]] = [
 
 # Metric keys where log1p should be applied (counts, sizes, lengths).
 _LOG_METRIC_WORDS = frozenset({"count", "size", "total", "bytes", "length"})
+
+# Extended-metric keys that must enter the vocab even though they fall below the
+# COLLIMATOR_METRIC_MIN_FREQ_PCT floor. Anti-analysis signals are rare *by
+# design* — they fire on a tiny fraction of (almost exclusively malicious)
+# samples — so a pure frequency prune would drop exactly the high-signal columns
+# we most want. Listing one here reserves its feature slot regardless of how
+# often the scan sample happened to see it. Keys are `group_field` (the same
+# form the scan produces from the dotted metric path, e.g. `ast.depth_capped` →
+# `ast_depth_capped`). Unlike KEY_METRICS these are NOT force-emitted when
+# absent from the spec vocab — they are only retained when the extended-metrics
+# scan is enabled, and they still honor an explicit extended_metrics_include
+# prefix filter so experiment isolation is preserved.
+ALWAYS_KEEP_METRICS: frozenset[str] = frozenset({
+    # filefacts emits this (=1) when a source file forces the AST walk's
+    # MAX_AST_DEPTH bound — a member/concat/subscript chain thousands deep, an
+    # anti-static-analysis shape that used to overflow the worker stack.
+    "ast_depth_capped",
+})
 
 
 # ---------------------------------------------------------------------------
@@ -1321,9 +1341,12 @@ class FeatureSpec:
     No path×tier binary features — criticality is a gradient, not a threshold.
     """
 
-    # NOTE: bumping this version requires a matching update in ../litmus (Rust).
-    # litmus accepts v16..=v18 to allow live deploys to keep working through
-    # a version transition; new bundles always serialize at MODEL_ABI_VERSION.
+    # `version` and `abi_version` are one compatibility number — both derive
+    # from MODEL_ABI_VERSION so they can never drift (they used to be a literal
+    # `17` and the constant, which silently desynced on a bump). Raising
+    # MODEL_ABI_VERSION requires a matching bump of EXPECTED_SPEC_VERSION in
+    # ../litmus (Rust); litmus accepts a range (v16..=current) so live deploys
+    # keep working through a transition while new bundles serialize at current.
     version: int = MODEL_ABI_VERSION
     abi_version: int = MODEL_ABI_VERSION
     presence_vocab: list[str] = field(default_factory=list)
@@ -5345,15 +5368,28 @@ def build_vocab_from_db(
         metric_pct = float(os.getenv("COLLIMATOR_METRIC_MIN_FREQ_PCT", "5")) / 100
         threshold = max(len(scan_ids) * metric_pct, 10)
         prefixes = config.extended_metrics_include
-        metric_vocab = sorted(
+
+        def _passes_prefix(k: str) -> bool:
+            return not prefixes or any(k.startswith(p) for p in prefixes)
+
+        # Frequency-selected keys, plus the always-keep allowlist (which bypasses
+        # the threshold but still respects base_keys and the prefix filter). The
+        # allowlist reserves the slot even when the scan sample never saw the key
+        # — exactly the case for a rare anti-analysis signal.
+        kept = {
             k for k, c in metric_key_counts.items()
-            if c >= threshold
-            and k not in base_keys
-            and (not prefixes or any(k.startswith(p) for p in prefixes))
-        )
-        log.info("extended metrics: %d keys from %d scanned rows%s",
+            if c >= threshold and k not in base_keys and _passes_prefix(k)
+        }
+        forced = {
+            k for k in ALWAYS_KEEP_METRICS
+            if k not in base_keys and _passes_prefix(k)
+        }
+        metric_vocab = sorted(kept | forced)
+        forced_present = sorted(forced - kept)
+        log.info("extended metrics: %d keys from %d scanned rows%s%s",
                  len(metric_vocab), len(scan_ids),
-                 f" (filtered by prefixes: {','.join(prefixes)})" if prefixes else "")
+                 f" (filtered by prefixes: {','.join(prefixes)})" if prefixes else "",
+                 f" (always-keep below threshold: {','.join(forced_present)})" if forced_present else "")
 
     # Crit-category n-gram vocabulary: build from the same sample_paths
     # already computed by the vocab workers (stored in presence_counts).
