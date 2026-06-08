@@ -846,3 +846,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260608T183023-filetypes-rust` — 2026-06-08T18:30:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ae100c2e72e7cb02` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9130 | 0.9893 | 0.8125 | 8 | [log](out/autocollie/runs/2026-06-08T18-39-35_20260608T183023-filetypes-rust_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2a12c4c63fc63a05` | rust_ctrl_baseline_train | ok | 0.1133 | 0.7375 | 0.0816 | 19 | [log](out/autocollie/runs/2026-06-08T18-39-46_20260608T183023-filetypes-rust_rust_ctrl_baseline_train.log) |
+| `1ccebbdd312a7b3c` | rust_train_hardneg_tail | ok | 0.0792 | 0.4779 | 0.1165 | 2 | [log](out/autocollie/runs/2026-06-08T18-40-06_20260608T183023-filetypes-rust_rust_train_hardneg_tail.log) |
+| `81e2beabe1cd4d4e` | rust_train_reg_leaves_high | ok | 0.1079 | 0.7145 | 0.0816 | 5 | [log](out/autocollie/runs/2026-06-08T18-40-14_20260608T183023-filetypes-rust_rust_train_reg_leaves_high.log) |
+| `2f70878d4db948c1` | rust_feat_kv_vocab_expand | ok | 0.1133 | 0.7375 | 0.0816 | 14 | [log](out/autocollie/runs/2026-06-08T18-40-27_20260608T183023-filetypes-rust_rust_feat_kv_vocab_expand.log) |
+| `d7464de387fd7c3e` | rust_feat_symbol_vocab_bigrams | ok | 0.1091 | 0.7178 | 0.0918 | 16 | [log](out/autocollie/runs/2026-06-08T18-40-41_20260608T183023-filetypes-rust_rust_feat_symbol_vocab_bigrams.log) |
+| `a002bd2ada652bbb` | rust_feat_textenc_lowbigram | ok | 0.1133 | 0.7375 | 0.0816 | 11 | [log](out/autocollie/runs/2026-06-08T18-40-59_20260608T183023-filetypes-rust_rust_feat_textenc_lowbigram.log) |
+| `5a6578fc44cde93e` | rust_abl_disable_clusters | ok | 0.1133 | 0.7375 | 0.0816 | 14 | [log](out/autocollie/runs/2026-06-08T18-41-10_20260608T183023-filetypes-rust_rust_abl_disable_clusters.log) |
+| `803f202feaea775b` | rust_transfer_lowbigram_tiered | ok | 0.1091 | 0.7178 | 0.0918 | 11 | [log](out/autocollie/runs/2026-06-08T18-41-26_20260608T183023-filetypes-rust_rust_transfer_lowbigram_tiered.log) |
+| `009df3b9792a0161` | rust_gen_seed_search_3 | ok | 0.1170 | 0.7432 | 0.1484 | 7 | [log](out/autocollie/runs/2026-06-08T18-41-38_20260608T183023-filetypes-rust_rust_gen_seed_search_3.log) |
+| `f3aba40acb7a2c58` | rust_retry_severity_fractions | ok | 0.1133 | 0.7375 | 0.0816 | 12 | [log](out/autocollie/runs/2026-06-08T18-41-48_20260608T183023-filetypes-rust_rust_retry_severity_fractions.log) |
+| `3bd2a239eb5c07c0` | rust_feat_metric_ratios_norm | ok | 0.1091 | 0.7178 | 0.0918 | 12 | [log](out/autocollie/runs/2026-06-08T18-42-02_20260608T183023-filetypes-rust_rust_feat_metric_ratios_norm.log) |
+| `e5d7d2cfc3042f86` | rust_train_dart_extra_trees | ok | 0.0872 | 0.6202 | 0.1154 | 2 | [log](out/autocollie/runs/2026-06-08T18-42-15_20260608T183023-filetypes-rust_rust_train_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_ctrl_baseline_train`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Replicate best recent feature env to establish a stable baseline for PR_AUC and ROC_AUC while varying only training knobs for cache hits.
+- **`rust_train_hardneg_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 …` — Improve recall@3 FP/M by upweighting hard negatives to sharpen the decision boundary at low FPR, targeting PR_AUC gain.
+- **`rust_train_reg_leaves_high`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=350 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 …` — Increase model capacity with higher leaves and stronger L2 regularization to capture complex Rust patterns without overfitting, aiming for PR_AUC improvement.
+- **`rust_feat_kv_vocab_expand`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with higher cap to capture rare but malicious Rust crate/config patterns, targeting PR_AUC and recall@3 FP/M.
+- **`rust_feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Add symbol_vocab and symbol_bigrams to capture Rust function/import co-occurrences, aiming to boost PR_AUC by identifying malicious API chains.
+- **`rust_feat_textenc_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 100 to include rarer Rust string patterns while keeping text metrics, targeting recall@3 FP/M gain.
+- **`rust_abl_disable_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Remove noisy clusters group to reduce overfitting on benign Rust project structures, aiming to stabilize ROC_AUC and improve PR_AUC.
+- **`rust_transfer_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Port successful sister-route config with low bigram freq and tiered trigrams to capture subtle Rust obfuscation, targeting PR_AUC.
+- **`rust_gen_seed_search_3`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Run seed search K=3 on the best feature set to average out RNG variance and confirm PR_AUC signal stability.
+- **`rust_retry_severity_fractions`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry severity_fractions feature which showed promise previously, aiming to recover PR_AUC gains while monitoring ROC_AUC guardrails.
+- **`rust_feat_metric_ratios_norm`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable metric_ratio_features and size_normalized_metrics to capture density-independent Rust malware signals, targeting recall@3 FP/M.
+- **`rust_train_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Combine DART boosting with extra_trees regularization to improve tail generalization and recall@3 FP/M without sacrificing PR_AUC.
+
+</details>
+

@@ -136,7 +136,7 @@ TOP_K_RISK_FILES = 1
 # model is stored in. Older litmus (1.2.x) reading a v17 bundle that
 # now ships .onnx + .txt silently ignores the .onnx and uses the .txt;
 # fully forward-compatible. Bump this when feature families are added
-# or removed (last bump: v17 added cluster:* + agg:static_*).
+# or removed (last bump: v18 added metrics:ast_depth_capped).
 #
 # Bump it ALSO when the feature-allowlist prune changes the LAYOUT — not
 # just when whole families appear/disappear. litmus places the offset-written
@@ -146,7 +146,7 @@ TOP_K_RISK_FILES = 1
 # v17 and ran litmus's unsigned-bigram block off the end of the vector. The
 # `feature_layout_hash` written into every spec records the exact layout so
 # such a change is detectable even when this number is forgotten.
-MODEL_ABI_VERSION = 17
+MODEL_ABI_VERSION = 18
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
@@ -1322,9 +1322,9 @@ class FeatureSpec:
     """
 
     # NOTE: bumping this version requires a matching update in ../litmus (Rust).
-    # litmus accepts v16..=v17 to allow live deploys to keep working through
+    # litmus accepts v16..=v18 to allow live deploys to keep working through
     # a version transition; new bundles always serialize at MODEL_ABI_VERSION.
-    version: int = 17
+    version: int = MODEL_ABI_VERSION
     abi_version: int = MODEL_ABI_VERSION
     presence_vocab: list[str] = field(default_factory=list)
     filetype_vocab: list[str] = field(default_factory=list)

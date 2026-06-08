@@ -1,6 +1,6 @@
 # Confirm PASS — 031999071f35bb21 on `filetypes/python`
 
-Cycle `20260602T011023-confirm-031999071f35bb21` — 2026-06-02T01:10:23Z
+Cycle `20260608T182525-confirm-031999071f35bb21` — 2026-06-08T18:25:25Z
 
 PR_AUC held across 3 seeds (orig 0.9990)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 0.9990)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `031999071f35bb21` | `598b2d294025434b` | `598b2d294025434b` | `598b2d294025434b` |
-| PR AUC | 0.9990 | 0.9972 | 0.9975 | 0.9973 |
-| ROC AUC | 0.9991 | 0.9979 | 0.9982 | 0.9980 |
+| key | `031999071f35bb21` | `92817fa0b92c8d20` | `92817fa0b92c8d20` | `92817fa0b92c8d20` |
+| PR AUC | 0.9990 | 0.9943 | 0.9942 | 0.9943 |
+| ROC AUC | 0.9991 | 0.9954 | 0.9953 | 0.9956 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 

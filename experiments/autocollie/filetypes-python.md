@@ -898,3 +898,51 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T181517-filetypes-python` — 2026-06-08T18:15:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8f59b254bd3cfb9e` | try_severity_fractions | dup | 0.8590 | 0.8915 | 0.8363 | 1 | [log](out/autocollie/runs/2026-06-08T18-17-17_20260608T181517-filetypes-python_try_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Directed knob trial (--try-knobs=severity_fractions): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20260608T183023-filetypes-python` — 2026-06-08T18:30:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f41f682734dbb9cc` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9942 | 0.9953 | 0.9668 | 51 | [log](out/autocollie/runs/2026-06-08T18-38-52_20260608T183023-filetypes-python_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f01308735ab97bc9` | py_ctrl_hsn01_w15_leaves128 | ok | 0.8797 | 0.9285 | 0.8423 | 52 | [log](out/autocollie/runs/2026-06-08T18-39-44_20260608T183023-filetypes-python_py_ctrl_hsn01_w15_leaves128.log) |
+| `616cb94b934c396b` | py_exploit_hsn_lr003_depth10 | ok | 0.8721 | 0.9171 | 0.8438 | 12 | [log](out/autocollie/runs/2026-06-08T18-40-39_20260608T183023-filetypes-python_py_exploit_hsn_lr003_depth10.log) |
+| `9a1ed2e361e86007` | py_exploit_dart_hsn01_w10 | ok | 0.8552 | 0.8858 | 0.8336 | 17 | [log](out/autocollie/runs/2026-06-08T18-40-53_20260608T183023-filetypes-python_py_exploit_dart_hsn01_w10.log) |
+| `bc9d40b9b202f25b` | py_feat_kv_vocab_split_max15k | ok | 0.8590 | 0.8915 | 0.8363 | 45 | [log](out/autocollie/runs/2026-06-08T18-41-11_20260608T183023-filetypes-python_py_feat_kv_vocab_split_max15k.log) |
+| `5b0e94076bb8f5a3` | py_feat_textenc_metrics_full | ok | 0.8611 | 0.8965 | 0.8328 | 34 | [log](out/autocollie/runs/2026-06-08T18-41-59_20260608T183023-filetypes-python_py_feat_textenc_metrics_full.log) |
+| `4b0cf06eca128d86` | py_feat_lowfreq_bigrams_trigrams | ok | 0.8590 | 0.8915 | 0.8363 | 26 | [log](out/autocollie/runs/2026-06-08T18-42-34_20260608T183023-filetypes-python_py_feat_lowfreq_bigrams_trigrams.log) |
+| `8f59b254bd3cfb9e` | py_feat_severity_fractions_traits | dup | 0.8590 | 0.8915 | 0.8363 | 1 | [log](out/autocollie/runs/2026-06-08T18-43-01_20260608T183023-filetypes-python_py_feat_severity_fractions_traits.log) |
+| `4eace0de57d3b386` | py_abl_extreme_off | ok | 0.8590 | 0.8881 | 0.8383 | 22 | [log](out/autocollie/runs/2026-06-08T18-43-03_20260608T183023-filetypes-python_py_abl_extreme_off.log) |
+| `029b48ac181245c3` | py_transfer_kv_seedsearch3 | ok | 0.8867 | 0.9365 | 0.8318 | 25 | [log](out/autocollie/runs/2026-06-08T18-43-26_20260608T183023-filetypes-python_py_transfer_kv_seedsearch3.log) |
+| `79631b9804b89fe4` | py_transfer_rtf_obfuscation | ok | 0.8616 | 0.8984 | 0.8268 | 22 | [log](out/autocollie/runs/2026-06-08T18-43-52_20260608T183023-filetypes-python_py_transfer_rtf_obfuscation.log) |
+| `f3008ac4d9277662` | py_retry_scalepos075_seedsearch | ok | 0.8574 | 0.8861 | 0.8393 | 5 | [log](out/autocollie/runs/2026-06-08T18-44-15_20260608T183023-filetypes-python_py_retry_scalepos075_seedsearch.log) |
+| `cf009706aa5465f3` | py_drift_minmalware3_hsn | ok | 0.8781 | 0.9259 | 0.8400 | 26 | [log](out/autocollie/runs/2026-06-08T18-44-21_20260608T183023-filetypes-python_py_drift_minmalware3_hsn.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`py_ctrl_hsn01_w15_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with hard negatives; increase num_leaves to 128 and add reg_lambda=1.0 to refine PR_AUC ranking without overfitting.
+- **`py_exploit_hsn_lr003_depth10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Same feature surface; lower learning_rate to 0.03 and max_depth to 10 to smooth score distribution and boost recall@3 FP/M at strict thresholds.
+- **`py_exploit_dart_hsn01_w10`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTRA_TREES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Switch to dart boosting with dropout regularization to improve tail generalization and stabilize PR_AUC while maintaining recall@3 FP/M.
+- **`py_feat_kv_vocab_split_max15k`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture granular dependency/config signals in Python scripts, targeting PR_AUC improvement via finer feature resolution.
+- **`py_feat_textenc_metrics_full`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_encoding and text_metrics_full to detect obfuscation and structural anomalies in Python source, aiming to lift recall@3 FP/M for evasive scripts.
+- **`py_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 and tiered_trigram_min_freq to 10 to capture rare but high-signal Python patterns, targeting PR_AUC gains from long-tail features.
+- **`py_feat_severity_fractions_traits`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SCORE_WEIGHTED_TRAITS=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable severity_fractions and score_weighted_traits to highlight minimal malicious payloads, aiming to improve recall@3 FP/M for low-footprint malware.
+- **`py_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce noise from tail distributions, expecting flat or improved PR_AUC with more stable ROC_AUC.
+- **`py_transfer_kv_seedsearch3`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Port gz route's kv_vocab success with seed_search_k=3 to reduce variance and confirm PR_AUC signal stability across Python corpus.
+- **`py_transfer_rtf_obfuscation`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=250 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Adapt rtf route's document_obfuscation_features and line_length_buckets to Python scripts, targeting recall@3 FP/M gains on obfuscated payloads.
+- **`py_retry_scalepos075_seedsearch`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Retry scale_pos_weight_mult=0.75 with seed_search_k=3 to verify PR_AUC improvement is robust and not seed-dependent.
+- **`py_drift_minmalware3_hsn`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_TRAIN_SAMPLES=30000` — Filter training to min_malware_score=3 to focus on high-severity examples, paired with hard negatives to sharpen recall@3 FP/M at the deployed operating point.
+
+</details>
+

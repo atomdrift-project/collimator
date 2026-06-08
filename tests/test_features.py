@@ -10,6 +10,7 @@ import pytest
 
 from collimator.features import (
     FeatureSpec,
+    MODEL_ABI_VERSION,
     _allowed_with_pair,
     _assemble_partitioned_matrices,
     _finding_paths,
@@ -164,7 +165,7 @@ def test_build_vocab_empty() -> None:
     spec = build_vocab([_make_report()])
     assert spec.total_features > 0
     assert len(spec.feature_names) == spec.total_features
-    assert spec.version == 17
+    assert spec.version == MODEL_ABI_VERSION
 
 
 def test_build_vocab_presence() -> None:
@@ -1080,7 +1081,7 @@ def test_feature_spec_save_load(tmp_path) -> None:
     assert loaded.presence_vocab == spec.presence_vocab
     assert loaded.filetype_vocab == spec.filetype_vocab
     assert loaded.feature_names == spec.feature_names
-    assert loaded.version == 17
+    assert loaded.version == MODEL_ABI_VERSION
 
 
 def test_feature_spec_save_load_with_standardization(tmp_path) -> None:

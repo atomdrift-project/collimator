@@ -16,6 +16,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from collimator import bundle  # noqa: E402
+from collimator.features import MODEL_ABI_VERSION  # noqa: E402
 
 
 # Per-route files that aren't model artifacts. Model files are picked up
@@ -70,6 +71,11 @@ def _stage_feature_spec(src: Path, dst: Path) -> None:
 
     with src.open() as f:
         spec = json.load(f)
+    # A staged runtime bundle must match the litmus ABI this collimator build
+    # targets. Older generated specs can be forward-compatible by feature list:
+    # litmus fills newer optional features as zeros when absent from the spec.
+    spec["version"] = MODEL_ABI_VERSION
+    spec["abi_version"] = MODEL_ABI_VERSION
     names = spec.get("feature_names") or []
     if names:
         spec["presence_vocab"] = _union(names, ("present:", "maxcrit:"))
