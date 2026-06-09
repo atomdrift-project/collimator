@@ -716,3 +716,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260609T050643-filegroups-config` — 2026-06-09T05:06:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `46ec55278912862b` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9987 | 0.9982 | 0.9929 | 16 | [log](out/autocollie/runs/2026-06-09T05-13-54_20260609T050643-filegroups-config_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `a74f8acc1fa1a115` | config_ctrl_hardneg_leaves128 | ok | 0.8828 | 0.8994 | 0.8711 | 15 | [log](out/autocollie/runs/2026-06-09T05-14-16_20260609T050643-filegroups-config_config_ctrl_hardneg_leaves128.log) |
+| `b18a5b9cb1d7db0a` | config_feat_kv_vocab_split | ok | 0.8817 | 0.9007 | 0.8707 | 12 | [log](out/autocollie/runs/2026-06-09T05-14-33_20260609T050643-filegroups-config_config_feat_kv_vocab_split.log) |
+| `8c154217a0030591` | config_feat_textmetrics_encoding | ok | 0.8828 | 0.9002 | 0.8731 | 12 | [log](out/autocollie/runs/2026-06-09T05-14-46_20260609T050643-filegroups-config_config_feat_textmetrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_hardneg_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env; tuning hard_negative_weight and num_leaves to improve PR_AUC by better separating hard benigns from malware.
+- **`config_feat_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured key-value patterns in configs, aiming to boost PR_AUC by isolating malicious configuration directives.
+- **`config_feat_textmetrics_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to detect obfuscation and encoding anomalies in config files, targeting PR_AUC improvement by surfacing hidden malicious payloads.
+
+</details>
+
+## Cycle `20260609T075800-filegroups-config` — 2026-06-09T07:58:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `46ec55278912862b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9987 | 0.9982 | 0.9929 | 1 | [log](out/autocollie/runs/2026-06-09T08-05-19_20260609T075800-filegroups-config_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `2d451279a64653bb` | config_ctrl_lr003_leaves128 | ok | 0.8819 | 0.9164 | 0.8701 | 5 | [log](out/autocollie/runs/2026-06-09T08-05-30_20260609T075800-filegroups-config_config_ctrl_lr003_leaves128.log) |
+| `c6a7c28da3a6498f` | config_feat_kv_vocab_split | ok | 0.8804 | 0.8979 | 0.8759 | 14 | [log](out/autocollie/runs/2026-06-09T08-05-38_20260609T075800-filegroups-config_config_feat_kv_vocab_split.log) |
+| `a1e72ffaa58bc8ca` | config_feat_textmetrics_lowbigram | ok | 0.8832 | 0.9027 | 0.8709 | 12 | [log](out/autocollie/runs/2026-06-09T08-05-52_20260609T075800-filegroups-config_config_feat_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control feature set with lower LR and higher leaves to improve tail recall@3FPM while keeping PR_AUC flat.
+- **`config_feat_kv_vocab_split`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture structured key-value patterns and split list values, targeting PR_AUC gains on config files.
+- **`config_feat_textmetrics_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and lower bigram_min_freq to 100 to capture obfuscation signals and rare config patterns, aiming to boost recall@3FPM.
+
+</details>
+
+## Cycle `20260609T094310-filegroups-config` — 2026-06-09T09:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `46ec55278912862b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9987 | 0.9982 | 0.9929 | 3 | [log](out/autocollie/runs/2026-06-09T09-50-08_20260609T094310-filegroups-config_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `f515ee50ef749d5b` | config_ctrl_lr002_leaves160 | ok | 0.8620 | 0.9045 | 0.8811 | 16 | [log](out/autocollie/runs/2026-06-09T09-50-15_20260609T094310-filegroups-config_config_ctrl_lr002_leaves160.log) |
+| `c6555fdfdac31de3` | config_feat_textenc_metrics_full | ok | 0.8819 | 0.9007 | 0.8722 | 19 | [log](out/autocollie/runs/2026-06-09T09-50-34_20260609T094310-filegroups-config_config_feat_textenc_metrics_full.log) |
+| `e0e949115c08d851` | config_feat_kv_vocab_split | ok | 0.8804 | 0.8979 | 0.8759 | 4 | [log](out/autocollie/runs/2026-06-09T09-50-54_20260609T094310-filegroups-config_config_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_lr002_leaves160`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=160 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature_env to hit the matrix cache, tuning learning_rate and num_leaves to improve PR_AUC by reducing overfitting on noisy config patterns while maintaining rank quality.
+- **`config_feat_textenc_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture obfuscation and structural text signals in config files, aiming to boost PR_AUC by adding discriminative features for malicious vs benign configs.
+- **`config_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with kv_value_split to recover per-element signal from list-valued config keys, targeting recall@3FPM gains by isolating rare malicious payloads buried in composite values.
+
+</details>
+

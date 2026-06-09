@@ -588,3 +588,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T235233-filetypes-tar` — 2026-06-08T23:52:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `98e43befab38e664` | inherit_from_filetypes_data_171c6310 | ok | 1.0000 | 1.0000 | 0.9842 | 17 | [log](out/autocollie/runs/2026-06-09T00-01-58_20260608T235233-filetypes-tar_inherit_from_filetypes_data_171c6310.log) |
+| `ddc8d37475380ee3` | tar_control_train_tweak | ok | 0.9977 | 0.9929 | 0.9840 | 25 | [log](out/autocollie/runs/2026-06-09T00-02-19_20260608T235233-filetypes-tar_tar_control_train_tweak.log) |
+| `c53e7356915ee92d` | tar_feat_kv_vocab_split | ok | 0.9970 | 0.9905 | 0.9787 | 29 | [log](out/autocollie/runs/2026-06-09T00-02-47_20260608T235233-filetypes-tar_tar_feat_kv_vocab_split.log) |
+| `a24583a3f66d9b3c` | tar_feat_textmetrics_encoding | ok | 0.9972 | 0.9913 | 0.9761 | 29 | [log](out/autocollie/runs/2026-06-09T00-03-18_20260608T235233-filetypes-tar_tar_feat_textmetrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_data_171c6310`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/data (key=171c63109389b743, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_control_train_tweak`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; tweaks hard_negative_weight and reg_lambda to improve PR_AUC while preserving ROC_AUC.
+- **`tar_feat_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured metadata in tar archives, aiming to boost recall@3FPM and PR_AUC.
+- **`tar_feat_textmetrics_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to extract obfuscation and encoding signals from tar contents, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260609T083102-filetypes-tar` — 2026-06-09T08:31:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `98e43befab38e664` | inherit_from_filetypes_data_171c6310 | dup | 1.0000 | 1.0000 | 0.9842 | 1 | [log](out/autocollie/runs/2026-06-09T08-39-29_20260609T083102-filetypes-tar_inherit_from_filetypes_data_171c6310.log) |
+| `6456b41e9f91a9d9` | tar_control_scalepos_leaves | ok | 0.9965 | 0.9887 | 0.9761 | 2 | [log](out/autocollie/runs/2026-06-09T08-39-33_20260609T083102-filetypes-tar_tar_control_scalepos_leaves.log) |
+| `1e06a9a8c1d36e3f` | tar_feat_textenc_lowbigram | ok | 0.9972 | 0.9913 | 0.9761 | 21 | [log](out/autocollie/runs/2026-06-09T08-39-37_20260609T083102-filetypes-tar_tar_feat_textenc_lowbigram.log) |
+| `5820a1ff1bf16650` | tar_feat_tiered_trigrams_hardneg | ok | 0.9979 | 0.9932 | 0.9840 | 22 | [log](out/autocollie/runs/2026-06-09T08-39-59_20260609T083102-filetypes-tar_tar_feat_tiered_trigrams_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_data_171c6310`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/data (key=171c63109389b743, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_control_scalepos_leaves`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.75 and num_leaves=128 to tighten FP tail and improve recall@3 FP/M while keeping PR AUC flat.
+- **`tar_feat_textenc_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full with lower bigram_min_freq=500 to capture rarer text patterns in archives, aiming to improve PR AUC and recall@3 FP/M.
+- **`tar_feat_tiered_trigrams_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Enable tiered_crit_trigrams and suspicious_trigrams with hard_negative_fraction=0.1 to sharpen ranking on malicious archives, targeting recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260609T110513-filetypes-tar` — 2026-06-09T11:05:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `98e43befab38e664` | inherit_from_filetypes_data_171c6310 | dup | 1.0000 | 1.0000 | 0.9842 | 1 | [log](out/autocollie/runs/2026-06-09T11-13-51_20260609T110513-filetypes-tar_inherit_from_filetypes_data_171c6310.log) |
+| `6310261e33f1c7cb` | tar_control_train_tweak_v2 | ok | 0.9969 | 0.9899 | 0.9787 | 20 | [log](out/autocollie/runs/2026-06-09T11-13-55_20260609T110513-filetypes-tar_tar_control_train_tweak_v2.log) |
+| `be740815442b54e7` | tar_feat_textmetrics_encoding | ok | 0.9972 | 0.9913 | 0.9761 | 2 | [log](out/autocollie/runs/2026-06-09T11-14-17_20260609T110513-filetypes-tar_tar_feat_textmetrics_encoding.log) |
+| `307f4c13580b9d0c` | tar_feat_kv_vocab_split | ok | 0.9970 | 0.9905 | 0.9787 | 23 | [log](out/autocollie/runs/2026-06-09T11-14-20_20260609T110513-filetypes-tar_tar_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_data_171c6310`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/data (key=171c63109389b743, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_control_train_tweak_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by adjusting tree complexity and regularization on the best recent feature set, leveraging matrix cache hits to find a better ranking boundary.
+- **`tar_feat_textmetrics_encoding`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and text_encoding to capture document obfuscation and encoding artifacts in tar payloads, while preserving PR_AUC.
+- **`tar_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and kv_value_split to extract finer-grained metadata signals from archive entries, improving separation of malicious from benign archives.
+
+</details>
+

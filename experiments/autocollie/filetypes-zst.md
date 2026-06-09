@@ -612,3 +612,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260609T051026-filetypes-zst` — 2026-06-09T05:10:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f3a1a2bb5606d93f` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 1.0000 | 1.0000 | 12 | [log](out/autocollie/runs/2026-06-09T05-19-38_20260609T051026-filetypes-zst_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `77f44ff9b198f0d5` | zst_control_hardneg_tune | ok | 0.9907 | 0.9928 | 0.9817 | 11 | [log](out/autocollie/runs/2026-06-09T05-19-53_20260609T051026-filetypes-zst_zst_control_hardneg_tune.log) |
+| `1341a2448625f07d` | zst_feat_textenc_metrics_full | ok | 0.9942 | 0.9955 | 0.9833 | 10 | [log](out/autocollie/runs/2026-06-09T05-20-17_20260609T051026-filetypes-zst_zst_feat_textenc_metrics_full.log) |
+| `5a9fa025a541ffb5` | zst_feat_kv_vocab_bigram_low | ok | 0.9942 | 0.9956 | 0.9833 | 10 | [log](out/autocollie/runs/2026-06-09T05-20-29_20260609T051026-filetypes-zst_zst_feat_kv_vocab_bigram_low.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_hardneg_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent feature_env; tests hard-negative mining to improve tail recall@3FPM while keeping PR_AUC flat.
+- **`zst_feat_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full research vocabs to capture obfuscation/structural signals in compressed archives, aiming to lift PR_AUC.
+- **`zst_feat_kv_vocab_bigram_low`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab and lowers bigram_min_freq to capture rare malicious KV pairs and bigrams, targeting recall@3FPM gains.
+
+</details>
+
+## Cycle `20260609T072501-filetypes-zst` — 2026-06-09T07:25:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f3a1a2bb5606d93f` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-06-09T07-32-19_20260609T072501-filetypes-zst_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ebbb6d2233782cad` | zst_control_train_tune | ok | 0.9942 | 0.9955 | 0.9833 | 12 | [log](out/autocollie/runs/2026-06-09T07-32-33_20260609T072501-filetypes-zst_zst_control_train_tune.log) |
+| `d71bd484ba98cf12` | zst_feat_textenc_metrics_lowfreq | ok | 0.9942 | 0.9955 | 0.9833 | 13 | [log](out/autocollie/runs/2026-06-09T07-32-46_20260609T072501-filetypes-zst_zst_feat_textenc_metrics_lowfreq.log) |
+| `ac5f150d87e2a932` | zst_feat_severity_frac_kv_split | ok | 0.9942 | 0.9956 | 0.9833 | 12 | [log](out/autocollie/runs/2026-06-09T07-33-02_20260609T072501-filetypes-zst_zst_feat_severity_frac_kv_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_train_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 …` — Aims to improve PR_AUC by increasing num_leaves and lowering learning_rate to better rank subtle malware signals in the tail while keeping ROC_AUC flat.
+- **`zst_feat_textenc_metrics_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies that KV features miss, while lowering bigram_min_freq to catch rarer patterns.
+- **`zst_feat_severity_frac_kv_split`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by enabling severity_fractions and kv_value_split to highlight high-severity finding distributions and recover per-element signal from opaque KV blobs.
+
+</details>
+
+## Cycle `20260609T101143-filetypes-zst` — 2026-06-09T10:11:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f3a1a2bb5606d93f` | inherit_from_filetypes_tar_1f9a08a6 | dup | 1.0000 | 1.0000 | 1.0000 | 1 | [log](out/autocollie/runs/2026-06-09T10-19-38_20260609T101143-filetypes-zst_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ce83e2f898454fff` | zst_control_train_tune_v2 | ok | 0.9942 | 0.9956 | 0.9833 | 15 | [log](out/autocollie/runs/2026-06-09T10-19-56_20260609T101143-filetypes-zst_zst_control_train_tune_v2.log) |
+| `513d03294785d55d` | zst_feat_text_metrics_full | ok | 0.9942 | 0.9955 | 0.9833 | 17 | [log](out/autocollie/runs/2026-06-09T10-20-14_20260609T101143-filetypes-zst_zst_feat_text_metrics_full.log) |
+| `ee088870caf739c1` | zst_feat_kv_vocab_lowfreq | ok | 0.9942 | 0.9956 | 0.9833 | 15 | [log](out/autocollie/runs/2026-06-09T10-20-34_20260609T101143-filetypes-zst_zst_feat_kv_vocab_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_train_tune_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating the best recent feature set; increases num_leaves and estimators to improve PR_AUC by allowing deeper trees to capture subtle ranking signals without changing the feature matrix.
+- **`zst_feat_text_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to extract structural and obfuscation signals from archived contents, aiming to increase recall@3FPM by better separating malicious payloads from benign archives.
+- **`zst_feat_kv_vocab_lowfreq`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with a lower frequency floor to capture rare configuration patterns in zst files, targeting PR_AUC gains by adding high-signal sparse features that distinguish malicious tooling.
+
+</details>
+

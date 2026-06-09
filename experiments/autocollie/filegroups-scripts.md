@@ -598,3 +598,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260609T044643-filegroups-scripts` — 2026-06-09T04:46:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ea83775b3e61c4b8` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9962 | 0.9953 | 0.9635 | 49 | [log](out/autocollie/runs/2026-06-09T04-55-17_20260609T044643-filegroups-scripts_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ea21ef5fcd29a221` | scripts_control_train_tune | ok | 0.9162 | 0.9136 | 0.6066 | 37 | [log](out/autocollie/runs/2026-06-09T04-56-26_20260609T044643-filegroups-scripts_scripts_control_train_tune.log) |
+| `fdd5e8fb431c4f3c` | scripts_feat_kv_vocab_split | ok | 0.9236 | 0.9135 | 0.6059 | 35 | [log](out/autocollie/runs/2026-06-09T04-57-06_20260609T044643-filegroups-scripts_scripts_feat_kv_vocab_split.log) |
+| `5f6e913212e9ba43` | scripts_feat_text_metrics_enc | ok | 0.9142 | 0.9010 | 0.6048 | 27 | [log](out/autocollie/runs/2026-06-09T04-57-42_20260609T044643-filegroups-scripts_scripts_feat_text_metrics_enc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning hard_negative_weight and num_leaves on the best recent feature set to better separate tail malware from benigns.
+- **`scripts_feat_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab and kv_value_split to capture structured config/header signals in scripts that are missed by path n-grams.
+- **`scripts_feat_text_metrics_enc`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture obfuscation and encoding patterns specific to script files.
+
+</details>
+
+## Cycle `20260609T081313-filegroups-scripts` — 2026-06-09T08:13:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ea83775b3e61c4b8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9962 | 0.9953 | 0.9635 | 1 | [log](out/autocollie/runs/2026-06-09T08-20-18_20260609T081313-filegroups-scripts_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `943fa416d7f8b5d2` | scripts_control_train_tune | ok | 0.9216 | 0.9221 | 0.6049 | 8 | [log](out/autocollie/runs/2026-06-09T08-20-23_20260609T081313-filegroups-scripts_scripts_control_train_tune.log) |
+| `5f6e913212e9ba43` | scripts_feat_text_metrics_enc | dup | 0.9142 | 0.9010 | 0.6048 | 2 | [log](out/autocollie/runs/2026-06-09T08-20-32_20260609T081313-filegroups-scripts_scripts_feat_text_metrics_enc.log) |
+| `fdd5e8fb431c4f3c` | scripts_feat_kv_vocab_split | dup | 0.9236 | 0.9135 | 0.6059 | 1 | [log](out/autocollie/runs/2026-06-09T08-20-36_20260609T081313-filegroups-scripts_scripts_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best feature_env; tuning num_leaves and reg_lambda to improve PR_AUC and recall@3FPM by reducing overfitting on rare script patterns.
+- **`scripts_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture script obfuscation and encoding artifacts, aiming to boost PR_AUC and recall@3FPM by adding high-signal structural features for scripts.
+- **`scripts_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to extract key-value pair signals and split compound values, targeting PR_AUC and recall@3FPM improvements by resolving opaque config blobs common in scripts.
+
+</details>
+
+## Cycle `20260609T102815-filegroups-scripts` — 2026-06-09T10:28:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ea83775b3e61c4b8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9962 | 0.9953 | 0.9635 | 1 | [log](out/autocollie/runs/2026-06-09T10-33-52_20260609T102815-filegroups-scripts_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `943fa416d7f8b5d2` | scripts_control_train_tune | dup | 0.9216 | 0.9221 | 0.6049 | 1 | [log](out/autocollie/runs/2026-06-09T10-34-16_20260609T102815-filegroups-scripts_scripts_control_train_tune.log) |
+| `d2f6ced42f8829cd` | scripts_feat_text_metrics_enc | ok | 0.9142 | 0.9010 | 0.6048 | 4 | [log](out/autocollie/runs/2026-06-09T10-34-22_20260609T102815-filegroups-scripts_scripts_feat_text_metrics_enc.log) |
+| `d17c425a78b9ca0b` | scripts_feat_kv_vocab_split | ok | 0.9236 | 0.9135 | 0.6059 | 4 | [log](out/autocollie/runs/2026-06-09T10-34-28_20260609T102815-filegroups-scripts_scripts_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature surface; adjusts num_leaves and reg_lambda to improve PR_AUC by reducing overfitting on noisy benign script patterns.
+- **`scripts_feat_text_metrics_enc`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture obfuscation and encoding artifacts in scripts, aiming to increase recall@3FPM by better isolating malicious payloads from benign text.
+- **`scripts_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to extract structured key-value signals from script metadata, targeting PR_AUC improvement by adding discriminative features for malicious payloads.
+
+</details>
+

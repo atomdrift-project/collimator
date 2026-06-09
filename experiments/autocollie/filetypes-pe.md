@@ -878,3 +878,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T235233-filetypes-pe` — 2026-06-08T23:52:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `644535c539b18a3c` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9991 | 0.9992 | 0.9896 | 179 | [log](out/autocollie/runs/2026-06-09T00-05-04_20260608T235233-filetypes-pe_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `7585a20505ddb18c` | pe_control_threshold_fpr_hardneg | ok | 0.9989 | 0.9989 | 0.0000 | 121 | [log](out/autocollie/runs/2026-06-09T00-09-26_20260608T235233-filetypes-pe_pe_control_threshold_fpr_hardneg.log) |
+| `0e5529fe63e59b9e` | pe_feat_kv_vocab_symbol_bigrams | ok | 0.9988 | 0.9989 | 0.9841 | 109 | [log](out/autocollie/runs/2026-06-09T00-11-36_20260608T235233-filetypes-pe_pe_feat_kv_vocab_symbol_bigrams.log) |
+| `d7f777dd5fe06cbe` | pe_feat_symbol_vocab_pe_flags | ok | 0.9989 | 0.9990 | 0.9860 | 119 | [log](out/autocollie/runs/2026-06-09T00-13-26_20260608T235233-filetypes-pe_pe_feat_symbol_vocab_pe_flags.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_threshold_fpr_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with max_recall_at_fpr threshold and hard-negative sweep to directly optimize deployed tail recall@3FPM while preserving PR_AUC.
+- **`pe_feat_kv_vocab_symbol_bigrams`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 …` — Enable kv_vocab and symbol_bigrams to capture key-value pair distributions and import co-occurrence patterns, aiming to improve PR_AUC by adding structural signal for packed PE binaries.
+- **`pe_feat_symbol_vocab_pe_flags`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 …` — Enable symbol_vocab and PE-specific format/temporal flags to isolate compiler/linker anomalies and symbol presence, targeting recall@3FPM gains on obfuscated or timestamp-manipulated malware.
+
+</details>
+
+## Cycle `20260609T075344-filetypes-pe` — 2026-06-09T07:53:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `644535c539b18a3c` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9991 | 0.9992 | 0.9896 | 1 | [log](out/autocollie/runs/2026-06-09T08-00-36_20260609T075344-filetypes-pe_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bf97bdeec463191a` | pe_control_hardneg_fpr_target | ok | 0.9988 | 0.9988 | 0.0000 | 106 | [log](out/autocollie/runs/2026-06-09T08-01-54_20260609T075344-filetypes-pe_pe_control_hardneg_fpr_target.log) |
+| `9c5fc1291c9ef2d2` | pe_feat_symbol_vocab_bigrams | ok | 0.9988 | 0.9989 | 0.9841 | 102 | [log](out/autocollie/runs/2026-06-09T08-03-48_20260609T075344-filetypes-pe_pe_feat_symbol_vocab_bigrams.log) |
+| `53a358cb9ff3c70b` | pe_feat_pe_metrics_overlay_hardneg | ok | 0.9988 | 0.9988 | 0.9843 | 100 | [log](out/autocollie/runs/2026-06-09T08-05-31_20260609T075344-filetypes-pe_pe_feat_pe_metrics_overlay_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_fpr_target`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Replicates best feature env with hard-negative sweep and strict FPR threshold to maximize recall@3 FP/M at the deployed operating point.
+- **`pe_feat_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 …` — Enables symbol vocab and bigrams to capture PE import co-occurrence patterns, aiming to improve PR_AUC by adding structural binary signal.
+- **`pe_feat_pe_metrics_overlay_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 …` — Adds PE-format, temporal, and overlay metrics to catch packer/dropper signals, paired with hard negatives to boost tail recall@3 FP/M.
+
+</details>
+
+## Cycle `20260609T094310-filetypes-pe` — 2026-06-09T09:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `644535c539b18a3c` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9991 | 0.9992 | 0.9896 | 3 | [log](out/autocollie/runs/2026-06-09T09-49-50_20260609T094310-filetypes-pe_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b91814e1b796171a` | pe_control_hardneg_fpr_target | ok | 0.9988 | 0.9989 | 0.0000 | 72 | [log](out/autocollie/runs/2026-06-09T09-49-58_20260609T094310-filetypes-pe_pe_control_hardneg_fpr_target.log) |
+| `b292c800cbbb875c` | pe_feat_symbol_vocab_bigrams_pe_flags | ok | 0.9988 | 0.9989 | 0.9843 | 102 | [log](out/autocollie/runs/2026-06-09T09-51-12_20260609T094310-filetypes-pe_pe_feat_symbol_vocab_bigrams_pe_flags.log) |
+| `89648464dbf04d9a` | pe_feat_kv_vocab_overlay_extra_trees | ok | 0.9985 | 0.9986 | 0.9796 | 94 | [log](out/autocollie/runs/2026-06-09T09-52-55_20260609T094310-filetypes-pe_pe_feat_kv_vocab_overlay_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_fpr_target`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Control baseline using hard-negative sweep and strict FPR targeting to maximize recall@3FPM at the deployed operating point while keeping PR_AUC flat.
+- **`pe_feat_symbol_vocab_bigrams_pe_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_VOCAB=1 …` — Enables symbol_vocab and symbol_bigrams plus PE format/temporal flags to capture import co-occurrence and packer signals, aiming to lift PR_AUC and recall@3FPM.
+- **`pe_feat_kv_vocab_overlay_extra_trees`** `EXP_EXTRA_TREES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 …` — Adds kv_vocab and overlay_signal to detect packed/dropper binaries, paired with extra_trees regularization to improve tail generalization and boost recall@3FPM.
+
+</details>
+

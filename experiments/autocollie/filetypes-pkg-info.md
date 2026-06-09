@@ -594,3 +594,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T235233-filetypes-pkg-info` — 2026-06-08T23:52:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e01439a04459d6e6` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9927 | 0.5000 | 0.9963 | 9 | [log](out/autocollie/runs/2026-06-09T00-02-09_20260608T235233-filetypes-pkg-info_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b6d6b114a478ceb6` | pkginfo_control_train_exploit_v2 | ok | 0.9956 | 0.9820 | 0.9858 | 10 | [log](out/autocollie/runs/2026-06-09T00-02-23_20260608T235233-filetypes-pkg-info_pkginfo_control_train_exploit_v2.log) |
+| `decfa7fe098eaac5` | pkginfo_kv_vocab_split_research | ok | 0.9956 | 0.9800 | 0.9846 | 11 | [log](out/autocollie/runs/2026-06-09T00-02-35_20260608T235233-filetypes-pkg-info_pkginfo_kv_vocab_split_research.log) |
+| `5b55cd50ecef42e4` | pkginfo_text_metrics_hardneg_tail | ok | 0.9973 | 0.9863 | 0.9843 | 10 | [log](out/autocollie/runs/2026-06-09T00-02-46_20260608T235233-filetypes-pkg-info_pkginfo_text_metrics_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_train_exploit_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 …` — Control run replicating best feature surface; tuning num_leaves and reg_lambda to stabilize PR_AUC and improve recall@3FPM by reducing overfitting on rare benign patterns.
+- **`pkginfo_kv_vocab_split_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured package metadata fields; aims to boost PR_AUC by isolating malicious dependency and author patterns from noisy text.
+- **`pkginfo_text_metrics_hardneg_tail`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Adds text_metrics_full and text_encoding alongside lower bigram_min_freq; targets recall@3FPM by surfacing obfuscation and rare string patterns in package manifests while using hard negatives to sharpen the tail.
+
+</details>
+
+## Cycle `20260609T070309-filetypes-pkg-info` — 2026-06-09T07:03:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e01439a04459d6e6` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9927 | 0.5000 | 0.9963 | 1 | [log](out/autocollie/runs/2026-06-09T07-13-12_20260609T070309-filetypes-pkg-info_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bee8a6c35b003e6e` | pkginfo_control_hardneg_tune | ok | 0.9964 | 0.9821 | 0.9854 | 9 | [log](out/autocollie/runs/2026-06-09T07-13-15_20260609T070309-filetypes-pkg-info_pkginfo_control_hardneg_tune.log) |
+| `4adf0a483fbb3b0c` | pkginfo_kv_vocab_split_research | ok | 0.9956 | 0.9800 | 0.9858 | 14 | [log](out/autocollie/runs/2026-06-09T07-13-25_20260609T070309-filetypes-pkg-info_pkginfo_kv_vocab_split_research.log) |
+| `1c28ff91891a69cb` | pkginfo_textenc_tiered_trigrams | ok | 0.9956 | 0.9800 | 0.9858 | 8 | [log](out/autocollie/runs/2026-06-09T07-13-40_20260609T070309-filetypes-pkg-info_pkginfo_textenc_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_hardneg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.15 …` — Control run replicating best feature set with tuned hard-negative sampling and tree capacity to improve PR_AUC and recall@3FPM by better separating hard benigns from malware.
+- **`pkginfo_kv_vocab_split_research`** `EXP_BIGRAM_MIN_FREQ=250 EXP_KV_MIN_FREQ=3 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables KV vocab and value splitting to extract structured metadata signals from package manifests, aiming to boost PR_AUC by capturing malicious dependency patterns.
+- **`pkginfo_textenc_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=250 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=5 …` — Tests text encoding and tiered critical trigrams to detect obfuscation and structural anomalies in pkg-info files, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260609T101631-filetypes-pkg-info` — 2026-06-09T10:16:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e01439a04459d6e6` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9927 | 0.5000 | 0.9963 | 1 | [log](out/autocollie/runs/2026-06-09T10-22-04_20260609T101631-filetypes-pkg-info_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `49762b2ffd10b704` | pkginfo_control_hardneg_tune | ok | 0.9971 | 0.9851 | 0.9854 | 3 | [log](out/autocollie/runs/2026-06-09T10-22-07_20260609T101631-filetypes-pkg-info_pkginfo_control_hardneg_tune.log) |
+| `5e56d5702c530ad9` | pkginfo_kv_vocab_textmetrics | ok | 0.9956 | 0.9800 | 0.9858 | 11 | [log](out/autocollie/runs/2026-06-09T10-22-11_20260609T101631-filetypes-pkg-info_pkginfo_kv_vocab_textmetrics.log) |
+| `bf53ba6d6d6924fc` | pkginfo_lowfreq_trigrams | ok | 0.9956 | 0.9800 | 0.9846 | 10 | [log](out/autocollie/runs/2026-06-09T10-22-22_20260609T101631-filetypes-pkg-info_pkginfo_lowfreq_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_hardneg_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set and tune hard-negative sampling to improve PR_AUC and recall@3FPM by better separating difficult benigns from malware.
+- **`pkginfo_kv_vocab_textmetrics`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture key-value structure and text signals in package manifests, aiming to boost PR_AUC and recall@3FPM.
+- **`pkginfo_lowfreq_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Lower n-gram frequency floors and enable tiered_crit_trigrams to capture rare malicious patterns, targeting PR_AUC gains while preserving ROC_AUC.
+
+</details>
+

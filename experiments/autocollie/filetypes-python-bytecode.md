@@ -626,3 +626,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260609T051026-filetypes-python-bytecode` — 2026-06-09T05:10:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1de7f248b18db4ec` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9996 | 0.9992 | 0.9867 | 9 | [log](out/autocollie/runs/2026-06-09T05-18-41_20260609T051026-filetypes-python-bytecode_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `5acb0e09c4df3bf4` | pybc_ctrl_train_hardneg_leaves128 | ok | 0.8731 | 0.9177 | 0.9118 | 15 | [log](out/autocollie/runs/2026-06-09T05-18-54_20260609T051026-filetypes-python-bytecode_pybc_ctrl_train_hardneg_leaves128.log) |
+| `22e87964886d6760` | pybc_feat_textenc_symbol_lowbigram | ok | 0.8787 | 0.9266 | 0.9091 | 14 | [log](out/autocollie/runs/2026-06-09T05-19-11_20260609T051026-filetypes-python-bytecode_pybc_feat_textenc_symbol_lowbigram.log) |
+| `de68bbcb2b45d5b8` | pybc_feat_severity_frac_kv_split | ok | 0.8810 | 0.9272 | 0.9103 | 13 | [log](out/autocollie/runs/2026-06-09T05-19-26_20260609T051026-filetypes-python-bytecode_pybc_feat_severity_frac_kv_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_hardneg_leaves128`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Aims to improve PR_AUC by upweighting hard negatives and increasing tree capacity to better separate borderline malware from benign bytecode, keeping the proven feature surface.
+- **`pybc_feat_textenc_symbol_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to boost recall@3FPM by enabling text_encoding and symbol_vocab to capture obfuscation artifacts, while lowering bigram_min_freq to 50 to retain rare malicious n-grams.
+- **`pybc_feat_severity_frac_kv_split`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=1.5 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding severity_fractions to highlight minimal malicious payloads and kv_value_split to isolate specific malicious library calls, reducing aggregate noise.
+
+</details>
+
+## Cycle `20260609T072045-filetypes-python-bytecode` — 2026-06-09T07:20:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1de7f248b18db4ec` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9996 | 0.9992 | 0.9867 | 1 | [log](out/autocollie/runs/2026-06-09T07-27-43_20260609T072045-filetypes-python-bytecode_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4a29016d55910984` | pybc_ctrl_train_hardneg_leaves128 | ok | 0.8752 | 0.9134 | 0.9118 | 12 | [log](out/autocollie/runs/2026-06-09T07-27-46_20260609T072045-filetypes-python-bytecode_pybc_ctrl_train_hardneg_leaves128.log) |
+| `ada37e97cdbb4acb` | pybc_feat_textenc_metrics_full | ok | 0.8786 | 0.9314 | 0.9088 | 12 | [log](out/autocollie/runs/2026-06-09T07-27-59_20260609T072045-filetypes-python-bytecode_pybc_feat_textenc_metrics_full.log) |
+| `7c9bf6c6edd05815` | pybc_feat_lowbigram_clusters_off | ok | 0.8787 | 0.9266 | 0.9091 | 12 | [log](out/autocollie/runs/2026-06-09T07-28-11_20260609T072045-filetypes-python-bytecode_pybc_feat_lowbigram_clusters_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_hardneg_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature_env to hit matrix cache; test hard_negative_weight and increased leaves to improve recall@3FPM by better separating hard negatives without hurting PR_AUC.
+- **`pybc_feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text_encoding and text_metrics_full to capture structural obfuscation signals in bytecode, aiming to boost PR_AUC and recall@3FPM by adding discriminative text-level features.
+- **`pybc_feat_lowbigram_clusters_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 50 and disable clusters group to reduce noise and capture rarer bytecode patterns, targeting PR_AUC improvement by focusing on high-signal n-grams.
+
+</details>
+
+## Cycle `20260609T094310-filetypes-python-bytecode` — 2026-06-09T09:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1de7f248b18db4ec` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9996 | 0.9992 | 0.9867 | 1 | [log](out/autocollie/runs/2026-06-09T09-49-56_20260609T094310-filetypes-python-bytecode_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `6b3c50ab63849b5f` | pybc_ctrl_train_hardneg_leaves128 | ok | 0.8772 | 0.9215 | 0.9103 | 5 | [log](out/autocollie/runs/2026-06-09T09-50-04_20260609T094310-filetypes-python-bytecode_pybc_ctrl_train_hardneg_leaves128.log) |
+| `8f6975cc45e47534` | pybc_feat_kv_vocab_split | ok | 0.8787 | 0.9266 | 0.9091 | 41 | [log](out/autocollie/runs/2026-06-09T09-50-11_20260609T094310-filetypes-python-bytecode_pybc_feat_kv_vocab_split.log) |
+| `3b86f574080cb220` | pybc_feat_textenc_metrics_lowfreq | ok | 0.8835 | 0.9350 | 0.9079 | 19 | [log](out/autocollie/runs/2026-06-09T09-50-54_20260609T094310-filetypes-python-bytecode_pybc_feat_textenc_metrics_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_hardneg_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicates best recent feature surface to hit matrix cache, testing hard-negative upweighting and deeper trees to improve PR_AUC ranking at the tail.
+- **`pybc_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and value splitting to capture structured payload signals in bytecode, aiming to lift recall@3 FP/M by isolating malicious configuration patterns.
+- **`pybc_feat_textenc_metrics_lowfreq`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and text_encoding with lower bigram frequency to capture obfuscation and string-packing signals, targeting PR_AUC gains from structural text features.
+
+</details>
+

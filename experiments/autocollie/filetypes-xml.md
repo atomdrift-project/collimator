@@ -728,3 +728,57 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260609T002244-filetypes-xml` — 2026-06-09T00:22:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2649353f84242da3` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9952 | 0.9984 | 0.9474 | 5 | [log](out/autocollie/runs/2026-06-09T00-28-59_20260609T002244-filetypes-xml_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `53da2533357890ff` | xml_control_hardneg_tail_recall | ok | 0.2657 | 0.6893 | 0.1624 | 11 | [log](out/autocollie/runs/2026-06-09T00-29-09_20260609T002244-filetypes-xml_xml_control_hardneg_tail_recall.log) |
+| `2518ed4662ab5ae9` | xml_feat_textmetrics_encoding_kv | ok | 0.2715 | 0.7105 | 0.1624 | 9 | [log](out/autocollie/runs/2026-06-09T00-29-22_20260609T002244-filetypes-xml_xml_feat_textmetrics_encoding_kv.log) |
+| `f3f577e31954bd81` | xml_feat_lower_freq_ngrams_trigrams | ok | 0.2662 | 0.7053 | 0.1624 | 9 | [log](out/autocollie/runs/2026-06-09T00-29-32_20260609T002244-filetypes-xml_xml_feat_lower_freq_ngrams_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_hardneg_tail_recall`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by upweighting hard negatives to sharpen the decision boundary at the strict-FP tail, while keeping PR AUC and ROC AUC flat.
+- **`xml_feat_textmetrics_encoding_kv`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR AUC and recall@3 FP/M by enabling text_metrics_full and text_encoding to capture XML-specific obfuscation and encoding artifacts, supplemented by kv_vocab for attribute-value signal.
+- **`xml_feat_lower_freq_ngrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=50` — Aims to improve PR AUC by lowering bigram and trigram frequency floors to capture rare but high-signal XML structural patterns, while capping vocab sizes to control overfitting.
+
+</details>
+
+## Cycle `20260609T083102-filetypes-xml` — 2026-06-09T08:31:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2649353f84242da3` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9952 | 0.9984 | 0.9474 | 1 | [log](out/autocollie/runs/2026-06-09T08-36-43_20260609T083102-filetypes-xml_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `7cd3a61fa862b8a1` | xml_control_training_tweak | ok | 0.1306 | 0.5448 | 0.1719 | 2 | [log](out/autocollie/runs/2026-06-09T08-36-47_20260609T083102-filetypes-xml_xml_control_training_tweak.log) |
+| `c5c9dda677d391c6` | xml_text_metrics_encoding_vocab | ok | 0.2719 | 0.7123 | 0.1624 | 10 | [log](out/autocollie/runs/2026-06-09T08-36-51_20260609T083102-filetypes-xml_xml_text_metrics_encoding_vocab.log) |
+| `28a8f3b3a8a3231f` | xml_kv_vocab_lower_bigram_freq | ok | 0.2666 | 0.7057 | 0.1624 | 10 | [log](out/autocollie/runs/2026-06-09T08-37-02_20260609T083102-filetypes-xml_xml_kv_vocab_lower_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_training_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by increasing tree capacity and slowing learning to better separate tail malware from benign XML noise, while keeping features identical for cache hits.
+- **`xml_text_metrics_encoding_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_metrics_full and text_encoding to capture XML structural obfuscation and encoding anomalies that standard n-grams miss.
+- **`xml_kv_vocab_lower_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab to extract XML attribute-value pairs and lowering bigram_min_freq to 250 to capture rarer malicious XML patterns without excessive noise.
+
+</details>
+
+## Cycle `20260609T105907-filetypes-xml` — 2026-06-09T10:59:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2649353f84242da3` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9952 | 0.9984 | 0.9474 | 1 | [log](out/autocollie/runs/2026-06-09T11-05-11_20260609T105907-filetypes-xml_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `78a51dc4f1c27ed4` | xml_control_training_tweak_v2 | ok | 0.2662 | 0.7053 | 0.1624 | 2 | [log](out/autocollie/runs/2026-06-09T11-05-14_20260609T105907-filetypes-xml_xml_control_training_tweak_v2.log) |
+| `91f5915268912457` | xml_kv_text_metrics_vocab | ok | 0.2719 | 0.7123 | 0.1624 | 12 | [log](out/autocollie/runs/2026-06-09T11-05-17_20260609T105907-filetypes-xml_xml_kv_text_metrics_vocab.log) |
+| `63d4be0a22249920` | xml_tiered_trigrams_no_clusters | ok | 0.2678 | 0.7053 | 0.1624 | 15 | [log](out/autocollie/runs/2026-06-09T11-05-30_20260609T105907-filetypes-xml_xml_tiered_trigrams_no_clusters.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_training_tweak_v2`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by tuning num_leaves and estimators on the baseline feature set to reduce overfitting while preserving ranking quality.
+- **`xml_kv_text_metrics_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and text_metrics_full to capture XML attribute key-value pairs and document-level text obfuscation metrics.
+- **`xml_tiered_trigrams_no_clusters`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by disabling the noisy clusters group and enabling tiered_crit_trigrams to emphasize high-severity path co-occurrences relevant to XML payloads.
+
+</details>
+

@@ -748,3 +748,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T235233-filegroups-portable` — 2026-06-08T23:52:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `616baf33eb6111ea` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9885 | 0.9979 | 0.8977 | 19 | [log](out/autocollie/runs/2026-06-09T00-03-38_20260608T235233-filegroups-portable_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ebb2195aa732c038` | control_training_leaves128_lr005 | ok | 0.9091 | 0.9726 | 0.8943 | 21 | [log](out/autocollie/runs/2026-06-09T00-04-09_20260608T235233-filegroups-portable_control_training_leaves128_lr005.log) |
+| `6dd16f7a8a1699e0` | feat_text_metrics_full_textenc | ok | 0.9091 | 0.9726 | 0.8943 | 8 | [log](out/autocollie/runs/2026-06-09T00-04-36_20260608T235233-filegroups-portable_feat_text_metrics_full_textenc.log) |
+| `888e90aaea87c556` | feat_kv_vocab_lowfreq_split | ok | 0.9091 | 0.9726 | 0.8943 | 13 | [log](out/autocollie/runs/2026-06-09T00-04-45_20260608T235233-filegroups-portable_feat_kv_vocab_lowfreq_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_training_leaves128_lr005`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent feature_env to hit matrix cache; increases num_leaves to 128 to improve PR_AUC by allowing finer decision boundaries on the existing feature surface.
+- **`feat_text_metrics_full_textenc`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture structural obfuscation signals, aiming to boost recall@3FPM by better separating malicious portable scripts from benign archives.
+- **`feat_kv_vocab_lowfreq_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Activates kv_vocab with kv_value_split to recover per-element signal in config blobs, targeting PR_AUC improvement by isolating malicious key-value patterns in portable droppers.
+
+</details>
+
+## Cycle `20260609T065157-filegroups-portable` — 2026-06-09T06:51:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `616baf33eb6111ea` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9885 | 0.9979 | 0.8977 | 2 | [log](out/autocollie/runs/2026-06-09T07-04-40_20260609T065157-filegroups-portable_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `6d985a94d62c662b` | control_train_leaves128_reg2 | ok | 0.9067 | 0.9736 | 0.8922 | 11 | [log](out/autocollie/runs/2026-06-09T07-05-06_20260609T065157-filegroups-portable_control_train_leaves128_reg2.log) |
+| `79c2cd213950173d` | feat_kv_vocab_split_lowfreq | ok | 0.9091 | 0.9726 | 0.8943 | 16 | [log](out/autocollie/runs/2026-06-09T07-05-22_20260609T065157-filegroups-portable_feat_kv_vocab_split_lowfreq.log) |
+| `6dd16f7a8a1699e0` | feat_text_metrics_encoding | dup | 0.9091 | 0.9726 | 0.8943 | 2 | [log](out/autocollie/runs/2026-06-09T07-05-41_20260609T065157-filegroups-portable_feat_text_metrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_train_leaves128_reg2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Replicates best feature set to establish baseline; increases num_leaves and reg_lambda to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`feat_kv_vocab_split_lowfreq`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured metadata signals in portable archives, aiming to boost recall@3FPM by distinguishing malicious configs from benign ones.
+- **`feat_text_metrics_encoding`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and text_encoding to capture obfuscation and encoding patterns in script-heavy portable files, targeting PR_AUC gains by improving separation of obfuscated malware.
+
+</details>
+
+## Cycle `20260609T094310-filegroups-portable` — 2026-06-09T09:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `616baf33eb6111ea` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9885 | 0.9979 | 0.8977 | 1 | [log](out/autocollie/runs/2026-06-09T09-49-26_20260609T094310-filegroups-portable_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ebb2195aa732c038` | control_train_leaves128_est300 | dup | 0.9091 | 0.9726 | 0.8943 | 1 | [log](out/autocollie/runs/2026-06-09T09-49-30_20260609T094310-filegroups-portable_control_train_leaves128_est300.log) |
+| `79c2cd213950173d` | feat_kv_vocab_split_10k | dup | 0.9091 | 0.9726 | 0.8943 | 2 | [log](out/autocollie/runs/2026-06-09T09-49-31_20260609T094310-filegroups-portable_feat_kv_vocab_split_10k.log) |
+| `6dd16f7a8a1699e0` | feat_text_metrics_full_encoding | dup | 0.9091 | 0.9726 | 0.8943 | 1 | [log](out/autocollie/runs/2026-06-09T09-49-34_20260609T094310-filegroups-portable_feat_text_metrics_full_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_train_leaves128_est300`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by increasing tree capacity and estimators on the proven feature set to reduce underfitting.
+- **`feat_kv_vocab_split_10k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and kv_value_split to capture finer-grained key-value patterns in portable archives.
+- **`feat_text_metrics_full_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and text_encoding to detect obfuscation and encoding anomalies in script-heavy portable files.
+
+</details>
+

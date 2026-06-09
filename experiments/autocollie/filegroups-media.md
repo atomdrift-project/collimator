@@ -652,3 +652,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260609T005658-filegroups-media` — 2026-06-09T00:56:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `628c54d7d3611a69` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9717 | 0.9798 | 0.9151 | 8 | [log](out/autocollie/runs/2026-06-09T01-02-42_20260609T005658-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `527919da367b11ef` | media_control_train_tail_opt | ok | 0.2137 | 0.5511 | 0.1650 | 18 | [log](out/autocollie/runs/2026-06-09T01-02-58_20260609T005658-filegroups-media_media_control_train_tail_opt.log) |
+| `0af2e6201aff73ed` | media_textenc_metrics_full_pr_auc | ok | 0.2063 | 0.5541 | 0.1559 | 11 | [log](out/autocollie/runs/2026-06-09T01-03-19_20260609T005658-filegroups-media_media_textenc_metrics_full_pr_auc.log) |
+| `0f2de7cbecd51f73` | media_kv_vocab_split_recall | ok | 0.2063 | 0.5541 | 0.1559 | 11 | [log](out/autocollie/runs/2026-06-09T01-03-31_20260609T005658-filegroups-media_media_kv_vocab_split_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_train_tail_opt`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates baseline feature_env for cache hits; tunes hard_negative_weight and scale_pos_weight_mult to improve recall@3FPM by sharpening separation on hard benigns and reducing FP pressure at the tail.
+- **`media_textenc_metrics_full_pr_auc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture structural and encoding anomalies in media files, aiming to boost PR_AUC by adding discriminative signal for obfuscated or malformed media payloads.
+- **`media_kv_vocab_split_recall`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to parse metadata fields in media files, aiming to improve recall@3FPM by isolating malicious metadata patterns that are diluted in aggregate features.
+
+</details>
+
+## Cycle `20260609T082323-filegroups-media` — 2026-06-09T08:23:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `628c54d7d3611a69` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9717 | 0.9798 | 0.9151 | 1 | [log](out/autocollie/runs/2026-06-09T08-33-42_20260609T082323-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3ba6303204a37660` | media_control_train_opt | ok | 0.2258 | 0.5620 | 0.1551 | 2 | [log](out/autocollie/runs/2026-06-09T08-33-46_20260609T082323-filegroups-media_media_control_train_opt.log) |
+| `9fccaad44406ec49` | media_kv_textenc_vocab | ok | 0.2063 | 0.5541 | 0.1559 | 10 | [log](out/autocollie/runs/2026-06-09T08-33-49_20260609T082323-filegroups-media_media_kv_textenc_vocab.log) |
+| `31deee511a85c693` | media_lowbigram_disable_clusters | ok | 0.2063 | 0.5541 | 0.1559 | 9 | [log](out/autocollie/runs/2026-06-09T08-34-00_20260609T082323-filegroups-media_media_lowbigram_disable_clusters.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_train_opt`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and lowering learning rate (0.03) on the proven feature set to better rank tail malware.
+- **`media_kv_textenc_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab and text_metrics_full to capture structured metadata and header obfuscation patterns common in malicious media files.
+- **`media_lowbigram_disable_clusters`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering bigram_min_freq to 200 to catch rarer malicious patterns and disabling the clusters group to reduce noise, following sister-route successes.
+
+</details>
+
+## Cycle `20260609T105408-filegroups-media` — 2026-06-09T10:54:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `628c54d7d3611a69` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9717 | 0.9798 | 0.9151 | 1 | [log](out/autocollie/runs/2026-06-09T10-59-58_20260609T105408-filegroups-media_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `11a4b93d64bd10b2` | media_control_train_opt | ok | 0.2172 | 0.5594 | 0.1636 | 2 | [log](out/autocollie/runs/2026-06-09T11-00-01_20260609T105408-filegroups-media_media_control_train_opt.log) |
+| `19306870d3980c04` | media_text_metrics_full_pr | ok | 0.2063 | 0.5541 | 0.1559 | 10 | [log](out/autocollie/runs/2026-06-09T11-00-05_20260609T105408-filegroups-media_media_text_metrics_full_pr.log) |
+| `b1f086252375f5ae` | media_kv_vocab_split_recall | ok | 0.2117 | 0.5740 | 0.1559 | 10 | [log](out/autocollie/runs/2026-06-09T11-00-16_20260609T105408-filegroups-media_media_kv_vocab_split_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_train_opt`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to improve PR_AUC by tuning hard-negative weighting and tree complexity to better separate borderline malware, while keeping ROC_AUC flat.
+- **`media_text_metrics_full_pr`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 …` — Aims to improve PR_AUC by enabling text_metrics_full to capture document obfuscation and structural anomalies, adding rank signal without harming ROC_AUC.
+- **`media_kv_vocab_split_recall`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to improve recall@3FPM by enabling kv_vocab and kv_value_split to recover per-element signal in metadata, pushing subtle malware higher in the strict-FP tail.
+
+</details>
+

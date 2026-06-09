@@ -718,3 +718,57 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260609T003350-filetypes-vbs` — 2026-06-09T00:33:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c48e3de9b2afde0a` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9900 | 0.8487 | 0.9815 | 11 | [log](out/autocollie/runs/2026-06-09T00-39-09_20260609T003350-filetypes-vbs_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `8246c6d1fb9f1fe4` | vbs_control_hardneg_lr003_leaves128 | ok | 0.9968 | 0.9887 | 0.9548 | 12 | [log](out/autocollie/runs/2026-06-09T00-39-23_20260609T003350-filetypes-vbs_vbs_control_hardneg_lr003_leaves128.log) |
+| `1ba4ed26a1355954` | vbs_text_metrics_full_encoding | ok | 0.9967 | 0.9887 | 0.9565 | 11 | [log](out/autocollie/runs/2026-06-09T00-39-37_20260609T003350-filetypes-vbs_vbs_text_metrics_full_encoding.log) |
+| `b0dbe1041dc0335f` | vbs_kv_vocab_low_bigram_freq | ok | 0.9966 | 0.9883 | 0.9565 | 12 | [log](out/autocollie/runs/2026-06-09T00-39-49_20260609T003350-filetypes-vbs_vbs_kv_vocab_low_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the top feature set; adjusts learning_rate and num_leaves to refine tree splits, aiming to improve PR_AUC by reducing overfitting on the dev set.
+- **`vbs_text_metrics_full_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture script obfuscation and character distribution, aiming to boost PR_AUC by adding high-signal structural text features for VBS.
+- **`vbs_kv_vocab_low_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab to extract registry/COM object patterns and lowers bigram_min_freq to capture rarer malicious sequences, aiming to increase recall@3FPM and PR_AUC by surfacing tail malware signals.
+
+</details>
+
+## Cycle `20260609T065157-filetypes-vbs` — 2026-06-09T06:51:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c48e3de9b2afde0a` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9900 | 0.8487 | 0.9815 | 6 | [log](out/autocollie/runs/2026-06-09T07-04-39_20260609T065157-filetypes-vbs_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `15115f191025df34` | vbs_control_train_tune | ok | 0.9954 | 0.9849 | 0.9561 | 13 | [log](out/autocollie/runs/2026-06-09T07-05-04_20260609T065157-filetypes-vbs_vbs_control_train_tune.log) |
+| `4eaa9383ef5f32b5` | vbs_kv_vocab_split_trigrams | ok | 0.9966 | 0.9884 | 0.9565 | 25 | [log](out/autocollie/runs/2026-06-09T07-05-24_20260609T065157-filetypes-vbs_vbs_kv_vocab_split_trigrams.log) |
+| `6b3df59195c6e1b1` | vbs_text_metrics_full_encoding | ok | 0.9967 | 0.9887 | 0.9562 | 5 | [log](out/autocollie/runs/2026-06-09T07-05-50_20260609T065157-filetypes-vbs_vbs_text_metrics_full_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_train_tune`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to establish baseline; tunes training knobs to stabilize PR_AUC and ROC_AUC.
+- **`vbs_kv_vocab_split_trigrams`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured script payloads, aiming to boost PR_AUC by isolating malicious key-value patterns.
+- **`vbs_text_metrics_full_encoding`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and text_encoding to detect obfuscation and encoding anomalies in VBS, targeting recall@3FPM improvement.
+
+</details>
+
+## Cycle `20260609T110935-filetypes-vbs` — 2026-06-09T11:09:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c48e3de9b2afde0a` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9900 | 0.8487 | 0.9815 | 1 | [log](out/autocollie/runs/2026-06-09T11-16-53_20260609T110935-filetypes-vbs_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `1e14438f4cd45575` | vbs_control_hardneg_lr002_leaves128 | ok | 0.9964 | 0.9874 | 0.9561 | 4 | [log](out/autocollie/runs/2026-06-09T11-16-59_20260609T110935-filetypes-vbs_vbs_control_hardneg_lr002_leaves128.log) |
+| `e087e5b2c8851ec3` | vbs_kv_vocab_split_textmetrics | ok | 0.9967 | 0.9887 | 0.9562 | 15 | [log](out/autocollie/runs/2026-06-09T11-17-04_20260609T110935-filetypes-vbs_vbs_kv_vocab_split_textmetrics.log) |
+| `11605262cc8bc098` | vbs_severity_fractions_trigrams | ok | 0.9967 | 0.9887 | 0.9562 | 17 | [log](out/autocollie/runs/2026-06-09T11-17-20_20260609T110935-filetypes-vbs_vbs_severity_fractions_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg_lr002_leaves128`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control feature set with tuned hard negatives and lower learning rate to stabilize tail recall and improve PR_AUC without changing the feature matrix.
+- **`vbs_kv_vocab_split_textmetrics`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split alongside text_metrics_full to capture structural and obfuscation signals in VBS, targeting PR_AUC gains from finer-grained key-value parsing.
+- **`vbs_severity_fractions_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Activates severity_fractions and objective_trigrams to better rank minimal droppers and script-based payloads, aiming to lift PR_AUC by reducing false negatives on low-crit malicious samples.
+
+</details>
+

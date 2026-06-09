@@ -366,3 +366,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260609T051824-filetypes-java` — 2026-06-09T05:18:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c8c3fced3218855b` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9705 | 0.9650 | 0.9259 | 6 | [log](out/autocollie/runs/2026-06-09T05-23-38_20260609T051824-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `b290e09c7a6444d8` | java_control_train_tune_v5 | ok | 0.0765 | 0.5326 | 0.0965 | 12 | [log](out/autocollie/runs/2026-06-09T05-23-47_20260609T051824-filetypes-java_java_control_train_tune_v5.log) |
+| `18cd87688abaeb00` | java_kv_vocab_split_5k | ok | 0.4821 | 0.9348 | 0.1205 | 10 | [log](out/autocollie/runs/2026-06-09T05-24-01_20260609T051824-filetypes-java_java_kv_vocab_split_5k.log) |
+| `0cf8ea58663f7b31` | java_text_metrics_encoding | ok | 0.4774 | 0.9351 | 0.1209 | 11 | [log](out/autocollie/runs/2026-06-09T05-24-11_20260609T051824-filetypes-java_java_text_metrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune_v5`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; increases num_leaves and lowers learning_rate to improve PR_AUC by allowing finer decision boundaries without overfitting.
+- **`java_kv_vocab_split_5k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture package/class/method naming patterns in Java metadata, aiming to boost PR_AUC by adding high-signal structural features.
+- **`java_text_metrics_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture obfuscation and structural text patterns in Java source, aiming to improve recall@3FPM by highlighting heavily obfuscated or suspiciously formatted files.
+
+</details>
+
+## Cycle `20260609T065157-filetypes-java` — 2026-06-09T06:51:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c8c3fced3218855b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9705 | 0.9650 | 0.9259 | 1 | [log](out/autocollie/runs/2026-06-09T07-02-57_20260609T065157-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ba506c7558f58950` | java_control_train_tune_v6 | ok | 0.0977 | 0.5859 | 0.1070 | 4 | [log](out/autocollie/runs/2026-06-09T07-03-02_20260609T065157-filetypes-java_java_control_train_tune_v6.log) |
+| `b7cf1bc8d360d3d5` | java_kv_vocab_10k | ok | 0.4821 | 0.9348 | 0.1205 | 15 | [log](out/autocollie/runs/2026-06-09T07-03-09_20260609T065157-filetypes-java_java_kv_vocab_10k.log) |
+| `0cf8ea58663f7b31` | java_text_metrics_encoding | dup | 0.4774 | 0.9351 | 0.1209 | 1 | [log](out/autocollie/runs/2026-06-09T07-03-26_20260609T065157-filetypes-java_java_text_metrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune_v6`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by increasing model capacity (num_leaves=128) and regularization (reg_lambda=1.5) to better separate the small malware class from the large benign set.
+- **`java_kv_vocab_10k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab to capture Java-specific key-value patterns (e.g., manifest entries, config keys) that are currently missed by the inherited tar feature set.
+- **`java_text_metrics_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_metrics_full and text_encoding to capture obfuscation and structural text patterns common in malicious Java source/code, complementing the existing n-gram features.
+
+</details>
+
+## Cycle `20260609T094310-filetypes-java` — 2026-06-09T09:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c8c3fced3218855b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9705 | 0.9650 | 0.9259 | 3 | [log](out/autocollie/runs/2026-06-09T09-50-11_20260609T094310-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `64b0fcf178707ed3` | java_control_hardneg_tune | ok | 0.4097 | 0.9198 | 0.1154 | 9 | [log](out/autocollie/runs/2026-06-09T09-50-26_20260609T094310-filetypes-java_java_control_hardneg_tune.log) |
+| `18cd87688abaeb00` | java_kv_vocab_split_5k | dup | 0.4821 | 0.9348 | 0.1205 | 4 | [log](out/autocollie/runs/2026-06-09T09-50-36_20260609T094310-filetypes-java_java_kv_vocab_split_5k.log) |
+| `0cf8ea58663f7b31` | java_text_metrics_encoding_full | dup | 0.4774 | 0.9351 | 0.1209 | 4 | [log](out/autocollie/runs/2026-06-09T09-50-44_20260609T094310-filetypes-java_java_text_metrics_encoding_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_hardneg_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature surface; tuning hard_negative_fraction and hard_negative_weight aims to improve PR_AUC by sharpening separation between tail malware and benigns.
+- **`java_kv_vocab_split_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured config signals in Java properties; aims to boost PR_AUC by adding discriminative key-value patterns that distinguish malicious payloads from benign configs.
+- **`java_text_metrics_encoding_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and text_encoding to capture obfuscation and structural text patterns; aims to improve recall@3FPM by surfacing subtle malicious text artifacts often missed by standard n-grams.
+
+</details>
+

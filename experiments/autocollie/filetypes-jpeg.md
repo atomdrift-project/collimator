@@ -954,3 +954,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260608T235233-filetypes-jpeg` — 2026-06-08T23:52:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f0edddcdec7870b8` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9530 | 0.9750 | 0.8378 | 6 | [log](out/autocollie/runs/2026-06-09T00-03-29_20260608T235233-filetypes-jpeg_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d97a10bf60e07501` | jpeg_control_train_hardneg_v4 | ok | 0.2752 | 0.6691 | 0.2996 | 16 | [log](out/autocollie/runs/2026-06-09T00-03-42_20260608T235233-filetypes-jpeg_jpeg_control_train_hardneg_v4.log) |
+| `b53bc9f417c99755` | jpeg_feat_kv_textenc_vocab | ok | 0.2013 | 0.5097 | 0.3223 | 16 | [log](out/autocollie/runs/2026-06-09T00-04-00_20260608T235233-filetypes-jpeg_jpeg_feat_kv_textenc_vocab.log) |
+| `8d28cda9b6e541b6` | jpeg_feat_textmetrics_lowfreq_trigrams | ok | 0.2013 | 0.5097 | 0.3223 | 17 | [log](out/autocollie/runs/2026-06-09T00-04-18_20260608T235233-filetypes-jpeg_jpeg_feat_textmetrics_lowfreq_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_hardneg_v4`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set; increase hard negative weight and tree depth to sharpen ranking at the tail, targeting PR_AUC and recall@3FPM by better separating borderline malware from benign JPEGs.
+- **`jpeg_feat_kv_textenc_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable KV and text encoding vocabs to extract metadata and structural signals from JPEG headers, aiming to lift PR_AUC by capturing distinct malicious patterns missed by default features.
+- **`jpeg_feat_textmetrics_lowfreq_trigrams`** `EXP_BIGRAM_MIN_FREQ=150 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Add full text metrics and lower n-gram frequency floors to capture rare obfuscation and structural anomalies, targeting PR_AUC improvement while keeping ROC_AUC stable.
+
+</details>
+
+## Cycle `20260609T074830-filetypes-jpeg` — 2026-06-09T07:48:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f0edddcdec7870b8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9530 | 0.9750 | 0.8378 | 1 | [log](out/autocollie/runs/2026-06-09T07-55-15_20260609T074830-filetypes-jpeg_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `25101fe934903468` | jpeg_control_train_reg_leaves | ok | 0.2053 | 0.5097 | 0.3250 | 2 | [log](out/autocollie/runs/2026-06-09T07-55-18_20260609T074830-filetypes-jpeg_jpeg_control_train_reg_leaves.log) |
+| `b42d0773517dbad0` | jpeg_feat_textmetrics_encoding | ok | 0.2013 | 0.5097 | 0.3223 | 9 | [log](out/autocollie/runs/2026-06-09T07-55-21_20260609T074830-filetypes-jpeg_jpeg_feat_textmetrics_encoding.log) |
+| `833395102a0a742d` | jpeg_feat_kv_vocab_lowfreq_bigrams | ok | 0.2013 | 0.5097 | 0.3223 | 9 | [log](out/autocollie/runs/2026-06-09T07-55-31_20260609T074830-filetypes-jpeg_jpeg_feat_kv_vocab_lowfreq_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_reg_leaves`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by increasing tree capacity (num_leaves=128) and regularization (reg_lambda=2.0) to better rank tail malware while controlling false positives.
+- **`jpeg_feat_textmetrics_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture obfuscation and encoding anomalies in JPEG metadata and embedded streams.
+- **`jpeg_feat_kv_vocab_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab to extract EXIF/IPTC metadata signals and lowering bigram_min_freq to 200 to capture rarer malicious patterns in JPEG payloads.
+
+</details>
+
+## Cycle `20260609T110935-filetypes-jpeg` — 2026-06-09T11:09:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f0edddcdec7870b8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9530 | 0.9750 | 0.8378 | 1 | [log](out/autocollie/runs/2026-06-09T11-17-30_20260609T110935-filetypes-jpeg_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `fda963b01f330a47` | jpeg_control_train_reg_leaves | ok | 0.2036 | 0.5097 | 0.3250 | 2 | [log](out/autocollie/runs/2026-06-09T11-17-36_20260609T110935-filetypes-jpeg_jpeg_control_train_reg_leaves.log) |
+| `d80176b00093e2e7` | jpeg_feat_textmetrics_encoding | ok | 0.2013 | 0.5097 | 0.3223 | 2 | [log](out/autocollie/runs/2026-06-09T11-17-39_20260609T110935-filetypes-jpeg_jpeg_feat_textmetrics_encoding.log) |
+| `13ee252dec4fdaf5` | jpeg_feat_kv_vocab_lowfreq | ok | 0.2013 | 0.5097 | 0.3223 | 13 | [log](out/autocollie/runs/2026-06-09T11-17-41_20260609T110935-filetypes-jpeg_jpeg_feat_kv_vocab_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_reg_leaves`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by tuning tree complexity and regularization to better rank malware without overfitting, using the best recent feature set.
+- **`jpeg_feat_textmetrics_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_metrics_full and text_encoding to capture steganographic or metadata obfuscation patterns common in malicious JPEGs.
+- **`jpeg_feat_kv_vocab_lowfreq`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by enabling kv_vocab and lowering kv_min_freq to capture rare but highly indicative metadata key-value pairs in malicious JPEGs.
+
+</details>
+

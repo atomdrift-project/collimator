@@ -566,3 +566,57 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260608T235233-filetypes-lnk` — 2026-06-08T23:52:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b67b3736f37af9fb` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9934 | 0.8875 | 0.9852 | 10 | [log](out/autocollie/runs/2026-06-09T00-05-03_20260608T235233-filetypes-lnk_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `de55e41e4b3e0e10` | lnk_control_hardneg_leaves | ok | 0.9955 | 0.9798 | 0.9132 | 15 | [log](out/autocollie/runs/2026-06-09T00-05-19_20260608T235233-filetypes-lnk_lnk_control_hardneg_leaves.log) |
+| `92eca594f9c07481` | lnk_feat_kv_textenc_vocab | ok | 0.9820 | 0.9153 | 0.9163 | 12 | [log](out/autocollie/runs/2026-06-09T00-05-47_20260608T235233-filetypes-lnk_lnk_feat_kv_textenc_vocab.log) |
+| `fe34c5182cbd990d` | lnk_feat_textmetrics_lowbigram | ok | 0.9821 | 0.9159 | 0.9163 | 16 | [log](out/autocollie/runs/2026-06-09T00-06-02_20260608T235233-filetypes-lnk_lnk_feat_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_control_hardneg_leaves`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env to hit matrix cache; tune hard_negative_weight and num_leaves to improve PR_AUC by better separating tail malware from benign shortcuts.
+- **`lnk_feat_kv_textenc_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture shortcut path/argument structures; aims to boost PR_AUC by adding high-signal lexical features for LNK metadata.
+- **`lnk_feat_textmetrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and lower bigram_min_freq to 25 to capture rare path patterns; aims to improve recall@3FPM by surfacing subtle malicious shortcut configurations.
+
+</details>
+
+## Cycle `20260609T072920-filetypes-lnk` — 2026-06-09T07:29:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b67b3736f37af9fb` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9934 | 0.8875 | 0.9852 | 1 | [log](out/autocollie/runs/2026-06-09T07-35-50_20260609T072920-filetypes-lnk_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `de55e41e4b3e0e10` | lnk_ctrl_hardneg_leaves_lr | dup | 0.9955 | 0.9798 | 0.9132 | 1 | [log](out/autocollie/runs/2026-06-09T07-35-54_20260609T072920-filetypes-lnk_lnk_ctrl_hardneg_leaves_lr.log) |
+| `c76223258618e5a1` | lnk_feat_textenc_metrics_lowbigram | ok | 0.9820 | 0.9153 | 0.9163 | 6 | [log](out/autocollie/runs/2026-06-09T07-35-57_20260609T072920-filetypes-lnk_lnk_feat_textenc_metrics_lowbigram.log) |
+| `cc37c2b83c24ca13` | lnk_feat_kv_vocab_split | ok | 0.9820 | 0.9153 | 0.9163 | 7 | [log](out/autocollie/runs/2026-06-09T07-36-04_20260609T072920-filetypes-lnk_lnk_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_ctrl_hardneg_leaves_lr`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning hard-negative weighting and tree complexity to better rank malicious LNK files at the strict-FP tail without degrading ROC_AUC.
+- **`lnk_feat_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM and PR_AUC by adding text-encoding and full text-metric features to capture obfuscation and structural patterns in LNK payloads, while lowering bigram frequency to retain rare but malicious n-grams.
+- **`lnk_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling KV vocab and value splitting to extract fine-grained signal from LNK target paths and command-line arguments, helping the model distinguish malicious shortcuts from benign ones.
+
+</details>
+
+## Cycle `20260609T104349-filetypes-lnk` — 2026-06-09T10:43:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b67b3736f37af9fb` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9934 | 0.8875 | 0.9852 | 1 | [log](out/autocollie/runs/2026-06-09T10-49-06_20260609T104349-filetypes-lnk_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `d96adeeb73d603a1` | lnk_control_train_tune | ok | 0.9858 | 0.9403 | 0.9132 | 2 | [log](out/autocollie/runs/2026-06-09T10-49-08_20260609T104349-filetypes-lnk_lnk_control_train_tune.log) |
+| `cc37c2b83c24ca13` | lnk_feat_kv_vocab_split | dup | 0.9820 | 0.9153 | 0.9163 | 1 | [log](out/autocollie/runs/2026-06-09T10-49-10_20260609T104349-filetypes-lnk_lnk_feat_kv_vocab_split.log) |
+| `ef4843fe95b48e71` | lnk_feat_textenc_metrics | ok | 0.9820 | 0.9153 | 0.9163 | 6 | [log](out/autocollie/runs/2026-06-09T10-49-12_20260609T104349-filetypes-lnk_lnk_feat_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_control_train_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning num_leaves and learning_rate on the best recent feature set, leveraging matrix cache hits for cheap validation.
+- **`lnk_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM and PR_AUC by enabling kv_vocab and kv_value_split to extract structured path and argument tokens from LNK files, capturing high-signal key-value pairs.
+- **`lnk_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_encoding and text_metrics_full to detect obfuscation and structural anomalies in LNK text content, complementing existing n-gram features.
+
+</details>
+

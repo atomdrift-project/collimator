@@ -528,3 +528,57 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260609T045420-filetypes-rtf` — 2026-06-09T04:54:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8949e769b2274210` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9947 | 0.5000 | 0.9973 | 5 | [log](out/autocollie/runs/2026-06-09T05-00-30_20260609T045420-filetypes-rtf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `3aadf463e8d350b6` | rtf_ctrl_hardneg_tail_recall | ok | 0.9996 | 0.9969 | 0.9880 | 5 | [log](out/autocollie/runs/2026-06-09T05-00-38_20260609T045420-filetypes-rtf_rtf_ctrl_hardneg_tail_recall.log) |
+| `7003f0a00a2e50c6` | rtf_feat_textmetrics_kv_vocab | ok | 0.9989 | 0.9927 | 0.9894 | 5 | [log](out/autocollie/runs/2026-06-09T05-00-44_20260609T045420-filetypes-rtf_rtf_feat_textmetrics_kv_vocab.log) |
+| `2d3f496567aa00a7` | rtf_feat_docobf_lowbigram | ok | 0.9989 | 0.9927 | 0.9894 | 5 | [log](out/autocollie/runs/2026-06-09T05-00-50_20260609T045420-filetypes-rtf_rtf_feat_docobf_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_hardneg_tail_recall`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives and increasing tree capacity to better separate borderline malware from benign RTF documents, reusing the cached feature matrix.
+- **`rtf_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and kv_vocab to capture RTF-specific structural obfuscation and macro key-value patterns that standard n-grams miss.
+- **`rtf_feat_docobf_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by activating document_obfuscation_features and lowering bigram_min_freq to 100, targeting rare RTF control sequences and obfuscation taxonomies that drive tail false negatives.
+
+</details>
+
+## Cycle `20260609T074830-filetypes-rtf` — 2026-06-09T07:48:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8949e769b2274210` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9947 | 0.5000 | 0.9973 | 1 | [log](out/autocollie/runs/2026-06-09T07-56-55_20260609T074830-filetypes-rtf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bf2d2e6090b911c8` | rtf_ctrl_hardneg_tail_recall_v2 | ok | 0.9989 | 0.9927 | 0.9894 | 2 | [log](out/autocollie/runs/2026-06-09T07-56-59_20260609T074830-filetypes-rtf_rtf_ctrl_hardneg_tail_recall_v2.log) |
+| `669d68c3195a3c08` | rtf_feat_textmetrics_docobf | ok | 0.9989 | 0.9927 | 0.9894 | 6 | [log](out/autocollie/runs/2026-06-09T07-57-02_20260609T074830-filetypes-rtf_rtf_feat_textmetrics_docobf.log) |
+| `4f8a23d4ea573601` | rtf_feat_kv_vocab_tiered_trigrams | ok | 0.9989 | 0.9927 | 0.9894 | 6 | [log](out/autocollie/runs/2026-06-09T07-57-09_20260609T074830-filetypes-rtf_rtf_feat_kv_vocab_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_hardneg_tail_recall_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating best PR_AUC feature set while tuning hard_negative_weight and num_leaves to improve recall@3FPM without hurting PR_AUC.
+- **`rtf_feat_textmetrics_docobf`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 …` — Enables text_metrics_full and document_obfuscation_features to capture structural obfuscation signals in RTF, aiming to boost PR_AUC and recall@3FPM.
+- **`rtf_feat_kv_vocab_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=280 …` — Adds kv_vocab and expands tiered trigram coverage to capture key-value patterns and longer trait sequences, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260609T094310-filetypes-rtf` — 2026-06-09T09:43:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8949e769b2274210` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9947 | 0.5000 | 0.9973 | 1 | [log](out/autocollie/runs/2026-06-09T09-49-50_20260609T094310-filetypes-rtf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `282256a771c08dbf` | rtf_ctrl_hardneg_tail_v3 | ok | 0.9998 | 0.9984 | 0.9880 | 3 | [log](out/autocollie/runs/2026-06-09T09-49-55_20260609T094310-filetypes-rtf_rtf_ctrl_hardneg_tail_v3.log) |
+| `c4c26b30d7ab2732` | rtf_feat_textmetrics_kv_vocab | ok | 0.9989 | 0.9927 | 0.9894 | 26 | [log](out/autocollie/runs/2026-06-09T09-50-02_20260609T094310-filetypes-rtf_rtf_feat_textmetrics_kv_vocab.log) |
+| `7af35ac21ba83e26` | rtf_feat_docobf_lowbigram_tiered | ok | 0.9989 | 0.9927 | 0.9894 | 16 | [log](out/autocollie/runs/2026-06-09T09-50-31_20260609T094310-filetypes-rtf_rtf_feat_docobf_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_hardneg_tail_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best feature_env and tunes hard_negative_weight and num_leaves to improve recall@3 FP/M while preserving PR_AUC.
+- **`rtf_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture RTF-specific obfuscation and key-value patterns, targeting PR_AUC improvement.
+- **`rtf_feat_docobf_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and enables document_obfuscation_features and tiered_crit_trigrams to boost recall@3 FP/M on rare malicious RTF constructs.
+
+</details>
+

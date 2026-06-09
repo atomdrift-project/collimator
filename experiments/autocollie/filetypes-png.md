@@ -796,3 +796,57 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260609T005658-filetypes-png` — 2026-06-09T00:56:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d0f3777b30bd6677` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9785 | 0.9710 | 0.9474 | 9 | [log](out/autocollie/runs/2026-06-09T01-02-36_20260609T005658-filetypes-png_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `08c44ddbf86e2815` | png_ctrl_train_reg_lambda_leaves_v2 | ok | 0.1871 | 0.6077 | 0.1255 | 17 | [log](out/autocollie/runs/2026-06-09T01-02-53_20260609T005658-filetypes-png_png_ctrl_train_reg_lambda_leaves_v2.log) |
+| `3aff2d752abe7018` | png_feat_kv_textmetrics_vocab | ok | 0.1781 | 0.5930 | 0.1256 | 10 | [log](out/autocollie/runs/2026-06-09T01-03-15_20260609T005658-filetypes-png_png_feat_kv_textmetrics_vocab.log) |
+| `d9130c84a1a48b6f` | png_feat_lowbigram_overlay_signal | ok | 0.1781 | 0.5930 | 0.1256 | 11 | [log](out/autocollie/runs/2026-06-09T01-03-27_20260609T005658-filetypes-png_png_feat_lowbigram_overlay_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_reg_lambda_leaves_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=3 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to test if higher regularization and deeper trees improve PR_AUC by reducing overfit on rare PNG patterns while keeping ROC_AUC flat.
+- **`png_feat_kv_textmetrics_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture PNG metadata chunks and text encoding patterns, aiming to boost PR_AUC by surfacing hidden malicious metadata in tEXt/iTXt chunks.
+- **`png_feat_lowbigram_overlay_signal`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 and enables overlay_signal to capture packing/overlay artifacts in PNG binaries, targeting recall@3FPM improvement by ranking subtle dropper signatures higher.
+
+</details>
+
+## Cycle `20260609T065157-filetypes-png` — 2026-06-09T06:51:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d0f3777b30bd6677` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9785 | 0.9710 | 0.9474 | 2 | [log](out/autocollie/runs/2026-06-09T07-04-02_20260609T065157-filetypes-png_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `22d2de90d2e50ee3` | png_ctrl_train_reg_lambda_leaves | ok | 0.1728 | 0.5910 | 0.1255 | 8 | [log](out/autocollie/runs/2026-06-09T07-04-15_20260609T065157-filetypes-png_png_ctrl_train_reg_lambda_leaves.log) |
+| `d40630fe7944f073` | png_feat_kv_textmetrics_vocab | ok | 0.1789 | 0.5812 | 0.1256 | 32 | [log](out/autocollie/runs/2026-06-09T07-04-34_20260609T065157-filetypes-png_png_feat_kv_textmetrics_vocab.log) |
+| `021f5c685a0e2798` | png_feat_lowbigram_overlay_signal | ok | 0.1789 | 0.5812 | 0.1256 | 23 | [log](out/autocollie/runs/2026-06-09T07-05-09_20260609T065157-filetypes-png_png_feat_lowbigram_overlay_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_reg_lambda_leaves`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by tuning regularization and tree capacity on the best feature set to reduce overfitting on the tail.
+- **`png_feat_kv_textmetrics_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to boost recall@3FPM by enabling kv_vocab and text_metrics_full to capture embedded metadata and steganographic text patterns in PNGs.
+- **`png_feat_lowbigram_overlay_signal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by lowering bigram_min_freq to 100 and enabling overlay_signal to detect packed or modified PNG structures.
+
+</details>
+
+## Cycle `20260609T105907-filetypes-png` — 2026-06-09T10:59:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d0f3777b30bd6677` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9785 | 0.9710 | 0.9474 | 2 | [log](out/autocollie/runs/2026-06-09T11-05-24_20260609T105907-filetypes-png_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `7e9631b08c645500` | png_ctrl_train_hardneg_reg | ok | 0.1683 | 0.5356 | 0.1259 | 3 | [log](out/autocollie/runs/2026-06-09T11-05-29_20260609T105907-filetypes-png_png_ctrl_train_hardneg_reg.log) |
+| `5882ef76f6a9a89c` | png_feat_kv_textmetrics_vocab | ok | 0.1781 | 0.5930 | 0.1256 | 13 | [log](out/autocollie/runs/2026-06-09T11-05-35_20260609T105907-filetypes-png_png_feat_kv_textmetrics_vocab.log) |
+| `2b32746d742e471a` | png_feat_bigram_freq_overlay | ok | 0.1781 | 0.5930 | 0.1256 | 11 | [log](out/autocollie/runs/2026-06-09T11-05-49_20260609T105907-filetypes-png_png_feat_bigram_freq_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_hardneg_reg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by applying hard-negative mining and L2 regularization to reduce overfitting on benign PNGs while preserving malware signal.
+- **`png_feat_kv_textmetrics_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and text_metrics_full to capture metadata chunk patterns and text encoding anomalies common in malicious PNGs.
+- **`png_feat_bigram_freq_overlay`** `EXP_BIGRAM_MIN_FREQ=500 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by raising bigram_min_freq to filter benign noise and enabling overlay_signal to catch packed PNG droppers.
+
+</details>
+

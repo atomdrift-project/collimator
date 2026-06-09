@@ -2042,3 +2042,57 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260609T054502-filegroups-documents` — 2026-06-09T05:45:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `246ec657fb26d6f8` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9999 | 0.9989 | 0.9908 | 30 | [log](out/autocollie/runs/2026-06-09T05-51-00_20260609T054502-filegroups-documents_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `26b6640d22927a49` | docs_control_train_leaves128_lr003 | ok | 0.9124 | 0.8454 | 0.8399 | 30 | [log](out/autocollie/runs/2026-06-09T05-51-38_20260609T054502-filegroups-documents_docs_control_train_leaves128_lr003.log) |
+| `8a956db8840601cd` | docs_textmetrics_kv_vocab_15k | ok | 0.9261 | 0.8766 | 0.8402 | 13 | [log](out/autocollie/runs/2026-06-09T05-52-11_20260609T054502-filegroups-documents_docs_textmetrics_kv_vocab_15k.log) |
+| `d4a641d40cf85136` | docs_obfuscation_linebuckets_bigram500 | ok | 0.9274 | 0.8823 | 0.8403 | 13 | [log](out/autocollie/runs/2026-06-09T05-52-25_20260609T054502-filegroups-documents_docs_obfuscation_linebuckets_bigram500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_train_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best feature surface; adjusts num_leaves to 128 and learning_rate to 0.03 to stabilize PR_AUC and improve recall@3FPM by reducing overfitting on the dev set.
+- **`docs_textmetrics_kv_vocab_15k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to boost PR_AUC and recall@3FPM by adding high-signal structural features for documents.
+- **`docs_obfuscation_linebuckets_bigram500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Adds document_obfuscation_features and line_length_buckets while raising bigram_min_freq to 500 to reduce noise, targeting PR_AUC and recall@3FPM gains by focusing on high-severity document patterns.
+
+</details>
+
+## Cycle `20260609T080353-filegroups-documents` — 2026-06-09T08:03:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `246ec657fb26d6f8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9999 | 0.9989 | 0.9908 | 1 | [log](out/autocollie/runs/2026-06-09T08-10-50_20260609T080353-filegroups-documents_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9c869cb3a01ed8c0` | docs_control_train_leaves128_lr005 | ok | 0.9425 | 0.9117 | 0.8408 | 2 | [log](out/autocollie/runs/2026-06-09T08-10-58_20260609T080353-filegroups-documents_docs_control_train_leaves128_lr005.log) |
+| `aa49ad5b7b187666` | docs_textmetrics_full_kv_vocab_10k | ok | 0.9243 | 0.8718 | 0.8380 | 12 | [log](out/autocollie/runs/2026-06-09T08-11-03_20260609T080353-filegroups-documents_docs_textmetrics_full_kv_vocab_10k.log) |
+| `914af28bbc9ea664` | docs_obfuscation_linebuckets_bigram500 | ok | 0.9274 | 0.8823 | 0.8403 | 2 | [log](out/autocollie/runs/2026-06-09T08-11-16_20260609T080353-filegroups-documents_docs_obfuscation_linebuckets_bigram500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_train_leaves128_lr005`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to isolate training knob effects on PR_AUC and recall@3FPM by increasing tree complexity and estimators.
+- **`docs_textmetrics_full_kv_vocab_10k`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to improve PR_AUC and recall@3FPM by adding high-signal structural features.
+- **`docs_obfuscation_linebuckets_bigram500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Toggles document_obfuscation_features and line_length_buckets while lowering bigram_min_freq to 500 to capture rarer malicious patterns, targeting recall@3FPM gains without hurting ROC_AUC.
+
+</details>
+
+## Cycle `20260609T105408-filegroups-documents` — 2026-06-09T10:54:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `246ec657fb26d6f8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9999 | 0.9989 | 0.9908 | 1 | [log](out/autocollie/runs/2026-06-09T11-00-43_20260609T105408-filegroups-documents_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `e578311d26561a01` | docs_control_train_hardneg_lr003 | ok | 0.9230 | 0.8726 | 0.8407 | 4 | [log](out/autocollie/runs/2026-06-09T11-00-48_20260609T105408-filegroups-documents_docs_control_train_hardneg_lr003.log) |
+| `f394ec29d4509043` | docs_textmetrics_full_kv_vocab_15k | ok | 0.9322 | 0.8864 | 0.8407 | 14 | [log](out/autocollie/runs/2026-06-09T11-00-53_20260609T105408-filegroups-documents_docs_textmetrics_full_kv_vocab_15k.log) |
+| `5eae00e994768226` | docs_tiered_crit_trigrams_seed_search | ok | 0.9352 | 0.8988 | 0.7801 | 15 | [log](out/autocollie/runs/2026-06-09T11-01-08_20260609T105408-filegroups-documents_docs_tiered_crit_trigrams_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_train_hardneg_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with hard-negative training to improve recall@3FPM by focusing on difficult benigns, while keeping PR_AUC flat via conservative LR.
+- **`docs_textmetrics_full_kv_vocab_15k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_LINE_LENGTH_BUCKETS=1 …` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, targeting PR_AUC and recall@3FPM gains by adding high-signal structural features.
+- **`docs_tiered_crit_trigrams_seed_search`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Enable tiered critical trigrams to capture higher-order malicious patterns in documents, with seed search to stabilize recall@3FPM against RNG variance.
+
+</details>
+

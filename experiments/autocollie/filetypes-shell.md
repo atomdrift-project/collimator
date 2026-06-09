@@ -780,3 +780,57 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260609T004035-filetypes-shell` — 2026-06-09T00:40:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ae22a6f799d5f3bf` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9980 | 0.9981 | 0.9766 | 26 | [log](out/autocollie/runs/2026-06-09T00-46-15_20260609T004035-filetypes-shell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `76a16e6693af3a1a` | shell_control_train_tweak_v3 | ok | 0.9690 | 0.9821 | 0.9409 | 21 | [log](out/autocollie/runs/2026-06-09T00-46-46_20260609T004035-filetypes-shell_shell_control_train_tweak_v3.log) |
+| `6fc033161a164c08` | shell_kv20k_lowfreq_bigrams | ok | 0.9690 | 0.9821 | 0.9409 | 21 | [log](out/autocollie/runs/2026-06-09T00-47-09_20260609T004035-filetypes-shell_shell_kv20k_lowfreq_bigrams.log) |
+| `1b308ece2a668d12` | shell_tiered_trigrams_transfer | ok | 0.9690 | 0.9821 | 0.9409 | 23 | [log](out/autocollie/runs/2026-06-09T00-47-31_20260609T004035-filetypes-shell_shell_tiered_trigrams_transfer.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_train_tweak_v3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Replicate best recent feature set and increase num_leaves/estimators to improve PR_AUC ranking by allowing deeper trees to capture complex shell patterns.
+- **`shell_kv20k_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Expand KV vocab to 20k and lower bigram_min_freq to 25 to capture rare shell patterns, aiming to boost PR_AUC and recall@3FPM by adding discriminative low-frequency signals.
+- **`shell_tiered_trigrams_transfer`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Enable tiered_crit_trigrams with low min_freq to capture sequential shell command patterns, targeting PR_AUC gain by adding higher-order n-gram signal.
+
+</details>
+
+## Cycle `20260609T072045-filetypes-shell` — 2026-06-09T07:20:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ae22a6f799d5f3bf` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9980 | 0.9981 | 0.9766 | 1 | [log](out/autocollie/runs/2026-06-09T07-26-20_20260609T072045-filetypes-shell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `65ba26df2ab7f106` | shell_control_train_v1 | ok | 0.9694 | 0.9825 | 0.9368 | 24 | [log](out/autocollie/runs/2026-06-09T07-26-26_20260609T072045-filetypes-shell_shell_control_train_v1.log) |
+| `23ac87e1831b8cc0` | shell_kv_vocab_15k_lowfreq | ok | 0.9697 | 0.9831 | 0.9294 | 20 | [log](out/autocollie/runs/2026-06-09T07-26-52_20260609T072045-filetypes-shell_shell_kv_vocab_15k_lowfreq.log) |
+| `1fa66f46b46cdbc4` | shell_text_metrics_lowbigram | ok | 0.9690 | 0.9821 | 0.9409 | 18 | [log](out/autocollie/runs/2026-06-09T07-27-13_20260609T072045-filetypes-shell_shell_text_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_train_v1`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env for matrix cache hit; tests num_leaves=128 and reg_lambda=1.5 to improve PR_AUC by reducing overfit on rare shell patterns while preserving ROC_AUC.
+- **`shell_kv_vocab_15k_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with kv_vocab_max=15000 and kv_min_freq=5 to capture rare shell configuration keys, targeting PR_AUC gains from improved malicious config detection without hurting ROC_AUC.
+- **`shell_text_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and lowers bigram_min_freq to 50 to capture subtle obfuscation and rare command sequences, aiming to boost recall@3FPM by surfacing tail malware signals while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260609T110935-filetypes-shell` — 2026-06-09T11:09:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ae22a6f799d5f3bf` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9980 | 0.9981 | 0.9766 | 1 | [log](out/autocollie/runs/2026-06-09T11-17-00_20260609T110935-filetypes-shell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `a36c1850fd8f378a` | shell_control_train_v2 | ok | 0.9689 | 0.9825 | 0.9282 | 5 | [log](out/autocollie/runs/2026-06-09T11-17-03_20260609T110935-filetypes-shell_shell_control_train_v2.log) |
+| `378c4bcff915b684` | shell_textenc_metrics_lowbigram | ok | 0.9690 | 0.9821 | 0.9409 | 21 | [log](out/autocollie/runs/2026-06-09T11-17-09_20260609T110935-filetypes-shell_shell_textenc_metrics_lowbigram.log) |
+| `751e23f87b1917f5` | shell_kv_vocab_split_20k | ok | 0.9697 | 0.9831 | 0.9294 | 26 | [log](out/autocollie/runs/2026-06-09T11-17-31_20260609T110935-filetypes-shell_shell_kv_vocab_split_20k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_train_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity (num_leaves=128, estimators=300) and slowing learning (lr=0.03) to better rank tail malware without overfitting.
+- **`shell_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_encoding and text_metrics_full to capture obfuscation signals, while lowering bigram_min_freq to 25 to retain rare but malicious shell patterns.
+- **`shell_kv_vocab_split_20k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and kv_value_split to parse structured config/argument patterns in shell scripts, expanding kv_vocab_max to 20000 to cover diverse tooling.
+
+</details>
+
