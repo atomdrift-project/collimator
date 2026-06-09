@@ -1,27 +1,27 @@
 # Promote REJECTED — `9d5103e79a1c1ca1` on `filetypes/python`
 
-Generated 2026-06-09T16:02:56Z
+Generated 2026-06-09T16:43:21Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-09T15-59-18_20260609T155917-promote-9d5103e79a1c1ca1_azoth-validate.log; tail: 2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xls already has seed_44.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xlsx already has model.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xml already has model.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_42.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_43.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_44.onnx; skipping
-2026-06-09 12:02:49,071 INFO found 3 .txt files to convert
-2026-06-09 12:02:49,552 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_42.onnx
-2026-06-09 12:02:49,602 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-09 12:02:50,373 INFO filetypes/python/models/seed_42.txt -> seed_42.onnx OK (delta=8.51e-08 on 200 rows, 1302 ms)
-2026-06-09 12:02:50,841 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_43.onnx
-2026-06-09 12:02:50,864 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-09 12:02:51,559 INFO filetypes/python/models/seed_43.txt -> seed_43.onnx OK (delta=8.36e-08 on 200 rows, 1185 ms)
-2026-06-09 12:02:52,161 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_44.onnx
-2026-06-09 12:02:52,186 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-09 12:02:52,855 INFO filetypes/python/models/seed_44.txt -> seed_44.onnx OK (delta=7.89e-08 on 200 rows, 1296 ms)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-09T16-39-14_20260609T163913-promote-9d5103e79a1c1ca1_azoth-validate.log; tail: 2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xls already has seed_44.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xlsx already has model.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xml already has model.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_42.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_43.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_44.onnx; skipping
+2026-06-09 12:43:12,944 INFO found 3 .txt files to convert
+2026-06-09 12:43:13,545 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_42.onnx
+2026-06-09 12:43:13,601 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-09 12:43:14,401 INFO filetypes/python/models/seed_42.txt -> seed_42.onnx OK (delta=8.51e-08 on 200 rows, 1457 ms)
+2026-06-09 12:43:15,012 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_43.onnx
+2026-06-09 12:43:15,037 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-09 12:43:15,832 INFO filetypes/python/models/seed_43.txt -> seed_43.onnx OK (delta=8.36e-08 on 200 rows, 1431 ms)
+2026-06-09 12:43:16,577 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_44.onnx
+2026-06-09 12:43:16,602 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-09 12:43:17,473 INFO filetypes/python/models/seed_44.txt -> seed_44.onnx OK (delta=7.89e-08 on 200 rows, 1641 ms)
 
 converted 3/3 files (0 intentionally skipped, 0 failed)
-staged runtime azoth bundle: /tmp/tmp.hPkQifE0N4
-azoth bundle ok: /tmp/tmp.hPkQifE0N4
+staged runtime azoth bundle: /tmp/tmp.Rmdbd1Qgnq
+azoth bundle ok: /tmp/tmp.Rmdbd1Qgnq
 --source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 79 unimpacted (drift treated as pre-existing)
 
 13 low-water-mark improvement(s) (>0.90pp above LWM, informational):
@@ -42,7 +42,7 @@ azoth bundle ok: /tmp/tmp.hPkQifE0N4
 1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
   - python: L50 hostile ENSEMBLE recall dropped 3.64pp BELOW LOW-WATER-MARK (48.46% → 44.82%; LWM tolerance 0.90pp)
 
-net-improvement-fallback DID NOT rescue: net malware-caught delta = -18 TPs across 76 compared filetypes; worst high-volume drop (>=1500 mal) = 0.00pp on 'none' (cap = 5.00pp); worst drop overall = 0.00pp on '' (small-route, not gated)
+net-improvement-fallback DID NOT rescue: net malware-caught delta = +0 TPs across 76 compared filetypes; worst high-volume drop (>=1500 mal) = 0.00pp on 'none' (cap = 5.00pp); worst drop overall = 0.00pp on '' (small-route, not gated)
   reason: aggregate TP delta is not positive
 
 compared 76 filetypes (mal≥1, ben≥1); 4 below threshold and skipped.
@@ -71,26 +71,26 @@ make[1]: Leaving directory '/home/t/collimator')
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-09T15-59-18_20260609T155917-promote-9d5103e79a1c1ca1_azoth-validate.log; tail: 2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xls already has seed_44.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xlsx already has model.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xml already has model.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_42.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_43.onnx; skipping
-2026-06-09 12:02:49,071 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_44.onnx; skipping
-2026-06-09 12:02:49,071 INFO found 3 .txt files to convert
-2026-06-09 12:02:49,552 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_42.onnx
-2026-06-09 12:02:49,602 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-09 12:02:50,373 INFO filetypes/python/models/seed_42.txt -> seed_42.onnx OK (delta=8.51e-08 on 200 rows, 1302 ms)
-2026-06-09 12:02:50,841 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_43.onnx
-2026-06-09 12:02:50,864 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-09 12:02:51,559 INFO filetypes/python/models/seed_43.txt -> seed_43.onnx OK (delta=8.36e-08 on 200 rows, 1185 ms)
-2026-06-09 12:02:52,161 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_44.onnx
-2026-06-09 12:02:52,186 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-09 12:02:52,855 INFO filetypes/python/models/seed_44.txt -> seed_44.onnx OK (delta=7.89e-08 on 200 rows, 1296 ms)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-09T16-39-14_20260609T163913-promote-9d5103e79a1c1ca1_azoth-validate.log; tail: 2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xls already has seed_44.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xlsx already has model.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/xml already has model.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_42.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_43.onnx; skipping
+2026-06-09 12:43:12,944 INFO /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/zip already has seed_44.onnx; skipping
+2026-06-09 12:43:12,944 INFO found 3 .txt files to convert
+2026-06-09 12:43:13,545 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_42.onnx
+2026-06-09 12:43:13,601 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-09 12:43:14,401 INFO filetypes/python/models/seed_42.txt -> seed_42.onnx OK (delta=8.51e-08 on 200 rows, 1457 ms)
+2026-06-09 12:43:15,012 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_43.onnx
+2026-06-09 12:43:15,037 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-09 12:43:15,832 INFO filetypes/python/models/seed_43.txt -> seed_43.onnx OK (delta=8.36e-08 on 200 rows, 1431 ms)
+2026-06-09 12:43:16,577 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-python-9d5103e79a1c1ca1/filetypes/python/models/seed_44.onnx
+2026-06-09 12:43:16,602 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-09 12:43:17,473 INFO filetypes/python/models/seed_44.txt -> seed_44.onnx OK (delta=7.89e-08 on 200 rows, 1641 ms)
 
 converted 3/3 files (0 intentionally skipped, 0 failed)
-staged runtime azoth bundle: /tmp/tmp.hPkQifE0N4
-azoth bundle ok: /tmp/tmp.hPkQifE0N4
+staged runtime azoth bundle: /tmp/tmp.Rmdbd1Qgnq
+azoth bundle ok: /tmp/tmp.Rmdbd1Qgnq
 --source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 79 unimpacted (drift treated as pre-existing)
 
 13 low-water-mark improvement(s) (>0.90pp above LWM, informational):
@@ -111,7 +111,7 @@ azoth bundle ok: /tmp/tmp.hPkQifE0N4
 1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
   - python: L50 hostile ENSEMBLE recall dropped 3.64pp BELOW LOW-WATER-MARK (48.46% → 44.82%; LWM tolerance 0.90pp)
 
-net-improvement-fallback DID NOT rescue: net malware-caught delta = -18 TPs across 76 compared filetypes; worst high-volume drop (>=1500 mal) = 0.00pp on 'none' (cap = 5.00pp); worst drop overall = 0.00pp on '' (small-route, not gated)
+net-improvement-fallback DID NOT rescue: net malware-caught delta = +0 TPs across 76 compared filetypes; worst high-volume drop (>=1500 mal) = 0.00pp on 'none' (cap = 5.00pp); worst drop overall = 0.00pp on '' (small-route, not gated)
   reason: aggregate TP delta is not positive
 
 compared 76 filetypes (mal≥1, ben≥1); 4 below threshold and skipped.
