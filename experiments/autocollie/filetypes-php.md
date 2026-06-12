@@ -706,3 +706,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260610T102257-filetypes-php` — 2026-06-10T10:22:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f0487a46aaf8705d` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9943 | 0.9969 | 0.9720 | 3 | [log](out/autocollie/runs/2026-06-10T10-34-20_20260610T102257-filetypes-php_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `` | php_control_train_tune_v6 | fail | — | — | — | 1 | [log](out/autocollie/runs/2026-06-10T10-34-40_20260610T102257-filetypes-php_php_control_train_tune_v6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_tune_v6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to improve PR_AUC ranking stability without rebuilding the feature matrix.
+
+</details>
+

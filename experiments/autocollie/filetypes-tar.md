@@ -642,3 +642,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260610T102253-filetypes-tar` — 2026-06-10T10:22:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `98e43befab38e664` | inherit_from_filetypes_data_171c6310 | dup | 1.0000 | 1.0000 | 0.9842 | 1 | [log](out/autocollie/runs/2026-06-10T10-33-57_20260610T102253-filetypes-tar_inherit_from_filetypes_data_171c6310.log) |
+| `79edaf735b51b405` | tar_control_hardneg_leaves128 | ok | 0.9976 | 0.9922 | 0.9840 | 4 | [log](out/autocollie/runs/2026-06-10T10-34-02_20260610T102253-filetypes-tar_tar_control_hardneg_leaves128.log) |
+| `` | tar_feat_kv_split_textenc | fail | — | — | — | 25 | [log](out/autocollie/runs/2026-06-10T10-34-16_20260610T102253-filetypes-tar_tar_feat_kv_split_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_data_171c6310`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/data (key=171c63109389b743, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_control_hardneg_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set from best PR AUC run; increase num_leaves and hard_negative_weight to improve recall@3 FP/M while preserving PR AUC.
+- **`tar_feat_kv_split_textenc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with value splitting and text_encoding to capture granular archive metadata and script patterns, targeting PR AUC gains.
+
+</details>
+

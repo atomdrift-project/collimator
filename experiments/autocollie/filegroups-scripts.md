@@ -652,3 +652,15 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260610T102253-filegroups-scripts` — 2026-06-10T10:22:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ea83775b3e61c4b8` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9962 | 0.9953 | 0.9635 | 1 | [log](out/autocollie/runs/2026-06-10T10-34-02_20260610T102253-filegroups-scripts_inherit_from_filetypes_tar_1f9a08a6.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

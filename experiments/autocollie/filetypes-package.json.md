@@ -836,3 +836,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260610T102253-filetypes-package.json` — 2026-06-10T10:22:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `48b43d319d288452` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9988 | 0.9981 | 0.9878 | 1 | [log](out/autocollie/runs/2026-06-10T10-34-03_20260610T102253-filetypes-package.json_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `af0cde669fa13d95` | pkg_json_ctrl_train_deeper_reg_v2 | ok | 0.9967 | 0.9952 | 0.9926 | 6 | [log](out/autocollie/runs/2026-06-10T10-34-16_20260610T102253-filetypes-package.json_pkg_json_ctrl_train_deeper_reg_v2.log) |
+| `c679b36beee15e9e` | pkg_json_feat_kv_vocab_split_highcap | dup | 0.9967 | 0.9951 | 0.9932 | 2 | [log](out/autocollie/runs/2026-06-10T10-34-25_20260610T102253-filetypes-package.json_pkg_json_feat_kv_vocab_split_highcap.log) |
+| `` | pkg_json_feat_textenc_metrics_lowbigram | fail | — | — | — | 12 | [log](out/autocollie/runs/2026-06-10T10-34-29_20260610T102253-filetypes-package.json_pkg_json_feat_textenc_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_ctrl_train_deeper_reg_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_DEPTH=14 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=3 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent feature env to test if deeper trees with stronger L2 regularization improve PR_AUC without hurting ROC_AUC.
+- **`pkg_json_feat_kv_vocab_split_highcap`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split with higher vocab cap to capture rare npm dependency patterns, aiming to boost recall@3FPM and PR_AUC.
+- **`pkg_json_feat_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 25 and enables text_metrics_full to capture obfuscation signals in package.json scripts, targeting PR_AUC gains.
+
+</details>
+

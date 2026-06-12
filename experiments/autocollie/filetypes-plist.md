@@ -912,3 +912,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260610T102255-filetypes-plist` — 2026-06-10T10:22:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `833c3b039baba664` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.2000 | 0.5000 | 0.3333 | 2 | [log](out/autocollie/runs/2026-06-10T10-34-04_20260610T102255-filetypes-plist_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `6cb8c2c5553360d0` | plist_control_train_deeper_reg | ok | 0.1633 | 0.7332 | 0.1176 | 15 | [log](out/autocollie/runs/2026-06-10T10-34-11_20260610T102255-filetypes-plist_plist_control_train_deeper_reg.log) |
+| `` | plist_feat_kv_textenc_vocab | fail | — | — | — | 10 | [log](out/autocollie/runs/2026-06-10T10-34-31_20260610T102255-filetypes-plist_plist_feat_kv_textenc_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_control_train_deeper_reg`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Replicates best feature set to isolate training impact; deeper trees and lower LR aim to improve PR_AUC by better fitting tail malware patterns without overfitting.
+- **`plist_feat_kv_textenc_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab and enables text encoding to capture plist-specific string patterns, targeting PR_AUC gains from richer lexical signal.
+
+</details>
+

@@ -420,3 +420,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260610T102253-filetypes-java` — 2026-06-10T10:22:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c8c3fced3218855b` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9705 | 0.9650 | 0.9259 | 1 | [log](out/autocollie/runs/2026-06-10T10-33-10_20260610T102253-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `4258327f199c99bb` | java_control_hardneg_lr_tune | ok | 0.4995 | 0.9237 | 0.1154 | 2 | [log](out/autocollie/runs/2026-06-10T10-33-15_20260610T102253-filetypes-java_java_control_hardneg_lr_tune.log) |
+| `a918ae6c4560f184` | java_kv_vocab_split_15k | ok | 0.4821 | 0.9348 | 0.1205 | 10 | [log](out/autocollie/runs/2026-06-10T10-33-20_20260610T102253-filetypes-java_java_kv_vocab_split_15k.log) |
+| `8d062f4d9b2f0484` | java_lowfreq_bigrams_textenc | ok | 0.4821 | 0.9348 | 0.1205 | 9 | [log](out/autocollie/runs/2026-06-10T10-33-31_20260610T102253-filetypes-java_java_lowfreq_bigrams_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_hardneg_lr_tune`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adjusting hard-negative weighting and learning rate to better rank malware against difficult benign Java files without overfitting.
+- **`java_kv_vocab_split_15k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab and kv_value_split to capture fine-grained configuration and string literal patterns specific to Java malware droppers.
+- **`java_lowfreq_bigrams_textenc`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering bigram_min_freq to 50 and enabling text_encoding to capture rarer code patterns and obfuscation signals that distinguish malicious Java from benign libraries.
+
+</details>
+

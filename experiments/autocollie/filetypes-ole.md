@@ -711,3 +711,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260610T102253-filetypes-ole` — 2026-06-10T10:22:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `825bfc09b74a306a` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9935 | 0.5000 | 0.9967 | 3 | [log](out/autocollie/runs/2026-06-10T10-34-12_20260610T102253-filetypes-ole_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `ebc48ee4ce13794d` | ole_control_train_dart_hardneg | ok | 0.9826 | 0.9803 | 0.8973 | 6 | [log](out/autocollie/runs/2026-06-10T10-34-21_20260610T102253-filetypes-ole_ole_control_train_dart_hardneg.log) |
+| `` | ole_feat_textmetrics_full_lowbigram | fail | — | — | — | 10 | [log](out/autocollie/runs/2026-06-10T10-34-31_20260610T102253-filetypes-ole_ole_feat_textmetrics_full_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_train_dart_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve recall@3 FP/M by using dart boosting and hard negatives to reduce overfitting on benign OLE structures while preserving PR AUC.
+- **`ole_feat_textmetrics_full_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR AUC and recall@3 FP/M by enabling text_metrics_full to capture document obfuscation signals and lowering bigram_min_freq to 200 to catch rarer malicious macro patterns.
+
+</details>
+

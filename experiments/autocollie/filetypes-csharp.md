@@ -754,3 +754,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260610T102253-filetypes-csharp` — 2026-06-10T10:22:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b38aff58277abb5d` | inherit_from_filetypes_tar_1f9a08a6 | dup | 0.9930 | 0.9950 | 0.9557 | 2 | [log](out/autocollie/runs/2026-06-10T10-34-04_20260610T102253-filetypes-csharp_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `5e50d40f72f0f377` | csharp_control_train_tune | ok | 0.5186 | 0.9283 | 0.3734 | 4 | [log](out/autocollie/runs/2026-06-10T10-34-15_20260610T102253-filetypes-csharp_csharp_control_train_tune.log) |
+| `` | csharp_feat_kv_symbol_vocab | fail | — | — | — | 17 | [log](out/autocollie/runs/2026-06-10T10-34-24_20260610T102253-filetypes-csharp_csharp_feat_kv_symbol_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_train_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and regularization on the current best feature set without rebuilding the matrix cache.
+- **`csharp_feat_kv_symbol_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 …` — Aims to boost PR_AUC by enabling kv_vocab and symbol_vocab to capture structured metadata and API usage patterns unique to C# artifacts.
+
+</details>
+

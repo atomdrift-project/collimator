@@ -1,13 +1,62 @@
-# Promote PASS — `c8c3fced3218855b` on `filetypes/java`
+# Promote REJECTED — `c8c3fced3218855b` on `filetypes/java`
 
-Generated 2026-06-09T10:04:35Z
+Generated 2026-06-10T10:34:41Z
 
-full-train holds — PR_AUC 0.9705 -> 0.9770, AUC 0.9650 -> 0.9672, Brier 0.0428 -> 0.0364
+azoth-validate failed: signal: terminated (log /home/t/collimator/out/autocollie/runs/2026-06-10T10-33-43_20260610T103342-promote-c8c3fced3218855b_azoth-validate.log; tail: 2026-06-10 06:34:17,599 INFO azoth_calibrate_ensemble: filetypes/python: using cached scores
+2026-06-10 06:34:18,318 INFO azoth_calibrate_ensemble: filetypes/xml: using cached scores
+2026-06-10 06:34:18,370 INFO azoth_calibrate_ensemble: filetypes/pdf: using cached scores
+2026-06-10 06:34:18,692 INFO azoth_calibrate_ensemble: filetypes/python-bytecode: using cached scores
+2026-06-10 06:34:18,955 INFO azoth_calibrate_ensemble: filetypes/png: using cached scores
+2026-06-10 06:34:19,088 INFO azoth_calibrate_ensemble: filetypes/batch: using cached scores
+2026-06-10 06:34:19,301 INFO azoth_calibrate_ensemble: filetypes/php: using cached scores
+2026-06-10 06:34:19,531 INFO azoth_calibrate_ensemble: filetypes/go: using cached scores
+2026-06-10 06:34:20,284 INFO azoth_calibrate_ensemble: filetypes/text: using cached scores
+2026-06-10 06:34:20,921 INFO azoth_calibrate_ensemble: filetypes/rust: using cached scores
+2026-06-10 06:34:21,003 INFO azoth_calibrate_ensemble: filetypes/zip: using cached scores
+2026-06-10 06:34:22,450 INFO azoth_calibrate_ensemble: filetypes/kotlin: using cached scores
+2026-06-10 06:34:22,504 INFO azoth_calibrate_ensemble: filetypes/java: route artifacts changed; refreshing score cache
+2026-06-10 06:34:23,019 INFO azoth_calibrate_ensemble: filetypes/csharp: using cached scores
+2026-06-10 06:34:23,032 INFO azoth_calibrate_ensemble: filetypes/shell: using cached scores
+2026-06-10 06:34:23,220 INFO azoth_calibrate_ensemble: filetypes/xlsx: using cached scores
+2026-06-10 06:34:23,478 INFO azoth_calibrate_ensemble: filetypes/xls: using cached scores
+2026-06-10 06:34:23,931 INFO azoth_calibrate_ensemble: filetypes/tar: using cached scores
+2026-06-10 06:34:24,287 INFO azoth_calibrate_ensemble: filetypes/perl: using cached scores
+2026-06-10 06:34:24,560 INFO azoth_calibrate_ensemble: filetypes/package.json: using cached scores
+2026-06-10 06:34:24,560 INFO collimator.features: DB-backed feature extraction: 82543 rows, 8 workers, batch_size=1024
+2026-06-10 06:34:24,837 INFO azoth_calibrate_ensemble: filetypes/makefile: using cached scores
+2026-06-10 06:34:24,879 INFO azoth_calibrate_ensemble: filetypes/ruby: using cached scores
+2026-06-10 06:34:24,903 INFO azoth_calibrate_ensemble: filetypes/jpeg: using cached scores
+2026-06-10 06:34:25,375 INFO azoth_calibrate_ensemble: filetypes/objc: using cached scores
+2026-06-10 06:34:25,570 INFO azoth_calibrate_ensemble: filetypes/lua: using cached scores
+2026-06-10 06:34:26,022 INFO azoth_calibrate_ensemble: filetypes/html: using cached scores
+2026-06-10 06:34:26,139 INFO azoth_calibrate_ensemble: filetypes/macho: using cached scores
+2026-06-10 06:34:26,198 INFO azoth_calibrate_ensemble: filetypes/vbs: using cached scores
+2026-06-10 06:34:26,900 INFO azoth_calibrate_ensemble: filetypes/plist: using cached scores
+2026-06-10 06:34:27,670 INFO azoth_calibrate_ensemble: filetypes/ole: using cached scores
+2026-06-10 06:34:28,111 INFO azoth_calibrate_ensemble: filetypes/powershell: using cached scores
+2026-06-10 06:34:28,460 INFO azoth_calibrate_ensemble: filetypes/pkg-info: using cached scores
+2026-06-10 06:34:28,729 INFO azoth_calibrate_ensemble: filetypes/deb: using cached scores
+2026-06-10 06:34:29,074 INFO azoth_calibrate_ensemble: filetypes/jar: using cached scores
+2026-06-10 06:34:29,767 INFO azoth_calibrate_ensemble: filetypes/rtf: using cached scores
+2026-06-10 06:34:30,000 INFO azoth_calibrate_ensemble: filetypes/clojure: using cached scores
+2026-06-10 06:34:30,206 INFO azoth_calibrate_ensemble: filetypes/groovy: using cached scores
+2026-06-10 06:34:30,644 INFO azoth_calibrate_ensemble: filetypes/lnk: using cached scores
+2026-06-10 06:34:30,967 INFO azoth_calibrate_ensemble: filetypes/msi: using cached scores
+2026-06-10 06:34:31,119 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
+2026-06-10 06:34:31,808 INFO azoth_calibrate_ensemble: filetypes/dockerfile: using cached scores
+2026-06-10 06:34:31,999 INFO azoth_calibrate_ensemble: filetypes/cargo.toml: using cached scores
+2026-06-10 06:34:33,395 INFO azoth_calibrate_ensemble: filetypes/chrome-manifest: using cached scores
+2026-06-10 06:34:33,518 INFO azoth_calibrate_ensemble: filetypes/crx: using cached scores
+2026-06-10 06:34:33,939 INFO azoth_calibrate_ensemble: filetypes/applescript: using cached scores
+2026-06-10 06:34:36,104 INFO azoth_calibrate_ensemble: filetypes/whl: using cached scores
+2026-06-10 06:34:39,104 INFO azoth_calibrate_ensemble: filetypes/java: saved route feature matrix cache out/cache/azoth-route-features/filetypes_java-1685037226-b61d97fe8165f12a-e4ea48eb4bca8ccc.matrix.npz
+2026-06-10 06:34:39,289 INFO azoth_calibrate_ensemble: filetypes/java: refreshed 82543 rows in 16.8s (fetch 1.4s, filter 0.0s, load 0.6s, extract 14.5s, matrix 0.0s, predict 0.1s, write 0.1s; feature_cache_read 0.0s, feature_cache_write 0.0s; features=501 nnz=1917691)
+make[1]: *** [Makefile:1201: azoth-calibrate] Terminated)
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9705)
-- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
+- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
 
 ## Metrics
 
@@ -18,129 +67,57 @@ full-train holds — PR_AUC 0.9705 -> 0.9770, AUC 0.9650 -> 0.9672, Brier 0.0428
 | ROC AUC | 0.9650 | 0.9666 | 0.9672 |
 | F1 | 0.9259 | 0.9825 | 0.9825 |
 
-## Status: candidate bundle is built; litmus validation skipped
+## Disposition
 
-Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
+This spec did not survive the promotion ladder.
 
-- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
-- `azoth_route_policy_search.py` chose the best routing per route.
-- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
-- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
-- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
-
-The candidate bundle lives at:
-
-```
-/home/t/collimator/out/models/azoth-candidate-filetypes-java-c8c3fced3218855b
-```
-
-## Candidate knobs (raw EXP_* form)
-
-```
-EXP_AIR_GAP_SIGNAL=1
-EXP_ALLOWED_FEATURES_FILE=/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json
-EXP_ATTACK_CODE_NGRAMS=1
-EXP_ATTACK_FEATURES=1
-EXP_ATTACK_NGRAMS=0
-EXP_BETA=1.25
-EXP_BIGRAM_MAX=5000
-EXP_BIGRAM_MIN_FREQ=1000
-EXP_BLINDFOLD=1
-EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
-EXP_CRIT_CATEGORY_NGRAMS=1
-EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc
-EXP_DOCUMENT_OBFUSCATION_FEATURES=0
-EXP_EMBER_LITE_FEATURES=0
-EXP_ESTIMATORS=400
-EXP_EXTENDED_METRICS=1
-EXP_EXTREME_FEATURES=1
-EXP_FILETYPE_INTERACTIONS=0
-EXP_FILE_SEVERITY_DISTRIBUTION=1
-EXP_FORMAT_HINTS=0
-EXP_HARD_NEGATIVE_FRACTION=0.2
-EXP_HARD_NEGATIVE_WEIGHT=5
-EXP_HOSTILE_ESCALATION_FEATURES=1
-EXP_HOSTILE_WEIGHTED_DENSITY=1
-EXP_KV_MIN_FREQ=5
-EXP_KV_SHAPE_FEATURES=0
-EXP_KV_VALUE_SPLIT=0
-EXP_KV_VOCAB=0
-EXP_KV_VOCAB_MAX=5000
-EXP_LEARNING_RATE=0.05
-EXP_LINE_LENGTH_BUCKETS=0
-EXP_MAX_DEPTH=12
-EXP_MAX_TEST_SAMPLES=80000
-EXP_MBC_ID_VOCAB=0
-EXP_METRIC_MIN_FREQ_PCT=5
-EXP_METRIC_RATIO_FEATURES=0
-EXP_MIN_CHILD_SAMPLES=100
-EXP_MIN_SAMPLE_SCORE=3
-EXP_MTIME_KURTOSIS=0
-EXP_NGRAM_MIN_CRIT=0
-EXP_NGRAM_PATH_DEPTH=0
-EXP_NONSTANDARD_SECTION_SIGNAL=0
-EXP_NUM_LEAVES=96
-EXP_NUM_THREADS=8
-EXP_OBJECTIVE_TRIGRAMS=0
-EXP_OVERLAY_SIGNAL=0
-EXP_PACKAGED_CAPABILITY_MODE=paths
-EXP_PE_FORMAT_FLAGS=0
-EXP_PE_TEMPORAL_ANOMALY=0
-EXP_REG_ALPHA=0
-EXP_REG_LAMBDA=1
-EXP_REPETITION_PENALTY_FEATURES=1
-EXP_SCORE_WEIGHTED_TRAITS=1
-EXP_SEVERITY_FRACTION_FEATURES=0
-EXP_SILENT_PACKER_SIGNAL=0
-EXP_SIZE_NORMALIZED_METRICS=0
-EXP_SOFT_PRESENCE=1
-EXP_STRUCT_FILE_RISK_COVERAGE=1
-EXP_SUSPICIOUS_BREADTH_DENSITY=1
-EXP_SUSPICIOUS_TRIGRAMS=0
-EXP_SYMBOL_BIGRAMS=0
-EXP_SYMBOL_BIGRAM_MAX=5000
-EXP_SYMBOL_MIN_FREQ=5
-EXP_SYMBOL_MIN_FREQ_BIGRAM=10
-EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
-EXP_SYMBOL_TRIGRAMS=0
-EXP_SYMBOL_TRIGRAM_MAX=2000
-EXP_SYMBOL_VOCAB=0
-EXP_SYMBOL_VOCAB_MAX=5000
-EXP_TAXONOMY_FEATURES=0
-EXP_TEXT_ENCODING_FEATURES=0
-EXP_TEXT_METRICS_FULL=0
-EXP_TIERED_BIGRAM_MAX=5000
-EXP_TIERED_BIGRAM_MIN_CRIT=3
-EXP_TIERED_BIGRAM_MIN_FREQ=5
-EXP_TIERED_BIGRAM_PATH_DEPTH=3
-EXP_TIERED_CRIT_BIGRAMS=1
-EXP_TIERED_CRIT_QUADGRAMS=0
-EXP_TIERED_CRIT_TRIGRAMS=0
-EXP_TIERED_QUADGRAM_MAX=5000
-EXP_TIERED_QUADGRAM_MIN_CRIT=3
-EXP_TIERED_QUADGRAM_MIN_FREQ=5
-EXP_TIERED_QUADGRAM_PATH_DEPTH=3
-EXP_TIERED_TRIGRAM_MAX=5000
-EXP_TIERED_TRIGRAM_MIN_CRIT=3
-EXP_TIERED_TRIGRAM_MIN_FREQ=5
-EXP_TIERED_TRIGRAM_PATH_DEPTH=3
-EXP_TOP_K_RISK_FILES=1
-EXP_TOP_K_RISK_FILES_MIN_CRIT=0
-EXP_TRAIN_SAMPLES=600000
-EXP_TRAIT_CONFIDENCE_MOMENTS=0
-EXP_TRAIT_ID_LEXICAL_DISTANCE=0
-EXP_TRIGRAM_MAX=500
-EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
-EXP_TRIGRAM_MIN_FREQ=5
-SEED=42
-```
-
-## To deploy (HUMAN)
-
-Read `/home/t/collimator/out/models/azoth-candidate-filetypes-java-c8c3fced3218855b/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
-
-```
-make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-java-c8c3fced3218855b
-```
-
-The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.
+azoth-validate failed: signal: terminated (log /home/t/collimator/out/autocollie/runs/2026-06-10T10-33-43_20260610T103342-promote-c8c3fced3218855b_azoth-validate.log; tail: 2026-06-10 06:34:17,599 INFO azoth_calibrate_ensemble: filetypes/python: using cached scores
+2026-06-10 06:34:18,318 INFO azoth_calibrate_ensemble: filetypes/xml: using cached scores
+2026-06-10 06:34:18,370 INFO azoth_calibrate_ensemble: filetypes/pdf: using cached scores
+2026-06-10 06:34:18,692 INFO azoth_calibrate_ensemble: filetypes/python-bytecode: using cached scores
+2026-06-10 06:34:18,955 INFO azoth_calibrate_ensemble: filetypes/png: using cached scores
+2026-06-10 06:34:19,088 INFO azoth_calibrate_ensemble: filetypes/batch: using cached scores
+2026-06-10 06:34:19,301 INFO azoth_calibrate_ensemble: filetypes/php: using cached scores
+2026-06-10 06:34:19,531 INFO azoth_calibrate_ensemble: filetypes/go: using cached scores
+2026-06-10 06:34:20,284 INFO azoth_calibrate_ensemble: filetypes/text: using cached scores
+2026-06-10 06:34:20,921 INFO azoth_calibrate_ensemble: filetypes/rust: using cached scores
+2026-06-10 06:34:21,003 INFO azoth_calibrate_ensemble: filetypes/zip: using cached scores
+2026-06-10 06:34:22,450 INFO azoth_calibrate_ensemble: filetypes/kotlin: using cached scores
+2026-06-10 06:34:22,504 INFO azoth_calibrate_ensemble: filetypes/java: route artifacts changed; refreshing score cache
+2026-06-10 06:34:23,019 INFO azoth_calibrate_ensemble: filetypes/csharp: using cached scores
+2026-06-10 06:34:23,032 INFO azoth_calibrate_ensemble: filetypes/shell: using cached scores
+2026-06-10 06:34:23,220 INFO azoth_calibrate_ensemble: filetypes/xlsx: using cached scores
+2026-06-10 06:34:23,478 INFO azoth_calibrate_ensemble: filetypes/xls: using cached scores
+2026-06-10 06:34:23,931 INFO azoth_calibrate_ensemble: filetypes/tar: using cached scores
+2026-06-10 06:34:24,287 INFO azoth_calibrate_ensemble: filetypes/perl: using cached scores
+2026-06-10 06:34:24,560 INFO azoth_calibrate_ensemble: filetypes/package.json: using cached scores
+2026-06-10 06:34:24,560 INFO collimator.features: DB-backed feature extraction: 82543 rows, 8 workers, batch_size=1024
+2026-06-10 06:34:24,837 INFO azoth_calibrate_ensemble: filetypes/makefile: using cached scores
+2026-06-10 06:34:24,879 INFO azoth_calibrate_ensemble: filetypes/ruby: using cached scores
+2026-06-10 06:34:24,903 INFO azoth_calibrate_ensemble: filetypes/jpeg: using cached scores
+2026-06-10 06:34:25,375 INFO azoth_calibrate_ensemble: filetypes/objc: using cached scores
+2026-06-10 06:34:25,570 INFO azoth_calibrate_ensemble: filetypes/lua: using cached scores
+2026-06-10 06:34:26,022 INFO azoth_calibrate_ensemble: filetypes/html: using cached scores
+2026-06-10 06:34:26,139 INFO azoth_calibrate_ensemble: filetypes/macho: using cached scores
+2026-06-10 06:34:26,198 INFO azoth_calibrate_ensemble: filetypes/vbs: using cached scores
+2026-06-10 06:34:26,900 INFO azoth_calibrate_ensemble: filetypes/plist: using cached scores
+2026-06-10 06:34:27,670 INFO azoth_calibrate_ensemble: filetypes/ole: using cached scores
+2026-06-10 06:34:28,111 INFO azoth_calibrate_ensemble: filetypes/powershell: using cached scores
+2026-06-10 06:34:28,460 INFO azoth_calibrate_ensemble: filetypes/pkg-info: using cached scores
+2026-06-10 06:34:28,729 INFO azoth_calibrate_ensemble: filetypes/deb: using cached scores
+2026-06-10 06:34:29,074 INFO azoth_calibrate_ensemble: filetypes/jar: using cached scores
+2026-06-10 06:34:29,767 INFO azoth_calibrate_ensemble: filetypes/rtf: using cached scores
+2026-06-10 06:34:30,000 INFO azoth_calibrate_ensemble: filetypes/clojure: using cached scores
+2026-06-10 06:34:30,206 INFO azoth_calibrate_ensemble: filetypes/groovy: using cached scores
+2026-06-10 06:34:30,644 INFO azoth_calibrate_ensemble: filetypes/lnk: using cached scores
+2026-06-10 06:34:30,967 INFO azoth_calibrate_ensemble: filetypes/msi: using cached scores
+2026-06-10 06:34:31,119 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
+2026-06-10 06:34:31,808 INFO azoth_calibrate_ensemble: filetypes/dockerfile: using cached scores
+2026-06-10 06:34:31,999 INFO azoth_calibrate_ensemble: filetypes/cargo.toml: using cached scores
+2026-06-10 06:34:33,395 INFO azoth_calibrate_ensemble: filetypes/chrome-manifest: using cached scores
+2026-06-10 06:34:33,518 INFO azoth_calibrate_ensemble: filetypes/crx: using cached scores
+2026-06-10 06:34:33,939 INFO azoth_calibrate_ensemble: filetypes/applescript: using cached scores
+2026-06-10 06:34:36,104 INFO azoth_calibrate_ensemble: filetypes/whl: using cached scores
+2026-06-10 06:34:39,104 INFO azoth_calibrate_ensemble: filetypes/java: saved route feature matrix cache out/cache/azoth-route-features/filetypes_java-1685037226-b61d97fe8165f12a-e4ea48eb4bca8ccc.matrix.npz
+2026-06-10 06:34:39,289 INFO azoth_calibrate_ensemble: filetypes/java: refreshed 82543 rows in 16.8s (fetch 1.4s, filter 0.0s, load 0.6s, extract 14.5s, matrix 0.0s, predict 0.1s, write 0.1s; feature_cache_read 0.0s, feature_cache_write 0.0s; features=501 nnz=1917691)
+make[1]: *** [Makefile:1201: azoth-calibrate] Terminated)
