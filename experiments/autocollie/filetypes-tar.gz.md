@@ -708,3 +708,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260614T150005-filetypes-tar.gz` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ad32d1af43640cad` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9989 | 0.9986 | 0.9789 | 349 | [log](out/autocollie/runs/2026-06-14T15-08-31_20260614T150005-filetypes-tar.gz_inherit_from_filetypes_json_eb5cd709.log) |
+| `1c7e423067f6197b` | tar_gz_ctrl_hardneg_leaves128_v2 | ok | 0.9944 | 0.9954 | 0.9703 | 158 | [log](out/autocollie/runs/2026-06-14T15-14-35_20260614T150005-filetypes-tar.gz_tar_gz_ctrl_hardneg_leaves128_v2.log) |
+| `fba62a70bc33c5bc` | tar_gz_feat_kv_textmetrics_full | ok | 0.9935 | 0.9946 | 0.9696 | 150 | [log](out/autocollie/runs/2026-06-14T15-17-15_20260614T150005-filetypes-tar.gz_tar_gz_feat_kv_textmetrics_full.log) |
+| `` | tar_gz_transfer_lowbigram_tiered | fail | — | — | — | 69 | [log](out/autocollie/runs/2026-06-14T15-19-46_20260614T150005-filetypes-tar.gz_tar_gz_transfer_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_gz_ctrl_hardneg_leaves128_v2`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature surface and increase hard-negative weight to sharpen tail ranking, targeting PR_AUC and recall@3FPM.
+- **`tar_gz_feat_kv_textmetrics_full`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture key-value structure and document obfuscation signals, targeting PR_AUC improvement.
+- **`tar_gz_transfer_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TIERED_TRIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Port low-frequency bigram and tiered trigram config from sister routes to capture rarer malicious patterns, targeting PR_AUC.
+
+</details>
+

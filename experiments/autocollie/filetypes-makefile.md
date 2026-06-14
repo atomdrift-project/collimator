@@ -710,3 +710,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260614T150005-filetypes-makefile` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `691f89dddbd52f63` | inherit_from_filetypes_json_eb5cd709 | ok | 0.6411 | 0.8955 | 0.5455 | 10 | [log](out/autocollie/runs/2026-06-14T15-08-04_20260614T150005-filetypes-makefile_inherit_from_filetypes_json_eb5cd709.log) |
+| `89c3bea804de9855` | makefile_ctrl_deeper_trees_hardneg | ok | 0.0331 | 0.6059 | 0.0635 | 30 | [log](out/autocollie/runs/2026-06-14T15-08-22_20260614T150005-filetypes-makefile_makefile_ctrl_deeper_trees_hardneg.log) |
+| `1afd3b96d5f626dc` | makefile_feat_kv_vocab_lowfreq | ok | 0.0331 | 0.6059 | 0.0635 | 51 | [log](out/autocollie/runs/2026-06-14T15-09-07_20260614T150005-filetypes-makefile_makefile_feat_kv_vocab_lowfreq.log) |
+| `32dec20abba8c496` | makefile_feat_textenc_metrics_full | ok | 0.0367 | 0.6095 | 0.0806 | 26 | [log](out/autocollie/runs/2026-06-14T15-10-00_20260614T150005-filetypes-makefile_makefile_feat_textenc_metrics_full.log) |
+| `02b8130fb2641591` | makefile_transfer_xml_tiered_trigrams | ok | 0.0331 | 0.6059 | 0.0635 | 21 | [log](out/autocollie/runs/2026-06-14T15-10-28_20260614T150005-filetypes-makefile_makefile_transfer_xml_tiered_trigrams.log) |
+| `7999cc76f3a34da6` | makefile_gen_kv_seed_search | ok | 0.0367 | 0.6095 | 0.0806 | 3 | [log](out/autocollie/runs/2026-06-14T15-10-53_20260614T150005-filetypes-makefile_makefile_gen_kv_seed_search.log) |
+| `f5bf71dea46ef377` | makefile_train_dart_tail_recall | ok | 0.0460 | 0.3785 | 0.0000 | 7 | [log](out/autocollie/runs/2026-06-14T15-10-57_20260614T150005-filetypes-makefile_makefile_train_dart_tail_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_deeper_trees_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control baseline replicating best recent feature_env with deeper trees and hard negatives to better separate malicious makefiles, targeting PR_AUC.
+- **`makefile_feat_kv_vocab_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable KV vocab with low frequency floor to capture rare makefile variable assignments and targets, targeting PR_AUC.
+- **`makefile_feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable text encoding and full text metrics to detect obfuscation and structural anomalies in makefiles, targeting PR_AUC and ROC_AUC.
+- **`makefile_transfer_xml_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Transfer tiered trigram and expanded bigram config from XML route to capture multi-word makefile directives, targeting PR_AUC.
+- **`makefile_gen_kv_seed_search`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Apply seed search to KV vocab config to verify signal stability and reduce variance, targeting recall@3FPM.
+- **`makefile_train_dart_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Use DART boosting and extra trees with lower positive weight to regularize and reduce FPs, targeting recall@3FPM.
+
+</details>
+

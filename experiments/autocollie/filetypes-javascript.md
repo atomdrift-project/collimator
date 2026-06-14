@@ -925,3 +925,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260614T071001-filetypes-javascript` — 2026-06-14T07:10:01Z
+
+_No specs ran._
+
+## Cycle `20260614T150005-filetypes-javascript` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3d35f5a56cfb6b08` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9971 | 0.9964 | 0.9757 | 278 | [log](out/autocollie/runs/2026-06-14T15-07-35_20260614T150005-filetypes-javascript_inherit_from_filetypes_json_eb5cd709.log) |
+| `be73761dceeb2d8b` | js_control_train_tune | ok | 0.9811 | 0.9734 | 0.9409 | 101 | [log](out/autocollie/runs/2026-06-14T15-13-44_20260614T150005-filetypes-javascript_js_control_train_tune.log) |
+| `bae97a478b20386d` | js_kv_vocab_15k | ok | 0.9825 | 0.9758 | 0.9414 | 81 | [log](out/autocollie/runs/2026-06-14T15-15-33_20260614T150005-filetypes-javascript_js_kv_vocab_15k.log) |
+| `97881f266bf8ba3b` | js_textenc_metrics_full | ok | 0.9823 | 0.9756 | 0.9449 | 54 | [log](out/autocollie/runs/2026-06-14T15-16-55_20260614T150005-filetypes-javascript_js_textenc_metrics_full.log) |
+| `add1d2cdeecb1eb5` | js_low_freq_ngrams | ok | 0.9823 | 0.9754 | 0.9420 | 60 | [log](out/autocollie/runs/2026-06-14T15-17-51_20260614T150005-filetypes-javascript_js_low_freq_ngrams.log) |
+| `708a15565bde388a` | js_hardneg_01_12 | ok | 0.9840 | 0.9777 | 0.9470 | 10 | [log](out/autocollie/runs/2026-06-14T15-18-53_20260614T150005-filetypes-javascript_js_hardneg_01_12.log) |
+| `693a2a9d28fdd811` | js_seed_search_ensemble | ok | 0.9834 | 0.9773 | 0.9147 | 23 | [log](out/autocollie/runs/2026-06-14T15-19-07_20260614T150005-filetypes-javascript_js_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env to establish baseline; tweak num_leaves and learning_rate to stabilize PR_AUC and improve recall@3FPM via better tree capacity.
+- **`js_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with expanded cap to capture richer configuration/payload signals, targeting PR_AUC gains from structured key-value patterns.
+- **`js_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_encoding and text_metrics_full to detect obfuscation and structural anomalies in JS, aiming to boost recall@3FPM on evasive samples.
+- **`js_low_freq_ngrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=320 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=50` — Lower bigram and trigram min_freq to capture rarer malicious sequences, targeting PR_AUC improvement without overfitting due to controlled vocab expansion.
+- **`js_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining to sharpen decision boundary at low FPR, directly targeting recall@3FPM gains while preserving PR_AUC.
+- **`js_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with ensemble averaging to reduce variance and stabilize PR_AUC, ensuring robust recall@3FPM across different data splits.
+
+</details>
+

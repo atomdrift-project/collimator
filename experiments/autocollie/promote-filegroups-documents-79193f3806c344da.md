@@ -1,123 +1,146 @@
-# Promote REJECTED — `79193f3806c344da` on `filegroups/documents`
+# Promote PASS — `79193f3806c344da` on `filegroups/documents`
 
-Generated 2026-06-06T14:54:07Z
+Generated 2026-06-14T01:06:11Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-06T14-51-05_20260606T145043-promote-79193f3806c344da_azoth-validate.log; tail: 2026-06-06 10:54:05,349 INFO filegroups/documents/models/seed_44.txt -> seed_44.onnx OK (delta=1.18e-07 on 200 rows, 3039 ms)
-2026-06-06 10:54:05,356 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_42.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
-2026-06-06 10:54:05,356 INFO skipped filetypes/json/models/seed_42.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_42.txt: constant-predictor model (1 leaf). .txt remains canonical.
-2026-06-06 10:54:05,365 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_43.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
-2026-06-06 10:54:05,366 INFO skipped filetypes/json/models/seed_43.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_43.txt: constant-predictor model (1 leaf). .txt remains canonical.
-2026-06-06 10:54:05,374 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_44.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
-2026-06-06 10:54:05,375 INFO skipped filetypes/json/models/seed_44.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_44.txt: constant-predictor model (1 leaf). .txt remains canonical.
-
-converted 3/6 files (3 intentionally skipped, 0 failed)
-skipped (3, .txt remains canonical):
-  filetypes/json/models/seed_42.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_42.txt: constant-predictor model (1 leaf). .txt remains canonical.
-  filetypes/json/models/seed_43.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_43.txt: constant-predictor model (1 leaf). .txt remains canonical.
-  filetypes/json/models/seed_44.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_44.txt: constant-predictor model (1 leaf). .txt remains canonical.
-staged runtime azoth bundle: /tmp/tmp.priEWxc3IV
-azoth bundle ok: /tmp/tmp.priEWxc3IV
---source-bundle out/models/azoth: 1 routes changed → 9 filetypes impacted, 69 unimpacted (drift treated as pre-existing)
-
-ensemble improvements (≥0.10pp):
-  doc: L50 hostile ensemble recall +60.04pp (38.51% → 98.55%)
-  xls: L50 hostile ensemble recall +0.55pp (93.19% → 93.74%)
-
-per-route improvements (≥0.10pp, informational):
-  docx :: general recall@1FP-on-slice +0.18pp (43.06% → 43.24%)
-  docx :: filegroups/documents recall@1FP-on-slice +25.80pp (61.03% → 86.83%)
-  pdf :: filetypes/pdf recall@1FP-on-slice +64.05pp (10.39% → 74.44%)
-  xls :: filegroups/documents recall@1FP-on-slice +1.30pp (93.49% → 94.79%)
-  xls :: filetypes/xls recall@1FP-on-slice +0.72pp (93.73% → 94.45%)
-  xlsx :: filegroups/documents recall@1FP-on-slice +1.42pp (31.12% → 32.54%)
-
-per-route regressions (informational; does not block deploy):
-  docx :: filetypes/docx recall@1FP-on-slice dropped 9.07pp (89.15% → 80.07%)
-  ole :: general recall@1FP-on-slice dropped 7.06pp (90.64% → 83.59%)
-  ole :: filegroups/documents recall@1FP-on-slice dropped 4.16pp (93.68% → 89.52%)
-  ole :: filetypes/ole recall@1FP-on-slice dropped 8.83pp (93.05% → 84.22%)
-  pptx :: general recall@1FP-on-slice dropped 34.72pp (44.44% → 9.72%)
-  pptx :: filegroups/documents recall@1FP-on-slice dropped 8.33pp (44.44% → 36.11%)
-  xlsx :: general recall@1FP-on-slice dropped 14.94pp (45.91% → 30.97%)
-  xlsx :: filetypes/xlsx recall@1FP-on-slice dropped 13.12pp (44.30% → 31.17%)
-
-3 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - ole: L50 hostile ENSEMBLE recall dropped 3.26pp (82.17% → 78.91%; tolerance 1.70pp; deployed 95% CI lower = 79.33%)
-  - pdf: L50 hostile ENSEMBLE recall dropped 2.20pp (6.50% → 4.30%; tolerance 1.70pp; deployed 95% CI lower = 6.18%)
-  - xlsx: L50 hostile ENSEMBLE recall dropped 5.69pp (36.08% → 30.39%; tolerance 1.70pp; deployed 95% CI lower = 34.98%)
-
-compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
-
-blocked by: deployed-tolerance gate (3 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1297: azoth-validate] Error 1)
+full-train holds — PR_AUC 1.0000 -> 1.0000, AUC 0.9997 -> 0.9991, Brier 0.0042 -> 0.0066
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 1.0000)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `79193f3806c344da` | `2f679abc02b211c2` | `883e754f5379f564` |
+| key | `79193f3806c344da` | `797a22ae63b2d352` | `05e0d051f6c0d76d` |
 | PR AUC | 1.0000 | 1.0000 | 1.0000 |
-| ROC AUC | 0.9997 | 0.9991 | 0.9992 |
-| F1 | 0.9969 | 0.9975 | 0.9968 |
+| ROC AUC | 0.9997 | 0.9991 | 0.9991 |
+| F1 | 0.9969 | 0.9967 | 0.9969 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-06T14-51-05_20260606T145043-promote-79193f3806c344da_azoth-validate.log; tail: 2026-06-06 10:54:05,349 INFO filegroups/documents/models/seed_44.txt -> seed_44.onnx OK (delta=1.18e-07 on 200 rows, 3039 ms)
-2026-06-06 10:54:05,356 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_42.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
-2026-06-06 10:54:05,356 INFO skipped filetypes/json/models/seed_42.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_42.txt: constant-predictor model (1 leaf). .txt remains canonical.
-2026-06-06 10:54:05,365 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_43.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
-2026-06-06 10:54:05,366 INFO skipped filetypes/json/models/seed_43.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_43.txt: constant-predictor model (1 leaf). .txt remains canonical.
-2026-06-06 10:54:05,374 INFO skipping ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_44.onnx: model is a constant predictor (no split learned — trips the TreeEnsembleClassifier 0-split bug)
-2026-06-06 10:54:05,375 INFO skipped filetypes/json/models/seed_44.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_44.txt: constant-predictor model (1 leaf). .txt remains canonical.
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-converted 3/6 files (3 intentionally skipped, 0 failed)
-skipped (3, .txt remains canonical):
-  filetypes/json/models/seed_42.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_42.txt: constant-predictor model (1 leaf). .txt remains canonical.
-  filetypes/json/models/seed_43.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_43.txt: constant-predictor model (1 leaf). .txt remains canonical.
-  filetypes/json/models/seed_44.txt: skipped ONNX export for /home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/filetypes/json/models/seed_44.txt: constant-predictor model (1 leaf). .txt remains canonical.
-staged runtime azoth bundle: /tmp/tmp.priEWxc3IV
-azoth bundle ok: /tmp/tmp.priEWxc3IV
---source-bundle out/models/azoth: 1 routes changed → 9 filetypes impacted, 69 unimpacted (drift treated as pre-existing)
+The candidate bundle lives at:
 
-ensemble improvements (≥0.10pp):
-  doc: L50 hostile ensemble recall +60.04pp (38.51% → 98.55%)
-  xls: L50 hostile ensemble recall +0.55pp (93.19% → 93.74%)
+```
+/home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da
+```
 
-per-route improvements (≥0.10pp, informational):
-  docx :: general recall@1FP-on-slice +0.18pp (43.06% → 43.24%)
-  docx :: filegroups/documents recall@1FP-on-slice +25.80pp (61.03% → 86.83%)
-  pdf :: filetypes/pdf recall@1FP-on-slice +64.05pp (10.39% → 74.44%)
-  xls :: filegroups/documents recall@1FP-on-slice +1.30pp (93.49% → 94.79%)
-  xls :: filetypes/xls recall@1FP-on-slice +0.72pp (93.73% → 94.45%)
-  xlsx :: filegroups/documents recall@1FP-on-slice +1.42pp (31.12% → 32.54%)
+## Candidate knobs (raw EXP_* form)
 
-per-route regressions (informational; does not block deploy):
-  docx :: filetypes/docx recall@1FP-on-slice dropped 9.07pp (89.15% → 80.07%)
-  ole :: general recall@1FP-on-slice dropped 7.06pp (90.64% → 83.59%)
-  ole :: filegroups/documents recall@1FP-on-slice dropped 4.16pp (93.68% → 89.52%)
-  ole :: filetypes/ole recall@1FP-on-slice dropped 8.83pp (93.05% → 84.22%)
-  pptx :: general recall@1FP-on-slice dropped 34.72pp (44.44% → 9.72%)
-  pptx :: filegroups/documents recall@1FP-on-slice dropped 8.33pp (44.44% → 36.11%)
-  xlsx :: general recall@1FP-on-slice dropped 14.94pp (45.91% → 30.97%)
-  xlsx :: filetypes/xlsx recall@1FP-on-slice dropped 13.12pp (44.30% → 31.17%)
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ALLOWED_FEATURES_FILE=/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=2
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0
+EXP_HARD_NEGATIVE_WEIGHT=1
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=1
+EXP_KV_VOCAB_MAX=10000
+EXP_LEARNING_RATE=0.05
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=96
+EXP_NUM_THREADS=8
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SEVERITY_FRACTION_FEATURES=0
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=1
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
 
-3 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - ole: L50 hostile ENSEMBLE recall dropped 3.26pp (82.17% → 78.91%; tolerance 1.70pp; deployed 95% CI lower = 79.33%)
-  - pdf: L50 hostile ENSEMBLE recall dropped 2.20pp (6.50% → 4.30%; tolerance 1.70pp; deployed 95% CI lower = 6.18%)
-  - xlsx: L50 hostile ENSEMBLE recall dropped 5.69pp (36.08% → 30.39%; tolerance 1.70pp; deployed 95% CI lower = 34.98%)
+## To deploy (HUMAN)
 
-compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+Read `/home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
 
-blocked by: deployed-tolerance gate (3 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filegroups-documents-79193f3806c344da
+```
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1297: azoth-validate] Error 1)
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

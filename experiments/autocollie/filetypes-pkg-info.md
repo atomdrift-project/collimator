@@ -648,3 +648,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260614T150005-filetypes-pkg-info` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f5a9fd1ae9299bec` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9927 | 0.5000 | 0.9963 | 65 | [log](out/autocollie/runs/2026-06-14T15-08-55_20260614T150005-filetypes-pkg-info_inherit_from_filetypes_json_eb5cd709.log) |
+| `97ca50d0d0f9ac62` | pkginfo_control_hardneg_leaves128 | ok | 0.9963 | 0.9838 | 0.9858 | 30 | [log](out/autocollie/runs/2026-06-14T15-10-18_20260614T150005-filetypes-pkg-info_pkginfo_control_hardneg_leaves128.log) |
+| `5847b7f88e6c8425` | pkginfo_control_scalepos_extra_trees | ok | 0.9965 | 0.9826 | 0.9854 | 2 | [log](out/autocollie/runs/2026-06-14T15-10-56_20260614T150005-filetypes-pkg-info_pkginfo_control_scalepos_extra_trees.log) |
+| `8585c0fb0a273960` | pkginfo_textmetrics_full_kv_vocab | ok | 0.9949 | 0.9777 | 0.9858 | 30 | [log](out/autocollie/runs/2026-06-14T15-11-02_20260614T150005-filetypes-pkg-info_pkginfo_textmetrics_full_kv_vocab.log) |
+| `805ccaf32f4df9a1` | pkginfo_lowfreq_trigrams_tiered | ok | 0.9949 | 0.9821 | 0.9858 | 24 | [log](out/autocollie/runs/2026-06-14T15-11-36_20260614T150005-filetypes-pkg-info_pkginfo_lowfreq_trigrams_tiered.log) |
+| `9a34dd23d4942808` | pkginfo_transfer_xml_lowbigram | ok | 0.9968 | 0.9866 | 0.9858 | 40 | [log](out/autocollie/runs/2026-06-14T15-12-01_20260614T150005-filetypes-pkg-info_pkginfo_transfer_xml_lowbigram.log) |
+| `9f5eba306504dc35` | pkginfo_seed_search_3_hardneg | ok | 0.9971 | 0.9857 | 0.9851 | 10 | [log](out/autocollie/runs/2026-06-14T15-12-50_20260614T150005-filetypes-pkg-info_pkginfo_seed_search_3_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_hardneg_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by increasing model capacity (num_leaves=128) while maintaining hard-negative focus to sharpen ranking at the tail.
+- **`pkginfo_control_scalepos_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Aims to boost recall@3FPM by down-weighting positives (scale_pos_weight_mult=0.75) to reduce false positives at the strict operating point, while extra_trees adds regularization.
+- **`pkginfo_textmetrics_full_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 …` — Aims to lift PR_AUC by adding structural text metrics and split KV vocab to capture fine-grained package metadata signals that standard n-grams miss.
+- **`pkginfo_lowfreq_trigrams_tiered`** `EXP_BIGRAM_MIN_FREQ=250 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_ALPHA=0.5 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=50` — Aims to improve recall@3FPM by lowering frequency floors to capture rare but high-signal trigram patterns in package manifests, regularized to avoid noise.
+- **`pkginfo_transfer_xml_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by transferring the low-frequency bigram strategy from the xml route and disabling noisy cluster features, focusing the model on precise metadata co-occurrences.
+- **`pkginfo_seed_search_3_hardneg`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Aims to stabilize recall@3FPM gains by averaging over 3 seeds to reduce variance, ensuring the hard-negative tuning yields consistent tail performance.
+
+</details>
+

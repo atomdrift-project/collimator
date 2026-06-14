@@ -338,7 +338,7 @@ def _gather_diverse_fixture_reports(
     conn.close()
     log.info("fixture: gathered %d diverse reports (%d file types, %d with inner files)",
              len(reports), len(file_types), sum(1 for r in reports if any(
-                 f.get("dp", 0) > 0 for f in (r.get("fs") or []))))
+                 f.get("dp", 0) > 0 for f in features.report_files(r))))
     return reports
 
 

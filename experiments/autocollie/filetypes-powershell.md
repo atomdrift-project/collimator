@@ -819,3 +819,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260614T150006-filetypes-powershell` — 2026-06-14T15:00:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `620f11579b0b72ff` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9993 | 0.9962 | 0.9882 | 18 | [log](out/autocollie/runs/2026-06-14T15-07-13_20260614T150006-filetypes-powershell_inherit_from_filetypes_json_eb5cd709.log) |
+| `ad59d38e94de263d` | ps_ctrl_train_deeper_trees | ok | 0.9933 | 0.9836 | 0.9539 | 35 | [log](out/autocollie/runs/2026-06-14T15-07-39_20260614T150006-filetypes-powershell_ps_ctrl_train_deeper_trees.log) |
+| `96b9ab2fb3ee43cf` | ps_feat_textenc_metrics_full | ok | 0.9934 | 0.9838 | 0.9526 | 74 | [log](out/autocollie/runs/2026-06-14T15-08-18_20260614T150006-filetypes-powershell_ps_feat_textenc_metrics_full.log) |
+| `6fb02662c97f7452` | ps_feat_kv_vocab_split | ok | 0.9933 | 0.9836 | 0.9539 | 82 | [log](out/autocollie/runs/2026-06-14T15-09-43_20260614T150006-filetypes-powershell_ps_feat_kv_vocab_split.log) |
+| `90ee656a6e193b6b` | ps_feat_lowbigram_tieredtri | ok | 0.9934 | 0.9837 | 0.9533 | 47 | [log](out/autocollie/runs/2026-06-14T15-11-12_20260614T150006-filetypes-powershell_ps_feat_lowbigram_tieredtri.log) |
+| `f16563158733e06f` | ps_train_hardneg_tail | ok | 0.9953 | 0.9883 | 0.9643 | 20 | [log](out/autocollie/runs/2026-06-14T15-12-01_20260614T150006-filetypes-powershell_ps_train_hardneg_tail.log) |
+| `24cd39edeccb8743` | ps_gen_seed_search_3 | ok | 0.9933 | 0.9836 | 0.9359 | 39 | [log](out/autocollie/runs/2026-06-14T15-12-24_20260614T150006-filetypes-powershell_ps_gen_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_train_deeper_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and more estimators to improve PR_AUC by capturing complex PowerShell obfuscation patterns without changing features.
+- **`ps_feat_textenc_metrics_full`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture PowerShell script structure and obfuscation, targeting PR_AUC gains from richer lexical signals.
+- **`ps_feat_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and split values to isolate malicious parameters in PowerShell commands, aiming to boost recall@3FPM by surfacing rare but high-signal key-value pairs.
+- **`ps_feat_lowbigram_tieredtri`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add tiered trigrams to capture longer malicious command sequences, targeting PR_AUC improvement via better sequence modeling.
+- **`ps_train_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to sharpen decision boundary at low FPR, targeting recall@3FPM gains by reducing false positives on benign scripts.
+- **`ps_gen_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed search to average out RNG variance and stabilize PR_AUC, ensuring recent gains are robust rather than seed-dependent.
+
+</details>
+

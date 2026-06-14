@@ -1,19 +1,23 @@
-# Confirm FAIL — 27b09314c67decc0 on `filetypes/go`
+# Confirm PASS — 27b09314c67decc0 on `filetypes/go`
 
-Cycle `20260613T192533-confirm-27b09314c67decc0` — 2026-06-13T19:25:33Z
+Cycle `20260614T220453-confirm-27b09314c67decc0` — 2026-06-14T22:04:53Z
 
-averaged ensemble PR_AUC regressed: 0.9442 -> 0.9231 (tol 0.0050, K=3)
+PR_AUC held across 3 seeds (orig 0.9442)
 
 ## Per-seed results (3 ran)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `27b09314c67decc0` | `ade17936f884ed8f` | `ade17936f884ed8f` | `ade17936f884ed8f` |
-| PR AUC | 0.9442 | 0.9210 | 0.9181 | 0.9177 |
-| ROC AUC | 0.9858 | 0.9766 | 0.9762 | 0.9737 |
+| key | `27b09314c67decc0` | `f1b70725f49946d2` | `f1b70725f49946d2` | `f1b70725f49946d2` |
+| PR AUC | 0.9442 | 0.9440 | 0.9339 | 0.9410 |
+| ROC AUC | 0.9858 | 0.9863 | 0.9834 | 0.9841 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
-| verdict | — | FAIL | FAIL | FAIL |
+| verdict | — | PASS | FAIL | PASS |
 
-## Disposition
+## Next step
 
-This spec did not survive multi-seed reseeding (0/3 held). Suggest abandoning the idea or letting the LLM propose a variant.
+The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
+
+```
+make autocollie-promote KEY=27b09314c67decc0
+```

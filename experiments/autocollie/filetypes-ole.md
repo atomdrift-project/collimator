@@ -727,3 +727,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260614T071001-filetypes-ole` — 2026-06-14T07:10:01Z
+
+_No specs ran._
+
+## Cycle `20260614T150005-filetypes-ole` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9dc6f38f02f19889` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9935 | 0.5000 | 0.9967 | 25 | [log](out/autocollie/runs/2026-06-14T15-07-39_20260614T150005-filetypes-ole_inherit_from_filetypes_json_eb5cd709.log) |
+| `32ffc9fa2a6d34fa` | ole_control_kv_split_leaves128 | ok | 0.9941 | 0.9926 | 0.8764 | 32 | [log](out/autocollie/runs/2026-06-14T15-08-13_20260614T150005-filetypes-ole_ole_control_kv_split_leaves128.log) |
+| `ce661506012a0bfa` | ole_exploit_kv_split_dart | ok | 0.9825 | 0.9795 | 0.8785 | 29 | [log](out/autocollie/runs/2026-06-14T15-08-53_20260614T150005-filetypes-ole_ole_exploit_kv_split_dart.log) |
+| `ce603dcd3276846f` | ole_feat_textmetrics_full_kv | ok | 0.9936 | 0.9920 | 0.8751 | 53 | [log](out/autocollie/runs/2026-06-14T15-09-34_20260614T150005-filetypes-ole_ole_feat_textmetrics_full_kv.log) |
+| `68979827ad645163` | ole_feat_severity_fractions_kv | ok | 0.9933 | 0.9916 | 0.8751 | 28 | [log](out/autocollie/runs/2026-06-14T15-10-28_20260614T150005-filetypes-ole_ole_feat_severity_fractions_kv.log) |
+| `5c167e62de879b4a` | ole_transfer_xml_lowbigram | ok | 0.9933 | 0.9916 | 0.8751 | 31 | [log](out/autocollie/runs/2026-06-14T15-10-59_20260614T150005-filetypes-ole_ole_transfer_xml_lowbigram.log) |
+| `e6e32d31936d418e` | ole_gen_kv_split_seed3 | ok | 0.9940 | 0.9924 | 0.8787 | 13 | [log](out/autocollie/runs/2026-06-14T15-11-31_20260614T150005-filetypes-ole_ole_gen_kv_split_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_kv_split_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run using best PR_AUC feature set with increased num_leaves to 128 to improve PR_AUC ranking granularity.
+- **`ole_exploit_kv_split_dart`** `EXP_BOOSTING_TYPE=dart EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Tests dart boosting on best feature set to reduce overfitting and improve recall@3FPM at the strict-FP tail.
+- **`ole_feat_textmetrics_full_kv`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full research vocab to capture document obfuscation signals, aiming to lift PR_AUC without tanking ROC_AUC.
+- **`ole_feat_severity_fractions_kv`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adds severity_fractions to highlight minimal droppers, targeting recall@3FPM gains on low-finding malicious OLEs.
+- **`ole_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfers xml route's low bigram_min_freq (50) to capture rare OLE macro patterns, aiming to improve PR_AUC.
+- **`ole_gen_kv_split_seed3`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Runs seed_search_k=3 on the best config to verify PR_AUC stability and reduce seed-driven variance.
+
+</details>
+

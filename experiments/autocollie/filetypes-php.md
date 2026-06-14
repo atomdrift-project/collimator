@@ -744,3 +744,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260614T150005-filetypes-php` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cf3c27ff19cfd4f1` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9943 | 0.9973 | 0.9706 | 62 | [log](out/autocollie/runs/2026-06-14T15-07-38_20260614T150005-filetypes-php_inherit_from_filetypes_json_eb5cd709.log) |
+| `63137fcfd739b193` | php_control_train_tune_v7 | ok | 0.8398 | 0.9347 | 0.8066 | 81 | [log](out/autocollie/runs/2026-06-14T15-09-12_20260614T150005-filetypes-php_php_control_train_tune_v7.log) |
+| `7c8de7262d4b94a9` | php_train_hardneg_01_10 | ok | 0.8485 | 0.9519 | 0.7890 | 14 | [log](out/autocollie/runs/2026-06-14T15-10-45_20260614T150005-filetypes-php_php_train_hardneg_01_10.log) |
+| `1da789deb7f66f54` | php_feat_kv_vocab_split | ok | 0.8376 | 0.9361 | 0.8030 | 58 | [log](out/autocollie/runs/2026-06-14T15-11-02_20260614T150005-filetypes-php_php_feat_kv_vocab_split.log) |
+| `7dd88179c98253b8` | php_feat_textenc_metrics | ok | 0.8400 | 0.9398 | 0.7935 | 59 | [log](out/autocollie/runs/2026-06-14T15-12-02_20260614T150005-filetypes-php_php_feat_textenc_metrics.log) |
+| `ff4fbb34df054e6d` | php_transfer_xml_lowbigram | ok | 0.8376 | 0.9361 | 0.8030 | 47 | [log](out/autocollie/runs/2026-06-14T15-13-03_20260614T150005-filetypes-php_php_transfer_xml_lowbigram.log) |
+| `82a89df4e18a8fe3` | php_gen_seed_search_kv | ok | 0.8398 | 0.9411 | 0.8416 | 69 | [log](out/autocollie/runs/2026-06-14T15-13-52_20260614T150005-filetypes-php_php_gen_seed_search_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_tune_v7`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Baseline feature set with increased L2 regularization and leaves to improve PR_AUC ranking stability.
+- **`php_train_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Hard negative mining to push benign PHP scripts lower, targeting recall@3 FP/M gains.
+- **`php_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and value splitting to capture granular PHP config/malware signals, targeting PR_AUC improvement.
+- **`php_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text encoding and full text metrics to detect obfuscation patterns in PHP, aiming for PR_AUC lift.
+- **`php_transfer_xml_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Transfers low-frequency bigram/trigram tuning from XML route to capture rarer PHP attack patterns, targeting PR_AUC.
+- **`php_gen_seed_search_kv`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Seed search on KV vocab config to distinguish real signal from seed noise, stabilizing PR_AUC and recall@3 FP/M.
+
+</details>
+

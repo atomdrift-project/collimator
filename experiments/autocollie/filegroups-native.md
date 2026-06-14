@@ -728,3 +728,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260614T150005-filegroups-native` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b577f33f68f29f2d` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9995 | 0.9995 | 0.9891 | 409 | [log](out/autocollie/runs/2026-06-14T15-08-29_20260614T150005-filegroups-native_inherit_from_filetypes_json_eb5cd709.log) |
+| `dccd8abf7a78a491` | native_control_hn_tail_v10 | ok | 0.9991 | 0.9991 | 0.9872 | 188 | [log](out/autocollie/runs/2026-06-14T15-15-42_20260614T150005-filegroups-native_native_control_hn_tail_v10.log) |
+| `c94cadb48c96385e` | native_control_reg_depth_v2 | ok | 0.9990 | 0.9990 | 0.9812 | 28 | [log](out/autocollie/runs/2026-06-14T15-19-01_20260614T150005-filegroups-native_native_control_reg_depth_v2.log) |
+| `` | native_kv_vocab_split_15k | fail | — | — | — | 85 | [log](out/autocollie/runs/2026-06-14T15-19-31_20260614T150005-filegroups-native_native_kv_vocab_split_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_hn_tail_v10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature_env, tune hard_negative_weight and scale_pos_weight_mult to improve recall@3 FP/M while preserving PR_AUC.
+- **`native_control_reg_depth_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Same feature set, increase regularization and depth to capture complex native patterns without overfitting, targeting PR_AUC stability.
+- **`native_kv_vocab_split_15k`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enable kv_vocab and kv_value_split to recover per-element signal in native config/payload blobs, aiming to lift PR_AUC by capturing granular key-value patterns.
+
+</details>
+

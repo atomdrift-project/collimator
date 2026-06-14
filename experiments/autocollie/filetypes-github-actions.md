@@ -264,3 +264,9 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260614T071001-filetypes-github-actions` — 2026-06-14T07:10:01Z
+
+Rejected before run:
+
+- `ga_generalize_seed_lr` — training.seed: unknown knob (not in allowlist)
+

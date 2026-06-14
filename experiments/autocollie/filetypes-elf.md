@@ -848,3 +848,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260614T150005-filetypes-elf` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6fcdc79700d2958e` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9999 | 0.9999 | 0.9965 | 197 | [log](out/autocollie/runs/2026-06-14T15-09-02_20260614T150005-filetypes-elf_inherit_from_filetypes_json_eb5cd709.log) |
+| `329f224ead296769` | elf_control_training_exploit | ok | 0.9998 | 0.9998 | 0.9955 | 123 | [log](out/autocollie/runs/2026-06-14T15-13-03_20260614T150005-filetypes-elf_elf_control_training_exploit.log) |
+| `4ec17b21ced7f971` | elf_kv_vocab_split_research | ok | 0.9998 | 0.9998 | 0.9955 | 86 | [log](out/autocollie/runs/2026-06-14T15-15-14_20260614T150005-filetypes-elf_elf_kv_vocab_split_research.log) |
+| `87b1810638fecc9d` | elf_symbol_bigram_trigram_surface | ok | 0.9998 | 0.9998 | 0.9955 | 68 | [log](out/autocollie/runs/2026-06-14T15-16-42_20260614T150005-filetypes-elf_elf_symbol_bigram_trigram_surface.log) |
+| `6e3e75f15330ddc1` | elf_overlay_packer_section_metrics | ok | 0.9998 | 0.9998 | 0.9955 | 62 | [log](out/autocollie/runs/2026-06-14T15-17-52_20260614T150005-filetypes-elf_elf_overlay_packer_section_metrics.log) |
+| `4b2169d6f6c64cfe` | elf_hardneg_dart_training | ok | 0.9996 | 0.9996 | 0.9922 | 30 | [log](out/autocollie/runs/2026-06-14T15-18-55_20260614T150005-filetypes-elf_elf_hardneg_dart_training.log) |
+| `9fa6faba1eae4166` | elf_seed_search_ensemble_generalization | ok | 0.9998 | 0.9998 | 0.9959 | 16 | [log](out/autocollie/runs/2026-06-14T15-19-27_20260614T150005-filetypes-elf_elf_seed_search_ensemble_generalization.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_training_exploit`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best recent feature_env to hit matrix cache; increases leaves and estimators with moderate L2 regularization to improve PR_AUC by capturing finer decision boundaries without overfitting.
+- **`elf_kv_vocab_split_research`** `EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to extract structured metadata and string patterns from ELF headers, aiming to boost PR_AUC by isolating high-signal key-value pairs that n-grams dilute.
+- **`elf_symbol_bigram_trigram_surface`** `EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_TRIGRAM=20 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=5000 …` — Activates symbol bigram and trigram vocabs to capture import co-occurrence sequences unique to malicious ELF binaries, targeting PR_AUC gains from structural linkage patterns.
+- **`elf_overlay_packer_section_metrics`** `EXP_ESTIMATORS=260 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_SILENT_PACKER_SIGNAL=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Adds overlay, nonstandard section, and packer signals to detect packed/dropper ELF binaries that evade lexical features, aiming to improve recall@3FPM at the strict-FP tail.
+- **`elf_hardneg_dart_training`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard-negative mining with DART boosting to focus on difficult benign ELF samples, targeting PR_AUC improvement by reducing false positives in the low-FPR region.
+- **`elf_seed_search_ensemble_generalization`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_LEARNING_RATE=0.04 …` — Runs best-of-3 seed search with ensemble averaging on the control feature set to reduce seed-driven variance, aiming to stabilize PR_AUC and recall@3FPM across different data splits.
+
+</details>
+

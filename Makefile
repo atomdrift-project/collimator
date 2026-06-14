@@ -219,7 +219,11 @@ AZOTH_REGRESSION_ARGS ?= --net-improvement-fallback
 # + severity-sync stay on.
 AZOTH_BUDGET_GATE_ARGS ?= --fail-on-budget --max-budget-multiplier 30
 AZOTH_POLICY_OVERRIDE_ROUTE ?=
-AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/litmus/models/azoth
+# scan v2 reads its default bundle from <data>/atomdrift/scan/models/<bundle>,
+# where <bundle> is the last segment of SCAN_MODELS_REPO (default repo
+# codeberg.org/atomdrift/azoth.git -> "azoth"). Deploy there so `ascan scan`
+# picks up the bundle at runtime without SCAN_MODELS_DIR.
+AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/atomdrift/scan/models/azoth
 ELF_ROUTE_OUTPUT_DIR ?= $(AZOTH_ROOT)/elf_route_optimization
 ELF_ROUTE_OUTPUT ?= $(AZOTH_ROOT)/elf_route_optimization.json
 ELF_ROUTE_TEACHER_DIR ?= $(AZOTH_ROOT)/filetypes/elf
@@ -1360,7 +1364,7 @@ azoth-validate: azoth-calibrate
 	    echo "Skipping litmus deployed-ensemble compatibility checks (AZOTH_SKIP_LITMUS_VALIDATE=$(AZOTH_SKIP_LITMUS_VALIDATE))"; \
 	  else \
 	    echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
-	    ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
+	    ( cd $(LITMUS_DIR) && SCAN_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
 	    $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf; \
 	  fi && \
 	  rm -rf "$$_STAGE" && \
@@ -1550,7 +1554,7 @@ azoth-deploy-final: venv
 	    { echo "==> litmus update-rules"; cargo run --release -- update-rules; } || echo "WARN: litmus update-rules failed; continuing (trait/model rules may be stale)"; \
 	    true ) && \
 	  echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
-	  ( cd $(LITMUS_DIR) && LITMUS_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
+	  ( cd $(LITMUS_DIR) && SCAN_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
 	  $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf && \
 	  echo "Running litmus validate (fatal feature-layout + benign-corpus gate) against staged copy..." && \
 	  ( cd $(LITMUS_DIR) && cargo run --release -- --model-dir "$$_STAGE" validate --skip-traits ) && \
@@ -2012,7 +2016,7 @@ lint: venv
 XDG_DATA_HOME ?= $(HOME)/.local/share
 LIGHTGBM_ARS_DIR ?= ../lightgbm-ars
 
-LITMUS_DIR ?= ../litmus
+LITMUS_DIR ?= ../scan
 
 # Azoth (LightGBM → ONNX ensemble) is the only deploy path. The legacy
 # single-model deploy and its xgboost-ars cross-language parity gate were
@@ -2027,7 +2031,7 @@ verify-litmus:
 	@echo "Running litmus feature-extraction parity tests..."
 	@mkdir -p $(LITMUS_DIR)/tests/fixtures
 	cp $(OUT_DIR)/extraction_fixture.json $(LITMUS_DIR)/tests/fixtures/extraction_fixture.json
-	cd $(LITMUS_DIR) && LITMUS_MODELS_DIR=$(abspath $(OUT_DIR)) cargo test --release --test extraction_parity
+	cd $(LITMUS_DIR) && SCAN_MODELS_DIR=$(abspath $(OUT_DIR)) cargo test --release --test extraction_parity
 	@echo "litmus: extraction parity tests passed"
 
 AUTOCOLLIE_DIR ?= ../autocollie

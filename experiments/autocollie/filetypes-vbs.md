@@ -796,3 +796,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260614T150006-filetypes-vbs` — 2026-06-14T15:00:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8aa0d23ad47a0b31` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9951 | 0.8994 | 0.9820 | 27 | [log](out/autocollie/runs/2026-06-14T15-07-51_20260614T150006-filetypes-vbs_inherit_from_filetypes_json_eb5cd709.log) |
+| `5c85ad78c365a601` | vbs_control_hardneg_lr002_leaves128 | ok | 0.9948 | 0.9834 | 0.9557 | 102 | [log](out/autocollie/runs/2026-06-14T15-08-28_20260614T150006-filetypes-vbs_vbs_control_hardneg_lr002_leaves128.log) |
+| `d639700eb4a6e987` | vbs_train_dart_extra_trees_reg | ok | 0.9937 | 0.9793 | 0.9527 | 11 | [log](out/autocollie/runs/2026-06-14T15-10-19_20260614T150006-filetypes-vbs_vbs_train_dart_extra_trees_reg.log) |
+| `0be5e939c5ce2ba0` | vbs_text_metrics_full_encoding | ok | 0.9966 | 0.9874 | 0.9568 | 43 | [log](out/autocollie/runs/2026-06-14T15-10-32_20260614T150006-filetypes-vbs_vbs_text_metrics_full_encoding.log) |
+| `9057690a26b3570d` | vbs_kv_vocab_split_trigrams | ok | 0.9967 | 0.9879 | 0.9561 | 39 | [log](out/autocollie/runs/2026-06-14T15-11-21_20260614T150006-filetypes-vbs_vbs_kv_vocab_split_trigrams.log) |
+| `b2aab0cf961d69bc` | vbs_transfer_disable_clusters_bigram | ok | 0.9967 | 0.9879 | 0.9561 | 53 | [log](out/autocollie/runs/2026-06-14T15-12-01_20260614T150006-filetypes-vbs_vbs_transfer_disable_clusters_bigram.log) |
+| `0fae7138a5f67d6a` | vbs_seed_search_tiered_trigrams | ok | 0.9953 | 0.9836 | 0.9577 | 52 | [log](out/autocollie/runs/2026-06-14T15-12-57_20260614T150006-filetypes-vbs_vbs_seed_search_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg_lr002_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run using best feature_env; lowers LR to 0.02 and increases leaves to 128 to refine ranking and improve PR_AUC without overfitting.
+- **`vbs_train_dart_extra_trees_reg`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Tests DART boosting with extra_trees and higher L2 regularization to reduce variance at the tail, targeting recall@3FPM and PR_AUC stability.
+- **`vbs_text_metrics_full_encoding`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture obfuscation and encoding patterns in VBS scripts, aiming to boost PR_AUC by adding discriminative structural signal.
+- **`vbs_kv_vocab_split_trigrams`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with kv_value_split and objective_trigrams to parse structured VBS config strings, targeting PR_AUC gains from finer-grained key-value signal.
+- **`vbs_transfer_disable_clusters_bigram`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfers sister-route success by disabling noisy clusters group and lowering bigram_min_freq to 50 to capture rarer script patterns, targeting PR_AUC improvement.
+- **`vbs_seed_search_tiered_trigrams`** `EXP_LEARNING_RATE=0.025 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Retries tiered_crit_trigrams with seed_search_k=3 to average out seed variance and stabilize recall@3FPM across data drift.
+
+</details>
+

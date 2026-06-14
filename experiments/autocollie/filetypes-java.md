@@ -462,3 +462,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260614T150005-filetypes-java` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fd3cfb3393d56c0b` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9738 | 0.9705 | 0.9114 | 8 | [log](out/autocollie/runs/2026-06-14T15-07-58_20260614T150005-filetypes-java_inherit_from_filetypes_json_eb5cd709.log) |
+| `17067fb9d6d76e97` | java_baseline_lr_reg | ok | 0.1170 | 0.5633 | 0.1232 | 31 | [log](out/autocollie/runs/2026-06-14T15-08-14_20260614T150005-filetypes-java_java_baseline_lr_reg.log) |
+| `bc736110e3c2e8b6` | java_hardneg_tail_recall | ok | 0.5211 | 0.9480 | 0.1176 | 31 | [log](out/autocollie/runs/2026-06-14T15-08-55_20260614T150005-filetypes-java_java_hardneg_tail_recall.log) |
+| `9094fd3c6385d11e` | java_kv_textenc_conservative | ok | 0.0911 | 0.5329 | 0.1215 | 51 | [log](out/autocollie/runs/2026-06-14T15-09-35_20260614T150005-filetypes-java_java_kv_textenc_conservative.log) |
+| `c66348275bdb329f` | java_tiered_trigrams_adapted | ok | 0.1177 | 0.5850 | 0.1189 | 28 | [log](out/autocollie/runs/2026-06-14T15-10-29_20260614T150005-filetypes-java_java_tiered_trigrams_adapted.log) |
+| `4c8a65f129381544` | java_abl_blindfold_off | ok | 0.1177 | 0.5850 | 0.1189 | 32 | [log](out/autocollie/runs/2026-06-14T15-10-59_20260614T150005-filetypes-java_java_abl_blindfold_off.log) |
+| `3961e9bc1a30bb89` | java_seed_ensemble_stability | ok | 0.1311 | 0.5809 | 0.2219 | 6 | [log](out/autocollie/runs/2026-06-14T15-11-33_20260614T150005-filetypes-java_java_seed_ensemble_stability.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_baseline_lr_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by reducing overfitting via lower learning rate and higher L2 regularization, keeping the proven feature surface for a cache-hit training sweep.
+- **`java_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Aims to boost recall@3 FP/M by upweighting hard negatives to sharpen the decision boundary at low FPR, targeting the strict-FP operating point.
+- **`java_kv_textenc_conservative`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to lift PR_AUC by enabling KV and text encoding features with conservative vocab limits and higher min-freq to capture Java metadata without noise.
+- **`java_tiered_trigrams_adapted`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by introducing tiered critical trigrams with a higher min-crit floor to filter benign Java boilerplate, targeting better rank quality.
+- **`java_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Aims to maintain PR_AUC while reducing training time and potential noise by disabling the blindfold dropout feature, testing if it is redundant with existing regularization.
+- **`java_seed_ensemble_stability`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to stabilize recall@3 FP/M by averaging predictions across 3 seeds to reduce variance, targeting consistent tail performance.
+
+</details>
+

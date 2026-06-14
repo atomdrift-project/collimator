@@ -918,3 +918,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260614T071001-filetypes-macho` — 2026-06-14T07:10:01Z
+
+_No specs ran._
+
+## Cycle `20260614T150005-filetypes-macho` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b953022968a6d855` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9963 | 0.9992 | 0.9736 | 131 | [log](out/autocollie/runs/2026-06-14T15-08-46_20260614T150005-filetypes-macho_inherit_from_filetypes_json_eb5cd709.log) |
+| `4f1762f7482ca474` | macho_control_kv_deep_trees | ok | 0.9964 | 0.9992 | 0.9719 | 111 | [log](out/autocollie/runs/2026-06-14T15-11-16_20260614T150005-filetypes-macho_macho_control_kv_deep_trees.log) |
+| `74a4d2a479106995` | macho_symbol_bigrams_overlay | ok | 0.9966 | 0.9993 | 0.9727 | 111 | [log](out/autocollie/runs/2026-06-14T15-13-14_20260614T150005-filetypes-macho_macho_symbol_bigrams_overlay.log) |
+| `2145ea1d0f03a918` | macho_textenc_metrics_kv | ok | 0.9966 | 0.9993 | 0.9727 | 45 | [log](out/autocollie/runs/2026-06-14T15-15-06_20260614T150005-filetypes-macho_macho_textenc_metrics_kv.log) |
+| `6573bbe5f229fd04` | macho_tiered_trigrams_obj | ok | 0.9966 | 0.9993 | 0.9727 | 69 | [log](out/autocollie/runs/2026-06-14T15-15-53_20260614T150005-filetypes-macho_macho_tiered_trigrams_obj.log) |
+| `35d28c48fcf9b403` | macho_abl_extreme_off | ok | 0.9966 | 0.9993 | 0.9727 | 46 | [log](out/autocollie/runs/2026-06-14T15-17-03_20260614T150005-filetypes-macho_macho_abl_extreme_off.log) |
+| `fa684a1ee61f2dbe` | macho_seed_search_ensemble | ok | 0.9970 | 0.9994 | 0.9700 | 28 | [log](out/autocollie/runs/2026-06-14T15-17-50_20260614T150005-filetypes-macho_macho_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_kv_deep_trees`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best KV features; increases num_leaves and estimators to improve PR_AUC by better fitting high-signal patterns.
+- **`macho_symbol_bigrams_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigrams and overlay metrics to capture Mach-O packer/dropper co-occurrences, targeting PR_AUC improvement.
+- **`macho_textenc_metrics_kv`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables research text_encoding and text_metrics_full alongside KV vocab to capture obfuscation signals, targeting PR_AUC and recall@3FPM.
+- **`macho_tiered_trigrams_obj`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Activates tiered_crit_trigrams and objective_trigrams to model complex malicious objectives, targeting PR_AUC.
+- **`macho_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce noise and overfitting, aiming to stabilize ROC_AUC while preserving PR_AUC.
+- **`macho_seed_search_ensemble`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 with save_all_seeds to average predictions, reducing variance to improve robust recall@3FPM at the strict-FP tail.
+
+</details>
+

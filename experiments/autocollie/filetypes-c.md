@@ -1372,3 +1372,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260614T150008-filetypes-c` — 2026-06-14T15:00:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8ce206be13ab1c8e` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9830 | 0.9927 | 0.9421 | 122 | [log](out/autocollie/runs/2026-06-14T15-08-31_20260614T150008-filetypes-c_inherit_from_filetypes_json_eb5cd709.log) |
+| `b4e569fd8f3e1bd7` | c_control_baseline_training_tweak | ok | 0.7097 | 0.8830 | 0.3547 | 45 | [log](out/autocollie/runs/2026-06-14T15-10-58_20260614T150008-filetypes-c_c_control_baseline_training_tweak.log) |
+| `1b8f33f15dc5fe7b` | c_feat_kv_vocab_split | ok | 0.7097 | 0.8830 | 0.3547 | 30 | [log](out/autocollie/runs/2026-06-14T15-11-50_20260614T150008-filetypes-c_c_feat_kv_vocab_split.log) |
+| `4f44e0da079427c8` | c_feat_tiered_crit_trigrams | ok | 0.7097 | 0.8830 | 0.3547 | 40 | [log](out/autocollie/runs/2026-06-14T15-12-24_20260614T150008-filetypes-c_c_feat_tiered_crit_trigrams.log) |
+| `6b8922f25c91737c` | c_train_hardneg_tail_recall | ok | 0.7044 | 0.8696 | 0.3537 | 21 | [log](out/autocollie/runs/2026-06-14T15-13-13_20260614T150008-filetypes-c_c_train_hardneg_tail_recall.log) |
+| `e14fde30a6279175` | c_transfer_low_freq_bigrams | ok | 0.6985 | 0.8788 | 0.3539 | 33 | [log](out/autocollie/runs/2026-06-14T15-13-36_20260614T150008-filetypes-c_c_transfer_low_freq_bigrams.log) |
+| `9c779a4c719148b4` | c_seed_search_symbol_kv_vocab | ok | 0.7218 | 0.8930 | 0.5927 | 48 | [log](out/autocollie/runs/2026-06-14T15-14-11_20260614T150008-filetypes-c_c_seed_search_symbol_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_baseline_training_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best feature_env and increase num_leaves/estimators to improve PR_AUC by allowing deeper trees to model complex C-binary patterns without overfitting.
+- **`c_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to extract structured config signals from C files, aiming to boost recall@3 FP/M by identifying malicious key-value patterns missed by n-grams.
+- **`c_feat_tiered_crit_trigrams`** `EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Add tiered critical trigrams to capture multi-step attack chains in C code, targeting PR_AUC improvement by separating benign complex code from malicious sequences.
+- **`c_train_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Introduce hard negative mining to sharpen decision boundary at low FPR, aiming to increase recall@3 FP/M while maintaining ROC_AUC flat.
+- **`c_transfer_low_freq_bigrams`** `EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfer low-frequency bigram strategy from XML route to capture rare malicious C patterns, targeting PR_AUC gain by expanding feature coverage of uncommon attack strings.
+- **`c_seed_search_symbol_kv_vocab`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_VOCAB=1 …` — Use seed search on combined symbol and KV vocabs to stabilize recall@3 FP/M gains and reduce variance across random splits while improving PR_AUC.
+
+</details>
+

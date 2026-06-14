@@ -1405,7 +1405,7 @@ class FeatureSpec:
     # from MODEL_ABI_VERSION so they can never drift (they used to be a literal
     # `17` and the constant, which silently desynced on a bump). Raising
     # MODEL_ABI_VERSION requires a matching bump of EXPECTED_SPEC_VERSION in
-    # ../litmus (Rust); litmus accepts a range (v16..=current) so live deploys
+    # ../scan (Rust); scan accepts a range (v16..=current) so live deploys
     # keep working through a transition while new bundles serialize at current.
     version: int = MODEL_ABI_VERSION
     abi_version: int = MODEL_ABI_VERSION

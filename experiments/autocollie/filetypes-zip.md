@@ -812,3 +812,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260614T150005-filetypes-zip` — 2026-06-14T15:00:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `19f0b2dd70564c54` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9996 | 0.9973 | 0.9813 | 476 | [log](out/autocollie/runs/2026-06-14T15-07-28_20260614T150005-filetypes-zip_inherit_from_filetypes_json_eb5cd709.log) |
+| `9c22e49610bb6349` | zip_control_hardneg_base | ok | 0.9725 | 0.8723 | 0.8136 | 225 | [log](out/autocollie/runs/2026-06-14T15-16-10_20260614T150005-filetypes-zip_zip_control_hardneg_base.log) |
+| `bae5dcec6b15ec28` | zip_hardneg_high_weight_scalepos | ok | 0.9754 | 0.8867 | 0.8120 | 30 | [log](out/autocollie/runs/2026-06-14T15-19-58_20260614T150005-filetypes-zip_zip_hardneg_high_weight_scalepos.log) |
+| `` | zip_kv_vocab_split_research | fail | — | — | — | 26 | [log](out/autocollie/runs/2026-06-14T15-20-29_20260614T150005-filetypes-zip_zip_kv_vocab_split_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_base`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to improve recall@3 FP/M by focusing on difficult benigns without hurting PR_AUC.
+- **`zip_hardneg_high_weight_scalepos`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aggressive hard-negative weighting paired with lower scale_pos_weight_mult to suppress FP tail and boost recall@3 FP/M while preserving PR_AUC.
+- **`zip_kv_vocab_split_research`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to extract granular metadata signal from zip entries, targeting PR_AUC gains on structured archives.
+
+</details>
+

@@ -1,8 +1,8 @@
 # Promote PASS — `e6eec146826b1709` on `filetypes/javascript`
 
-Generated 2026-06-08T10:35:12Z
+Generated 2026-06-14T04:36:43Z
 
-full-train holds — PR_AUC 0.9976 -> 0.9993, AUC 0.9971 -> 0.9989, Brier 0.0173 -> 0.0119
+full-train holds — PR_AUC 0.9976 -> 0.9991, AUC 0.9971 -> 0.9988, Brier 0.0173 -> 0.0126
 
 ## Gates
 
@@ -13,10 +13,10 @@ full-train holds — PR_AUC 0.9976 -> 0.9993, AUC 0.9971 -> 0.9989, Brier 0.0173
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `e6eec146826b1709` | `808a8770961d4023` | `1087f632175a10a4` |
-| PR AUC | 0.9976 | 0.9993 | 0.9993 |
-| ROC AUC | 0.9971 | 0.9989 | 0.9989 |
-| F1 | 0.9779 | 0.9882 | 0.9875 |
+| key | `e6eec146826b1709` | `07a39d62623f6d7f` | `7c982b7228fd23b1` |
+| PR AUC | 0.9976 | 0.9991 | 0.9991 |
+| ROC AUC | 0.9971 | 0.9988 | 0.9988 |
+| F1 | 0.9779 | 0.9873 | 0.9872 |
 
 ## Status: candidate bundle is built; litmus validation skipped
 
@@ -90,6 +90,7 @@ EXP_REG_ALPHA=0
 EXP_REG_LAMBDA=1
 EXP_REPETITION_PENALTY_FEATURES=1
 EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SEVERITY_FRACTION_FEATURES=0
 EXP_SILENT_PACKER_SIGNAL=0
 EXP_SIZE_NORMALIZED_METRICS=0
 EXP_SOFT_PRESENCE=1
