@@ -3730,7 +3730,7 @@ def _apply_structural_features(
         if file_entry.get("type", "") in binary_like and _float(file_size(file_entry) or 0) < 20000:
             any_tiny_binary = True
         imports = file_imports(file_entry)
-        if imports or "is" in file_entry or "ff" in file_entry:
+        if imports or file_facts(file_entry) or "is" in file_entry:
             import_candidates += 1
             if len(imports) == 0:
                 importless_candidates += 1
