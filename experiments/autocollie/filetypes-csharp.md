@@ -770,3 +770,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T023531-filetypes-csharp` — 2026-06-13T02:35:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `02655da4d56bff77` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9761 | 0.9872 | 0.9304 | 7 | [log](out/autocollie/runs/2026-06-13T02-40-58_20260613T023531-filetypes-csharp_inherit_from_filetypes_json_eb5cd709.log) |
+| `38b76421a82db015` | csharp_control_train_tune_v2 | ok | 0.4599 | 0.8892 | 0.3643 | 10 | [log](out/autocollie/runs/2026-06-13T02-41-08_20260613T023531-filetypes-csharp_csharp_control_train_tune_v2.log) |
+| `91ef8bbbd63c9c61` | csharp_train_hardneg_tail | ok | 0.4700 | 0.8958 | 0.3682 | 2 | [log](out/autocollie/runs/2026-06-13T02-41-20_20260613T023531-filetypes-csharp_csharp_train_hardneg_tail.log) |
+| `3b92241b4bb703e6` | csharp_feat_kv_vocab_10k | ok | 0.4578 | 0.8908 | 0.3636 | 10 | [log](out/autocollie/runs/2026-06-13T02-41-23_20260613T023531-filetypes-csharp_csharp_feat_kv_vocab_10k.log) |
+| `8f8c6897e9ee1ca7` | csharp_feat_symbol_bigram_lowfreq | ok | 0.4578 | 0.8908 | 0.3636 | 10 | [log](out/autocollie/runs/2026-06-13T02-41-34_20260613T023531-filetypes-csharp_csharp_feat_symbol_bigram_lowfreq.log) |
+| `c8ff3ba8b6c6db7f` | csharp_abl_extreme_off | ok | 0.4578 | 0.8908 | 0.3636 | 10 | [log](out/autocollie/runs/2026-06-13T02-41-45_20260613T023531-filetypes-csharp_csharp_abl_extreme_off.log) |
+| `97d82d5cca3826ac` | csharp_seed_search_3 | ok | 0.4617 | 0.8916 | 0.4026 | 2 | [log](out/autocollie/runs/2026-06-13T02-41-55_20260613T023531-filetypes-csharp_csharp_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_train_tune_v2`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and estimators to better rank subtle C# assembly indicators.
+- **`csharp_train_hardneg_tail`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by applying hard-negative upweighting and slight positive downweighting to sharpen the strict-FP decision boundary.
+- **`csharp_feat_kv_vocab_10k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab to capture assembly metadata and resource patterns missed by default n-grams.
+- **`csharp_feat_symbol_bigram_lowfreq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by lowering bigram_min_freq and enabling symbol_vocab to catch rarer but highly indicative method co-occurrences in obfuscated C#.
+- **`csharp_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by disabling extreme_features to reduce noise and overfitting on the small malware corpus, potentially improving generalization.
+- **`csharp_seed_search_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to verify PR_AUC robustness and reduce variance at recall@3FPM by averaging predictions across 3 seeds.
+
+</details>
+

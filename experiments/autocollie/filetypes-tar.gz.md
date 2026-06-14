@@ -688,3 +688,23 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T024010-filetypes-tar.gz` — 2026-06-13T02:40:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dd04a29b33d6cedb` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9991 | 0.9984 | 0.9762 | 112 | [log](out/autocollie/runs/2026-06-13T02-45-31_20260613T024010-filetypes-tar.gz_inherit_from_filetypes_json_eb5cd709.log) |
+| `06610821d027097d` | tar_gz_ctrl_hardneg_leaves128 | ok | 0.9967 | 0.9966 | 0.9694 | 99 | [log](out/autocollie/runs/2026-06-13T02-47-38_20260613T024010-filetypes-tar.gz_tar_gz_ctrl_hardneg_leaves128.log) |
+| `68bb3cf46358e1f3` | tar_gz_feat_kv_textmetrics_vocab | ok | 0.9945 | 0.9938 | 0.9672 | 179 | [log](out/autocollie/runs/2026-06-13T02-49-22_20260613T024010-filetypes-tar.gz_tar_gz_feat_kv_textmetrics_vocab.log) |
+| `f1cce0d8e2fd7f32` | tar_gz_transfer_gz_noclusters | ok | 0.9952 | 0.9947 | 0.9692 | 22 | [log](out/autocollie/runs/2026-06-13T02-52-22_20260613T024010-filetypes-tar.gz_tar_gz_transfer_gz_noclusters.log) |
+| `` | tar_gz_abl_extreme_off_textenc | fail | — | — | — | 160 | [log](out/autocollie/runs/2026-06-13T02-52-48_20260613T024010-filetypes-tar.gz_tar_gz_abl_extreme_off_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_gz_ctrl_hardneg_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Exploit hard-negative upweighting and deeper trees to improve PR AUC and recall@3 FP/M by better separating borderline malware from benign archives.
+- **`tar_gz_feat_kv_textmetrics_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture archive metadata and payload structure, targeting PR AUC gain from richer feature surface.
+- **`tar_gz_transfer_gz_noclusters`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port gz route's cluster-disabled, high-freq bigram config to reduce noisy co-occurrence features and improve PR AUC.
+- **`tar_gz_abl_extreme_off_textenc`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_BIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce overfitting on tail noise while enabling text_encoding, aiming for flat PR AUC with better generalization.
+
+</details>
+

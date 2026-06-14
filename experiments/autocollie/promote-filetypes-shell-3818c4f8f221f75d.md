@@ -1,57 +1,57 @@
 # Promote REJECTED — `3818c4f8f221f75d` on `filetypes/shell`
 
-Generated 2026-06-06T13:44:56Z
+Generated 2026-06-13T18:56:18Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-06T13-41-44_20260606T134124-promote-3818c4f8f221f75d_azoth-validate.log; tail:   shell :: filetypes/shell recall@1FP-on-slice +0.14pp (84.10% → 84.24%)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-13T18-50-47_20260613T185024-promote-3818c4f8f221f75d_azoth-validate.log; tail: 2026-06-13 14:56:10,515 INFO found 3 .txt files to convert
+2026-06-13 14:56:10,879 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/filetypes/shell/models/seed_42.onnx
+2026-06-13 14:56:11,557 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-13 14:56:12,652 INFO filetypes/shell/models/seed_42.txt -> seed_42.onnx OK (delta=9.30e-08 on 200 rows, 2137 ms)
+2026-06-13 14:56:12,900 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/filetypes/shell/models/seed_43.onnx
+2026-06-13 14:56:13,391 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-13 14:56:14,105 INFO filetypes/shell/models/seed_43.txt -> seed_43.onnx OK (delta=8.12e-08 on 200 rows, 1453 ms)
+2026-06-13 14:56:14,323 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/filetypes/shell/models/seed_44.onnx
+2026-06-13 14:56:14,716 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-13 14:56:15,485 INFO filetypes/shell/models/seed_44.txt -> seed_44.onnx OK (delta=7.78e-08 on 200 rows, 1380 ms)
 
-per-route regressions (informational; does not block deploy):
-  shell :: general recall@1FP-on-slice dropped 28.10pp (74.79% → 46.69%)
+converted 3/3 files (0 intentionally skipped, 0 failed)
+staged runtime azoth bundle: /tmp/tmp.3yTB94lYUf
+azoth bundle ok: /tmp/tmp.3yTB94lYUf
+--source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 82 unimpacted (drift treated as pre-existing)
 
-34 pre-existing drift(s) on unimpacted filetypes (informational — not caused by this promote, see --source-bundle impact analysis):
-  ~ 7z: pre-existing drift, recall 16.24% → 12.63% (+3.61pp; unimpacted by this promote)
-  ~ batch: pre-existing drift, recall 97.46% → 1.24% (+96.23pp; unimpacted by this promote)
-  ~ c: pre-existing drift, recall 3.93% → 6.30% (+2.37pp; unimpacted by this promote)
-  ~ chrome-manifest: pre-existing drift, recall 28.57% → 42.86% (+14.29pp; unimpacted by this promote)
-  ~ doc: pre-existing drift, recall 38.51% → 66.38% (+27.87pp; unimpacted by this promote)
-  ~ docx: pre-existing drift, recall 82.92% → 44.66% (+38.26pp; unimpacted by this promote)
-  ~ elf: pre-existing drift, recall 95.93% → 98.61% (+2.68pp; unimpacted by this promote)
-  ~ go: pre-existing drift, recall 2.20% → 6.06% (+3.86pp; unimpacted by this promote)
-  ~ jar: pre-existing drift, recall 70.65% → 85.39% (+14.74pp; unimpacted by this promote)
-  ~ java_class: pre-existing drift, recall 17.65% → 23.08% (+5.43pp; unimpacted by this promote)
-  ~ javascript: pre-existing drift, recall 59.50% → 71.30% (+11.80pp; unimpacted by this promote)
-  ~ jpeg: pre-existing drift, recall 10.60% → 13.25% (+2.65pp; unimpacted by this promote)
-  ~ kotlin: pre-existing drift, recall 51.39% → 52.99% (+1.60pp; unimpacted by this promote)
-  ~ lnk: pre-existing drift, recall 82.68% → 66.73% (+15.95pp; unimpacted by this promote)
-  ~ lua: pre-existing drift, recall 30.77% → 53.85% (+23.08pp; unimpacted by this promote)
-  ~ macho: pre-existing drift, recall 80.24% → 68.26% (+11.98pp; unimpacted by this promote)
-  ~ msi: pre-existing drift, recall 0.00% → 58.05% (+58.05pp; unimpacted by this promote)
-  ~ ole: pre-existing drift, recall 82.17% → 50.88% (+31.29pp; unimpacted by this promote)
-  ~ pdf: pre-existing drift, recall 6.50% → 4.25% (+2.25pp; unimpacted by this promote)
-  ~ pe: pre-existing drift, recall 51.78% → 56.91% (+5.12pp; unimpacted by this promote)
-  ~ perl: pre-existing drift, recall 69.44% → 83.33% (+13.89pp; unimpacted by this promote)
-  ~ pkg-info: pre-existing drift, recall 87.00% → 65.47% (+21.53pp; unimpacted by this promote)
-  ~ png: pre-existing drift, recall 0.00% → 7.27% (+7.27pp; unimpacted by this promote)
-  ~ powershell: pre-existing drift, recall 52.76% → 43.71% (+9.05pp; unimpacted by this promote)
-  ~ pptx: pre-existing drift, recall 22.22% → 1.39% (+20.83pp; unimpacted by this promote)
-  ~ python: pre-existing drift, recall 48.01% → 48.19% (+0.18pp; unimpacted by this promote)
-  ~ python-bytecode: pre-existing drift, recall 92.09% → 88.14% (+3.95pp; unimpacted by this promote)
-  ~ tar: pre-existing drift, recall 88.19% → 81.54% (+6.65pp; unimpacted by this promote)
-  ~ vbs: pre-existing drift, recall 42.72% → 47.69% (+4.97pp; unimpacted by this promote)
-  ~ xls: pre-existing drift, recall 93.19% → 90.97% (+2.22pp; unimpacted by this promote)
-  ~ xlsx: pre-existing drift, recall 36.08% → 29.09% (+6.99pp; unimpacted by this promote)
-  ~ xml: pre-existing drift, recall 2.55% → 13.23% (+10.68pp; unimpacted by this promote)
-  ~ zip: pre-existing drift, recall 31.45% → 31.98% (+0.53pp; unimpacted by this promote)
-  ~ zst: pre-existing drift, recall 6.39% → 8.26% (+1.87pp; unimpacted by this promote)
+per-route improvements (≥0.10pp, informational):
+  shell :: filetypes/shell recall@1FP-on-slice +3.64pp (75.28% → 78.92%)
+
+13 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + applescript: L50 hostile ensemble recall +23.08pp above LWM (0.00% → 23.08%)
+  + dockerfile: L50 hostile ensemble recall +5.56pp above LWM (0.00% → 5.56%)
+  + jar: L50 hostile ensemble recall +8.98pp above LWM (55.51% → 64.49%)
+  + jpeg: L50 hostile ensemble recall +6.38pp above LWM (3.85% → 10.23%)
+  + objc: L50 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
+  + package.json: L50 hostile ensemble recall +3.39pp above LWM (85.89% → 89.28%)
+  + pdf: L50 hostile ensemble recall +1.02pp above LWM (4.48% → 5.50%)
+  + perl: L50 hostile ensemble recall +4.82pp above LWM (51.28% → 56.10%)
+  + php: L50 hostile ensemble recall +6.29pp above LWM (43.22% → 49.51%)
+  + pkg-info: L50 hostile ensemble recall +0.94pp above LWM (94.75% → 95.69%)
+  + ruby: L50 hostile ensemble recall +1.68pp above LWM (41.18% → 42.86%)
+  + whl: L50 hostile ensemble recall +37.50pp above LWM (0.00% → 37.50%)
+  + xml: L50 hostile ensemble recall +6.95pp above LWM (2.52% → 9.47%)
 
 1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - shell: L50 hostile ENSEMBLE recall dropped 1.99pp (81.64% → 79.65%; tolerance 1.70pp; deployed 95% CI lower = 79.81%)
+  - shell: L50 hostile ENSEMBLE recall dropped 10.97pp (73.23% → 62.26%; tolerance 1.70pp; deployed 95% CI lower = 71.21%)
 
-compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
+  - shell: L50 hostile ENSEMBLE recall dropped 9.80pp BELOW LOW-WATER-MARK (72.05% → 62.26%; LWM tolerance 0.90pp)
 
-blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
+net-improvement-fallback DID NOT rescue: net malware-caught delta = -199 TPs across 78 compared filetypes; worst high-volume drop (>=1500 mal) = 10.97pp on 'shell' (cap = 5.00pp); worst drop overall = 10.97pp on 'shell' (small-route, not gated)
+  reason: aggregate TP delta is not positive
+  reason: a high-volume filetype cratered (10.97pp on 'shell', >=1500 malware) exceeds catastrophe cap (5.00pp)
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1297: azoth-validate] Error 1)
+compared 78 filetypes (mal≥1, ben≥1); 5 below threshold and skipped.
+
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run, or pass --net-improvement-fallback to ship a net-positive deploy whose only regressions are on small routes (below --catastrophe-min-mal). A high-volume filetype cratering past --max-net-route-regression blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.
+make[2]: *** [Makefile:1317: azoth-validate] Error 1)
 
 ## Gates
 
@@ -62,62 +62,62 @@ make[2]: *** [Makefile:1297: azoth-validate] Error 1)
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `3818c4f8f221f75d` | `43e964486f908713` | `a1dec9071922fcdc` |
-| PR AUC | 0.9963 | 0.9987 | 0.9987 |
-| ROC AUC | 0.9976 | 0.9988 | 0.9987 |
-| F1 | 0.9650 | 0.9812 | 0.9777 |
+| key | `3818c4f8f221f75d` | `0597f9f531653ef9` | `215272eac473f45b` |
+| PR AUC | 0.9963 | 0.9971 | 0.9972 |
+| ROC AUC | 0.9976 | 0.9973 | 0.9974 |
+| F1 | 0.9650 | 0.9732 | 0.9745 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-06T13-41-44_20260606T134124-promote-3818c4f8f221f75d_azoth-validate.log; tail:   shell :: filetypes/shell recall@1FP-on-slice +0.14pp (84.10% → 84.24%)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-13T18-50-47_20260613T185024-promote-3818c4f8f221f75d_azoth-validate.log; tail: 2026-06-13 14:56:10,515 INFO found 3 .txt files to convert
+2026-06-13 14:56:10,879 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/filetypes/shell/models/seed_42.onnx
+2026-06-13 14:56:11,557 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-13 14:56:12,652 INFO filetypes/shell/models/seed_42.txt -> seed_42.onnx OK (delta=9.30e-08 on 200 rows, 2137 ms)
+2026-06-13 14:56:12,900 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/filetypes/shell/models/seed_43.onnx
+2026-06-13 14:56:13,391 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-13 14:56:14,105 INFO filetypes/shell/models/seed_43.txt -> seed_43.onnx OK (delta=8.12e-08 on 200 rows, 1453 ms)
+2026-06-13 14:56:14,323 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-3818c4f8f221f75d/filetypes/shell/models/seed_44.onnx
+2026-06-13 14:56:14,716 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
+2026-06-13 14:56:15,485 INFO filetypes/shell/models/seed_44.txt -> seed_44.onnx OK (delta=7.78e-08 on 200 rows, 1380 ms)
 
-per-route regressions (informational; does not block deploy):
-  shell :: general recall@1FP-on-slice dropped 28.10pp (74.79% → 46.69%)
+converted 3/3 files (0 intentionally skipped, 0 failed)
+staged runtime azoth bundle: /tmp/tmp.3yTB94lYUf
+azoth bundle ok: /tmp/tmp.3yTB94lYUf
+--source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 82 unimpacted (drift treated as pre-existing)
 
-34 pre-existing drift(s) on unimpacted filetypes (informational — not caused by this promote, see --source-bundle impact analysis):
-  ~ 7z: pre-existing drift, recall 16.24% → 12.63% (+3.61pp; unimpacted by this promote)
-  ~ batch: pre-existing drift, recall 97.46% → 1.24% (+96.23pp; unimpacted by this promote)
-  ~ c: pre-existing drift, recall 3.93% → 6.30% (+2.37pp; unimpacted by this promote)
-  ~ chrome-manifest: pre-existing drift, recall 28.57% → 42.86% (+14.29pp; unimpacted by this promote)
-  ~ doc: pre-existing drift, recall 38.51% → 66.38% (+27.87pp; unimpacted by this promote)
-  ~ docx: pre-existing drift, recall 82.92% → 44.66% (+38.26pp; unimpacted by this promote)
-  ~ elf: pre-existing drift, recall 95.93% → 98.61% (+2.68pp; unimpacted by this promote)
-  ~ go: pre-existing drift, recall 2.20% → 6.06% (+3.86pp; unimpacted by this promote)
-  ~ jar: pre-existing drift, recall 70.65% → 85.39% (+14.74pp; unimpacted by this promote)
-  ~ java_class: pre-existing drift, recall 17.65% → 23.08% (+5.43pp; unimpacted by this promote)
-  ~ javascript: pre-existing drift, recall 59.50% → 71.30% (+11.80pp; unimpacted by this promote)
-  ~ jpeg: pre-existing drift, recall 10.60% → 13.25% (+2.65pp; unimpacted by this promote)
-  ~ kotlin: pre-existing drift, recall 51.39% → 52.99% (+1.60pp; unimpacted by this promote)
-  ~ lnk: pre-existing drift, recall 82.68% → 66.73% (+15.95pp; unimpacted by this promote)
-  ~ lua: pre-existing drift, recall 30.77% → 53.85% (+23.08pp; unimpacted by this promote)
-  ~ macho: pre-existing drift, recall 80.24% → 68.26% (+11.98pp; unimpacted by this promote)
-  ~ msi: pre-existing drift, recall 0.00% → 58.05% (+58.05pp; unimpacted by this promote)
-  ~ ole: pre-existing drift, recall 82.17% → 50.88% (+31.29pp; unimpacted by this promote)
-  ~ pdf: pre-existing drift, recall 6.50% → 4.25% (+2.25pp; unimpacted by this promote)
-  ~ pe: pre-existing drift, recall 51.78% → 56.91% (+5.12pp; unimpacted by this promote)
-  ~ perl: pre-existing drift, recall 69.44% → 83.33% (+13.89pp; unimpacted by this promote)
-  ~ pkg-info: pre-existing drift, recall 87.00% → 65.47% (+21.53pp; unimpacted by this promote)
-  ~ png: pre-existing drift, recall 0.00% → 7.27% (+7.27pp; unimpacted by this promote)
-  ~ powershell: pre-existing drift, recall 52.76% → 43.71% (+9.05pp; unimpacted by this promote)
-  ~ pptx: pre-existing drift, recall 22.22% → 1.39% (+20.83pp; unimpacted by this promote)
-  ~ python: pre-existing drift, recall 48.01% → 48.19% (+0.18pp; unimpacted by this promote)
-  ~ python-bytecode: pre-existing drift, recall 92.09% → 88.14% (+3.95pp; unimpacted by this promote)
-  ~ tar: pre-existing drift, recall 88.19% → 81.54% (+6.65pp; unimpacted by this promote)
-  ~ vbs: pre-existing drift, recall 42.72% → 47.69% (+4.97pp; unimpacted by this promote)
-  ~ xls: pre-existing drift, recall 93.19% → 90.97% (+2.22pp; unimpacted by this promote)
-  ~ xlsx: pre-existing drift, recall 36.08% → 29.09% (+6.99pp; unimpacted by this promote)
-  ~ xml: pre-existing drift, recall 2.55% → 13.23% (+10.68pp; unimpacted by this promote)
-  ~ zip: pre-existing drift, recall 31.45% → 31.98% (+0.53pp; unimpacted by this promote)
-  ~ zst: pre-existing drift, recall 6.39% → 8.26% (+1.87pp; unimpacted by this promote)
+per-route improvements (≥0.10pp, informational):
+  shell :: filetypes/shell recall@1FP-on-slice +3.64pp (75.28% → 78.92%)
+
+13 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + applescript: L50 hostile ensemble recall +23.08pp above LWM (0.00% → 23.08%)
+  + dockerfile: L50 hostile ensemble recall +5.56pp above LWM (0.00% → 5.56%)
+  + jar: L50 hostile ensemble recall +8.98pp above LWM (55.51% → 64.49%)
+  + jpeg: L50 hostile ensemble recall +6.38pp above LWM (3.85% → 10.23%)
+  + objc: L50 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
+  + package.json: L50 hostile ensemble recall +3.39pp above LWM (85.89% → 89.28%)
+  + pdf: L50 hostile ensemble recall +1.02pp above LWM (4.48% → 5.50%)
+  + perl: L50 hostile ensemble recall +4.82pp above LWM (51.28% → 56.10%)
+  + php: L50 hostile ensemble recall +6.29pp above LWM (43.22% → 49.51%)
+  + pkg-info: L50 hostile ensemble recall +0.94pp above LWM (94.75% → 95.69%)
+  + ruby: L50 hostile ensemble recall +1.68pp above LWM (41.18% → 42.86%)
+  + whl: L50 hostile ensemble recall +37.50pp above LWM (0.00% → 37.50%)
+  + xml: L50 hostile ensemble recall +6.95pp above LWM (2.52% → 9.47%)
 
 1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - shell: L50 hostile ENSEMBLE recall dropped 1.99pp (81.64% → 79.65%; tolerance 1.70pp; deployed 95% CI lower = 79.81%)
+  - shell: L50 hostile ENSEMBLE recall dropped 10.97pp (73.23% → 62.26%; tolerance 1.70pp; deployed 95% CI lower = 71.21%)
 
-compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
+  - shell: L50 hostile ENSEMBLE recall dropped 9.80pp BELOW LOW-WATER-MARK (72.05% → 62.26%; LWM tolerance 0.90pp)
 
-blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
+net-improvement-fallback DID NOT rescue: net malware-caught delta = -199 TPs across 78 compared filetypes; worst high-volume drop (>=1500 mal) = 10.97pp on 'shell' (cap = 5.00pp); worst drop overall = 10.97pp on 'shell' (small-route, not gated)
+  reason: aggregate TP delta is not positive
+  reason: a high-volume filetype cratered (10.97pp on 'shell', >=1500 malware) exceeds catastrophe cap (5.00pp)
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1297: azoth-validate] Error 1)
+compared 78 filetypes (mal≥1, ben≥1); 5 below threshold and skipped.
+
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run, or pass --net-improvement-fallback to ship a net-positive deploy whose only regressions are on small routes (below --catastrophe-min-mal). A high-volume filetype cratering past --max-net-route-regression blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.
+make[2]: *** [Makefile:1317: azoth-validate] Error 1)

@@ -850,3 +850,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T011038-filetypes-png` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `141bc2b93b5d32d7` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9670 | 0.9385 | 0.9323 | 23 | [log](out/autocollie/runs/2026-06-13T01-19-35_20260613T011038-filetypes-png_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `bcf794ee5660d876` | png_ctrl_train_reg_leaves | ok | 0.1779 | 0.5596 | 0.1183 | 34 | [log](out/autocollie/runs/2026-06-13T01-20-12_20260613T011038-filetypes-png_png_ctrl_train_reg_leaves.log) |
+| `2e5c311d6cef4097` | png_feat_kv_textmetrics_vocab | ok | 0.1726 | 0.5597 | 0.1183 | 23 | [log](out/autocollie/runs/2026-06-13T01-20-51_20260613T011038-filetypes-png_png_feat_kv_textmetrics_vocab.log) |
+| `2be95a62c2957534` | png_feat_lowbigram_tiered_trigrams | ok | 0.1819 | 0.5598 | 0.1184 | 34 | [log](out/autocollie/runs/2026-06-13T01-21-17_20260613T011038-filetypes-png_png_feat_lowbigram_tiered_trigrams.log) |
+| `0b928248862f1ec3` | png_train_hardneg_tail | ok | 0.1944 | 0.5766 | 0.1179 | 9 | [log](out/autocollie/runs/2026-06-13T01-21-55_20260613T011038-filetypes-png_png_train_hardneg_tail.log) |
+| `fc3a65ed505beebd` | png_train_dart_extra_trees | ok | 0.1557 | 0.5219 | 0.1187 | 20 | [log](out/autocollie/runs/2026-06-13T01-22-05_20260613T011038-filetypes-png_png_train_dart_extra_trees.log) |
+| `84b105e31de3f0d0` | png_transfer_xml_lowbigram_tiered | ok | 0.1796 | 0.5804 | 0.1183 | 28 | [log](out/autocollie/runs/2026-06-13T01-22-28_20260613T011038-filetypes-png_png_transfer_xml_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_reg_leaves`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by tuning tree complexity and regularization on the best recent feature set to better separate malware from benign PNGs without changing the feature matrix.
+- **`png_feat_kv_textmetrics_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and text_metrics_full to capture hidden metadata and structural anomalies in PNG files that standard n-grams miss.
+- **`png_feat_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=112 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by lowering bigram_min_freq to 100 and enabling tiered_crit_trigrams to capture rare malicious chunk sequences in the tail.
+- **`png_train_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Aims to improve recall@3FPM by upweighting hard negatives to push benign lookalikes lower in the ranking, reducing false positives at the strict operating point.
+- **`png_train_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to improve ROC_AUC and PR_AUC by using dart boosting and extra_trees to add stochastic regularization, reducing overfitting on noisy PNG metadata.
+- **`png_transfer_xml_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=3000 …` — Aims to improve PR_AUC by transferring the successful xml low-bigram-freq and tiered-trigram configuration, adapted for PNG's chunk-based structure to better rank malicious payloads.
+
+</details>
+

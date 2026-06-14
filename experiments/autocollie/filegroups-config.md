@@ -770,3 +770,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T011038-filegroups-config` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `96772bac6c4e10cc` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9989 | 0.9986 | 0.9914 | 49 | [log](out/autocollie/runs/2026-06-13T01-17-58_20260613T011038-filegroups-config_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `678e1a6361a080b5` | config_ctrl_lr003_leaves128_reg1 | ok | 0.8699 | 0.8939 | 0.8671 | 56 | [log](out/autocollie/runs/2026-06-13T01-19-06_20260613T011038-filegroups-config_config_ctrl_lr003_leaves128_reg1.log) |
+| `269a3b965fb3580f` | config_train_hardneg_01_10 | ok | 0.8935 | 0.9244 | 0.8747 | 15 | [log](out/autocollie/runs/2026-06-13T01-20-11_20260613T011038-filegroups-config_config_train_hardneg_01_10.log) |
+| `66311374406e53c2` | config_feat_kv_vocab_split | ok | 0.8795 | 0.9078 | 0.8727 | 46 | [log](out/autocollie/runs/2026-06-13T01-20-29_20260613T011038-filegroups-config_config_feat_kv_vocab_split.log) |
+| `f676d6a07e755c90` | config_feat_textenc_lowbigram | ok | 0.8798 | 0.9127 | 0.8741 | 47 | [log](out/autocollie/runs/2026-06-13T01-21-19_20260613T011038-filegroups-config_config_feat_textenc_lowbigram.log) |
+| `d4ad828ea106c958` | config_abl_extreme_off | ok | 0.8798 | 0.9127 | 0.8741 | 48 | [log](out/autocollie/runs/2026-06-13T01-22-08_20260613T011038-filegroups-config_config_abl_extreme_off.log) |
+| `9f12ef906553540d` | config_seed_search_k3_ensemble | ok | 0.8731 | 0.9016 | 0.8737 | 9 | [log](out/autocollie/runs/2026-06-13T01-23-01_20260613T011038-filegroups-config_config_seed_search_k3_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_lr003_leaves128_reg1`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Refine tree complexity and regularization on the best recent feature set to improve PR_AUC by reducing overfitting on rare config patterns while preserving tail recall.
+- **`config_train_hardneg_01_10`** `EXP_BIGRAM_MIN_FREQ=50 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Apply hard-negative upweighting to sharpen the decision boundary at low FPR, targeting higher recall@3FPM without sacrificing PR_AUC.
+- **`config_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured config key-value pairs, aiming to lift PR_AUC by isolating malicious payload signatures from benign boilerplate.
+- **`config_feat_textenc_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Expand text encoding features and lower bigram frequency floor to capture rarer obfuscation patterns in configs, targeting PR_AUC gains from improved lexical coverage.
+- **`config_abl_extreme_off`** `EXP_BIGRAM_MIN_FREQ=50 EXP_EXTREME_FEATURES=0 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Disable extreme/tail features to reduce noise in config parsing, aiming to stabilize PR_AUC and improve ROC_AUC by focusing the model on core structural and text signals.
+- **`config_seed_search_k3_ensemble`** `EXP_BIGRAM_MIN_FREQ=50 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Use seed search ensemble to reduce variance and stabilize recall@3FPM gains observed in recent text-metric configs, ensuring robust tail performance across RNG splits.
+
+</details>
+

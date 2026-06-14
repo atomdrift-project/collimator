@@ -1,123 +1,146 @@
-# Promote REJECTED — `33ba656da8844f37` on `filegroups/documents`
+# Promote PASS — `33ba656da8844f37` on `filegroups/documents`
 
-Generated 2026-06-06T13:35:23Z
+Generated 2026-06-13T18:22:37Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-06T13-32-14_20260606T133148-promote-33ba656da8844f37_azoth-validate.log; tail: per-route regressions (informational; does not block deploy):
-  docx :: filetypes/docx recall@1FP-on-slice dropped 9.07pp (89.15% → 80.07%)
-  ole :: general recall@1FP-on-slice dropped 7.06pp (90.64% → 83.59%)
-  ole :: filegroups/documents recall@1FP-on-slice dropped 6.31pp (93.68% → 87.37%)
-  ole :: filetypes/ole recall@1FP-on-slice dropped 8.83pp (93.05% → 84.22%)
-  pptx :: general recall@1FP-on-slice dropped 34.72pp (44.44% → 9.72%)
-  pptx :: filegroups/documents recall@1FP-on-slice dropped 5.56pp (44.44% → 38.89%)
-  xlsx :: general recall@1FP-on-slice dropped 14.94pp (45.91% → 30.97%)
-  xlsx :: filetypes/xlsx recall@1FP-on-slice dropped 13.12pp (44.30% → 31.17%)
-
-29 pre-existing drift(s) on unimpacted filetypes (informational — not caused by this promote, see --source-bundle impact analysis):
-  ~ 7z: pre-existing drift, recall 16.24% → 12.63% (+3.61pp; unimpacted by this promote)
-  ~ batch: pre-existing drift, recall 97.46% → 1.24% (+96.23pp; unimpacted by this promote)
-  ~ c: pre-existing drift, recall 3.93% → 8.53% (+4.60pp; unimpacted by this promote)
-  ~ chrome-manifest: pre-existing drift, recall 28.57% → 42.86% (+14.29pp; unimpacted by this promote)
-  ~ csharp: pre-existing drift, recall 24.38% → 25.62% (+1.24pp; unimpacted by this promote)
-  ~ elf: pre-existing drift, recall 95.93% → 98.61% (+2.68pp; unimpacted by this promote)
-  ~ go: pre-existing drift, recall 2.20% → 5.90% (+3.70pp; unimpacted by this promote)
-  ~ jar: pre-existing drift, recall 70.65% → 85.39% (+14.74pp; unimpacted by this promote)
-  ~ java_class: pre-existing drift, recall 17.65% → 23.08% (+5.43pp; unimpacted by this promote)
-  ~ javascript: pre-existing drift, recall 59.50% → 71.30% (+11.80pp; unimpacted by this promote)
-  ~ jpeg: pre-existing drift, recall 10.60% → 13.25% (+2.65pp; unimpacted by this promote)
-  ~ kotlin: pre-existing drift, recall 51.39% → 46.48% (+4.91pp; unimpacted by this promote)
-  ~ lnk: pre-existing drift, recall 82.68% → 66.73% (+15.95pp; unimpacted by this promote)
-  ~ lua: pre-existing drift, recall 30.77% → 53.85% (+23.08pp; unimpacted by this promote)
-  ~ macho: pre-existing drift, recall 80.24% → 68.26% (+11.98pp; unimpacted by this promote)
-  ~ msi: pre-existing drift, recall 0.00% → 58.05% (+58.05pp; unimpacted by this promote)
-  ~ pe: pre-existing drift, recall 51.78% → 56.91% (+5.12pp; unimpacted by this promote)
-  ~ perl: pre-existing drift, recall 69.44% → 83.33% (+13.89pp; unimpacted by this promote)
-  ~ pkg-info: pre-existing drift, recall 87.00% → 65.47% (+21.53pp; unimpacted by this promote)
-  ~ png: pre-existing drift, recall 0.00% → 7.27% (+7.27pp; unimpacted by this promote)
-  ~ powershell: pre-existing drift, recall 52.76% → 43.71% (+9.05pp; unimpacted by this promote)
-  ~ python: pre-existing drift, recall 48.01% → 48.19% (+0.18pp; unimpacted by this promote)
-  ~ python-bytecode: pre-existing drift, recall 92.09% → 88.14% (+3.95pp; unimpacted by this promote)
-  ~ shell: pre-existing drift, recall 81.64% → 87.71% (+6.08pp; unimpacted by this promote)
-  ~ tar: pre-existing drift, recall 88.19% → 81.54% (+6.65pp; unimpacted by this promote)
-  ~ vbs: pre-existing drift, recall 42.72% → 47.69% (+4.97pp; unimpacted by this promote)
-  ~ xml: pre-existing drift, recall 2.55% → 13.23% (+10.68pp; unimpacted by this promote)
-  ~ zip: pre-existing drift, recall 31.45% → 31.98% (+0.53pp; unimpacted by this promote)
-  ~ zst: pre-existing drift, recall 6.39% → 8.26% (+1.87pp; unimpacted by this promote)
-
-1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - xlsx: L50 hostile ENSEMBLE recall dropped 5.50pp (36.08% → 30.58%; tolerance 1.70pp; deployed 95% CI lower = 34.98%)
-
-compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
-
-blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1291: azoth-validate] Error 1)
+full-train holds — PR_AUC 1.0000 -> 1.0000, AUC 0.9998 -> 0.9992, Brier 0.0045 -> 0.0066
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 1.0000)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `33ba656da8844f37` | `0b0b8faa06a4d5ce` | `194145bfbc9451a7` |
+| key | `33ba656da8844f37` | `31fcd080d9f0e85a` | `c8f4229dea3fe570` |
 | PR AUC | 1.0000 | 1.0000 | 1.0000 |
-| ROC AUC | 0.9998 | 0.9992 | 0.9992 |
-| F1 | 0.9976 | 0.9973 | 0.9972 |
+| ROC AUC | 0.9998 | 0.9991 | 0.9992 |
+| F1 | 0.9976 | 0.9973 | 0.9973 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-06T13-32-14_20260606T133148-promote-33ba656da8844f37_azoth-validate.log; tail: per-route regressions (informational; does not block deploy):
-  docx :: filetypes/docx recall@1FP-on-slice dropped 9.07pp (89.15% → 80.07%)
-  ole :: general recall@1FP-on-slice dropped 7.06pp (90.64% → 83.59%)
-  ole :: filegroups/documents recall@1FP-on-slice dropped 6.31pp (93.68% → 87.37%)
-  ole :: filetypes/ole recall@1FP-on-slice dropped 8.83pp (93.05% → 84.22%)
-  pptx :: general recall@1FP-on-slice dropped 34.72pp (44.44% → 9.72%)
-  pptx :: filegroups/documents recall@1FP-on-slice dropped 5.56pp (44.44% → 38.89%)
-  xlsx :: general recall@1FP-on-slice dropped 14.94pp (45.91% → 30.97%)
-  xlsx :: filetypes/xlsx recall@1FP-on-slice dropped 13.12pp (44.30% → 31.17%)
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-29 pre-existing drift(s) on unimpacted filetypes (informational — not caused by this promote, see --source-bundle impact analysis):
-  ~ 7z: pre-existing drift, recall 16.24% → 12.63% (+3.61pp; unimpacted by this promote)
-  ~ batch: pre-existing drift, recall 97.46% → 1.24% (+96.23pp; unimpacted by this promote)
-  ~ c: pre-existing drift, recall 3.93% → 8.53% (+4.60pp; unimpacted by this promote)
-  ~ chrome-manifest: pre-existing drift, recall 28.57% → 42.86% (+14.29pp; unimpacted by this promote)
-  ~ csharp: pre-existing drift, recall 24.38% → 25.62% (+1.24pp; unimpacted by this promote)
-  ~ elf: pre-existing drift, recall 95.93% → 98.61% (+2.68pp; unimpacted by this promote)
-  ~ go: pre-existing drift, recall 2.20% → 5.90% (+3.70pp; unimpacted by this promote)
-  ~ jar: pre-existing drift, recall 70.65% → 85.39% (+14.74pp; unimpacted by this promote)
-  ~ java_class: pre-existing drift, recall 17.65% → 23.08% (+5.43pp; unimpacted by this promote)
-  ~ javascript: pre-existing drift, recall 59.50% → 71.30% (+11.80pp; unimpacted by this promote)
-  ~ jpeg: pre-existing drift, recall 10.60% → 13.25% (+2.65pp; unimpacted by this promote)
-  ~ kotlin: pre-existing drift, recall 51.39% → 46.48% (+4.91pp; unimpacted by this promote)
-  ~ lnk: pre-existing drift, recall 82.68% → 66.73% (+15.95pp; unimpacted by this promote)
-  ~ lua: pre-existing drift, recall 30.77% → 53.85% (+23.08pp; unimpacted by this promote)
-  ~ macho: pre-existing drift, recall 80.24% → 68.26% (+11.98pp; unimpacted by this promote)
-  ~ msi: pre-existing drift, recall 0.00% → 58.05% (+58.05pp; unimpacted by this promote)
-  ~ pe: pre-existing drift, recall 51.78% → 56.91% (+5.12pp; unimpacted by this promote)
-  ~ perl: pre-existing drift, recall 69.44% → 83.33% (+13.89pp; unimpacted by this promote)
-  ~ pkg-info: pre-existing drift, recall 87.00% → 65.47% (+21.53pp; unimpacted by this promote)
-  ~ png: pre-existing drift, recall 0.00% → 7.27% (+7.27pp; unimpacted by this promote)
-  ~ powershell: pre-existing drift, recall 52.76% → 43.71% (+9.05pp; unimpacted by this promote)
-  ~ python: pre-existing drift, recall 48.01% → 48.19% (+0.18pp; unimpacted by this promote)
-  ~ python-bytecode: pre-existing drift, recall 92.09% → 88.14% (+3.95pp; unimpacted by this promote)
-  ~ shell: pre-existing drift, recall 81.64% → 87.71% (+6.08pp; unimpacted by this promote)
-  ~ tar: pre-existing drift, recall 88.19% → 81.54% (+6.65pp; unimpacted by this promote)
-  ~ vbs: pre-existing drift, recall 42.72% → 47.69% (+4.97pp; unimpacted by this promote)
-  ~ xml: pre-existing drift, recall 2.55% → 13.23% (+10.68pp; unimpacted by this promote)
-  ~ zip: pre-existing drift, recall 31.45% → 31.98% (+0.53pp; unimpacted by this promote)
-  ~ zst: pre-existing drift, recall 6.39% → 8.26% (+1.87pp; unimpacted by this promote)
+The candidate bundle lives at:
 
-1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - xlsx: L50 hostile ENSEMBLE recall dropped 5.50pp (36.08% → 30.58%; tolerance 1.70pp; deployed 95% CI lower = 34.98%)
+```
+/home/t/collimator/out/models/azoth-candidate-filegroups-documents-33ba656da8844f37
+```
 
-compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+## Candidate knobs (raw EXP_* form)
 
-blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops)
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ALLOWED_FEATURES_FILE=/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=2
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters
+EXP_DOCUMENT_OBFUSCATION_FEATURES=1
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0
+EXP_HARD_NEGATIVE_WEIGHT=1
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=0
+EXP_KV_VOCAB_MAX=5000
+EXP_LEARNING_RATE=0.05
+EXP_LINE_LENGTH_BUCKETS=1
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=96
+EXP_NUM_THREADS=8
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SEVERITY_FRACTION_FEATURES=0
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=0
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1291: azoth-validate] Error 1)
+## To deploy (HUMAN)
+
+Read `/home/t/collimator/out/models/azoth-candidate-filegroups-documents-33ba656da8844f37/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
+
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filegroups-documents-33ba656da8844f37
+```
+
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

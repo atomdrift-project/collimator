@@ -1,57 +1,57 @@
 # Promote REJECTED — `e37f927afbd32e67` on `filegroups/scripts`
 
-Generated 2026-06-08T10:30:41Z
+Generated 2026-06-13T19:25:05Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-08T10-26-02_20260608T102600-promote-e37f927afbd32e67_azoth-validate.log; tail:   python :: filegroups/scripts recall@1FP-on-slice +2.35pp (55.47% → 57.82%)
-  python :: filetypes/python recall@1FP-on-slice +2.66pp (60.40% → 63.06%)
-  ruby :: filegroups/scripts recall@1FP-on-slice +11.76pp (35.29% → 47.06%)
-  shell :: filegroups/scripts recall@1FP-on-slice +12.31pp (60.70% → 73.01%)
-  shell :: filetypes/shell recall@1FP-on-slice +17.33pp (63.55% → 80.88%)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-13T19-12-41_20260613T190740-promote-e37f927afbd32e67_azoth-validate.log; tail: 
+per-route improvements (≥0.10pp, informational):
+  batch :: filegroups/scripts recall@1FP-on-slice +0.25pp (1.76% → 2.01%)
+  javascript :: filetypes/javascript recall@1FP-on-slice +4.07pp (62.90% → 66.97%)
+  php :: filetypes/php recall@1FP-on-slice +6.87pp (44.74% → 51.61%)
+  powershell :: filegroups/scripts recall@1FP-on-slice +7.39pp (54.51% → 61.89%)
+  python :: filegroups/scripts recall@1FP-on-slice +1.77pp (52.76% → 54.53%)
+  ruby :: filegroups/scripts recall@1FP-on-slice +23.81pp (19.05% → 42.86%)
 
 per-route regressions (informational; does not block deploy):
-  php :: filegroups/scripts recall@1FP-on-slice dropped 4.02pp (46.35% → 42.32%)
-  powershell :: filetypes/powershell recall@1FP-on-slice dropped 11.69pp (60.15% → 48.46%)
+  perl :: filegroups/scripts recall@1FP-on-slice dropped 2.44pp (63.41% → 60.98%)
+  php :: filegroups/scripts recall@1FP-on-slice dropped 2.66pp (55.54% → 52.88%)
+  powershell :: filetypes/powershell recall@1FP-on-slice dropped 11.08pp (55.39% → 44.31%)
+  shell :: filegroups/scripts recall@1FP-on-slice dropped 2.05pp (72.46% → 70.41%)
 
-23 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + 7z: L50 hostile ensemble recall +7.60pp above LWM (13.53% → 21.13%)
-  + c: L50 hostile ensemble recall +2.07pp above LWM (8.53% → 10.60%)
-  + cargo.toml: L50 hostile ensemble recall +22.22pp above LWM (0.00% → 22.22%)
-  + crx: L50 hostile ensemble recall +30.51pp above LWM (37.98% → 68.49%)
-  + docx: L50 hostile ensemble recall +34.91pp above LWM (44.66% → 79.57%)
-  + elf: L50 hostile ensemble recall +4.32pp above LWM (91.77% → 96.09%)
-  + jar: L50 hostile ensemble recall +7.42pp above LWM (48.09% → 55.51%)
-  + javascript: L50 hostile ensemble recall +24.52pp above LWM (39.17% → 63.69%)
-  + kotlin: L50 hostile ensemble recall +4.02pp above LWM (46.48% → 50.50%)
-  + lnk: L50 hostile ensemble recall +12.05pp above LWM (66.73% → 78.78%)
-  + lua: L50 hostile ensemble recall +7.69pp above LWM (53.85% → 61.54%)
-  + macho: L50 hostile ensemble recall +9.65pp above LWM (68.26% → 77.91%)
-  + msi: L50 hostile ensemble recall +6.97pp above LWM (38.34% → 45.31%)
-  + ole: L50 hostile ensemble recall +30.02pp above LWM (50.88% → 80.90%)
-  + package.json: L50 hostile ensemble recall +7.50pp above LWM (78.39% → 85.89%)
-  + pe: L50 hostile ensemble recall +17.11pp above LWM (37.61% → 54.72%)
-  + pkg-info: L50 hostile ensemble recall +10.73pp above LWM (65.47% → 76.19%)
-  + shell: L50 hostile ensemble recall +30.52pp above LWM (43.91% → 74.43%)
-  + vbs: L50 hostile ensemble recall +26.92pp above LWM (42.09% → 69.01%)
-  + xls: L50 hostile ensemble recall +3.44pp above LWM (90.97% → 94.40%)
-  + xlsx: L50 hostile ensemble recall +1.37pp above LWM (29.09% → 30.46%)
-  + zip: L50 hostile ensemble recall +2.12pp above LWM (31.98% → 34.10%)
-  + zst: L50 hostile ensemble recall +5.22pp above LWM (8.42% → 13.64%)
+14 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + applescript: L50 hostile ensemble recall +23.08pp above LWM (0.00% → 23.08%)
+  + batch: L50 hostile ensemble recall +1.18pp above LWM (0.96% → 2.15%)
+  + dockerfile: L50 hostile ensemble recall +5.56pp above LWM (0.00% → 5.56%)
+  + jar: L50 hostile ensemble recall +8.98pp above LWM (55.51% → 64.49%)
+  + jpeg: L50 hostile ensemble recall +6.38pp above LWM (3.85% → 10.23%)
+  + objc: L50 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
+  + package.json: L50 hostile ensemble recall +3.39pp above LWM (85.89% → 89.28%)
+  + pdf: L50 hostile ensemble recall +1.02pp above LWM (4.48% → 5.50%)
+  + php: L50 hostile ensemble recall +5.87pp above LWM (43.22% → 49.09%)
+  + pkg-info: L50 hostile ensemble recall +0.94pp above LWM (94.75% → 95.69%)
+  + ruby: L50 hostile ensemble recall +1.68pp above LWM (41.18% → 42.86%)
+  + shell: L50 hostile ensemble recall +2.00pp above LWM (72.05% → 74.05%)
+  + whl: L50 hostile ensemble recall +37.50pp above LWM (0.00% → 37.50%)
+  + xml: L50 hostile ensemble recall +6.95pp above LWM (2.52% → 9.47%)
 
 1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - powershell: L50 hostile ENSEMBLE recall dropped 5.08pp (43.38% → 38.31%; tolerance 1.70pp; deployed 95% CI lower = 39.54%)
+  - python: L50 hostile ENSEMBLE recall dropped 4.07pp (48.94% → 44.87%; tolerance 1.70pp; deployed 95% CI lower = 47.08%)
 
-3 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - perl: L50 hostile ENSEMBLE recall dropped 15.60pp BELOW LOW-WATER-MARK (69.44% → 53.85%; LWM tolerance 0.90pp)
-  - php: L50 hostile ENSEMBLE recall dropped 2.17pp BELOW LOW-WATER-MARK (47.03% → 44.86%; LWM tolerance 0.90pp)
-  - powershell: L50 hostile ENSEMBLE recall dropped 5.40pp BELOW LOW-WATER-MARK (43.71% → 38.31%; LWM tolerance 0.90pp)
+5 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
+  - javascript: L50 hostile ENSEMBLE recall dropped 8.67pp BELOW LOW-WATER-MARK (63.33% → 54.66%; LWM tolerance 0.90pp)
+  - lua: L50 hostile ENSEMBLE recall dropped 23.08pp BELOW LOW-WATER-MARK (69.23% → 46.15%; LWM tolerance 0.90pp)
+  - perl: L50 hostile ENSEMBLE recall dropped 2.50pp BELOW LOW-WATER-MARK (51.28% → 48.78%; LWM tolerance 0.90pp)
+  - powershell: L50 hostile ENSEMBLE recall dropped 5.96pp BELOW LOW-WATER-MARK (53.08% → 47.12%; LWM tolerance 0.90pp)
+  - python: L50 hostile ENSEMBLE recall dropped 3.59pp BELOW LOW-WATER-MARK (48.46% → 44.87%; LWM tolerance 0.90pp)
 
-compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+net-improvement-fallback DID NOT rescue: net malware-caught delta = -3 TPs across 78 compared filetypes; worst high-volume drop (>=1500 mal) = 4.07pp on 'python' (cap = 5.00pp); worst drop overall = 7.32pp on 'perl' (small-route, not gated)
+  reason: aggregate TP delta is not positive
 
-blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (3 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+compared 78 filetypes (mal≥1, ben≥1); 5 below threshold and skipped.
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[1]: *** [Makefile:1310: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (5 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run, or pass --net-improvement-fallback to ship a net-positive deploy whose only regressions are on small routes (below --catastrophe-min-mal). A high-volume filetype cratering past --max-net-route-regression blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.
+make[2]: *** [Makefile:1317: azoth-validate] Error 1)
 
 ## Gates
 
@@ -62,62 +62,62 @@ make[1]: Leaving directory '/home/t/collimator')
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `e37f927afbd32e67` | `bcae0f6984fea346` | `664df9c2b3c32ad1` |
-| PR AUC | 0.9970 | 0.9986 | 0.9986 |
-| ROC AUC | 0.9964 | 0.9983 | 0.9983 |
-| F1 | 0.9723 | 0.9833 | 0.9834 |
+| key | `e37f927afbd32e67` | `bd6c7568313c5192` | `67fef8ff67a34935` |
+| PR AUC | 0.9970 | 0.9973 | 0.9973 |
+| ROC AUC | 0.9964 | 0.9969 | 0.9969 |
+| F1 | 0.9723 | 0.9760 | 0.9758 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-08T10-26-02_20260608T102600-promote-e37f927afbd32e67_azoth-validate.log; tail:   python :: filegroups/scripts recall@1FP-on-slice +2.35pp (55.47% → 57.82%)
-  python :: filetypes/python recall@1FP-on-slice +2.66pp (60.40% → 63.06%)
-  ruby :: filegroups/scripts recall@1FP-on-slice +11.76pp (35.29% → 47.06%)
-  shell :: filegroups/scripts recall@1FP-on-slice +12.31pp (60.70% → 73.01%)
-  shell :: filetypes/shell recall@1FP-on-slice +17.33pp (63.55% → 80.88%)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-13T19-12-41_20260613T190740-promote-e37f927afbd32e67_azoth-validate.log; tail: 
+per-route improvements (≥0.10pp, informational):
+  batch :: filegroups/scripts recall@1FP-on-slice +0.25pp (1.76% → 2.01%)
+  javascript :: filetypes/javascript recall@1FP-on-slice +4.07pp (62.90% → 66.97%)
+  php :: filetypes/php recall@1FP-on-slice +6.87pp (44.74% → 51.61%)
+  powershell :: filegroups/scripts recall@1FP-on-slice +7.39pp (54.51% → 61.89%)
+  python :: filegroups/scripts recall@1FP-on-slice +1.77pp (52.76% → 54.53%)
+  ruby :: filegroups/scripts recall@1FP-on-slice +23.81pp (19.05% → 42.86%)
 
 per-route regressions (informational; does not block deploy):
-  php :: filegroups/scripts recall@1FP-on-slice dropped 4.02pp (46.35% → 42.32%)
-  powershell :: filetypes/powershell recall@1FP-on-slice dropped 11.69pp (60.15% → 48.46%)
+  perl :: filegroups/scripts recall@1FP-on-slice dropped 2.44pp (63.41% → 60.98%)
+  php :: filegroups/scripts recall@1FP-on-slice dropped 2.66pp (55.54% → 52.88%)
+  powershell :: filetypes/powershell recall@1FP-on-slice dropped 11.08pp (55.39% → 44.31%)
+  shell :: filegroups/scripts recall@1FP-on-slice dropped 2.05pp (72.46% → 70.41%)
 
-23 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + 7z: L50 hostile ensemble recall +7.60pp above LWM (13.53% → 21.13%)
-  + c: L50 hostile ensemble recall +2.07pp above LWM (8.53% → 10.60%)
-  + cargo.toml: L50 hostile ensemble recall +22.22pp above LWM (0.00% → 22.22%)
-  + crx: L50 hostile ensemble recall +30.51pp above LWM (37.98% → 68.49%)
-  + docx: L50 hostile ensemble recall +34.91pp above LWM (44.66% → 79.57%)
-  + elf: L50 hostile ensemble recall +4.32pp above LWM (91.77% → 96.09%)
-  + jar: L50 hostile ensemble recall +7.42pp above LWM (48.09% → 55.51%)
-  + javascript: L50 hostile ensemble recall +24.52pp above LWM (39.17% → 63.69%)
-  + kotlin: L50 hostile ensemble recall +4.02pp above LWM (46.48% → 50.50%)
-  + lnk: L50 hostile ensemble recall +12.05pp above LWM (66.73% → 78.78%)
-  + lua: L50 hostile ensemble recall +7.69pp above LWM (53.85% → 61.54%)
-  + macho: L50 hostile ensemble recall +9.65pp above LWM (68.26% → 77.91%)
-  + msi: L50 hostile ensemble recall +6.97pp above LWM (38.34% → 45.31%)
-  + ole: L50 hostile ensemble recall +30.02pp above LWM (50.88% → 80.90%)
-  + package.json: L50 hostile ensemble recall +7.50pp above LWM (78.39% → 85.89%)
-  + pe: L50 hostile ensemble recall +17.11pp above LWM (37.61% → 54.72%)
-  + pkg-info: L50 hostile ensemble recall +10.73pp above LWM (65.47% → 76.19%)
-  + shell: L50 hostile ensemble recall +30.52pp above LWM (43.91% → 74.43%)
-  + vbs: L50 hostile ensemble recall +26.92pp above LWM (42.09% → 69.01%)
-  + xls: L50 hostile ensemble recall +3.44pp above LWM (90.97% → 94.40%)
-  + xlsx: L50 hostile ensemble recall +1.37pp above LWM (29.09% → 30.46%)
-  + zip: L50 hostile ensemble recall +2.12pp above LWM (31.98% → 34.10%)
-  + zst: L50 hostile ensemble recall +5.22pp above LWM (8.42% → 13.64%)
+14 low-water-mark improvement(s) (>0.90pp above LWM, informational):
+  + applescript: L50 hostile ensemble recall +23.08pp above LWM (0.00% → 23.08%)
+  + batch: L50 hostile ensemble recall +1.18pp above LWM (0.96% → 2.15%)
+  + dockerfile: L50 hostile ensemble recall +5.56pp above LWM (0.00% → 5.56%)
+  + jar: L50 hostile ensemble recall +8.98pp above LWM (55.51% → 64.49%)
+  + jpeg: L50 hostile ensemble recall +6.38pp above LWM (3.85% → 10.23%)
+  + objc: L50 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
+  + package.json: L50 hostile ensemble recall +3.39pp above LWM (85.89% → 89.28%)
+  + pdf: L50 hostile ensemble recall +1.02pp above LWM (4.48% → 5.50%)
+  + php: L50 hostile ensemble recall +5.87pp above LWM (43.22% → 49.09%)
+  + pkg-info: L50 hostile ensemble recall +0.94pp above LWM (94.75% → 95.69%)
+  + ruby: L50 hostile ensemble recall +1.68pp above LWM (41.18% → 42.86%)
+  + shell: L50 hostile ensemble recall +2.00pp above LWM (72.05% → 74.05%)
+  + whl: L50 hostile ensemble recall +37.50pp above LWM (0.00% → 37.50%)
+  + xml: L50 hostile ensemble recall +6.95pp above LWM (2.52% → 9.47%)
 
 1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/litmus/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - powershell: L50 hostile ENSEMBLE recall dropped 5.08pp (43.38% → 38.31%; tolerance 1.70pp; deployed 95% CI lower = 39.54%)
+  - python: L50 hostile ENSEMBLE recall dropped 4.07pp (48.94% → 44.87%; tolerance 1.70pp; deployed 95% CI lower = 47.08%)
 
-3 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - perl: L50 hostile ENSEMBLE recall dropped 15.60pp BELOW LOW-WATER-MARK (69.44% → 53.85%; LWM tolerance 0.90pp)
-  - php: L50 hostile ENSEMBLE recall dropped 2.17pp BELOW LOW-WATER-MARK (47.03% → 44.86%; LWM tolerance 0.90pp)
-  - powershell: L50 hostile ENSEMBLE recall dropped 5.40pp BELOW LOW-WATER-MARK (43.71% → 38.31%; LWM tolerance 0.90pp)
+5 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
+  - javascript: L50 hostile ENSEMBLE recall dropped 8.67pp BELOW LOW-WATER-MARK (63.33% → 54.66%; LWM tolerance 0.90pp)
+  - lua: L50 hostile ENSEMBLE recall dropped 23.08pp BELOW LOW-WATER-MARK (69.23% → 46.15%; LWM tolerance 0.90pp)
+  - perl: L50 hostile ENSEMBLE recall dropped 2.50pp BELOW LOW-WATER-MARK (51.28% → 48.78%; LWM tolerance 0.90pp)
+  - powershell: L50 hostile ENSEMBLE recall dropped 5.96pp BELOW LOW-WATER-MARK (53.08% → 47.12%; LWM tolerance 0.90pp)
+  - python: L50 hostile ENSEMBLE recall dropped 3.59pp BELOW LOW-WATER-MARK (48.46% → 44.87%; LWM tolerance 0.90pp)
 
-compared 75 filetypes (mal≥1, ben≥1); 3 below threshold and skipped.
+net-improvement-fallback DID NOT rescue: net malware-caught delta = -3 TPs across 78 compared filetypes; worst high-volume drop (>=1500 mal) = 4.07pp on 'python' (cap = 5.00pp); worst drop overall = 7.32pp on 'perl' (small-route, not gated)
+  reason: aggregate TP delta is not positive
 
-blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (3 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+compared 78 filetypes (mal≥1, ben≥1); 5 below threshold and skipped.
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[1]: *** [Makefile:1310: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (5 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+
+If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run, or pass --net-improvement-fallback to ship a net-positive deploy whose only regressions are on small routes (below --catastrophe-min-mal). A high-volume filetype cratering past --max-net-route-regression blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.
+make[2]: *** [Makefile:1317: azoth-validate] Error 1)

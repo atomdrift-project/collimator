@@ -704,3 +704,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T012926-filegroups-native` — 2026-06-13T01:29:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `da8e23431a535154` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9994 | 0.9994 | 0.9881 | 89 | [log](out/autocollie/runs/2026-06-13T01-35-44_20260613T012926-filegroups-native_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `631d35b95052d394` | native_control_hn_tail_v9 | ok | 0.9986 | 0.9987 | 0.9848 | 86 | [log](out/autocollie/runs/2026-06-13T01-38-20_20260613T012926-filegroups-native_native_control_hn_tail_v9.log) |
+| `088f7405b0893e46` | native_sym_vocab_bigrams_25k | ok | 0.9986 | 0.9986 | 0.9821 | 108 | [log](out/autocollie/runs/2026-06-13T01-39-54_20260613T012926-filegroups-native_native_sym_vocab_bigrams_25k.log) |
+| `9a8134967493924b` | native_kv_vocab_split_20k | ok | 0.9986 | 0.9986 | 0.9821 | 77 | [log](out/autocollie/runs/2026-06-13T01-41-43_20260613T012926-filegroups-native_native_kv_vocab_split_20k.log) |
+| `eec24067814f2e84` | native_mbc_overlay_research | ok | 0.9986 | 0.9986 | 0.9821 | 70 | [log](out/autocollie/runs/2026-06-13T01-43-01_20260613T012926-filegroups-native_native_mbc_overlay_research.log) |
+| `4f2f82f63a7ea771` | native_transfer_lowbigram_tiered | ok | 0.9986 | 0.9986 | 0.9839 | 71 | [log](out/autocollie/runs/2026-06-13T01-44-12_20260613T012926-filegroups-native_native_transfer_lowbigram_tiered.log) |
+| `d4ca2bfd5d847706` | native_seed_search_3_hn | ok | 0.9988 | 0.9988 | 0.9831 | 38 | [log](out/autocollie/runs/2026-06-13T01-45-23_20260613T012926-filegroups-native_native_seed_search_3_hn.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_hn_tail_v9`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates recent best feature_env; increases hard_negative_weight and num_leaves to improve recall@3 FP/M by better separating hard benigns from malware.
+- **`native_sym_vocab_bigrams_25k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=20000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 …` — Expands symbol vocab and enables symbol bigrams to capture co-occurrence patterns in native binaries, aiming to boost PR_AUC by adding discriminative structural signal.
+- **`native_kv_vocab_split_20k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables KV vocab with value splitting to recover per-element signal in metadata/strings, targeting PR_AUC improvement via finer-grained feature resolution.
+- **`native_mbc_overlay_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=128 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Activates mbc_id_vocab and overlay_signal to capture behavioral catalog IDs and packer overlay metrics, aiming to lift recall@3 FP/M by highlighting dropper/packer artifacts.
+- **`native_transfer_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Transfers low bigram_min_freq and tiered trigrams from sister routes to capture rarer native patterns, targeting PR_AUC gain while controlling noise via tiered crit floors.
+- **`native_seed_search_3_hn`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Runs seed_search_k=3 on a hard-negative optimized config to average out seed variance and stabilize recall@3 FP/M at the strict-FP tail.
+
+</details>
+

@@ -854,3 +854,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T011038-filetypes-package.json` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d17dfd3b5b8f42be` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9987 | 0.9979 | 0.9878 | 62 | [log](out/autocollie/runs/2026-06-13T01-18-45_20260613T011038-filetypes-package.json_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `635be40440ce90ed` | pkg_json_ctrl_train_deeper_reg_v3 | ok | 0.9961 | 0.9946 | 0.9904 | 48 | [log](out/autocollie/runs/2026-06-13T01-20-01_20260613T011038-filetypes-package.json_pkg_json_ctrl_train_deeper_reg_v3.log) |
+| `20f443aa0c3970f6` | pkg_json_feat_kv_vocab_split | ok | 0.9960 | 0.9944 | 0.9911 | 72 | [log](out/autocollie/runs/2026-06-13T01-20-52_20260613T011038-filetypes-package.json_pkg_json_feat_kv_vocab_split.log) |
+| `de27ee9f54b76d51` | pkg_json_feat_lowbigram_textenc | ok | 0.9960 | 0.9944 | 0.9911 | 52 | [log](out/autocollie/runs/2026-06-13T01-22-05_20260613T011038-filetypes-package.json_pkg_json_feat_lowbigram_textenc.log) |
+| `10784486660c4134` | pkg_json_feat_abl_clusters_trigrams | ok | 0.9959 | 0.9942 | 0.9917 | 35 | [log](out/autocollie/runs/2026-06-13T01-23-02_20260613T011038-filetypes-package.json_pkg_json_feat_abl_clusters_trigrams.log) |
+| `af5775295b201991` | pkg_json_train_hardneg_01_10 | ok | 0.9962 | 0.9946 | 0.9919 | 8 | [log](out/autocollie/runs/2026-06-13T01-23-38_20260613T011038-filetypes-package.json_pkg_json_train_hardneg_01_10.log) |
+| `425e09847b38da83` | pkg_json_seed_search_kv | ok | 0.9959 | 0.9941 | 0.9917 | 29 | [log](out/autocollie/runs/2026-06-13T01-23-47_20260613T011038-filetypes-package.json_pkg_json_seed_search_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_ctrl_train_deeper_reg_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating best feature surface; tests deeper trees and higher regularization to improve PR_AUC without changing features.
+- **`pkg_json_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables KV vocab and value splitting to capture structured package.json fields, aiming to boost recall@3FPM by isolating malicious dependency patterns.
+- **`pkg_json_feat_lowbigram_textenc`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Lowers bigram frequency floor and enables text encoding to capture rarer script patterns, targeting PR_AUC gains from improved feature granularity.
+- **`pkg_json_feat_abl_clusters_trigrams`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Removes noisy clusters group and adds tiered crit trigrams to reduce overfitting while preserving rank signal, aiming to stabilize ROC_AUC and improve PR_AUC.
+- **`pkg_json_train_hardneg_01_10`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 …` — Applies hard negative mining to push benign package.json files further from the decision boundary, targeting recall@3FPM improvement.
+- **`pkg_json_seed_search_kv`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 …` — Runs seed search on KV-enhanced config to average out variance and verify if feature gains are robust, targeting stable PR_AUC.
+
+</details>
+

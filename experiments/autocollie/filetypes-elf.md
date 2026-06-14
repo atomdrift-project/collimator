@@ -824,3 +824,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T011038-filetypes-elf` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f9b6700f77bc10da` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9999 | 0.9998 | 0.9957 | 187 | [log](out/autocollie/runs/2026-06-13T01-18-57_20260613T011038-filetypes-elf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `06c00010dc229d2f` | elf_control_hardneg_train | ok | 0.9998 | 0.9998 | 0.9941 | 94 | [log](out/autocollie/runs/2026-06-13T01-22-44_20260613T011038-filetypes-elf_elf_control_hardneg_train.log) |
+| `81587eb55adf3dd0` | elf_kv_vocab_split | ok | 0.9998 | 0.9997 | 0.9937 | 58 | [log](out/autocollie/runs/2026-06-13T01-24-23_20260613T011038-filetypes-elf_elf_kv_vocab_split.log) |
+| `6258e534ce2e9561` | elf_symbol_bigrams | ok | 0.9998 | 0.9997 | 0.9937 | 48 | [log](out/autocollie/runs/2026-06-13T01-25-21_20260613T011038-filetypes-elf_elf_symbol_bigrams.log) |
+| `7d939a837550924f` | elf_overlay_section_metrics | ok | 0.9998 | 0.9997 | 0.9937 | 36 | [log](out/autocollie/runs/2026-06-13T01-26-11_20260613T011038-filetypes-elf_elf_overlay_section_metrics.log) |
+| `b83a1c6afaa3b40d` | elf_lowfreq_bigrams_tiered_trigrams | ok | 0.9998 | 0.9998 | 0.9916 | 48 | [log](out/autocollie/runs/2026-06-13T01-26-48_20260613T011038-filetypes-elf_elf_lowfreq_bigrams_tiered_trigrams.log) |
+| `9fe6d5dadebd54f9` | elf_seed_search_avg | ok | 0.9998 | 0.9998 | 0.9944 | 7 | [log](out/autocollie/runs/2026-06-13T01-27-37_20260613T011038-filetypes-elf_elf_seed_search_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Baseline features with hard-negative training to improve recall@3 FP/M by focusing on difficult benign samples.
+- **`elf_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable KV vocab and value splitting to capture structured ELF metadata, targeting PR AUC improvement.
+- **`elf_symbol_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Add symbol bigrams to model import co-occurrence patterns in ELF binaries, aiming to boost recall@3 FP/M.
+- **`elf_overlay_section_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable overlay and nonstandard section signals to better detect packers/droppers, targeting recall@3 FP/M.
+- **`elf_lowfreq_bigrams_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lower bigram min freq and add tiered trigrams to capture rarer malicious patterns, aiming for PR AUC gain.
+- **`elf_seed_search_avg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Average predictions over 3 seeds on baseline features to reduce variance and stabilize recall@3 FP/M.
+
+</details>
+

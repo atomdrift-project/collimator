@@ -901,3 +901,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T011038-filetypes-javascript` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `75e915aee0bbf238` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9968 | 0.9961 | 0.9654 | 219 | [log](out/autocollie/runs/2026-06-13T01-18-05_20260613T011038-filetypes-javascript_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `dc1eae4318c4cdc5` | js_ctrl_hardneg_tail | ok | 0.9832 | 0.9765 | 0.9446 | 98 | [log](out/autocollie/runs/2026-06-13T01-22-30_20260613T011038-filetypes-javascript_js_ctrl_hardneg_tail.log) |
+| `3b758c00f046ab5e` | js_ctrl_dart_extra_trees | ok | 0.9795 | 0.9707 | 0.9303 | 10 | [log](out/autocollie/runs/2026-06-13T01-24-16_20260613T011038-filetypes-javascript_js_ctrl_dart_extra_trees.log) |
+| `fc1565230970fad8` | js_feat_textmetrics_kv_vocab | ok | 0.9813 | 0.9736 | 0.9434 | 51 | [log](out/autocollie/runs/2026-06-13T01-24-29_20260613T011038-filetypes-javascript_js_feat_textmetrics_kv_vocab.log) |
+| `5b44a3627499b4e8` | js_transfer_xml_bigram_tiered | ok | 0.9811 | 0.9731 | 0.9439 | 34 | [log](out/autocollie/runs/2026-06-13T01-25-21_20260613T011038-filetypes-javascript_js_transfer_xml_bigram_tiered.log) |
+| `395199f0c25d5f7a` | js_abl_extreme_off | ok | 0.9810 | 0.9728 | 0.9435 | 36 | [log](out/autocollie/runs/2026-06-13T01-25-59_20260613T011038-filetypes-javascript_js_abl_extreme_off.log) |
+| `b088c97ac2b76f10` | js_retry_seed_search_best | ok | 0.9823 | 0.9755 | 0.9367 | 12 | [log](out/autocollie/runs/2026-06-13T01-26-35_20260613T011038-filetypes-javascript_js_retry_seed_search_best.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_ctrl_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative upweighting to improve recall@3 FP/M by focusing the model on difficult benign samples.
+- **`js_ctrl_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with DART boosting and extra trees to reduce overfitting and boost PR_AUC at the strict-FP tail.
+- **`js_feat_textmetrics_kv_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture structural and key-value signals, targeting PR_AUC gains from richer feature surface.
+- **`js_transfer_xml_bigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Port xml route's expanded bigram vocab and tiered trigrams to capture richer JS syntax patterns, aiming for PR_AUC improvement.
+- **`js_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce noise and potential overfitting, targeting stable ROC_AUC and recall@3 FP/M.
+- **`js_retry_seed_search_best`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Retry best recent feature set with seed_search_k=3 to verify signal robustness against seed variance, targeting consistent PR_AUC.
+
+</details>
+

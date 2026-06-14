@@ -790,3 +790,25 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T023531-filetypes-zip` — 2026-06-13T02:35:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d561f68d40bdeadf` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9996 | 0.9959 | 0.9814 | 105 | [log](out/autocollie/runs/2026-06-13T02-42-46_20260613T023531-filetypes-zip_inherit_from_filetypes_json_eb5cd709.log) |
+| `dc44ed27d97cb9eb` | zip_control_hardneg_sweep | ok | 0.9781 | 0.8707 | 0.7990 | 139 | [log](out/autocollie/runs/2026-06-13T02-44-43_20260613T023531-filetypes-zip_zip_control_hardneg_sweep.log) |
+| `a4d8b03ea7b5740f` | zip_kv_split_textenc_vocab | ok | 0.9739 | 0.8449 | 0.8022 | 132 | [log](out/autocollie/runs/2026-06-13T02-47-05_20260613T023531-filetypes-zip_zip_kv_split_textenc_vocab.log) |
+| `65a8af88b5811378` | zip_textmetrics_severity_fractions | ok | 0.9764 | 0.8607 | 0.8026 | 182 | [log](out/autocollie/runs/2026-06-13T02-49-18_20260613T023531-filetypes-zip_zip_textmetrics_severity_fractions.log) |
+| `32dfac75018a4653` | zip_ablate_extreme_blindfold | ok | 0.9716 | 0.8301 | 0.8033 | 174 | [log](out/autocollie/runs/2026-06-13T02-52-22_20260613T023531-filetypes-zip_zip_ablate_extreme_blindfold.log) |
+| `` | zip_transfer_lowbigram_tiered | fail | — | — | — | 11 | [log](out/autocollie/runs/2026-06-13T02-55-17_20260613T023531-filetypes-zip_zip_transfer_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative upweighting and positive scale reduction to lift recall@3FPM by sharpening the decision boundary at the strict-FP tail, addressing the or_loses threshold gap.
+- **`zip_kv_split_textenc_vocab`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables kv_vocab with value splitting and text_encoding to capture granular payload structure and encoding artifacts, targeting PR_AUC gains from improved feature resolution.
+- **`zip_textmetrics_severity_fractions`** `EXP_ESTIMATORS=350 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and severity_fractions to better score document-heavy archives and minimal droppers, aiming to boost recall@3FPM by reducing sparsity-induced false negatives.
+- **`zip_ablate_extreme_blindfold`** `EXP_BLINDFOLD=0 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features and blindfold to reduce high-variance noise and dropout artifacts, targeting flat or higher PR_AUC with improved ROC_AUC stability.
+- **`zip_transfer_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 …` — Ports sister-route low bigram frequency floor and tiered trigrams to capture rarer archive-internal patterns, targeting PR_AUC improvement via expanded n-gram signal.
+
+</details>
+

@@ -800,3 +800,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T011038-general` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4f3b0ee18bf61a56` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9974 | 0.9974 | 0.9787 | 362 | [log](out/autocollie/runs/2026-06-13T01-17-56_20260613T011038-general_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9855c97e848d34b1` | control_train_leaves128_reg1 | ok | 0.9751 | 0.9685 | 0.8998 | 128 | [log](out/autocollie/runs/2026-06-13T01-23-57_20260613T011038-general_control_train_leaves128_reg1.log) |
+| `39afa1926dc29cbb` | feat_textenc_metrics_kv20k | ok | 0.9739 | 0.9668 | 0.8992 | 76 | [log](out/autocollie/runs/2026-06-13T01-26-05_20260613T011038-general_feat_textenc_metrics_kv20k.log) |
+| `8354b4460a9ca34e` | feat_lowbigram_kv25k_symbol | ok | 0.9752 | 0.9689 | 0.8988 | 68 | [log](out/autocollie/runs/2026-06-13T01-27-21_20260613T011038-general_feat_lowbigram_kv25k_symbol.log) |
+| `29e0f65643d3055c` | abl_extreme_off | ok | 0.9748 | 0.9681 | 0.8992 | 57 | [log](out/autocollie/runs/2026-06-13T01-28-29_20260613T011038-general_abl_extreme_off.log) |
+| `28585c244085e8ba` | transfer_hardneg_01_10 | ok | 0.9779 | 0.9715 | 0.9015 | 13 | [log](out/autocollie/runs/2026-06-13T01-29-26_20260613T011038-general_transfer_hardneg_01_10.log) |
+| `86f171a89e643008` | gen_seedsearch3_kv_text | ok | 0.9749 | 0.9682 | 0.8994 | 73 | [log](out/autocollie/runs/2026-06-13T01-29-39_20260613T011038-general_gen_seedsearch3_kv_text.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_train_leaves128_reg1`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and L2 regularization to better rank tail malware without overfitting.
+- **`feat_textenc_metrics_kv20k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by capturing document obfuscation and encoding anomalies via text_metrics_full and text_encoding alongside expanded KV vocab.
+- **`feat_lowbigram_kv25k_symbol`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering bigram frequency floor and expanding KV/symbol vocabs to capture rarer malicious patterns.
+- **`abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize ROC_AUC and PR_AUC by disabling noisy extreme_features that may cause overfitting on rare benign artifacts.
+- **`transfer_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, transferring a successful sister-route strategy.
+- **`gen_seedsearch3_kv_text`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to verify PR_AUC gains are robust to seed variance by averaging 3 seeds on a high-signal KV and text feature set.
+
+</details>
+

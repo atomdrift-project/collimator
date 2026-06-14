@@ -1,8 +1,8 @@
 # Promote PASS — `7f1cb97cfc130961` on `filetypes/javascript`
 
-Generated 2026-06-09T08:31:02Z
+Generated 2026-06-13T22:27:06Z
 
-full-train holds — PR_AUC 0.9976 -> 0.9992, AUC 0.9971 -> 0.9989, Brier 0.0166 -> 0.0122
+full-train holds — PR_AUC 0.9976 -> 0.9986, AUC 0.9971 -> 0.9980, Brier 0.0166 -> 0.0181
 
 ## Gates
 
@@ -13,10 +13,10 @@ full-train holds — PR_AUC 0.9976 -> 0.9992, AUC 0.9971 -> 0.9989, Brier 0.0166
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `7f1cb97cfc130961` | `fa0cf6dd43370d8e` | `747ecd4ef5437572` |
-| PR AUC | 0.9976 | 0.9992 | 0.9992 |
-| ROC AUC | 0.9971 | 0.9988 | 0.9989 |
-| F1 | 0.9793 | 0.9875 | 0.9876 |
+| key | `7f1cb97cfc130961` | `1a95b74f1a216acc` | `efd1a347e5bbbe2c` |
+| PR AUC | 0.9976 | 0.9986 | 0.9986 |
+| ROC AUC | 0.9971 | 0.9981 | 0.9980 |
+| F1 | 0.9793 | 0.9820 | 0.9819 |
 
 ## Status: candidate bundle is built; litmus validation skipped
 

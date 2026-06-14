@@ -804,3 +804,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T011038-filetypes-java_class` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `31c2bb766f6273e3` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9890 | 0.9981 | 0.9189 | 34 | [log](out/autocollie/runs/2026-06-13T01-19-29_20260613T011038-filetypes-java_class_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `31d38415332bfef5` | java_class_control_train_v3 | ok | 0.8823 | 0.9523 | 0.8925 | 29 | [log](out/autocollie/runs/2026-06-13T01-20-23_20260613T011038-filetypes-java_class_java_class_control_train_v3.log) |
+| `75e2776209cde174` | java_class_kv_vocab_expand | ok | 0.8830 | 0.9531 | 0.8946 | 35 | [log](out/autocollie/runs/2026-06-13T01-21-03_20260613T011038-filetypes-java_class_java_class_kv_vocab_expand.log) |
+| `5853ee871a2bb94a` | java_class_symbol_bigram_vocab | ok | 0.8830 | 0.9531 | 0.8946 | 23 | [log](out/autocollie/runs/2026-06-13T01-21-41_20260613T011038-filetypes-java_class_java_class_symbol_bigram_vocab.log) |
+| `6ecdcdc558298349` | java_class_rare_trigrams_low_freq | ok | 0.8823 | 0.9523 | 0.8925 | 22 | [log](out/autocollie/runs/2026-06-13T01-22-06_20260613T011038-filetypes-java_class_java_class_rare_trigrams_low_freq.log) |
+| `dab8ba498c85f98b` | java_class_hardneg_tail_recall | ok | 0.8848 | 0.9478 | 0.8967 | 18 | [log](out/autocollie/runs/2026-06-13T01-22-32_20260613T011038-filetypes-java_class_java_class_hardneg_tail_recall.log) |
+| `aefbf166d761dc2a` | java_class_dart_reg_lambda | ok | 0.8663 | 0.9498 | 0.8268 | 16 | [log](out/autocollie/runs/2026-06-13T01-22-53_20260613T011038-filetypes-java_class_java_class_dart_reg_lambda.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_train_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature set to establish baseline; increase estimators to improve PR_AUC convergence without changing feature surface.
+- **`java_class_kv_vocab_expand`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable kv_vocab with higher cap to capture key-value pair signals in Java class metadata, aiming to boost PR_AUC.
+- **`java_class_symbol_bigram_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Add symbol_vocab and symbol_bigrams to capture method/class co-occurrence patterns, targeting recall@3FPM improvement.
+- **`java_class_rare_trigrams_low_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lower trigram_min_freq and bigram_min_freq to include rarer patterns that may indicate obfuscated malware, aiming to increase recall@3FPM.
+- **`java_class_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Apply hard negative weighting to focus model on difficult benign samples, targeting recall@3FPM without hurting PR_AUC.
+- **`java_class_dart_reg_lambda`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting and increase reg_lambda to reduce overfitting on rare features, aiming to stabilize PR_AUC and ROC_AUC.
+
+</details>
+

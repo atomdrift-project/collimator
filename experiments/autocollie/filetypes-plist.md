@@ -928,3 +928,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T011038-filetypes-plist` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `590629546a2354b1` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.2000 | 0.5000 | 0.3333 | 5 | [log](out/autocollie/runs/2026-06-13T01-17-42_20260613T011038-filetypes-plist_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `9fca40aefc343ee7` | plist_ctrl_sevfrac_deeper_lr | ok | 0.2089 | 0.8020 | 0.1064 | 12 | [log](out/autocollie/runs/2026-06-13T01-17-52_20260613T011038-filetypes-plist_plist_ctrl_sevfrac_deeper_lr.log) |
+| `67cc539265830d5e` | plist_ctrl_sevfrac_hardneg | ok | 0.1247 | 0.6496 | 0.1020 | 3 | [log](out/autocollie/runs/2026-06-13T01-18-08_20260613T011038-filetypes-plist_plist_ctrl_sevfrac_hardneg.log) |
+| `432f114215ffaedf` | plist_feat_kv_vocab_expanded | ok | 0.2161 | 0.8100 | 0.1075 | 29 | [log](out/autocollie/runs/2026-06-13T01-18-13_20260613T011038-filetypes-plist_plist_feat_kv_vocab_expanded.log) |
+| `79920a32e3df4db9` | plist_feat_textenc_metrics | ok | 0.2401 | 0.8219 | 0.1087 | 23 | [log](out/autocollie/runs/2026-06-13T01-18-46_20260613T011038-filetypes-plist_plist_feat_textenc_metrics.log) |
+| `432bc2747bcdca07` | plist_abl_blindfold_extreme_off | ok | 0.2161 | 0.8100 | 0.1075 | 35 | [log](out/autocollie/runs/2026-06-13T01-19-11_20260613T011038-filetypes-plist_plist_abl_blindfold_extreme_off.log) |
+| `beb1f46c61e83a1c` | plist_gen_sevfrac_seed_avg | ok | 0.1982 | 0.7521 | 0.1997 | 8 | [log](out/autocollie/runs/2026-06-13T01-19-49_20260613T011038-filetypes-plist_plist_gen_sevfrac_seed_avg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_sevfrac_deeper_lr`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Control on best severity_fractions feature set; deeper trees and lower LR aim to improve PR_AUC by better fitting complex patterns.
+- **`plist_ctrl_sevfrac_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Control on severity_fractions; hard negatives and lower pos weight aim to boost recall@3FPM by sharpening the decision boundary at low FPR.
+- **`plist_feat_kv_vocab_expanded`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable and expand KV vocab to capture plist-specific key-value patterns, aiming to increase PR_AUC.
+- **`plist_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to capture XML/structure signals in plists, aiming to improve ROC_AUC and PR_AUC.
+- **`plist_abl_blindfold_extreme_off`** `EXP_BLINDFOLD=0 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout and extreme tail features to reduce noise and overfitting, aiming for flat/higher PR_AUC and improved ROC_AUC.
+- **`plist_gen_sevfrac_seed_avg`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Average 3 seeds on the severity_fractions config to reduce variance and stabilize recall@3FPM gains.
+
+</details>
+

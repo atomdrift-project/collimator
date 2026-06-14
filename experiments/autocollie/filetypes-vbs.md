@@ -772,3 +772,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T011040-filetypes-vbs` — 2026-06-13T01:10:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c1438862770e7156` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9907 | 0.8515 | 0.9817 | 12 | [log](out/autocollie/runs/2026-06-13T01-16-39_20260613T011040-filetypes-vbs_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `a5cc0c6cc613a4d9` | vbs_control_hardneg_lr003_leaves128 | ok | 0.9980 | 0.9930 | 0.9554 | 12 | [log](out/autocollie/runs/2026-06-13T01-16-54_20260613T011040-filetypes-vbs_vbs_control_hardneg_lr003_leaves128.log) |
+| `7651d5bddd012870` | vbs_control_dart_lr002_reg | ok | 0.9950 | 0.9850 | 0.9547 | 2 | [log](out/autocollie/runs/2026-06-13T01-17-08_20260613T011040-filetypes-vbs_vbs_control_dart_lr002_reg.log) |
+| `6c616805cdeb7331` | vbs_text_metrics_encoding_full | ok | 0.9973 | 0.9905 | 0.9559 | 13 | [log](out/autocollie/runs/2026-06-13T01-17-11_20260613T011040-filetypes-vbs_vbs_text_metrics_encoding_full.log) |
+| `052b7171eade6715` | vbs_kv_vocab_split_enabled | ok | 0.9971 | 0.9896 | 0.9565 | 13 | [log](out/autocollie/runs/2026-06-13T01-17-24_20260613T011040-filetypes-vbs_vbs_kv_vocab_split_enabled.log) |
+| `d2862ca4dc53d317` | vbs_transfer_lowbigram_seedsearch | ok | 0.9970 | 0.9889 | 0.9534 | 19 | [log](out/autocollie/runs/2026-06-13T01-17-39_20260613T011040-filetypes-vbs_vbs_transfer_lowbigram_seedsearch.log) |
+| `593a056a9ad3e34e` | vbs_abl_extreme_off_focus | ok | 0.9972 | 0.9899 | 0.9559 | 31 | [log](out/autocollie/runs/2026-06-13T01-18-01_20260613T011040-filetypes-vbs_vbs_abl_extreme_off_focus.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Exploit hard negatives with lr=0.03 to improve recall@3FPM by focusing the model on difficult benign/malware boundaries while preserving PR_AUC.
+- **`vbs_control_dart_lr002_reg`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Use DART boosting with lower LR and L2 regularization to reduce overfitting and lift PR_AUC at the strict-FP tail.
+- **`vbs_text_metrics_encoding_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture script obfuscation and encoding anomalies, targeting PR_AUC gains on VBS payloads.
+- **`vbs_kv_vocab_split_enabled`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activate kv_vocab and kv_value_split to recover granular signal from registry/config paths in VBS, aiming to boost recall@3FPM.
+- **`vbs_transfer_lowbigram_seedsearch`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Transfer low bigram_min_freq from XML/Perl winners and add seed_search_k=3 to stabilize rare-pattern signal, targeting PR_AUC improvement.
+- **`vbs_abl_extreme_off_focus`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to remove noisy tail signal that may hurt ranking, aiming to keep PR_AUC flat while improving ROC_AUC and recall@3FPM stability.
+
+</details>
+

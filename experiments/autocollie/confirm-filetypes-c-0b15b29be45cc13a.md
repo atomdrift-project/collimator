@@ -1,23 +1,19 @@
-# Confirm PASS — 0b15b29be45cc13a on `filetypes/c`
+# Confirm FAIL — 0b15b29be45cc13a on `filetypes/c`
 
-Cycle `20260602T004650-confirm-0b15b29be45cc13a` — 2026-06-02T00:46:50Z
+Cycle `20260613T220053-confirm-0b15b29be45cc13a` — 2026-06-13T22:00:53Z
 
-PR_AUC held across 3 seeds (orig 0.9904)
+averaged ensemble PR_AUC regressed: 0.9904 -> 0.9751 (tol 0.0050, K=3)
 
 ## Per-seed results (3 ran)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `0b15b29be45cc13a` | `04e623d50363ed4a` | `04e623d50363ed4a` | `04e623d50363ed4a` |
-| PR AUC | 0.9904 | 0.9886 | 0.9895 | 0.9888 |
-| ROC AUC | 0.9951 | 0.9947 | 0.9951 | 0.9946 |
+| key | `0b15b29be45cc13a` | `c92647089519d708` | `c92647089519d708` | `c92647089519d708` |
+| PR AUC | 0.9904 | 0.9737 | 0.9748 | 0.9746 |
+| ROC AUC | 0.9951 | 0.9884 | 0.9881 | 0.9882 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
-| verdict | — | PASS | PASS | PASS |
+| verdict | — | FAIL | FAIL | FAIL |
 
-## Next step
+## Disposition
 
-The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
-
-```
-make autocollie-promote KEY=0b15b29be45cc13a
-```
+This spec did not survive multi-seed reseeding (0/3 held). Suggest abandoning the idea or letting the LLM propose a variant.

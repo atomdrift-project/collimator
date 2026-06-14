@@ -1,6 +1,6 @@
 # Confirm PASS — 33ba656da8844f37 on `filegroups/documents`
 
-Cycle `20260606T133147-confirm-33ba656da8844f37` — 2026-06-06T13:31:47Z
+Cycle `20260613T181642-confirm-33ba656da8844f37` — 2026-06-13T18:16:42Z
 
 PR_AUC held across 3 seeds (orig 1.0000)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 1.0000)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `33ba656da8844f37` | `0b0b8faa06a4d5ce` | `0b0b8faa06a4d5ce` | `0b0b8faa06a4d5ce` |
+| key | `33ba656da8844f37` | `31fcd080d9f0e85a` | `31fcd080d9f0e85a` | `31fcd080d9f0e85a` |
 | PR AUC | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
-| ROC AUC | 0.9998 | 0.9992 | 0.9992 | 0.9992 |
+| ROC AUC | 0.9998 | 0.9991 | 0.9991 | 0.9991 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 

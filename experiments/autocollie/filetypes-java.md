@@ -438,3 +438,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T012926-filetypes-java` — 2026-06-13T01:29:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a2fe1f641a4aa12d` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9581 | 0.9594 | 0.8493 | 7 | [log](out/autocollie/runs/2026-06-13T01-36-45_20260613T012926-filetypes-java_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `79dae65cdbaaa5b5` | java_control_hardneg_tune_v2 | ok | 0.2198 | 0.8581 | 0.1118 | 12 | [log](out/autocollie/runs/2026-06-13T01-36-56_20260613T012926-filetypes-java_java_control_hardneg_tune_v2.log) |
+| `e390481861492d46` | java_control_posweight_leaves | ok | 0.2997 | 0.8904 | 0.1111 | 2 | [log](out/autocollie/runs/2026-06-13T01-37-11_20260613T012926-filetypes-java_java_control_posweight_leaves.log) |
+| `a6243f536ab1a155` | java_kv_vocab_20k_split | ok | 0.3041 | 0.8905 | 0.1071 | 12 | [log](out/autocollie/runs/2026-06-13T01-37-13_20260613T012926-filetypes-java_java_kv_vocab_20k_split.log) |
+| `f26d45faccbd6fb6` | java_textenc_metrics_full | ok | 0.3163 | 0.8964 | 0.1191 | 10 | [log](out/autocollie/runs/2026-06-13T01-37-27_20260613T012926-filetypes-java_java_textenc_metrics_full.log) |
+| `9d6b88a64733b149` | java_tiered_trigrams_transfer | ok | 0.3041 | 0.8905 | 0.1071 | 11 | [log](out/autocollie/runs/2026-06-13T01-37-38_20260613T012926-filetypes-java_java_tiered_trigrams_transfer.log) |
+| `6b358f9dfc66e4ed` | java_kv_seed_search_ensemble | ok | 0.3309 | 0.9049 | 0.4168 | 10 | [log](out/autocollie/runs/2026-06-13T01-37-49_20260613T012926-filetypes-java_java_kv_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_hardneg_tune_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by upweighting hard negatives to better separate borderline malware from benign Java files, while keeping PR_AUC flat.
+- **`java_control_posweight_leaves`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Aims to boost PR_AUC by down-weighting positives slightly to reduce false positives at the strict-FP operating point, improving recall@3FPM.
+- **`java_kv_vocab_20k_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to increase PR_AUC by capturing structured metadata and configuration patterns in Java archives via KV vocab, adding orthogonal signal to n-grams.
+- **`java_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by detecting obfuscation and encoding anomalies in Java source files, which often use unusual character distributions or line lengths.
+- **`java_tiered_trigrams_transfer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to lift PR_AUC by capturing longer semantic paths in Java code via tiered trigrams, transferring a successful pattern from XML/script routes.
+- **`java_kv_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to stabilize recall@3FPM gains from KV vocab by averaging across 3 seeds, reducing variance and confirming signal robustness against data drift.
+
+</details>
+

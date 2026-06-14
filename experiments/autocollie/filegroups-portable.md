@@ -802,3 +802,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T020342-filegroups-portable` — 2026-06-13T02:03:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bf2cc9860cc77334` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9882 | 0.9977 | 0.9439 | 9 | [log](out/autocollie/runs/2026-06-13T02-09-30_20260613T020342-filegroups-portable_inherit_from_filetypes_json_eb5cd709.log) |
+| `3ed30c052bd82cfe` | control_train_leaves128_reg2 | ok | 0.8793 | 0.9507 | 0.8925 | 12 | [log](out/autocollie/runs/2026-06-13T02-09-45_20260613T020342-filegroups-portable_control_train_leaves128_reg2.log) |
+| `1e9e27a9beed9749` | feat_text_metrics_kv_vocab | ok | 0.8805 | 0.9505 | 0.8884 | 10 | [log](out/autocollie/runs/2026-06-13T02-10-01_20260613T020342-filegroups-portable_feat_text_metrics_kv_vocab.log) |
+| `768146092b6f2142` | feat_lowfreq_bigrams_tiered_trigrams | ok | 0.8815 | 0.9532 | 0.8925 | 10 | [log](out/autocollie/runs/2026-06-13T02-10-13_20260613T020342-filegroups-portable_feat_lowfreq_bigrams_tiered_trigrams.log) |
+| `2e0d7fa76316c325` | train_hardneg_01_10 | ok | 0.8834 | 0.9491 | 0.8946 | 2 | [log](out/autocollie/runs/2026-06-13T02-10-23_20260613T020342-filegroups-portable_train_hardneg_01_10.log) |
+| `2256f5d0eed33557` | transfer_xml_bigrams_symbol_vocab | ok | 0.8815 | 0.9532 | 0.8925 | 8 | [log](out/autocollie/runs/2026-06-13T02-10-26_20260613T020342-filegroups-portable_transfer_xml_bigrams_symbol_vocab.log) |
+| `06f52c45518a4a3d` | gen_seed_search_kv_vocab | ok | 0.8799 | 0.9550 | 0.8925 | 9 | [log](out/autocollie/runs/2026-06-13T02-10-35_20260613T020342-filegroups-portable_gen_seed_search_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_train_leaves128_reg2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env with increased tree capacity and L2 regularization to stabilize ranking and improve PR_AUC.
+- **`feat_text_metrics_kv_vocab`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and text_encoding to capture document obfuscation signals, paired with expanded kv_vocab to boost recall@3FPM.
+- **`feat_lowfreq_bigrams_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Lowers bigram min_freq and enables tiered_crit_trigrams to capture rare malicious co-occurrences, targeting PR_AUC improvement.
+- **`train_hardneg_01_10`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Applies hard-negative upweighting to sharpen the decision boundary at the tail, aiming to increase recall@3FPM without hurting ROC_AUC.
+- **`transfer_xml_bigrams_symbol_vocab`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Transfers low-freq bigram strategy from xml route and adds symbol_vocab to capture structural signals, targeting PR_AUC.
+- **`gen_seed_search_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Runs seed search on kv_vocab config to average out seed variance and stabilize recall@3FPM gains.
+
+</details>
+

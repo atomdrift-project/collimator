@@ -894,3 +894,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T011038-filetypes-macho` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e45812c1177ed26d` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9965 | 0.9992 | 0.9688 | 29 | [log](out/autocollie/runs/2026-06-13T01-17-19_20260613T011038-filetypes-macho_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `239e15fb1743de41` | macho_control_leaves_lr | ok | 0.9963 | 0.9992 | 0.9589 | 71 | [log](out/autocollie/runs/2026-06-13T01-17-57_20260613T011038-filetypes-macho_macho_control_leaves_lr.log) |
+| `57afe441375f2454` | macho_kv_vocab_split_10k | ok | 0.9968 | 0.9993 | 0.9723 | 96 | [log](out/autocollie/runs/2026-06-13T01-19-15_20260613T011038-filetypes-macho_macho_kv_vocab_split_10k.log) |
+| `ac38146acd5008cb` | macho_symbol_bigrams_overlay | ok | 0.9968 | 0.9993 | 0.9723 | 123 | [log](out/autocollie/runs/2026-06-13T01-20-54_20260613T011038-filetypes-macho_macho_symbol_bigrams_overlay.log) |
+| `596942f383897cc5` | macho_abl_clusters_metrics | ok | 0.9968 | 0.9993 | 0.9723 | 50 | [log](out/autocollie/runs/2026-06-13T01-22-58_20260613T011038-filetypes-macho_macho_abl_clusters_metrics.log) |
+| `602684df1f572d33` | macho_seed_search_kv | ok | 0.9968 | 0.9993 | 0.9723 | 60 | [log](out/autocollie/runs/2026-06-13T01-23-49_20260613T011038-filetypes-macho_macho_seed_search_kv.log) |
+| `e686656431c76793` | macho_retry_dart_hardneg | ok | 0.9926 | 0.9983 | 0.9633 | 8 | [log](out/autocollie/runs/2026-06-13T01-24-51_20260613T011038-filetypes-macho_macho_retry_dart_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_leaves_lr`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity (num_leaves=128) and slowing convergence (learning_rate=0.03) on the baseline feature set to better separate tail malware.
+- **`macho_kv_vocab_split_10k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and kv_value_split to capture Mach-O metadata key-value pairs and split compound values, adding high-signal lexical features.
+- **`macho_symbol_bigrams_overlay`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by enabling symbol_bigrams and overlay_signal to catch Mach-O import co-occurrence patterns and packer/dropper overlay artifacts in the tail.
+- **`macho_abl_clusters_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by disabling the noisy clusters group and adding size_normalized_metrics to provide scale-invariant structural signals for Mach-O binaries.
+- **`macho_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to verify PR_AUC gains by running seed_search_k=3 on the kv_vocab config to distinguish true signal from seed-driven variance at the strict-FP tail.
+- **`macho_retry_dart_hardneg`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by retrying a strong historical config with dart boosting and hard_negative_weight=10 to regularize trees and upweight difficult benigns in the tail.
+
+</details>
+

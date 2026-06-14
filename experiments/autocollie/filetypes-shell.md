@@ -834,3 +834,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T011041-filetypes-shell` — 2026-06-13T01:10:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `884424e2ef5ff47d` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9974 | 0.9975 | 0.9759 | 129 | [log](out/autocollie/runs/2026-06-13T01-18-54_20260613T011041-filetypes-shell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `0646aa725c049e64` | shell_control_leaves128_est300 | ok | 0.9662 | 0.9830 | 0.9298 | 95 | [log](out/autocollie/runs/2026-06-13T01-21-21_20260613T011041-filetypes-shell_shell_control_leaves128_est300.log) |
+| `a589a9d1e4870b83` | shell_exploit_hardneg_01_10 | ok | 0.9684 | 0.9844 | 0.9447 | 11 | [log](out/autocollie/runs/2026-06-13T01-23-09_20260613T011041-filetypes-shell_shell_exploit_hardneg_01_10.log) |
+| `90e3c112212b2ae1` | shell_textenc_metrics_lowbigram | ok | 0.9660 | 0.9832 | 0.8963 | 41 | [log](out/autocollie/runs/2026-06-13T01-23-24_20260613T011041-filetypes-shell_shell_textenc_metrics_lowbigram.log) |
+| `72e7cb1e8fbad374` | shell_kv_vocab_25k_split | ok | 0.9659 | 0.9829 | 0.9251 | 37 | [log](out/autocollie/runs/2026-06-13T01-24-08_20260613T011041-filetypes-shell_shell_kv_vocab_25k_split.log) |
+| `f2256a2dc436bc33` | shell_abl_extreme_off | ok | 0.9658 | 0.9826 | 0.9277 | 26 | [log](out/autocollie/runs/2026-06-13T01-24-47_20260613T011041-filetypes-shell_shell_abl_extreme_off.log) |
+| `53b9dbd579bef51c` | shell_transfer_hardneg_seedavg | ok | 0.9703 | 0.9857 | 0.9427 | 15 | [log](out/autocollie/runs/2026-06-13T01-25-16_20260613T011041-filetypes-shell_shell_transfer_hardneg_seedavg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_leaves128_est300`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and estimators (300) on the stable baseline feature matrix to better fit complex shell script patterns.
+- **`shell_exploit_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by upweighting hard negatives (fraction=0.1, weight=10) to sharpen the decision boundary at the strict-FP operating point.
+- **`shell_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling text_encoding and text_metrics_full alongside lower bigram_min_freq (50) to capture obfuscation and structural text patterns in shell scripts.
+- **`shell_kv_vocab_25k_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding kv_vocab_max to 25000 and enabling kv_value_split to recover per-element signal from complex shell configuration arrays.
+- **`shell_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to maintain or improve PR_AUC by disabling extreme_features to reduce noise from rare tail patterns that may cause overfitting on benign shell scripts.
+- **`shell_transfer_hardneg_seedavg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to maximize recall@3FPM by transferring a strong hard-negative weighting strategy (fraction=0.15, weight=12) and averaging across 3 seeds to stabilize tail recall variance.
+
+</details>
+

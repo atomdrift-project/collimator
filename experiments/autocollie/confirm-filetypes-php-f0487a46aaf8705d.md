@@ -1,6 +1,6 @@
 # Confirm PASS — f0487a46aaf8705d on `filetypes/php`
 
-Cycle `20260609T095409-confirm-f0487a46aaf8705d` — 2026-06-09T09:54:09Z
+Cycle `20260613T201044-confirm-f0487a46aaf8705d` — 2026-06-13T20:10:44Z
 
 PR_AUC held across 3 seeds (orig 0.9943)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 0.9943)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `f0487a46aaf8705d` | `00c7c477afccd9db` | `00c7c477afccd9db` | `00c7c477afccd9db` |
-| PR AUC | 0.9943 | 0.9946 | 0.9944 | 0.9948 |
-| ROC AUC | 0.9969 | 0.9972 | 0.9969 | 0.9973 |
+| key | `f0487a46aaf8705d` | `c1ef02cdf9899427` | `c1ef02cdf9899427` | `c1ef02cdf9899427` |
+| PR AUC | 0.9943 | 0.9939 | 0.9927 | 0.9933 |
+| ROC AUC | 0.9969 | 0.9971 | 0.9960 | 0.9964 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 

@@ -620,3 +620,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T024423-filetypes-lnk` — 2026-06-13T02:44:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `db53395c99c272a9` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9947 | 0.9067 | 0.9858 | 15 | [log](out/autocollie/runs/2026-06-13T02-50-55_20260613T024423-filetypes-lnk_inherit_from_filetypes_json_eb5cd709.log) |
+| `35834e14ef69210e` | lnk_control_train_tune_v2 | ok | 0.9846 | 0.9272 | 0.9206 | 14 | [log](out/autocollie/runs/2026-06-13T02-51-17_20260613T024423-filetypes-lnk_lnk_control_train_tune_v2.log) |
+| `94ee9778f59df6a7` | lnk_feat_kv_vocab_split | ok | 0.9845 | 0.9271 | 0.9216 | 30 | [log](out/autocollie/runs/2026-06-13T02-51-40_20260613T024423-filetypes-lnk_lnk_feat_kv_vocab_split.log) |
+| `46b796bf98f1ec02` | lnk_feat_textenc_metrics | ok | 0.9845 | 0.9271 | 0.9216 | 11 | [log](out/autocollie/runs/2026-06-13T02-52-12_20260613T024423-filetypes-lnk_lnk_feat_textenc_metrics.log) |
+| `ca06ac0db8d74a1c` | lnk_feat_tiered_trigrams | ok | 0.9845 | 0.9271 | 0.9216 | 20 | [log](out/autocollie/runs/2026-06-13T02-52-24_20260613T024423-filetypes-lnk_lnk_feat_tiered_trigrams.log) |
+| `90d35e809466a79a` | lnk_train_dart_reg | ok | 0.9769 | 0.9209 | 0.9221 | 2 | [log](out/autocollie/runs/2026-06-13T02-52-47_20260613T024423-filetypes-lnk_lnk_train_dart_reg.log) |
+| `47bfc3d843aa3180` | lnk_train_hardneg_scale | ok | 0.9833 | 0.9193 | 0.9245 | 6 | [log](out/autocollie/runs/2026-06-13T02-52-54_20260613T024423-filetypes-lnk_lnk_train_hardneg_scale.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_control_train_tune_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env for matrix cache hit; tweaks num_leaves and learning_rate to refine tree splits and improve PR_AUC.
+- **`lnk_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured metadata signals in LNK files, aiming to boost PR_AUC.
+- **`lnk_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full to extract obfuscation and structural text signals, targeting PR_AUC gains.
+- **`lnk_feat_tiered_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Enables tiered_crit_trigrams to capture higher-order severity-prefixed path co-occurrences, aiming to improve PR_AUC.
+- **`lnk_train_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Switches boosting_type to dart and increases reg_lambda to reduce overfitting on rare patterns, targeting recall@3FPM.
+- **`lnk_train_hardneg_scale`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Adjusts hard_negative_weight and scale_pos_weight_mult to better separate tail malware from benigns, targeting recall@3FPM.
+
+</details>
+

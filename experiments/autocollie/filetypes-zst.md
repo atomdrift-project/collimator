@@ -666,3 +666,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T015423-filetypes-zst` — 2026-06-13T01:54:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c7acaf2a9ab98bb4` | inherit_from_filetypes_json_eb5cd709 | ok | 1.0000 | 1.0000 | 0.9996 | 11 | [log](out/autocollie/runs/2026-06-13T01-59-39_20260613T015423-filetypes-zst_inherit_from_filetypes_json_eb5cd709.log) |
+| `35c712d44a9da00a` | zst_control_train_tune_v3 | ok | 0.9942 | 0.9968 | 0.9814 | 12 | [log](out/autocollie/runs/2026-06-13T01-59-54_20260613T015423-filetypes-zst_zst_control_train_tune_v3.log) |
+| `73b62cf1573e6d13` | zst_feat_kv_vocab_split | ok | 0.9948 | 0.9971 | 0.9814 | 10 | [log](out/autocollie/runs/2026-06-13T02-00-16_20260613T015423-filetypes-zst_zst_feat_kv_vocab_split.log) |
+| `640590ceaf5ff45a` | zst_feat_text_metrics_full | ok | 0.9942 | 0.9968 | 0.9814 | 9 | [log](out/autocollie/runs/2026-06-13T02-00-27_20260613T015423-filetypes-zst_zst_feat_text_metrics_full.log) |
+| `65c884dcbc294c55` | zst_train_hardneg_boost | ok | 0.9780 | 0.9829 | 0.9814 | 2 | [log](out/autocollie/runs/2026-06-13T02-00-38_20260613T015423-filetypes-zst_zst_train_hardneg_boost.log) |
+| `c38767a775e34cc4` | zst_transfer_tar_hardneg_seed | ok | 0.9990 | 0.9995 | 0.9765 | 2 | [log](out/autocollie/runs/2026-06-13T02-00-41_20260613T015423-filetypes-zst_zst_transfer_tar_hardneg_seed.log) |
+| `fa1f15506dcda94f` | zst_feat_tiered_trigrams_noclusters | ok | 0.9948 | 0.9971 | 0.9814 | 10 | [log](out/autocollie/runs/2026-06-13T02-00-44_20260613T015423-filetypes-zst_zst_feat_tiered_trigrams_noclusters.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zst_control_train_tune_v3`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to establish baseline; increases estimators and lowers learning_rate to improve PR_AUC stability without changing features.
+- **`zst_feat_kv_vocab_split`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture fine-grained key-value signals in compressed archives, aiming to boost recall@3FPM by isolating malicious payload markers.
+- **`zst_feat_text_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full to extract structural text anomalies from decompressed content, targeting PR_AUC gains by catching obfuscated scripts inside zst archives.
+- **`zst_train_hardneg_boost`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard_negative_fraction and hard_negative_weight to focus model capacity on difficult benign samples, aiming to improve recall@3FPM by reducing false positives at the tail.
+- **`zst_transfer_tar_hardneg_seed`** `EXP_BOOSTING_TYPE=dart EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Ports tar route's hard-negative strategy with seed_search_k=3 to average out variance, targeting stable PR_AUC and recall@3FPM improvements.
+- **`zst_feat_tiered_trigrams_noclusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Disables noisy clusters group and enables tiered_crit_trigrams to focus on high-severity path co-occurrences, aiming to lift ROC_AUC and PR_AUC by reducing feature noise.
+
+</details>
+

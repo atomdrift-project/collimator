@@ -2096,3 +2096,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T011038-filegroups-documents` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `48ae66e380562440` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9999 | 0.9986 | 0.9914 | 38 | [log](out/autocollie/runs/2026-06-13T01-18-10_20260613T011038-filegroups-documents_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `12cb1cfa431b6912` | docs_control_leaves160_lr004 | ok | 0.9183 | 0.8736 | 0.8342 | 46 | [log](out/autocollie/runs/2026-06-13T01-19-06_20260613T011038-filegroups-documents_docs_control_leaves160_lr004.log) |
+| `5c75b8badb25c896` | docs_control_hardneg_tail | ok | 0.9263 | 0.8912 | 0.8378 | 10 | [log](out/autocollie/runs/2026-06-13T01-20-04_20260613T011038-filegroups-documents_docs_control_hardneg_tail.log) |
+| `f1e7b7938b79b05d` | docs_textmetrics_kv_vocab_20k | ok | 0.9190 | 0.8699 | 0.8339 | 36 | [log](out/autocollie/runs/2026-06-13T01-20-17_20260613T011038-filegroups-documents_docs_textmetrics_kv_vocab_20k.log) |
+| `d8569f6e387dfc0d` | docs_obfuscation_linebuckets | ok | 0.9310 | 0.9023 | 0.8353 | 43 | [log](out/autocollie/runs/2026-06-13T01-20-58_20260613T011038-filegroups-documents_docs_obfuscation_linebuckets.log) |
+| `c7cef4354e136b25` | docs_abl_extreme_off | ok | 0.9268 | 0.8903 | 0.8340 | 40 | [log](out/autocollie/runs/2026-06-13T01-21-47_20260613T011038-filegroups-documents_docs_abl_extreme_off.log) |
+| `9b29a9c19c64c132` | docs_xml_transfer_tiered_trigrams_seed3 | ok | 0.9158 | 0.8633 | 0.8370 | 40 | [log](out/autocollie/runs/2026-06-13T01-22-30_20260613T011038-filegroups-documents_docs_xml_transfer_tiered_trigrams_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_leaves160_lr004`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Aims to improve PR_AUC by increasing model capacity (num_leaves=160) and slowing learning (lr=0.04) on the best recent feature set to better fit the tail.
+- **`docs_control_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to boost recall@3 FP/M by upweighting hard negatives (fraction=0.1, weight=12.0) to sharpen decision boundaries near the operating point.
+- **`docs_textmetrics_kv_vocab_20k`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling text_metrics_full for document structure signal and expanding kv_vocab to 20k to capture rare but malicious key-value patterns.
+- **`docs_obfuscation_linebuckets`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by enabling document_obfuscation_features and line_length_buckets to catch obfuscated PDF/DOCX malware that evades standard n-grams.
+- **`docs_abl_extreme_off`** `EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC and ROC_AUC by disabling extreme_features, which may introduce noise on document routes where tail metrics are less informative.
+- **`docs_xml_transfer_tiered_trigrams_seed3`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by transferring xml route's low bigram_min_freq (50) and tiered_crit_trigrams, with seed_search_k=3 to average out seed variance and confirm signal.
+
+</details>
+

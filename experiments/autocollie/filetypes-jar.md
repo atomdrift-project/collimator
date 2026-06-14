@@ -668,3 +668,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T012138-filetypes-jar` — 2026-06-13T01:21:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fea322ad74d5a3ef` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9896 | 0.9771 | 0.9407 | 32 | [log](out/autocollie/runs/2026-06-13T01-30-34_20260613T012138-filetypes-jar_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `866608b96b64c0bf` | jar_control_train_tune_v8 | ok | 0.9438 | 0.9343 | 0.8598 | 25 | [log](out/autocollie/runs/2026-06-13T01-31-14_20260613T012138-filetypes-jar_jar_control_train_tune_v8.log) |
+| `e884d08793a1a68d` | jar_train_hardneg_tail_recall | ok | 0.9539 | 0.9473 | 0.8718 | 3 | [log](out/autocollie/runs/2026-06-13T01-31-41_20260613T012138-filetypes-jar_jar_train_hardneg_tail_recall.log) |
+| `a8f3a78bdc4c1b85` | jar_kv_vocab_split_15k | ok | 0.9450 | 0.9360 | 0.8699 | 47 | [log](out/autocollie/runs/2026-06-13T01-31-45_20260613T012138-filetypes-jar_jar_kv_vocab_split_15k.log) |
+| `d59ee9b2d9d53624` | jar_textenc_tiered_trigrams | ok | 0.9445 | 0.9351 | 0.8684 | 25 | [log](out/autocollie/runs/2026-06-13T01-32-32_20260613T012138-filetypes-jar_jar_textenc_tiered_trigrams.log) |
+| `d43ebe753c56feba` | jar_seed_search_ensemble | ok | 0.9450 | 0.9364 | 0.8099 | 3 | [log](out/autocollie/runs/2026-06-13T01-32-57_20260613T012138-filetypes-jar_jar_seed_search_ensemble.log) |
+| `501a9261bb1da3e7` | jar_abl_clusters_extreme | ok | 0.9450 | 0.9360 | 0.8699 | 25 | [log](out/autocollie/runs/2026-06-13T01-33-01_20260613T012138-filetypes-jar_jar_abl_clusters_extreme.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_train_tune_v8`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TIERED_TRIGRAM_MAX=8000 …` — Control feature set with increased num_leaves and reg_lambda to improve PR_AUC by capturing finer decision boundaries without overfitting.
+- **`jar_train_hardneg_tail_recall`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TIERED_TRIGRAM_MAX=8000 …` — Adds hard-negative mining and lowers scale_pos_weight_mult to push recall@3 FP/M by focusing the model on difficult benign samples at the strict-FP tail.
+- **`jar_kv_vocab_split_15k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture manifest metadata and class attributes, aiming to boost PR_AUC by adding structured signal missing from n-grams alone.
+- **`jar_textenc_tiered_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 …` — Activates text_encoding and text_metrics_full alongside lower tiered_trigram_min_freq to improve recall@3 FP/M by detecting obfuscated resources and rare malicious path patterns.
+- **`jar_seed_search_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 …` — Applies seed_search_k=3 and save_all_seeds=true to average out RNG variance, targeting stable PR_AUC gains by ensuring the best tail-recall seed isn't lost to noise.
+- **`jar_abl_clusters_extreme`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 …` — Disables clusters and extreme_features to reduce noise and overfitting, aiming to maintain or improve PR_AUC while simplifying the model for better generalization.
+
+</details>
+

@@ -1,131 +1,146 @@
-# Promote REJECTED — `e087e5b2c8851ec3` on `filetypes/vbs`
+# Promote PASS — `e087e5b2c8851ec3` on `filetypes/vbs`
 
-Generated 2026-06-09T11:27:18Z
+Generated 2026-06-13T23:31:30Z
 
-full-train failed: interrupted: context canceled
---- experiment log tail ---
---n-estimators 400 --max-depth 12 \
-	--learning-rate 0.05 --early-stopping-rounds 25 \
-	--num-leaves 96 \
-	--min-child-samples 100 \
-	--min-child-weight 5 \
-	--colsample-bytree 0.8 --subsample 0.8 \
-	--gamma 0 --reg-alpha 0 --reg-lambda 1 \
-	--device auto \
-	 \
-	 \
-	--min-malware-score 4 \
-	--beta 2 --threshold-mode fbeta \
-	 \
-	--hard-negative-fraction 0 --hard-negative-weight 1 \
-	--scale-pos-weight-mult 1 \
-	--boosting-type gbdt \
-	 \
-	--seed-search-k 3 \
-	--save-all-seeds \
-	 \
-	 \
-	--cache-dir out/cache/experiment/azoth \
-	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_vbs_kv_vocab_split_textmetrics_full_train.log"
-07:27:02 INFO  collimator.experiment: using cached experiment snapshot: max_id=1679491877
-07:27:02 INFO  collimator.experiment: dataset snapshot: max_id=1679491877
-07:27:02 INFO  collimator.experiment: loaded cached corpus: 10258 train, 1801 test from out/cache/experiment/azoth/corpus_464c3863d5afece6.json
-
-EXPERIMENT
-============================================================
-Sampled train: 10258 (7778 malware, 2480 benign)
-External test: 1801 (1383 malware, 418 benign)
-07:27:02 INFO  collimator.experiment: pass 1: building vocabulary (worker-local DB fetching)
-07:27:06 INFO  collimator.features: tiered crit bigrams: 4051 vocab entries
-07:27:08 INFO  collimator.features: extended metrics: 28 keys from 5000 scanned rows (always-keep below threshold: ast_depth_capped)
-07:27:10 INFO  collimator.features: crit-category n-grams: 22 unigrams, 107 bigrams, 205 trigrams from 5000 scanned rows
-07:27:11 INFO  collimator.features: ATT&CK/MBC n-grams: 494/500 atk bi/tri, 150/414 mbc bi/tri from 5000 scanned rows
-07:27:13 INFO  collimator.features: kv vocab: 67 entries from 5000 scanned rows
-07:27:13 INFO  collimator.features: pruned feature spec: 7631 -> 1070 features
-07:27:13 INFO  collimator.features: vocab: 139 paths, 2 filetypes, 188 elements, 161 bigrams, 0 ghosts, 28 ext_metrics -> 1070 features
-07:27:13 INFO  collimator.experiment: pass 2: extracting all features (worker-local DB fetching)
-07:27:17 INFO  collimator.features: saved feature spec: 1070 features to out/cache/experiment/azoth/matrix_b5dd3129f08e390b_spec.json
-07:27:17 INFO  collimator.experiment: cached matrices: out/cache/experiment/azoth/matrix_b5dd3129f08e390b.npz (10258 train, 1801 test, 1070 features)
-07:27:17 INFO  collimator.experiment: seed-search attempt 1/3 (seed=42)
-07:27:17 INFO  collimator.train: training: 10258 samples (7778 malware, 2480 benign), 1070 features, sparse nnz=1191102 density=10.9% mem=9MB
-07:27:17 INFO  collimator.train: holdout: 1231 samples (933 malware, 298 benign)
-07:27:17 INFO  collimator.train: cross-validation disabled
-07:27:17 INFO  collimator.train: training final model on 9027 samples
-07:27:17 INFO  collimator.model: xgboost device: cuda:0
-07:27:17 INFO  collimator.model: device=cpu (sparse: 10.861% density)
-make[1]: *** [Makefile:1847: experiment] Terminated
---- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-09T11-27-01_20260609T112701-promote-e087e5b2c8851ec3_vbs_kv_vocab_split_textmetrics_full_train.log
+full-train holds — PR_AUC 0.9967 -> 0.9974, AUC 0.9887 -> 0.9908, Brier 0.0628 -> 0.0630
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9967)
-- **Full-train**: not run (confirm gate failed)
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `e087e5b2c8851ec3` | `9d67d840a5bee0e2` | `—` |
-| PR AUC | 0.9967 | 0.9969 | — |
-| ROC AUC | 0.9887 | 0.9893 | — |
-| F1 | 0.9562 | 0.9579 | — |
+| key | `e087e5b2c8851ec3` | `fee76c2cdc8daf3a` | `01882d86bba79e5b` |
+| PR AUC | 0.9967 | 0.9973 | 0.9974 |
+| ROC AUC | 0.9887 | 0.9904 | 0.9908 |
+| F1 | 0.9562 | 0.9651 | 0.9687 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-full-train failed: interrupted: context canceled
---- experiment log tail ---
---n-estimators 400 --max-depth 12 \
-	--learning-rate 0.05 --early-stopping-rounds 25 \
-	--num-leaves 96 \
-	--min-child-samples 100 \
-	--min-child-weight 5 \
-	--colsample-bytree 0.8 --subsample 0.8 \
-	--gamma 0 --reg-alpha 0 --reg-lambda 1 \
-	--device auto \
-	 \
-	 \
-	--min-malware-score 4 \
-	--beta 2 --threshold-mode fbeta \
-	 \
-	--hard-negative-fraction 0 --hard-negative-weight 1 \
-	--scale-pos-weight-mult 1 \
-	--boosting-type gbdt \
-	 \
-	--seed-search-k 3 \
-	--save-all-seeds \
-	 \
-	 \
-	--cache-dir out/cache/experiment/azoth \
-	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_vbs_kv_vocab_split_textmetrics_full_train.log"
-07:27:02 INFO  collimator.experiment: using cached experiment snapshot: max_id=1679491877
-07:27:02 INFO  collimator.experiment: dataset snapshot: max_id=1679491877
-07:27:02 INFO  collimator.experiment: loaded cached corpus: 10258 train, 1801 test from out/cache/experiment/azoth/corpus_464c3863d5afece6.json
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-EXPERIMENT
-============================================================
-Sampled train: 10258 (7778 malware, 2480 benign)
-External test: 1801 (1383 malware, 418 benign)
-07:27:02 INFO  collimator.experiment: pass 1: building vocabulary (worker-local DB fetching)
-07:27:06 INFO  collimator.features: tiered crit bigrams: 4051 vocab entries
-07:27:08 INFO  collimator.features: extended metrics: 28 keys from 5000 scanned rows (always-keep below threshold: ast_depth_capped)
-07:27:10 INFO  collimator.features: crit-category n-grams: 22 unigrams, 107 bigrams, 205 trigrams from 5000 scanned rows
-07:27:11 INFO  collimator.features: ATT&CK/MBC n-grams: 494/500 atk bi/tri, 150/414 mbc bi/tri from 5000 scanned rows
-07:27:13 INFO  collimator.features: kv vocab: 67 entries from 5000 scanned rows
-07:27:13 INFO  collimator.features: pruned feature spec: 7631 -> 1070 features
-07:27:13 INFO  collimator.features: vocab: 139 paths, 2 filetypes, 188 elements, 161 bigrams, 0 ghosts, 28 ext_metrics -> 1070 features
-07:27:13 INFO  collimator.experiment: pass 2: extracting all features (worker-local DB fetching)
-07:27:17 INFO  collimator.features: saved feature spec: 1070 features to out/cache/experiment/azoth/matrix_b5dd3129f08e390b_spec.json
-07:27:17 INFO  collimator.experiment: cached matrices: out/cache/experiment/azoth/matrix_b5dd3129f08e390b.npz (10258 train, 1801 test, 1070 features)
-07:27:17 INFO  collimator.experiment: seed-search attempt 1/3 (seed=42)
-07:27:17 INFO  collimator.train: training: 10258 samples (7778 malware, 2480 benign), 1070 features, sparse nnz=1191102 density=10.9% mem=9MB
-07:27:17 INFO  collimator.train: holdout: 1231 samples (933 malware, 298 benign)
-07:27:17 INFO  collimator.train: cross-validation disabled
-07:27:17 INFO  collimator.train: training final model on 9027 samples
-07:27:17 INFO  collimator.model: xgboost device: cuda:0
-07:27:17 INFO  collimator.model: device=cpu (sparse: 10.861% density)
-make[1]: *** [Makefile:1847: experiment] Terminated
---- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-09T11-27-01_20260609T112701-promote-e087e5b2c8851ec3_vbs_kv_vocab_split_textmetrics_full_train.log
+The candidate bundle lives at:
+
+```
+/home/t/collimator/out/models/azoth-candidate-filetypes-vbs-e087e5b2c8851ec3
+```
+
+## Candidate knobs (raw EXP_* form)
+
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ALLOWED_FEATURES_FILE=/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=2
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0
+EXP_HARD_NEGATIVE_WEIGHT=1
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=1
+EXP_KV_VOCAB=1
+EXP_KV_VOCAB_MAX=8000
+EXP_LEARNING_RATE=0.05
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=0
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=96
+EXP_NUM_THREADS=8
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SEVERITY_FRACTION_FEATURES=0
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=1
+EXP_TEXT_METRICS_FULL=1
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
+
+## To deploy (HUMAN)
+
+Read `/home/t/collimator/out/models/azoth-candidate-filetypes-vbs-e087e5b2c8851ec3/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
+
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-vbs-e087e5b2c8851ec3
+```
+
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

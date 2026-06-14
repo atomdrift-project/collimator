@@ -795,3 +795,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T011038-filetypes-powershell` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `251fdd0d7838f8f8` | inherit_from_filetypes_tar_1f9a08a6 | ok | 0.9989 | 0.9941 | 0.9766 | 48 | [log](out/autocollie/runs/2026-06-13T01-18-18_20260613T011038-filetypes-powershell_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `c9776fccf274ee36` | ps_ctrl_train_opt_v4 | ok | 0.9926 | 0.9820 | 0.9520 | 41 | [log](out/autocollie/runs/2026-06-13T01-19-23_20260613T011038-filetypes-powershell_ps_ctrl_train_opt_v4.log) |
+| `113ae14291df3ed9` | ps_feat_kv_textenc_lowfreq | ok | 0.9924 | 0.9816 | 0.9540 | 62 | [log](out/autocollie/runs/2026-06-13T01-20-12_20260613T011038-filetypes-powershell_ps_feat_kv_textenc_lowfreq.log) |
+| `a24ccc79140de82c` | ps_feat_tiered_trigrams_ps | ok | 0.9926 | 0.9820 | 0.9520 | 74 | [log](out/autocollie/runs/2026-06-13T01-21-18_20260613T011038-filetypes-powershell_ps_feat_tiered_trigrams_ps.log) |
+| `2bd098c9c6a4c0e9` | ps_abl_extreme_off | ok | 0.9926 | 0.9822 | 0.9533 | 40 | [log](out/autocollie/runs/2026-06-13T01-22-38_20260613T011038-filetypes-powershell_ps_abl_extreme_off.log) |
+| `0955b6b8101daa70` | ps_transfer_hardneg_ps | ok | 0.9953 | 0.9888 | 0.9633 | 17 | [log](out/autocollie/runs/2026-06-13T01-23-20_20260613T011038-filetypes-powershell_ps_transfer_hardneg_ps.log) |
+| `6d21a394d77f80bc` | ps_gen_seedsearch_kv | ok | 0.9927 | 0.9823 | 0.9348 | 38 | [log](out/autocollie/runs/2026-06-13T01-23-38_20260613T011038-filetypes-powershell_ps_gen_seedsearch_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_train_opt_v4`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by increasing model capacity (num_leaves=128) and adding mild L2 regularization to the baseline feature set, aiming to better separate borderline PowerShell malware without overfitting.
+- **`ps_feat_kv_textenc_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling kv_vocab and text_encoding to capture PowerShell parameter structures and encoding artifacts, while lowering bigram_min_freq to 100 to retain rare malicious command sequences.
+- **`ps_feat_tiered_trigrams_ps`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by enabling tiered_crit_trigrams with a lower min_crit (2) to capture notable PowerShell pipeline chains that standard bigrams miss, improving tail detection of obfuscated scripts.
+- **`ps_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by disabling extreme_features to reduce noise from tail-distribution metrics that often trigger false positives on benign PowerShell automation scripts, aiming for cleaner ranking.
+- **`ps_transfer_hardneg_ps`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by porting the hard-negative strategy from filetypes/perl, upweighting difficult benign PowerShell samples to sharpen the decision boundary at low FPR.
+- **`ps_gen_seedsearch_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC stability by applying seed_search_k=3 to the KV-vocab configuration, averaging out seed-driven variance to confirm whether the feature signal is robust across different train/holdout splits.
+
+</details>
+

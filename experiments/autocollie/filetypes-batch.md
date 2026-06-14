@@ -950,3 +950,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T024423-filetypes-batch` — 2026-06-13T02:44:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `97244639f964ea57` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9990 | 0.9930 | 0.9753 | 31 | [log](out/autocollie/runs/2026-06-13T02-52-35_20260613T024423-filetypes-batch_inherit_from_filetypes_json_eb5cd709.log) |
+| `608a2116c9dac327` | batch_control_hardneg_01_12 | ok | 0.9816 | 0.8245 | 0.0625 | 20 | [log](out/autocollie/runs/2026-06-13T02-53-17_20260613T024423-filetypes-batch_batch_control_hardneg_01_12.log) |
+| `7a0e2a75434c13d0` | batch_hardneg_015_16_leaves128 | ok | 0.9719 | 0.8184 | 0.0623 | 5 | [log](out/autocollie/runs/2026-06-13T02-53-43_20260613T024423-filetypes-batch_batch_hardneg_015_16_leaves128.log) |
+| `94413b46aeafe63d` | batch_kv_vocab_15k_textenc | ok | 0.9611 | 0.7895 | 0.0629 | 21 | [log](out/autocollie/runs/2026-06-13T02-53-49_20260613T024423-filetypes-batch_batch_kv_vocab_15k_textenc.log) |
+| `494124318718152d` | batch_transfer_lowbigram_tieredtri | ok | 0.9611 | 0.7895 | 0.0629 | 14 | [log](out/autocollie/runs/2026-06-13T02-54-11_20260613T024423-filetypes-batch_batch_transfer_lowbigram_tieredtri.log) |
+| `2570b37b0409ac8e` | batch_abl_text_metrics_off | ok | 0.9611 | 0.7895 | 0.0629 | 15 | [log](out/autocollie/runs/2026-06-13T02-54-26_20260613T024423-filetypes-batch_batch_abl_text_metrics_off.log) |
+| `522e6c8aae736a2b` | batch_seed_search_k3_control | ok | 0.9720 | 0.8458 | 0.0629 | 4 | [log](out/autocollie/runs/2026-06-13T02-54-43_20260613T024423-filetypes-batch_batch_seed_search_k3_control.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to boost recall@3FPM by focusing on difficult benigns.
+- **`batch_hardneg_015_16_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Stronger hard-negative weighting and deeper trees to improve recall@3FPM without hurting PR_AUC.
+- **`batch_kv_vocab_15k_textenc`** `EXP_BIGRAM_MIN_FREQ=300 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and enable text_encoding to capture rarer script patterns, targeting PR_AUC gain.
+- **`batch_transfer_lowbigram_tieredtri`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Transfer low bigram freq and tiered trigrams from xml/perl routes to improve PR_AUC on batch scripts.
+- **`batch_abl_text_metrics_off`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=0 EXP_TRAIN_SAMPLES=30000` — Disable text_metrics_full to test if it adds noise; aims to keep PR_AUC flat while reducing feature dimensionality.
+- **`batch_seed_search_k3_control`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Seed search on best config to distinguish real signal from seed noise, stabilizing recall@3FPM.
+
+</details>
+

@@ -2210,3 +2210,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260613T011038-filetypes-pdf` — 2026-06-13T01:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7e5be460f03bc3ee` | inherit_from_filetypes_tar_1f9a08a6 | ok | 1.0000 | 0.9988 | 0.9951 | 38 | [log](out/autocollie/runs/2026-06-13T01-19-13_20260613T011038-filetypes-pdf_inherit_from_filetypes_tar_1f9a08a6.log) |
+| `fd7478af7ca98ca0` | pdf_ctrl_hardneg_015_16_leaves128 | ok | 0.9673 | 0.8835 | 0.8548 | 43 | [log](out/autocollie/runs/2026-06-13T01-20-07_20260613T011038-filetypes-pdf_pdf_ctrl_hardneg_015_16_leaves128.log) |
+| `c0e009cbd7681153` | pdf_train_dart_extra_trees_spw075 | ok | 0.9921 | 0.9771 | 0.8547 | 13 | [log](out/autocollie/runs/2026-06-13T01-21-02_20260613T011038-filetypes-pdf_pdf_train_dart_extra_trees_spw075.log) |
+| `68428b265ba68d79` | pdf_feat_textmetrics_kv_split | ok | 0.9836 | 0.9453 | 0.8552 | 59 | [log](out/autocollie/runs/2026-06-13T01-21-18_20260613T011038-filetypes-pdf_pdf_feat_textmetrics_kv_split.log) |
+| `1719eb00f4b47621` | pdf_feat_docobfus_linelen_textenc | ok | 0.9877 | 0.9595 | 0.8552 | 32 | [log](out/autocollie/runs/2026-06-13T01-22-21_20260613T011038-filetypes-pdf_pdf_feat_docobfus_linelen_textenc.log) |
+| `f0fd5804e9954853` | pdf_transfer_docx_ember_extmetrics | ok | 0.9874 | 0.9585 | 0.8551 | 23 | [log](out/autocollie/runs/2026-06-13T01-22-56_20260613T011038-filetypes-pdf_pdf_transfer_docx_ember_extmetrics.log) |
+| `0ce4f3701a773b76` | pdf_seedsearch_kv_textmetrics_trigrams | ok | 0.9887 | 0.9633 | 0.9666 | 26 | [log](out/autocollie/runs/2026-06-13T01-23-20_20260613T011038-filetypes-pdf_pdf_seedsearch_kv_textmetrics_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_tar_1f9a08a6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/tar (key=1f9a08a6e36704c3, recall_at_fp_per_million_3=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_hardneg_015_16_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with increased tree capacity to capture complex PDF obfuscation patterns, aiming to improve PR_AUC without hurting ROC_AUC.
+- **`pdf_train_dart_extra_trees_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Use DART boosting and extra trees with down-weighted positives to reduce false positives at the tail, targeting higher recall@3FPM while maintaining PR_AUC.
+- **`pdf_feat_textmetrics_kv_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable kv_value_split to recover per-element signal in PDF metadata arrays, boosting PR_AUC by distinguishing malicious payloads from benign document structures.
+- **`pdf_feat_docobfus_linelen_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 …` — Add document-specific obfuscation and line-length features to catch heavily obfuscated PDFs, aiming to lift recall@3FPM for tail malware.
+- **`pdf_transfer_docx_ember_extmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_EMBER_LITE_FEATURES=1 …` — Port strong docx feature set (ember_lite + extended_metrics) to PDF to capture structural anomalies, targeting PR_AUC improvement via cross-format signal transfer.
+- **`pdf_seedsearch_kv_textmetrics_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Average 3 seeds on a high-signal feature set to reduce variance and stabilize recall@3FPM gains across data drift.
+
+</details>
+

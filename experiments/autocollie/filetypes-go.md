@@ -1238,3 +1238,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260613T014547-filetypes-go` — 2026-06-13T01:45:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4b58974fdcfa2857` | inherit_from_filetypes_json_eb5cd709 | ok | 0.9244 | 0.9773 | 0.7135 | 16 | [log](out/autocollie/runs/2026-06-13T01-51-23_20260613T014547-filetypes-go_inherit_from_filetypes_json_eb5cd709.log) |
+| `84cf00218212e01d` | go_ctrl_train_leaves128 | ok | 0.5454 | 0.8898 | 0.2065 | 12 | [log](out/autocollie/runs/2026-06-13T01-51-44_20260613T014547-filetypes-go_go_ctrl_train_leaves128.log) |
+| `66e063e0c8d86e07` | go_feat_kv_vocab_15k | ok | 0.5567 | 0.8905 | 0.2077 | 12 | [log](out/autocollie/runs/2026-06-13T01-51-59_20260613T014547-filetypes-go_go_feat_kv_vocab_15k.log) |
+| `dedc873865d20824` | go_feat_symbol_vocab_lowbigram | ok | 0.5580 | 0.8937 | 0.2078 | 12 | [log](out/autocollie/runs/2026-06-13T01-52-12_20260613T014547-filetypes-go_go_feat_symbol_vocab_lowbigram.log) |
+| `fb1291bf149e3b9b` | go_abl_extreme_off | ok | 0.5536 | 0.8966 | 0.2053 | 11 | [log](out/autocollie/runs/2026-06-13T01-52-24_20260613T014547-filetypes-go_go_abl_extreme_off.log) |
+| `a5fdaa6aba65c2f7` | go_transfer_tiered_trigrams | ok | 0.5504 | 0.8921 | 0.2053 | 11 | [log](out/autocollie/runs/2026-06-13T01-52-36_20260613T014547-filetypes-go_go_transfer_tiered_trigrams.log) |
+| `1f7d52b61fed1a65` | go_gen_seed_search_3 | ok | 0.5525 | 0.9028 | 0.5742 | 11 | [log](out/autocollie/runs/2026-06-13T01-52-48_20260613T014547-filetypes-go_go_gen_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_eb5cd709`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=eb5cd70988aaf256, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3 FP/M by increasing tree capacity and regularization on the baseline feature set to better rank tail malware.
+- **`go_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Aims to boost PR_AUC by enabling KV vocab to capture structured Go import and config patterns that text metrics miss.
+- **`go_feat_symbol_vocab_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to improve recall@3 FP/M by lowering bigram frequency floor and adding symbol vocab to detect rare malicious Go API sequences.
+- **`go_abl_extreme_off`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=200 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Aims to maintain PR_AUC while improving ROC_AUC stability by removing noisy extreme features that may overfit on benign Go projects.
+- **`go_transfer_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 …` — Aims to lift PR_AUC by transferring XML/GZ tiered trigram success to capture severity-weighted Go code patterns.
+- **`go_gen_seed_search_3`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Aims to stabilize recall@3 FP/M gains by averaging across 3 seeds to reduce variance in the strict-FP tail region.
+
+</details>
+
