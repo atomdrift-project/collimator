@@ -87,6 +87,39 @@ def _make_report_v5(
     }
 
 
+def _finding_v4_to_v7(finding: dict) -> dict:
+    """Translate a v4 short-key finding to the cleave v7 long-key form."""
+    mapping = {"i": "id", "c": "conf", "l": "crit", "a": "atk", "m": "mbc"}
+    return {mapping.get(k, k): v for k, v in finding.items()}
+
+
+def _make_report_v7(
+    findings: list[dict] | None = None,
+    imports: list[str] | None = None,
+    metrics: dict | None = None,
+    file_type: str = "elf",
+    size: int = 1024,
+) -> dict:
+    """Create a report in cleave's v7 long-key schema (mirrors _make_report)."""
+    return {
+        "v": "7",
+        "files": [{
+            "id": 0,
+            "path": "/tmp/test",
+            "dp": 0,
+            "type": file_type,
+            "sha": "abc123",
+            "size": size,
+            "find": [_finding_v4_to_v7(f) for f in (findings or [])],
+            "fact": {
+                "imp": imports or [],
+                "str": [],
+                "met": metrics or {},
+            },
+        }],
+    }
+
+
 # Many reports needed to exceed MIN_PATH_FREQ (30).
 def _reports_with_finding(finding_id: str, crit: str, n: int = 35) -> list[dict]:
     """Create n reports each containing one finding with the given id and crit."""
@@ -360,6 +393,30 @@ def test_extract_presence_features() -> None:
     assert vec[spec.feature_names.index("present:objectives")] == 1.0
     assert vec[spec.feature_names.index("present:objectives/evasion")] == 1.0
     assert vec[spec.feature_names.index("present:objectives/evasion/process")] == 1.0
+
+
+def test_extract_v7_parity_with_v4() -> None:
+    """v7 long-key reports extract to the same vector as equivalent v4 reports."""
+    findings = [
+        {"i": "objectives/evasion/process", "l": _CRIT_MAP["hostile"], "c": 1.0,
+         "a": "T1055", "m": "B0009"},
+        {"i": "objectives/execution/interpreter/eval", "l": _CRIT_MAP["suspicious"],
+         "c": 0.8},
+    ]
+    metrics = {"binary": {"file_size": 4096}}
+    imports = ["kernel32.dll", "user32.dll"]
+
+    v4_reports = [
+        _make_report(findings=findings, imports=imports, metrics=metrics)
+        for _ in range(35)
+    ]
+    spec = build_vocab(v4_reports)
+
+    v4_vec = extract(v4_reports[0], spec)
+    v7_report = _make_report_v7(findings=findings, imports=imports, metrics=metrics)
+    v7_vec = extract(v7_report, spec)
+
+    np.testing.assert_array_equal(v4_vec, v7_vec)
 
 
 def test_extract_maxcrit_features() -> None:

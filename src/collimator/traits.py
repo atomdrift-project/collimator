@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from .data import Sample, load_samples
-from .features import report_files
+from .features import file_findings, finding_crit, finding_id, report_files
 
 # Map v4 criticality ordinals to human-readable names (and reverse).
 _CRIT_NAME_TO_ORDINAL: dict[str, int] = {
@@ -56,10 +56,10 @@ def compute_trait_stats(
     for sample in samples:
         seen: set[str] = set()
         for file_entry in report_files(sample.report):
-            for finding in file_entry.get("ts") or []:
-                if crit_ordinal is not None and finding.get("l") != crit_ordinal:
+            for finding in file_findings(file_entry):
+                if crit_ordinal is not None and finding_crit(finding) != crit_ordinal:
                     continue
-                trait_id = finding.get("i", "")
+                trait_id = finding_id(finding) or ""
                 if not trait_id:
                     continue
 

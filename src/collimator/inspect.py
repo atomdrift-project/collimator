@@ -15,7 +15,10 @@ from .features import (
     FeatureSpec,
     extract,
     extract_all,
+    file_findings,
+    finding_crit,
     primary_file,
+    report_files,
     standardize,
 )
 from .export import load_recommended_thresholds, load_threshold
@@ -277,14 +280,14 @@ def scan_file(
 
     embedded_files = [
         file_entry
-        for file_entry in report.get("fs") or []
-        if isinstance(file_entry, dict) and int(file_entry.get("dp", 0) or 0) > 0
+        for file_entry in report_files(report)
+        if int(file_entry.get("dp", 0) or 0) > 0
     ]
     for file_entry in embedded_files:
         _ef_raw, _ef_vec, ef_prob = _score_report(
             model,
             spec,
-            {"fs": [file_entry], "v": "4"},
+            {"files": [file_entry], "v": "7"},
         )
         if ef_prob > effective_prob:
             effective_prob = ef_prob
@@ -292,9 +295,9 @@ def scan_file(
             promoted_path = full_path.rsplit("!!", 1)[-1] if full_path else None
             promoted_type = str(file_entry.get("type", "unknown"))
 
-    findings = pf.get("ts") or []
-    hostile = sum(1 for f in findings if f.get("l") == 5)
-    suspicious = sum(1 for f in findings if f.get("l") == 4)
+    findings = file_findings(pf)
+    hostile = sum(1 for f in findings if finding_crit(f) == 5)
+    suspicious = sum(1 for f in findings if finding_crit(f) == 4)
 
     classification = _classify(effective_prob, recommended, threshold)
     print(f"File:        {file_path}")

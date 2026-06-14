@@ -971,37 +971,52 @@ def feature_config_from_env() -> FeatureConfig:
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _alias(obj: dict[str, Any], *keys: str) -> Any:
+    """First non-None value among key aliases (new key first, old fallbacks).
+
+    Bridges cleave's v7 long keys (`files`, `find`, `conf`, `crit`, …) with the
+    legacy short keys (`fs`, `ts`, `c`, `l`, …) so collimator parses old stored
+    reports and new cleave output alike. Mirrors prism's parse-old/emit-new
+    handling: both schemes are read; only the new scheme is emitted.
+    """
+    for key in keys:
+        value = obj.get(key)
+        if value is not None:
+            return value
+    return None
+
+
 def report_files(report: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return all valid file entries from a v4 report."""
-    files = report.get("fs") or []
+    """Return all valid file entries (v7 `files`, else v4 `fs`)."""
+    files = _alias(report, "files", "fs") or []
     return [f for f in files if isinstance(f, dict)]
 
 
 def primary_file(report: dict[str, Any]) -> dict[str, Any]:
-    """Return the primary (first) file entry from a v3 report."""
+    """Return the primary (first) file entry from a report."""
     files = report_files(report)
     return files[0] if files else {}
 
 
 def file_facts(file_entry: dict[str, Any]) -> dict[str, Any]:
-    """Return a cleave v5 ff block, or an empty mapping for v4 rows."""
-    facts = file_entry.get("ff")
+    """Return the dense facts block: cleave v7 `fact`, else v5 `ff`, else {}."""
+    facts = _alias(file_entry, "fact", "ff")
     return facts if isinstance(facts, dict) else {}
 
 
 def file_metrics(file_entry: dict[str, Any]) -> dict[str, Any]:
-    """Return per-file metrics from v5 ff.m or v4 ms."""
+    """Return per-file metrics from v7 fact.met / v5 ff.m / v4 ms."""
     facts = file_facts(file_entry)
-    metrics = facts.get("m") if facts else None
+    metrics = _alias(facts, "met", "m") if facts else None
     if not isinstance(metrics, dict):
         metrics = file_entry.get("ms")
     return metrics if isinstance(metrics, dict) else {}
 
 
 def file_values(file_entry: dict[str, Any]) -> dict[str, Any]:
-    """Return flat structural values from v5 ff.v or v4 k."""
+    """Return flat structural values from v7 fact.val / v5 ff.v / v4 k."""
     facts = file_facts(file_entry)
-    values = facts.get("v") if facts else None
+    values = _alias(facts, "val", "v") if facts else None
     if not isinstance(values, dict):
         values = file_entry.get("k")
     return values if isinstance(values, dict) else {}
@@ -1014,21 +1029,66 @@ def _tuple_string(raw: Any, index: int) -> str:
 
 
 def file_imports(file_entry: dict[str, Any]) -> list[Any]:
-    """Return import entries from v5 ff.i or v4 is."""
+    """Return import entries from v7 fact.imp / v5 ff.i / v4 is."""
     facts = file_facts(file_entry)
-    raw = facts.get("i") if facts else None
+    raw = _alias(facts, "imp", "i") if facts else None
     if raw is None:
         raw = file_entry.get("is")
     return raw if isinstance(raw, list) else []
 
 
 def file_strings(file_entry: dict[str, Any]) -> list[Any]:
-    """Return string tuples from v5 ff.s or v4 ss."""
+    """Return string tuples from v7 fact.str / v5 ff.s / v4 ss."""
     facts = file_facts(file_entry)
-    raw = facts.get("s") if facts else None
+    raw = _alias(facts, "str", "s") if facts else None
     if raw is None:
         raw = file_entry.get("ss")
     return raw if isinstance(raw, list) else []
+
+
+def file_findings(file_entry: dict[str, Any]) -> list[Any]:
+    """Return a file entry's findings (v7 `find`, else v4 `ts`)."""
+    return _alias(file_entry, "find", "ts") or []
+
+
+def file_size(file_entry: dict[str, Any]) -> Any:
+    """Return a file entry's size (v7 `size`, else v4 `sz`)."""
+    return _alias(file_entry, "size", "sz")
+
+
+def file_formula(file_entry: dict[str, Any]) -> Any:
+    """Return a file entry's molecular formula (v7 `mol`, else v4 `f`)."""
+    return _alias(file_entry, "mol", "f")
+
+
+def file_risk(file_entry: dict[str, Any]) -> Any:
+    """Return a file entry's risk/score (v7 `risk`, else v4 `x`)."""
+    return _alias(file_entry, "risk", "x")
+
+
+def finding_id(finding: dict[str, Any]) -> Any:
+    """Return a finding's id (v7 `id`, else v4 `i`)."""
+    return _alias(finding, "id", "i")
+
+
+def finding_conf(finding: dict[str, Any]) -> Any:
+    """Return a finding's confidence (v7 `conf`, else v4 `c`)."""
+    return _alias(finding, "conf", "c")
+
+
+def finding_crit(finding: dict[str, Any]) -> Any:
+    """Return a finding's criticality ordinal (v7 `crit`, else v4 `l`)."""
+    return _alias(finding, "crit", "l")
+
+
+def finding_attack(finding: dict[str, Any]) -> Any:
+    """Return a finding's ATT&CK code (v7 `atk`, else v4 `a`)."""
+    return _alias(finding, "atk", "a")
+
+
+def finding_mbc(finding: dict[str, Any]) -> Any:
+    """Return a finding's MBC code (v7 `mbc`, else v4 `m`)."""
+    return _alias(finding, "mbc", "m")
 
 
 def _float(value: Any, default: float = 0.0) -> float:
@@ -1079,7 +1139,7 @@ def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
         if len(sym) >= 2:
             symbols.add(sym)
     facts = file_facts(file_entry)
-    for raw in facts.get("x") or []:
+    for raw in _alias(facts, "exp", "x") or []:
         name = _tuple_string(raw, 0) if isinstance(raw, (list, tuple)) else raw
         sym = _normalize_vocab_token(name)
         if len(sym) >= 2:
@@ -1089,11 +1149,11 @@ def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
         sym = _normalize_vocab_token(name)
         if len(sym) >= 2:
             symbols.add(sym)
-    for raw in facts.get("ct") or []:
+    for raw in _alias(facts, "tgt", "ct") or []:
         sym = _normalize_vocab_token(raw)
         if len(sym) >= 2:
             symbols.add(sym)
-    for raw in facts.get("mc") or []:
+    for raw in _alias(facts, "mbr", "mc") or []:
         sym = _normalize_vocab_token(raw)
         if len(sym) >= 2:
             symbols.add(sym)
@@ -2373,19 +2433,21 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     has_yara = False
 
     for finding in findings:
-        fid = finding.get("i", "")
+        fid = finding_id(finding) or ""
         if not fid:
             continue
-        # _float used to wrap finding.get("c", 1.0) but the value is
+        # _float used to wrap the confidence read but the value is
         # already a float coming from JSON in 99.9% of cases — the
         # try/float() overhead was hot. Fall back only for stragglers.
-        conf_raw = finding.get("c", 1.0)
+        conf_raw = finding_conf(finding)
+        if conf_raw is None:
+            conf_raw = 1.0
         conf = conf_raw if isinstance(conf_raw, float) else _float(conf_raw)
         if conf < min_conf:
             continue
         finding_confidences.append(conf)
         filtered_finding_count += 1
-        crit_ord = finding.get("l", 0)
+        crit_ord = finding_crit(finding) or 0
         if crit_ord >= 3:
             notable_finding_count += 1
             notable_ids.add(fid)
@@ -2477,7 +2539,7 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
     finding_confidences: list[float] = []
 
     for file_entry in files:
-        summary = _summarize_findings(file_entry.get("ts") or [])
+        summary = _summarize_findings(file_findings(file_entry))
         filtered_finding_count += summary.filtered_finding_count
         notable_finding_count += summary.notable_finding_count
         suspicious_finding_count += summary.suspicious_finding_count
@@ -2506,11 +2568,11 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
 
         finding_confidences.extend(summary.finding_confidences)
 
-        for finding in file_entry.get("ts") or []:
-            fid = finding.get("i", "")
-            if not fid or _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
+        for finding in file_findings(file_entry):
+            fid = finding_id(finding) or ""
+            if not fid or _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
                 continue
-            crit_ord = finding.get("l", 0)
+            crit_ord = finding_crit(finding) or 0
             if crit_ord >= 3:
                 unique_notable_ids.add(fid)
             if crit_ord >= 4:
@@ -2542,9 +2604,9 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
 
 def _file_risk_stats(file_entry: dict[str, Any]) -> _FileRiskStats:
     """Compute per-file suspiciousness for top-k package aggregation."""
-    summary = _summarize_findings(file_entry.get("ts") or [])
+    summary = _summarize_findings(file_findings(file_entry))
     denom = max(summary.filtered_finding_count, 1)
-    size_kb = max(_float(file_entry.get("sz", 0.0)) / 1024.0, 1.0)
+    size_kb = max(_float(file_size(file_entry) or 0.0) / 1024.0, 1.0)
     return _FileRiskStats(
         suspicious_ratio=summary.suspicious_finding_count / denom,
         hostile_ratio=summary.hostile_finding_count / denom,
@@ -2745,7 +2807,7 @@ def _apply_aggregate_features(
     _assign(vec, lookup.get("agg:hostile_findings_log"), math.log1p(summary.hostile_finding_count))
     
     # Pruned raw IDs for density-first metrics.
-    total_kb = max(sum(_float(file_entry.get("sz", 0.0)) for file_entry in files) / 1024.0, 0.1)
+    total_kb = max(sum(_float(file_size(file_entry) or 0.0) for file_entry in files) / 1024.0, 0.1)
     _assign(vec, lookup.get("agg:notable_finding_ratio"), summary.notable_finding_count / total_kb)
     _assign(vec, lookup.get("agg:suspicious_finding_ratio"), summary.suspicious_finding_count / total_kb)
     _assign(vec, lookup.get("agg:hostile_finding_ratio"), summary.hostile_finding_count / total_kb)
@@ -2766,7 +2828,7 @@ def _apply_aggregate_features(
         _assign(vec, lookup.get("agg:severe_to_mundane_ratio"), summary.notable_finding_count / mundane)
         _assign(vec, lookup.get("agg:crit4_present"), 1.0 if summary.suspicious_finding_count > 0 else 0.0)
 
-    total_kb = max(sum(_float(file_entry.get("sz", 0.0)) for file_entry in files) / 1024.0, 1.0)
+    total_kb = max(sum(_float(file_size(file_entry) or 0.0) for file_entry in files) / 1024.0, 1.0)
     topk_features = _topk_file_risk_features(
         files,
         top_k_risk_files,
@@ -2961,8 +3023,8 @@ def _apply_experimental_features(
         file_max_crits: list[int] = []
         for file_entry in files:
             fmax = 0
-            for finding in (file_entry.get("ts") or []):
-                crit = finding.get("l", 0)
+            for finding in file_findings(file_entry):
+                crit = finding_crit(finding) or 0
                 if crit > fmax:
                     fmax = crit
             file_max_crits.append(fmax)
@@ -2995,7 +3057,7 @@ def _apply_experimental_features(
     if config.exp_unsigned_import_density:
         is_unsigned = "metadata/unsigned" in summary.sample_paths
         if is_unsigned and total_imports > 0:
-            total_size = sum(_float(f.get("sz", 0)) for f in files) or 1.0
+            total_size = sum(_float(file_size(f) or 0) for f in files) or 1.0
             density = total_imports / (total_size / 1024.0)
             _assign(vec, lookup.get("agg:unsigned_import_density"), density)
 
@@ -3030,8 +3092,8 @@ def _apply_experimental_features(
     if config.include_trait_id_lexical_distance:
         all_ids: set[str] = set()
         for fe in files:
-            for finding in fe.get("ts") or []:
-                fid = finding.get("i")
+            for finding in file_findings(fe):
+                fid = finding_id(finding)
                 if isinstance(fid, str) and fid:
                     all_ids.add(fid)
         sorted_ids = sorted(all_ids)
@@ -3051,8 +3113,8 @@ def _apply_experimental_features(
     if config.include_document_obfuscation_features:
         obf_count = eval_count = lure_count = 0
         for fe in files:
-            for finding in fe.get("ts") or []:
-                fid = finding.get("i", "")
+            for finding in file_findings(fe):
+                fid = finding_id(finding) or ""
                 if not isinstance(fid, str):
                     continue
                 if fid.startswith("objectives/anti-static/obfuscation/document"):
@@ -3076,11 +3138,11 @@ def _apply_experimental_features(
         attack_techniques: set[str] = set()
         mbc_behaviors: set[str] = set()
         for file_entry in files:
-            for finding in file_entry.get("ts") or []:
-                a = finding.get("a")
+            for finding in file_findings(file_entry):
+                a = finding_attack(finding)
                 if a:
                     attack_techniques.add(a)
-                m = finding.get("m")
+                m = finding_mbc(finding)
                 if m:
                     mbc_behaviors.add(m)
         # ATT&CK tactics: T1xxx.yyy → T1xxx is the technique, first 2 digits = tactic
@@ -3211,7 +3273,7 @@ def _apply_ember_lite_features(
 
         analyzed_files += 1
         binary = metrics.get("binary") or {}
-        total_file_bytes += _metric_number(metrics, "binary", "file_size") or _float(file_entry.get("sz", 0))
+        total_file_bytes += _metric_number(metrics, "binary", "file_size") or _float(file_size(file_entry) or 0)
         import_count += _metric_number(metrics, "binary", "import_count")
         export_count += _metric_number(metrics, "binary", "export_count")
         dependency_count += _metric_number(metrics, "binary", "dependency_count")
@@ -3357,8 +3419,8 @@ def _apply_mbc_id_features(
     """
     lookup = ctx.absolute_lookup
     for fe in files:
-        for finding in fe.get("ts") or []:
-            mid = finding.get("m")
+        for finding in file_findings(fe):
+            mid = finding_mbc(finding)
             if isinstance(mid, str) and mid:
                 _assign(vec, lookup.get(f"mbc:{mid}"), 1.0)
 
@@ -3508,7 +3570,7 @@ def _apply_format_hint_features(
             inner_files += 1
         if groups:
             known_files += 1
-        file_summary = _summarize_findings(file_entry.get("ts") or [])
+        file_summary = _summarize_findings(file_findings(file_entry))
         for group in groups:
             present_groups.add(group)
             group_file_counts[group] += 1
@@ -3665,7 +3727,7 @@ def _apply_structural_features(
             except (ValueError, TypeError):
                 pass
 
-        if file_entry.get("type", "") in binary_like and _float(file_entry.get("sz", 0)) < 20000:
+        if file_entry.get("type", "") in binary_like and _float(file_size(file_entry) or 0) < 20000:
             any_tiny_binary = True
         imports = file_imports(file_entry)
         if imports or "is" in file_entry or "ff" in file_entry:
@@ -3680,7 +3742,7 @@ def _apply_structural_features(
         if ent > 0:
             entropies.append(ent)
         max_entropy = max(max_entropy, ent)
-        file_summary = _summarize_findings(file_entry.get("ts") or [])
+        file_summary = _summarize_findings(file_findings(file_entry))
         if file_summary.suspicious_finding_count > 0:
             suspicious_files += 1
         if file_summary.hostile_finding_count > 0:
@@ -3762,7 +3824,7 @@ def _apply_structural_features(
     
     # Exp 43: Silent Packer Signal
     if os.getenv("COLLIMATOR_SILENT_PACKER_SIGNAL") == "1":
-        total_size = sum(_float(f.get("sz", 0)) for f in files)
+        total_size = sum(_float(file_size(f) or 0) for f in files)
         size_mb = total_size / (1024 * 1024)
         _assign(vec, lookup.get("struct:silent_packer_signal"), math.log1p(size_mb) / (filtered_finding_count + 1))
 
@@ -3855,13 +3917,13 @@ def _ngram_paths_for_file(
     Shared by bigram, trigram, and unsigned-bigram generation.
     """
     file_traits: set[str] = set()
-    for finding in file_entry.get("ts") or []:
-        fid = finding.get("i", "")
+    for finding in file_findings(file_entry):
+        fid = finding_id(finding) or ""
         if not fid:
             continue
-        if _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
+        if _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
             continue
-        if min_crit > 0 and finding.get("l", 0) < min_crit:
+        if min_crit > 0 and (finding_crit(finding) or 0) < min_crit:
             continue
         file_traits.add(fid)
     return sorted({_truncate_path(fid.split("::")[0], depth) for fid in file_traits})
@@ -4170,7 +4232,7 @@ def _extract_into(
             for file_entry in files:
                 fpath = file_entry.get("path", "")
                 depth = depths.get(fpath, 0)
-                file_summary = _summarize_findings(file_entry.get("ts") or [])
+                file_summary = _summarize_findings(file_findings(file_entry))
                 hostile_depth_weight += file_summary.hostile_finding_count * depth
 
         _apply_aggregate_features(
@@ -4228,7 +4290,7 @@ def _extract_into(
     if "formula" in config.enabled_groups:
         _apply_formula_features(formula, summary.filtered_finding_count, ctx, vec)
     if "score" in config.enabled_groups:
-        total_size = sum(_float(f.get("sz", 0)) for f in files)
+        total_size = sum(_float(file_size(f) or 0) for f in files)
         _apply_score_features(score, total_size, files, ctx, vec)
 
     if "bigrams" in config.enabled_groups:
@@ -4299,11 +4361,11 @@ def _extract_into(
         atk_codes: set[str] = set()
         mbc_codes: set[str] = set()
         for file_entry in files:
-            for finding in file_entry.get("ts") or []:
-                a = finding.get("a")
+            for finding in file_findings(file_entry):
+                a = finding_attack(finding)
                 if a:
                     atk_codes.add(a)
-                m = finding.get("m")
+                m = finding_mbc(finding)
                 if m:
                     mbc_codes.add(m)
         lookup = ctx.absolute_lookup
@@ -4394,13 +4456,13 @@ def _vocab_batch_worker(
                 filetypes.append(ftype)
 
             file_traits: set[str] = set()
-            for finding in file_entry.get("ts") or []:
-                fid = finding.get("i", "")
+            for finding in file_findings(file_entry):
+                fid = finding_id(finding) or ""
                 if not fid:
                     continue
-                if _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
+                if _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
                     continue
-                crit_ord = finding.get("l", 0)
+                crit_ord = finding_crit(finding) or 0
                 file_traits.add(fid)
                 for path in _finding_paths(fid):
                     if crit_ord > sample_paths.get(path, -1):
@@ -4563,15 +4625,12 @@ def canonical_fields_from_report(report: dict[str, Any]) -> tuple[str, str, int]
 
     Returns ("", "", 0) if no depth-0 file is found.
     """
-    files = report.get("fs") or []
-    for f in files:
-        if not isinstance(f, dict):
-            continue
+    for f in report_files(report):
         if int(f.get("dp") or 0) == 0:
-            formula = str(f.get("f") or "")
+            formula = str(file_formula(f) or "")
             # Strip Unicode subscript digits ₀-₉ to match hopper.stripSubscripts.
             elements = "".join(c for c in formula if not ("₀" <= c <= "₉"))
-            score = int(f.get("x") or 0)
+            score = int(file_risk(f) or 0)
             return formula, elements, score
     return "", "", 0
 
@@ -5132,11 +5191,11 @@ def _vocab_labeled_db_batch_worker(
                 filetypes.append(ftype)
 
             file_traits: set[str] = set()
-            for finding in file_entry.get("ts") or []:
-                fid = finding.get("i", "")
-                if not fid or _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
+            for finding in file_findings(file_entry):
+                fid = finding_id(finding) or ""
+                if not fid or _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
                     continue
-                crit_ord = finding.get("l", 0)
+                crit_ord = finding_crit(finding) or 0
                 file_traits.add(fid)
                 for path in _finding_paths(fid):
                     if crit_ord > sample_paths.get(path, -1):
@@ -5415,12 +5474,12 @@ def build_vocab_from_db(
                 # Build sample_paths from all findings
                 sp: dict[str, int] = {}
                 for fe in report_files(report):
-                    for finding in fe.get("ts") or []:
-                        fid = finding.get("i", "")
-                        if not fid or _float(finding.get("c", 1.0)) < MIN_CONFIDENCE:
+                    for finding in file_findings(fe):
+                        fid = finding_id(finding) or ""
+                        if not fid or _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
                             continue
                         for path in _finding_paths(fid):
-                            crit_ord = finding.get("l", 0)
+                            crit_ord = finding_crit(finding) or 0
                             if crit_ord > sp.get(path, -1):
                                 sp[path] = crit_ord
                 tokens = _crit_category_tokens(sp)
@@ -5489,11 +5548,11 @@ def build_vocab_from_db(
                 attacks: set[str] = set()
                 mbcs: set[str] = set()
                 for fe in report_files(report):
-                    for finding in fe.get("ts") or []:
-                        a = finding.get("a")
+                    for finding in file_findings(fe):
+                        a = finding_attack(finding)
                         if a:
                             attacks.add(a)
-                        m = finding.get("m")
+                        m = finding_mbc(finding)
                         if m:
                             mbcs.add(m)
                 if config.include_mbc_id_vocab:

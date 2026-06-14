@@ -28,6 +28,7 @@ src/collimator/thresholds/_inspect.py
 tests/test_ablation.py
 tests/test_archive_error_samples.py
 tests/test_azoth_calibrate.py
+tests/test_azoth_route_policy_search.py
 tests/test_azoth_specialist_suite.py
 tests/test_azoth_train_best.py
 tests/test_bundle.py
@@ -42,6 +43,7 @@ tests/test_features.py
 tests/test_model.py
 tests/test_model_early_stopping.py
 tests/test_reporting_artifacts.py
+tests/test_stage_azoth_runtime_bundle.py
 tests/test_stats.py
 tests/test_thresholds.py
 tests/test_train.py
