@@ -874,3 +874,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260615T052147-filetypes-png` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `00830e563aaed804` | inherit_from_filetypes_json_1e3933ad | ok | 0.9666 | 0.9383 | 0.9254 | 19 | [log](out/autocollie/runs/2026-06-15T05-37-58_20260615T052147-filetypes-png_inherit_from_filetypes_json_1e3933ad.log) |
+| `4b9d9aa5f919d4af` | png_ctrl_train_reg_leaves | ok | 0.2119 | 0.6478 | 0.1170 | 47 | [log](out/autocollie/runs/2026-06-15T05-38-39_20260615T052147-filetypes-png_png_ctrl_train_reg_leaves.log) |
+| `720f724bd0a7168f` | png_feat_kv_textmetrics_vocab | ok | 0.2081 | 0.6281 | 0.1170 | 35 | [log](out/autocollie/runs/2026-06-15T05-39-37_20260615T052147-filetypes-png_png_feat_kv_textmetrics_vocab.log) |
+| `b50a375c15266304` | png_feat_lowbigram_tiered_trigrams | ok | 0.2081 | 0.6281 | 0.1170 | 37 | [log](out/autocollie/runs/2026-06-15T05-40-15_20260615T052147-filetypes-png_png_feat_lowbigram_tiered_trigrams.log) |
+| `59eb48a1b777c871` | png_abl_extreme_off_clusters | ok | 0.2241 | 0.6687 | 0.1170 | 29 | [log](out/autocollie/runs/2026-06-15T05-40-54_20260615T052147-filetypes-png_png_abl_extreme_off_clusters.log) |
+| `a04bf26e61045edd` | png_transfer_xml_lowbigram_tiered | ok | 0.2081 | 0.6281 | 0.1170 | 26 | [log](out/autocollie/runs/2026-06-15T05-41-26_20260615T052147-filetypes-png_png_transfer_xml_lowbigram_tiered.log) |
+| `8b8f32b349860425` | png_seed_search_kv_vocab | ok | 0.2083 | 0.5692 | 0.2766 | 38 | [log](out/autocollie/runs/2026-06-15T05-41-54_20260615T052147-filetypes-png_png_seed_search_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_reg_leaves`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control baseline matching recent best feature_env; increases tree depth and regularization to improve PR_AUC by better separating malicious PNG metadata from benign noise.
+- **`png_feat_kv_textmetrics_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and full text metrics to extract PNG chunk and text stream signals, aiming to boost PR_AUC by adding high-signal structural features.
+- **`png_feat_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor and adds tiered trigrams to capture rarer malicious PNG patterns, targeting recall@3FPM improvement by surfacing subtle attack signatures.
+- **`png_abl_extreme_off_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Disables extreme features and cluster groups to reduce noise and overfitting, aiming to stabilize ROC_AUC while preserving PR_AUC by simplifying the feature space.
+- **`png_transfer_xml_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=3000 EXP_TRAIN_SAMPLES=30000` — Transfers XML's low-frequency bigram and tiered trigram config to PNG to capture subtle structural anomalies, targeting PR_AUC gains from cross-route pattern similarity.
+- **`png_seed_search_kv_vocab`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=3000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Averages 3 seeds on a KV-vocab config to reduce variance and stabilize tail recall, aiming to improve recall@3FPM consistency across different random splits.
+
+</details>
+

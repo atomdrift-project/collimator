@@ -843,3 +843,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T052147-filetypes-powershell` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1e2c83955aa9e042` | inherit_from_filetypes_json_1e3933ad | ok | 0.9993 | 0.9959 | 0.9837 | 55 | [log](out/autocollie/runs/2026-06-15T05-36-12_20260615T052147-filetypes-powershell_inherit_from_filetypes_json_1e3933ad.log) |
+| `12763ab1c936765a` | ps_control_hardneg_tail_opt | ok | 0.9926 | 0.9816 | 0.9513 | 83 | [log](out/autocollie/runs/2026-06-15T05-37-24_20260615T052147-filetypes-powershell_ps_control_hardneg_tail_opt.log) |
+| `75681c16ad992357` | ps_feat_textenc_metrics_full | ok | 0.9924 | 0.9812 | 0.9533 | 70 | [log](out/autocollie/runs/2026-06-15T05-39-01_20260615T052147-filetypes-powershell_ps_feat_textenc_metrics_full.log) |
+| `79171d9e08fafd4c` | ps_feat_kv_vocab_split | ok | 0.9934 | 0.9839 | 0.9547 | 82 | [log](out/autocollie/runs/2026-06-15T05-40-14_20260615T052147-filetypes-powershell_ps_feat_kv_vocab_split.log) |
+| `cac2a39e9afdda88` | ps_abl_extreme_off | ok | 0.9933 | 0.9835 | 0.9553 | 56 | [log](out/autocollie/runs/2026-06-15T05-41-41_20260615T052147-filetypes-powershell_ps_abl_extreme_off.log) |
+| `1bb14ad58be9b935` | ps_seed_search_tiered_trigrams | ok | 0.9939 | 0.9853 | 0.9413 | 51 | [log](out/autocollie/runs/2026-06-15T05-42-44_20260615T052147-filetypes-powershell_ps_seed_search_tiered_trigrams.log) |
+| `a54f81bd52730bea` | ps_train_dart_extra_trees | ok | 0.9891 | 0.9728 | 0.9195 | 9 | [log](out/autocollie/runs/2026-06-15T05-43-35_20260615T052147-filetypes-powershell_ps_train_dart_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_control_hardneg_tail_opt`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env and tunes hard_negative_weight and scale_pos_weight_mult to improve recall@3FPM by focusing the model on difficult benigns and down-weighting positives to reduce FPs at the tail.
+- **`ps_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture PowerShell script obfuscation and structural text patterns, aiming to improve PR_AUC by adding high-signal lexical features.
+- **`ps_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to extract key-value pair signals common in PowerShell configs and payloads, aiming to boost PR_AUC via structured metadata features.
+- **`ps_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce tail noise and overfitting on rare patterns, aiming to keep PR_AUC flat or higher while improving ROC_AUC stability.
+- **`ps_seed_search_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Combines tiered_crit_trigrams with seed_search_k=3 to average out seed variance on a promising n-gram surface, aiming to stabilize and improve recall@3FPM across different RNG splits.
+- **`ps_train_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Switches to dart boosting and enables extra_trees to add regularization and ensemble noise, aiming to improve recall@3FPM by better generalizing to the low-FPR tail.
+
+</details>
+

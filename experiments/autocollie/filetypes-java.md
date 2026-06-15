@@ -486,3 +486,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T065516-filetypes-java` — 2026-06-15T06:55:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `21d0561ceaa6e137` | inherit_from_filetypes_json_1e3933ad | ok | 0.9747 | 0.9705 | 0.9143 | 5 | [log](out/autocollie/runs/2026-06-15T07-05-34_20260615T065516-filetypes-java_inherit_from_filetypes_json_1e3933ad.log) |
+| `030073d6c8854ce3` | java_control_baseline_lr | ok | 0.1352 | 0.6001 | 0.1179 | 11 | [log](out/autocollie/runs/2026-06-15T07-05-44_20260615T065516-filetypes-java_java_control_baseline_lr.log) |
+| `b03cc61235dbe971` | java_hardneg_tail_recall | ok | 0.4790 | 0.9310 | 0.1273 | 2 | [log](out/autocollie/runs/2026-06-15T07-05-58_20260615T065516-filetypes-java_java_hardneg_tail_recall.log) |
+| `a257be1657f1b737` | java_kv_textenc_vocab | ok | 0.1352 | 0.6001 | 0.1179 | 13 | [log](out/autocollie/runs/2026-06-15T07-06-02_20260615T065516-filetypes-java_java_kv_textenc_vocab.log) |
+| `e052c5d8107ac70d` | java_tiered_trigrams_lowfreq | ok | 0.1107 | 0.5744 | 0.1179 | 10 | [log](out/autocollie/runs/2026-06-15T07-06-16_20260615T065516-filetypes-java_java_tiered_trigrams_lowfreq.log) |
+| `c19793756f4d9860` | java_transfer_xml_bigrams | ok | 0.1352 | 0.6001 | 0.1179 | 9 | [log](out/autocollie/runs/2026-06-15T07-06-28_20260615T065516-filetypes-java_java_transfer_xml_bigrams.log) |
+| `db6b6db23c1b3ef6` | java_abl_blindfold_off | ok | 0.1109 | 0.5720 | 0.1167 | 10 | [log](out/autocollie/runs/2026-06-15T07-06-38_20260615T065516-filetypes-java_java_abl_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_baseline_lr`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Replicate best feature set with slightly higher estimators and leaves to improve PR_AUC ranking stability.
+- **`java_hardneg_tail_recall`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 …` — Apply hard-negative weighting to focus on difficult benigns, targeting recall@3 FP/M gains without feature changes.
+- **`java_kv_textenc_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 …` — Enable kv_vocab and text_encoding to capture Java metadata and string patterns, aiming for PR_AUC lift from new signal.
+- **`java_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TIERED_TRIGRAM_MAX=5000 …` — Lower bigram min_freq and add tiered trigrams to capture rarer Java attack sequences, targeting recall@3 FP/M improvement.
+- **`java_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Port XML route's expanded bigram vocab and lower frequency floor to Java to capture longer code patterns, targeting PR_AUC gains.
+- **`java_abl_blindfold_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 …` — Disable blindfold dropout features to reduce noise and potentially stabilize ROC_AUC and PR_AUC by simplifying the feature surface.
+
+</details>
+

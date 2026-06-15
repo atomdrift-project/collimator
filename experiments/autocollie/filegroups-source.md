@@ -754,3 +754,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T064727-filegroups-source` — 2026-06-15T06:47:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5a8a6d11d8e153bf` | inherit_from_filetypes_json_1e3933ad | ok | 0.9973 | 0.9969 | 0.9709 | 34 | [log](out/autocollie/runs/2026-06-15T06-57-53_20260615T064727-filegroups-source_inherit_from_filetypes_json_1e3933ad.log) |
+| `05898c9b0c8f15a3` | source_control_hardneg_train | ok | 0.9063 | 0.9081 | 0.5300 | 30 | [log](out/autocollie/runs/2026-06-15T06-58-42_20260615T064727-filegroups-source_source_control_hardneg_train.log) |
+| `5d21c5aedee49cca` | source_exploit_extra_trees_reg | ok | 0.8930 | 0.8926 | 0.5468 | 3 | [log](out/autocollie/runs/2026-06-15T06-59-15_20260615T064727-filegroups-source_source_exploit_extra_trees_reg.log) |
+| `f874c862bdbe607f` | source_feat_textenc_metrics_full | ok | 0.8972 | 0.8973 | 0.5301 | 19 | [log](out/autocollie/runs/2026-06-15T06-59-19_20260615T064727-filegroups-source_source_feat_textenc_metrics_full.log) |
+| `da7524dd194fde46` | source_feat_kv_vocab_expand | ok | 0.8985 | 0.8988 | 0.5306 | 23 | [log](out/autocollie/runs/2026-06-15T06-59-40_20260615T064727-filegroups-source_source_feat_kv_vocab_expand.log) |
+| `c9a4bd18f857ed02` | source_transfer_lowbigram_tiered | ok | 0.8987 | 0.8988 | 0.5318 | 21 | [log](out/autocollie/runs/2026-06-15T07-00-04_20260615T064727-filegroups-source_source_transfer_lowbigram_tiered.log) |
+| `13ce290c733d4aea` | source_exploit_scale_pos_recall | ok | 0.8912 | 0.8921 | 0.5305 | 3 | [log](out/autocollie/runs/2026-06-15T07-00-26_20260615T064727-filegroups-source_source_exploit_scale_pos_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_hardneg_train`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by upweighting hard negatives to better separate benign source files from malware, using the cached feature matrix.
+- **`source_exploit_extra_trees_reg`** `EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=3 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by adding ensemble noise via extra_trees and stronger L2 regularization to prevent overfitting on noisy source patterns.
+- **`source_feat_textenc_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling text_encoding and text_metrics_full to capture structural and obfuscation signals specific to source code files.
+- **`source_feat_kv_vocab_expand`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab with a higher max cap to extract discriminative key-value pairs from configuration and source files.
+- **`source_transfer_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by lowering bigram_min_freq to 50 and enabling tiered_crit_trigrams to capture rarer but highly predictive code patterns, ported from xml route success.
+- **`source_exploit_scale_pos_recall`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives via scale_pos_weight_mult to shift the score distribution and reduce false positives at the strict operating point.
+
+</details>
+

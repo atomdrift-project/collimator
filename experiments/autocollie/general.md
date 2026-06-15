@@ -842,3 +842,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T052149-general` — 2026-06-15T05:21:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b6e4e23901ade1d2` | inherit_from_filetypes_json_1e3933ad | ok | 0.9979 | 0.9978 | 0.9806 | 420 | [log](out/autocollie/runs/2026-06-15T05-37-06_20260615T052149-general_inherit_from_filetypes_json_1e3933ad.log) |
+| `20f9755dd8f3febd` | ctrl_hardneg_scalepos_075 | ok | 0.9812 | 0.9773 | 0.9020 | 155 | [log](out/autocollie/runs/2026-06-15T05-44-06_20260615T052149-general_ctrl_hardneg_scalepos_075.log) |
+| `f30fd05f0e54c663` | ctrl_dart_extra_trees_reg | ok | 0.9730 | 0.9676 | 0.8943 | 12 | [log](out/autocollie/runs/2026-06-15T05-46-42_20260615T052149-general_ctrl_dart_extra_trees_reg.log) |
+| `275425f118e406d2` | feat_kv_vocab_split_expanded | ok | 0.9718 | 0.9641 | 0.9005 | 81 | [log](out/autocollie/runs/2026-06-15T05-46-53_20260615T052149-general_feat_kv_vocab_split_expanded.log) |
+| `a99fd07c65c53772` | feat_symbol_vocab_bigrams | ok | 0.9735 | 0.9667 | 0.9015 | 80 | [log](out/autocollie/runs/2026-06-15T05-48-14_20260615T052149-general_feat_symbol_vocab_bigrams.log) |
+| `b13e733472968b05` | transfer_xml_lowbigram_trigrams | ok | 0.9737 | 0.9669 | 0.8998 | 78 | [log](out/autocollie/runs/2026-06-15T05-49-33_20260615T052149-general_transfer_xml_lowbigram_trigrams.log) |
+| `aefd1e5b98e1605d` | abl_extreme_off_seed3 | ok | 0.9748 | 0.9689 | 0.9050 | 69 | [log](out/autocollie/runs/2026-06-15T05-50-51_20260615T052149-general_abl_extreme_off_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_hardneg_scalepos_075`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.75 to down-weight positives, aiming to improve recall@3FPM by reducing false positives at the strict operating point.
+- **`ctrl_dart_extra_trees_reg`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control feature set with dart boosting and extra_trees to add ensemble noise, aiming to improve recall@3FPM and PR_AUC by better generalizing at the low-FPR tail.
+- **`feat_kv_vocab_split_expanded`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split with expanded vocab cap to capture finer-grained key-value signals, aiming to improve PR_AUC by resolving ambiguous KV blobs.
+- **`feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_BIGRAM=25 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and symbol_bigrams to capture import co-occurrence patterns, aiming to improve PR_AUC by adding structural signal for packed/obfuscated binaries.
+- **`transfer_xml_lowbigram_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Transfer low bigram_min_freq and tiered_crit_trigrams from xml route to capture rarer patterns, aiming to improve PR_AUC while keeping ROC_AUC flat.
+- **`abl_extreme_off_seed3`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce tail noise and use seed_search_k=3 to average variance, aiming to stabilize recall@3FPM and improve ROC_AUC.
+
+</details>
+

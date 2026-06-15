@@ -662,3 +662,27 @@ Rejected before run:
 
 _No specs ran._
 
+## Cycle `20260615T060619-filetypes-tar` — 2026-06-15T06:06:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fad5fb4131b09db6` | inherit_from_filetypes_json_1e3933ad | ok | 0.9998 | 0.9998 | 0.9699 | 18 | [log](out/autocollie/runs/2026-06-15T06-20-02_20260615T060619-filetypes-tar_inherit_from_filetypes_json_1e3933ad.log) |
+| `d23e8e833a496fdb` | tar_exploit_hardneg_leaves128 | ok | 0.9934 | 0.9946 | 0.9620 | 19 | [log](out/autocollie/runs/2026-06-15T06-20-25_20260615T060619-filetypes-tar_tar_exploit_hardneg_leaves128.log) |
+| `0953dc00398c7b9d` | tar_exploit_scalepos_lr003 | ok | 0.9932 | 0.9947 | 0.9718 | 2 | [log](out/autocollie/runs/2026-06-15T06-20-53_20260615T060619-filetypes-tar_tar_exploit_scalepos_lr003.log) |
+| `35062aebdd6bf492` | tar_feat_textmetrics_encoding | ok | 0.9931 | 0.9947 | 0.9814 | 19 | [log](out/autocollie/runs/2026-06-15T06-20-56_20260615T060619-filetypes-tar_tar_feat_textmetrics_encoding.log) |
+| `69c0cf0e6143f753` | tar_feat_kv_vocab_lowfreq | ok | 0.9931 | 0.9947 | 0.9718 | 23 | [log](out/autocollie/runs/2026-06-15T06-21-18_20260615T060619-filetypes-tar_tar_feat_kv_vocab_lowfreq.log) |
+| `e8658be0e1c511f1` | tar_transfer_xml_bigrams | ok | 0.9931 | 0.9947 | 0.9718 | 19 | [log](out/autocollie/runs/2026-06-15T06-21-43_20260615T060619-filetypes-tar_tar_transfer_xml_bigrams.log) |
+| `a8817a26e035359c` | tar_gen_seedsearch_k3 | ok | 0.9931 | 0.9947 | 0.9718 | 3 | [log](out/autocollie/runs/2026-06-15T06-22-04_20260615T060619-filetypes-tar_tar_gen_seedsearch_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_exploit_hardneg_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree complexity and upweighting hard negatives to better separate borderline malware.
+- **`tar_exploit_scalepos_lr003`** `EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by down-weighting positives and slowing learning to reduce false positives in the strict-FP tail.
+- **`tar_feat_textmetrics_encoding`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture obfuscation and encoding signals in archived documents.
+- **`tar_feat_kv_vocab_lowfreq`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab with low frequency floor to extract rare metadata patterns from tar contents.
+- **`tar_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by transferring xml route's low bigram_min_freq and disabling clusters to reduce noise and capture rare payload patterns.
+- **`tar_gen_seedsearch_k3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by using seed_search_k=3 to average out seed-driven variance on the baseline feature set.
+
+</details>
+

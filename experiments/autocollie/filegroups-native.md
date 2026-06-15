@@ -746,3 +746,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260615T052147-filegroups-native` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b44dfc52f25c20ad` | inherit_from_filetypes_json_1e3933ad | ok | 0.9994 | 0.9994 | 0.9891 | 446 | [log](out/autocollie/runs/2026-06-15T05-34-22_20260615T052147-filegroups-native_inherit_from_filetypes_json_1e3933ad.log) |
+| `25be20a67ec6bd26` | native_control_leaves128_lr003 | ok | 0.9992 | 0.9992 | 0.9825 | 134 | [log](out/autocollie/runs/2026-06-15T05-44-38_20260615T052147-filegroups-native_native_control_leaves128_lr003.log) |
+| `b3701c6f988679fa` | native_symbol_vocab_bigrams | ok | 0.9992 | 0.9992 | 0.9853 | 101 | [log](out/autocollie/runs/2026-06-15T05-47-05_20260615T052147-filegroups-native_native_symbol_vocab_bigrams.log) |
+| `5b3848eea604bef9` | native_lowfreq_bigrams_500 | ok | 0.9992 | 0.9992 | 0.9754 | 79 | [log](out/autocollie/runs/2026-06-15T05-48-47_20260615T052147-filegroups-native_native_lowfreq_bigrams_500.log) |
+| `2edf1123daaff9a5` | native_abl_clusters_off | ok | 0.9992 | 0.9992 | 0.9852 | 8 | [log](out/autocollie/runs/2026-06-15T05-50-09_20260615T052147-filegroups-native_native_abl_clusters_off.log) |
+| `45696018815d795c` | native_hn_01_12 | ok | 0.9992 | 0.9992 | 0.9865 | 13 | [log](out/autocollie/runs/2026-06-15T05-50-18_20260615T052147-filegroups-native_native_hn_01_12.log) |
+| `495dc692216fef77` | native_scalepos_05 | ok | 0.9992 | 0.9992 | 0.9872 | 11 | [log](out/autocollie/runs/2026-06-15T05-50-32_20260615T052147-filegroups-native_native_scalepos_05.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to hit matrix cache; increases tree capacity and lowers LR to stabilize ranking and improve PR_AUC.
+- **`native_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=3000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and symbol_bigrams to capture import co-occurrence patterns in native binaries, aiming to boost PR_AUC with new structural signal.
+- **`native_lowfreq_bigrams_500`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 500 and raises bigram_max to 8000 to capture rarer malicious patterns, targeting recall@3FPM gains.
+- **`native_abl_clusters_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables clusters group to remove noisy aggregate features that may dilute signal, aiming to improve PR_AUC by reducing overfitting.
+- **`native_hn_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Introduces hard negative mining (fraction 0.1, weight 12) to sharpen decision boundary at low FPR, targeting recall@3FPM.
+- **`native_scalepos_05`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weights positives with scale_pos_weight_mult=0.5 to suppress false positives in the tail, targeting recall@3FPM.
+
+</details>
+

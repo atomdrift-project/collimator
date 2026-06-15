@@ -1,61 +1,61 @@
 # Confirm FAIL — 9c5fc1291c9ef2d2 on `filetypes/pe`
 
-Cycle `20260614T024459-confirm-9c5fc1291c9ef2d2` — 2026-06-14T02:44:59Z
+Cycle `20260614T230236-confirm-9c5fc1291c9ef2d2` — 2026-06-14T23:02:36Z
 
 experiment failed: timed out after 30m0s (timeout(1) exit 124)
 --- experiment log tail ---
-COLLIMATOR_EXPERIMENT_TAG=_pe_feat_symbol_vocab_bigrams_confirm_seedsearch_3 \
-.venv/bin/python -u -m collimator experiment --db postgres://hopper@localhost:5432/hopper --output out/experiments/azoth --model-name azoth --learner azoth --workers 128 --seed 43 \
-	--experiment-idea pe_feat_symbol_vocab_bigrams_confirm_seedsearch_3 --route filetypes/pe  \
-	--train-samples 0 --max-test-samples 0 \
-	--total-limit 0 \
-	 \
-	 \
-	--n-folds 0 --holdout-fraction 0.12 \
-	--n-estimators 300 --max-depth 12 \
-	--learning-rate 0.05 --early-stopping-rounds 25 \
-	--num-leaves 96 \
-	--min-child-samples 100 \
-	--min-child-weight 5 \
-	--colsample-bytree 0.8 --subsample 0.8 \
-	--gamma 0 --reg-alpha 0 --reg-lambda 1 \
-	--device auto \
-	 \
-	 \
-	--min-malware-score 4 \
-	--beta 2 --threshold-mode fbeta \
-	 \
-	--hard-negative-fraction 0 --hard-negative-weight 1 \
-	--scale-pos-weight-mult 1 \
-	--boosting-type gbdt \
-	 \
-	--seed-search-k 3 \
-	--save-all-seeds \
-	 \
-	 \
-	--cache-dir out/cache/experiment/azoth \
-	2>&1 | tee "out/experiments/azoth/logs/$(date +%Y-%m-%dT%H-%M-%S)-experiment_pe_feat_symbol_vocab_bigrams_confirm_seedsearch_3.log"
-22:45:00 INFO  collimator.experiment: using cached experiment snapshot: max_id=1716957660
-22:45:00 INFO  collimator.experiment: dataset snapshot: max_id=1716957660
-22:45:25 INFO  collimator.experiment: cached corpus selections: out/cache/experiment/azoth/corpus_4edd741b1ec37a66.json
+Features: 7538
+Model:    azoth  301/300 trees  depth=12  lr=0.05  leaves=96  min_child_samples=100  β=2.0  seed=43
+──────────────────── Holdout ─────────────────────────
+  n=68933 (61474 malware, 7459 benign)  threshold=0.375
+  ROC AUC  0.9997   Avg Prec  0.9999   Brier  0.0023   ECE  0.0006
+  F1  0.9981   Precision  0.9966   Recall  0.9996
+  TP 61451 / 61474  (99.96%)    FN    23 / 61474  (0.04%)
+  TN  7247 / 7459  (97.16%)    FP   212 / 7459  (2.84%)
+======================================================
 
-EXPERIMENT
-============================================================
-Sampled train: 1146901 (1022614 malware, 124287 benign)
-External test: 189711 (169315 malware, 20396 benign)
-22:45:26 INFO  collimator.experiment: pass 1: building vocabulary (worker-local DB fetching)
-23:07:27 INFO  collimator.features: tiered crit bigrams: 5000 vocab entries
-23:08:19 INFO  collimator.features: extended metrics: 176 keys from 5000 scanned rows (always-keep below threshold: ast_depth_capped)
-23:09:08 INFO  collimator.features: crit-category n-grams: 52 unigrams, 371 bigrams, 439 trigrams from 5000 scanned rows
-23:10:29 INFO  collimator.features: ATT&CK/MBC n-grams: 0/500 atk bi/tri, 37/500 mbc bi/tri from 5000 scanned rows
-23:11:41 INFO  collimator.features: symbol vocab: 10000 entries from 5000 scanned rows
-23:11:41 INFO  collimator.features: symbol bigram vocab: 5000 entries (cap=64/file) from 5000 scanned rows
-23:11:41 INFO  collimator.features: pruned feature spec: 74979 -> 7534 features
-23:11:41 INFO  collimator.features: vocab: 1198 paths, 53 filetypes, 21049 elements, 5000 bigrams, 0 ghosts, 176 ext_metrics -> 7534 features
-23:11:42 INFO  collimator.experiment: pass 2: extracting all features (worker-local DB fetching)
-make[2]: *** [Makefile:1847: experiment] Terminated
+=======================EXTERNAL TEST========================
+  Threshold: 0.375
+  Precision: 0.9985
+  Recall:    0.9960
+  F1:        0.9972
+  ROC AUC:   0.9997
+  Avg Prec:  1.0000
+  Brier:     0.0046
+  Recall@FP/100M: L50(deploy)=0.9104 50=0.9104 100=0.9482 300=0.9783 500=0.9878 (n_benign=20396, min_resolvable=4902.9/100M)
+19:30:07 INFO  collimator.experiment: seed-search attempt 1/3 done: F1=0.9972 AUC=0.9997 recall@L50/100M=0.9104 (110.3s)
+19:30:07 INFO  collimator.experiment: seed-search attempt 2/3 (seed=44)
+19:30:07 INFO  collimator.train: training: 1148879 samples (1024573 malware, 124306 benign), 7538 features, sparse nnz=525944215 density=6.1% mem=4017MB
+19:30:07 INFO  collimator.train: holdout: 137866 samples (122949 malware, 14917 benign)
+19:30:09 INFO  collimator.train: cross-validation disabled
+19:30:09 INFO  collimator.train: training final model on 1011013 samples
+19:30:09 INFO  collimator.model: device=cpu (sparse: 6.076% density)
+19:31:39 INFO  collimator.train: final model: 300 trees (early stopped at 300) on cpu
+19:31:39 INFO  collimator.train: evaluation: AUC=0.9998 F1=0.9984 threshold=0.267 (isotonic calibrated)
+
+======================================================
+TRAINING RESULTS
+======================================================
+Dataset:  1148879 (1024573 malware, 124306 benign, 0.1:1)
+Features: 7538
+Model:    azoth  301/300 trees  depth=12  lr=0.05  leaves=96  min_child_samples=100  β=2.0  seed=44
+──────────────────── Holdout ─────────────────────────
+  n=68933 (61474 malware, 7459 benign)  threshold=0.267
+  ROC AUC  0.9998   Avg Prec  1.0000   Brier  0.0022   ECE  0.0004
+  F1  0.9984   Precision  0.9976   Recall  0.9993
+  TP 61429 / 61474  (99.93%)    FN    45 / 61474  (0.07%)
+  TN  7311 / 7459  (98.02%)    FP   148 / 7459  (1.98%)
+======================================================
+19:31:40 INFO  collimator.experiment: seed-search attempt 2/3 done: F1=0.9976 AUC=0.9996 recall@L50/100M=0.8607 (93.2s)
+19:31:40 INFO  collimator.experiment: seed-search attempt 3/3 (seed=45)
+19:31:40 INFO  collimator.train: training: 1148879 samples (1024573 malware, 124306 benign), 7538 features, sparse nnz=525944215 density=6.1% mem=4017MB
+19:31:40 INFO  collimator.train: holdout: 137866 samples (122949 malware, 14917 benign)
+19:31:42 INFO  collimator.train: cross-validation disabled
+19:31:42 INFO  collimator.train: training final model on 1011013 samples
+19:31:42 INFO  collimator.model: device=cpu (sparse: 6.075% density)
+make[2]: *** [Makefile:1851: experiment] Terminated
 --- end log tail ---
-full log: /home/t/collimator/out/autocollie/runs/2026-06-14T02-44-59_20260614T024459-confirm-9c5fc1291c9ef2d2_pe_feat_symbol_vocab_bigrams_confirm_seedsearch_3.log
+full log: /home/t/collimator/out/autocollie/runs/2026-06-14T23-02-36_20260614T230236-confirm-9c5fc1291c9ef2d2_pe_feat_symbol_vocab_bigrams_confirm_seedsearch_3.log
 
 ## Per-seed results (1 ran)
 

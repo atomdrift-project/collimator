@@ -782,3 +782,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T052147-filetypes-kotlin` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d7d838abd8013ca3` | inherit_from_filetypes_json_1e3933ad | ok | 0.9992 | 0.9665 | 0.9945 | 125 | [log](out/autocollie/runs/2026-06-15T05-37-11_20260615T052147-filetypes-kotlin_inherit_from_filetypes_json_1e3933ad.log) |
+| `8a3655e2f8c04175` | kotlin_control_training_tune | ok | 0.9806 | 0.9859 | 0.7368 | 67 | [log](out/autocollie/runs/2026-06-15T05-39-47_20260615T052147-filetypes-kotlin_kotlin_control_training_tune.log) |
+| `7187b9313c952df8` | kotlin_train_hardneg_sweep | ok | 0.9761 | 0.9817 | 0.7369 | 30 | [log](out/autocollie/runs/2026-06-15T05-41-07_20260615T052147-filetypes-kotlin_kotlin_train_hardneg_sweep.log) |
+| `c15dec0603fab470` | kotlin_feat_kv_vocab_split | ok | 0.9780 | 0.9833 | 0.7364 | 73 | [log](out/autocollie/runs/2026-06-15T05-41-39_20260615T052147-filetypes-kotlin_kotlin_feat_kv_vocab_split.log) |
+| `c499f1e4bca8ed34` | kotlin_feat_textenc_metrics | ok | 0.9790 | 0.9844 | 0.7368 | 38 | [log](out/autocollie/runs/2026-06-15T05-42-56_20260615T052147-filetypes-kotlin_kotlin_feat_textenc_metrics.log) |
+| `e28786d1f3e1c007` | kotlin_feat_tiered_crit_abl | ok | 0.9780 | 0.9833 | 0.7364 | 32 | [log](out/autocollie/runs/2026-06-15T05-43-35_20260615T052147-filetypes-kotlin_kotlin_feat_tiered_crit_abl.log) |
+| `42bcd94caedc226c` | kotlin_feat_symbol_bigram_vocab | ok | 0.9780 | 0.9833 | 0.7364 | 27 | [log](out/autocollie/runs/2026-06-15T05-44-09_20260615T052147-filetypes-kotlin_kotlin_feat_symbol_bigram_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_training_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best recent feature_env to cache-hit; tweaks num_leaves and learning_rate to improve recall@3FPM by refining tree splits at the tail.
+- **`kotlin_train_hardneg_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Applies hard-negative upweighting to push recall@3FPM by forcing the model to better separate borderline malware from benigns at the strict-FP tail.
+- **`kotlin_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture granular key-value signals, targeting PR_AUC gains by resolving ambiguous config patterns.
+- **`kotlin_feat_textenc_metrics`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full with lower bigram_min_freq to capture obfuscation and structural text signals, aiming to lift PR_AUC.
+- **`kotlin_feat_tiered_crit_abl`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Disables clusters group and enables tiered_crit_trigrams to reduce noise while capturing high-severity co-occurrences, targeting PR_AUC and ROC_AUC stability.
+- **`kotlin_feat_symbol_bigram_vocab`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Expands symbol_vocab and enables symbol_bigrams to capture API co-occurrence patterns, aiming to improve PR_AUC by distinguishing malicious import chains.
+
+</details>
+

@@ -1032,3 +1032,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T052147-filetypes-jpeg` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cd476b9f7e787b85` | inherit_from_filetypes_json_1e3933ad | ok | 0.9513 | 0.9755 | 0.8916 | 17 | [log](out/autocollie/runs/2026-06-15T05-37-02_20260615T052147-filetypes-jpeg_inherit_from_filetypes_json_1e3933ad.log) |
+| `f5966ca1781e60bb` | jpeg_control_train_deeper | ok | 0.2115 | 0.6489 | 0.2817 | 33 | [log](out/autocollie/runs/2026-06-15T05-37-42_20260615T052147-filetypes-jpeg_jpeg_control_train_deeper.log) |
+| `a80edd0b8530e289` | jpeg_kv_vocab_metadata | ok | 0.2115 | 0.6489 | 0.2817 | 45 | [log](out/autocollie/runs/2026-06-15T05-38-27_20260615T052147-filetypes-jpeg_jpeg_kv_vocab_metadata.log) |
+| `e904a5579bd79940` | jpeg_low_freq_bigrams | ok | 0.2115 | 0.6489 | 0.2817 | 32 | [log](out/autocollie/runs/2026-06-15T05-39-15_20260615T052147-filetypes-jpeg_jpeg_low_freq_bigrams.log) |
+| `23aaf2a86fc4b959` | jpeg_train_hardneg_scalepos | ok | 0.2856 | 0.7021 | 0.3089 | 21 | [log](out/autocollie/runs/2026-06-15T05-39-49_20260615T052147-filetypes-jpeg_jpeg_train_hardneg_scalepos.log) |
+| `0a43fb572a11c66d` | jpeg_abl_extreme_off | ok | 0.2115 | 0.6489 | 0.2817 | 39 | [log](out/autocollie/runs/2026-06-15T05-40-13_20260615T052147-filetypes-jpeg_jpeg_abl_extreme_off.log) |
+| `61e361efbc6cced4` | jpeg_transfer_xml_tiered_seed | ok | 0.2112 | 0.5952 | 0.3065 | 30 | [log](out/autocollie/runs/2026-06-15T05-40-53_20260615T052147-filetypes-jpeg_jpeg_transfer_xml_tiered_seed.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_deeper`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control baseline replicating recent feature_env; increases num_leaves and estimators to improve PR_AUC by better fitting the tail distribution without altering features.
+- **`jpeg_kv_vocab_metadata`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture EXIF/IPTC metadata patterns unique to malicious JPEGs, targeting PR_AUC and recall@3FPM by adding high-signal key-value features.
+- **`jpeg_low_freq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 to include rarer structural and metadata patterns, aiming to boost recall@3FPM by catching novel malicious JPEG variants that evade high-frequency filters.
+- **`jpeg_train_hardneg_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Upweights hard negatives and scales down positive weight to sharpen the decision boundary at low FPR, targeting recall@3FPM and PR_AUC by reducing false positives in the tail.
+- **`jpeg_abl_extreme_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=250 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce noise from tail metrics, aiming to stabilize PR_AUC and improve recall@3FPM by focusing the model on core structural and metadata signals.
+- **`jpeg_transfer_xml_tiered_seed`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 …` — Transfers XML's low-freq bigram and tiered trigram config to JPEG to capture subtle metadata sequences, using seed_search_k=3 to ensure robust PR_AUC gains across random splits.
+
+</details>
+

@@ -980,3 +980,27 @@ _No specs ran._
 
 _No specs ran._
 
+## Cycle `20260615T052147-filetypes-text` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4a7bb71a8c68684d` | inherit_from_filetypes_json_1e3933ad | ok | 0.9473 | 0.9752 | 0.8364 | 13 | [log](out/autocollie/runs/2026-06-15T05-35-09_20260615T052147-filetypes-text_inherit_from_filetypes_json_1e3933ad.log) |
+| `3f5b78b11782a314` | text_ctrl_train_tune_v3 | ok | 0.0803 | 0.5253 | 0.0738 | 19 | [log](out/autocollie/runs/2026-06-15T05-35-29_20260615T052147-filetypes-text_text_ctrl_train_tune_v3.log) |
+| `79616648dc9fc76d` | text_feat_textmetrics_kv_vocab | ok | 0.0759 | 0.5183 | 0.0738 | 17 | [log](out/autocollie/runs/2026-06-15T05-35-54_20260615T052147-filetypes-text_text_feat_textmetrics_kv_vocab.log) |
+| `e3936d20034039a5` | text_feat_lowbigram_tieredtrigrams | ok | 0.0803 | 0.5253 | 0.0738 | 19 | [log](out/autocollie/runs/2026-06-15T05-36-12_20260615T052147-filetypes-text_text_feat_lowbigram_tieredtrigrams.log) |
+| `3ac2a0a8715efd5f` | text_transfer_xml_lowbigram | ok | 0.0803 | 0.5253 | 0.0738 | 34 | [log](out/autocollie/runs/2026-06-15T05-36-32_20260615T052147-filetypes-text_text_transfer_xml_lowbigram.log) |
+| `83fe6c2606c0071b` | text_abl_extreme_off | ok | 0.0803 | 0.5253 | 0.0738 | 38 | [log](out/autocollie/runs/2026-06-15T05-37-07_20260615T052147-filetypes-text_text_abl_extreme_off.log) |
+| `52886733f5d354cc` | text_gen_seed_search_k3 | ok | 0.0997 | 0.5254 | 0.1172 | 38 | [log](out/autocollie/runs/2026-06-15T05-38-02_20260615T052147-filetypes-text_text_gen_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_train_tune_v3`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run using recent feature surface; increase estimators and adjust learning rate to improve PR_AUC by allowing deeper model fitting without changing features.
+- **`text_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture structural text obfuscation and key-value patterns, aiming to boost PR_AUC and recall@3FPM by adding high-signal features.
+- **`text_feat_lowbigram_tieredtrigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Lower bigram min freq to 50 and enable tiered crit trigrams to capture rarer malicious patterns, targeting PR_AUC improvement through finer-grained n-gram signal.
+- **`text_transfer_xml_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfer XML route's successful low bigram freq and tiered trigram config to text route, expecting similar PR_AUC gains from finer-grained n-grams.
+- **`text_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce noise and overfitting on rare patterns, aiming to stabilize PR_AUC and improve recall@3FPM by removing low-signal tail features.
+- **`text_gen_seed_search_k3`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 on a baseline config to average out seed variance and verify if recent PR_AUC drops are due to RNG noise, targeting stable PR_AUC.
+
+</details>
+

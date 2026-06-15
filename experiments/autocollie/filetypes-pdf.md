@@ -2234,3 +2234,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260615T052147-filetypes-pdf` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f66d05dfe8e86388` | inherit_from_filetypes_json_1e3933ad | ok | 1.0000 | 0.9989 | 0.9946 | 53 | [log](out/autocollie/runs/2026-06-15T05-37-22_20260615T052147-filetypes-pdf_inherit_from_filetypes_json_1e3933ad.log) |
+| `5318fbbd81af7830` | pdf_ctrl_dart_extra_trees_spw05 | ok | 0.9919 | 0.9766 | 0.8546 | 66 | [log](out/autocollie/runs/2026-06-15T05-38-44_20260615T052147-filetypes-pdf_pdf_ctrl_dart_extra_trees_spw05.log) |
+| `8b65ed8488030e54` | pdf_feat_textmetrics_docobfus_kv | ok | 0.9932 | 0.9780 | 0.8554 | 44 | [log](out/autocollie/runs/2026-06-15T05-40-10_20260615T052147-filetypes-pdf_pdf_feat_textmetrics_docobfus_kv.log) |
+| `6807336efe56bc4d` | pdf_feat_kv_split_lowbigram | ok | 0.9933 | 0.9782 | 0.8553 | 41 | [log](out/autocollie/runs/2026-06-15T05-40-56_20260615T052147-filetypes-pdf_pdf_feat_kv_split_lowbigram.log) |
+| `f5a649b4ccad3c05` | pdf_transfer_rtf_extmetrics_textenc | ok | 0.9936 | 0.9793 | 0.8554 | 34 | [log](out/autocollie/runs/2026-06-15T05-41-40_20260615T052147-filetypes-pdf_pdf_transfer_rtf_extmetrics_textenc.log) |
+| `38c96e98bb58a345` | pdf_seedsearch_textmetrics_ensemble | ok | 0.9933 | 0.9783 | 0.9806 | 40 | [log](out/autocollie/runs/2026-06-15T05-42-18_20260615T052147-filetypes-pdf_pdf_seedsearch_textmetrics_ensemble.log) |
+| `27e2a80b3f5bd061` | pdf_abl_extreme_blindfold_off | ok | 0.9933 | 0.9782 | 0.8553 | 21 | [log](out/autocollie/runs/2026-06-15T05-43-02_20260615T052147-filetypes-pdf_pdf_abl_extreme_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_dart_extra_trees_spw05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Replicate best recent feature surface and test dart boosting with extra_trees and lower scale_pos_weight_mult to improve recall@3FPM by focusing on hard positives and reducing tail FPR.
+- **`pdf_feat_textmetrics_docobfus_kv`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and document_obfuscation_features to capture PDF-specific obfuscation patterns, aiming to boost PR_AUC by adding high-signal structural features.
+- **`pdf_feat_kv_split_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enable kv_value_split and lower bigram_min_freq to 25 to recover granular key-value and rare bigram signal, targeting recall@3FPM improvement by capturing subtle malicious patterns.
+- **`pdf_transfer_rtf_extmetrics_textenc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Port extended_metrics and text_encoding from sister route rtf to capture cross-format structural and encoding anomalies, aiming to lift PR_AUC by adding proven document-family signal.
+- **`pdf_seedsearch_textmetrics_ensemble`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Apply seed_search_k=3 and save_all_seeds=true to the text_metrics config to average out seed variance and stabilize recall@3FPM gains across different random splits.
+- **`pdf_abl_extreme_blindfold_off`** `EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features and blindfold to reduce noisy tail features, aiming to improve PR_AUC by lowering false positive rate at the strict operating point without losing core signal.
+
+</details>
+

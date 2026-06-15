@@ -710,3 +710,27 @@ Rejected before run:
 
 _No specs ran._
 
+## Cycle `20260615T061345-filegroups-media` — 2026-06-15T06:13:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c8eb289be2592ecb` | inherit_from_filetypes_json_1e3933ad | ok | 0.9510 | 0.9738 | 0.9217 | 6 | [log](out/autocollie/runs/2026-06-15T06-27-36_20260615T061345-filegroups-media_inherit_from_filetypes_json_1e3933ad.log) |
+| `8792174846aa462c` | media_control_train_opt_v2 | ok | 0.2402 | 0.6054 | 0.1544 | 12 | [log](out/autocollie/runs/2026-06-15T06-27-48_20260615T061345-filegroups-media_media_control_train_opt_v2.log) |
+| `80935d648d691f6d` | media_text_metrics_full_vocab | ok | 0.2501 | 0.6394 | 0.1557 | 10 | [log](out/autocollie/runs/2026-06-15T06-28-03_20260615T061345-filegroups-media_media_text_metrics_full_vocab.log) |
+| `34ca6b8f8b46c705` | media_lowbigram_expand | ok | 0.2501 | 0.6394 | 0.1557 | 9 | [log](out/autocollie/runs/2026-06-15T06-28-14_20260615T061345-filegroups-media_media_lowbigram_expand.log) |
+| `7ef27fb8be4fd4b0` | media_abl_clusters_extreme | ok | 0.2501 | 0.6394 | 0.1557 | 14 | [log](out/autocollie/runs/2026-06-15T06-28-24_20260615T061345-filegroups-media_media_abl_clusters_extreme.log) |
+| `adeba9a54d83eca2` | media_hardneg_tail | ok | 0.2737 | 0.6606 | 0.1557 | 6 | [log](out/autocollie/runs/2026-06-15T06-28-40_20260615T061345-filegroups-media_media_hardneg_tail.log) |
+| `ec9a79f173bab84d` | media_seed_search_3 | ok | 0.2561 | 0.6506 | 0.2338 | 13 | [log](out/autocollie/runs/2026-06-15T06-28-48_20260615T061345-filegroups-media_media_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_train_opt_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree complexity and regularization to better separate tail malware from benign media files.
+- **`media_text_metrics_full_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by capturing document obfuscation and encoding anomalies common in malicious media/documents.
+- **`media_lowbigram_expand`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by including rarer but highly indicative bigrams in media files without overfitting.
+- **`media_abl_clusters_extreme`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize ROC_AUC and PR_AUC by removing noisy cluster and extreme features that dilute signal in media corpora.
+- **`media_hardneg_tail`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`media_seed_search_3`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to improve robust PR_AUC and recall@3FPM by averaging over 3 seeds to mitigate seed-driven variance in tail metrics.
+
+</details>
+

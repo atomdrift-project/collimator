@@ -828,3 +828,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T052147-filetypes-java_class` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f173036c727472de` | inherit_from_filetypes_json_1e3933ad | ok | 0.9883 | 0.9979 | 0.9406 | 19 | [log](out/autocollie/runs/2026-06-15T05-35-56_20260615T052147-filetypes-java_class_inherit_from_filetypes_json_1e3933ad.log) |
+| `7c0fac7d892b09f9` | java_class_control_training_tune | ok | 0.8922 | 0.9544 | 0.8742 | 35 | [log](out/autocollie/runs/2026-06-15T05-36-32_20260615T052147-filetypes-java_class_java_class_control_training_tune.log) |
+| `7015eea4cd55eb2f` | java_class_symbol_vocab_expansion | ok | 0.8921 | 0.9548 | 0.8723 | 61 | [log](out/autocollie/runs/2026-06-15T05-37-18_20260615T052147-filetypes-java_class_java_class_symbol_vocab_expansion.log) |
+| `e516b73ff3ac27b3` | java_class_kv_vocab_split | ok | 0.8921 | 0.9548 | 0.8723 | 38 | [log](out/autocollie/runs/2026-06-15T05-38-22_20260615T052147-filetypes-java_class_java_class_kv_vocab_split.log) |
+| `48f9c3c074f6c798` | java_class_abl_textenc_clusters | ok | 0.8921 | 0.9548 | 0.8723 | 29 | [log](out/autocollie/runs/2026-06-15T05-39-08_20260615T052147-filetypes-java_class_java_class_abl_textenc_clusters.log) |
+| `e7c5c2f361caf3b5` | java_class_transfer_hardneg_perl | ok | 0.8899 | 0.9538 | 0.8723 | 31 | [log](out/autocollie/runs/2026-06-15T05-39-40_20260615T052147-filetypes-java_class_java_class_transfer_hardneg_perl.log) |
+| `6fbe5966cbcdeb56` | java_class_seed_search_k3 | ok | 0.8904 | 0.9556 | 0.8650 | 10 | [log](out/autocollie/runs/2026-06-15T05-40-15_20260615T052147-filetypes-java_class_java_class_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_training_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates the top PR_AUC feature set while tuning tree complexity and regularization to improve PR_AUC by reducing benign-tail overfitting.
+- **`java_class_symbol_vocab_expansion`** `EXP_DISABLE_FEATURE_GROUPS=textenc EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab with expanded capacity to capture rare Java method co-occurrences, targeting PR_AUC improvement by adding discriminative structural signal.
+- **`java_class_kv_vocab_split`** `EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with value splitting to parse manifest attributes into discrete tokens, targeting PR_AUC improvement by recovering granular metadata signal.
+- **`java_class_abl_textenc_clusters`** `EXP_DISABLE_FEATURE_GROUPS=textenc,clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=0 EXP_TRAIN_SAMPLES=30000` — Disables textenc and clusters to remove noise from non-text bytecode and high-variance groupings, targeting PR_AUC by focusing the model on core structural and symbol features.
+- **`java_class_transfer_hardneg_perl`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Ports the perl route's hard-negative weighting to handle extreme class imbalance, targeting recall@3FPM by forcing stricter benign boundary learning on the 223:51k corpus.
+- **`java_class_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_LEARNING_RATE=0.05 …` — Applies seed_search_k=3 to the best feature configuration to verify signal stability, targeting consistent PR_AUC and recall@3FPM by averaging out seed-driven variance.
+
+</details>
+

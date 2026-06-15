@@ -1352,6 +1352,10 @@ azoth-validate: azoth-calibrate
 	@# promote-full-train ships .txt seeds. Idempotent: no-op when every seed
 	@# already has its .onnx sibling.
 	$(PYTHON) scripts/convert_bundle_to_onnx.py --azoth-root $(AZOTH_ROOT) --db $(DB)
+	@# convert_bundle_to_onnx may DROP weak/parity-failing specialist routes, so
+	@# the bundle membership can change here. Regenerate READMEs from the final
+	@# (post-prune) bundle so the docs never dangle a link to a dropped route.
+	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	@_STAGE=$$(mktemp -d) && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
 	  cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
@@ -1499,8 +1503,9 @@ azoth-deploy: azoth-calibrate
 # azoth-deploy-final reruns only the post-generation deploy stages: stage the
 # curated runtime/docs bundle, validate it, run litmus compatibility checks,
 # mirror it into $(AZOTH_DEPLOY_DIR), and verify litmus's default deployed path.
-# It intentionally skips azoth-calibrate, diagnostics, policy search, routed
-# metrics, and README regeneration; use after those artifacts already exist.
+# It intentionally skips azoth-calibrate, diagnostics, policy search, and routed
+# metrics; use after those artifacts already exist. It DOES regenerate READMEs,
+# but only after convert (the prune step) so the docs match the final bundle.
 #
 # The litmus checks include `litmus validate` (fatal) against the STAGED bundle
 # before the rsync. `scan` only WARNs when an offset-written feature family
@@ -1527,6 +1532,10 @@ azoth-deploy-final: venv
 	@# checked: refuses to ship if any prob delta exceeds the converter's
 	@# default tolerance.
 	$(PYTHON) scripts/convert_bundle_to_onnx.py --azoth-root $(AZOTH_ROOT) --db $(DB)
+	@# convert_bundle_to_onnx may DROP weak/parity-failing specialist routes, so
+	@# the bundle membership can change here. Regenerate READMEs from the final
+	@# (post-prune) bundle so the docs never dangle a link to a dropped route.
+	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	@# Mirror staged bundle into deploy dir, deleting anything in the deploy
 	@# tree that isn't in the staged copy. Per-route slot contents (e.g. an
 	@# old `models/` dir from a prior multi-seed deploy) get cleaned even

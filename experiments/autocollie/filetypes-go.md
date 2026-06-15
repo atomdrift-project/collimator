@@ -1262,3 +1262,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T062035-filetypes-go` — 2026-06-15T06:20:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `37c7944061ff9958` | inherit_from_filetypes_json_1e3933ad | ok | 0.9417 | 0.9854 | 0.8550 | 24 | [log](out/autocollie/runs/2026-06-15T06-28-01_20260615T062035-filetypes-go_inherit_from_filetypes_json_1e3933ad.log) |
+| `819308a6e7b18f3d` | go_control_deeper_trees | ok | 0.5253 | 0.8835 | 0.2045 | 23 | [log](out/autocollie/runs/2026-06-15T06-28-35_20260615T062035-filetypes-go_go_control_deeper_trees.log) |
+| `a950272d76b96f53` | go_hardneg_tail_recall | ok | 0.5136 | 0.8841 | 0.2041 | 5 | [log](out/autocollie/runs/2026-06-15T06-29-02_20260615T062035-filetypes-go_go_hardneg_tail_recall.log) |
+| `13f36e635926d78f` | go_kv_vocab_split | ok | 0.5253 | 0.8835 | 0.2045 | 21 | [log](out/autocollie/runs/2026-06-15T06-29-08_20260615T062035-filetypes-go_go_kv_vocab_split.log) |
+| `6afa9fd9511417b2` | go_text_metrics_obfuscation | ok | 0.5259 | 0.8784 | 0.2043 | 13 | [log](out/autocollie/runs/2026-06-15T06-29-31_20260615T062035-filetypes-go_go_text_metrics_obfuscation.log) |
+| `d85aeb73b4f10b2f` | go_abl_blindfold_off | ok | 0.5253 | 0.8835 | 0.2045 | 13 | [log](out/autocollie/runs/2026-06-15T06-29-45_20260615T062035-filetypes-go_go_abl_blindfold_off.log) |
+| `becfc918c859d6ee` | go_seed_search_ensemble | ok | 0.5424 | 0.8921 | 0.5722 | 6 | [log](out/autocollie/runs/2026-06-15T06-29-59_20260615T062035-filetypes-go_go_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_deeper_trees`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and more estimators to capture complex Go patterns, aiming to lift PR_AUC.
+- **`go_hardneg_tail_recall`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining to sharpen the low-FPR boundary, targeting recall@3 FP/M improvement.
+- **`go_kv_vocab_split`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture Go module/config signals, aiming to boost PR_AUC by resolving ambiguous configs.
+- **`go_text_metrics_obfuscation`** `EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text metrics and encoding features to detect obfuscated Go payloads, targeting recall@3 FP/M by catching minimal droppers.
+- **`go_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ablate blindfold dropout features to reduce variance and potentially stabilize PR_AUC without losing recall.
+- **`go_seed_search_ensemble`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed search to average out RNG variance and verify if the current PR_AUC gain is robust, targeting stable recall@3 FP/M.
+
+</details>
+

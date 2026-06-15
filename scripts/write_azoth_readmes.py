@@ -607,6 +607,7 @@ def _ensemble_table(
     filetypes: tuple[str, ...],
     *,
     link_routes: bool = False,
+    root: Path | None = None,
 ) -> list[str]:
     """Headline table for the routed ensemble's model properties.
 
@@ -679,7 +680,15 @@ def _ensemble_table(
             wsum[key] += fv * pop
             wpop[key] += pop
         balance = f"{_int(n_mal)} / {_int(n_ben)}"
-        ft_cell = f"[`{ft}`](filetypes/{ft}/README.md)" if link_routes else f"`{ft}`"
+        # Only link to a per-route page that actually exists. A filetype can
+        # appear here on eval support alone (>=25 mal/ben) without — or after
+        # losing — a dedicated specialist (e.g. dropped by the deploy weakness
+        # gate); linking it would dangle at filetypes/<ft>/README.md.
+        has_route_readme = (
+            link_routes and root is not None
+            and (root / f"filetypes/{ft}" / "README.md").is_file()
+        )
+        ft_cell = f"[`{ft}`](filetypes/{ft}/README.md)" if has_route_readme else f"`{ft}`"
         lines.append(
             f"| {ft_cell} | {balance} | {pr_str} | {roc_str} | {f1_str} | {recall_str} | {ember_str} |"
         )
@@ -1343,8 +1352,7 @@ def _write_bundle(root: Path) -> None:
         "model expects). Scores are the model's raw probabilities — there is "
         "no separate probability calibrator.",
         "",
-        "Further reading: [DESIGN.md](DESIGN.md) for architecture and "
-        "FP-budget design, [ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md) for "
+        "Further reading: [ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md) for "
         "routing details, [GENERALIST_MODEL.md](GENERALIST_MODEL.md) for "
         "the single-model baseline. License: Apache 2.0.",
         "",
@@ -1376,7 +1384,7 @@ def _write_bundle(root: Path) -> None:
         "",
         *_ensemble_table(
             metrics, eval_data, _headline_filetypes(metrics, config, eval_data),
-            link_routes=True,
+            link_routes=True, root=root,
         ),
         "",
         "PR AUC summarizes recall against precision across operating "

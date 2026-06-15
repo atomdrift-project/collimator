@@ -672,3 +672,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T052147-filetypes-pkg-info` — 2026-06-15T05:21:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aa783059198e130a` | inherit_from_filetypes_json_1e3933ad | ok | 0.9927 | 0.5000 | 0.9963 | 34 | [log](out/autocollie/runs/2026-06-15T05-36-22_20260615T052147-filetypes-pkg-info_inherit_from_filetypes_json_1e3933ad.log) |
+| `ff737e993fddf807` | pkginfo_control_hardneg_tune | ok | 0.9968 | 0.9847 | 0.9851 | 38 | [log](out/autocollie/runs/2026-06-15T05-37-07_20260615T052147-filetypes-pkg-info_pkginfo_control_hardneg_tune.log) |
+| `5d7c583c3aa1b6f4` | pkginfo_lowbigram_freq_50 | ok | 0.9961 | 0.9820 | 0.9843 | 44 | [log](out/autocollie/runs/2026-06-15T05-37-56_20260615T052147-filetypes-pkg-info_pkginfo_lowbigram_freq_50.log) |
+| `6055c22c2c845d3a` | pkginfo_kv_vocab_5000 | ok | 0.9961 | 0.9820 | 0.9843 | 48 | [log](out/autocollie/runs/2026-06-15T05-38-43_20260615T052147-filetypes-pkg-info_pkginfo_kv_vocab_5000.log) |
+| `bc6e522e46d4fc93` | pkginfo_tiered_trigrams_lowcrit | ok | 0.9969 | 0.9852 | 0.9851 | 36 | [log](out/autocollie/runs/2026-06-15T05-39-36_20260615T052147-filetypes-pkg-info_pkginfo_tiered_trigrams_lowcrit.log) |
+| `db5eb94502b3d876` | pkginfo_abl_blindfold_off | ok | 0.9961 | 0.9820 | 0.9843 | 36 | [log](out/autocollie/runs/2026-06-15T05-40-15_20260615T052147-filetypes-pkg-info_pkginfo_abl_blindfold_off.log) |
+| `284bc2bdb81795f1` | pkginfo_seed_search_3_kv | ok | 0.9971 | 0.9859 | 0.9847 | 13 | [log](out/autocollie/runs/2026-06-15T05-40-54_20260615T052147-filetypes-pkg-info_pkginfo_seed_search_3_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_hardneg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best recent feature surface to hit matrix cache; tunes hard_negative_weight and num_leaves to improve PR_AUC by better separating tail malware from benigns.
+- **`pkginfo_lowbigram_freq_50`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 to capture rarer package metadata patterns, aiming to boost recall@3 FP/M by surfacing subtle malicious signals without hurting ROC_AUC.
+- **`pkginfo_kv_vocab_5000`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with max 5000 to extract structured key-value signals from package manifests, targeting PR_AUC improvement by capturing precise dependency and version anomalies.
+- **`pkginfo_tiered_trigrams_lowcrit`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Enables tiered_crit_trigrams with lower min_crit to catch subtle malicious patterns in package traits, aiming to lift recall@3 FP/M while keeping ROC_AUC flat.
+- **`pkginfo_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout features to reduce noise in the feature matrix, expecting stable PR_AUC and potentially higher recall@3 FP/M by giving the model cleaner signals.
+- **`pkginfo_seed_search_3_kv`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Uses seed_search_k=3 on the kv_vocab config to average out seed variance, targeting robust recall@3 FP/M gains across different random splits.
+
+</details>
+

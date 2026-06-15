@@ -794,3 +794,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T062829-filetypes-csharp` — 2026-06-15T06:28:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `119ef25cc21cbd7f` | inherit_from_filetypes_json_1e3933ad | ok | 0.9828 | 0.9903 | 0.9386 | 9 | [log](out/autocollie/runs/2026-06-15T06-45-04_20260615T062829-filetypes-csharp_inherit_from_filetypes_json_1e3933ad.log) |
+| `2d1ba947cc646f0e` | csharp_control_hardneg_tune | ok | 0.4433 | 0.8887 | 0.3602 | 12 | [log](out/autocollie/runs/2026-06-15T06-45-18_20260615T062829-filetypes-csharp_csharp_control_hardneg_tune.log) |
+| `a524fff705fec880` | csharp_feat_kv_vocab_split | ok | 0.4716 | 0.8910 | 0.3649 | 13 | [log](out/autocollie/runs/2026-06-15T06-45-46_20260615T062829-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+| `e8d1f0dccaf5dd84` | csharp_feat_symbol_bigrams | ok | 0.4721 | 0.8973 | 0.3576 | 15 | [log](out/autocollie/runs/2026-06-15T06-46-01_20260615T062829-filetypes-csharp_csharp_feat_symbol_bigrams.log) |
+| `9baf068fd40705f2` | csharp_transfer_lowbigram_tieredtri | ok | 0.4534 | 0.8865 | 0.3573 | 18 | [log](out/autocollie/runs/2026-06-15T06-46-19_20260615T062829-filetypes-csharp_csharp_transfer_lowbigram_tieredtri.log) |
+| `991e8b2f96f7606a` | csharp_abl_extreme_blindfold_off | ok | 0.4719 | 0.9003 | 0.3559 | 12 | [log](out/autocollie/runs/2026-06-15T06-46-40_20260615T062829-filetypes-csharp_csharp_abl_extreme_blindfold_off.log) |
+| `1204b5d0b6ffcfd8` | csharp_retry_hardneg_posweight | ok | 0.4977 | 0.9071 | 0.3531 | 13 | [log](out/autocollie/runs/2026-06-15T06-46-54_20260615T062829-filetypes-csharp_csharp_retry_hardneg_posweight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_hardneg_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature set and increase leaves/estimators to capture complex boundaries, targeting PR_AUC improvement while keeping ROC_AUC flat.
+- **`csharp_feat_kv_vocab_split`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to extract structured signal from C# configs, targeting PR_AUC by reducing false negatives on structured malware.
+- **`csharp_feat_symbol_bigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 …` — Add symbol vocab and bigrams to capture C# namespace co-occurrence, aiming to boost recall@3 FP/M by identifying malicious API chains.
+- **`csharp_transfer_lowbigram_tieredtri`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add tiered trigrams to capture rarer high-signal patterns, targeting PR_AUC gain from improved tail ranking.
+- **`csharp_abl_extreme_blindfold_off`** `EXP_BLINDFOLD=0 EXP_ESTIMATORS=200 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Remove noisy extreme and blindfold features to reduce overfitting on benign artifacts, targeting stable ROC_AUC and flat-to-up PR_AUC.
+- **`csharp_retry_hardneg_posweight`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Retry hard-negative tail config with down-weighted positives to tighten score distribution at low FPR, targeting recall@3 FP/M improvement.
+
+</details>
+

@@ -24,6 +24,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sys
@@ -37,7 +38,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from collimator import bundle, features, model as collimator_model  # noqa: E402
+from collimator import features, route_prune  # noqa: E402
 
 LOG = logging.getLogger("convert_bundle_to_onnx")
 
@@ -173,6 +174,18 @@ def _walk_route_dirs(azoth_root: Path):
             yield d
 
 
+def _route_name(route_dir: Path, azoth_root: Path) -> str:
+    """Bundle route name for a route dir, e.g. 'general', 'filetypes/jpeg'."""
+    return route_dir.relative_to(azoth_root).as_posix()
+
+
+def _safe_unlink(path: Path) -> None:
+    try:
+        path.unlink()
+    except OSError:
+        pass
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--azoth-root", type=Path, required=True,
@@ -190,6 +203,17 @@ def main() -> int:
                    ))
     p.add_argument("--parity-rows", type=int, default=200,
                    help="Rows per route to use for parity (default 200)")
+    p.add_argument("--no-weakness-gate", action="store_true",
+                   help="Skip the pre-conversion quality gate that drops "
+                        "filetype specialists meaningfully worse than the "
+                        "general route on home-filetype PR-AUC.")
+    p.add_argument("--max-pr-auc-deficit", type=float,
+                   default=route_prune.DEFAULT_PR_AUC_TOLERANCE,
+                   help="Drop a filetype specialist when the general route "
+                        "beats it on home-filetype PR-AUC by more than this "
+                        "(default %(default)s). A dead-band, not a required "
+                        "gain: ties and noise-level deficits are kept, so "
+                        "strong specialists tied with general survive.")
     p.add_argument("--skip-parity", action="store_true",
                    help="Convert without parity check. Faster but unsafe.")
     p.add_argument("--dry-run", action="store_true",
@@ -203,6 +227,37 @@ def main() -> int:
         raise SystemExit(f"azoth root not found: {azoth_root}")
     if not args.skip_parity and not args.db:
         raise SystemExit("--db is required (or set $DB) unless --skip-parity is passed")
+
+    # Pass 0 — quality gate. Drop filetype specialists too weak to ship BEFORE
+    # spending any effort converting them, so a near-random model can never
+    # reach (let alone be blocked by) the float32 ONNX parity check. A
+    # specialist that doesn't beat the general route on its home filetype's
+    # PR-AUC carries no defensible signal; the filetype falls back to the
+    # general/filegroup routes it already ensembles with.
+    pruned_weak: set[str] = set()
+    metrics_path = azoth_root / "per_filetype_metrics.json"
+    if args.no_weakness_gate:
+        LOG.info("weakness gate disabled (--no-weakness-gate)")
+    elif not metrics_path.is_file():
+        LOG.warning("weakness gate skipped: %s not found", metrics_path)
+    else:
+        metrics = json.loads(metrics_path.read_text())
+        weak = route_prune.weak_filetype_specialists(
+            metrics, tolerance=args.max_pr_auc_deficit)
+        # Only routes actually present as a deployable model in this bundle.
+        weak = {r: v for r, v in weak.items()
+                if (azoth_root / r / "feature_spec.json").is_file()}
+        for route, info in sorted(weak.items()):
+            LOG.warning(
+                "weakness gate: dropping %s (PR-AUC %.4f vs general %.4f, "
+                "deficit %.4f > %.4g) — filetype falls back to general/filegroup",
+                route, info["specialist_pr_auc"], info["general_pr_auc"],
+                info["deficit"], args.max_pr_auc_deficit,
+            )
+        if weak and args.dry_run:
+            LOG.info("[dry-run] would prune weak specialists: %s", sorted(weak))
+        elif weak:
+            pruned_weak = route_prune.prune_routes(azoth_root, set(weak))
 
     # Pass 1: identify every .txt that needs an .onnx sibling.
     to_convert: list[tuple[Path, Path, Path]] = []  # (route_dir, txt, onnx)
@@ -236,6 +291,10 @@ def main() -> int:
     n_skipped = 0
     failures: list[tuple[Path, str]] = []
     skipped: list[tuple[Path, str]] = []
+    # Specialist routes whose ONNX failed parity: dropped (fall back), not fatal.
+    # The general route is exempt — a parity failure there stays fatal because
+    # it is the fallback of last resort, with nothing to fall back to.
+    parity_failed_routes: set[str] = set()
     for route_dir, txt, onnx in to_convert:
         t0 = time.perf_counter()
         try:
@@ -262,23 +321,35 @@ def main() -> int:
                 route_dir, txt, onnx, args.db, sample, args.max_parity_delta,
             )
         except Exception as e:
-            failures.append((txt, f"parity: {e}"))
-            LOG.error("parity check failed for %s: %s — removing .onnx", txt, e)
-            try:
-                onnx.unlink()
-            except OSError:
-                pass
+            _safe_unlink(onnx)
+            route = _route_name(route_dir, azoth_root)
+            if route == "general":
+                failures.append((txt, f"parity: {e}"))
+                LOG.error("parity check errored for %s: %s — removing .onnx "
+                          "(FATAL: general route)", txt, e)
+            else:
+                parity_failed_routes.add(route)
+                LOG.warning("parity check errored for %s: %s — dropping specialist "
+                            "route %s (filetype falls back to general/filegroup)",
+                            txt, e, route)
             continue
         if not ok:
-            failures.append((txt, f"parity delta {delta:.2e} > {args.max_parity_delta:.2e}"))
-            LOG.error(
-                "%s FAILED parity: delta=%.2e > %.2e (rows=%d) — removing .onnx",
-                txt, delta, args.max_parity_delta, n_rows,
-            )
-            try:
-                onnx.unlink()
-            except OSError:
-                pass
+            _safe_unlink(onnx)
+            route = _route_name(route_dir, azoth_root)
+            if route == "general":
+                failures.append((txt, f"parity delta {delta:.2e} > {args.max_parity_delta:.2e}"))
+                LOG.error(
+                    "%s FAILED parity: delta=%.2e > %.2e (rows=%d) — removing .onnx "
+                    "(FATAL: general route)",
+                    txt, delta, args.max_parity_delta, n_rows,
+                )
+            else:
+                parity_failed_routes.add(route)
+                LOG.warning(
+                    "%s FAILED parity: delta=%.2e > %.2e (rows=%d) — dropping specialist "
+                    "route %s (filetype falls back to general/filegroup)",
+                    txt, delta, args.max_parity_delta, n_rows, route,
+                )
             continue
         n_converted += 1
         elapsed_ms = (time.perf_counter() - t0) * 1000
@@ -287,16 +358,29 @@ def main() -> int:
             txt.relative_to(azoth_root), onnx.name, delta, n_rows, elapsed_ms,
         )
 
+    # Drop specialist routes whose ONNX failed parity (general is never here).
+    parity_pruned: set[str] = set()
+    if parity_failed_routes and not args.dry_run:
+        parity_pruned = route_prune.prune_routes(azoth_root, parity_failed_routes)
+
+    dropped = sorted(pruned_weak | parity_pruned)
+
     print()
     print(
         f"converted {n_converted}/{len(to_convert)} files "
         f"({n_skipped} intentionally skipped, "
+        f"{len(dropped)} specialist route(s) dropped, "
         f"{len(failures)} failed)"
     )
     if skipped:
         print(f"skipped ({n_skipped}, .txt remains canonical):")
         for path, reason in skipped:
             print(f"  {path.relative_to(azoth_root)}: {reason}")
+    if dropped:
+        print(f"dropped specialist routes ({len(dropped)}, filetype falls back "
+              f"to general/filegroup — weak PR-AUC or failed ONNX parity):")
+        for route in dropped:
+            print(f"  {route}")
     if failures:
         print(f"failures ({len(failures)}):")
         for path, reason in failures:

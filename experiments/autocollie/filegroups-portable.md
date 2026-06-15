@@ -830,3 +830,27 @@ Rejected before run:
 
 _No specs ran._
 
+## Cycle `20260615T052150-filegroups-portable` — 2026-06-15T05:21:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7a3327d121927f92` | inherit_from_filetypes_json_1e3933ad | ok | 0.9874 | 0.9977 | 0.8556 | 13 | [log](out/autocollie/runs/2026-06-15T05-34-45_20260615T052150-filegroups-portable_inherit_from_filetypes_json_1e3933ad.log) |
+| `d27b329fd9430619` | control_training_tweak_leaves128 | ok | 0.8897 | 0.9449 | 0.8742 | 18 | [log](out/autocollie/runs/2026-06-15T05-35-06_20260615T052150-filegroups-portable_control_training_tweak_leaves128.log) |
+| `31b38c393a38e5f8` | feat_kv_vocab_split_20k | ok | 0.8921 | 0.9548 | 0.8723 | 14 | [log](out/autocollie/runs/2026-06-15T05-35-35_20260615T052150-filegroups-portable_feat_kv_vocab_split_20k.log) |
+| `ea7a40a56bdbbfdf` | feat_text_metrics_full_encoding | ok | 0.8921 | 0.9548 | 0.8723 | 17 | [log](out/autocollie/runs/2026-06-15T05-35-52_20260615T052150-filegroups-portable_feat_text_metrics_full_encoding.log) |
+| `31defffb8b128b4b` | feat_lowbigram_tiered_trigrams | ok | 0.8904 | 0.9556 | 0.8650 | 19 | [log](out/autocollie/runs/2026-06-15T05-36-11_20260615T052150-filegroups-portable_feat_lowbigram_tiered_trigrams.log) |
+| `214a24f3f7715362` | abl_disable_clusters | ok | 0.8897 | 0.9449 | 0.8742 | 20 | [log](out/autocollie/runs/2026-06-15T05-36-32_20260615T052150-filegroups-portable_abl_disable_clusters.log) |
+| `7056f8e8d8f5e452` | train_hardneg_02_15 | ok | 0.8985 | 0.9668 | 0.8874 | 9 | [log](out/autocollie/runs/2026-06-15T05-36-55_20260615T052150-filegroups-portable_train_hardneg_02_15.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_training_tweak_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control feature set with increased num_leaves and estimators to improve PR_AUC and recall@3FPM via better tree complexity.
+- **`feat_kv_vocab_split_20k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture structured config signal in portable files, aiming to boost PR_AUC and recall@3FPM.
+- **`feat_text_metrics_full_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text_metrics_full and text_encoding to capture obfuscation and encoding patterns, targeting PR_AUC and recall@3FPM gains.
+- **`feat_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and enable tiered_crit_trigrams to capture rarer co-occurrence patterns, aiming to improve PR_AUC.
+- **`abl_disable_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable clusters group to reduce noisy aggregate features, aiming to maintain PR_AUC while improving ROC_AUC and recall@3FPM stability.
+- **`train_hardneg_02_15`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard_negative_fraction 0.2 and weight 15 to focus model on difficult benigns, targeting recall@3FPM improvement.
+
+</details>
+

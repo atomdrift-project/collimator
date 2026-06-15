@@ -692,3 +692,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260615T052154-filetypes-jar` — 2026-06-15T05:21:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bbfa28998dd93ead` | inherit_from_filetypes_json_1e3933ad | ok | 0.9860 | 0.9700 | 0.9283 | 173 | [log](out/autocollie/runs/2026-06-15T05-37-17_20260615T052154-filetypes-jar_inherit_from_filetypes_json_1e3933ad.log) |
+| `fe12d312c0daa320` | jar_control_leaves128_lr003 | ok | 0.9436 | 0.9366 | 0.8539 | 123 | [log](out/autocollie/runs/2026-06-15T05-40-52_20260615T052154-filetypes-jar_jar_control_leaves128_lr003.log) |
+| `5fe192d1a72cfef7` | jar_hardneg_01_12 | ok | 0.9463 | 0.9414 | 0.8431 | 12 | [log](out/autocollie/runs/2026-06-15T05-43-01_20260615T052154-filetypes-jar_jar_hardneg_01_12.log) |
+| `83e923d339070086` | jar_kv_vocab_split_15k | ok | 0.9436 | 0.9370 | 0.8477 | 107 | [log](out/autocollie/runs/2026-06-15T05-43-16_20260615T052154-filetypes-jar_jar_kv_vocab_split_15k.log) |
+| `becbebd7ad3b9b7e` | jar_textenc_metrics_full | ok | 0.9430 | 0.9364 | 0.8470 | 38 | [log](out/autocollie/runs/2026-06-15T05-45-04_20260615T052154-filetypes-jar_jar_textenc_metrics_full.log) |
+| `1da6c2cba33c04f8` | jar_transfer_xml_lowbigram_tiered | ok | 0.9436 | 0.9370 | 0.8477 | 43 | [log](out/autocollie/runs/2026-06-15T05-45-43_20260615T052154-filetypes-jar_jar_transfer_xml_lowbigram_tiered.log) |
+| `20f9e70f5623e84a` | jar_abl_blindfold_seed_search | ok | 0.9448 | 0.9373 | 0.8103 | 49 | [log](out/autocollie/runs/2026-06-15T05-46-29_20260615T052154-filetypes-jar_jar_abl_blindfold_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to reduce overfitting, aiming to improve PR_AUC while keeping ROC_AUC flat.
+- **`jar_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Adds hard negative mining to push benign JARs further down the score distribution, targeting recall@3FPM improvement at the strict-FP tail.
+- **`jar_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and value splitting to capture manifest and metadata key-value pairs, aiming to boost PR_AUC with structured signal.
+- **`jar_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text encoding and full text metrics to better model obfuscated strings and resource files in JARs, targeting PR_AUC gains.
+- **`jar_transfer_xml_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Ports XML route's low bigram frequency floor and tiered trigrams to capture rare but malicious XML/manifest patterns, aiming for PR_AUC improvement.
+- **`jar_abl_blindfold_seed_search`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout to reduce feature noise while using seed search to stabilize recall@3FPM across RNG variance.
+
+</details>
+

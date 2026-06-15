@@ -680,3 +680,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T055154-filetypes-python-bytecode` — 2026-06-15T05:51:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b4d2c06fb86eb412` | inherit_from_filetypes_json_1e3933ad | ok | 0.9994 | 0.9996 | 0.9830 | 16 | [log](out/autocollie/runs/2026-06-15T06-06-16_20260615T055154-filetypes-python-bytecode_inherit_from_filetypes_json_1e3933ad.log) |
+| `7fea25ebc3d8025e` | pybc_ctrl_hardneg_leaves128 | ok | 0.8570 | 0.9107 | 0.8842 | 18 | [log](out/autocollie/runs/2026-06-15T06-06-39_20260615T055154-filetypes-python-bytecode_pybc_ctrl_hardneg_leaves128.log) |
+| `301ff86798e0db1e` | pybc_ctrl_reg_posweight | ok | 0.8538 | 0.9109 | 0.8837 | 2 | [log](out/autocollie/runs/2026-06-15T06-07-00_20260615T055154-filetypes-python-bytecode_pybc_ctrl_reg_posweight.log) |
+| `a31337dcb53233a2` | pybc_feat_kv_vocab_20k | ok | 0.8533 | 0.9123 | 0.8859 | 17 | [log](out/autocollie/runs/2026-06-15T06-07-04_20260615T055154-filetypes-python-bytecode_pybc_feat_kv_vocab_20k.log) |
+| `5079f050af38f201` | pybc_feat_tiered_trigrams | ok | 0.8533 | 0.9123 | 0.8859 | 15 | [log](out/autocollie/runs/2026-06-15T06-07-24_20260615T055154-filetypes-python-bytecode_pybc_feat_tiered_trigrams.log) |
+| `ec8b2062a79096d0` | pybc_transfer_xml_bigrams | ok | 0.8533 | 0.9123 | 0.8859 | 17 | [log](out/autocollie/runs/2026-06-15T06-07-39_20260615T055154-filetypes-python-bytecode_pybc_transfer_xml_bigrams.log) |
+| `0f56fb21a9b5610d` | pybc_seed_search_ensemble | ok | 0.8549 | 0.9191 | 0.8837 | 2 | [log](out/autocollie/runs/2026-06-15T06-07-57_20260615T055154-filetypes-python-bytecode_pybc_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_hardneg_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Exploit best recent feature surface with hard negatives and deeper trees to boost recall@3 FP/M.
+- **`pybc_ctrl_reg_posweight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Apply L2 regularization and down-weight positives to reduce FP noise, targeting PR AUC gain while preserving recall.
+- **`pybc_feat_kv_vocab_20k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture structured bytecode metadata, aiming to improve PR AUC via finer-grained signal.
+- **`pybc_feat_tiered_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Introduce severity-prefixed trigrams to capture malicious bytecode patterns, targeting recall@3 FP/M lift.
+- **`pybc_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfer XML route's expanded bigram vocab and cluster ablation to reduce noise and improve PR AUC.
+- **`pybc_seed_search_ensemble`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Average over 3 seeds to stabilize recall@3 FP/M gains and reduce variance on the top-performing feature set.
+
+</details>
+

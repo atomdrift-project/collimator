@@ -768,3 +768,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260615T052205-filetypes-php` — 2026-06-15T05:22:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16e8d40169c5ce40` | inherit_from_filetypes_json_1e3933ad | ok | 0.9949 | 0.9977 | 0.9649 | 42 | [log](out/autocollie/runs/2026-06-15T05-35-11_20260615T052205-filetypes-php_inherit_from_filetypes_json_1e3933ad.log) |
+| `80a2b81a146802be` | php_control_train_tune_v7 | ok | 0.8441 | 0.9446 | 0.8009 | 56 | [log](out/autocollie/runs/2026-06-15T05-36-10_20260615T052205-filetypes-php_php_control_train_tune_v7.log) |
+| `92ccf232622136cc` | php_feat_kv_textenc_vocab | ok | 0.8443 | 0.9426 | 0.8035 | 151 | [log](out/autocollie/runs/2026-06-15T05-37-14_20260615T052205-filetypes-php_php_feat_kv_textenc_vocab.log) |
+| `245ba09fae58ec32` | php_feat_lowbigram_tieredtri | ok | 0.8443 | 0.9426 | 0.8035 | 66 | [log](out/autocollie/runs/2026-06-15T05-39-48_20260615T052205-filetypes-php_php_feat_lowbigram_tieredtri.log) |
+| `aba90bafe14832b4` | php_transfer_xml_bigram_expand | ok | 0.8443 | 0.9426 | 0.8035 | 42 | [log](out/autocollie/runs/2026-06-15T05-40-57_20260615T052205-filetypes-php_php_transfer_xml_bigram_expand.log) |
+| `658e1426daa2c08b` | php_gen_seed_search_baseline | ok | 0.8446 | 0.9442 | 0.8457 | 33 | [log](out/autocollie/runs/2026-06-15T05-41-42_20260615T052205-filetypes-php_php_gen_seed_search_baseline.log) |
+| `ead1e0a097478ef2` | php_abl_extreme_off | ok | 0.8442 | 0.9410 | 0.7991 | 47 | [log](out/autocollie/runs/2026-06-15T05-42-18_20260615T052205-filetypes-php_php_abl_extreme_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_tune_v7`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by down-weighting positives (scale_pos_weight_mult=0.75) and increasing capacity (estimators=350, num_leaves=112) while keeping the proven baseline feature set to ensure matrix cache hits.
+- **`php_feat_kv_textenc_vocab`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Targets PR AUC gain by enabling kv_vocab and text_encoding to capture PHP-specific key-value structures and encoding patterns, removing cluster disable to allow full feature interaction.
+- **`php_feat_lowbigram_tieredtri`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Seeks recall@3 FP/M improvement by lowering bigram_min_freq to 100 and enabling tiered_crit_trigrams to capture rarer, high-crit PHP attack patterns without overwhelming the model.
+- **`php_transfer_xml_bigram_expand`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports xml route's successful bigram expansion (max=8000, min_freq=50) to PHP to boost PR AUC by capturing longer structural sequences common in web scripts.
+- **`php_gen_seed_search_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 and save_all_seeds=true on the baseline feature set to stabilize PR AUC and recall@3 FP/M against seed variance, averaging predictions for robust tail performance.
+- **`php_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC AUC and maintain PR AUC by disabling extreme_features to reduce tail noise and overfitting on rare benign patterns, testing if the model generalizes better without them.
+
+</details>
+

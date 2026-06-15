@@ -1156,3 +1156,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260615T052149-filetypes-python` — 2026-06-15T05:21:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `32ab2a277d74951e` | inherit_from_filetypes_json_1e3933ad | ok | 0.9912 | 0.9936 | 0.9523 | 128 | [log](out/autocollie/runs/2026-06-15T05-35-03_20260615T052149-filetypes-python_inherit_from_filetypes_json_1e3933ad.log) |
+| `fa7a86f3e7feaf24` | py_ctrl_train_opt | ok | 0.8593 | 0.9060 | 0.8057 | 144 | [log](out/autocollie/runs/2026-06-15T05-37-59_20260615T052149-filetypes-python_py_ctrl_train_opt.log) |
+| `10dd90eb7df8b3d1` | py_feat_kv_vocab_split | ok | 0.8561 | 0.8990 | 0.8043 | 115 | [log](out/autocollie/runs/2026-06-15T05-40-38_20260615T052149-filetypes-python_py_feat_kv_vocab_split.log) |
+| `458474cb83c20e8d` | py_feat_text_metrics_enc | ok | 0.8621 | 0.9094 | 0.8084 | 69 | [log](out/autocollie/runs/2026-06-15T05-42-39_20260615T052149-filetypes-python_py_feat_text_metrics_enc.log) |
+| `4ad1c3cca22cc31b` | py_abl_extreme_off | ok | 0.8577 | 0.9043 | 0.8015 | 47 | [log](out/autocollie/runs/2026-06-15T05-43-50_20260615T052149-filetypes-python_py_abl_extreme_off.log) |
+| `77cd6d83dd822d51` | py_xfer_lowbigram_hardneg | ok | 0.8720 | 0.9192 | 0.8196 | 41 | [log](out/autocollie/runs/2026-06-15T05-44-38_20260615T052149-filetypes-python_py_xfer_lowbigram_hardneg.log) |
+| `07d68d1f2f9313b5` | py_gen_seed_search_kv | ok | 0.8562 | 0.8990 | 0.8046 | 38 | [log](out/autocollie/runs/2026-06-15T05-45-19_20260615T052149-filetypes-python_py_gen_seed_search_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`py_ctrl_train_opt`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best feature env to isolate training signal; increases estimators and lowers LR to improve PR_AUC convergence without overfitting.
+- **`py_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured config/payload signals in Python scripts, targeting PR_AUC gains from finer-grained key-value patterns.
+- **`py_feat_text_metrics_enc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and text_encoding to surface obfuscation and encoding artifacts common in Python droppers, aiming to boost recall@3FPM at the strict-FP tail.
+- **`py_abl_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce tail noise and potential overfitting on rare artifacts, expecting flat or improved PR_AUC with cleaner ranking.
+- **`py_xfer_lowbigram_hardneg`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfers XML's low bigram_min_freq (50) to capture rarer Python string patterns, paired with hard negatives to sharpen decision boundary, targeting recall@3FPM.
+- **`py_gen_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=0 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Applies seed_search_k=3 to the kv_vocab config to distinguish real feature signal from seed variance, stabilizing PR_AUC and recall@3FPM across RNG splits.
+
+</details>
+

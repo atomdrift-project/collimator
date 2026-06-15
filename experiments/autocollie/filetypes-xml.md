@@ -782,3 +782,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260615T055921-filetypes-xml` — 2026-06-15T05:59:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1398f81b161f3673` | inherit_from_filetypes_json_1e3933ad | ok | 0.9974 | 0.9992 | 0.9783 | 7 | [log](out/autocollie/runs/2026-06-15T06-12-07_20260615T055921-filetypes-xml_inherit_from_filetypes_json_1e3933ad.log) |
+| `1d5a876b72187078` | xml_control_training_lr_leaves | ok | 0.1260 | 0.5457 | 0.1493 | 14 | [log](out/autocollie/runs/2026-06-15T06-12-21_20260615T055921-filetypes-xml_xml_control_training_lr_leaves.log) |
+| `cc32499cf7d3c866` | xml_control_hardneg_scalepos | ok | 0.2251 | 0.6621 | 0.1336 | 2 | [log](out/autocollie/runs/2026-06-15T06-12-37_20260615T055921-filetypes-xml_xml_control_hardneg_scalepos.log) |
+| `e037f6f02d5814a4` | xml_text_metrics_encoding_vocab | ok | 0.1209 | 0.5396 | 0.1493 | 11 | [log](out/autocollie/runs/2026-06-15T06-12-40_20260615T055921-filetypes-xml_xml_text_metrics_encoding_vocab.log) |
+| `1fff9505e262624f` | xml_kv_vocab_split_leaves | ok | 0.1209 | 0.5396 | 0.1493 | 11 | [log](out/autocollie/runs/2026-06-15T06-12-52_20260615T055921-filetypes-xml_xml_kv_vocab_split_leaves.log) |
+| `d72b1ada812a0615` | xml_ablation_extreme_off | ok | 0.0840 | 0.5455 | 0.1409 | 9 | [log](out/autocollie/runs/2026-06-15T06-13-03_20260615T055921-filetypes-xml_xml_ablation_extreme_off.log) |
+| `99d7c30936582cc7` | xml_transfer_seed_search_hardneg | ok | 0.2301 | 0.6863 | 0.2176 | 9 | [log](out/autocollie/runs/2026-06-15T06-13-13_20260615T055921-filetypes-xml_xml_transfer_seed_search_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_training_lr_leaves`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and smoothing gradients to better rank tail malware without overfitting.
+- **`xml_control_hardneg_scalepos`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by upweighting hard negatives and adjusting class balance to push borderline malware higher in the ranking.
+- **`xml_text_metrics_encoding_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture XML-specific obfuscation and encoding patterns that standard n-grams miss.
+- **`xml_kv_vocab_split_leaves`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_DEPTH=14 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=160 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by expanding kv_vocab and enabling kv_value_split to isolate malicious XML attribute values, paired with deeper trees to capture sparse signals.
+- **`xml_ablation_extreme_off`** `EXP_BIGRAM_MIN_FREQ=500 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC by disabling extreme_features which may introduce high-variance tail noise on XML documents, allowing the model to focus on consistent structural signals.
+- **`xml_transfer_seed_search_hardneg`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Aims to maximize recall@3FPM by combining sister-route hard-negative training with seed_search_k=3 to average out RNG variance and lock in tail gains.
+
+</details>
+

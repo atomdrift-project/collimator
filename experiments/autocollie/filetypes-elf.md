@@ -872,3 +872,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260615T062034-filetypes-elf` — 2026-06-15T06:20:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2b80cb9d50a717cd` | inherit_from_filetypes_json_1e3933ad | ok | 0.9999 | 0.9999 | 0.9959 | 67 | [log](out/autocollie/runs/2026-06-15T06-27-54_20260615T062034-filetypes-elf_inherit_from_filetypes_json_1e3933ad.log) |
+| `ead60829079a3238` | elf_control_hardneg_tail | ok | 0.9999 | 0.9999 | 0.9962 | 55 | [log](out/autocollie/runs/2026-06-15T06-29-17_20260615T062034-filetypes-elf_elf_control_hardneg_tail.log) |
+| `ef77665503061abd` | elf_symbol_vocab_bigrams | ok | 0.9998 | 0.9998 | 0.9953 | 45 | [log](out/autocollie/runs/2026-06-15T06-30-18_20260615T062034-filetypes-elf_elf_symbol_vocab_bigrams.log) |
+| `bdfd5ce226629c53` | elf_kv_vocab_split_research | ok | 0.9998 | 0.9998 | 0.9953 | 41 | [log](out/autocollie/runs/2026-06-15T06-31-04_20260615T062034-filetypes-elf_elf_kv_vocab_split_research.log) |
+| `e20a726499c889e5` | elf_abl_extreme_off | ok | 0.9998 | 0.9998 | 0.9953 | 33 | [log](out/autocollie/runs/2026-06-15T06-31-46_20260615T062034-filetypes-elf_elf_abl_extreme_off.log) |
+| `2a357b07ccb0bec3` | elf_symbol_seed_search_3 | ok | 0.9998 | 0.9998 | 0.9957 | 8 | [log](out/autocollie/runs/2026-06-15T06-32-21_20260615T062034-filetypes-elf_elf_symbol_seed_search_3.log) |
+| `2073f67250740c46` | elf_transfer_lowbigram_tiered | ok | 0.9998 | 0.9998 | 0.9959 | 44 | [log](out/autocollie/runs/2026-06-15T06-32-29_20260615T062034-filetypes-elf_elf_transfer_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicates the recent best feature_env and applies hard-negative upweighting to improve recall@3 FP/M by forcing the model to better separate difficult benign/malware boundaries.
+- **`elf_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and symbol_bigrams to capture ELF import/export co-occurrence patterns, targeting PR_AUC gains from structural binary signals.
+- **`elf_kv_vocab_split_research`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with kv_value_split to parse ELF header and metadata tokens into discrete features, aiming to lift PR_AUC by recovering granular metadata signal.
+- **`elf_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce tail noise and potential overfitting, targeting stable PR_AUC and ROC_AUC while simplifying the feature surface.
+- **`elf_symbol_seed_search_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Applies seed_search_k=3 to the symbol-vocab configuration to verify signal robustness and reduce seed-driven variance in recall@3 FP/M.
+- **`elf_transfer_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Ports low bigram_min_freq and tiered_crit_trigrams from sister routes to capture rarer ELF patterns, targeting PR_AUC improvement via expanded n-gram coverage.
+
+</details>
+
