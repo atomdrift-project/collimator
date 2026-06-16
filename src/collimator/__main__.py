@@ -201,14 +201,20 @@ def cmd_explain(args: argparse.Namespace) -> None:
     rng = np.random.default_rng(42)
     sampled: list[tuple[dict[str, object], int]] = []
     seen = 0
-    for report, label in data.stream_reports(db_path):
+    for report, label in data.stream_reports(db_path, limit=args.scan_limit):
         seen += 1
         if len(sampled) < explain.MAX_EXPLAIN:
             sampled.append((report, label))
-            continue
-        j = int(rng.integers(seen))
-        if j < explain.MAX_EXPLAIN:
-            sampled[j] = (report, label)
+        else:
+            j = int(rng.integers(seen))
+            if j < explain.MAX_EXPLAIN:
+                sampled[j] = (report, label)
+        # Bound the scan: the full labeled corpus is millions of rows and
+        # streaming all of it (each carrying a large cleave_result JSONB) to
+        # pick MAX_EXPLAIN never completes. The reservoir above is uniform over
+        # the rows actually scanned.
+        if args.scan_limit and seen >= args.scan_limit:
+            break
 
     if not sampled:
         print("No samples found")
@@ -455,9 +461,16 @@ def main() -> None:
     # explain
     p_explain = subparsers.add_parser("explain", help="SHAP feature importance analysis")
     p_explain.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
-    p_explain.add_argument("--model", required=True, help="Path to XGBoost model (.json)")
+    p_explain.add_argument("--model", required=True, help="Path to a trained model (.txt/.json/.onnx)")
     p_explain.add_argument("--spec", required=True, help="Path to feature_spec.json")
     p_explain.add_argument("--output", default="out", help="Output directory")
+    p_explain.add_argument(
+        "--scan-limit", type=int, default=20000,
+        help="Cap DB rows scanned for the SHAP sample (0 = full corpus). The "
+             "labeled corpus is millions of rows; streaming all of it just to "
+             "reservoir-sample MAX_EXPLAIN never finishes, so the default bounds "
+             "the scan. The reservoir still samples within the cap.",
+    )
 
     # inspect
     p_inspect = subparsers.add_parser("inspect", help="Inspect a single sample from the DB")

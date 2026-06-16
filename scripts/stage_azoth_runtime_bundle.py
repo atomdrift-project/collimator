@@ -25,6 +25,10 @@ from collimator.features import MODEL_ABI_VERSION  # noqa: E402
 # isotonic calibrator is no longer emitted or staged — deploy runs on raw
 # probabilities (see project_calibrator_decision_irrelevant); excluding it here
 # also strips any stale calibrator.json from older bundles being restaged.
+# Note: shap_importance.json is deliberately NOT in any staged list. Per-route
+# SHAP is generated every train (see the Makefile `azoth-shap` target) and kept
+# in out/ as an internal debugging aid for `ascan --extra`; it is not published
+# in the deployed bundle.
 ROUTE_AUX_FILES = ("feature_spec.json", "README.md", "recall_curve.svg")
 ROOT_FILES = ("config.json", "route_policies.json")
 

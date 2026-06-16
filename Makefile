@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
+.PHONY: azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final azoth-shap false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -844,6 +844,31 @@ azoth-oof-merge-general: venv check-db
 _azoth-train: azoth-general
 	$(MAKE) azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0
 	$(MAKE) azoth-deploy
+	$(MAKE) azoth-shap
+
+# Per-route SHAP feature importance for the whole bundle. Pure inference on the
+# trained LightGBM boosters (~seconds/route), so it runs on EVERY train — right
+# after azoth-deploy, so it covers exactly the routes that survived the
+# deploy-time weakness prune. Written into each route dir under $(AZOTH_ROOT)
+# (i.e. out/) and INTENTIONALLY NOT staged into the deployed bundle:
+# stage_azoth_runtime_bundle.py omits shap_importance.json, since SHAP is an
+# internal debugging aid (ascan --extra), not a published artifact. Fatal on
+# error so a systemic break (e.g. the XGBoost->LightGBM regression) surfaces
+# loudly instead of silently leaving stale SHAP behind. Uses the first seed per
+# route — global importance is stable across seeds.
+AZOTH_SHAP_SCAN_LIMIT ?= 10000
+azoth-shap: venv check-db
+	@for d in $(AZOTH_ROOT)/general $(AZOTH_ROOT)/filegroups/* $(AZOTH_ROOT)/filetypes/*; do \
+		[ -d "$$d" ] || continue; \
+		[ -f "$$d/feature_spec.json" ] || continue; \
+		m="$$d/models/seed_42.txt"; [ -f "$$m" ] || m="$$d/model.txt"; \
+		if [ ! -f "$$m" ]; then echo "azoth-shap: skip $$d (no .txt booster)"; continue; fi; \
+		echo "azoth-shap: $$d"; \
+		$(PYTHON) -m collimator explain --db $(DB) --model "$$m" \
+			--spec "$$d/feature_spec.json" --output "$$d" \
+			--scan-limit $(AZOTH_SHAP_SCAN_LIMIT) || exit 1; \
+	done
+	@echo "azoth-shap: wrote per-route shap_importance.json under $(AZOTH_ROOT) (kept in out/, not staged into deploy)"
 
 evaluate: venv check-db
 	$(PYTHON) -m collimator evaluate --db $(DB) --model $(OUT_DIR)/model.onnx --spec $(OUT_DIR)/feature_spec.json

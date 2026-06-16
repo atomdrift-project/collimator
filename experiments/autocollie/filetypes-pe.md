@@ -936,3 +936,891 @@ Rejected before run:
 
 _No specs ran._
 
+## Cycle `20260615T170234-filetypes-pe` — 2026-06-15T17:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | ok | 0.9990 | 0.9990 | 0.9882 | 87 | [log](out/autocollie/runs/2026-06-15T17-10-07_20260615T170234-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `4ffbd2b63a04dd90` | pe_ctrl_hardneg_01_12 | ok | 0.9985 | 0.9987 | 0.9863 | 82 | [log](out/autocollie/runs/2026-06-15T17-12-21_20260615T170234-filetypes-pe_pe_ctrl_hardneg_01_12.log) |
+| `6be70f1d3c227ec9` | pe_ctrl_fpr_target_5e7 | ok | 0.9985 | 0.9987 | 0.0000 | 8 | [log](out/autocollie/runs/2026-06-15T17-13-51_20260615T170234-filetypes-pe_pe_ctrl_fpr_target_5e7.log) |
+| `b15e85944beb56e4` | pe_ctrl_dart_extra_trees | ok | 0.9974 | 0.9976 | 0.9784 | 9 | [log](out/autocollie/runs/2026-06-15T17-14-00_20260615T170234-filetypes-pe_pe_ctrl_dart_extra_trees.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | ok | 0.9985 | 0.9987 | 0.9863 | 80 | [log](out/autocollie/runs/2026-06-15T17-14-10_20260615T170234-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `c6d71ad89d2ff4cd` | pe_feat_symbol_bigrams_5k | ok | 0.9985 | 0.9987 | 0.9863 | 84 | [log](out/autocollie/runs/2026-06-15T17-15-31_20260615T170234-filetypes-pe_pe_feat_symbol_bigrams_5k.log) |
+| `bfe8eddb86bf7efe` | pe_feat_pe_structural_flags | ok | 0.9985 | 0.9987 | 0.9863 | 71 | [log](out/autocollie/runs/2026-06-15T17-16-57_20260615T170234-filetypes-pe_pe_feat_pe_structural_flags.log) |
+| `0285bdcf54dad2ec` | pe_feat_tiered_trigrams_8k | ok | 0.9985 | 0.9987 | 0.9863 | 84 | [log](out/autocollie/runs/2026-06-15T17-18-09_20260615T170234-filetypes-pe_pe_feat_tiered_trigrams_8k.log) |
+| `4a160bb3899a867a` | pe_abl_disable_clusters | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T17-19-34_20260615T170234-filetypes-pe_pe_abl_disable_clusters.log) |
+| `b517c5c3b1967233` | pe_transfer_tar_hardneg_full | ok | 0.9986 | 0.9987 | 0.9853 | 10 | [log](out/autocollie/runs/2026-06-15T17-19-41_20260615T170234-filetypes-pe_pe_transfer_tar_hardneg_full.log) |
+| `8e6bde9960cc81f0` | pe_gen_seed_search_kv | ok | 0.9987 | 0.9988 | 0.9828 | 87 | [log](out/autocollie/runs/2026-06-15T17-19-52_20260615T170234-filetypes-pe_pe_gen_seed_search_kv.log) |
+| `76855aa62e964154` | pe_retry_hardneg_fpr_drift | ok | 0.9986 | 0.9987 | 0.9003 | 75 | [log](out/autocollie/runs/2026-06-15T17-21-20_20260615T170234-filetypes-pe_pe_retry_hardneg_fpr_drift.log) |
+| `ac8b9e4a4142a222` | pe_feat_density_ratios | ok | 0.9985 | 0.9987 | 0.9863 | 72 | [log](out/autocollie/runs/2026-06-15T17-22-36_20260615T170234-filetypes-pe_pe_feat_density_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR.
+- **`pe_ctrl_fpr_target_5e7`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by directly optimizing the threshold for the deployed strict-FP operating point.
+- **`pe_ctrl_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and tail recall by adding dropout regularization and random splits to reduce overfitting.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding KV vocabulary to capture more granular key-value patterns in PE metadata.
+- **`pe_feat_symbol_bigrams_5k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_BIGRAM=20 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling symbol bigrams to catch co-occurrence patterns in PE imports.
+- **`pe_feat_pe_structural_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by adding PE-specific structural and temporal anomaly features to catch packers.
+- **`pe_feat_tiered_trigrams_8k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling severity-prefixed trigrams to capture higher-order attack sequences.
+- **`pe_abl_disable_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to keep PR_AUC flat while reducing noise by removing the clusters feature group which may dilute signal.
+- **`pe_transfer_tar_hardneg_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by transferring a strong hard-negative configuration from the tar route, adapted for PE.
+- **`pe_gen_seed_search_kv`** `EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC gains from KV vocab by averaging across 3 seeds to reduce seed-driven variance.
+- **`pe_retry_hardneg_fpr_drift`** `EXP_ESTIMATORS=320 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_PE_FORMAT_FLAGS=1 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to recover recall@3FPM by retrying a prior high-recall hard-negative config with adjusted weight and PE flags for corpus drift.
+- **`pe_feat_density_ratios`** `EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding size-normalized metrics and severity fractions to capture density-invariant signals.
+
+</details>
+
+## Cycle `20260615T183033-filetypes-pe` — 2026-06-15T18:30:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T18-37-03_20260615T183033-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `6449528e870eb0bc` | pe_control_hardneg_005_16 | ok | 0.9985 | 0.9987 | 0.9853 | 12 | [log](out/autocollie/runs/2026-06-15T18-37-52_20260615T183033-filetypes-pe_pe_control_hardneg_005_16.log) |
+| `4ffbd2b63a04dd90` | pe_control_hardneg_01_12 | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T18-38-12_20260615T183033-filetypes-pe_pe_control_hardneg_01_12.log) |
+| `6be70f1d3c227ec9` | pe_control_threshold_fpr_5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T18-38-14_20260615T183033-filetypes-pe_pe_control_threshold_fpr_5e7.log) |
+| `a7f39f98f843711c` | pe_feat_symbol_vocab_bigrams | ok | 0.9985 | 0.9987 | 0.9863 | 88 | [log](out/autocollie/runs/2026-06-15T18-38-16_20260615T183033-filetypes-pe_pe_feat_symbol_vocab_bigrams.log) |
+| `ede25418eac3fe80` | pe_feat_kv_vocab_split | ok | 0.9985 | 0.9987 | 0.9863 | 80 | [log](out/autocollie/runs/2026-06-15T18-39-45_20260615T183033-filetypes-pe_pe_feat_kv_vocab_split.log) |
+| `19fb28fbe265ebb6` | pe_feat_pe_flags_overlay_temporal | ok | 0.9985 | 0.9987 | 0.9863 | 8 | [log](out/autocollie/runs/2026-06-15T18-41-06_20260615T183033-filetypes-pe_pe_feat_pe_flags_overlay_temporal.log) |
+| `2338dc0806e13ef3` | pe_feat_lowbigram_tiered_trigrams | ok | 0.9985 | 0.9987 | 0.9827 | 85 | [log](out/autocollie/runs/2026-06-15T18-41-14_20260615T183033-filetypes-pe_pe_feat_lowbigram_tiered_trigrams.log) |
+| `85930d064ea5095b` | pe_abl_extreme_off | ok | 0.9986 | 0.9987 | 0.9865 | 72 | [log](out/autocollie/runs/2026-06-15T18-42-41_20260615T183033-filetypes-pe_pe_abl_extreme_off.log) |
+| `e2c379c5cfafeca1` | pe_transfer_perl_hardneg_full | ok | 0.9985 | 0.9987 | 0.9859 | 12 | [log](out/autocollie/runs/2026-06-15T18-43-53_20260615T183033-filetypes-pe_pe_transfer_perl_hardneg_full.log) |
+| `c3f833f3b82f778a` | pe_transfer_xml_lowbigram_tiered | ok | 0.9985 | 0.9987 | 0.9858 | 87 | [log](out/autocollie/runs/2026-06-15T18-44-06_20260615T183033-filetypes-pe_pe_transfer_xml_lowbigram_tiered.log) |
+| `c7d9a91c7d7516a3` | pe_gen_seed_search_kv_hardneg | ok | 0.9988 | 0.9989 | 0.9841 | 27 | [log](out/autocollie/runs/2026-06-15T18-45-34_20260615T183033-filetypes-pe_pe_gen_seed_search_kv_hardneg.log) |
+| `6777e774689a5d72` | pe_retry_hardneg_fpr_drift_v2 | ok | 0.9985 | 0.9986 | 0.9840 | 12 | [log](out/autocollie/runs/2026-06-15T18-46-02_20260615T183033-filetypes-pe_pe_retry_hardneg_fpr_drift_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_005_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Targets recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR while keeping baseline features.
+- **`pe_control_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Targets recall@3FPM by testing a higher hard-negative fraction with moderate weight to improve tail ranking without overfitting.
+- **`pe_control_threshold_fpr_5e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Targets recall@3FPM by directly optimizing the threshold at the deployed operating point (5e-07 FPR) to maximize tail recall.
+- **`pe_feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 …` — Targets PR_AUC by adding symbol vocabulary and bigrams to capture PE import co-occurrence patterns missed by current features.
+- **`pe_feat_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling KV vocabulary with value splitting to recover granular signal from structured PE metadata.
+- **`pe_feat_pe_flags_overlay_temporal`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by adding PE format flags, temporal anomalies, and overlay signals to catch packer and dropper artifacts.
+- **`pe_feat_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by lowering bigram frequency floor and enabling tiered critical trigrams to capture rarer malicious patterns.
+- **`pe_abl_extreme_off`** `EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by disabling extreme features to reduce noise and potential overfitting on tail samples while preserving core ranking.
+- **`pe_transfer_perl_hardneg_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Targets recall@3FPM by transferring perl's successful hard-negative configuration to PE to sharpen low-FPR ranking.
+- **`pe_transfer_xml_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by porting xml's low bigram frequency and tiered trigram strategy to capture finer-grained PE trait combinations.
+- **`pe_gen_seed_search_kv_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 …` — Targets recall@3FPM stability by running seed search on the KV+hardneg config to distinguish real signal from seed variance.
+- **`pe_retry_hardneg_fpr_drift_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Targets recall@3FPM by retrying a prior high-recall hard-negative config on the updated daily corpus to check for data-drift recovery.
+
+</details>
+
+## Cycle `20260615T185332-filetypes-pe` — 2026-06-15T18:53:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T19-02-36_20260615T185332-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `2a00177fca991463` | pe_control_baseline_train | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T19-02-38_20260615T185332-filetypes-pe_pe_control_baseline_train.log) |
+| `529027ba42c6e155` | pe_train_hardneg_01_16 | ok | 0.9985 | 0.9987 | 0.9839 | 11 | [log](out/autocollie/runs/2026-06-15T19-02-45_20260615T185332-filetypes-pe_pe_train_hardneg_01_16.log) |
+| `6be70f1d3c227ec9` | pe_train_fpr_target_5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T19-02-58_20260615T185332-filetypes-pe_pe_train_fpr_target_5e7.log) |
+| `93f8d56f1251dcb8` | pe_feat_kv_vocab_15k | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T19-03-00_20260615T185332-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `90e4fe74d37af93b` | pe_feat_symbol_bigrams_8k | ok | 0.9985 | 0.9987 | 0.9863 | 83 | [log](out/autocollie/runs/2026-06-15T19-03-07_20260615T185332-filetypes-pe_pe_feat_symbol_bigrams_8k.log) |
+| `7223982761bb76a8` | pe_feat_tiered_crit_trigrams | ok | 0.9985 | 0.9987 | 0.9863 | 83 | [log](out/autocollie/runs/2026-06-15T19-04-31_20260615T185332-filetypes-pe_pe_feat_tiered_crit_trigrams.log) |
+| `f7cf3ec21ff3a84c` | pe_feat_pe_flags_temporal | ok | 0.9985 | 0.9987 | 0.9863 | 70 | [log](out/autocollie/runs/2026-06-15T19-05-56_20260615T185332-filetypes-pe_pe_feat_pe_flags_temporal.log) |
+| `32f9f38a8ee8b436` | pe_abl_blindfold_off | ok | 0.9985 | 0.9987 | 0.9863 | 70 | [log](out/autocollie/runs/2026-06-15T19-07-07_20260615T185332-filetypes-pe_pe_abl_blindfold_off.log) |
+| `d8b21ee7abb44ecd` | pe_transfer_lowbigram_tiered | ok | 0.9985 | 0.9986 | 0.9861 | 73 | [log](out/autocollie/runs/2026-06-15T19-08-18_20260615T185332-filetypes-pe_pe_transfer_lowbigram_tiered.log) |
+| `cb0f0e5dd9ea6b08` | pe_gen_seed_search_kv | ok | 0.9987 | 0.9989 | 0.9829 | 86 | [log](out/autocollie/runs/2026-06-15T19-09-32_20260615T185332-filetypes-pe_pe_gen_seed_search_kv.log) |
+| `fd191209d71d3d07` | pe_retry_hardneg_fpr_drift | ok | 0.9986 | 0.9987 | 0.0000 | 13 | [log](out/autocollie/runs/2026-06-15T19-10-59_20260615T185332-filetypes-pe_pe_retry_hardneg_fpr_drift.log) |
+| `a814d82cfad6db56` | pe_feat_overlay_silent_packer | ok | 0.9985 | 0.9987 | 0.9863 | 70 | [log](out/autocollie/runs/2026-06-15T19-11-14_20260615T185332-filetypes-pe_pe_feat_overlay_silent_packer.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to stabilize PR_AUC by establishing a clean baseline with default training knobs for matrix cache validation.
+- **`pe_train_hardneg_01_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low false-positive rates.
+- **`pe_train_fpr_target_5e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to maximize recall@3FPM by directly tuning the threshold to the deployed operating point at FPR=5e-7.
+- **`pe_feat_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by expanding the KV vocabulary to capture rare PE metadata patterns that distinguish malware.
+- **`pe_feat_symbol_bigrams_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by enabling symbol bigrams to catch malicious import co-occurrence sequences.
+- **`pe_feat_tiered_crit_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by adding severity-prefixed trigrams to highlight high-crit execution paths.
+- **`pe_feat_pe_flags_temporal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve ROC_AUC by enabling PE format flags and timestamp anomalies to better rank packed binaries.
+- **`pe_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to stabilize PR_AUC by disabling blindfold dropout to reduce feature noise without sacrificing tail recall.
+- **`pe_transfer_lowbigram_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by transferring a low bigram frequency floor from sister routes to capture rare PE patterns.
+- **`pe_gen_seed_search_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to stabilize PR_AUC by averaging three seeds on the KV vocab config to filter out seed-driven variance.
+- **`pe_retry_hardneg_fpr_drift`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to recover recall@3FPM by retrying a strong hard-negative and FPR-target combo to account for recent data drift.
+- **`pe_feat_overlay_silent_packer`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by enabling overlay and silent packer signals to catch dropper patterns buried in the tail.
+
+</details>
+
+## Cycle `20260615T191849-filetypes-pe` — 2026-06-15T19:18:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T19-25-14_20260615T191849-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `4ffbd2b63a04dd90` | pe_control_hardneg_sweep_1 | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T19-25-16_20260615T191849-filetypes-pe_pe_control_hardneg_sweep_1.log) |
+| `6be70f1d3c227ec9` | pe_exploit_fpr_target_tail | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T19-25-18_20260615T191849-filetypes-pe_pe_exploit_fpr_target_tail.log) |
+| `beeec016848ad104` | pe_exploit_dart_regularization | ok | 0.9969 | 0.9972 | 0.9608 | 10 | [log](out/autocollie/runs/2026-06-15T19-25-20_20260615T191849-filetypes-pe_pe_exploit_dart_regularization.log) |
+| `07374da30e725831` | pe_feat_kv_vocab_split | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T19-25-31_20260615T191849-filetypes-pe_pe_feat_kv_vocab_split.log) |
+| `f071fd8160217230` | pe_feat_symbol_bigrams_vocab | ok | 0.9985 | 0.9987 | 0.9863 | 88 | [log](out/autocollie/runs/2026-06-15T19-25-38_20260615T191849-filetypes-pe_pe_feat_symbol_bigrams_vocab.log) |
+| `8afa04e964d37a72` | pe_feat_overlay_pe_flags | ok | 0.9985 | 0.9987 | 0.9863 | 68 | [log](out/autocollie/runs/2026-06-15T19-27-07_20260615T191849-filetypes-pe_pe_feat_overlay_pe_flags.log) |
+| `8f4252c3d5c361d3` | pe_feat_text_encoding_metrics | ok | 0.9986 | 0.9987 | 0.9847 | 71 | [log](out/autocollie/runs/2026-06-15T19-28-17_20260615T191849-filetypes-pe_pe_feat_text_encoding_metrics.log) |
+| `821bdee724193460` | pe_abl_blindfold_off | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T19-29-29_20260615T191849-filetypes-pe_pe_abl_blindfold_off.log) |
+| `4c91f0b90f6d5835` | pe_transfer_lowbigram_freq | ok | 0.9986 | 0.9987 | 0.9861 | 71 | [log](out/autocollie/runs/2026-06-15T19-29-36_20260615T191849-filetypes-pe_pe_transfer_lowbigram_freq.log) |
+| `01b820b103a84037` | pe_gen_seed_search_hardneg | ok | 0.9987 | 0.9988 | 0.9861 | 29 | [log](out/autocollie/runs/2026-06-15T19-30-47_20260615T191849-filetypes-pe_pe_gen_seed_search_hardneg.log) |
+| `cb2f100c2c93906f` | pe_retry_kv_hardneg_drift | ok | 0.9986 | 0.9987 | 0.9851 | 12 | [log](out/autocollie/runs/2026-06-15T19-31-18_20260615T191849-filetypes-pe_pe_retry_kv_hardneg_drift.log) |
+| `e64c74edc6a14a47` | pe_feat_mbc_id_vocab | ok | 0.9985 | 0.9987 | 0.9863 | 70 | [log](out/autocollie/runs/2026-06-15T19-31-31_20260615T191849-filetypes-pe_pe_feat_mbc_id_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_sweep_1`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test hard-negative upweighting to improve recall@3FPM by focusing on difficult benigns.
+- **`pe_exploit_fpr_target_tail`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimize threshold for deployed operating point to maximize recall@3FPM.
+- **`pe_exploit_dart_regularization`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use DART boosting to reduce overfitting and improve PR_AUC stability at the tail.
+- **`pe_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to recover per-element signal in PE metadata, targeting PR_AUC gains.
+- **`pe_feat_symbol_bigrams_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 EXP_TRAIN_SAMPLES=30000` — Add symbol bigrams and expanded symbol vocab to capture import co-occurrence patterns for better PR_AUC.
+- **`pe_feat_overlay_pe_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Add overlay metrics and PE format flags to improve packer detection and ROC_AUC.
+- **`pe_feat_text_encoding_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding and full text metrics to capture string obfuscation patterns, targeting PR_AUC.
+- **`pe_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove blindfold dropout to test if deterministic features improve PR_AUC without noise.
+- **`pe_transfer_lowbigram_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer low bigram frequency floor from sister routes to capture rare PE patterns, aiming for PR_AUC lift.
+- **`pe_gen_seed_search_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed search on hard-negative config to distinguish real signal from seed noise for recall@3FPM.
+- **`pe_retry_kv_hardneg_drift`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry top PR_AUC config to check for data drift gains in recall@3FPM.
+- **`pe_feat_mbc_id_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Enable MBC ID vocab to capture specific malware behavior catalog codes, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260615T193900-filetypes-pe` — 2026-06-15T19:39:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T19-46-40_20260615T193900-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `455f2431fb31b2c6` | pe_control_hardneg_sweep_01_12 | ok | 0.9985 | 0.9986 | 0.9861 | 10 | [log](out/autocollie/runs/2026-06-15T19-46-41_20260615T193900-filetypes-pe_pe_control_hardneg_sweep_01_12.log) |
+| `e18bf1462662ae3c` | pe_control_max_recall_fpr_5e7 | ok | 0.9985 | 0.9987 | 0.0000 | 6 | [log](out/autocollie/runs/2026-06-15T19-46-53_20260615T193900-filetypes-pe_pe_control_max_recall_fpr_5e7.log) |
+| `bc72887698e4c374` | pe_control_dart_extra_trees | ok | 0.9967 | 0.9970 | 0.9769 | 7 | [log](out/autocollie/runs/2026-06-15T19-46-59_20260615T193900-filetypes-pe_pe_control_dart_extra_trees.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T19-47-07_20260615T193900-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `00fc999b71a35813` | pe_feat_symbol_bigrams_10k | ok | 0.9985 | 0.9987 | 0.9863 | 83 | [log](out/autocollie/runs/2026-06-15T19-47-09_20260615T193900-filetypes-pe_pe_feat_symbol_bigrams_10k.log) |
+| `8f4252c3d5c361d3` | pe_feat_text_encoding_metrics | dup | 0.9986 | 0.9987 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-15T19-48-34_20260615T193900-filetypes-pe_pe_feat_text_encoding_metrics.log) |
+| `8f1f29be1c3851ff` | pe_feat_mbc_overlay_pe_flags | ok | 0.9985 | 0.9987 | 0.9863 | 72 | [log](out/autocollie/runs/2026-06-15T19-48-35_20260615T193900-filetypes-pe_pe_feat_mbc_overlay_pe_flags.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | ok | 0.9986 | 0.9987 | 0.9860 | 7 | [log](out/autocollie/runs/2026-06-15T19-49-48_20260615T193900-filetypes-pe_pe_abl_extreme_off.log) |
+| `8b3b7f207b676ab8` | pe_transfer_tiered_crit_trigrams | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T19-49-56_20260615T193900-filetypes-pe_pe_transfer_tiered_crit_trigrams.log) |
+| `e0c8ee740e34545b` | pe_gen_seed_search_3_save_all | ok | 0.9987 | 0.9988 | 0.9828 | 80 | [log](out/autocollie/runs/2026-06-15T19-50-04_20260615T193900-filetypes-pe_pe_gen_seed_search_3_save_all.log) |
+| `791f98ea64877b1b` | pe_retry_mbc_hardneg_drift | ok | 0.9986 | 0.9987 | 0.9845 | 12 | [log](out/autocollie/runs/2026-06-15T19-51-24_20260615T193900-filetypes-pe_pe_retry_mbc_hardneg_drift.log) |
+| `f5663199c7de193c` | pe_feat_severity_fractions_size_norm | ok | 0.9985 | 0.9987 | 0.9863 | 69 | [log](out/autocollie/runs/2026-06-15T19-51-38_20260615T193900-filetypes-pe_pe_feat_severity_fractions_size_norm.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_sweep_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative upweighting to improve recall@3FPM by focusing on difficult benigns, targeting PR_AUC gain.
+- **`pe_control_max_recall_fpr_5e7`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for deployed tail to boost recall@3FPM while keeping PR_AUC flat.
+- **`pe_control_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Uses DART boosting and extra trees to reduce overfitting and improve tail recall@3FPM.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab to capture structured metadata patterns, aiming to lift PR_AUC.
+- **`pe_feat_symbol_bigrams_10k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigrams to catch import co-occurrence patterns, targeting PR_AUC improvement.
+- **`pe_feat_text_encoding_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text encoding and full text metrics to detect string obfuscation in PE files, boosting recall@3FPM.
+- **`pe_feat_mbc_overlay_pe_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Combines MBC ID vocab, overlay signal, and PE format/temporal flags to capture packer/dropper traits, aiming for PR_AUC gain.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme features to reduce noise and overfitting, expecting flat or higher PR_AUC with better generalization.
+- **`pe_transfer_tiered_crit_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Transfers tiered critical trigrams from sister routes to capture high-severity path patterns, targeting PR_AUC.
+- **`pe_gen_seed_search_3_save_all`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Uses seed search k=3 and averages ensemble to reduce variance and stabilize recall@3FPM gains.
+- **`pe_retry_mbc_hardneg_drift`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Retries strong MBC ID vocab config with hard negatives to recover tail recall@3FPM after corpus drift.
+- **`pe_feat_severity_fractions_size_norm`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Adds severity fractions and size-normalized metrics to better score minimal droppers, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260615T195911-filetypes-pe` — 2026-06-15T19:59:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T20-05-30_20260615T195911-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `4ffbd2b63a04dd90` | pe_ctrl_hardneg_01_12 | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-05-31_20260615T195911-filetypes-pe_pe_ctrl_hardneg_01_12.log) |
+| `6be70f1d3c227ec9` | pe_ctrl_max_recall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T20-05-33_20260615T195911-filetypes-pe_pe_ctrl_max_recall_fpr.log) |
+| `b15e85944beb56e4` | pe_ctrl_dart_extra_trees | dup | 0.9974 | 0.9976 | 0.9784 | 1 | [log](out/autocollie/runs/2026-06-15T20-05-35_20260615T195911-filetypes-pe_pe_ctrl_dart_extra_trees.log) |
+| `2ebb6c44251d0d94` | pe_feat_symbol_vocab_bigrams | ok | 0.9985 | 0.9987 | 0.9863 | 7 | [log](out/autocollie/runs/2026-06-15T20-05-37_20260615T195911-filetypes-pe_pe_feat_symbol_vocab_bigrams.log) |
+| `8f1f29be1c3851ff` | pe_feat_mbc_overlay_pe_flags | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-05-45_20260615T195911-filetypes-pe_pe_feat_mbc_overlay_pe_flags.log) |
+| `07374da30e725831` | pe_feat_kv_vocab_split | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-05-47_20260615T195911-filetypes-pe_pe_feat_kv_vocab_split.log) |
+| `8b3b7f207b676ab8` | pe_feat_tiered_crit_trigrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-05-49_20260615T195911-filetypes-pe_pe_feat_tiered_crit_trigrams.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-15T20-05-51_20260615T195911-filetypes-pe_pe_abl_extreme_off.log) |
+| `1c562e916e55bfec` | pe_transfer_low_freq_bigrams | ok | 0.9985 | 0.9987 | 0.9858 | 72 | [log](out/autocollie/runs/2026-06-15T20-05-53_20260615T195911-filetypes-pe_pe_transfer_low_freq_bigrams.log) |
+| `ff9c834ae6949dbe` | pe_gen_seed_search_3 | ok | 0.9987 | 0.9989 | 0.9829 | 15 | [log](out/autocollie/runs/2026-06-15T20-07-06_20260615T195911-filetypes-pe_pe_gen_seed_search_3.log) |
+| `6308410fa8598c24` | pe_retry_kv_hardneg_drift | ok | 0.9986 | 0.9987 | 0.9849 | 9 | [log](out/autocollie/runs/2026-06-15T20-07-22_20260615T195911-filetypes-pe_pe_retry_kv_hardneg_drift.log) |
+| `65f5a6653d1b19c4` | pe_train_scale_pos_075_hardneg | ok | 0.9985 | 0.9987 | 0.9861 | 10 | [log](out/autocollie/runs/2026-06-15T20-07-32_20260615T195911-filetypes-pe_pe_train_scale_pos_075_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative upweighting to lift recall@3FPM by focusing the model on difficult benigns near the decision boundary.
+- **`pe_ctrl_max_recall_fpr`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for recall@3FPM at the deployed strict-FP operating point using max_recall_at_fpr mode.
+- **`pe_ctrl_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Uses dart boosting and extra_trees to improve PR_AUC and ROC_AUC stability by adding ensemble noise and dropout regularization.
+- **`pe_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol vocab and bigrams to capture import co-occurrence patterns, aiming to improve PR_AUC with new structural rank signal.
+- **`pe_feat_mbc_overlay_pe_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Adds MBC ID vocab, overlay metrics, and PE format flags to boost recall@3FPM by highlighting packer/dropper and structural anomalies.
+- **`pe_feat_kv_vocab_split`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates KV vocab with value splitting to recover per-element signal in PE metadata/strings, targeting PR_AUC gains.
+- **`pe_feat_tiered_crit_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Enables severity-prefixed trigrams to capture high-crit path combinations, aiming to lift PR_AUC without adding low-crit noise.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce tail noise and overfitting, expecting flat or improved PR_AUC and ROC_AUC.
+- **`pe_transfer_low_freq_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports low-frequency bigram config from sister routes to capture rarer PE patterns, targeting PR_AUC improvement.
+- **`pe_gen_seed_search_3`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 with save_all_seeds to average out seed variance, stabilizing recall@3FPM across different RNG splits.
+- **`pe_retry_kv_hardneg_drift`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retries a prior high-recall KV+hardneg config to check for positive data-drift signal in the updated corpus, targeting recall@3FPM.
+- **`pe_train_scale_pos_075_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weights positives with scale_pos_weight_mult=0.75 combined with hard negatives to surgically reduce FPs, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260615T201416-filetypes-pe` — 2026-06-15T20:14:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T20-21-38_20260615T201416-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `ad1861ee73764dcb` | pe_ctrl_scalepos075_hardneg | ok | 0.9985 | 0.9986 | 0.9861 | 10 | [log](out/autocollie/runs/2026-06-15T20-21-39_20260615T201416-filetypes-pe_pe_ctrl_scalepos075_hardneg.log) |
+| `984de36d665364ed` | pe_train_hardneg_015_16 | ok | 0.9986 | 0.9987 | 0.9845 | 12 | [log](out/autocollie/runs/2026-06-15T20-21-51_20260615T201416-filetypes-pe_pe_train_hardneg_015_16.log) |
+| `e18bf1462662ae3c` | pe_train_max_recall_fpr_5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T20-22-04_20260615T201416-filetypes-pe_pe_train_max_recall_fpr_5e7.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-22-06_20260615T201416-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `07a23cee7fcca41c` | pe_feat_symbol_bigrams_10k | ok | 0.9985 | 0.9987 | 0.9863 | 85 | [log](out/autocollie/runs/2026-06-15T20-22-08_20260615T201416-filetypes-pe_pe_feat_symbol_bigrams_10k.log) |
+| `8f4252c3d5c361d3` | pe_feat_textenc_metrics | dup | 0.9986 | 0.9987 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-15T20-23-34_20260615T201416-filetypes-pe_pe_feat_textenc_metrics.log) |
+| `d325a23bad49b50e` | pe_feat_pe_flags_temporal | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T20-23-35_20260615T201416-filetypes-pe_pe_feat_pe_flags_temporal.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-15T20-23-43_20260615T201416-filetypes-pe_pe_abl_extreme_off.log) |
+| `ce559e040cf1423a` | pe_transfer_xml_lowbigram | ok | 0.9985 | 0.9987 | 0.9868 | 73 | [log](out/autocollie/runs/2026-06-15T20-23-45_20260615T201416-filetypes-pe_pe_transfer_xml_lowbigram.log) |
+| `7a4f15797b392197` | pe_gen_kv_seed3 | ok | 0.9987 | 0.9988 | 0.9847 | 15 | [log](out/autocollie/runs/2026-06-15T20-24-59_20260615T201416-filetypes-pe_pe_gen_kv_seed3.log) |
+| `0dd0b40e80ba2766` | pe_retry_scalepos05_severity | ok | 0.9984 | 0.9986 | 0.9841 | 75 | [log](out/autocollie/runs/2026-06-15T20-25-15_20260615T201416-filetypes-pe_pe_retry_scalepos05_severity.log) |
+| `fa89b490a1231557` | pe_feat_overlay_section | ok | 0.9985 | 0.9987 | 0.9863 | 70 | [log](out/autocollie/runs/2026-06-15T20-26-30_20260615T201416-filetypes-pe_pe_feat_overlay_section.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_scalepos075_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature set with tuned hard-negative and class weighting to boost recall@3FPM while preserving PR_AUC.
+- **`pe_train_hardneg_015_16`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Sweeps hard-negative parameters to find optimal tail recall@3FPM without PR_AUC regression.
+- **`pe_train_max_recall_fpr_5e7`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for deployed L50 operating point to maximize recall@3FPM.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocabulary to capture structured metadata patterns, targeting PR_AUC improvement.
+- **`pe_feat_symbol_bigrams_10k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Adds symbol co-occurrence bigrams to catch API chaining patterns, aiming for PR_AUC gain.
+- **`pe_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text encoding and full text metrics to extract obfuscation signals, targeting PR_AUC.
+- **`pe_feat_pe_flags_temporal`** `EXP_MAX_TEST_SAMPLES=20000 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Leverages PE-specific format and timestamp anomaly features to improve PR_AUC on native binaries.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Removes noisy extreme features to reduce overfitting, aiming for flat PR_AUC with higher ROC_AUC.
+- **`pe_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfers low-frequency bigram and hard-negative config from xml route to boost PR_AUC.
+- **`pe_gen_kv_seed3`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Tests KV vocab stability across seeds to distinguish real signal from seed noise, targeting recall@3FPM.
+- **`pe_retry_scalepos05_severity`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Retries aggressive positive down-weighting with severity fractions to check data-drift impact on recall@3FPM.
+- **`pe_feat_overlay_section`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Adds packer/overlay signals to catch droppers, aiming for recall@3FPM improvement.
+
+</details>
+
+## Cycle `20260615T203401-filetypes-pe` — 2026-06-15T20:34:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T20-41-33_20260615T203401-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `2a00177fca991463` | pe_control_train_baseline | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-41-34_20260615T203401-filetypes-pe_pe_control_train_baseline.log) |
+| `455f2431fb31b2c6` | pe_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T20-41-36_20260615T203401-filetypes-pe_pe_hardneg_01_12.log) |
+| `e18bf1462662ae3c` | pe_threshold_max_recall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T20-41-38_20260615T203401-filetypes-pe_pe_threshold_max_recall_fpr.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-41-40_20260615T203401-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `bfe8eddb86bf7efe` | pe_feat_overlay_section_pe_flags | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-41-42_20260615T203401-filetypes-pe_pe_feat_overlay_section_pe_flags.log) |
+| `7264a55108af3f6c` | pe_feat_symbol_bigrams_8k | ok | 0.9985 | 0.9987 | 0.9863 | 86 | [log](out/autocollie/runs/2026-06-15T20-41-44_20260615T203401-filetypes-pe_pe_feat_symbol_bigrams_8k.log) |
+| `4a160bb3899a867a` | pe_abl_disable_clusters | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T20-43-11_20260615T203401-filetypes-pe_pe_abl_disable_clusters.log) |
+| `1267369396798ef3` | pe_transfer_lowbigram_tiered | ok | 0.9985 | 0.9987 | 0.9858 | 70 | [log](out/autocollie/runs/2026-06-15T20-43-13_20260615T203401-filetypes-pe_pe_transfer_lowbigram_tiered.log) |
+| `eaf5e1551748c70d` | pe_gen_seed_search_3 | ok | 0.9987 | 0.9988 | 0.9828 | 76 | [log](out/autocollie/runs/2026-06-15T20-44-24_20260615T203401-filetypes-pe_pe_gen_seed_search_3.log) |
+| `c6f301b64729c797` | pe_retry_hardneg_015_16 | ok | 0.9986 | 0.9987 | 0.9845 | 11 | [log](out/autocollie/runs/2026-06-15T20-45-41_20260615T203401-filetypes-pe_pe_retry_hardneg_015_16.log) |
+| `8f4252c3d5c361d3` | pe_feat_text_encoding_metrics | dup | 0.9986 | 0.9987 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-15T20-45-54_20260615T203401-filetypes-pe_pe_feat_text_encoding_metrics.log) |
+| `f210aad054447dae` | pe_train_dart_boosting | ok | 0.9975 | 0.9978 | 0.9764 | 136 | [log](out/autocollie/runs/2026-06-15T20-45-55_20260615T203401-filetypes-pe_pe_train_dart_boosting.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_train_baseline`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to establish a matrix-cache baseline; aims to keep PR_AUC flat while verifying training stability.
+- **`pe_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, addressing the or_loses diagnostic shape.
+- **`pe_threshold_max_recall_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes recall@3FPM by setting threshold_mode to max_recall_at_fpr with a strict 5e-07 target, pushing the operating point to the deployed tail.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with expanded cap to 15000 to capture rare PE header/key-value patterns, aiming to lift PR_AUC by adding discriminative signal for packed binaries.
+- **`pe_feat_overlay_section_pe_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Combines overlay_signal, nonstandard_section_signal, and pe_format_flags to strengthen packer/dropper detection, targeting PR_AUC improvement via structural PE anomalies.
+- **`pe_feat_symbol_bigrams_8k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Expands symbol_bigram_max to 8000 and lowers min_freq to capture co-occurrence patterns in imports, aiming to boost PR_AUC by resolving ambiguous API usage.
+- **`pe_abl_disable_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disables the clusters feature group to reduce noise from correlated benign patterns, aiming to keep PR_AUC flat while improving recall@3FPM by simplifying the decision space.
+- **`pe_transfer_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Transfers low bigram_min_freq (50) and tiered trigrams from sister routes to capture rare PE string patterns, targeting PR_AUC gains from finer-grained n-gram signal.
+- **`pe_gen_seed_search_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 on the baseline feature set to average out seed variance, aiming to stabilize recall@3FPM and verify if recent PR_AUC wins are robust.
+- **`pe_retry_hardneg_015_16`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Retries a stronger hard-negative configuration (fraction 0.015, weight 16) with severity_fractions to test if recent corpus drift favors heavier negative weighting, targeting recall@3FPM improvement.
+- **`pe_feat_text_encoding_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to analyze PE string sections for obfuscation, aiming to lift PR_AUC by catching encoded payloads in resource sections.
+- **`pe_train_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_ID_LEXICAL_DISTANCE=1` — Switches boosting_type to dart to add dropout regularization, aiming to improve recall@3FPM by reducing overfitting on rare benign PE structures while keeping PR_AUC stable.
+
+</details>
+
+## Cycle `20260615T205434-filetypes-pe` — 2026-06-15T20:54:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T21-04-16_20260615T205434-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `db684b63f353dec2` | pe_ctrl_lr003_est300 | ok | 0.9984 | 0.9986 | 0.9832 | 7 | [log](out/autocollie/runs/2026-06-15T21-04-18_20260615T205434-filetypes-pe_pe_ctrl_lr003_est300.log) |
+| `455f2431fb31b2c6` | pe_train_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T21-04-26_20260615T205434-filetypes-pe_pe_train_hardneg_01_12.log) |
+| `e18bf1462662ae3c` | pe_train_thresh_fpr5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T21-04-28_20260615T205434-filetypes-pe_pe_train_thresh_fpr5e7.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T21-04-30_20260615T205434-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `6b206b8f052b2e34` | pe_feat_sym_bigrams_10k | ok | 0.9985 | 0.9987 | 0.9863 | 92 | [log](out/autocollie/runs/2026-06-15T21-04-32_20260615T205434-filetypes-pe_pe_feat_sym_bigrams_10k.log) |
+| `bfe8eddb86bf7efe` | pe_feat_overlay_pe_flags | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T21-06-05_20260615T205434-filetypes-pe_pe_feat_overlay_pe_flags.log) |
+| `fd693d46fa7ef21b` | pe_feat_lowbigram_tiered | ok | 0.9986 | 0.9987 | 0.9861 | 72 | [log](out/autocollie/runs/2026-06-15T21-06-07_20260615T205434-filetypes-pe_pe_feat_lowbigram_tiered.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-15T21-07-19_20260615T205434-filetypes-pe_pe_abl_extreme_off.log) |
+| `76670ced332a6778` | pe_transfer_ext_metrics_pe | ok | 0.9985 | 0.9986 | 0.9843 | 72 | [log](out/autocollie/runs/2026-06-15T21-07-21_20260615T205434-filetypes-pe_pe_transfer_ext_metrics_pe.log) |
+| `7a4f15797b392197` | pe_gen_kv_seed3 | dup | 0.9987 | 0.9988 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-15T21-08-34_20260615T205434-filetypes-pe_pe_gen_kv_seed3.log) |
+| `e5a86663a3440467` | pe_retry_lowbigram_drift | ok | 0.9986 | 0.9987 | 0.9839 | 71 | [log](out/autocollie/runs/2026-06-15T21-08-36_20260615T205434-filetypes-pe_pe_retry_lowbigram_drift.log) |
+| `8f4252c3d5c361d3` | pe_feat_textenc_metrics | dup | 0.9986 | 0.9987 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-15T21-09-48_20260615T205434-filetypes-pe_pe_feat_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_lr003_est300`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with lower learning rate and more estimators to refine decision boundaries and improve PR_AUC.
+- **`pe_train_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Hard-negative sweep with fraction 0.01 and weight 12 to focus model on difficult benigns and boost recall@3FPM.
+- **`pe_train_thresh_fpr5e7`** `EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimize threshold for deployed operating point using max_recall_at_fpr to maximize recall@3FPM.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 15000 to capture metadata and string key-value patterns, aiming to lift PR_AUC.
+- **`pe_feat_sym_bigrams_10k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enable symbol bigrams and trigrams to model API call sequences, targeting PR_AUC improvement via structural signal.
+- **`pe_feat_overlay_pe_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enable overlay_signal, nonstandard_section_signal, and PE format/temporal flags to catch packers and improve recall@3FPM.
+- **`pe_feat_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and enable tiered_crit_bigrams to capture rarer but high-signal patterns, aiming for PR_AUC gain.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce noise and potential overfitting, aiming to keep PR_AUC flat while stabilizing ROC_AUC.
+- **`pe_transfer_ext_metrics_pe`** `EXP_EXTENDED_METRICS=1 EXP_EXTENDED_METRICS_INCLUDE=pe_timestamp,binary_overlay EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer extended_metrics with PE-specific includes from sister routes to add targeted numeric signal and improve PR_AUC.
+- **`pe_gen_kv_seed3`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Apply seed_search_k=3 to the kv_vocab config to verify signal robustness across seeds and target stable PR_AUC.
+- **`pe_retry_lowbigram_drift`** `EXP_BIGRAM_MIN_FREQ=150 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=40 EXP_TRAIN_SAMPLES=30000` — Retry low bigram freq config on updated corpus to verify signal persistence and improve PR_AUC.
+- **`pe_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation in embedded resources/strings, aiming to boost PR_AUC.
+
+</details>
+
+## Cycle `20260615T211617-filetypes-pe` — 2026-06-15T21:16:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T21-24-05_20260615T211617-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `51554d0fb6aad263` | pe_ctrl_hn_01_12 | ok | 0.9985 | 0.9987 | 0.9832 | 77 | [log](out/autocollie/runs/2026-06-15T21-24-07_20260615T211617-filetypes-pe_pe_ctrl_hn_01_12.log) |
+| `d3528372acdb06f7` | pe_ctrl_fpr_target_5e7 | ok | 0.9986 | 0.9987 | 0.0000 | 7 | [log](out/autocollie/runs/2026-06-15T21-25-25_20260615T211617-filetypes-pe_pe_ctrl_fpr_target_5e7.log) |
+| `da30ecf187a9c65b` | pe_ctrl_scale_pos_075 | ok | 0.9985 | 0.9987 | 0.9865 | 6 | [log](out/autocollie/runs/2026-06-15T21-25-32_20260615T211617-filetypes-pe_pe_ctrl_scale_pos_075.log) |
+| `b18519471b4f141b` | pe_feat_kv_vocab_10k | ok | 0.9986 | 0.9987 | 0.9839 | 82 | [log](out/autocollie/runs/2026-06-15T21-25-39_20260615T211617-filetypes-pe_pe_feat_kv_vocab_10k.log) |
+| `3e23e7859959108a` | pe_feat_sym_bigrams_10k | ok | 0.9986 | 0.9987 | 0.9839 | 84 | [log](out/autocollie/runs/2026-06-15T21-27-02_20260615T211617-filetypes-pe_pe_feat_sym_bigrams_10k.log) |
+| `1a16288216fc58e4` | pe_feat_tiered_trigrams | ok | 0.9986 | 0.9987 | 0.9839 | 85 | [log](out/autocollie/runs/2026-06-15T21-28-27_20260615T211617-filetypes-pe_pe_feat_tiered_trigrams.log) |
+| `0a32640dd79bbc44` | pe_feat_pe_metrics_overlay | ok | 0.9986 | 0.9987 | 0.9839 | 70 | [log](out/autocollie/runs/2026-06-15T21-29-52_20260615T211617-filetypes-pe_pe_feat_pe_metrics_overlay.log) |
+| `9d645329ad913f0a` | pe_abl_extreme_off | ok | 0.9985 | 0.9986 | 0.9844 | 69 | [log](out/autocollie/runs/2026-06-15T21-31-03_20260615T211617-filetypes-pe_pe_abl_extreme_off.log) |
+| `efa4838f2b9211a5` | pe_transfer_hardneg_extmetrics | ok | 0.9985 | 0.9987 | 0.9848 | 11 | [log](out/autocollie/runs/2026-06-15T21-32-13_20260615T211617-filetypes-pe_pe_transfer_hardneg_extmetrics.log) |
+| `128904f408951601` | pe_gen_seed_search_3 | ok | 0.9987 | 0.9988 | 0.9826 | 15 | [log](out/autocollie/runs/2026-06-15T21-32-25_20260615T211617-filetypes-pe_pe_gen_seed_search_3.log) |
+| `ce8ebc6fd5b84afa` | pe_retry_kv_seed3_drift | ok | 0.9986 | 0.9987 | 0.9847 | 90 | [log](out/autocollie/runs/2026-06-15T21-32-41_20260615T211617-filetypes-pe_pe_retry_kv_seed3_drift.log) |
+| `06e7db8ca900ab13` | pe_train_hn_02_18_reg | ok | 0.9985 | 0.9987 | 0.9854 | 10 | [log](out/autocollie/runs/2026-06-15T21-34-18_20260615T211617-filetypes-pe_pe_train_hn_02_18_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hn_01_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=150 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to lift recall@3FPM by focusing on difficult benigns.
+- **`pe_ctrl_fpr_target_5e7`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=150 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for deployed operating point to maximize recall@3FPM.
+- **`pe_ctrl_scale_pos_075`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=150 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weights positives to tighten score distribution and improve recall@3FPM at strict FP rates.
+- **`pe_feat_kv_vocab_10k`** `EXP_BIGRAM_MIN_FREQ=150 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab research family to capture structured metadata patterns, targeting PR_AUC gain.
+- **`pe_feat_sym_bigrams_10k`** `EXP_BIGRAM_MIN_FREQ=150 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigrams to catch API co-occurrence patterns common in PE malware, aiming for PR_AUC lift.
+- **`pe_feat_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=150 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Expands n-gram depth to tiered trigrams with crit floor to capture complex attack chains, targeting PR_AUC.
+- **`pe_feat_pe_metrics_overlay`** `EXP_BIGRAM_MIN_FREQ=150 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enables PE-specific structural and overlay metrics to improve packer detection, targeting recall@3FPM.
+- **`pe_abl_extreme_off`** `EXP_BIGRAM_MIN_FREQ=150 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce tail noise and overfitting, aiming for flat PR_AUC with better recall@3FPM.
+- **`pe_transfer_hardneg_extmetrics`** `EXP_BIGRAM_MIN_FREQ=150 EXP_EXTENDED_METRICS=1 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Ports strong hard-negative + extended_metrics combo from sister routes to boost PR_AUC on PE.
+- **`pe_gen_seed_search_3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=150 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Averages 3 seeds on low-bigram config to reduce variance and stabilize recall@3FPM gains.
+- **`pe_retry_kv_seed3_drift`** `EXP_BIGRAM_MIN_FREQ=150 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retries top historical kv_vocab config on fresh corpus to check for data-drift induced PR_AUC recovery.
+- **`pe_train_hn_02_18_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=150 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 …` — Aggressive hard-negative sweep with L2 regularization to suppress benign overfitting, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260615T214055-filetypes-pe` — 2026-06-15T21:40:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T21-48-34_20260615T214055-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `2a00177fca991463` | pe_ctrl_baseline_train | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T21-48-35_20260615T214055-filetypes-pe_pe_ctrl_baseline_train.log) |
+| `529027ba42c6e155` | pe_train_hn_01_16 | dup | 0.9985 | 0.9987 | 0.9839 | 1 | [log](out/autocollie/runs/2026-06-15T21-48-37_20260615T214055-filetypes-pe_pe_train_hn_01_16.log) |
+| `6be70f1d3c227ec9` | pe_train_fpr_target_5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T21-48-39_20260615T214055-filetypes-pe_pe_train_fpr_target_5e7.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T21-48-40_20260615T214055-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `6f493bdbb4cdf2d7` | pe_feat_symbol_bigrams_trigrams | ok | 0.9985 | 0.9987 | 0.9863 | 91 | [log](out/autocollie/runs/2026-06-15T21-48-43_20260615T214055-filetypes-pe_pe_feat_symbol_bigrams_trigrams.log) |
+| `bfe8eddb86bf7efe` | pe_feat_pe_flags_overlay_temporal | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T21-50-14_20260615T214055-filetypes-pe_pe_feat_pe_flags_overlay_temporal.log) |
+| `d5b6c4a946e4f385` | pe_feat_tiered_crit_trigrams_quadgrams | ok | 0.9985 | 0.9987 | 0.9863 | 97 | [log](out/autocollie/runs/2026-06-15T21-50-16_20260615T214055-filetypes-pe_pe_feat_tiered_crit_trigrams_quadgrams.log) |
+| `9ea0b9eff24bdb16` | pe_feat_ext_metrics_ratios | ok | 0.9985 | 0.9987 | 0.9863 | 71 | [log](out/autocollie/runs/2026-06-15T21-51-53_20260615T214055-filetypes-pe_pe_feat_ext_metrics_ratios.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-15T21-53-06_20260615T214055-filetypes-pe_pe_abl_extreme_off.log) |
+| `8787ff5617634350` | pe_transfer_lowbigram_disable_clusters | ok | 0.9985 | 0.9987 | 0.9858 | 71 | [log](out/autocollie/runs/2026-06-15T21-53-08_20260615T214055-filetypes-pe_pe_transfer_lowbigram_disable_clusters.log) |
+| `7a4f15797b392197` | pe_gen_seed_search_3_kv | dup | 0.9987 | 0.9988 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-15T21-54-19_20260615T214055-filetypes-pe_pe_gen_seed_search_3_kv.log) |
+| `a3b15901aedd150d` | pe_retry_hn_02_20_overlay | ok | 0.9985 | 0.9987 | 0.9864 | 10 | [log](out/autocollie/runs/2026-06-15T21-54-21_20260615T214055-filetypes-pe_pe_retry_hn_02_20_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_baseline_train`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature env to establish a training-only baseline for PR_AUC and recall@3 FP/M comparison.
+- **`pe_train_hn_01_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative upweighting to improve recall@3 FP/M by forcing the model to better separate borderline benigns from malware.
+- **`pe_train_fpr_target_5e7`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for deployed operating point to maximize recall@3 FP/M at strict FPR.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals in PE metadata/strings, targeting PR_AUC improvement via richer feature surface.
+- **`pe_feat_symbol_bigrams_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_SYMBOL_MIN_FREQ_TRIGRAM=5 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=5000 …` — Adds symbol bigrams and trigrams to catch import co-occurrence patterns, aiming to boost PR_AUC and recall@3 FP/M for packed/malicious PE files.
+- **`pe_feat_pe_flags_overlay_temporal`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enables PE-specific format flags, temporal anomalies, and overlay signals to improve ROC_AUC and PR_AUC by capturing packer/dropper artifacts.
+- **`pe_feat_tiered_crit_trigrams_quadgrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_QUADGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_QUADGRAM_MAX=5000 EXP_TIERED_QUADGRAM_MIN_CRIT=3 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Extends tiered criticality n-grams to trigrams and quadgrams to capture longer malicious path sequences, targeting PR_AUC gains.
+- **`pe_feat_ext_metrics_ratios`** `EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Adds extended metrics and cross-metric ratios to provide structural density signals, aiming to improve recall@3 FP/M without hurting PR_AUC.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce noise and potential overfitting, testing if PR_AUC and ROC_AUC remain flat or improve while simplifying the model.
+- **`pe_transfer_lowbigram_disable_clusters`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Transfers low bigram frequency and cluster disabling from sister routes to reduce noise and improve PR_AUC by focusing on rarer, more discriminative bigrams.
+- **`pe_gen_seed_search_3_kv`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 on the kv_vocab config to distinguish real signal from seed noise and stabilize recall@3 FP/M gains.
+- **`pe_retry_hn_02_20_overlay`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=20 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 …` — Retries a strong historical hard-negative config with overlay_signal enabled to recover tail recall gains while stabilizing PR_AUC guardrails.
+
+</details>
+
+## Cycle `20260615T220054-filetypes-pe` — 2026-06-15T22:00:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T22-07-57_20260615T220054-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `e18bf1462662ae3c` | pe_ctrl_max_recall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T22-07-59_20260615T220054-filetypes-pe_pe_ctrl_max_recall_fpr.log) |
+| `760679ec938e87db` | pe_ctrl_hn_01_16 | ok | 0.9985 | 0.9987 | 0.9837 | 11 | [log](out/autocollie/runs/2026-06-15T22-08-01_20260615T220054-filetypes-pe_pe_ctrl_hn_01_16.log) |
+| `11a3670142d6d8b1` | pe_feat_metric_ratios | ok | 0.9985 | 0.9986 | 0.9843 | 70 | [log](out/autocollie/runs/2026-06-15T22-08-12_20260615T220054-filetypes-pe_pe_feat_metric_ratios.log) |
+| `07374da30e725831` | pe_feat_kv_vocab_split | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T22-09-23_20260615T220054-filetypes-pe_pe_feat_kv_vocab_split.log) |
+| `00fc999b71a35813` | pe_feat_symbol_bigrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T22-09-25_20260615T220054-filetypes-pe_pe_feat_symbol_bigrams.log) |
+| `8b3b7f207b676ab8` | pe_feat_tiered_crit_trigrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T22-09-27_20260615T220054-filetypes-pe_pe_feat_tiered_crit_trigrams.log) |
+| `8afa04e964d37a72` | pe_feat_overlay_pe_flags | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T22-09-29_20260615T220054-filetypes-pe_pe_feat_overlay_pe_flags.log) |
+| `9db0af1934dc626f` | pe_abl_extreme_blindfold_off | ok | 0.9986 | 0.9987 | 0.9860 | 70 | [log](out/autocollie/runs/2026-06-15T22-09-30_20260615T220054-filetypes-pe_pe_abl_extreme_blindfold_off.log) |
+| `12fc6760efbca2ba` | pe_transfer_lowbigram_tiered | ok | 0.9985 | 0.9986 | 0.9819 | 72 | [log](out/autocollie/runs/2026-06-15T22-10-41_20260615T220054-filetypes-pe_pe_transfer_lowbigram_tiered.log) |
+| `7dca4ad3f6d3dadc` | pe_gen_seed_search_3 | ok | 0.9987 | 0.9988 | 0.9828 | 16 | [log](out/autocollie/runs/2026-06-15T22-11-54_20260615T220054-filetypes-pe_pe_gen_seed_search_3.log) |
+| `369b19a3a0fb1973` | pe_retry_kv_drift_seed42 | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T22-12-12_20260615T220054-filetypes-pe_pe_retry_kv_drift_seed42.log) |
+| `0fa5180509adea79` | pe_train_scale_pos_05_reg | ok | 0.9985 | 0.9987 | 0.9861 | 5 | [log](out/autocollie/runs/2026-06-15T22-12-19_20260615T220054-filetypes-pe_pe_train_scale_pos_05_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_max_recall_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by directly optimizing threshold at deployed strict-FP operating point (5e-07) while keeping baseline features.
+- **`pe_ctrl_hn_01_16`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by upweighting hard negatives to sharpen decision boundary at low FPR, addressing or_loses diagnostic shape.
+- **`pe_feat_metric_ratios`** `EXP_EXTENDED_METRICS_INCLUDE=pe_timestamp,binary_overlay EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by adding cross-metric ratios and targeted PE metrics to improve structural ranking.
+- **`pe_feat_kv_vocab_split`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling KV vocab with value splitting to recover per-element signal in PE metadata and imports.
+- **`pe_feat_symbol_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by adding symbol bigram vocab to capture kernel32->WriteProcessMemory style co-occurrence patterns in PE imports.
+- **`pe_feat_tiered_crit_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling severity-prefixed trigrams to isolate high-crit malicious path sequences from benign noise.
+- **`pe_feat_overlay_pe_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by adding overlay metrics and PE format/temporal flags to catch packers and anomalous binaries at the tail.
+- **`pe_abl_extreme_blindfold_off`** `EXP_BLINDFOLD=0 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by removing extreme and blindfold features to reduce noise and prevent overfitting on rare patterns.
+- **`pe_transfer_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=8000 EXP_TIERED_BIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by transferring low-frequency bigram and tiered bigram config from xml route to capture rarer PE-specific patterns.
+- **`pe_gen_seed_search_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM stability by averaging 3 seeds to distinguish real signal from seed-driven variance at the strict-FP tail.
+- **`pe_retry_kv_drift_seed42`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by retrying a prior strong KV vocab config to check for data-drift recovery after corpus updates.
+- **`pe_train_scale_pos_05_reg`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_MIN_CHILD_WEIGHT=5 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by down-weighting positives to reduce false positives at low FPR while adding L2 regularization.
+
+</details>
+
+## Cycle `20260615T221847-filetypes-pe` — 2026-06-15T22:18:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T22-25-53_20260615T221847-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `455f2431fb31b2c6` | pe_ctrl_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T22-25-55_20260615T221847-filetypes-pe_pe_ctrl_hardneg_01_12.log) |
+| `e18bf1462662ae3c` | pe_ctrl_maxrec_fpr5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T22-25-56_20260615T221847-filetypes-pe_pe_ctrl_maxrec_fpr5e7.log) |
+| `0fa5180509adea79` | pe_ctrl_scalepos05_reg2 | dup | 0.9985 | 0.9987 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T22-25-58_20260615T221847-filetypes-pe_pe_ctrl_scalepos05_reg2.log) |
+| `369b19a3a0fb1973` | pe_feat_kv_vocab_12k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T22-26-00_20260615T221847-filetypes-pe_pe_feat_kv_vocab_12k.log) |
+| `2071bb655bb206bd` | pe_feat_sym_bigrams_5k | ok | 0.9985 | 0.9987 | 0.9863 | 84 | [log](out/autocollie/runs/2026-06-15T22-26-02_20260615T221847-filetypes-pe_pe_feat_sym_bigrams_5k.log) |
+| `871ff4e52aa054e5` | pe_feat_tiered_trigrams | ok | 0.9985 | 0.9987 | 0.9863 | 84 | [log](out/autocollie/runs/2026-06-15T22-27-27_20260615T221847-filetypes-pe_pe_feat_tiered_trigrams.log) |
+| `8afa04e964d37a72` | pe_feat_pe_flags_overlay | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T22-28-52_20260615T221847-filetypes-pe_pe_feat_pe_flags_overlay.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-15T22-28-53_20260615T221847-filetypes-pe_pe_abl_extreme_off.log) |
+| `1c562e916e55bfec` | pe_transfer_xml_lowbigram | dup | 0.9985 | 0.9987 | 0.9858 | 1 | [log](out/autocollie/runs/2026-06-15T22-28-55_20260615T221847-filetypes-pe_pe_transfer_xml_lowbigram.log) |
+| `6dbd607f11fc87c4` | pe_transfer_ruby_attack_ngrams | ok | 0.9985 | 0.9987 | 0.9863 | 72 | [log](out/autocollie/runs/2026-06-15T22-28-57_20260615T221847-filetypes-pe_pe_transfer_ruby_attack_ngrams.log) |
+| `93ebe35608e16aec` | pe_gen_seed3_kv | ok | 0.9987 | 0.9988 | 0.9847 | 13 | [log](out/autocollie/runs/2026-06-15T22-30-10_20260615T221847-filetypes-pe_pe_gen_seed3_kv.log) |
+| `33de4c3c290cb10d` | pe_retry_kv_seed7 | ok | 0.9987 | 0.9988 | 0.9859 | 87 | [log](out/autocollie/runs/2026-06-15T22-30-24_20260615T221847-filetypes-pe_pe_retry_kv_seed7.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative upweighting to improve recall@3FPM by focusing on difficult benigns, keeping PR_AUC flat.
+- **`pe_ctrl_maxrec_fpr5e7`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for deployed tail to boost recall@3FPM without hurting PR_AUC.
+- **`pe_ctrl_scalepos05_reg2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weights positives to reduce FP tail noise, targeting recall@3FPM improvement while preserving PR_AUC.
+- **`pe_feat_kv_vocab_12k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals in PE metadata, aiming to lift PR_AUC and recall@3FPM.
+- **`pe_feat_sym_bigrams_5k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigrams to catch co-occurrence patterns in imports, targeting PR_AUC gain.
+- **`pe_feat_tiered_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=20 EXP_TRAIN_SAMPLES=30000` — Extends tiered n-grams to trigrams for richer context, aiming to improve PR_AUC ranking.
+- **`pe_feat_pe_flags_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Activates PE format flags and overlay signal to capture packer/dropper traits, boosting recall@3FPM.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce noise and overfitting, testing if PR_AUC stays flat or improves.
+- **`pe_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports XML route's low-frequency bigram strategy to capture rarer PE patterns, targeting PR_AUC lift.
+- **`pe_transfer_ruby_attack_ngrams`** `EXP_ATTACK_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables attack_ngrams from Ruby route to strengthen malicious pattern detection, aiming for higher recall@3FPM.
+- **`pe_gen_seed3_kv`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Combines kv_vocab with seed_search_k=3 to verify signal stability and reduce seed variance, targeting robust PR_AUC.
+- **`pe_retry_kv_seed7`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retries strong kv_vocab config with new seed to check for data-drift recovery in recall@3FPM.
+
+</details>
+
+## Cycle `20260615T223823-filetypes-pe` — 2026-06-15T22:38:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T22-46-07_20260615T223823-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `e18bf1462662ae3c` | pe_ctrl_max_recall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T22-46-09_20260615T223823-filetypes-pe_pe_ctrl_max_recall_fpr.log) |
+| `455f2431fb31b2c6` | pe_train_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T22-46-11_20260615T223823-filetypes-pe_pe_train_hardneg_01_12.log) |
+| `984de36d665364ed` | pe_train_hardneg_015_16 | dup | 0.9986 | 0.9987 | 0.9845 | 1 | [log](out/autocollie/runs/2026-06-15T22-46-12_20260615T223823-filetypes-pe_pe_train_hardneg_015_16.log) |
+| `aaeb25d69aa605b8` | pe_feat_kv_vocab_10k | ok | 0.9985 | 0.9987 | 0.9863 | 81 | [log](out/autocollie/runs/2026-06-15T22-46-14_20260615T223823-filetypes-pe_pe_feat_kv_vocab_10k.log) |
+| `d6f637f5664797e9` | pe_feat_sym_bigrams_5k | ok | 0.9985 | 0.9987 | 0.9863 | 81 | [log](out/autocollie/runs/2026-06-15T22-47-36_20260615T223823-filetypes-pe_pe_feat_sym_bigrams_5k.log) |
+| `8afa04e964d37a72` | pe_feat_pe_metrics_overlay | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T22-48-58_20260615T223823-filetypes-pe_pe_feat_pe_metrics_overlay.log) |
+| `aaf41c937e76af7c` | pe_feat_low_bigram_freq | ok | 0.9985 | 0.9987 | 0.9827 | 6 | [log](out/autocollie/runs/2026-06-15T22-49-00_20260615T223823-filetypes-pe_pe_feat_low_bigram_freq.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-15T22-49-08_20260615T223823-filetypes-pe_pe_abl_extreme_off.log) |
+| `992799f1096e0e92` | pe_transfer_perl_hardneg_clusters | ok | 0.9986 | 0.9987 | 0.9835 | 12 | [log](out/autocollie/runs/2026-06-15T22-49-10_20260615T223823-filetypes-pe_pe_transfer_perl_hardneg_clusters.log) |
+| `7dca4ad3f6d3dadc` | pe_gen_seed_search_3 | dup | 0.9987 | 0.9988 | 0.9828 | 1 | [log](out/autocollie/runs/2026-06-15T22-49-22_20260615T223823-filetypes-pe_pe_gen_seed_search_3.log) |
+| `6dbd607f11fc87c4` | pe_retry_attack_ngrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T22-49-24_20260615T223823-filetypes-pe_pe_retry_attack_ngrams.log) |
+| `fa6c44ac6621bd98` | pe_feat_metric_ratios | ok | 0.9985 | 0.9987 | 0.9863 | 5 | [log](out/autocollie/runs/2026-06-15T22-49-26_20260615T223823-filetypes-pe_pe_feat_metric_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_max_recall_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by optimizing threshold at deployed FPR while keeping feature set cached.
+- **`pe_train_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative upweighting to improve PR_AUC by focusing gradient updates on difficult benigns.
+- **`pe_train_hardneg_015_16`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Stronger hard-negative weighting to further separate tail malware from benigns, targeting PR_AUC.
+- **`pe_feat_kv_vocab_10k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals, aiming to boost PR_AUC with new rank signal.
+- **`pe_feat_sym_bigrams_5k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigrams to catch import co-occurrence patterns, targeting PR_AUC improvement.
+- **`pe_feat_pe_metrics_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enables PE format flags, temporal anomaly, and overlay signal to capture packer traits, aiming for recall@3FPM.
+- **`pe_feat_low_bigram_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 500 to include rarer malicious patterns, targeting PR_AUC.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce noise, aiming to keep PR_AUC flat while improving generalization.
+- **`pe_transfer_perl_hardneg_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Ports perl hard-negative config and disables clusters group to reduce noise, targeting PR_AUC.
+- **`pe_gen_seed_search_3`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 to average out seed variance and stabilize recall@3FPM gains.
+- **`pe_retry_attack_ngrams`** `EXP_ATTACK_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retries attack_ngrams on updated corpus to check for data-drift signal recovery, targeting PR_AUC.
+- **`pe_feat_metric_ratios`** `EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adds cross-metric ratios to help trees on small corpora, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260615T225552-filetypes-pe` — 2026-06-15T22:55:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T23-03-53_20260615T225552-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `455f2431fb31b2c6` | pe_ctrl_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T23-03-55_20260615T225552-filetypes-pe_pe_ctrl_hardneg_01_12.log) |
+| `e18bf1462662ae3c` | pe_ctrl_threshold_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T23-03-56_20260615T225552-filetypes-pe_pe_ctrl_threshold_fpr.log) |
+| `bc72887698e4c374` | pe_ctrl_dart_extra_trees | dup | 0.9967 | 0.9970 | 0.9769 | 1 | [log](out/autocollie/runs/2026-06-15T23-03-58_20260615T225552-filetypes-pe_pe_ctrl_dart_extra_trees.log) |
+| `07374da30e725831` | pe_feat_kv_vocab_15k_split | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-04-00_20260615T225552-filetypes-pe_pe_feat_kv_vocab_15k_split.log) |
+| `7264a55108af3f6c` | pe_feat_sym_bigrams_8k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-04-02_20260615T225552-filetypes-pe_pe_feat_sym_bigrams_8k.log) |
+| `8afa04e964d37a72` | pe_feat_pe_flags_overlay | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-04-04_20260615T225552-filetypes-pe_pe_feat_pe_flags_overlay.log) |
+| `8f4252c3d5c361d3` | pe_feat_textenc_metrics | dup | 0.9986 | 0.9987 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-15T23-04-06_20260615T225552-filetypes-pe_pe_feat_textenc_metrics.log) |
+| `d45209b510377e64` | pe_abl_clusters_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-15T23-04-07_20260615T225552-filetypes-pe_pe_abl_clusters_extreme_off.log) |
+| `984de36d665364ed` | pe_transfer_perl_hardneg_015_16 | dup | 0.9986 | 0.9987 | 0.9845 | 1 | [log](out/autocollie/runs/2026-06-15T23-04-09_20260615T225552-filetypes-pe_pe_transfer_perl_hardneg_015_16.log) |
+| `fd693d46fa7ef21b` | pe_transfer_xml_lowbigram | dup | 0.9986 | 0.9987 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T23-04-11_20260615T225552-filetypes-pe_pe_transfer_xml_lowbigram.log) |
+| `7dca4ad3f6d3dadc` | pe_gen_seed_search_3_avg | dup | 0.9987 | 0.9988 | 0.9828 | 1 | [log](out/autocollie/runs/2026-06-15T23-04-13_20260615T225552-filetypes-pe_pe_gen_seed_search_3_avg.log) |
+| `0e2d28ebbe11194f` | pe_retry_kv_seed7_drift | ok | 0.9987 | 0.9988 | 0.9859 | 82 | [log](out/autocollie/runs/2026-06-15T23-04-15_20260615T225552-filetypes-pe_pe_retry_kv_seed7_drift.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Tests hard-negative upweighting to push borderline malware higher, targeting recall@3FPM without hurting PR_AUC.
+- **`pe_ctrl_threshold_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes the deployed operating point via max_recall_at_fpr to maximize recall@3FPM at strict FP constraints.
+- **`pe_ctrl_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Uses DART boosting with extra trees to reduce overfitting on rare patterns, aiming to stabilize PR_AUC and improve tail recall@3FPM.
+- **`pe_feat_kv_vocab_15k_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Expands KV vocabulary and enables value splitting to capture fine-grained string signals, targeting PR_AUC gains.
+- **`pe_feat_sym_bigrams_8k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigram co-occurrence features to catch API chaining patterns, targeting PR_AUC improvement.
+- **`pe_feat_pe_flags_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enables PE format flags, temporal anomaly, and overlay signal to better distinguish packers/droppers, targeting recall@3FPM.
+- **`pe_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates research text_encoding and text_metrics_full families to extract structural obfuscation signals, targeting PR_AUC.
+- **`pe_abl_clusters_extreme_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Removes noisy clusters group and extreme features to reduce overfitting, aiming to keep PR_AUC flat while improving recall@3FPM stability.
+- **`pe_transfer_perl_hardneg_015_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Ports perl route's successful hard-negative configuration with higher weight to sharpen decision boundary, targeting recall@3FPM.
+- **`pe_transfer_xml_lowbigram`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Adopts xml route's lower bigram frequency floor to capture rarer but informative patterns, targeting PR_AUC.
+- **`pe_gen_seed_search_3_avg`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed search with averaging to reduce variance and stabilize tail performance, targeting recall@3FPM consistency.
+- **`pe_retry_kv_seed7_drift`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Retries top historical KV seed7 config on updated corpus to check for data-drift recovery, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260615T231159-filetypes-pe` — 2026-06-15T23:11:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T23-18-57_20260615T231159-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `2a00177fca991463` | pe_ctrl_baseline_train | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-18-59_20260615T231159-filetypes-pe_pe_ctrl_baseline_train.log) |
+| `455f2431fb31b2c6` | pe_train_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T23-19-01_20260615T231159-filetypes-pe_pe_train_hardneg_01_12.log) |
+| `e18bf1462662ae3c` | pe_train_max_recall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T23-19-03_20260615T231159-filetypes-pe_pe_train_max_recall_fpr.log) |
+| `07374da30e725831` | pe_feat_kv_vocab_split | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-19-05_20260615T231159-filetypes-pe_pe_feat_kv_vocab_split.log) |
+| `3e2f619005999940` | pe_feat_sym_bigrams_trigrams | ok | 0.9985 | 0.9987 | 0.9863 | 92 | [log](out/autocollie/runs/2026-06-15T23-19-07_20260615T231159-filetypes-pe_pe_feat_sym_bigrams_trigrams.log) |
+| `8afa04e964d37a72` | pe_feat_pe_flags_overlay | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-20-40_20260615T231159-filetypes-pe_pe_feat_pe_flags_overlay.log) |
+| `8f4252c3d5c361d3` | pe_feat_textenc_metrics | dup | 0.9986 | 0.9987 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-15T23-20-42_20260615T231159-filetypes-pe_pe_feat_textenc_metrics.log) |
+| `821bdee724193460` | pe_abl_blindfold_off | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-20-44_20260615T231159-filetypes-pe_pe_abl_blindfold_off.log) |
+| `664c0ba88fd92d03` | pe_transfer_lowbigram_tiered | ok | 0.9986 | 0.9987 | 0.9861 | 84 | [log](out/autocollie/runs/2026-06-15T23-20-46_20260615T231159-filetypes-pe_pe_transfer_lowbigram_tiered.log) |
+| `d455e0d53da3da91` | pe_transfer_kv_seedsearch | ok | 0.9987 | 0.9988 | 0.9828 | 15 | [log](out/autocollie/runs/2026-06-15T23-22-10_20260615T231159-filetypes-pe_pe_transfer_kv_seedsearch.log) |
+| `4f32e094dc1e19ae` | pe_gen_seed_var_88 | ok | 0.9989 | 0.9990 | 0.9868 | 87 | [log](out/autocollie/runs/2026-06-15T23-22-26_20260615T231159-filetypes-pe_pe_gen_seed_var_88.log) |
+| `5cdff0338859baa7` | pe_retry_kv_seed7_drift_v2 | ok | 0.9987 | 0.9988 | 0.9869 | 6 | [log](out/autocollie/runs/2026-06-15T23-24-02_20260615T231159-filetypes-pe_pe_retry_kv_seed7_drift_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_baseline_train`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Replicate the best recent feature_env to establish a stable baseline for PR_AUC and ROC_AUC while testing higher estimators for marginal recall@3FPM gains.
+- **`pe_train_hardneg_01_12`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Apply hard-negative upweighting to push recall@3FPM by focusing the model on difficult benign samples that cause false positives at the strict tail.
+- **`pe_train_max_recall_fpr`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Switch threshold tuning to max_recall_at_fpr with 5e-07 target to directly optimize recall@3FPM at the deployed operating point without harming PR_AUC.
+- **`pe_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to recover per-element signal in PE metadata strings, aiming to improve PR_AUC by capturing finer-grained malicious patterns.
+- **`pe_feat_sym_bigrams_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Add symbol_bigrams and symbol_trigrams to capture import co-occurrence sequences typical of PE packers, targeting PR_AUC gains from structural malware signatures.
+- **`pe_feat_pe_flags_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enable pe_format_flags, pe_temporal_anomaly, and overlay_signal to directly model PE structural anomalies and packer overlays, boosting recall@3FPM for obfuscated binaries.
+- **`pe_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activate text_encoding and text_metrics_full to extract string encoding and line-level obfuscation signals from PE resources, targeting PR_AUC improvements on resource-heavy malware.
+- **`pe_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout features to reduce training noise and variance, aiming to keep PR_AUC flat or higher while stabilizing recall@3FPM.
+- **`pe_transfer_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Port low bigram_min_freq and tiered_crit_trigrams from sister routes to capture rarer PE string patterns, targeting PR_AUC gains from expanded n-gram coverage.
+- **`pe_transfer_kv_seedsearch`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Combine transferred kv_vocab with seed_search_k=3 to average out seed variance and reliably capture recall@3FPM improvements from key-value metadata.
+- **`pe_gen_seed_var_88`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Vary seed to 88 on a strong feature set to distinguish real ranking signal from seed noise, targeting stable PR_AUC and recall@3FPM across RNG states.
+- **`pe_retry_kv_seed7_drift_v2`** `EXP_ESTIMATORS=320 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Retry the top recent kv_seed7 config with slightly increased estimators to account for daily corpus drift, aiming to recover PR_AUC and recall@3FPM if signal degraded.
+
+</details>
+
+## Cycle `20260615T233028-filetypes-pe` — 2026-06-15T23:30:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T23-37-21_20260615T233028-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `455f2431fb31b2c6` | pe_ctrl_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-15T23-37-22_20260615T233028-filetypes-pe_pe_ctrl_hardneg_01_12.log) |
+| `3278d92b7ed0acc0` | pe_ctrl_scalepos_075 | ok | 0.9985 | 0.9987 | 0.9850 | 7 | [log](out/autocollie/runs/2026-06-15T23-37-24_20260615T233028-filetypes-pe_pe_ctrl_scalepos_075.log) |
+| `e18bf1462662ae3c` | pe_train_maxrecall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T23-37-32_20260615T233028-filetypes-pe_pe_train_maxrecall_fpr.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-37-34_20260615T233028-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `01e50c510b643ed3` | pe_feat_sym_vocab_bigrams | ok | 0.9985 | 0.9987 | 0.9863 | 84 | [log](out/autocollie/runs/2026-06-15T23-37-35_20260615T233028-filetypes-pe_pe_feat_sym_vocab_bigrams.log) |
+| `31285abfdade9d22` | pe_feat_lowbigram_tiered | ok | 0.9985 | 0.9987 | 0.9854 | 72 | [log](out/autocollie/runs/2026-06-15T23-39-00_20260615T233028-filetypes-pe_pe_feat_lowbigram_tiered.log) |
+| `8afa04e964d37a72` | pe_feat_pe_flags_overlay | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-40-13_20260615T233028-filetypes-pe_pe_feat_pe_flags_overlay.log) |
+| `4a160bb3899a867a` | pe_abl_disable_clusters | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-40-15_20260615T233028-filetypes-pe_pe_abl_disable_clusters.log) |
+| `7dca4ad3f6d3dadc` | pe_gen_seedsearch_3 | dup | 0.9987 | 0.9988 | 0.9828 | 1 | [log](out/autocollie/runs/2026-06-15T23-40-17_20260615T233028-filetypes-pe_pe_gen_seedsearch_3.log) |
+| `984de36d665364ed` | pe_retry_drift_hardneg_015 | dup | 0.9986 | 0.9987 | 0.9845 | 1 | [log](out/autocollie/runs/2026-06-15T23-40-18_20260615T233028-filetypes-pe_pe_retry_drift_hardneg_015.log) |
+| `1de2d896f003d7d0` | pe_feat_ext_metrics_overlay | ok | 0.9985 | 0.9986 | 0.9843 | 71 | [log](out/autocollie/runs/2026-06-15T23-40-20_20260615T233028-filetypes-pe_pe_feat_ext_metrics_overlay.log) |
+| `3e1c84ea17a70f17` | pe_feat_severity_fractions | ok | 0.9985 | 0.9987 | 0.9863 | 6 | [log](out/autocollie/runs/2026-06-15T23-41-32_20260615T233028-filetypes-pe_pe_feat_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.01 …` — Replicates best feature_env to cache-hit matrix, adds hard negatives to push recall@3FPM by better separating tail benigns from malware.
+- **`pe_ctrl_scalepos_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Uses best feature_env with reduced positive weight to suppress false positives at the strict tail, targeting recall@3FPM.
+- **`pe_train_maxrecall_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimizes threshold for deployed operating point to maximize recall@3FPM at 5e-07 FPR.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured metadata patterns missed by n-grams, aiming to lift PR_AUC.
+- **`pe_feat_sym_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Adds symbol_vocab and symbol_bigrams to model API call sequences, targeting PR_AUC improvement via structural signal.
+- **`pe_feat_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=8000 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floors to capture rarer malicious patterns, targeting PR_AUC while monitoring ROC_AUC for overfit.
+- **`pe_feat_pe_flags_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enables PE-format flags and overlay metrics to catch packer/dropper artifacts, aiming to boost recall@3FPM.
+- **`pe_abl_disable_clusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables clusters group to remove noisy aggregate features, targeting PR_AUC stability and reducing overfit risk.
+- **`pe_gen_seedsearch_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Uses seed_search_k=3 with ensemble averaging to reduce variance and stabilize recall@3FPM across data splits.
+- **`pe_retry_drift_hardneg_015`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.015 …` — Retries prior drift config with stronger hard-negative weighting to recover tail recall@3FPM lost to corpus shift.
+- **`pe_feat_ext_metrics_overlay`** `EXP_EXTENDED_METRICS=1 EXP_EXTENDED_METRICS_INCLUDE=pe_timestamp,binary_overlay EXP_MAX_TEST_SAMPLES=20000 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Adds extended metrics focused on PE timestamps and overlay ratios to improve structural ranking, targeting PR_AUC.
+- **`pe_feat_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables severity_fractions to highlight minimal droppers with high-crit findings, targeting recall@3FPM for sparse malware.
+
+</details>
+
+## Cycle `20260615T234800-filetypes-pe` — 2026-06-15T23:48:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-15T23-55-32_20260615T234800-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `2a00177fca991463` | pe_ctrl_baseline_train | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-55-34_20260615T234800-filetypes-pe_pe_ctrl_baseline_train.log) |
+| `529027ba42c6e155` | pe_train_hardneg_01_16 | dup | 0.9985 | 0.9987 | 0.9839 | 1 | [log](out/autocollie/runs/2026-06-15T23-55-36_20260615T234800-filetypes-pe_pe_train_hardneg_01_16.log) |
+| `6be70f1d3c227ec9` | pe_train_max_recall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-15T23-55-38_20260615T234800-filetypes-pe_pe_train_max_recall_fpr.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-55-40_20260615T234800-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `6f493bdbb4cdf2d7` | pe_feat_sym_bigrams_trigrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-55-42_20260615T234800-filetypes-pe_pe_feat_sym_bigrams_trigrams.log) |
+| `af2a8515d6a1a99e` | pe_feat_tiered_lowfreq | ok | 0.9986 | 0.9987 | 0.9851 | 71 | [log](out/autocollie/runs/2026-06-15T23-55-44_20260615T234800-filetypes-pe_pe_feat_tiered_lowfreq.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-15T23-56-56_20260615T234800-filetypes-pe_pe_abl_extreme_off.log) |
+| `1712abafe66c35e9` | pe_transfer_kv_hardneg | ok | 0.9984 | 0.9986 | 0.9861 | 12 | [log](out/autocollie/runs/2026-06-15T23-56-57_20260615T234800-filetypes-pe_pe_transfer_kv_hardneg.log) |
+| `03fd1960acf6ad01` | pe_transfer_xml_tiered | ok | 0.9985 | 0.9987 | 0.9853 | 71 | [log](out/autocollie/runs/2026-06-15T23-57-11_20260615T234800-filetypes-pe_pe_transfer_xml_tiered.log) |
+| `a9b6a06351f77884` | pe_gen_seedsearch_3 | ok | 0.9987 | 0.9988 | 0.9828 | 92 | [log](out/autocollie/runs/2026-06-15T23-58-22_20260615T234800-filetypes-pe_pe_gen_seedsearch_3.log) |
+| `3e1c84ea17a70f17` | pe_retry_severity_fractions_drift | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-59-56_20260615T234800-filetypes-pe_pe_retry_severity_fractions_drift.log) |
+| `bfe8eddb86bf7efe` | pe_feat_pe_metrics_overlay | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-15T23-59-58_20260615T234800-filetypes-pe_pe_feat_pe_metrics_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_baseline_train`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Establish training-only baseline using recent feature cache to measure PR_AUC and recall@3FPM stability before introducing new knobs.
+- **`pe_train_hardneg_01_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Apply hard-negative upweighting to focus model on difficult benigns, aiming to lift recall@3FPM while preserving PR_AUC.
+- **`pe_train_max_recall_fpr`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Switch threshold tuning to max_recall_at_fpr to directly optimize the deployed operating point, targeting higher recall@3FPM with flat ROC_AUC.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with expanded cap to capture PE-specific metadata patterns, aiming to improve PR_AUC and recall@3FPM.
+- **`pe_feat_sym_bigrams_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_SYMBOL_MIN_FREQ_TRIGRAM=5 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=5000 …` — Add symbol bigrams and trigrams to model API call sequences in PE headers, targeting PR_AUC gains from structural malware signals.
+- **`pe_feat_tiered_lowfreq`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=15000 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lower tiered ngram frequency floors to capture rare but high-signal PE traits, aiming to boost recall@3FPM without degrading ROC_AUC.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features toggle to reduce tail noise and overfitting, expecting stable PR_AUC and improved recall@3FPM consistency.
+- **`pe_transfer_kv_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 …` — Port sister-route kv + hard-negative combo to PE, tuning weights to sharpen decision boundary for better recall@3FPM and PR_AUC.
+- **`pe_transfer_xml_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=12000 EXP_TIERED_BIGRAM_MIN_FREQ=25 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Adapt xml route's low-freq tiered ngram strategy to PE, expanding signal surface to lift PR_AUC and tail recall.
+- **`pe_gen_seedsearch_3`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on a strong feature set to average out seed variance, stabilizing recall@3FPM and PR_AUC across folds.
+- **`pe_retry_severity_fractions_drift`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Retry recent severity_fractions configuration to check if daily corpus drift recovers its PR_AUC and recall@3FPM potential.
+- **`pe_feat_pe_metrics_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enable PE-specific format flags, temporal anomaly, and overlay signal to capture packer traits, targeting recall@3FPM gains.
+
+</details>
+
+## Cycle `20260616T000620-filetypes-pe` — 2026-06-16T00:06:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-16T00-14-02_20260616T000620-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `6f087b016d58f1e0` | pe_ctrl_hardneg_threshold | ok | 0.9985 | 0.9986 | 0.0000 | 9 | [log](out/autocollie/runs/2026-06-16T00-14-03_20260616T000620-filetypes-pe_pe_ctrl_hardneg_threshold.log) |
+| `2f73fd2f9b013752` | pe_exploit_dart_hardneg | ok | 0.9978 | 0.9980 | 0.9745 | 14 | [log](out/autocollie/runs/2026-06-16T00-14-13_20260616T000620-filetypes-pe_pe_exploit_dart_hardneg.log) |
+| `94083ca2980f29f5` | pe_exploit_posweight_lr | ok | 0.9984 | 0.9986 | 0.9851 | 7 | [log](out/autocollie/runs/2026-06-16T00-14-29_20260616T000620-filetypes-pe_pe_exploit_posweight_lr.log) |
+| `07374da30e725831` | pe_feat_kv_split_vocab | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T00-14-37_20260616T000620-filetypes-pe_pe_feat_kv_split_vocab.log) |
+| `6b206b8f052b2e34` | pe_feat_symbol_bigrams_trigrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T00-14-38_20260616T000620-filetypes-pe_pe_feat_symbol_bigrams_trigrams.log) |
+| `8afa04e964d37a72` | pe_feat_overlay_temporal_flags | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T00-14-40_20260616T000620-filetypes-pe_pe_feat_overlay_temporal_flags.log) |
+| `450ca447b9258130` | pe_feat_tiered_quadgrams | ok | 0.9985 | 0.9987 | 0.9863 | 95 | [log](out/autocollie/runs/2026-06-16T00-14-42_20260616T000620-filetypes-pe_pe_feat_tiered_quadgrams.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-16T00-16-18_20260616T000620-filetypes-pe_pe_abl_extreme_off.log) |
+| `2d5902cac4d3905f` | pe_transfer_xml_lowfreq_tiered | ok | 0.9986 | 0.9987 | 0.9861 | 69 | [log](out/autocollie/runs/2026-06-16T00-16-20_20260616T000620-filetypes-pe_pe_transfer_xml_lowfreq_tiered.log) |
+| `303ea373050a5e3f` | pe_transfer_perl_symbol_vocab | ok | 0.9985 | 0.9987 | 0.9863 | 81 | [log](out/autocollie/runs/2026-06-16T00-17-30_20260616T000620-filetypes-pe_pe_transfer_perl_symbol_vocab.log) |
+| `7d74d442c978cab1` | pe_gen_seedsearch_hardneg | ok | 0.9987 | 0.9988 | 0.9851 | 25 | [log](out/autocollie/runs/2026-06-16T00-18-52_20260616T000620-filetypes-pe_pe_gen_seedsearch_hardneg.log) |
+| `dd06459c8a4bcc73` | pe_retry_kv_seed7_drift | ok | 0.9987 | 0.9988 | 0.9859 | 11 | [log](out/autocollie/runs/2026-06-16T00-19-18_20260616T000620-filetypes-pe_pe_retry_kv_seed7_drift.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_threshold`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets tail recall at deployed FPR using hard negatives and strict threshold mode to improve recall@3 FP/M.
+- **`pe_exploit_dart_hardneg`** `EXP_BOOSTING_TYPE=dart EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Tests higher hard-negative weight with DART regularization to improve PR_AUC and tail recall.
+- **`pe_exploit_posweight_lr`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Down-weights positives to reduce FPs at strict operating point, aiming for higher recall@3 FP/M.
+- **`pe_feat_kv_split_vocab`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab and value splitting to recover per-element signal in PE metadata, targeting PR_AUC gains.
+- **`pe_feat_symbol_bigrams_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_TRIGRAMS=1 EXP_SYMBOL_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Adds symbol co-occurrence patterns to catch kernel32->WriteProcessMemory chains, aiming for PR_AUC improvement.
+- **`pe_feat_overlay_temporal_flags`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Enables PE-specific structural and temporal features to improve ranking of packed/anomalous binaries, targeting ROC_AUC and PR_AUC.
+- **`pe_feat_tiered_quadgrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_QUADGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_QUADGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Extends severity-prefixed n-grams to quadgrams to capture longer malicious path sequences, targeting PR_AUC.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Removes noisy extreme features to reduce overfitting, aiming to keep PR_AUC flat while improving ROC_AUC stability.
+- **`pe_transfer_xml_lowfreq_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Transfers XML route's low-frequency bigram and tiered trigram config to capture rarer PE patterns, targeting PR_AUC.
+- **`pe_transfer_perl_symbol_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Transfers Perl route's symbol vocab approach to capture PE import patterns, targeting PR_AUC and recall@3 FP/M.
+- **`pe_gen_seedsearch_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Averages 3 seeds to reduce variance and stabilize tail recall gains from hard negatives, targeting recall@3 FP/M.
+- **`pe_retry_kv_seed7_drift`** `EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retries prior high-PR-AUC KV config with updated corpus to check for data-drift recovery, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260616T002555-filetypes-pe` — 2026-06-16T00:25:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-16T00-33-48_20260616T002555-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `455f2431fb31b2c6` | pe_ctrl_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-16T00-33-50_20260616T002555-filetypes-pe_pe_ctrl_hardneg_01_12.log) |
+| `e18bf1462662ae3c` | pe_ctrl_maxrecall_fpr5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-16T00-33-52_20260616T002555-filetypes-pe_pe_ctrl_maxrecall_fpr5e7.log) |
+| `333e6ddaf9bf0303` | pe_ctrl_posweight075_lr003 | ok | 0.9984 | 0.9985 | 0.9838 | 7 | [log](out/autocollie/runs/2026-06-16T00-33-54_20260616T002555-filetypes-pe_pe_ctrl_posweight075_lr003.log) |
+| `aaeb25d69aa605b8` | pe_feat_kv_vocab_10k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T00-34-02_20260616T002555-filetypes-pe_pe_feat_kv_vocab_10k.log) |
+| `0055931f9c348d85` | pe_feat_symbol_vocab_15k | ok | 0.9985 | 0.9987 | 0.9863 | 81 | [log](out/autocollie/runs/2026-06-16T00-34-03_20260616T002555-filetypes-pe_pe_feat_symbol_vocab_15k.log) |
+| `8f4252c3d5c361d3` | pe_feat_textenc_metrics | dup | 0.9986 | 0.9987 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-16T00-35-25_20260616T002555-filetypes-pe_pe_feat_textenc_metrics.log) |
+| `5876808a6ab21d7b` | pe_feat_lowfreq_bigrams | ok | 0.9985 | 0.9987 | 0.9827 | 73 | [log](out/autocollie/runs/2026-06-16T00-35-27_20260616T002555-filetypes-pe_pe_feat_lowfreq_bigrams.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-16T00-36-41_20260616T002555-filetypes-pe_pe_abl_extreme_off.log) |
+| `4a160bb3899a867a` | pe_xfer_clusters_off | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T00-36-43_20260616T002555-filetypes-pe_pe_xfer_clusters_off.log) |
+| `0f407914aecc97de` | pe_xfer_score_clusters_off | ok | 0.9985 | 0.9987 | 0.9851 | 71 | [log](out/autocollie/runs/2026-06-16T00-36-45_20260616T002555-filetypes-pe_pe_xfer_score_clusters_off.log) |
+| `1a4736a682fd5bc1` | pe_gen_seedsearch_hardneg | ok | 0.9986 | 0.9987 | 0.9841 | 26 | [log](out/autocollie/runs/2026-06-16T00-37-57_20260616T002555-filetypes-pe_pe_gen_seedsearch_hardneg.log) |
+| `6db56003b2930d84` | pe_retry_kv_seed7_drift_v2 | ok | 0.9986 | 0.9988 | 0.9860 | 77 | [log](out/autocollie/runs/2026-06-16T00-38-24_20260616T002555-filetypes-pe_pe_retry_kv_seed7_drift_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to reduce false positives at the tail, while keeping PR_AUC flat.
+- **`pe_ctrl_maxrecall_fpr5e7`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by directly optimizing the threshold for the deployed FPR target, preserving PR_AUC.
+- **`pe_ctrl_posweight075_lr003`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to lift recall@3FPM by down-weighting positives and slowing learning to reduce tail noise, targeting flat PR_AUC.
+- **`pe_feat_kv_vocab_10k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling KV vocab to capture structured metadata patterns unique to PE files.
+- **`pe_feat_symbol_vocab_15k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling symbol vocab to detect malicious import co-occurrences.
+- **`pe_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by adding text encoding and full text metrics to catch string obfuscation in PE binaries.
+- **`pe_feat_lowfreq_bigrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=500 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to lift recall@3FPM by lowering bigram min freq to capture rarer malicious sequences without hurting PR_AUC.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by disabling extreme features to reduce tail noise, expecting flat PR_AUC.
+- **`pe_xfer_clusters_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by disabling cluster groups to remove noisy aggregate features, ported from perl/xml routes.
+- **`pe_xfer_score_clusters_off`** `EXP_DISABLE_FEATURE_GROUPS=score,clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by disabling score and cluster groups to simplify the feature space, ported from ole route.
+- **`pe_gen_seedsearch_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM gains from hard-negative tuning via seed search, verifying signal over seed noise.
+- **`pe_retry_kv_seed7_drift_v2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Aims to recover recall@3FPM by retrying the top PR_AUC config with a new seed to account for recent data drift.
+
+</details>
+
+## Cycle `20260616T004611-filetypes-pe` — 2026-06-16T00:46:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-16T00-54-24_20260616T004611-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `760679ec938e87db` | pe_ctrl_hardneg_01_16 | dup | 0.9985 | 0.9987 | 0.9837 | 1 | [log](out/autocollie/runs/2026-06-16T00-54-26_20260616T004611-filetypes-pe_pe_ctrl_hardneg_01_16.log) |
+| `e18bf1462662ae3c` | pe_ctrl_threshold_fpr5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-16T00-54-28_20260616T004611-filetypes-pe_pe_ctrl_threshold_fpr5e7.log) |
+| `35b0c152fe13d763` | pe_ctrl_extratrees_lr003 | ok | 0.9981 | 0.9983 | 0.9812 | 7 | [log](out/autocollie/runs/2026-06-16T00-54-30_20260616T004611-filetypes-pe_pe_ctrl_extratrees_lr003.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T00-54-39_20260616T004611-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `b0e5d1db07171401` | pe_feat_symbol_vocab_20k | ok | 0.9985 | 0.9987 | 0.9863 | 87 | [log](out/autocollie/runs/2026-06-16T00-54-40_20260616T004611-filetypes-pe_pe_feat_symbol_vocab_20k.log) |
+| `8afa04e964d37a72` | pe_feat_pe_metrics_overlay | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T00-56-08_20260616T004611-filetypes-pe_pe_feat_pe_metrics_overlay.log) |
+| `8f4252c3d5c361d3` | pe_feat_textenc_metrics | dup | 0.9986 | 0.9987 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-16T00-56-10_20260616T004611-filetypes-pe_pe_feat_textenc_metrics.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-16T00-56-12_20260616T004611-filetypes-pe_pe_abl_extreme_off.log) |
+| `6a6bbf92e50a8d74` | pe_xfer_lowbigram_clusters_off | ok | 0.9986 | 0.9987 | 0.9861 | 70 | [log](out/autocollie/runs/2026-06-16T00-56-13_20260616T004611-filetypes-pe_pe_xfer_lowbigram_clusters_off.log) |
+| `7dca4ad3f6d3dadc` | pe_gen_seedsearch_3 | dup | 0.9987 | 0.9988 | 0.9828 | 1 | [log](out/autocollie/runs/2026-06-16T00-57-24_20260616T004611-filetypes-pe_pe_gen_seedsearch_3.log) |
+| `4a779ad3e3a3d484` | pe_retry_kv_seed7_drift_v3 | ok | 0.9987 | 0.9988 | 0.9859 | 80 | [log](out/autocollie/runs/2026-06-16T00-57-26_20260616T004611-filetypes-pe_pe_retry_kv_seed7_drift_v3.log) |
+| `6e73ebb4382ba14b` | pe_train_hardneg_posweight | ok | 0.9985 | 0.9987 | 0.9858 | 11 | [log](out/autocollie/runs/2026-06-16T00-58-47_20260616T004611-filetypes-pe_pe_train_hardneg_posweight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.01 …` — Targets recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, using the current best feature set.
+- **`pe_ctrl_threshold_fpr5e7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Targets recall@3FPM by directly optimizing the threshold for the deployed strict-FP operating point (5e-07 FPR).
+- **`pe_ctrl_extratrees_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_EXTRA_TREES=1 …` — Targets PR_AUC by adding ensemble noise via extra_trees and lowering learning rate to improve generalization at the tail.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling kv_vocab with a 15k cap to capture fine-grained key-value patterns in PE metadata and imports.
+- **`pe_feat_symbol_vocab_20k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by expanding symbol_vocab to 20k to better distinguish malicious import/symbol combinations from benign ones.
+- **`pe_feat_pe_metrics_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by enabling overlay_signal and pe_format_flags to catch packer/dropper artifacts and structural anomalies.
+- **`pe_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling text_encoding and text_metrics_full to extract string/entropy patterns often missed by binary-only features.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by disabling extreme_features to reduce noise from tail-distribution outliers that may hurt ranking stability.
+- **`pe_xfer_lowbigram_clusters_off`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by transferring a successful sister-route config: lowering bigram_min_freq to 200 and disabling clusters to focus on high-signal n-grams.
+- **`pe_gen_seedsearch_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Targets recall@3FPM by averaging 3 seeds to reduce variance and stabilize tail recall gains observed in prior runs.
+- **`pe_retry_kv_seed7_drift_v3`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by retrying a strong historical kv-focused config to account for daily corpus drift and potential new signal.
+- **`pe_train_hardneg_posweight`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by combining hard negative upweighting with reduced positive weight to suppress false positives at the strict operating point.
+
+</details>
+
+## Cycle `20260616T010523-filetypes-pe` — 2026-06-16T01:05:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-16T01-13-11_20260616T010523-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `760679ec938e87db` | pe_ctrl_baseline_hardneg | dup | 0.9985 | 0.9987 | 0.9837 | 1 | [log](out/autocollie/runs/2026-06-16T01-13-13_20260616T010523-filetypes-pe_pe_ctrl_baseline_hardneg.log) |
+| `d431187dfde84458` | pe_train_hardneg_005_18 | ok | 0.9986 | 0.9987 | 0.9826 | 10 | [log](out/autocollie/runs/2026-06-16T01-13-15_20260616T010523-filetypes-pe_pe_train_hardneg_005_18.log) |
+| `e18bf1462662ae3c` | pe_train_maxrecall_fpr5e7 | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-16T01-13-26_20260616T010523-filetypes-pe_pe_train_maxrecall_fpr5e7.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-13-29_20260616T010523-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `12fdab4da54b4556` | pe_feat_symbol_vocab_25k_bigrams | ok | 0.9985 | 0.9987 | 0.9863 | 84 | [log](out/autocollie/runs/2026-06-16T01-13-31_20260616T010523-filetypes-pe_pe_feat_symbol_vocab_25k_bigrams.log) |
+| `e8596901ea441ff4` | pe_feat_pe_flags_overlay | ok | 0.9985 | 0.9987 | 0.9863 | 71 | [log](out/autocollie/runs/2026-06-16T01-14-55_20260616T010523-filetypes-pe_pe_feat_pe_flags_overlay.log) |
+| `821bdee724193460` | pe_abl_blindfold_off | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-16-07_20260616T010523-filetypes-pe_pe_abl_blindfold_off.log) |
+| `0c0f9c68401eeb99` | pe_xfer_lowbigram_200_tiered | ok | 0.9986 | 0.9987 | 0.9861 | 86 | [log](out/autocollie/runs/2026-06-16T01-16-08_20260616T010523-filetypes-pe_pe_xfer_lowbigram_200_tiered.log) |
+| `7dca4ad3f6d3dadc` | pe_gen_seedsearch_k3 | dup | 0.9987 | 0.9988 | 0.9828 | 1 | [log](out/autocollie/runs/2026-06-16T01-17-35_20260616T010523-filetypes-pe_pe_gen_seedsearch_k3.log) |
+| `63f2d55903b372a2` | pe_retry_hardneg_posweight_drift | ok | 0.9985 | 0.9986 | 0.9861 | 10 | [log](out/autocollie/runs/2026-06-16T01-17-37_20260616T010523-filetypes-pe_pe_retry_hardneg_posweight_drift.log) |
+| `3d1e3913cbcab803` | pe_feat_tiered_quadgrams | ok | 0.9985 | 0.9987 | 0.9863 | 82 | [log](out/autocollie/runs/2026-06-16T01-17-48_20260616T010523-filetypes-pe_pe_feat_tiered_quadgrams.log) |
+| `155fc980619a2b6a` | pe_train_dart_regularized | ok | 0.9975 | 0.9978 | 0.9764 | 70 | [log](out/autocollie/runs/2026-06-16T01-19-11_20260616T010523-filetypes-pe_pe_train_dart_regularized.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_baseline_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 …` — Replicate best recent feature_env to establish a stable baseline for PR_AUC while testing a moderate hard-negative weight to tighten recall@3FPM at the deployed tail.
+- **`pe_train_hardneg_005_18`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 …` — Test lower hard-negative fraction with higher weight to improve recall@3FPM by focusing gradient updates on the most ambiguous benigns without overfitting PR_AUC.
+- **`pe_train_maxrecall_fpr5e7`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Directly optimize threshold for deployed operating point to maximize recall@3FPM while keeping PR_AUC flat via strict FPR targeting.
+- **`pe_feat_kv_vocab_15k`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 …` — Enable kv_vocab with moderate cap to capture PE-specific key-value patterns and boost PR_AUC via finer-grained structural signal.
+- **`pe_feat_symbol_vocab_25k_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 …` — Expand symbol vocab and enable symbol_bigrams to catch API co-occurrence patterns common in PE packers, targeting PR_AUC gains.
+- **`pe_feat_pe_flags_overlay`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 …` — Enable pe_format_flags and overlay_signal to directly model PE header anomalies and packer overlays, aiming to lift recall@3FPM for obfuscated binaries.
+- **`pe_abl_blindfold_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout features to reduce noise in the feature matrix, testing if PR_AUC improves or stays flat with cleaner structural signals.
+- **`pe_xfer_lowbigram_200_tiered`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Transfer low bigram_min_freq and enable tiered_crit_trigrams from sister routes to capture rarer PE-specific n-gram patterns, targeting PR_AUC lift.
+- **`pe_gen_seedsearch_k3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Run seed_search_k=3 on the best feature set to average out seed variance and stabilize recall@3FPM gains across different RNG splits.
+- **`pe_retry_hardneg_posweight_drift`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_MIN_CHILD_SAMPLES=100 …` — Retry the strong hard-negative + pos-weight configuration after corpus drift to verify if it still lifts recall@3FPM, adding metric_ratio_features for extra structural signal.
+- **`pe_feat_tiered_quadgrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_QUADGRAMS=1 EXP_TIERED_QUADGRAM_MAX=5000 …` — Enable tiered_crit_quadgrams to capture longer-range structural dependencies in PE headers, aiming for PR_AUC improvement via deeper context.
+- **`pe_train_dart_regularized`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SIZE_NORMALIZED_METRICS=1 …` — Switch to dart boosting to add dropout-style regularization between trees, targeting better tail behavior and recall@3FPM without hurting PR_AUC, paired with size_normalized_metrics.
+
+</details>
+
+## Cycle `20260616T012646-filetypes-pe` — 2026-06-16T01:26:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-16T01-33-36_20260616T012646-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `455f2431fb31b2c6` | pe_ctrl_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-16T01-33-38_20260616T012646-filetypes-pe_pe_ctrl_hardneg_01_12.log) |
+| `e18bf1462662ae3c` | pe_train_max_recall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-16T01-33-40_20260616T012646-filetypes-pe_pe_train_max_recall_fpr.log) |
+| `66d64c975fb19e4f` | pe_feat_pe_temporal_anomaly | ok | 0.9985 | 0.9987 | 0.9863 | 70 | [log](out/autocollie/runs/2026-06-16T01-33-42_20260616T012646-filetypes-pe_pe_feat_pe_temporal_anomaly.log) |
+| `2cb3102a5085734e` | pe_feat_kv_vocab_15k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-34-52_20260616T012646-filetypes-pe_pe_feat_kv_vocab_15k.log) |
+| `00fc999b71a35813` | pe_feat_sym_bigrams_10k | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-34-54_20260616T012646-filetypes-pe_pe_feat_sym_bigrams_10k.log) |
+| `e8596901ea441ff4` | pe_feat_pe_flags_overlay | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-34-56_20260616T012646-filetypes-pe_pe_feat_pe_flags_overlay.log) |
+| `3d1e3913cbcab803` | pe_feat_tiered_quadgrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-34-58_20260616T012646-filetypes-pe_pe_feat_tiered_quadgrams.log) |
+| `d45209b510377e64` | pe_abl_extreme_off | dup | 0.9986 | 0.9987 | 0.9860 | 1 | [log](out/autocollie/runs/2026-06-16T01-34-59_20260616T012646-filetypes-pe_pe_abl_extreme_off.log) |
+| `db19e04823357800` | pe_xfer_lowbigram_tiered | ok | 0.9986 | 0.9987 | 0.9861 | 86 | [log](out/autocollie/runs/2026-06-16T01-35-01_20260616T012646-filetypes-pe_pe_xfer_lowbigram_tiered.log) |
+| `93ebe35608e16aec` | pe_gen_seed_search_kv | dup | 0.9987 | 0.9988 | 0.9847 | 1 | [log](out/autocollie/runs/2026-06-16T01-36-28_20260616T012646-filetypes-pe_pe_gen_seed_search_kv.log) |
+| `4b23278792378aa5` | pe_retry_hardneg_posweight | ok | 0.9985 | 0.9987 | 0.9842 | 10 | [log](out/autocollie/runs/2026-06-16T01-36-30_20260616T012646-filetypes-pe_pe_retry_hardneg_posweight.log) |
+| `16a797e8846bc4b6` | pe_feat_mbc_severity_frac | ok | 0.9985 | 0.9987 | 0.9863 | 70 | [log](out/autocollie/runs/2026-06-16T01-36-41_20260616T012646-filetypes-pe_pe_feat_mbc_severity_frac.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to improve recall@3 FP/M by upweighting difficult benigns.
+- **`pe_train_max_recall_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimize threshold for deployed operating point to maximize recall@3 FP/M.
+- **`pe_feat_pe_temporal_anomaly`** `EXP_MAX_TEST_SAMPLES=20000 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Add PE timestamp anomaly features to catch suspicious compile dates, targeting recall@3 FP/M.
+- **`pe_feat_kv_vocab_15k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab to capture more granular key-value patterns, aiming to lift PR_AUC.
+- **`pe_feat_sym_bigrams_10k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_TRAIN_SAMPLES=30000` — Enable symbol bigrams to catch co-occurrence patterns in imports, targeting PR_AUC improvement.
+- **`pe_feat_pe_flags_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_TRAIN_SAMPLES=30000` — Add PE format flags and overlay metrics to capture packer/dropper signals, boosting recall@3 FP/M.
+- **`pe_feat_tiered_quadgrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_QUADGRAMS=1 EXP_TIERED_QUADGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Extend tiered crit n-grams to quadgrams for deeper structural signal, aiming for PR_AUC gain.
+- **`pe_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove extreme features to reduce noise and test if PR_AUC remains flat or improves.
+- **`pe_xfer_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Transfer low bigram frequency floor and tiered trigrams from XML route to capture rarer PE patterns, targeting PR_AUC.
+- **`pe_gen_seed_search_kv`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed search on KV vocab config to distinguish real signal from seed noise, stabilizing recall@3 FP/M.
+- **`pe_retry_hardneg_posweight`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Retry hard-negative and pos-weight config after data drift to recover recall@3 FP/M gains.
+- **`pe_feat_mbc_severity_frac`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Add MBC ID vocab and severity fractions to capture behavior catalog and crit-tier density, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260616T014411-filetypes-pe` — 2026-06-16T01:44:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-16T01-51-52_20260616T014411-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `455f2431fb31b2c6` | pe_ctrl_baseline_hardneg | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-16T01-51-54_20260616T014411-filetypes-pe_pe_ctrl_baseline_hardneg.log) |
+| `e18bf1462662ae3c` | pe_ctrl_baseline_threshold | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-16T01-51-56_20260616T014411-filetypes-pe_pe_ctrl_baseline_threshold.log) |
+| `1f254b1b9a5f5e09` | pe_ctrl_baseline_posweight | ok | 0.9985 | 0.9987 | 0.9867 | 6 | [log](out/autocollie/runs/2026-06-16T01-51-58_20260616T014411-filetypes-pe_pe_ctrl_baseline_posweight.log) |
+| `07374da30e725831` | pe_feat_kv_vocab_split | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-52-05_20260616T014411-filetypes-pe_pe_feat_kv_vocab_split.log) |
+| `07a23cee7fcca41c` | pe_feat_symbol_bigrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-52-07_20260616T014411-filetypes-pe_pe_feat_symbol_bigrams.log) |
+| `5dc9b42bf5eaaa12` | pe_feat_tiered_lowfreq | ok | 0.9984 | 0.9986 | 0.9860 | 73 | [log](out/autocollie/runs/2026-06-16T01-52-09_20260616T014411-filetypes-pe_pe_feat_tiered_lowfreq.log) |
+| `8afa04e964d37a72` | pe_feat_overlay_temporal | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-53-23_20260616T014411-filetypes-pe_pe_feat_overlay_temporal.log) |
+| `4a160bb3899a867a` | pe_abl_clusters_off | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T01-53-25_20260616T014411-filetypes-pe_pe_abl_clusters_off.log) |
+| `0c0f9c68401eeb99` | pe_xfer_lowbigram_tiered | dup | 0.9986 | 0.9987 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-16T01-53-26_20260616T014411-filetypes-pe_pe_xfer_lowbigram_tiered.log) |
+| `d455e0d53da3da91` | pe_gen_seed_search_3 | dup | 0.9987 | 0.9988 | 0.9828 | 1 | [log](out/autocollie/runs/2026-06-16T01-53-28_20260616T014411-filetypes-pe_pe_gen_seed_search_3.log) |
+| `d431187dfde84458` | pe_retry_hardneg_005_18 | dup | 0.9986 | 0.9987 | 0.9826 | 1 | [log](out/autocollie/runs/2026-06-16T01-53-30_20260616T014411-filetypes-pe_pe_retry_hardneg_005_18.log) |
+| `b4604958f367c86a` | pe_retry_mbc_severity_frac | ok | 0.9985 | 0.9987 | 0.9863 | 79 | [log](out/autocollie/runs/2026-06-16T01-53-32_20260616T014411-filetypes-pe_pe_retry_mbc_severity_frac.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_baseline_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR without changing features.
+- **`pe_ctrl_baseline_threshold`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by directly optimizing the threshold for the deployed strict-FP operating point.
+- **`pe_ctrl_baseline_posweight`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives to reduce false positives at the tail, improving precision-recall balance.
+- **`pe_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling KV vocab with value splitting to recover per-element signal in PE metadata and imports.
+- **`pe_feat_symbol_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding symbol bigrams to capture kernel32-to-API co-occurrence patterns common in PE malware.
+- **`pe_feat_tiered_lowfreq`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=8000 EXP_TIERED_BIGRAM_MIN_CRIT=2 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering tiered bigram min freq to capture rarer but highly predictive PE trait combinations.
+- **`pe_feat_overlay_temporal`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling overlay and temporal anomaly features to catch packer/dropper signatures and suspicious compile timestamps.
+- **`pe_abl_clusters_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by removing the clusters group to reduce noise and overfitting on benign PE structural patterns.
+- **`pe_xfer_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by transferring a successful low-frequency bigram strategy from sister routes to capture rare PE indicators.
+- **`pe_gen_seed_search_3`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by averaging over 3 seeds to reduce variance and stabilize tail recall gains.
+- **`pe_retry_hardneg_005_18`** `EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by retrying a historically strong hard-negative configuration to check for data-drift recovery.
+- **`pe_retry_mbc_severity_frac`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by retrying the recent MBC severity fraction feature set to verify signal persistence after corpus updates.
+
+</details>
+
+## Cycle `20260616T020118-filetypes-pe` — 2026-06-16T02:01:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `16a3ee3cc84676fd` | inherit_from_filetypes_json_1e3933ad | dup | 0.9990 | 0.9990 | 0.9882 | 1 | [log](out/autocollie/runs/2026-06-16T02-08-40_20260616T020118-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `455f2431fb31b2c6` | pe_ctrl_hardneg_01_12 | dup | 0.9985 | 0.9986 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-16T02-08-42_20260616T020118-filetypes-pe_pe_ctrl_hardneg_01_12.log) |
+| `e18bf1462662ae3c` | pe_ctrl_max_recall_fpr | dup | 0.9985 | 0.9987 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-16T02-08-44_20260616T020118-filetypes-pe_pe_ctrl_max_recall_fpr.log) |
+| `bc72887698e4c374` | pe_ctrl_dart_extra_trees | dup | 0.9967 | 0.9970 | 0.9769 | 1 | [log](out/autocollie/runs/2026-06-16T02-08-45_20260616T020118-filetypes-pe_pe_ctrl_dart_extra_trees.log) |
+| `2ebb6c44251d0d94` | pe_feat_symbol_bigrams | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T02-08-47_20260616T020118-filetypes-pe_pe_feat_symbol_bigrams.log) |
+| `07374da30e725831` | pe_feat_kv_vocab_split | dup | 0.9985 | 0.9987 | 0.9863 | 1 | [log](out/autocollie/runs/2026-06-16T02-08-49_20260616T020118-filetypes-pe_pe_feat_kv_vocab_split.log) |
+| `fd693d46fa7ef21b` | pe_feat_lowfreq_bigrams | dup | 0.9986 | 0.9987 | 0.9861 | 1 | [log](out/autocollie/runs/2026-06-16T02-08-51_20260616T020118-filetypes-pe_pe_feat_lowfreq_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_01_12`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to improve recall@3FPM by focusing on difficult benigns.
+- **`pe_ctrl_max_recall_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimize threshold for deployed tail to maximize recall@3FPM at strict FPR target.
+- **`pe_ctrl_dart_extra_trees`** `EXP_BOOSTING_TYPE=dart EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Use dart boosting and extra trees to improve generalization and PR_AUC at the low-FPR tail.
+- **`pe_feat_symbol_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol vocab and bigrams to capture PE import co-occurrence patterns, targeting PR_AUC gains.
+- **`pe_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable research kv_vocab with value splitting to extract granular PE metadata signal for recall@3FPM.
+- **`pe_feat_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floors to capture rarer PE patterns, aiming to improve PR_AUC without ROC regression.
+
+</details>
+

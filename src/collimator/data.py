@@ -650,14 +650,21 @@ def stream_reports(
     exclude_eval: bool = False,
     only_test: bool = False,
     only_dev: bool = False,
+    limit: int = 0,
 ) -> Iterator[tuple[dict[str, Any], int]]:
-    """Yield (report, label) pairs. See stream_samples for filter semantics."""
+    """Yield (report, label) pairs. See stream_samples for filter semantics.
+
+    ``limit`` caps the SQL query (0 = unbounded); without it a caller that only
+    wants a small sample still triggers a full-corpus scan that buffers before
+    the first row.
+    """
     for sample in stream_samples(
         db_path,
         exclude_test=exclude_test,
         exclude_eval=exclude_eval,
         only_test=only_test,
         only_dev=only_dev,
+        limit=limit,
     ):
         yield sample.report, sample.label
 
