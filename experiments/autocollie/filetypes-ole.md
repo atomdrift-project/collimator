@@ -755,3 +755,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filetypes-ole` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8267b734ef5ea8b1` | inherit_from_filetypes_json_1e3933ad | ok | 0.9935 | 0.5000 | 0.9967 | 23 | [log](out/autocollie/runs/2026-06-16T05-02-50_20260616T045437-filetypes-ole_inherit_from_filetypes_json_1e3933ad.log) |
+| `e7052cb5b922b768` | ole_control_kv_split_lr003 | ok | 0.9954 | 0.9943 | 0.8777 | 38 | [log](out/autocollie/runs/2026-06-16T05-03-23_20260616T045437-filetypes-ole_ole_control_kv_split_lr003.log) |
+| `7e4dbc43bbac47ac` | ole_exploit_hardneg_01_12 | ok | 0.9932 | 0.9916 | 0.8764 | 11 | [log](out/autocollie/runs/2026-06-16T05-04-08_20260616T045437-filetypes-ole_ole_exploit_hardneg_01_12.log) |
+| `1028d326ae3b2d25` | ole_feat_textmetrics_kv_split | ok | 0.9949 | 0.9938 | 0.8777 | 50 | [log](out/autocollie/runs/2026-06-16T05-04-22_20260616T045437-filetypes-ole_ole_feat_textmetrics_kv_split.log) |
+| `cf87910ca4daf2fb` | ole_transfer_xml_lowbigram_trigrams | ok | 0.9949 | 0.9938 | 0.8777 | 31 | [log](out/autocollie/runs/2026-06-16T05-05-14_20260616T045437-filetypes-ole_ole_transfer_xml_lowbigram_trigrams.log) |
+| `32efe560da7bb85e` | ole_abl_extreme_off_kv | ok | 0.9949 | 0.9938 | 0.8777 | 29 | [log](out/autocollie/runs/2026-06-16T05-05-50_20260616T045437-filetypes-ole_ole_abl_extreme_off_kv.log) |
+| `1ae12fcdc1ee4e23` | ole_gen_kv_split_seedsearch3 | ok | 0.9957 | 0.9946 | 0.9388 | 6 | [log](out/autocollie/runs/2026-06-16T05-06-21_20260616T045437-filetypes-ole_ole_gen_kv_split_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_kv_split_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Exploit best feature set with lower LR and higher leaves to improve PR_AUC ranking by reducing overfit on rare patterns.
+- **`ole_exploit_hardneg_01_12`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 …` — Use hard negatives to sharpen decision boundary at low FPR, targeting recall@3FPM by upweighting difficult benigns.
+- **`ole_feat_textmetrics_kv_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Add text_metrics_full to capture document obfuscation signals alongside KV split, aiming to boost PR_AUC with richer structural features.
+- **`ole_transfer_xml_lowbigram_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Port XML low-freq bigram + trigram strategy to OLE to capture rare malicious patterns, targeting PR_AUC via expanded n-gram coverage.
+- **`ole_abl_extreme_off_kv`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Remove noisy extreme_features to reduce overfitting while keeping PR_AUC flat or higher by simplifying the feature space.
+- **`ole_gen_kv_split_seedsearch3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 …` — Average 3 seeds to reduce variance and stabilize recall@3FPM gains from KV split features across different RNG splits.
+
+</details>
+

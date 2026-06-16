@@ -582,3 +582,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T045437-filetypes-rtf` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ac74397c7d358e2d` | inherit_from_filetypes_json_1e3933ad | ok | 0.9949 | 0.5000 | 0.9975 | 33 | [log](out/autocollie/runs/2026-06-16T05-03-27_20260616T045437-filetypes-rtf_inherit_from_filetypes_json_1e3933ad.log) |
+| `8ae51deb2f68609e` | rtf_ctrl_hardneg_lr003_leaves128 | ok | 0.9989 | 0.9926 | 0.9886 | 26 | [log](out/autocollie/runs/2026-06-16T05-04-15_20260616T045437-filetypes-rtf_rtf_ctrl_hardneg_lr003_leaves128.log) |
+| `c5f56c6302a58ee1` | rtf_feat_textmetrics_kv_vocab | ok | 0.9989 | 0.9926 | 0.9893 | 26 | [log](out/autocollie/runs/2026-06-16T05-04-48_20260616T045437-filetypes-rtf_rtf_feat_textmetrics_kv_vocab.log) |
+| `b3f11308a1504480` | rtf_feat_lowbigram_tiered_trigrams | ok | 0.9989 | 0.9926 | 0.9893 | 27 | [log](out/autocollie/runs/2026-06-16T05-05-16_20260616T045437-filetypes-rtf_rtf_feat_lowbigram_tiered_trigrams.log) |
+| `f41b43b0b0903cba` | rtf_abl_extreme_off | ok | 0.9989 | 0.9926 | 0.9893 | 28 | [log](out/autocollie/runs/2026-06-16T05-05-45_20260616T045437-filetypes-rtf_rtf_abl_extreme_off.log) |
+| `a98f2548e5a63e68` | rtf_transfer_docx_obfuscation | ok | 0.9989 | 0.9926 | 0.9893 | 11 | [log](out/autocollie/runs/2026-06-16T05-06-17_20260616T045437-filetypes-rtf_rtf_transfer_docx_obfuscation.log) |
+| `ff2fa32a5f1eb8bb` | rtf_seedsearch_severity_fractions | ok | 0.9989 | 0.9926 | 0.9893 | 12 | [log](out/autocollie/runs/2026-06-16T05-06-30_20260616T045437-filetypes-rtf_rtf_seedsearch_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_hardneg_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec using best feature set; lowers LR and increases leaves/estimators to refine tail ranking and improve recall@3 FP/M without hurting PR AUC.
+- **`rtf_feat_textmetrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to boost PR AUC by isolating malicious RTF structures.
+- **`rtf_feat_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables tiered trigrams to capture rarer malicious sequences, targeting PR AUC gains from improved signal density.
+- **`rtf_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Removes extreme_features to reduce tail noise and overfitting, aiming to stabilize ROC AUC and maintain PR AUC while improving recall@3 FP/M consistency.
+- **`rtf_transfer_docx_obfuscation`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Transfers DOCX-style obfuscation and text encoding features to RTF, targeting PR AUC by capturing document-specific evasion patterns.
+- **`rtf_seedsearch_severity_fractions`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Applies seed search K=3 with severity_fractions to reduce seed variance and stabilize recall@3 FP/M across different random splits.
+
+</details>
+

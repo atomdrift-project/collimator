@@ -822,3 +822,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T091458-filegroups-config` — 2026-06-16T09:14:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e226cfa3c257e4b3` | inherit_from_filetypes_json_1e3933ad | ok | 0.9989 | 0.9985 | 0.9909 | 45 | [log](out/autocollie/runs/2026-06-16T09-24-59_20260616T091458-filegroups-config_inherit_from_filetypes_json_1e3933ad.log) |
+| `0402736934d740cf` | config_control_hardneg_lr003 | ok | 0.8669 | 0.8997 | 0.8740 | 29 | [log](out/autocollie/runs/2026-06-16T09-25-51_20260616T091458-filegroups-config_config_control_hardneg_lr003.log) |
+| `6729b14680fea324` | config_kv_vocab_split_15k | ok | 0.8666 | 0.8882 | 0.8740 | 17 | [log](out/autocollie/runs/2026-06-16T09-26-22_20260616T091458-filegroups-config_config_kv_vocab_split_15k.log) |
+| `8780313352f5cfca` | config_textenc_metrics_full | ok | 0.8648 | 0.8936 | 0.8740 | 16 | [log](out/autocollie/runs/2026-06-16T09-26-40_20260616T091458-filegroups-config_config_textenc_metrics_full.log) |
+| `428b8f8f378814dd` | config_transfer_xml_tiered_trigrams | ok | 0.8718 | 0.8878 | 0.8685 | 16 | [log](out/autocollie/runs/2026-06-16T09-26-57_20260616T091458-filegroups-config_config_transfer_xml_tiered_trigrams.log) |
+| `e2ced2dedfd6fdff` | config_train_scale_pos_05_extra_trees | ok | 0.8725 | 0.8930 | 0.8691 | 3 | [log](out/autocollie/runs/2026-06-16T09-27-14_20260616T091458-filegroups-config_config_train_scale_pos_05_extra_trees.log) |
+| `8d20fb4f14ead1df` | config_seed_search_k3_kv | ok | 0.8666 | 0.8882 | 0.8740 | 17 | [log](out/autocollie/runs/2026-06-16T09-27-18_20260616T091458-filegroups-config_config_seed_search_k3_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_control_hardneg_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature set to establish a baseline; lowers learning_rate to 0.03 and increases estimators to 300 to improve PR_AUC by reducing overfitting on noisy config patterns.
+- **`config_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured config key-value pairs; aims to boost PR_AUC by isolating malicious payload tokens from opaque blobs.
+- **`config_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to detect obfuscation in script-like configs; targets recall@3 FP/M by surfacing structural anomalies in text-heavy config files.
+- **`config_transfer_xml_tiered_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=20 …` — Ports tiered trigram and low bigram freq settings from filetypes/xml; aims to improve PR_AUC by capturing longer semantic paths in config structures while filtering noise.
+- **`config_train_scale_pos_05_extra_trees`** `EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Lowers scale_pos_weight_mult to 0.5 and enables extra_trees to suppress false positives on benign configs; targets recall@3 FP/M by tightening the decision boundary at low FPR.
+- **`config_seed_search_k3_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Applies seed_search_k=3 to the kv_vocab config to distinguish real signal from seed noise; aims to stabilize PR_AUC gains across different random splits.
+
+</details>
+

@@ -1286,3 +1286,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T090007-filetypes-go` — 2026-06-16T09:00:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `62dfa163eeed37e2` | inherit_from_filetypes_json_1e3933ad | ok | 0.9404 | 0.9872 | 0.8377 | 15 | [log](out/autocollie/runs/2026-06-16T09-07-41_20260616T090007-filetypes-go_inherit_from_filetypes_json_1e3933ad.log) |
+| `e8277595b2202991` | go_control_deeper_trees | ok | 0.4024 | 0.8556 | 0.3089 | 14 | [log](out/autocollie/runs/2026-06-16T09-07-58_20260616T090007-filetypes-go_go_control_deeper_trees.log) |
+| `ec8335e6909daf0d` | go_kv_vocab_split | ok | 0.4024 | 0.8556 | 0.3089 | 13 | [log](out/autocollie/runs/2026-06-16T09-08-14_20260616T090007-filetypes-go_go_kv_vocab_split.log) |
+| `db10ff166af3114e` | go_text_metrics_encoding | ok | 0.4027 | 0.8445 | 0.3125 | 11 | [log](out/autocollie/runs/2026-06-16T09-08-28_20260616T090007-filetypes-go_go_text_metrics_encoding.log) |
+| `1973a678e45ec8dc` | go_low_freq_bigrams_trigrams | ok | 0.4024 | 0.8556 | 0.3089 | 11 | [log](out/autocollie/runs/2026-06-16T09-08-40_20260616T090007-filetypes-go_go_low_freq_bigrams_trigrams.log) |
+| `188046e8bf3db068` | go_hardneg_tail_recall | ok | 0.3973 | 0.8588 | 0.3075 | 2 | [log](out/autocollie/runs/2026-06-16T09-08-52_20260616T090007-filetypes-go_go_hardneg_tail_recall.log) |
+| `47e9f9ab186589c6` | go_transfer_xml_tiered | ok | 0.4024 | 0.8556 | 0.3089 | 12 | [log](out/autocollie/runs/2026-06-16T09-08-54_20260616T090007-filetypes-go_go_transfer_xml_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_deeper_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature set with deeper trees and more estimators to improve PR_AUC by capturing complex Go syntax patterns without altering the feature surface.
+- **`go_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable KV vocab and value splitting to extract structured signal from Go configs and string literals, aiming to boost PR_AUC by isolating malicious payloads from benign boilerplate.
+- **`go_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Add full text metrics and encoding features to capture obfuscation and structural anomalies in Go source, targeting recall@3FPM by surfacing heavily obfuscated malware.
+- **`go_low_freq_bigrams_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Expand bigram vocab and add tiered critical trigrams to capture rarer but highly indicative Go patterns, aiming to improve PR_AUC by reducing false negatives on novel attack patterns.
+- **`go_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Apply hard negative mining to push benign Go files further down the ranking, targeting recall@3FPM by sharpening the decision boundary at low FPR.
+- **`go_transfer_xml_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfer XML's low-frequency bigram and tiered trigram strategy to Go, aiming to boost PR_AUC by capturing more granular syntactic patterns while disabling noisy cluster features.
+
+</details>
+

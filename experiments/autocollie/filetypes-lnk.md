@@ -644,3 +644,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filetypes-lnk` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d0d1eceaac64d6d9` | inherit_from_filetypes_json_1e3933ad | ok | 0.9944 | 0.9005 | 0.9860 | 6 | [log](out/autocollie/runs/2026-06-16T05-02-13_20260616T045437-filetypes-lnk_inherit_from_filetypes_json_1e3933ad.log) |
+| `19d7dad76e1f2dbd` | lnk_control_hardneg_tune | ok | 0.9977 | 0.9890 | 0.9269 | 23 | [log](out/autocollie/runs/2026-06-16T05-02-22_20260616T045437-filetypes-lnk_lnk_control_hardneg_tune.log) |
+| `e69a8def6b565e87` | lnk_feat_kv_vocab_split | ok | 0.9893 | 0.9494 | 0.9261 | 20 | [log](out/autocollie/runs/2026-06-16T05-02-54_20260616T045437-filetypes-lnk_lnk_feat_kv_vocab_split.log) |
+| `2da36def584eafd1` | lnk_feat_textenc_lowbigram | ok | 0.9893 | 0.9494 | 0.9261 | 40 | [log](out/autocollie/runs/2026-06-16T05-03-20_20260616T045437-filetypes-lnk_lnk_feat_textenc_lowbigram.log) |
+| `066b8067364c6c13` | lnk_abl_extreme_off | ok | 0.9889 | 0.9465 | 0.9252 | 38 | [log](out/autocollie/runs/2026-06-16T05-04-02_20260616T045437-filetypes-lnk_lnk_abl_extreme_off.log) |
+| `19c9d48bc3104537` | lnk_transfer_xml_tiered | ok | 0.9889 | 0.9477 | 0.9261 | 29 | [log](out/autocollie/runs/2026-06-16T05-04-43_20260616T045437-filetypes-lnk_lnk_transfer_xml_tiered.log) |
+| `77070a428fd44950` | lnk_seed_search_kv | ok | 0.9861 | 0.9300 | 0.9408 | 28 | [log](out/autocollie/runs/2026-06-16T05-05-15_20260616T045437-filetypes-lnk_lnk_seed_search_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_control_hardneg_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning hard-negative weighting and tree complexity on the proven feature set, reducing false positives at the strict-FP tail.
+- **`lnk_feat_kv_vocab_split`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and kv_value_split to capture structured LNK metadata as discrete tokens, improving separation of malicious shortcuts.
+- **`lnk_feat_textenc_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by enabling text_encoding and text_metrics_full while lowering bigram_min_freq to 50, capturing rare obfuscated path patterns in LNK files.
+- **`lnk_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC and ROC_AUC by disabling extreme_features, which often inject high-variance tail noise that hurts ranking consistency on small structured files like LNK.
+- **`lnk_transfer_xml_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by transferring the low-frequency tiered trigram strategy from filetypes/xml, adapting min_freq to 10 and max to 2000 to catch subtle LNK manipulation chains.
+- **`lnk_seed_search_kv`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Aims to verify recall@3FPM gains from the kv_vocab surface by running seed_search_k=3, ensuring the signal is robust across RNG splits rather than seed-dependent noise.
+
+</details>
+

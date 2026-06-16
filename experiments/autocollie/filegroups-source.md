@@ -778,3 +778,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T045437-filegroups-source` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d7eba344c5ff400a` | inherit_from_filetypes_json_1e3933ad | ok | 0.9975 | 0.9972 | 0.9748 | 64 | [log](out/autocollie/runs/2026-06-16T05-02-03_20260616T045437-filegroups-source_inherit_from_filetypes_json_1e3933ad.log) |
+| `d0a250848099e35e` | source_control_hardneg_opt | ok | 0.9215 | 0.9293 | 0.5645 | 118 | [log](out/autocollie/runs/2026-06-16T05-03-15_20260616T045437-filegroups-source_source_control_hardneg_opt.log) |
+| `e338a98a90cfb02e` | source_feat_textenc_metrics_lowbigram | ok | 0.9101 | 0.9121 | 0.5646 | 59 | [log](out/autocollie/runs/2026-06-16T05-05-24_20260616T045437-filegroups-source_source_feat_textenc_metrics_lowbigram.log) |
+| `459d416a1f65d3c0` | source_feat_kv_vocab_split | ok | 0.9054 | 0.9028 | 0.5645 | 34 | [log](out/autocollie/runs/2026-06-16T05-06-26_20260616T045437-filegroups-source_source_feat_kv_vocab_split.log) |
+| `2f7bc7bf33692d08` | source_abl_clusters_off | ok | 0.9080 | 0.9071 | 0.5645 | 4 | [log](out/autocollie/runs/2026-06-16T05-07-02_20260616T045437-filegroups-source_source_abl_clusters_off.log) |
+| `1bc11f0596867e60` | source_seed_search_textenc | ok | 0.9104 | 0.9118 | 0.7571 | 36 | [log](out/autocollie/runs/2026-06-16T05-07-08_20260616T045437-filegroups-source_source_seed_search_textenc.log) |
+| `2a875d54a205d834` | source_transfer_xml_tiered_hardneg | ok | 0.9223 | 0.9287 | 0.5645 | 34 | [log](out/autocollie/runs/2026-06-16T05-07-45_20260616T045437-filegroups-source_source_transfer_xml_tiered_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_hardneg_opt`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature surface to isolate training effects; increases hard_negative_weight and lowers scale_pos_weight_mult to sharpen ranking at the strict-FP tail, targeting recall@3FPM.
+- **`source_feat_textenc_metrics_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture obfuscation/structural signals in source code, paired with lower bigram_min_freq to catch rare malicious patterns, targeting PR_AUC.
+- **`source_feat_kv_vocab_split`** `EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab and kv_value_split to parse configuration-like key-value pairs common in source/build files, aiming to improve PR_AUC by isolating high-signal tokens.
+- **`source_abl_clusters_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables the clusters feature group to reduce noisy co-occurrence signals that may dilute ranking quality, targeting flat or improved PR_AUC with higher ROC_AUC.
+- **`source_seed_search_textenc`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Applies seed_search_k=3 with save_all_seeds to the text-metrics surface to average out seed variance and stabilize tail predictions, targeting recall@3FPM.
+- **`source_transfer_xml_tiered_hardneg`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 …` — Ports strong xml/perl tiered n-gram and hard-negative training config to source route, expecting better separation of malicious vs benign code patterns, targeting PR_AUC.
+
+</details>
+

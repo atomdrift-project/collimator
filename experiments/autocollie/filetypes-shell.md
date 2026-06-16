@@ -858,3 +858,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T091458-filetypes-shell` — 2026-06-16T09:14:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4919704f9d88a5a8` | inherit_from_filetypes_json_1e3933ad | ok | 0.9977 | 0.9977 | 0.9791 | 56 | [log](out/autocollie/runs/2026-06-16T09-25-19_20260616T091458-filetypes-shell_inherit_from_filetypes_json_1e3933ad.log) |
+| `313f863682e1cc46` | shell_control_scalepos050_est350 | ok | 0.9658 | 0.9812 | 0.9365 | 27 | [log](out/autocollie/runs/2026-06-16T09-26-23_20260616T091458-filetypes-shell_shell_control_scalepos050_est350.log) |
+| `1d26f23b6bb51964` | shell_control_hardneg_01_12 | ok | 0.9704 | 0.9846 | 0.9419 | 9 | [log](out/autocollie/runs/2026-06-16T09-26-55_20260616T091458-filetypes-shell_shell_control_hardneg_01_12.log) |
+| `c02ef282dffbb7ab` | shell_kv_vocab_10k_textmetrics_full | ok | 0.9668 | 0.9822 | 0.9262 | 34 | [log](out/autocollie/runs/2026-06-16T09-27-06_20260616T091458-filetypes-shell_shell_kv_vocab_10k_textmetrics_full.log) |
+| `c1ec32fba6ad1b78` | shell_textenc_bigram50_kv_vocab | ok | 0.9672 | 0.9829 | 0.9398 | 33 | [log](out/autocollie/runs/2026-06-16T09-27-42_20260616T091458-filetypes-shell_shell_textenc_bigram50_kv_vocab.log) |
+| `429ca5cebaf10126` | shell_transfer_xml_tiered_trigrams | ok | 0.9672 | 0.9829 | 0.9398 | 26 | [log](out/autocollie/runs/2026-06-16T09-28-16_20260616T091458-filetypes-shell_shell_transfer_xml_tiered_trigrams.log) |
+| `0beefc1149dd8fcc` | shell_seedsearch3_kv_vocab | ok | 0.9668 | 0.9822 | 0.9262 | 21 | [log](out/autocollie/runs/2026-06-16T09-28-43_20260616T091458-filetypes-shell_shell_seedsearch3_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_scalepos050_est350`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Tests if further down-weighting positives (scale_pos_weight_mult=0.5) and increasing capacity (estimators=350) improves recall@3FPM while preserving PR_AUC by reducing FP pressure at the tail.
+- **`shell_control_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard-negative mining (fraction=0.1, weight=12) to the baseline feature set to sharpen decision boundaries and boost recall@3FPM without degrading PR_AUC.
+- **`shell_kv_vocab_10k_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab (max 10k) and text_metrics_full to capture structural/scripting signals in shell files, aiming to lift PR_AUC by adding high-signal features absent from the baseline.
+- **`shell_textenc_bigram50_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and lowers bigram_min_freq to 50 to capture rarer shell scripting patterns, targeting PR_AUC gains from improved lexical coverage.
+- **`shell_transfer_xml_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Transfers xml route's successful low bigram frequency (50) and adds tiered_crit_trigrams to capture multi-step attack chains in shell scripts, aiming to improve PR_AUC.
+- **`shell_seedsearch3_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Runs seed_search_k=3 on the kv_vocab+text_metrics config to verify signal stability and reduce seed-driven variance, targeting consistent recall@3FPM.
+
+</details>
+

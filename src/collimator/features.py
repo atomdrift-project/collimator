@@ -2,7 +2,7 @@
 
 This module is intentionally one file. The ~30 ``_apply_*`` per-family
 extractors share a layer of local helpers (``_crit_category_tokens``,
-``_tiered_bigram_tokens``, ``_metric_kv_tokens``, ``_file_risk_stats``,
+``_tiered_bigram_tokens``, ``_file_risk_stats``,
 ``_summarize_findings``, etc.) that aren't exposed elsewhere; splitting
 them across modules forces those helpers to be either re-implemented or
 exposed as cross-module API, neither of which improves clarity. The layout
@@ -642,13 +642,6 @@ class FeatureConfig:
     tiered_trigram_min_crit: int
     tiered_trigram_max: int
     tiered_trigram_min_freq: int
-    include_symbol_vocab: bool
-    symbol_vocab_max: int
-    symbol_min_freq: int
-    include_kv_vocab: bool
-    kv_vocab_max: int
-    kv_min_freq: int
-    include_kv_shape_features: bool
     include_text_encoding_features: bool
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
@@ -682,17 +675,6 @@ class FeatureConfig:
     # CSV of `<group_a>.<key_a>*<group_b>.<key_b>` pairs exposed as derived
     # `metrics:derived_corr_*` columns (pre-computed pairwise products).
     metric_correlation_pairs: tuple[str, ...]
-    # Additionally split string-valued kv tokens on common separators.
-    include_kv_value_split: bool
-    # Batch 3 — symbol & string n-grams. Each toggle adds a new vocab built
-    # from the corpus scan; columns appear in the spec only when the
-    # corresponding bool is on. Defaults preserve current behavior (off).
-    include_symbol_bigrams: bool
-    symbol_bigram_max: int
-    symbol_min_freq_bigram: int
-    include_symbol_trigrams: bool
-    symbol_trigram_max: int
-    symbol_min_freq_trigram: int
     # Symmetry fix: existing path-trigrams hard-code `c >= 5` for vocab
     # inclusion. This knob exposes that floor so autocollie can sweep it
     # the same way it sweeps `bigram_min_freq`.
@@ -860,19 +842,6 @@ def feature_config_from_env() -> FeatureConfig:
         tiered_trigram_min_crit=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MIN_CRIT", "3")),
         tiered_trigram_max=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MAX", "5000")),
         tiered_trigram_min_freq=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MIN_FREQ", "5")),
-        include_symbol_vocab=os.getenv("COLLIMATOR_SYMBOL_VOCAB") in {
-            "1", "true", "yes", "on",
-        },
-        symbol_vocab_max=int(os.getenv("COLLIMATOR_SYMBOL_VOCAB_MAX", "5000")),
-        symbol_min_freq=int(os.getenv("COLLIMATOR_SYMBOL_MIN_FREQ", "5")),
-        include_kv_vocab=os.getenv("COLLIMATOR_KV_VOCAB") in {
-            "1", "true", "yes", "on",
-        },
-        kv_vocab_max=int(os.getenv("COLLIMATOR_KV_VOCAB_MAX", "5000")),
-        kv_min_freq=int(os.getenv("COLLIMATOR_KV_MIN_FREQ", "5")),
-        include_kv_shape_features=os.getenv("COLLIMATOR_KV_SHAPE_FEATURES") in {
-            "1", "true", "yes", "on",
-        },
         include_text_encoding_features=os.getenv("COLLIMATOR_TEXT_ENCODING_FEATURES") in {
             "1", "true", "yes", "on",
         },
@@ -925,20 +894,6 @@ def feature_config_from_env() -> FeatureConfig:
             p.strip() for p in os.getenv("COLLIMATOR_METRIC_CORRELATION_PAIRS", "").split(",")
             if p.strip()
         ),
-        include_kv_value_split=os.getenv("COLLIMATOR_KV_VALUE_SPLIT") in {
-            "1", "true", "yes", "on",
-        },
-        # Batch 3 — symbol & string n-grams.
-        include_symbol_bigrams=os.getenv("COLLIMATOR_SYMBOL_BIGRAMS") in {
-            "1", "true", "yes", "on",
-        },
-        symbol_bigram_max=int(os.getenv("COLLIMATOR_SYMBOL_BIGRAM_MAX", "5000")),
-        symbol_min_freq_bigram=int(os.getenv("COLLIMATOR_SYMBOL_MIN_FREQ_BIGRAM", "10")),
-        include_symbol_trigrams=os.getenv("COLLIMATOR_SYMBOL_TRIGRAMS") in {
-            "1", "true", "yes", "on",
-        },
-        symbol_trigram_max=int(os.getenv("COLLIMATOR_SYMBOL_TRIGRAM_MAX", "2000")),
-        symbol_min_freq_trigram=int(os.getenv("COLLIMATOR_SYMBOL_MIN_FREQ_TRIGRAM", "10")),
         trigram_min_freq=int(os.getenv("COLLIMATOR_TRIGRAM_MIN_FREQ", "5")),
         include_tiered_crit_quadgrams=os.getenv("COLLIMATOR_TIERED_CRIT_QUADGRAMS") in {
             "1", "true", "yes", "on",
@@ -999,27 +954,18 @@ def primary_file(report: dict[str, Any]) -> dict[str, Any]:
 
 
 def file_facts(file_entry: dict[str, Any]) -> dict[str, Any]:
-    """Return the dense facts block: cleave v7 `fact`, else v5 `ff`, else {}."""
-    facts = _alias(file_entry, "fact", "ff")
+    """Return the dense facts block: cleave v8 `facts`, v7 `fact`, else v5 `ff`, else {}."""
+    facts = _alias(file_entry, "facts", "fact", "ff")
     return facts if isinstance(facts, dict) else {}
 
 
 def file_metrics(file_entry: dict[str, Any]) -> dict[str, Any]:
-    """Return per-file metrics from v7 fact.met / v5 ff.m / v4 ms."""
+    """Return per-file metrics from v8 facts.metrics / v7 fact.met / v5 ff.m / v4 ms."""
     facts = file_facts(file_entry)
-    metrics = _alias(facts, "met", "m") if facts else None
+    metrics = _alias(facts, "metrics", "met", "m") if facts else None
     if not isinstance(metrics, dict):
         metrics = file_entry.get("ms")
     return metrics if isinstance(metrics, dict) else {}
-
-
-def file_values(file_entry: dict[str, Any]) -> dict[str, Any]:
-    """Return flat structural values from v7 fact.val / v5 ff.v / v4 k."""
-    facts = file_facts(file_entry)
-    values = _alias(facts, "val", "v") if facts else None
-    if not isinstance(values, dict):
-        values = file_entry.get("k")
-    return values if isinstance(values, dict) else {}
 
 
 def _tuple_string(raw: Any, index: int) -> str:
@@ -1037,18 +983,9 @@ def file_imports(file_entry: dict[str, Any]) -> list[Any]:
     return raw if isinstance(raw, list) else []
 
 
-def file_strings(file_entry: dict[str, Any]) -> list[Any]:
-    """Return string tuples from v7 fact.str / v5 ff.s / v4 ss."""
-    facts = file_facts(file_entry)
-    raw = _alias(facts, "str", "s") if facts else None
-    if raw is None:
-        raw = file_entry.get("ss")
-    return raw if isinstance(raw, list) else []
-
-
 def file_findings(file_entry: dict[str, Any]) -> list[Any]:
-    """Return a file entry's findings (v7 `find`, else v4 `ts`)."""
-    return _alias(file_entry, "find", "ts") or []
+    """Return a file entry's findings (v8 `traits`, v7 `find`, else v4 `ts`)."""
+    return _alias(file_entry, "traits", "find", "ts") or []
 
 
 def file_size(file_entry: dict[str, Any]) -> Any:
@@ -1144,7 +1081,7 @@ def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
         sym = _normalize_vocab_token(name)
         if len(sym) >= 2:
             symbols.add(sym)
-    for raw in facts.get("fn") or []:
+    for raw in (facts.get("funcs") or facts.get("fn")) or []:
         name = _tuple_string(raw, 0) if isinstance(raw, (list, tuple)) else raw
         sym = _normalize_vocab_token(name)
         if len(sym) >= 2:
@@ -1158,38 +1095,6 @@ def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
         if len(sym) >= 2:
             symbols.add(sym)
     return symbols
-
-
-# Per-file caps for symbol n-gram generation. Real binaries can have 300+
-# imports; C(300, 2) = 44k pairs and C(300, 3) = 4.4M triples per file
-# would blow corpus-scan memory + time. Sorting alphabetically and taking
-# the first N gives deterministic vocab across rebuilds; the corpus-scan
-# min_freq filter then drops pairs that don't survive across files.
-_SYMBOL_BIGRAM_CAP = 64
-_SYMBOL_TRIGRAM_CAP = 24
-
-
-def _file_symbol_bigrams(file_entry: dict[str, Any]) -> list[str]:
-    """Sorted unordered symbol-pair tokens. Capped per file."""
-    syms = sorted(_file_symbols(file_entry))[:_SYMBOL_BIGRAM_CAP]
-    out: list[str] = []
-    for i, a in enumerate(syms):
-        for b in syms[i + 1:]:
-            out.append(f"{a}||{b}")
-    return out
-
-
-def _file_symbol_trigrams(file_entry: dict[str, Any]) -> list[str]:
-    """Sorted unordered symbol-triple tokens. Capped tighter than bigrams
-    because C(n, 3) grows much faster."""
-    syms = sorted(_file_symbols(file_entry))[:_SYMBOL_TRIGRAM_CAP]
-    out: list[str] = []
-    for i, a in enumerate(syms):
-        for j in range(i + 1, len(syms)):
-            b = syms[j]
-            for c in syms[j + 1:]:
-                out.append(f"{a}||{b}||{c}")
-    return out
 
 
 def _bucket_count(value: int) -> str:
@@ -1239,113 +1144,6 @@ def _bucket_number(value: float) -> str:
 _KV_VALUE_SPLIT_SEPARATORS = re.compile(r"[\s,;:/\\|]+")
 
 
-def _metric_kv_tokens(
-    file_entry: dict[str, Any],
-    *,
-    include_shape: bool = False,
-    split_string_values: bool = False,
-) -> set[str]:
-    """Return ms.* key/value and shape tokens for experimental KV vocab.
-
-    `split_string_values` additionally emits per-component tokens for
-    string-valued metrics by splitting on common separators — recovers
-    the per-element signal in things like `needed_libs="[libcap.so.2,
-    libc.so.6]"` that would otherwise be one opaque blob token.
-    """
-    tokens: set[str] = set()
-    metrics = file_metrics(file_entry)
-    for group, fields in metrics.items():
-        if not isinstance(fields, dict):
-            continue
-        for key, value in fields.items():
-            base = f"{group}.{key}"
-            if include_shape:
-                tokens.add(f"{base}:exists")
-            if isinstance(value, bool):
-                val = str(value).lower()
-                if include_shape:
-                    tokens.add(f"{base}:bool={val}")
-            elif isinstance(value, str):
-                val = _normalize_vocab_token(value, max_len=80)
-                if include_shape:
-                    tokens.add(f"{base}:strlen={_bucket_count(len(value))}")
-                    tokens.add(f"{base}:nonempty" if value else f"{base}:empty")
-                if split_string_values and value:
-                    for component in _KV_VALUE_SPLIT_SEPARATORS.split(value):
-                        sub = _normalize_vocab_token(component, max_len=64)
-                        if sub:
-                            tokens.add(f"{base}=part:{sub}")
-            else:
-                if include_shape:
-                    if value in (None, [], {}, ()):
-                        tokens.add(f"{base}:empty")
-                    if isinstance(value, (int, float)) and not isinstance(value, bool):
-                        tokens.add(f"{base}:number={_bucket_number(float(value))}")
-                    elif isinstance(value, (list, tuple, set)):
-                        tokens.add(f"{base}:len={_bucket_count(len(value))}")
-                        for item in list(value)[:32]:
-                            item_token = _normalize_vocab_token(item, max_len=64)
-                            if item_token:
-                                tokens.add(f"{base}:item={item_token}")
-                    elif isinstance(value, dict):
-                        tokens.add(f"{base}:len={_bucket_count(len(value))}")
-                        for subkey, subvalue in list(value.items())[:32]:
-                            sub = _normalize_vocab_token(subkey, max_len=48)
-                            if not sub:
-                                continue
-                            tokens.add(f"{base}.{sub}:exists")
-                            if subvalue in (None, "", [], {}, ()):
-                                tokens.add(f"{base}.{sub}:empty")
-                            elif isinstance(subvalue, str):
-                                tokens.add(f"{base}.{sub}:strlen={_bucket_count(len(subvalue))}")
-                            elif isinstance(subvalue, (list, tuple, set, dict)):
-                                tokens.add(f"{base}.{sub}:len={_bucket_count(len(subvalue))}")
-                continue
-            if val:
-                tokens.add(f"{base}={val}")
-            elif include_shape:
-                tokens.add(f"{base}:empty")
-    for path, value in file_values(file_entry).items():
-        base = f"v.{path}"
-        if include_shape:
-            tokens.add(f"{base}:exists")
-        if isinstance(value, bool):
-            tokens.add(f"{base}={str(value).lower()}")
-        elif isinstance(value, str):
-            val = _normalize_vocab_token(value, max_len=80)
-            if val:
-                tokens.add(f"{base}={val}")
-            if include_shape:
-                tokens.add(f"{base}:strlen={_bucket_count(len(value))}")
-            if split_string_values and value:
-                for component in _KV_VALUE_SPLIT_SEPARATORS.split(value):
-                    sub = _normalize_vocab_token(component, max_len=64)
-                    if sub:
-                        tokens.add(f"{base}=part:{sub}")
-        elif isinstance(value, (int, float)) and not isinstance(value, bool):
-            if include_shape:
-                tokens.add(f"{base}:number={_bucket_number(float(value))}")
-        elif include_shape:
-            if value in (None, [], {}, ()):  # type: ignore[comparison-overlap]
-                tokens.add(f"{base}:empty")
-            elif isinstance(value, (list, tuple, set, dict)):
-                tokens.add(f"{base}:len={_bucket_count(len(value))}")
-    return tokens
-
-
-def _string_values(file_entry: dict[str, Any]) -> list[tuple[str, bool]]:
-    """Return extracted string values with a best-effort wide-string flag."""
-    out: list[tuple[str, bool]] = []
-    for item in file_strings(file_entry):
-        if not isinstance(item, (list, tuple)) or len(item) < 2:
-            continue
-        is_wide = any(str(part).lower() in {"wide", "u16", "utf16le", "utf-16le"} for part in item[1:-1])
-        value = str(item[-1] or "")
-        if value:
-            out.append((value, is_wide))
-    return out
-
-
 def _char_entropy(value: str) -> float:
     if not value:
         return 0.0
@@ -1354,20 +1152,6 @@ def _char_entropy(value: str) -> float:
         counts[ch] = counts.get(ch, 0) + 1
     n = len(value)
     return -sum((c / n) * math.log2(c / n) for c in counts.values())
-
-
-def _looks_base64ish(value: str) -> bool:
-    if len(value) < 16:
-        return False
-    chars = sum(ch.isalnum() or ch in "+/=_-" for ch in value)
-    return chars / max(len(value), 1) > 0.92 and any(ch in "+/=" for ch in value)
-
-
-def _looks_hexish(value: str) -> bool:
-    compact = value.strip().replace(" ", "")
-    if len(compact) < 16:
-        return False
-    return sum(ch in "0123456789abcdefABCDEF" for ch in compact) / len(compact) > 0.95
 
 
 @lru_cache(maxsize=32768)
@@ -1890,7 +1674,6 @@ def _build_feature_names(
     if "struct" in config.enabled_groups:
         feature_names.extend([
             "struct:tiny_executable",
-            "struct:no_imports",
             "struct:zero_findings",
             "struct:finding_count_log",
             "struct:file_count_log",
@@ -2035,41 +1818,6 @@ def _build_feature_names(
         for ftype, traits in sorted(EXPECTED_GHOSTS.items()):
             for trait in traits:
                 feature_names.append(f"missing:{ftype}*{trait}")
-
-    # Experimental report metadata vocabularies. These are Python-side probes
-    # until litmus gains parity for any winning recipe.
-    if "symbols" in config.enabled_groups and config.include_symbol_vocab:
-        for sym in symbol_vocab or []:
-            feature_names.append(f"symbol:{sym}")
-
-    # Batch 3: symbol n-grams. Same `symbols` group toggle so they ride the
-    # disable_groups switch alongside `symbol_vocab`.
-    if "symbols" in config.enabled_groups and config.include_symbol_bigrams:
-        for bi in symbol_bigram_vocab or []:
-            feature_names.append(f"symbol_bi:{bi}")
-    if "symbols" in config.enabled_groups and config.include_symbol_trigrams:
-        for tri in symbol_trigram_vocab or []:
-            feature_names.append(f"symbol_tri:{tri}")
-
-    if "kv" in config.enabled_groups and config.include_kv_vocab:
-        for kv in kv_vocab or []:
-            feature_names.append(f"kv:{kv}")
-
-    if "textenc" in config.enabled_groups and config.include_text_encoding_features:
-        feature_names.extend([
-            "textenc:string_count_log",
-            "textenc:avg_len_log",
-            "textenc:max_len_log",
-            "textenc:base64ish_ratio",
-            "textenc:hexish_ratio",
-            "textenc:urlish_ratio",
-            "textenc:pathish_ratio",
-            "textenc:unicode_escape_ratio",
-            "textenc:wide_ratio",
-            "textenc:high_entropy_ratio",
-            "textenc:long_token_ratio",
-            "textenc:short_junk_ratio",
-        ])
 
     # NEW: Filter based on allowed list if provided.
     allowed = allowed_features()
@@ -2963,11 +2711,9 @@ def _apply_experimental_features(
     config = feature_config_from_env()
     lookup = ctx.absolute_lookup
 
-    # Collect import data once for import-based features.
-    import_categories: set[str] = set()
+    # Collect import count for import-density and import-finding-ratio features.
     total_imports = 0
-    if config.exp_import_categories or config.exp_suspicious_api_combo or \
-       config.exp_unsigned_import_density or config.exp_import_finding_ratio:
+    if config.exp_unsigned_import_density or config.exp_import_finding_ratio:
         import re
         api_pattern = re.compile(r'^[A-Z][a-zA-Z0-9_]{3,}[A-Za-z]$')
         for file_entry in files:
@@ -2975,18 +2721,6 @@ def _apply_experimental_features(
                 if not api_pattern.match(sym):
                     continue
                 total_imports += 1
-                cats = _SYMBOL_TO_CATEGORIES.get(sym)
-                if cats:
-                    import_categories.update(cats)
-
-    # Exp 1: Import functional category count.
-    if config.exp_import_categories:
-        _assign(vec, lookup.get("agg:import_category_count"), float(len(import_categories)))
-
-    # Exp 2: Suspicious API combo score — count of high-risk categories present.
-    if config.exp_suspicious_api_combo:
-        high_risk_present = import_categories & _HIGH_RISK_COMBOS
-        _assign(vec, lookup.get("agg:suspicious_api_combo"), float(len(high_risk_present)))
 
     # Exp 3 / Batch 4: Confidence distribution features. The legacy EXP_3
     # path emits mean+std; the Batch-4 promotion adds skew+kurtosis as
@@ -3369,42 +3103,6 @@ def _apply_metric_features(
                     _assign(vec, idx, val)
 
 
-def _apply_symbol_vocab_features(
-    files: list[dict[str, Any]],
-    ctx: _ExtractContext,
-    vec: np.ndarray,
-) -> None:
-    """Experimental import/symbol vocabulary features."""
-    lookup = ctx.absolute_lookup
-    for file_entry in files:
-        for sym in _file_symbols(file_entry):
-            _assign(vec, lookup.get(f"symbol:{sym}"), 1.0)
-
-
-def _apply_symbol_bigram_features(
-    files: list[dict[str, Any]],
-    ctx: _ExtractContext,
-    vec: np.ndarray,
-) -> None:
-    """Batch 3: bigram multi-hot over import/symbol pairs (capped per file)."""
-    lookup = ctx.absolute_lookup
-    for file_entry in files:
-        for bi in _file_symbol_bigrams(file_entry):
-            _assign(vec, lookup.get(f"symbol_bi:{bi}"), 1.0)
-
-
-def _apply_symbol_trigram_features(
-    files: list[dict[str, Any]],
-    ctx: _ExtractContext,
-    vec: np.ndarray,
-) -> None:
-    """Batch 3: trigram multi-hot over import/symbol triples (capped per file)."""
-    lookup = ctx.absolute_lookup
-    for file_entry in files:
-        for tri in _file_symbol_trigrams(file_entry):
-            _assign(vec, lookup.get(f"symbol_tri:{tri}"), 1.0)
-
-
 def _apply_mbc_id_features(
     files: list[dict[str, Any]],
     ctx: _ExtractContext,
@@ -3449,82 +3147,6 @@ def _lexical_distance(a: str, b: str) -> int:
             )
         prev = curr
     return prev[-1]
-
-
-def _apply_kv_vocab_features(
-    files: list[dict[str, Any]],
-    ctx: _ExtractContext,
-    vec: np.ndarray,
-) -> None:
-    """Experimental categorical ms.* key/value vocabulary features."""
-    lookup = ctx.absolute_lookup
-    config = feature_config_from_env()
-    for file_entry in files:
-        for token in _metric_kv_tokens(
-            file_entry,
-            include_shape=config.include_kv_shape_features,
-            split_string_values=config.include_kv_value_split,
-        ):
-            _assign(vec, lookup.get(f"kv:{token}"), 1.0)
-
-
-def _apply_text_encoding_features(
-    files: list[dict[str, Any]],
-    ctx: _ExtractContext,
-    vec: np.ndarray,
-) -> None:
-    """Experimental string/text encoding shape features."""
-    lookup = ctx.absolute_lookup
-    strings: list[tuple[str, bool]] = []
-    for file_entry in files:
-        strings.extend(_string_values(file_entry))
-    n = len(strings)
-    if n == 0:
-        return
-    lengths = [len(s) for s, _wide in strings]
-    base64ish = 0
-    hexish = 0
-    urlish = 0
-    pathish = 0
-    unicode_escape = 0
-    wide = 0
-    high_entropy = 0
-    long_token = 0
-    short_junk = 0
-    for value, is_wide in strings:
-        lower = value.lower()
-        if _looks_base64ish(value):
-            base64ish += 1
-        if _looks_hexish(value):
-            hexish += 1
-        if "http://" in lower or "https://" in lower or "://" in lower or "%2f" in lower:
-            urlish += 1
-        if "/" in value or "\\" in value or lower.startswith(("c:", "./", "../")):
-            pathish += 1
-        if "\\x" in value or "\\u" in value or "%u" in lower:
-            unicode_escape += 1
-        if is_wide:
-            wide += 1
-        if len(value) >= 24 and _char_entropy(value) >= 4.0:
-            high_entropy += 1
-        if len(value) >= 80:
-            long_token += 1
-        if 4 <= len(value) <= 8 and _char_entropy(value) >= 2.4:
-            short_junk += 1
-
-    denom = max(n, 1)
-    _assign(vec, lookup.get("textenc:string_count_log"), math.log1p(n))
-    _assign(vec, lookup.get("textenc:avg_len_log"), math.log1p(sum(lengths) / denom))
-    _assign(vec, lookup.get("textenc:max_len_log"), math.log1p(max(lengths)))
-    _assign(vec, lookup.get("textenc:base64ish_ratio"), base64ish / denom)
-    _assign(vec, lookup.get("textenc:hexish_ratio"), hexish / denom)
-    _assign(vec, lookup.get("textenc:urlish_ratio"), urlish / denom)
-    _assign(vec, lookup.get("textenc:pathish_ratio"), pathish / denom)
-    _assign(vec, lookup.get("textenc:unicode_escape_ratio"), unicode_escape / denom)
-    _assign(vec, lookup.get("textenc:wide_ratio"), wide / denom)
-    _assign(vec, lookup.get("textenc:high_entropy_ratio"), high_entropy / denom)
-    _assign(vec, lookup.get("textenc:long_token_ratio"), long_token / denom)
-    _assign(vec, lookup.get("textenc:short_junk_ratio"), short_junk / denom)
 
 
 def _apply_filetype_features(
@@ -3661,8 +3283,6 @@ def _apply_structural_features(
     lookup = ctx.absolute_lookup
     binary_like = {"pe", "elf", "macho"}
     any_tiny_binary = False
-    import_candidates = 0
-    importless_candidates = 0
     max_entropy = 0.0
     suspicious_files = 0
     hostile_files = 0
@@ -3729,11 +3349,6 @@ def _apply_structural_features(
 
         if file_entry.get("type", "") in binary_like and _float(file_size(file_entry) or 0) < 20000:
             any_tiny_binary = True
-        imports = file_imports(file_entry)
-        if imports or file_facts(file_entry) or "is" in file_entry:
-            import_candidates += 1
-            if len(imports) == 0:
-                importless_candidates += 1
 
         # Track max entropy across all files in the report.
         metrics = file_metrics(file_entry)
@@ -3762,7 +3377,6 @@ def _apply_structural_features(
     stealth_potential = 1.0 if (filtered_finding_count < 5 and max_entropy > 6.5) else 0.0
 
     _assign(vec, lookup.get("struct:tiny_executable"), 1.0 if any_tiny_binary else 0.0)
-    _assign(vec, lookup.get("struct:no_imports"), 1.0 if (import_candidates > 0 and importless_candidates == import_candidates) else 0.0)
     _assign(vec, lookup.get("struct:zero_findings"), 1.0 if filtered_finding_count == 0 else 0.0)
     _assign(vec, lookup.get("struct:finding_count_log"), math.log1p(filtered_finding_count))
     _assign(vec, lookup.get("struct:file_count_log"), math.log1p(len(files)))
@@ -4256,20 +3870,10 @@ def _extract_into(
         _apply_external_signal_features(summary, ctx, vec)
     if "metrics" in config.enabled_groups:
         _apply_metric_features(metrics, files, ctx, vec)
-    if "symbols" in config.enabled_groups and config.include_symbol_vocab:
-        _apply_symbol_vocab_features(files, ctx, vec)
-    if "symbols" in config.enabled_groups and config.include_symbol_bigrams:
-        _apply_symbol_bigram_features(files, ctx, vec)
-    if "symbols" in config.enabled_groups and config.include_symbol_trigrams:
-        _apply_symbol_trigram_features(files, ctx, vec)
     # Batch 4: MBC ID unigram vocab. Lives in the `agg` group since attack
     # features (its closest sibling) live there too.
     if "agg" in config.enabled_groups and config.include_mbc_id_vocab:
         _apply_mbc_id_features(files, ctx, vec)
-    if "kv" in config.enabled_groups and config.include_kv_vocab:
-        _apply_kv_vocab_features(files, ctx, vec)
-    if "textenc" in config.enabled_groups and config.include_text_encoding_features:
-        _apply_text_encoding_features(files, ctx, vec)
     if "filetype" in config.enabled_groups:
         _apply_filetype_features(files, ctx, vec)
     if "format" in config.enabled_groups and config.include_format_hints:
@@ -4626,7 +4230,7 @@ def canonical_fields_from_report(report: dict[str, Any]) -> tuple[str, str, int]
     Returns ("", "", 0) if no depth-0 file is found.
     """
     for f in report_files(report):
-        if int(f.get("dp") or 0) == 0:
+        if int(f.get("depth") or f.get("dp") or 0) == 0:
             formula = str(file_formula(f) or "")
             # Strip Unicode subscript digits ₀-₉ to match hopper.stripSubscripts.
             elements = "".join(c for c in formula if not ("₀" <= c <= "₉"))
@@ -5618,23 +5222,10 @@ def build_vocab_from_db(
             log.info("MBC unigram vocab: %d entries from %d scanned rows",
                      len(mbc_id_vocab), len(scan_ids_labels))
 
-    symbol_vocab: list[str] = []
-    symbol_bigram_vocab: list[str] = []
-    symbol_trigram_vocab: list[str] = []
     tiered_quadgram_vocab: list[str] = []
-    kv_vocab: list[str] = []
-    needs_symbol_scan = (
-        config.include_symbol_vocab
-        or config.include_symbol_bigrams
-        or config.include_symbol_trigrams
-    )
-    if needs_symbol_scan or config.include_kv_vocab or config.include_tiered_crit_quadgrams:
+    if config.include_tiered_crit_quadgrams:
         from . import data as _data  # noqa: PLC0415
-        symbol_counts: dict[str, int] = {}
-        symbol_bigram_counts: dict[str, int] = {}
-        symbol_trigram_counts: dict[str, int] = {}
         tiered_quadgram_counts: dict[str, int] = {}
-        kv_counts: dict[str, int] = {}
         scan_ids = [rid for rid, _l in row_ids_labels[:5000]]
         for start in range(0, len(scan_ids), 500):
             chunk = scan_ids[start:start + 500]
@@ -5642,82 +5233,27 @@ def build_vocab_from_db(
                 report = _coerce_report(item["cleave_result"])
                 if report is None:
                     continue
-                report_symbols: set[str] = set()
-                report_symbol_bigrams: set[str] = set()
-                report_symbol_trigrams: set[str] = set()
-                report_kvs: set[str] = set()
-                for file_entry in report_files(report):
-                    if config.include_symbol_vocab:
-                        report_symbols.update(_file_symbols(file_entry))
-                    if config.include_symbol_bigrams:
-                        report_symbol_bigrams.update(_file_symbol_bigrams(file_entry))
-                    if config.include_symbol_trigrams:
-                        report_symbol_trigrams.update(_file_symbol_trigrams(file_entry))
-                    if config.include_kv_vocab:
-                        report_kvs.update(
-                            _metric_kv_tokens(
-                                file_entry,
-                                include_shape=config.include_kv_shape_features,
-                                split_string_values=config.include_kv_value_split,
-                            )
-                        )
-                if config.include_tiered_crit_quadgrams:
-                    # Tiered quadgrams: one per report (not per file). Use the
-                    # already-summarized sample_paths via _summarize_report_files.
-                    quad_summary = _summarize_report_files(report_files(report))
-                    tokens = _tiered_bigram_tokens(
-                        quad_summary.sample_paths,
-                        depth=config.tiered_quadgram_path_depth,
-                        min_crit=config.tiered_quadgram_min_crit,
-                    )
-                    # Tighter cap than tiered_trigram (which uses 512) because
-                    # C(n, 4) grows much faster: 64 tokens -> 635k quadgrams.
-                    if len(tokens) <= 64:
-                        for quad in _quadgram_tokens(tokens):
-                            if len(tiered_quadgram_counts) >= 100000:
-                                break
-                            tiered_quadgram_counts[quad] = tiered_quadgram_counts.get(quad, 0) + 1
-                for sym in report_symbols:
-                    symbol_counts[sym] = symbol_counts.get(sym, 0) + 1
-                for bi in report_symbol_bigrams:
-                    symbol_bigram_counts[bi] = symbol_bigram_counts.get(bi, 0) + 1
-                for tri in report_symbol_trigrams:
-                    symbol_trigram_counts[tri] = symbol_trigram_counts.get(tri, 0) + 1
-                for kv in report_kvs:
-                    kv_counts[kv] = kv_counts.get(kv, 0) + 1
-        if config.include_symbol_vocab:
-            symbol_vocab = sorted(
-                k for k, c in sorted(symbol_counts.items(), key=lambda x: -x[1])[:config.symbol_vocab_max]
-                if c >= config.symbol_min_freq
-            )
-            log.info("symbol vocab: %d entries from %d scanned rows", len(symbol_vocab), len(scan_ids))
-        if config.include_symbol_bigrams:
-            symbol_bigram_vocab = sorted(
-                k for k, c in sorted(symbol_bigram_counts.items(), key=lambda x: -x[1])[:config.symbol_bigram_max]
-                if c >= config.symbol_min_freq_bigram
-            )
-            log.info("symbol bigram vocab: %d entries (cap=%d/file) from %d scanned rows",
-                     len(symbol_bigram_vocab), _SYMBOL_BIGRAM_CAP, len(scan_ids))
-        if config.include_symbol_trigrams:
-            symbol_trigram_vocab = sorted(
-                k for k, c in sorted(symbol_trigram_counts.items(), key=lambda x: -x[1])[:config.symbol_trigram_max]
-                if c >= config.symbol_min_freq_trigram
-            )
-            log.info("symbol trigram vocab: %d entries (cap=%d/file) from %d scanned rows",
-                     len(symbol_trigram_vocab), _SYMBOL_TRIGRAM_CAP, len(scan_ids))
-        if config.include_kv_vocab:
-            kv_vocab = sorted(
-                k for k, c in sorted(kv_counts.items(), key=lambda x: -x[1])[:config.kv_vocab_max]
-                if c >= config.kv_min_freq
-            )
-            log.info("kv vocab: %d entries from %d scanned rows", len(kv_vocab), len(scan_ids))
-        if config.include_tiered_crit_quadgrams:
-            tiered_quadgram_vocab = sorted(
-                k for k, c in sorted(tiered_quadgram_counts.items(), key=lambda x: -x[1])[:config.tiered_quadgram_max]
-                if c >= config.tiered_quadgram_min_freq
-            )
-            log.info("tiered crit quadgrams: %d vocab entries from %d scanned rows",
-                     len(tiered_quadgram_vocab), len(scan_ids))
+                # Tiered quadgrams: one per report (not per file). Use the
+                # already-summarized sample_paths via _summarize_report_files.
+                quad_summary = _summarize_report_files(report_files(report))
+                tokens = _tiered_bigram_tokens(
+                    quad_summary.sample_paths,
+                    depth=config.tiered_quadgram_path_depth,
+                    min_crit=config.tiered_quadgram_min_crit,
+                )
+                # Tighter cap than tiered_trigram (which uses 512) because
+                # C(n, 4) grows much faster: 64 tokens -> 635k quadgrams.
+                if len(tokens) <= 64:
+                    for quad in _quadgram_tokens(tokens):
+                        if len(tiered_quadgram_counts) >= 100000:
+                            break
+                        tiered_quadgram_counts[quad] = tiered_quadgram_counts.get(quad, 0) + 1
+        tiered_quadgram_vocab = sorted(
+            k for k, c in sorted(tiered_quadgram_counts.items(), key=lambda x: -x[1])[:config.tiered_quadgram_max]
+            if c >= config.tiered_quadgram_min_freq
+        )
+        log.info("tiered crit quadgrams: %d vocab entries from %d scanned rows",
+                 len(tiered_quadgram_vocab), len(scan_ids))
 
     feature_names = _build_feature_names(
         presence_vocab, filetype_vocab, element_vocab, bigram_vocab,
@@ -5725,7 +5261,7 @@ def build_vocab_from_db(
         metric_vocab, crit_unigram_vocab, crit_bigram_vocab, crit_trigram_vocab,
         attack_bigram_vocab, attack_trigram_vocab, mbc_bigram_vocab, mbc_trigram_vocab,
         tiered_bigram_vocab, tiered_trigram_vocab, tiered_quadgram_vocab,
-        symbol_vocab, symbol_bigram_vocab, symbol_trigram_vocab, kv_vocab,
+        [], [], [], [],
         mbc_id_vocab=mbc_id_vocab,
     )
 
@@ -5749,10 +5285,10 @@ def build_vocab_from_db(
         tiered_bigram_vocab=tiered_bigram_vocab,
         tiered_trigram_vocab=tiered_trigram_vocab,
         tiered_quadgram_vocab=tiered_quadgram_vocab,
-        symbol_vocab=symbol_vocab,
-        symbol_bigram_vocab=symbol_bigram_vocab,
-        symbol_trigram_vocab=symbol_trigram_vocab,
-        kv_vocab=kv_vocab,
+        symbol_vocab=[],
+        symbol_bigram_vocab=[],
+        symbol_trigram_vocab=[],
+        kv_vocab=[],
         mbc_id_vocab=mbc_id_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),

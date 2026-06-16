@@ -878,3 +878,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T045437-filetypes-package.json` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `446d38a6c7fc1502` | inherit_from_filetypes_json_1e3933ad | ok | 0.9988 | 0.9983 | 0.9929 | 41 | [log](out/autocollie/runs/2026-06-16T05-02-20_20260616T045437-filetypes-package.json_inherit_from_filetypes_json_1e3933ad.log) |
+| `5d0627711f8011a9` | pkg_json_control_leaves128 | ok | 0.9962 | 0.9947 | 0.9915 | 46 | [log](out/autocollie/runs/2026-06-16T05-03-21_20260616T045437-filetypes-package.json_pkg_json_control_leaves128.log) |
+| `37eeb75a8fc04886` | pkg_json_kv_vocab_split | ok | 0.9962 | 0.9947 | 0.9915 | 57 | [log](out/autocollie/runs/2026-06-16T05-04-16_20260616T045437-filetypes-package.json_pkg_json_kv_vocab_split.log) |
+| `9840b03369ede8ef` | pkg_json_lowbigram_noclusters | ok | 0.9961 | 0.9945 | 0.9917 | 50 | [log](out/autocollie/runs/2026-06-16T05-05-15_20260616T045437-filetypes-package.json_pkg_json_lowbigram_noclusters.log) |
+| `eccd4811d3be84ff` | pkg_json_textenc_metrics_safe | ok | 0.9961 | 0.9945 | 0.9917 | 27 | [log](out/autocollie/runs/2026-06-16T05-06-10_20260616T045437-filetypes-package.json_pkg_json_textenc_metrics_safe.log) |
+| `dd1af98b83d7de47` | pkg_json_hardneg_01_10 | ok | 0.9963 | 0.9950 | 0.9911 | 7 | [log](out/autocollie/runs/2026-06-16T05-06-39_20260616T045437-filetypes-package.json_pkg_json_hardneg_01_10.log) |
+| `ffe0850fc413209e` | pkg_json_seed_search_k3 | ok | 0.9962 | 0.9947 | 0.9907 | 14 | [log](out/autocollie/runs/2026-06-16T05-06-46_20260616T045437-filetypes-package.json_pkg_json_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_control_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env to establish a stable baseline; increases num_leaves to 128 to improve PR_AUC by capturing finer decision boundaries.
+- **`pkg_json_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to parse dependency arrays and script strings, targeting PR_AUC by isolating malicious package names.
+- **`pkg_json_lowbigram_noclusters`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfers xml route success by lowering bigram_min_freq to 50 and disabling clusters to reduce noise, targeting PR_AUC via rarer dependency co-occurrences.
+- **`pkg_json_textenc_metrics_safe`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full with conservative bigram_min_freq=500 to avoid OOM crash, targeting PR_AUC by capturing obfuscation patterns.
+- **`pkg_json_hardneg_01_10`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard_negative_fraction=0.1 and weight=10 to focus on difficult benign samples, targeting recall@3FPM by sharpening the decision boundary at low FPR.
+- **`pkg_json_seed_search_k3`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed_search_k=3 on a standard config to average out RNG variance, targeting stable recall@3FPM improvements across different data splits.
+
+</details>
+

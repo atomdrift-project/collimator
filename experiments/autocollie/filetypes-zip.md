@@ -830,3 +830,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T091458-filetypes-zip` — 2026-06-16T09:14:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `17f9bbd9d00c0295` | inherit_from_filetypes_json_1e3933ad | ok | 0.9997 | 0.9980 | 0.9875 | 207 | [log](out/autocollie/runs/2026-06-16T09-24-50_20260616T091458-filetypes-zip_inherit_from_filetypes_json_1e3933ad.log) |
+| `5253101124cee286` | zip_control_hardneg_base | ok | 0.9738 | 0.8801 | 0.8143 | 130 | [log](out/autocollie/runs/2026-06-16T09-28-46_20260616T091458-filetypes-zip_zip_control_hardneg_base.log) |
+| `05f93e2d6c214b2a` | zip_hardneg_aggressive_scalepos | ok | 0.9756 | 0.8898 | 0.8131 | 24 | [log](out/autocollie/runs/2026-06-16T09-31-00_20260616T091458-filetypes-zip_zip_hardneg_aggressive_scalepos.log) |
+| `7ce8e5f855afa3ed` | zip_kv_vocab_research | ok | 0.9708 | 0.8664 | 0.8144 | 147 | [log](out/autocollie/runs/2026-06-16T09-31-25_20260616T091458-filetypes-zip_zip_kv_vocab_research.log) |
+| `0a4482466260b240` | zip_ngram_expansion_tiered | ok | 0.9713 | 0.8684 | 0.8135 | 111 | [log](out/autocollie/runs/2026-06-16T09-33-53_20260616T091458-filetypes-zip_zip_ngram_expansion_tiered.log) |
+| `424366e160a859e1` | zip_transfer_gz_bigram_tuning | ok | 0.9681 | 0.8524 | 0.8073 | 91 | [log](out/autocollie/runs/2026-06-16T09-35-44_20260616T091458-filetypes-zip_zip_transfer_gz_bigram_tuning.log) |
+| `4061d52f1f645015` | zip_hardneg_seed_ensemble | ok | 0.9777 | 0.8993 | 0.9385 | 43 | [log](out/autocollie/runs/2026-06-16T09-37-15_20260616T091458-filetypes-zip_zip_hardneg_seed_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_base`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — replicate best feature env with moderate hard-negative tuning to stabilize PR_AUC and lift recall@3 FP/M
+- **`zip_hardneg_aggressive_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — increase hard-negative weight and down-weight positives to sharpen decision boundary, targeting recall@3 FP/M gain
+- **`zip_kv_vocab_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=20 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — enable kv_vocab to capture archive metadata patterns, aiming to improve PR_AUC by adding discriminative key-value signal
+- **`zip_ngram_expansion_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — lower bigram min_freq and enable tiered trigrams to capture rarer structural patterns, targeting PR_AUC improvement
+- **`zip_transfer_gz_bigram_tuning`** `EXP_BIGRAM_MAX=6000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — port gz archive bigram tuning to zip to exploit similar compression metadata, aiming to boost ROC_AUC and PR_AUC
+- **`zip_hardneg_seed_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SCALE_POS_WEIGHT_MULT=0.75 …` — ensemble 3 seeds on the aggressive hard-negative config to reduce variance and confirm recall@3 FP/M stability
+
+</details>
+

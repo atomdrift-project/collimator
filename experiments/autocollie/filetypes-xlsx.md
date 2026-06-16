@@ -466,3 +466,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T073742-filetypes-xlsx` — 2026-06-16T07:37:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3372dea03a89c979` | inherit_from_filetypes_json_1e3933ad | ok | 0.9975 | 0.5000 | 0.9988 | 13 | [log](out/autocollie/runs/2026-06-16T07-45-50_20260616T073742-filetypes-xlsx_inherit_from_filetypes_json_1e3933ad.log) |
+| `d70a98b0bdd08c2e` | xlsx_control_leaves128_reg2 | ok | 0.9853 | 0.6578 | 0.4790 | 12 | [log](out/autocollie/runs/2026-06-16T07-46-07_20260616T073742-filetypes-xlsx_xlsx_control_leaves128_reg2.log) |
+| `64a6e03f8fdf5d7a` | xlsx_hardneg_01_10_lr003 | ok | 0.9878 | 0.6869 | 0.4789 | 2 | [log](out/autocollie/runs/2026-06-16T07-46-27_20260616T073742-filetypes-xlsx_xlsx_hardneg_01_10_lr003.log) |
+| `0d9f2308ab59f0a7` | xlsx_text_metrics_encoding_full | ok | 0.9844 | 0.6901 | 0.4790 | 10 | [log](out/autocollie/runs/2026-06-16T07-46-30_20260616T073742-filetypes-xlsx_xlsx_text_metrics_encoding_full.log) |
+| `b15c8b50d93f3ad9` | xlsx_kv_split_lowbigram | ok | 0.9844 | 0.6901 | 0.4790 | 12 | [log](out/autocollie/runs/2026-06-16T07-46-41_20260616T073742-filetypes-xlsx_xlsx_kv_split_lowbigram.log) |
+| `8a6582343523f88a` | xlsx_seed_search_tiered_trigrams | ok | 0.9846 | 0.6327 | 0.4789 | 11 | [log](out/autocollie/runs/2026-06-16T07-46-54_20260616T073742-filetypes-xlsx_xlsx_seed_search_tiered_trigrams.log) |
+| `240effb04277b334` | xlsx_abl_extreme_blindfold_off | ok | 0.9844 | 0.6901 | 0.4790 | 10 | [log](out/autocollie/runs/2026-06-16T07-47-06_20260616T073742-filetypes-xlsx_xlsx_abl_extreme_blindfold_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_leaves128_reg2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control feature set with deeper trees and stronger L2 regularization to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`xlsx_hardneg_01_10_lr003`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=400 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Adds hard-negative mining with low learning rate to sharpen decision boundary at the tail, targeting recall@3FPM without hurting PR_AUC.
+- **`xlsx_text_metrics_encoding_full`** `EXP_BIGRAM_MIN_FREQ=100 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies, aiming to lift PR_AUC on macro-enabled XLSX files.
+- **`xlsx_kv_split_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor and enables kv_value_split to recover granular metadata signal, targeting PR_AUC gains from rare but malicious KV patterns.
+- **`xlsx_seed_search_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Ports tiered trigrams from XML route and uses seed_search_k=3 to stabilize recall@3FPM against seed variance while preserving PR_AUC.
+- **`xlsx_abl_extreme_blindfold_off`** `EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=0 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features and blindfold to reduce noisy tail signal, aiming to keep PR_AUC flat while improving ROC_AUC and threshold stability.
+
+</details>
+

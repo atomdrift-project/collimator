@@ -704,3 +704,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T045439-filetypes-python-bytecode` — 2026-06-16T04:54:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cce72e5324cfaa7c` | inherit_from_filetypes_json_1e3933ad | ok | 0.9994 | 0.9996 | 0.9861 | 46 | [log](out/autocollie/runs/2026-06-16T05-03-55_20260616T045439-filetypes-python-bytecode_inherit_from_filetypes_json_1e3933ad.log) |
+| `f569db508107fa87` | pybc_ctrl_hardneg_leaves128_v2 | ok | 0.8540 | 0.9185 | 0.8842 | 53 | [log](out/autocollie/runs/2026-06-16T05-04-54_20260616T045439-filetypes-python-bytecode_pybc_ctrl_hardneg_leaves128_v2.log) |
+| `06d493a12eaf3c41` | pybc_feat_kv_vocab_split | ok | 0.8490 | 0.9076 | 0.8823 | 41 | [log](out/autocollie/runs/2026-06-16T05-05-54_20260616T045439-filetypes-python-bytecode_pybc_feat_kv_vocab_split.log) |
+| `2750926420040374` | pybc_feat_textenc_metrics | ok | 0.8482 | 0.9054 | 0.8823 | 23 | [log](out/autocollie/runs/2026-06-16T05-06-36_20260616T045439-filetypes-python-bytecode_pybc_feat_textenc_metrics.log) |
+| `54a9d01e394a6a58` | pybc_feat_tiered_trigrams_lowfreq | ok | 0.8490 | 0.9076 | 0.8823 | 17 | [log](out/autocollie/runs/2026-06-16T05-07-00_20260616T045439-filetypes-python-bytecode_pybc_feat_tiered_trigrams_lowfreq.log) |
+| `5267bfae4a834b80` | pybc_transfer_xml_bigrams_abl | ok | 0.8490 | 0.9076 | 0.8823 | 25 | [log](out/autocollie/runs/2026-06-16T05-07-18_20260616T045439-filetypes-python-bytecode_pybc_transfer_xml_bigrams_abl.log) |
+| `9c939d55e676467c` | pybc_seed_search_ensemble_v2 | ok | 0.8537 | 0.9088 | 0.8856 | 3 | [log](out/autocollie/runs/2026-06-16T05-07-44_20260616T045439-filetypes-python-bytecode_pybc_seed_search_ensemble_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_hardneg_leaves128_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Apply hard-negative weighting and deeper trees to the best recent feature set to improve recall@3FPM while preserving PR AUC.
+- **`pybc_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable KV vocab and value splitting to extract structured metadata signals from bytecode headers, targeting PR AUC improvement.
+- **`pybc_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Add text encoding and full text metrics to detect obfuscation in bytecode string literals, aiming to lift PR AUC.
+- **`pybc_feat_tiered_trigrams_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lower bigram frequency floor and enable tiered trigrams to capture rarer malicious patterns, targeting recall@3FPM gains.
+- **`pybc_transfer_xml_bigrams_abl`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port XML route's low-freq bigram config and disable noisy cluster features to reduce overfitting and improve PR AUC.
+- **`pybc_seed_search_ensemble_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Run seed search with ensemble averaging on the baseline feature set to stabilize tail recall and improve recall@3FPM.
+
+</details>
+

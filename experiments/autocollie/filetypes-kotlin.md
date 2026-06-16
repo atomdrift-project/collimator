@@ -806,3 +806,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T091458-filetypes-kotlin` — 2026-06-16T09:14:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `81a7e41e0f2d4e91` | inherit_from_filetypes_json_1e3933ad | ok | 0.9993 | 0.9737 | 0.9961 | 24 | [log](out/autocollie/runs/2026-06-16T09-23-49_20260616T091458-filetypes-kotlin_inherit_from_filetypes_json_1e3933ad.log) |
+| `f64c22618c7741c7` | kotlin_train_leaves128_est300 | ok | 0.9796 | 0.9857 | 0.7412 | 18 | [log](out/autocollie/runs/2026-06-16T09-24-15_20260616T091458-filetypes-kotlin_kotlin_train_leaves128_est300.log) |
+| `ce52c429982b8db9` | kotlin_train_hardneg_01_10 | ok | 0.9762 | 0.9845 | 0.7414 | 3 | [log](out/autocollie/runs/2026-06-16T09-24-36_20260616T091458-filetypes-kotlin_kotlin_train_hardneg_01_10.log) |
+| `0f05d6bf07f5f5a7` | kotlin_feat_textenc_metrics_full | ok | 0.9799 | 0.9869 | 0.7413 | 26 | [log](out/autocollie/runs/2026-06-16T09-24-40_20260616T091458-filetypes-kotlin_kotlin_feat_textenc_metrics_full.log) |
+| `4b548abe1c897718` | kotlin_feat_kv_vocab_split | ok | 0.9796 | 0.9857 | 0.7412 | 37 | [log](out/autocollie/runs/2026-06-16T09-25-11_20260616T091458-filetypes-kotlin_kotlin_feat_kv_vocab_split.log) |
+| `2f7012c708fb2ab6` | kotlin_transfer_java_symbols | ok | 0.9796 | 0.9857 | 0.7412 | 25 | [log](out/autocollie/runs/2026-06-16T09-25-50_20260616T091458-filetypes-kotlin_kotlin_transfer_java_symbols.log) |
+| `7b4bb8cdecae053a` | kotlin_retry_textenc_seedsearch | ok | 0.9818 | 0.9877 | 0.7410 | 5 | [log](out/autocollie/runs/2026-06-16T09-26-17_20260616T091458-filetypes-kotlin_kotlin_retry_textenc_seedsearch.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_train_leaves128_est300`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Exploit best recent feature set by increasing tree complexity to capture finer ranking signals, aiming to improve PR_AUC.
+- **`kotlin_train_hardneg_01_10`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Focus model on hard benigns to push down FP tail, aiming to improve recall@3FPM while keeping PR_AUC flat.
+- **`kotlin_feat_textenc_metrics_full`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation patterns in Kotlin scripts, aiming to boost PR_AUC.
+- **`kotlin_feat_kv_vocab_split`** `EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to parse structured config tokens, aiming to improve PR_AUC.
+- **`kotlin_transfer_java_symbols`** `EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Port strong Java symbol/bigram config to Kotlin to leverage JVM shared patterns, aiming to increase PR_AUC.
+- **`kotlin_retry_textenc_seedsearch`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry top textenc config with seed_search_k=3 to verify stability of PR_AUC signal against seed variance.
+
+</details>
+

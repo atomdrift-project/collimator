@@ -2258,3 +2258,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T090757-filetypes-pdf` — 2026-06-16T09:07:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f581dd2925cc6e1f` | inherit_from_filetypes_json_1e3933ad | ok | 1.0000 | 0.9988 | 0.9786 | 14 | [log](out/autocollie/runs/2026-06-16T09-16-38_20260616T090757-filetypes-pdf_inherit_from_filetypes_json_1e3933ad.log) |
+| `64a70bf9aff527e8` | pdf_ctrl_hardneg_spw05 | ok | 0.9927 | 0.9760 | 0.8529 | 12 | [log](out/autocollie/runs/2026-06-16T09-16-54_20260616T090757-filetypes-pdf_pdf_ctrl_hardneg_spw05.log) |
+| `44213812f6fd08be` | pdf_feat_textmetrics_kv_vocab | ok | 0.9913 | 0.9723 | 0.8534 | 11 | [log](out/autocollie/runs/2026-06-16T09-17-09_20260616T090757-filetypes-pdf_pdf_feat_textmetrics_kv_vocab.log) |
+| `ba6881799d030a9b` | pdf_feat_lowbigram_tieredtrigrams | ok | 0.9909 | 0.9709 | 0.8535 | 10 | [log](out/autocollie/runs/2026-06-16T09-17-20_20260616T090757-filetypes-pdf_pdf_feat_lowbigram_tieredtrigrams.log) |
+| `64e16f19c8732a37` | pdf_train_hardneg_015_16 | ok | 0.9928 | 0.9766 | 0.8529 | 2 | [log](out/autocollie/runs/2026-06-16T09-17-32_20260616T090757-filetypes-pdf_pdf_train_hardneg_015_16.log) |
+| `c45a082af88111af` | pdf_transfer_xml_lowbigram | ok | 0.9909 | 0.9709 | 0.8535 | 10 | [log](out/autocollie/runs/2026-06-16T09-17-35_20260616T090757-filetypes-pdf_pdf_transfer_xml_lowbigram.log) |
+| `6906eb18a09aba4f` | pdf_seedsearch_textmetrics_ensemble | ok | 0.9931 | 0.9786 | 0.9674 | 10 | [log](out/autocollie/runs/2026-06-16T09-17-47_20260616T090757-filetypes-pdf_pdf_seedsearch_textmetrics_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_ctrl_hardneg_spw05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with hard-negative sweep and lower scale_pos_weight to improve recall@3FPM by pushing borderline benigns down without hurting PR_AUC
+- **`pdf_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Adds text metrics and KV vocab to capture PDF obfuscation and metadata patterns, aiming to boost PR_AUC and recall@3FPM
+- **`pdf_feat_lowbigram_tieredtrigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Expands n-gram coverage with lower frequency floor and tiered trigrams to capture rare malicious PDF patterns, targeting PR_AUC gain
+- **`pdf_train_hardneg_015_16`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aggressive hard-negative weighting to push borderline benigns down, improving recall@3FPM while maintaining PR_AUC
+- **`pdf_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Transfers XML route's low-frequency bigram and text encoding config to PDF, expecting improved PR_AUC from richer lexical signal
+- **`pdf_seedsearch_textmetrics_ensemble`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Averages 3 seeds on text-metrics config to stabilize recall@3FPM gains and reduce seed-driven variance
+
+</details>
+

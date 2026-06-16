@@ -956,3 +956,27 @@ Rejected before run:
 
 _No specs ran._
 
+## Cycle `20260616T045437-filetypes-plist` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bfa3c1adc4e6114b` | inherit_from_filetypes_json_1e3933ad | ok | 0.2000 | 0.5000 | 0.3333 | 7 | [log](out/autocollie/runs/2026-06-16T05-02-44_20260616T045437-filetypes-plist_inherit_from_filetypes_json_1e3933ad.log) |
+| `7a762ac3ce925a0f` | plist_ctrl_textenc_train_tune | ok | 0.2233 | 0.7398 | 0.1099 | 22 | [log](out/autocollie/runs/2026-06-16T05-02-59_20260616T045437-filetypes-plist_plist_ctrl_textenc_train_tune.log) |
+| `36aeab944d52713d` | plist_feat_textenc_tiered_trigrams | ok | 0.1622 | 0.7060 | 0.1099 | 31 | [log](out/autocollie/runs/2026-06-16T05-03-30_20260616T045437-filetypes-plist_plist_feat_textenc_tiered_trigrams.log) |
+| `2920010c9dd3dfd4` | plist_feat_kv_vocab_metrics | ok | 0.1622 | 0.7060 | 0.1099 | 38 | [log](out/autocollie/runs/2026-06-16T05-04-02_20260616T045437-filetypes-plist_plist_feat_kv_vocab_metrics.log) |
+| `63b36290adfdccf6` | plist_train_hardneg_01_10 | ok | 0.1169 | 0.5656 | 0.1087 | 31 | [log](out/autocollie/runs/2026-06-16T05-04-41_20260616T045437-filetypes-plist_plist_train_hardneg_01_10.log) |
+| `365bbaf9709fa216` | plist_train_dart_extra_trees | ok | 0.1081 | 0.4514 | 0.1124 | 7 | [log](out/autocollie/runs/2026-06-16T05-05-14_20260616T045437-filetypes-plist_plist_train_dart_extra_trees.log) |
+| `53849365eaeefa82` | plist_feat_sevfrac_scalepos | ok | 0.1522 | 0.6899 | 0.1099 | 39 | [log](out/autocollie/runs/2026-06-16T05-05-25_20260616T045437-filetypes-plist_plist_feat_sevfrac_scalepos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_textenc_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best feature_env and tune training (num_leaves=128, lr=0.03) to improve PR_AUC via better tree capacity and slower convergence.
+- **`plist_feat_textenc_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Add tiered_crit_trigrams and lower bigram_min_freq to 200 to capture rarer structural patterns, targeting PR_AUC gain.
+- **`plist_feat_kv_vocab_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable kv_vocab alongside text_metrics_full to test key-value signal, aiming for PR_AUC improvement while avoiding the prior crash combo.
+- **`plist_train_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Apply hard_negative_fraction=0.1 and weight=10.0 to sharpen the low-FPR boundary, targeting recall@3 FP/M.
+- **`plist_train_dart_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting and enable extra_trees to reduce overfitting, targeting ROC_AUC stability while preserving PR_AUC.
+- **`plist_feat_sevfrac_scalepos`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enable severity_fractions and down-weight positives (scale_pos_weight_mult=0.75) to reduce tail FPs, targeting recall@3 FP/M.
+
+</details>
+

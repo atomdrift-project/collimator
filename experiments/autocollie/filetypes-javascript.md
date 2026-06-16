@@ -953,3 +953,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filetypes-javascript` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ee4bb9baaaa18f7e` | inherit_from_filetypes_json_1e3933ad | ok | 0.9976 | 0.9971 | 0.9784 | 263 | [log](out/autocollie/runs/2026-06-16T05-02-19_20260616T045437-filetypes-javascript_inherit_from_filetypes_json_1e3933ad.log) |
+| `cacce4d129a6d5cb` | js_control_hardneg_tune | ok | 0.9837 | 0.9764 | 0.9470 | 65 | [log](out/autocollie/runs/2026-06-16T05-07-23_20260616T045437-filetypes-javascript_js_control_hardneg_tune.log) |
+| `d2d66368e0e3c4e8` | js_control_dart_regularized | ok | 0.9678 | 0.9630 | 0.9442 | 9 | [log](out/autocollie/runs/2026-06-16T05-08-41_20260616T045437-filetypes-javascript_js_control_dart_regularized.log) |
+| `546422525240face` | js_kv_vocab_20k_lowfreq | ok | 0.9719 | 0.9665 | 0.9450 | 39 | [log](out/autocollie/runs/2026-06-16T05-08-51_20260616T045437-filetypes-javascript_js_kv_vocab_20k_lowfreq.log) |
+| `f46bdf8a01cbf47f` | js_textenc_metrics_full_buckets | ok | 0.9717 | 0.9664 | 0.9407 | 35 | [log](out/autocollie/runs/2026-06-16T05-09-31_20260616T045437-filetypes-javascript_js_textenc_metrics_full_buckets.log) |
+| `1810a9f853ac524b` | js_lowfreq_ngrams_tiered | ok | 0.9795 | 0.9707 | 0.9452 | 36 | [log](out/autocollie/runs/2026-06-16T05-10-07_20260616T045437-filetypes-javascript_js_lowfreq_ngrams_tiered.log) |
+| `50dc9e40986cb04a` | js_abl_extreme_off_seedsearch | ok | 0.9671 | 0.9622 | 0.9450 | 43 | [log](out/autocollie/runs/2026-06-16T05-10-43_20260616T045437-filetypes-javascript_js_abl_extreme_off_seedsearch.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_hardneg_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature set to establish baseline; tweaks hard_negative_weight and estimators to improve recall@3 FP/M without hurting PR_AUC.
+- **`js_control_dart_regularized`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Tests dart boosting type on the control feature set to reduce overfitting and improve ROC_AUC while maintaining PR_AUC.
+- **`js_kv_vocab_20k_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab to 20k and lowers min_freq to 5 to capture rare JS object keys, targeting PR_AUC gains from finer-grained key-value signals.
+- **`js_textenc_metrics_full_buckets`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full with line_length_buckets to detect obfuscation patterns, aiming to boost recall@3 FP/M on packed JS.
+- **`js_lowfreq_ngrams_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Transfers low-frequency bigram/trigram strategy from xml route; lowers min_freq to 50/25 to capture rare attack patterns, targeting PR_AUC improvement.
+- **`js_abl_extreme_off_seedsearch`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to reduce tail noise and uses seed_search_k=3 to stabilize recall@3 FP/M, aiming for flatter ROC_AUC with consistent PR_AUC.
+
+</details>
+

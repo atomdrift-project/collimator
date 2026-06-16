@@ -14,8 +14,6 @@ from collimator.features import (
     _allowed_with_pair,
     _assemble_partitioned_matrices,
     _finding_paths,
-    _metric_kv_tokens,
-    _string_values,
     _file_symbols,
     build_vocab,
     extract,
@@ -170,24 +168,6 @@ def test_report_files_filters_invalid_entries() -> None:
     files = report_files(report)
 
     assert [f["type"] for f in files] == ["zip", "python"]
-
-
-def test_v5_ff_helpers_feed_existing_feature_surfaces() -> None:
-    report = _make_report_v5(
-        imports=[["kernel32.dll", "CreateFileW"]],
-        metrics={"binary": {"overall_entropy": 7.2}},
-        values={"pe.machine": "x86_64"},
-    )
-    file_entry = report_files(report)[0]
-
-    assert "kernel32.dll!CreateFileW" in _file_symbols(file_entry)
-    assert "DllRegisterServer" in _file_symbols(file_entry)
-    assert "main" in _file_symbols(file_entry)
-    assert _string_values(file_entry) == [("CreateFileW", True)]
-
-    tokens = _metric_kv_tokens(file_entry, include_shape=True)
-    assert "binary.overall_entropy:exists" in tokens
-    assert "v.pe.machine=x86_64" in tokens
 
 
 # ---------------------------------------------------------------------------
@@ -1016,15 +996,6 @@ def test_extract_structural() -> None:
     assert vec_big[idx] == 0.0
 
 
-def test_extract_no_imports() -> None:
-    report = _make_report(imports=[])
-    spec = build_vocab([report])
-    vec = extract(report, spec)
-
-    idx = spec.feature_names.index("struct:no_imports")
-    assert vec[idx] == 1.0
-
-
 def test_extract_zero_findings() -> None:
     report = _make_report(findings=[])
     spec = build_vocab([report])
@@ -1449,28 +1420,6 @@ def test_batch2_extended_metrics_include_filters_vocab(monkeypatch) -> None:
     assert "metrics:binary_overall_entropy" in spec.feature_names
 
 
-def test_batch2_kv_value_split_emits_components(monkeypatch) -> None:
-    """When kv_value_split is on, string-valued kv tokens are additionally
-    split on common separators and each component becomes its own token."""
-    from collimator.features import _metric_kv_tokens
-
-    file_entry = {
-        "ms": {
-            "elf": {"needed_libs": "libcap.so.2, libc.so.6"},
-        },
-    }
-    # Off: one opaque-blob token for the joined value.
-    tokens_off = _metric_kv_tokens(file_entry)
-    component_tokens = {t for t in tokens_off if "=part:" in t}
-    assert component_tokens == set()
-
-    # On: each component appears as its own token.
-    tokens_on = _metric_kv_tokens(file_entry, split_string_values=True)
-    component_tokens = {t for t in tokens_on if "=part:" in t}
-    assert "elf.needed_libs=part:libcap.so.2" in component_tokens
-    assert "elf.needed_libs=part:libc.so.6" in component_tokens
-
-
 def test_batch2_parse_metric_pair_validates() -> None:
     """Parser accepts well-formed `<group>.<key>*<group>.<key>`, rejects
     everything else."""
@@ -1489,43 +1438,6 @@ def test_batch2_parse_metric_pair_validates() -> None:
 # Batch 3 — symbol & string n-grams
 # ---------------------------------------------------------------------------
 
-def test_batch3_symbol_bigram_helper_emits_sorted_pairs() -> None:
-    """C(n, 2) sorted unordered pairs over a file's deduplicated symbol set."""
-    from collimator.features import _file_symbol_bigrams
-
-    file_entry = {"is": ["malloc", "free", "printf", "strcpy"]}
-    bigrams = _file_symbol_bigrams(file_entry)
-    assert bigrams == [
-        "free||malloc", "free||printf", "free||strcpy",
-        "malloc||printf", "malloc||strcpy", "printf||strcpy",
-    ]
-
-
-def test_batch3_symbol_trigram_helper_emits_sorted_triples() -> None:
-    """C(n, 3) sorted unordered triples; tighter per-file cap than bigrams."""
-    from collimator.features import _file_symbol_trigrams
-
-    file_entry = {"is": ["malloc", "free", "printf", "strcpy"]}
-    trigrams = _file_symbol_trigrams(file_entry)
-    assert trigrams == [
-        "free||malloc||printf", "free||malloc||strcpy",
-        "free||printf||strcpy", "malloc||printf||strcpy",
-    ]
-
-
-def test_batch3_symbol_bigram_per_file_cap() -> None:
-    """Per-file alphabetical cap bounds n-gram count even for large import lists."""
-    from collimator.features import _file_symbol_bigrams, _SYMBOL_BIGRAM_CAP
-
-    syms = [f"sym_{i:03d}" for i in range(_SYMBOL_BIGRAM_CAP * 2)]  # 128 symbols
-    bigrams = _file_symbol_bigrams({"is": syms})
-    # Exactly C(cap, 2) pairs, never more.
-    expected = _SYMBOL_BIGRAM_CAP * (_SYMBOL_BIGRAM_CAP - 1) // 2
-    assert len(bigrams) == expected
-    # All pairs come from the alphabetically-first cap symbols.
-    assert all(s.startswith("sym_0") for pair in bigrams for s in pair.split("||"))
-
-
 def test_batch3_quadgram_tokens_helper() -> None:
     """4-token combinations; same `+` separator the trigram path uses."""
     from collimator.features import _quadgram_tokens
@@ -1536,27 +1448,6 @@ def test_batch3_quadgram_tokens_helper() -> None:
         "a + c + d + e", "b + c + d + e",
     ]
     assert list(_quadgram_tokens(["a", "b", "c"])) == []
-
-
-def test_batch3_symbol_bigram_extraction(monkeypatch) -> None:
-    """When the knob is on, columns appear in the spec and present pairs
-    score 1.0 at extract."""
-    monkeypatch.setenv("COLLIMATOR_SYMBOL_BIGRAMS", "1")
-    feature_config_from_env.cache_clear()
-
-    # build_vocab (the in-memory test path) doesn't run the corpus scan,
-    # so symbol_bigram_vocab stays empty even with the knob on. Verify
-    # the knob enables extraction by directly seeding the vocab and
-    # asserting the per-file extractor populates the matching column.
-    from collimator.features import _file_symbol_bigrams
-    report = _make_report(file_type="elf", imports=["malloc", "free", "printf"])
-    spec = build_vocab([report])
-    spec.symbol_bigram_vocab = sorted(_file_symbol_bigrams(primary_file(report)))
-    spec.feature_names = list(spec.feature_names) + [f"symbol_bi:{b}" for b in spec.symbol_bigram_vocab]
-    spec.total_features = len(spec.feature_names)
-    vec = extract(report, spec)
-    for bi in spec.symbol_bigram_vocab:
-        assert vec[spec.feature_names.index(f"symbol_bi:{bi}")] == 1.0
 
 
 def test_batch3_trigram_min_freq_applied(monkeypatch) -> None:

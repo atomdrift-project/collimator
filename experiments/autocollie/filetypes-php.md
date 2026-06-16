@@ -792,3 +792,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T053735-filetypes-php` — 2026-06-16T05:37:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ba5704b7c67fbf3d` | inherit_from_filetypes_json_1e3933ad | ok | 0.9953 | 0.9978 | 0.9687 | 20 | [log](out/autocollie/runs/2026-06-16T05-43-15_20260616T053735-filetypes-php_inherit_from_filetypes_json_1e3933ad.log) |
+| `5baa0f2ef7dccba0` | php_control_train_tune_v7 | ok | 0.8462 | 0.9479 | 0.7849 | 19 | [log](out/autocollie/runs/2026-06-16T05-43-40_20260616T053735-filetypes-php_php_control_train_tune_v7.log) |
+| `523cf714d99b02b1` | php_train_hardneg_tail | ok | 0.8573 | 0.9594 | 0.8105 | 6 | [log](out/autocollie/runs/2026-06-16T05-44-02_20260616T053735-filetypes-php_php_train_hardneg_tail.log) |
+| `fec52105ae487ebc` | php_feat_kv_textenc_vocab | ok | 0.8516 | 0.9556 | 0.8176 | 17 | [log](out/autocollie/runs/2026-06-16T05-44-08_20260616T053735-filetypes-php_php_feat_kv_textenc_vocab.log) |
+| `cb95e9701e0fd401` | php_feat_lowbigram_tieredtri | ok | 0.8516 | 0.9556 | 0.8176 | 15 | [log](out/autocollie/runs/2026-06-16T05-44-27_20260616T053735-filetypes-php_php_feat_lowbigram_tieredtri.log) |
+| `2107bbf2d38a998b` | php_transfer_textmetrics_full | ok | 0.8528 | 0.9550 | 0.8263 | 13 | [log](out/autocollie/runs/2026-06-16T05-44-43_20260616T053735-filetypes-php_php_transfer_textmetrics_full.log) |
+| `94dab208286c8c4f` | php_gen_seed_search_k3 | ok | 0.8472 | 0.9443 | 0.8173 | 4 | [log](out/autocollie/runs/2026-06-16T05-44-57_20260616T053735-filetypes-php_php_gen_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_tune_v7`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control feature set with increased estimators and leaves to improve PR_AUC and recall@3FPM via better tree capacity.
+- **`php_train_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Upweight hard negatives to suppress benign tail scores, targeting recall@3FPM improvement while keeping PR_AUC flat.
+- **`php_feat_kv_textenc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable KV and text encoding vocabs to capture PHP-specific string and encoding patterns, aiming for PR_AUC gain.
+- **`php_feat_lowbigram_tieredtri`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor and add tiered trigrams to capture rarer PHP attack sequences, targeting recall@3FPM.
+- **`php_transfer_textmetrics_full`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Port text_metrics_full from docx route to capture PHP obfuscation and structural signals, targeting PR_AUC.
+- **`php_gen_seed_search_k3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Seed search on control features to reduce variance and stabilize recall@3FPM gains across different RNG splits.
+
+</details>
+

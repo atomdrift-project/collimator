@@ -866,3 +866,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T045437-general` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d3d3d646fe5ccdde` | inherit_from_filetypes_json_1e3933ad | ok | 0.9979 | 0.9977 | 0.9662 | 301 | [log](out/autocollie/runs/2026-06-16T05-02-11_20260616T045437-general_inherit_from_filetypes_json_1e3933ad.log) |
+| `7602db07b235882d` | ctrl_best_feat_train_tweak | ok | 0.9727 | 0.9664 | 0.8999 | 146 | [log](out/autocollie/runs/2026-06-16T05-07-12_20260616T045437-general_ctrl_best_feat_train_tweak.log) |
+| `bf5838c5c0125b39` | feat_kv_vocab_split | ok | 0.9745 | 0.9684 | 0.9002 | 88 | [log](out/autocollie/runs/2026-06-16T05-09-38_20260616T045437-general_feat_kv_vocab_split.log) |
+| `8e9ec599b3125850` | feat_text_enc_line_buckets | ok | 0.9732 | 0.9669 | 0.9031 | 66 | [log](out/autocollie/runs/2026-06-16T05-11-07_20260616T045437-general_feat_text_enc_line_buckets.log) |
+| `f898c00b8d8aa800` | feat_symbol_vocab_bigrams | ok | 0.9745 | 0.9684 | 0.9002 | 78 | [log](out/autocollie/runs/2026-06-16T05-12-13_20260616T045437-general_feat_symbol_vocab_bigrams.log) |
+| `f38a6f46f84e232b` | train_hardneg_tail_recall | ok | 0.9815 | 0.9774 | 0.9032 | 10 | [log](out/autocollie/runs/2026-06-16T05-13-30_20260616T045437-general_train_hardneg_tail_recall.log) |
+| `c481275f3f4076d3` | gen_kv_seed_search_3 | ok | 0.9739 | 0.9679 | 0.8713 | 78 | [log](out/autocollie/runs/2026-06-16T05-13-41_20260616T045437-general_gen_kv_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_feat_train_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set with deeper trees and lower LR to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`feat_kv_vocab_split`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab and value splitting to capture fine-grained key-value signal, aiming to boost recall@3 FP/M by distinguishing malicious configs from benign ones.
+- **`feat_text_enc_line_buckets`** `EXP_ESTIMATORS=250 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Add text encoding and line length buckets to improve ROC_AUC by capturing document obfuscation patterns in the general corpus.
+- **`feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol vocab and bigrams to catch co-occurrence patterns, targeting PR_AUC gains by better separating malicious imports from benign ones.
+- **`train_hardneg_tail_recall`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Apply hard negative mining to push benign samples further down the ranking, aiming to increase recall@3 FP/M without hurting PR_AUC.
+- **`gen_kv_seed_search_3`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed search on KV vocab config to reduce variance and stabilize PR_AUC gains across different data splits.
+
+</details>
+

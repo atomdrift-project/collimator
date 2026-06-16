@@ -686,3 +686,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filetypes-tar` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `809b93a511734463` | inherit_from_filetypes_json_1e3933ad | ok | 0.9993 | 0.9994 | 0.9781 | 100 | [log](out/autocollie/runs/2026-06-16T05-03-33_20260616T045437-filetypes-tar_inherit_from_filetypes_json_1e3933ad.log) |
+| `1a41f846409a23e2` | tar_control_hardneg_lr003 | ok | 0.9920 | 0.9937 | 0.9782 | 77 | [log](out/autocollie/runs/2026-06-16T05-05-17_20260616T045437-filetypes-tar_tar_control_hardneg_lr003.log) |
+| `7e23942182766624` | tar_transfer_xml_bigrams | ok | 0.9929 | 0.9949 | 0.9812 | 37 | [log](out/autocollie/runs/2026-06-16T05-06-39_20260616T045437-filetypes-tar_tar_transfer_xml_bigrams.log) |
+| `6e52b65b784e8a85` | tar_feat_kv_vocab_lowfreq | ok | 0.9929 | 0.9949 | 0.9812 | 47 | [log](out/autocollie/runs/2026-06-16T05-07-18_20260616T045437-filetypes-tar_tar_feat_kv_vocab_lowfreq.log) |
+| `689d3a216992e4c5` | tar_feat_textmetrics_encoding | ok | 0.9927 | 0.9945 | 0.9781 | 36 | [log](out/autocollie/runs/2026-06-16T05-08-10_20260616T045437-filetypes-tar_tar_feat_textmetrics_encoding.log) |
+| `5641b4194e5c0e9c` | tar_exploit_dart_reg | ok | 0.9906 | 0.9920 | 0.9623 | 3 | [log](out/autocollie/runs/2026-06-16T05-08-48_20260616T045437-filetypes-tar_tar_exploit_dart_reg.log) |
+| `22477cb3c7dcd6e4` | tar_gen_seedsearch_k3 | ok | 0.9931 | 0.9948 | 0.9845 | 5 | [log](out/autocollie/runs/2026-06-16T05-08-55_20260616T045437-filetypes-tar_tar_gen_seedsearch_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_control_hardneg_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Aims to improve PR_AUC by refining hard-negative weighting and lowering LR to stabilize tail ranking without changing features.
+- **`tar_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by capturing rarer bigram patterns from XML transfer success while removing noisy cluster features.
+- **`tar_feat_kv_vocab_lowfreq`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by exposing the model to low-frequency key-value pairs that often signal malicious payloads in archives.
+- **`tar_feat_textmetrics_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding structural text metrics and encoding signals that help distinguish obfuscated malicious scripts inside tars.
+- **`tar_exploit_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and PR_AUC by using DART's dropout regularization to reduce overfitting on the small tar corpus.
+- **`tar_gen_seedsearch_k3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize recall@3FPM by averaging across 3 seeds to filter out seed-driven variance in the tail region.
+
+</details>
+

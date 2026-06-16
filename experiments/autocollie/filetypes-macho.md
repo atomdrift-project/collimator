@@ -946,3 +946,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T092210-filetypes-macho` — 2026-06-16T09:22:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `549a156efcf3716c` | inherit_from_filetypes_json_1e3933ad | ok | 0.9962 | 0.9992 | 0.9710 | 27 | [log](out/autocollie/runs/2026-06-16T09-29-03_20260616T092210-filetypes-macho_inherit_from_filetypes_json_1e3933ad.log) |
+| `052d1c5ae49f371b` | macho_control_hardneg_tune | ok | 0.9963 | 0.9992 | 0.9727 | 24 | [log](out/autocollie/runs/2026-06-16T09-29-37_20260616T092210-filetypes-macho_macho_control_hardneg_tune.log) |
+| `3bff055d708247ce` | macho_symbol_vocab_bigrams | ok | 0.9962 | 0.9992 | 0.9766 | 39 | [log](out/autocollie/runs/2026-06-16T09-30-05_20260616T092210-filetypes-macho_macho_symbol_vocab_bigrams.log) |
+| `fce0ad59f7aaae00` | macho_low_freq_ngrams | ok | 0.9964 | 0.9992 | 0.9710 | 30 | [log](out/autocollie/runs/2026-06-16T09-30-45_20260616T092210-filetypes-macho_macho_low_freq_ngrams.log) |
+| `4f865d2a93ef2cc0` | macho_abl_extreme_blindfold | ok | 0.9958 | 0.9991 | 0.9738 | 35 | [log](out/autocollie/runs/2026-06-16T09-31-16_20260616T092210-filetypes-macho_macho_abl_extreme_blindfold.log) |
+| `7aeade325356387a` | macho_transfer_kv_vocab_split | ok | 0.9962 | 0.9992 | 0.9766 | 31 | [log](out/autocollie/runs/2026-06-16T09-31-51_20260616T092210-filetypes-macho_macho_transfer_kv_vocab_split.log) |
+| `03a879e0521d04ca` | macho_seed_ensemble_generalization | ok | 0.9967 | 0.9993 | 0.9741 | 7 | [log](out/autocollie/runs/2026-06-16T09-32-24_20260616T092210-filetypes-macho_macho_seed_ensemble_generalization.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_hardneg_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline with tuned hard-negative sampling to improve recall@3FPM by better separating borderline benigns from malware.
+- **`macho_symbol_vocab_bigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 …` — Enables symbol vocab and bigrams to capture Mach-O import co-occurrence patterns, targeting PR_AUC improvement by distinguishing malicious framework usage from benign libraries.
+- **`macho_low_freq_ngrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lowers bigram and tiered trigram frequency floors to include rarer but high-signal patterns, aiming to boost recall@3FPM by catching novel obfuscation.
+- **`macho_abl_extreme_blindfold`** `EXP_BLINDFOLD=0 EXP_ESTIMATORS=250 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disables extreme and blindfold features to reduce noise and overfitting, targeting improved ROC_AUC and more stable tail ranking while keeping PR_AUC flat.
+- **`macho_transfer_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfers KV vocab with value splitting from archive routes to capture Mach-O metadata structures, targeting PR_AUC gain via richer metadata signal.
+- **`macho_seed_ensemble_generalization`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Uses seed search with ensemble averaging to reduce variance and stabilize recall@3FPM, ensuring signal is robust to RNG initialization.
+
+</details>
+

@@ -734,3 +734,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filegroups-media` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f24f1d5732c983ac` | inherit_from_filetypes_json_1e3933ad | ok | 0.9707 | 0.9767 | 0.8844 | 24 | [log](out/autocollie/runs/2026-06-16T05-02-21_20260616T045437-filegroups-media_inherit_from_filetypes_json_1e3933ad.log) |
+| `ac5a829778ecef39` | media_control_train_opt | ok | 0.3036 | 0.7273 | 0.1558 | 25 | [log](out/autocollie/runs/2026-06-16T05-02-49_20260616T045437-filegroups-media_media_control_train_opt.log) |
+| `12f694827013363a` | media_text_metrics_kv_vocab | ok | 0.2973 | 0.7160 | 0.1572 | 38 | [log](out/autocollie/runs/2026-06-16T05-03-21_20260616T045437-filegroups-media_media_text_metrics_kv_vocab.log) |
+| `317c9a178a79445a` | media_transfer_lowbigram_noclusters | ok | 0.2914 | 0.7163 | 0.1558 | 38 | [log](out/autocollie/runs/2026-06-16T05-04-01_20260616T045437-filegroups-media_media_transfer_lowbigram_noclusters.log) |
+| `7345aae3149df021` | media_abl_extreme_off | ok | 0.3099 | 0.7412 | 0.1572 | 30 | [log](out/autocollie/runs/2026-06-16T05-04-41_20260616T045437-filegroups-media_media_abl_extreme_off.log) |
+| `df602360d70d331a` | media_seed_search_stabilize | ok | 0.2902 | 0.6904 | 0.2943 | 10 | [log](out/autocollie/runs/2026-06-16T05-05-13_20260616T045437-filegroups-media_media_seed_search_stabilize.log) |
+| `4dab1391f7c5ac33` | media_hardneg_scalepos_opt | ok | 0.2528 | 0.5630 | 0.1561 | 18 | [log](out/autocollie/runs/2026-06-16T05-05-27_20260616T045437-filegroups-media_media_hardneg_scalepos_opt.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_train_opt`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best recent feature_env to establish a stable baseline while tuning num_leaves and learning_rate to improve PR_AUC via better tree complexity control.
+- **`media_text_metrics_kv_vocab`** `EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and metadata patterns, aiming to lift PR_AUC by adding high-signal structural features for media files.
+- **`media_transfer_lowbigram_noclusters`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Ports sister-route success by lowering bigram_min_freq to 50 and disabling clusters to reduce noise, targeting PR_AUC gains from finer-grained n-gram signal.
+- **`media_abl_extreme_off`** `EXP_ESTIMATORS=200 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables extreme_features to test if removing tail-heavy noisy features stabilizes ranking and improves PR_AUC without hurting recall.
+- **`media_seed_search_stabilize`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Uses seed_search_k=3 on the control feature set to average out seed variance and improve recall@3FPM consistency at the strict-FP operating point.
+- **`media_hardneg_scalepos_opt`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Tunes hard_negative_fraction and scale_pos_weight_mult to 0.75 to suppress benign false positives, directly targeting recall@3FPM improvement.
+
+</details>
+

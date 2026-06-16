@@ -1180,3 +1180,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T092210-filetypes-python` — 2026-06-16T09:22:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8bdc8fb57a82aeba` | inherit_from_filetypes_json_1e3933ad | ok | 0.9920 | 0.9942 | 0.9579 | 52 | [log](out/autocollie/runs/2026-06-16T09-29-58_20260616T092210-filetypes-python_inherit_from_filetypes_json_1e3933ad.log) |
+| `b0b5ed49de4fb2d8` | py_ctrl_leaves128_est300 | ok | 0.8677 | 0.9137 | 0.8061 | 40 | [log](out/autocollie/runs/2026-06-16T09-31-00_20260616T092210-filetypes-python_py_ctrl_leaves128_est300.log) |
+| `002306e19523745a` | py_train_hardneg_01_10 | ok | 0.8761 | 0.9222 | 0.8227 | 8 | [log](out/autocollie/runs/2026-06-16T09-31-43_20260616T092210-filetypes-python_py_train_hardneg_01_10.log) |
+| `2b503fb220bd4a66` | py_feat_kv_textenc_vocab | ok | 0.8677 | 0.9137 | 0.8061 | 31 | [log](out/autocollie/runs/2026-06-16T09-31-52_20260616T092210-filetypes-python_py_feat_kv_textenc_vocab.log) |
+| `b35c2f534d652b85` | py_xfer_lowbigram_tieredtri | ok | 0.8677 | 0.9137 | 0.8061 | 32 | [log](out/autocollie/runs/2026-06-16T09-32-24_20260616T092210-filetypes-python_py_xfer_lowbigram_tieredtri.log) |
+| `457214e71eb18a00` | py_abl_extreme_off | ok | 0.8689 | 0.9123 | 0.8059 | 30 | [log](out/autocollie/runs/2026-06-16T09-32-57_20260616T092210-filetypes-python_py_abl_extreme_off.log) |
+| `0dcfac53f7ec307c` | py_gen_seed_search_k3 | ok | 0.8701 | 0.9141 | 0.7237 | 11 | [log](out/autocollie/runs/2026-06-16T09-33-28_20260616T092210-filetypes-python_py_gen_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`py_ctrl_leaves128_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control baseline with deeper trees and more estimators to improve PR_AUC ranking without changing features.
+- **`py_train_hardneg_01_10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Upweight hard negatives to push benign tail down, targeting recall@3FPM while preserving PR_AUC.
+- **`py_feat_kv_textenc_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable KV and text encoding vocabs to capture Python-specific string patterns and encoding artifacts, aiming to boost PR_AUC.
+- **`py_xfer_lowbigram_tieredtri`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Transfer low-frequency bigram and tiered trigram strategy from XML/Perl to capture rarer Python attack patterns, targeting PR_AUC.
+- **`py_abl_extreme_off`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Disable extreme features to reduce noise and overfitting, aiming to stabilize PR_AUC and improve recall@3FPM.
+- **`py_gen_seed_search_k3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Run seed search on the control feature set to average out seed variance and verify PR_AUC stability.
+
+</details>
+

@@ -600,3 +600,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filetypes-xls` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c17e151ab758b601` | inherit_from_filetypes_json_1e3933ad | ok | 0.9998 | 0.9979 | 0.9886 | 27 | [log](out/autocollie/runs/2026-06-16T05-02-21_20260616T045437-filetypes-xls_inherit_from_filetypes_json_1e3933ad.log) |
+| `e99ab30097dc0279` | xls_control_train_tune_v5 | ok | 0.9965 | 0.9922 | 0.9810 | 25 | [log](out/autocollie/runs/2026-06-16T05-02-51_20260616T045437-filetypes-xls_xls_control_train_tune_v5.log) |
+| `0d703861b2842b8d` | xls_train_hardneg_tail | ok | 0.9971 | 0.9938 | 0.9783 | 7 | [log](out/autocollie/runs/2026-06-16T05-03-19_20260616T045437-filetypes-xls_xls_train_hardneg_tail.log) |
+| `73ec76d703be8c6c` | xls_feat_textenc_metrics_kv | ok | 0.9964 | 0.9921 | 0.9808 | 36 | [log](out/autocollie/runs/2026-06-16T05-03-30_20260616T045437-filetypes-xls_xls_feat_textenc_metrics_kv.log) |
+| `f328bc93f386aa4b` | xls_feat_lowfreq_ngrams | ok | 0.9964 | 0.9921 | 0.9808 | 31 | [log](out/autocollie/runs/2026-06-16T05-04-10_20260616T045437-filetypes-xls_xls_feat_lowfreq_ngrams.log) |
+| `d3a8187631046d6a` | xls_transfer_xml_tiered | ok | 0.9964 | 0.9921 | 0.9808 | 30 | [log](out/autocollie/runs/2026-06-16T05-04-45_20260616T045437-filetypes-xls_xls_transfer_xml_tiered.log) |
+| `19a9812fef9d806b` | xls_seed_search_ensemble | ok | 0.9964 | 0.9919 | 0.9807 | 60 | [log](out/autocollie/runs/2026-06-16T05-05-19_20260616T045437-filetypes-xls_xls_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xls_control_train_tune_v5`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control baseline with increased num_leaves and estimators to improve PR_AUC by allowing deeper decision boundaries on the existing feature matrix.
+- **`xls_train_hardneg_tail`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Hard-negative mining with positive down-weighting targets recall@3 FP/M by sharpening the decision boundary near the benign/malware threshold.
+- **`xls_feat_textenc_metrics_kv`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies, aiming to lift PR_AUC by adding high-signal structural features for XLS files.
+- **`xls_feat_lowfreq_ngrams`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 EXP_TRIGRAM_MIN_FREQ=10` — Lowers n-gram frequency floors and expands vocab caps to capture rare malicious patterns, targeting PR_AUC gains from improved rank signal in the tail.
+- **`xls_transfer_xml_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Transfers tiered critical trigrams from high-performing sister routes to improve PR_AUC by focusing n-gram signal on high-severity findings while disabling noisy cluster features.
+- **`xls_seed_search_ensemble`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Averages predictions across 3 seeds to reduce variance and stabilize recall@3 FP/M, testing if recent feature gains generalize across data drift.
+
+</details>
+

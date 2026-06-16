@@ -696,3 +696,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T091458-filetypes-pkg-info` — 2026-06-16T09:14:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `31b5f2e2ab110c42` | inherit_from_filetypes_json_1e3933ad | ok | 0.9927 | 0.5000 | 0.9963 | 11 | [log](out/autocollie/runs/2026-06-16T09-24-22_20260616T091458-filetypes-pkg-info_inherit_from_filetypes_json_1e3933ad.log) |
+| `28311359fedd2818` | pkginfo_control_train_tweak | ok | 0.9948 | 0.9772 | 0.9858 | 12 | [log](out/autocollie/runs/2026-06-16T09-24-37_20260616T091458-filetypes-pkg-info_pkginfo_control_train_tweak.log) |
+| `118036d2866bed35` | pkginfo_kv_vocab_split_high | ok | 0.9948 | 0.9778 | 0.9858 | 29 | [log](out/autocollie/runs/2026-06-16T09-24-51_20260616T091458-filetypes-pkg-info_pkginfo_kv_vocab_split_high.log) |
+| `2648de63b15401a2` | pkginfo_lowbigram_tiered | ok | 0.9948 | 0.9814 | 0.9858 | 20 | [log](out/autocollie/runs/2026-06-16T09-25-21_20260616T091458-filetypes-pkg-info_pkginfo_lowbigram_tiered.log) |
+| `89026579bc52787a` | pkginfo_hardneg_upweight | ok | 0.9966 | 0.9838 | 0.9858 | 2 | [log](out/autocollie/runs/2026-06-16T09-25-42_20260616T091458-filetypes-pkg-info_pkginfo_hardneg_upweight.log) |
+| `e1f1409354f696e2` | pkginfo_transfer_xml_bigrams | ok | 0.9948 | 0.9778 | 0.9858 | 16 | [log](out/autocollie/runs/2026-06-16T09-25-46_20260616T091458-filetypes-pkg-info_pkginfo_transfer_xml_bigrams.log) |
+| `0efbad8451c2fd71` | pkginfo_seed_ensemble_3 | ok | 0.9964 | 0.9836 | 0.9858 | 4 | [log](out/autocollie/runs/2026-06-16T09-26-04_20260616T091458-filetypes-pkg-info_pkginfo_seed_ensemble_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control baseline with deeper trees and lower LR to reduce overfitting and improve PR_AUC stability.
+- **`pkginfo_kv_vocab_split_high`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab and splits values to capture granular package metadata, targeting PR_AUC gains from finer-grained signal.
+- **`pkginfo_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=2 EXP_TIERED_BIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor to include rare package dependency patterns, aiming to boost recall@3FPM without hurting ROC_AUC.
+- **`pkginfo_hardneg_upweight`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Applies hard-negative upweighting to sharpen the decision boundary at low FPR, targeting recall@3FPM improvement.
+- **`pkginfo_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfers low-frequency bigram strategy from xml route to capture subtle pkg metadata co-occurrences, targeting PR_AUC.
+- **`pkginfo_seed_ensemble_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Uses seed search and ensemble averaging to stabilize recall@3FPM gains and mitigate seed-driven variance.
+
+</details>
+

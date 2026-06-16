@@ -852,3 +852,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T045437-filetypes-java_class` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b568c66f05de7470` | inherit_from_filetypes_json_1e3933ad | ok | 0.9853 | 0.9972 | 0.9224 | 30 | [log](out/autocollie/runs/2026-06-16T05-03-01_20260616T045437-filetypes-java_class_inherit_from_filetypes_json_1e3933ad.log) |
+| `d7116eb5994cd03a` | java_class_control_train_tune | ok | 0.8982 | 0.9469 | 0.8729 | 43 | [log](out/autocollie/runs/2026-06-16T05-03-57_20260616T045437-filetypes-java_class_java_class_control_train_tune.log) |
+| `f8db950b6d4fed76` | java_class_kv_vocab_expand | ok | 0.8980 | 0.9551 | 0.8729 | 28 | [log](out/autocollie/runs/2026-06-16T05-04-46_20260616T045437-filetypes-java_class_java_class_kv_vocab_expand.log) |
+| `550aed2a1c23a5ff` | java_class_symbol_trigrams_low_freq | ok | 0.8984 | 0.9505 | 0.8710 | 28 | [log](out/autocollie/runs/2026-06-16T05-05-17_20260616T045437-filetypes-java_class_java_class_symbol_trigrams_low_freq.log) |
+| `ee8de5d5b64b525f` | java_class_textenc_metrics_full | ok | 0.8980 | 0.9551 | 0.8729 | 29 | [log](out/autocollie/runs/2026-06-16T05-05-49_20260616T045437-filetypes-java_class_java_class_textenc_metrics_full.log) |
+| `5be7362b3b056ed9` | java_class_hardneg_tail_recall | ok | 0.8989 | 0.9652 | 0.8803 | 5 | [log](out/autocollie/runs/2026-06-16T05-06-20_20260616T045437-filetypes-java_class_java_class_hardneg_tail_recall.log) |
+| `758b2a5d3701a7c9` | java_class_scalepos_downweight | ok | 0.8985 | 0.9621 | 0.8734 | 7 | [log](out/autocollie/runs/2026-06-16T05-06-28_20260616T045437-filetypes-java_class_java_class_scalepos_downweight.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_train_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating the best feature_env to ensure matrix cache hits; adjusts num_leaves and learning_rate to improve PR_AUC by refining the tree split boundaries.
+- **`java_class_kv_vocab_expand`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with a higher cap to capture discriminative key-value metadata patterns, aiming to boost PR_AUC by adding signal for malicious configuration structures.
+- **`java_class_symbol_trigrams_low_freq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and enables symbol_vocab to catch rarer import co-occurrences, targeting PR_AUC gains from finer-grained structural patterns in bytecode.
+- **`java_class_textenc_metrics_full`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full to extract string constant and entropy signals from embedded resources, aiming to improve recall@3FPM by surfacing obfuscated payloads.
+- **`java_class_hardneg_tail_recall`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Applies hard_negative_fraction and weight to focus gradient updates on confusing benign samples, aiming to lift recall@3FPM by sharpening the decision boundary at the tail.
+- **`java_class_scalepos_downweight`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Reduces scale_pos_weight_mult to 0.75 to penalize false positives more heavily during training, targeting improved recall@3FPM at the strict deployed operating point.
+
+</details>
+

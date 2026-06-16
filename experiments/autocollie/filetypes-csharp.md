@@ -818,3 +818,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T090757-filetypes-csharp` — 2026-06-16T09:07:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cc774fe31cf482ee` | inherit_from_filetypes_json_1e3933ad | ok | 0.9841 | 0.9910 | 0.9224 | 7 | [log](out/autocollie/runs/2026-06-16T09-15-26_20260616T090757-filetypes-csharp_inherit_from_filetypes_json_1e3933ad.log) |
+| `7e11de4cdf913e07` | csharp_control_hardneg_tune | ok | 0.5114 | 0.9063 | 0.3830 | 11 | [log](out/autocollie/runs/2026-06-16T09-15-40_20260616T090757-filetypes-csharp_csharp_control_hardneg_tune.log) |
+| `c8edc4b7df5c1707` | csharp_feat_kv_vocab_split | ok | 0.4936 | 0.9066 | 0.3808 | 11 | [log](out/autocollie/runs/2026-06-16T09-15-52_20260616T090757-filetypes-csharp_csharp_feat_kv_vocab_split.log) |
+| `15ddfa98235336af` | csharp_feat_text_metrics_obf | ok | 0.4908 | 0.9022 | 0.3779 | 11 | [log](out/autocollie/runs/2026-06-16T09-16-06_20260616T090757-filetypes-csharp_csharp_feat_text_metrics_obf.log) |
+| `6e511f38444f2078` | csharp_feat_symbol_bigrams | ok | 0.4936 | 0.9066 | 0.3808 | 10 | [log](out/autocollie/runs/2026-06-16T09-16-19_20260616T090757-filetypes-csharp_csharp_feat_symbol_bigrams.log) |
+| `5c3378b4654000aa` | csharp_train_dart_extratrees | ok | 0.3985 | 0.8576 | 0.3603 | 3 | [log](out/autocollie/runs/2026-06-16T09-16-30_20260616T090757-filetypes-csharp_csharp_train_dart_extratrees.log) |
+| `6009f59bb984e2d2` | csharp_seed_search_tiered | ok | 0.4903 | 0.9063 | 0.4406 | 15 | [log](out/autocollie/runs/2026-06-16T09-16-35_20260616T090757-filetypes-csharp_csharp_seed_search_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_hardneg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature set and tune hard_negative_weight and scale_pos_weight_mult to boost recall@3FPM while keeping PR_AUC flat.
+- **`csharp_feat_kv_vocab_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 …` — Enable kv_vocab and kv_value_split to extract structured metadata from C# assemblies/configs, aiming to improve PR_AUC by adding high-signal key-value pairs.
+- **`csharp_feat_text_metrics_obf`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable text_metrics_full and line_length_buckets to capture obfuscation patterns in C# scripts, targeting PR_AUC gains from structural text anomalies.
+- **`csharp_feat_symbol_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 …` — Activate symbol_bigrams to model co-occurring C# API calls, aiming to lift recall@3FPM by identifying malicious method chains.
+- **`csharp_train_dart_extratrees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting with extra_trees and higher reg_lambda to reduce overfitting and improve recall@3FPM at the strict-FP tail.
+- **`csharp_seed_search_tiered`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 …` — Run seed_search_k=3 on a tiered_crit_bigrams config to average out seed variance and stabilize PR_AUC gains across seeds.
+
+</details>
+

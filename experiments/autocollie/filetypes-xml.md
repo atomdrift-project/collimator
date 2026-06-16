@@ -806,3 +806,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filetypes-xml` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `68d10ee5738dc722` | inherit_from_filetypes_json_1e3933ad | ok | 0.9982 | 0.9995 | 0.9677 | 14 | [log](out/autocollie/runs/2026-06-16T05-02-40_20260616T045437-filetypes-xml_inherit_from_filetypes_json_1e3933ad.log) |
+| `8aefbd68601881e9` | xml_control_train_v1 | ok | 0.1226 | 0.5448 | 0.1411 | 23 | [log](out/autocollie/runs/2026-06-16T05-02-59_20260616T045437-filetypes-xml_xml_control_train_v1.log) |
+| `6e1071562b0245e1` | xml_exploit_hardneg_scalepos | ok | 0.2149 | 0.6664 | 0.1434 | 29 | [log](out/autocollie/runs/2026-06-16T05-03-30_20260616T045437-filetypes-xml_xml_exploit_hardneg_scalepos.log) |
+| `68ba555487a5001c` | xml_kv_text_metrics_vocab | ok | 0.1184 | 0.5397 | 0.1411 | 37 | [log](out/autocollie/runs/2026-06-16T05-04-02_20260616T045437-filetypes-xml_xml_kv_text_metrics_vocab.log) |
+| `3f0475b65cd4bdaa` | xml_ngram_rare_patterns | ok | 0.1083 | 0.5396 | 0.1411 | 30 | [log](out/autocollie/runs/2026-06-16T05-04-41_20260616T045437-filetypes-xml_xml_ngram_rare_patterns.log) |
+| `4d50fa395a8bbbaf` | xml_transfer_script_route | ok | 0.2067 | 0.6283 | 0.1474 | 32 | [log](out/autocollie/runs/2026-06-16T05-05-13_20260616T045437-filetypes-xml_xml_transfer_script_route.log) |
+| `308b36d26b9402a2` | xml_seed_search_ensemble | ok | 0.1258 | 0.5448 | 0.0886 | 11 | [log](out/autocollie/runs/2026-06-16T05-05-50_20260616T045437-filetypes-xml_xml_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_train_v1`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and lower LR to improve PR_AUC by reducing overfitting on noisy XML patterns.
+- **`xml_exploit_hardneg_scalepos`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Adds hard-negative mining and lowers positive weight to sharpen the decision boundary, targeting recall@3 FP/M improvement.
+- **`xml_kv_text_metrics_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture XML attribute structures and document obfuscation signals, aiming to lift PR_AUC.
+- **`xml_ngram_rare_patterns`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TIERED_BIGRAM_MIN_FREQ=20 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000 …` — Lowers bigram/trigram frequency floors to capture rarer XML structural motifs, targeting recall@3 FP/M gains on subtle malware.
+- **`xml_transfer_script_route`** `EXP_ATTACK_NGRAMS=1 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Ports strong script-route config disabling noisy clusters and raising bigram floor to reduce FP noise, aiming to improve PR_AUC.
+- **`xml_seed_search_ensemble`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Applies seed search and ensemble averaging to the best recent config to stabilize variance and boost recall@3 FP/M reliability.
+
+</details>
+

@@ -898,3 +898,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T100054-filetypes-png` — 2026-06-16T10:00:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `12d978f37cc73c73` | inherit_from_filetypes_json_1e3933ad | ok | 0.9662 | 0.9372 | 0.9254 | 5 | [log](out/autocollie/runs/2026-06-16T10-10-16_20260616T100054-filetypes-png_inherit_from_filetypes_json_1e3933ad.log) |
+| `45632b93e8b54d0f` | png_ctrl_baseline_reg | ok | 0.2544 | 0.6094 | 0.1176 | 10 | [log](out/autocollie/runs/2026-06-16T10-10-23_20260616T100054-filetypes-png_png_ctrl_baseline_reg.log) |
+| `d4652570efa9bacd` | png_exploit_hardneg_tail | ok | 0.2184 | 0.6026 | 0.1180 | 1 | [log](out/autocollie/runs/2026-06-16T10-10-35_20260616T100054-filetypes-png_png_exploit_hardneg_tail.log) |
+| `0646cccd899c57b5` | png_feat_kv_vocab_metadata | ok | 0.2390 | 0.5963 | 0.1175 | 9 | [log](out/autocollie/runs/2026-06-16T10-10-37_20260616T100054-filetypes-png_png_feat_kv_vocab_metadata.log) |
+| `65c2d7b203010d3a` | png_feat_textmetrics_chunks | ok | 0.2390 | 0.5963 | 0.1175 | 8 | [log](out/autocollie/runs/2026-06-16T10-10-46_20260616T100054-filetypes-png_png_feat_textmetrics_chunks.log) |
+| `3e0591e22d2bb368` | png_transfer_lowbigram_tiered | ok | 0.2481 | 0.6695 | 0.1176 | 8 | [log](out/autocollie/runs/2026-06-16T10-10-55_20260616T100054-filetypes-png_png_transfer_lowbigram_tiered.log) |
+| `d7b2b8daaf963360` | png_gen_seed_search_3 | ok | 0.1974 | 0.5529 | 0.1107 | 2 | [log](out/autocollie/runs/2026-06-16T10-11-04_20260616T100054-filetypes-png_png_gen_seed_search_3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_baseline_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate the best recent feature set to establish a stable PR_AUC baseline while tuning regularization to prevent overfitting on the PNG corpus.
+- **`png_exploit_hardneg_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply hard-negative mining to the control feature set to improve recall@3FPM by forcing the model to distinguish subtle benign PNG artifacts from malware.
+- **`png_feat_kv_vocab_metadata`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture PNG metadata key-value pairs, aiming to boost PR_AUC by adding structured signal from EXIF and chunk headers.
+- **`png_feat_textmetrics_chunks`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to extract statistical properties of text chunks, targeting PR_AUC gains from obfuscation or payload encoding patterns.
+- **`png_transfer_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Port low-frequency bigram and tiered trigram settings from XML to capture rare PNG chunk sequences, aiming to improve recall@3FPM without hurting ROC_AUC.
+- **`png_gen_seed_search_3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 on the control feature set to average out RNG variance and stabilize PR_AUC at the strict-FP tail.
+
+</details>
+

@@ -664,3 +664,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T085209-filegroups-scripts` — 2026-06-16T08:52:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `622dcaef385f1b6f` | inherit_from_filetypes_json_1e3933ad | ok | 0.9961 | 0.9956 | 0.9683 | 53 | [log](out/autocollie/runs/2026-06-16T08-59-46_20260616T085209-filegroups-scripts_inherit_from_filetypes_json_1e3933ad.log) |
+| `6134a8094ec038fc` | scripts_control_hardneg_lr | ok | 0.9096 | 0.9110 | 0.6142 | 35 | [log](out/autocollie/runs/2026-06-16T09-01-03_20260616T085209-filegroups-scripts_scripts_control_hardneg_lr.log) |
+| `35912b095e00ddd7` | scripts_textenc_metrics_full | ok | 0.8869 | 0.8883 | 0.6146 | 32 | [log](out/autocollie/runs/2026-06-16T09-01-43_20260616T085209-filegroups-scripts_scripts_textenc_metrics_full.log) |
+| `8e7a1a2edae928f2` | scripts_kv_vocab_split | ok | 0.9124 | 0.9152 | 0.6148 | 35 | [log](out/autocollie/runs/2026-06-16T09-02-16_20260616T085209-filegroups-scripts_scripts_kv_vocab_split.log) |
+| `e9ff88e0fb88bc70` | scripts_transfer_lowbigram_hardneg | ok | 0.9062 | 0.9107 | 0.6174 | 31 | [log](out/autocollie/runs/2026-06-16T09-02-53_20260616T085209-filegroups-scripts_scripts_transfer_lowbigram_hardneg.log) |
+| `f0f1d65eab14a89b` | scripts_seed_search_textenc | ok | 0.9045 | 0.9116 | 0.9115 | 9 | [log](out/autocollie/runs/2026-06-16T09-03-25_20260616T085209-filegroups-scripts_scripts_seed_search_textenc.log) |
+| `e98550b465bf9faa` | scripts_abl_blindfold_threshold | ok | 0.9124 | 0.9152 | 0.6159 | 32 | [log](out/autocollie/runs/2026-06-16T09-03-34_20260616T085209-filegroups-scripts_scripts_abl_blindfold_threshold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_hardneg_lr`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC feature set while tuning hard_negative_weight and learning_rate to improve recall@3FPM without hurting PR_AUC.
+- **`scripts_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation and structural script signals, targeting PR_AUC gains on complex script malware.
+- **`scripts_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activate kv_vocab and kv_value_split to extract granular key-value signals from script configs, aiming to boost recall@3FPM on dropper/packer scripts.
+- **`scripts_transfer_lowbigram_hardneg`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Port perl/xml low bigram_min_freq and hard negative weighting to scripts to capture rare malicious patterns, targeting PR_AUC improvement.
+- **`scripts_seed_search_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Stabilize recall@3FPM gains by averaging out seed variance across three independent training runs on the text_metrics_full config.
+- **`scripts_abl_blindfold_threshold`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=0.01 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Directly optimize recall@3FPM by switching threshold mode to max_recall_at_fpr and reducing feature noise from blindfold dropout.
+
+</details>
+

@@ -854,3 +854,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T095437-filegroups-portable` — 2026-06-16T09:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8305aff7097b9d40` | inherit_from_filetypes_json_1e3933ad | ok | 0.9853 | 0.9972 | 0.9224 | 13 | [log](out/autocollie/runs/2026-06-16T10-01-02_20260616T095437-filegroups-portable_inherit_from_filetypes_json_1e3933ad.log) |
+| `143f6560e52cad18` | ctrl_baseline_train_tune | ok | 0.8997 | 0.9618 | 0.8766 | 12 | [log](out/autocollie/runs/2026-06-16T10-01-22_20260616T095437-filegroups-portable_ctrl_baseline_train_tune.log) |
+| `710f6f96f69b8937` | train_hardneg_tail_recall | ok | 0.8979 | 0.9609 | 0.8879 | 2 | [log](out/autocollie/runs/2026-06-16T10-01-37_20260616T095437-filegroups-portable_train_hardneg_tail_recall.log) |
+| `825bf61aba57a2a6` | feat_lowbigram_tiered_trigrams | ok | 0.8984 | 0.9505 | 0.8710 | 10 | [log](out/autocollie/runs/2026-06-16T10-01-40_20260616T095437-filegroups-portable_feat_lowbigram_tiered_trigrams.log) |
+| `6ac35acaa67babb8` | feat_kv_vocab_split | ok | 0.8980 | 0.9551 | 0.8729 | 8 | [log](out/autocollie/runs/2026-06-16T10-01-50_20260616T095437-filegroups-portable_feat_kv_vocab_split.log) |
+| `4efe4d95ee9640f7` | feat_text_metrics_encoding | ok | 0.8980 | 0.9551 | 0.8729 | 11 | [log](out/autocollie/runs/2026-06-16T10-02-00_20260616T095437-filegroups-portable_feat_text_metrics_encoding.log) |
+| `daae26debbfaf02f` | abl_extreme_off_seed_search | ok | 0.8986 | 0.9532 | 0.8996 | 8 | [log](out/autocollie/runs/2026-06-16T10-02-12_20260616T095437-filegroups-portable_abl_extreme_off_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_baseline_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best feature env while tuning tree complexity to stabilize PR_AUC and reduce overfitting on the imbalanced corpus.
+- **`train_hardneg_tail_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Apply hard-negative upweighting to push borderline benigns lower in rank, directly targeting recall@3FPM improvement at the strict operating point.
+- **`feat_lowbigram_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Port sister-route success by lowering bigram frequency floor and enabling tiered trigrams to capture rarer malicious patterns, aiming to lift PR_AUC.
+- **`feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable kv_vocab and kv_value_split to extract granular key-value signal from structured payloads, targeting PR_AUC gains from finer feature resolution.
+- **`feat_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Activate text_metrics_full and text_encoding to capture obfuscation and structural text anomalies, aiming to improve PR_AUC.
+- **`abl_extreme_off_seed_search`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Disable extreme_features to reduce tail noise while using seed averaging to stabilize variance, targeting consistent PR_AUC and ROC_AUC.
+
+</details>
+

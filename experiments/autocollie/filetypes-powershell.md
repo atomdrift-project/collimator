@@ -867,3 +867,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T051654-filetypes-powershell` — 2026-06-16T05:16:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c1c2c9fab8060a1c` | inherit_from_filetypes_json_1e3933ad | ok | 0.9993 | 0.9963 | 0.9874 | 14 | [log](out/autocollie/runs/2026-06-16T05-23-40_20260616T051654-filetypes-powershell_inherit_from_filetypes_json_1e3933ad.log) |
+| `c2af4c83c96276f2` | ps_control_leaves128_lr003 | ok | 0.9920 | 0.9799 | 0.9544 | 18 | [log](out/autocollie/runs/2026-06-16T05-23-57_20260616T051654-filetypes-powershell_ps_control_leaves128_lr003.log) |
+| `9bc70fc43c58bb4b` | ps_feat_kv_vocab_15k | ok | 0.9927 | 0.9818 | 0.9539 | 14 | [log](out/autocollie/runs/2026-06-16T05-24-17_20260616T051654-filetypes-powershell_ps_feat_kv_vocab_15k.log) |
+| `27366157c0aff12d` | ps_feat_textenc_metrics_full | ok | 0.9926 | 0.9814 | 0.9554 | 13 | [log](out/autocollie/runs/2026-06-16T05-24-32_20260616T051654-filetypes-powershell_ps_feat_textenc_metrics_full.log) |
+| `6ebaa2005817d4ba` | ps_feat_lowbigram_100 | ok | 0.9925 | 0.9814 | 0.9545 | 13 | [log](out/autocollie/runs/2026-06-16T05-24-46_20260616T051654-filetypes-powershell_ps_feat_lowbigram_100.log) |
+| `80d1930dc0b01b26` | ps_train_dart_extra_trees_reg | ok | 0.9902 | 0.9756 | 0.9516 | 2 | [log](out/autocollie/runs/2026-06-16T05-25-00_20260616T051654-filetypes-powershell_ps_train_dart_extra_trees_reg.log) |
+| `c5619fca143baf42` | ps_seed_search_ensemble | ok | 0.9929 | 0.9825 | 0.9292 | 3 | [log](out/autocollie/runs/2026-06-16T05-25-03_20260616T051654-filetypes-powershell_ps_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_control_leaves128_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to stabilize PR_AUC and improve recall@3FPM by using deeper trees and lower learning rate on the proven feature set.
+- **`ps_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC gain by enabling kv_vocab with max 15000 and lower min_freq to capture malicious key-value patterns in PowerShell scripts.
+- **`ps_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_encoding and text_metrics_full to detect obfuscation and structural anomalies in script payloads.
+- **`ps_feat_lowbigram_100`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM improvement by lowering bigram_min_freq to 100 and raising bigram_max to 8000 to capture rarer but high-signal PowerShell command sequences.
+- **`ps_train_dart_extra_trees_reg`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and PR_AUC by applying dart boosting with extra_trees and reg_lambda=1.5 to reduce overfitting on noisy script samples.
+- **`ps_seed_search_ensemble`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC stability and recall@3FPM by using seed_search_k=3 with save_all_seeds=true to average out seed-driven variance on the baseline feature set.
+
+</details>
+

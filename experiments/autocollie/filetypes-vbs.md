@@ -820,3 +820,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T084500-filetypes-vbs` — 2026-06-16T08:45:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `798d38c97f467e26` | inherit_from_filetypes_json_1e3933ad | ok | 0.9906 | 0.8450 | 0.9820 | 16 | [log](out/autocollie/runs/2026-06-16T08-52-15_20260616T084500-filetypes-vbs_inherit_from_filetypes_json_1e3933ad.log) |
+| `1641548e327aaf0b` | vbs_control_hardneg_lr002 | ok | 0.9977 | 0.9926 | 0.9568 | 14 | [log](out/autocollie/runs/2026-06-16T08-52-36_20260616T084500-filetypes-vbs_vbs_control_hardneg_lr002.log) |
+| `557cad0d120232c0` | vbs_text_metrics_lowbigram | ok | 0.9966 | 0.9875 | 0.9583 | 16 | [log](out/autocollie/runs/2026-06-16T08-52-56_20260616T084500-filetypes-vbs_vbs_text_metrics_lowbigram.log) |
+| `318623c34a63c91e` | vbs_kv_vocab_tiered_trigrams | ok | 0.9965 | 0.9871 | 0.9580 | 14 | [log](out/autocollie/runs/2026-06-16T08-53-14_20260616T084500-filetypes-vbs_vbs_kv_vocab_tiered_trigrams.log) |
+| `c0bed61e814d3b2a` | vbs_transfer_xml_lowbigram | ok | 0.9966 | 0.9875 | 0.9583 | 13 | [log](out/autocollie/runs/2026-06-16T08-53-29_20260616T084500-filetypes-vbs_vbs_transfer_xml_lowbigram.log) |
+| `d634c63031cb4e64` | vbs_seed_search_ensemble | ok | 0.9976 | 0.9912 | 0.9655 | 4 | [log](out/autocollie/runs/2026-06-16T08-53-44_20260616T084500-filetypes-vbs_vbs_seed_search_ensemble.log) |
+| `0ef0be480ed6b5db` | vbs_ablation_extreme_reg | ok | 0.9964 | 0.9863 | 0.9579 | 13 | [log](out/autocollie/runs/2026-06-16T08-53-48_20260616T084500-filetypes-vbs_vbs_ablation_extreme_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg_lr002`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.02 …` — Control feature set with tuned hard negatives and lower LR to maximize recall@3FPM by focusing on difficult benign-malware boundaries.
+- **`vbs_text_metrics_lowbigram`** `EXP_BIGRAM_MAX=6000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding with lower bigram freq to capture script obfuscation signals, targeting PR_AUC.
+- **`vbs_kv_vocab_tiered_trigrams`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Expand KV vocab and enable tiered crit trigrams to improve ranking of malicious script structures, targeting PR_AUC.
+- **`vbs_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Transfer XML/Perl low-freq bigram strategy with cluster ablation to reduce noise and improve PR_AUC.
+- **`vbs_seed_search_ensemble`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 …` — Average over 3 seeds on strong feature set to stabilize recall@3FPM gains and reduce variance.
+- **`vbs_ablation_extreme_reg`** `EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_OBJECTIVE_TRIGRAMS=1 EXP_REG_LAMBDA=2 …` — Ablate extreme features and increase regularization to reduce overfitting, targeting stable ROC_AUC and PR_AUC.
+
+</details>
+

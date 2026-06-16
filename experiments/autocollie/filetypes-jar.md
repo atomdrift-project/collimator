@@ -716,3 +716,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filetypes-jar` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a178136e91f0feb2` | inherit_from_filetypes_json_1e3933ad | ok | 0.9899 | 0.9791 | 0.9256 | 160 | [log](out/autocollie/runs/2026-06-16T05-03-41_20260616T045437-filetypes-jar_inherit_from_filetypes_json_1e3933ad.log) |
+| `5b691ceb49a08b1f` | jar_control_hardneg_01_12 | ok | 0.9423 | 0.9359 | 0.8511 | 62 | [log](out/autocollie/runs/2026-06-16T05-06-41_20260616T045437-filetypes-jar_jar_control_hardneg_01_12.log) |
+| `d35da112d0ecb767` | jar_train_scalepos_05 | ok | 0.9417 | 0.9341 | 0.8598 | 5 | [log](out/autocollie/runs/2026-06-16T05-07-45_20260616T045437-filetypes-jar_jar_train_scalepos_05.log) |
+| `877133d3f0bb903a` | jar_kv_vocab_15k | ok | 0.9427 | 0.9354 | 0.8523 | 68 | [log](out/autocollie/runs/2026-06-16T05-07-51_20260616T045437-filetypes-jar_jar_kv_vocab_15k.log) |
+| `5505844e56be540a` | jar_textenc_metrics_full | ok | 0.9432 | 0.9352 | 0.8710 | 38 | [log](out/autocollie/runs/2026-06-16T05-09-00_20260616T045437-filetypes-jar_jar_textenc_metrics_full.log) |
+| `792c5369d7a9e476` | jar_transfer_lowbigram_100 | ok | 0.9427 | 0.9354 | 0.8523 | 33 | [log](out/autocollie/runs/2026-06-16T05-09-42_20260616T045437-filetypes-jar_jar_transfer_lowbigram_100.log) |
+| `8e5cf5e82838ef6b` | jar_seed_search_k3_hardneg | ok | 0.9394 | 0.9311 | 0.8555 | 8 | [log](out/autocollie/runs/2026-06-16T05-10-16_20260616T045437-filetypes-jar_jar_seed_search_k3_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with hard-negative sweep to improve recall@3FPM by focusing on difficult benigns.
+- **`jar_train_scalepos_05`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Down-weight positives to reduce false positives at strict operating point, targeting recall@3FPM.
+- **`jar_kv_vocab_15k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable KV vocab to capture manifest/metadata key-value patterns, aiming to lift PR_AUC.
+- **`jar_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text encoding and full text metrics to capture obfuscation/resource patterns, targeting PR_AUC.
+- **`jar_transfer_lowbigram_100`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Transfer XML route's low bigram frequency floor to capture rarer JAR patterns, aiming to improve PR_AUC.
+- **`jar_seed_search_k3_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Seed search on hard-negative config to distinguish real recall@3FPM signal from seed variance.
+
+</details>
+

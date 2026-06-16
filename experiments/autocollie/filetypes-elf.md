@@ -896,3 +896,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T050636-filetypes-elf` — 2026-06-16T05:06:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `111ae35eb036435f` | inherit_from_filetypes_json_1e3933ad | ok | 0.9999 | 0.9999 | 0.9955 | 42 | [log](out/autocollie/runs/2026-06-16T05-14-59_20260616T050636-filetypes-elf_inherit_from_filetypes_json_1e3933ad.log) |
+| `c292423ad5a5bbc1` | elf_control_hardneg_tail_v2 | ok | 0.9998 | 0.9998 | 0.9941 | 39 | [log](out/autocollie/runs/2026-06-16T05-15-46_20260616T050636-filetypes-elf_elf_control_hardneg_tail_v2.log) |
+| `7242a19f42c7e253` | elf_kv_vocab_split_research | ok | 0.9996 | 0.9996 | 0.9928 | 35 | [log](out/autocollie/runs/2026-06-16T05-16-28_20260616T050636-filetypes-elf_elf_kv_vocab_split_research.log) |
+| `2c7f9e2a522e44e9` | elf_symbol_bigram_expansion | ok | 0.9996 | 0.9996 | 0.9928 | 42 | [log](out/autocollie/runs/2026-06-16T05-17-05_20260616T050636-filetypes-elf_elf_symbol_bigram_expansion.log) |
+| `edc3d6a48b6a30d0` | elf_transfer_lowbigram_xml | ok | 0.9997 | 0.9997 | 0.9930 | 32 | [log](out/autocollie/runs/2026-06-16T05-17-48_20260616T050636-filetypes-elf_elf_transfer_lowbigram_xml.log) |
+| `06693fa8cc4f28fa` | elf_abl_clusters_off | ok | 0.9996 | 0.9996 | 0.9928 | 3 | [log](out/autocollie/runs/2026-06-16T05-18-21_20260616T050636-filetypes-elf_elf_abl_clusters_off.log) |
+| `246a7101014253b8` | elf_symbol_seed_avg_retry | ok | 0.9998 | 0.9997 | 0.9928 | 37 | [log](out/autocollie/runs/2026-06-16T05-18-24_20260616T050636-filetypes-elf_elf_symbol_seed_avg_retry.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_tail_v2`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Tune hard_negative_weight and num_leaves to boost recall@3FPM while keeping PR_AUC flat via cached matrix.
+- **`elf_kv_vocab_split_research`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture ELF metadata string patterns, aiming to improve PR_AUC.
+- **`elf_symbol_bigram_expansion`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_BIGRAM=20 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=12000 EXP_TRAIN_SAMPLES=30000` — Expand symbol_vocab and symbol_bigrams to catch ELF import co-occurrence patterns, targeting higher recall@3FPM.
+- **`elf_transfer_lowbigram_xml`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Transfer low bigram_min_freq from XML route to capture rare ELF patterns, aiming to lift PR_AUC.
+- **`elf_abl_clusters_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable clusters group to reduce noise and overfitting, targeting stable ROC_AUC and flat PR_AUC.
+- **`elf_symbol_seed_avg_retry`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Retry symbol vocab with seed averaging to verify signal stability, targeting consistent recall@3FPM.
+
+</details>
+

@@ -2120,3 +2120,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T052356-filegroups-documents` — 2026-06-16T05:23:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dafcdaa2b889beda` | inherit_from_filetypes_json_1e3933ad | ok | 0.9999 | 0.9989 | 0.9957 | 13 | [log](out/autocollie/runs/2026-06-16T05-29-09_20260616T052356-filegroups-documents_inherit_from_filetypes_json_1e3933ad.log) |
+| `f729750bbb3b55ae` | docs_control_lr_decay_leaves | ok | 0.9167 | 0.8731 | 0.8337 | 12 | [log](out/autocollie/runs/2026-06-16T05-29-29_20260616T052356-filegroups-documents_docs_control_lr_decay_leaves.log) |
+| `a848153ca1e7ed77` | docs_hardneg_tail_recall | ok | 0.9332 | 0.9047 | 0.8305 | 2 | [log](out/autocollie/runs/2026-06-16T05-29-44_20260616T052356-filegroups-documents_docs_hardneg_tail_recall.log) |
+| `7a37665ed3fa1489` | docs_textmetrics_kv_vocab_expand | ok | 0.9184 | 0.8825 | 0.8336 | 11 | [log](out/autocollie/runs/2026-06-16T05-29-48_20260616T052356-filegroups-documents_docs_textmetrics_kv_vocab_expand.log) |
+| `2d56777ed4bd1b73` | docs_transfer_xml_bigram_tiered | ok | 0.9263 | 0.8799 | 0.8337 | 10 | [log](out/autocollie/runs/2026-06-16T05-30-00_20260616T052356-filegroups-documents_docs_transfer_xml_bigram_tiered.log) |
+| `ce0dfc7e3759e0ea` | docs_abl_blindfold_off | ok | 0.9263 | 0.8799 | 0.8337 | 11 | [log](out/autocollie/runs/2026-06-16T05-30-11_20260616T052356-filegroups-documents_docs_abl_blindfold_off.log) |
+| `f0037ffbd2631f1d` | docs_seed_search_ensemble | ok | 0.9291 | 0.8895 | 0.7208 | 3 | [log](out/autocollie/runs/2026-06-16T05-30-23_20260616T052356-filegroups-documents_docs_seed_search_ensemble.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_lr_decay_leaves`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Baseline feature set with lower learning rate and more leaves to improve PR_AUC and recall@3FPM by refining decision boundaries without changing features.
+- **`docs_hardneg_tail_recall`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Adds hard negative mining to push benigns lower in ranking, targeting recall@3FPM and PR_AUC by reducing false positives at the tail.
+- **`docs_textmetrics_kv_vocab_expand`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Expands text metrics and KV vocab to capture document obfuscation signals, aiming to boost PR_AUC and recall@3FPM via richer feature surface.
+- **`docs_transfer_xml_bigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Transfers XML route's low bigram freq and tiered trigrams to capture rare document patterns, targeting PR_AUC by increasing signal diversity.
+- **`docs_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables blindfold dropout to reduce feature noise and stabilize ROC_AUC while maintaining PR_AUC through cleaner splits.
+- **`docs_seed_search_ensemble`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Averages 3 seeds to reduce variance and improve robust recall@3FPM on the strict-FP tail by smoothing seed-driven fluctuations.
+
+</details>
+

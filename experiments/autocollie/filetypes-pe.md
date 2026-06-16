@@ -1824,3 +1824,27 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260616T045437-filetypes-pe` — 2026-06-16T04:54:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `806e6507376e488d` | inherit_from_filetypes_json_1e3933ad | ok | 0.9989 | 0.9990 | 0.9874 | 262 | [log](out/autocollie/runs/2026-06-16T05-03-57_20260616T045437-filetypes-pe_inherit_from_filetypes_json_1e3933ad.log) |
+| `e0d5c98be188f89a` | pe_ctrl_hardneg_sweep | ok | 0.9984 | 0.9986 | 0.9848 | 141 | [log](out/autocollie/runs/2026-06-16T05-08-22_20260616T045437-filetypes-pe_pe_ctrl_hardneg_sweep.log) |
+| `fdc9bfb49296097a` | pe_feat_symbol_vocab | ok | 0.9986 | 0.9987 | 0.9851 | 110 | [log](out/autocollie/runs/2026-06-16T05-10-48_20260616T045437-filetypes-pe_pe_feat_symbol_vocab.log) |
+| `f00ac62530b567ab` | pe_feat_lowfreq_bigrams | ok | 0.9986 | 0.9987 | 0.9856 | 85 | [log](out/autocollie/runs/2026-06-16T05-12-39_20260616T045437-filetypes-pe_pe_feat_lowfreq_bigrams.log) |
+| `6e950c0f5747e4df` | pe_train_max_recall_fpr | ok | 0.9986 | 0.9987 | 0.0000 | 8 | [log](out/autocollie/runs/2026-06-16T05-14-04_20260616T045437-filetypes-pe_pe_train_max_recall_fpr.log) |
+| `d04747f970ad1fdc` | pe_feat_kv_vocab | ok | 0.9986 | 0.9987 | 0.9851 | 97 | [log](out/autocollie/runs/2026-06-16T05-14-14_20260616T045437-filetypes-pe_pe_feat_kv_vocab.log) |
+| `fc19999eb7fbb98e` | pe_seed_search_k3 | ok | 0.9986 | 0.9987 | 0.9841 | 18 | [log](out/autocollie/runs/2026-06-16T05-15-53_20260616T045437-filetypes-pe_pe_seed_search_k3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_ctrl_hardneg_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with hard-negative upweighting to improve recall@3FPM by focusing model capacity on difficult benigns.
+- **`pe_feat_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable symbol_vocab to capture rare import/symbol co-occurrences, aiming to lift PR_AUC on PE binaries.
+- **`pe_feat_lowfreq_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lower bigram_min_freq to 500 to capture rarer malicious patterns, targeting PR_AUC improvement.
+- **`pe_train_max_recall_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Directly optimize threshold for deployed tail using max_recall_at_fpr to boost recall@3FPM.
+- **`pe_feat_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable kv_vocab to extract key-value metadata patterns from PE headers, aiming for PR_AUC lift.
+- **`pe_seed_search_k3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Run seed_search_k=3 on strong config to reduce variance and stabilize recall@3FPM gains.
+
+</details>
+

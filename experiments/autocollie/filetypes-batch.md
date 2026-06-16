@@ -998,3 +998,27 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260616T055047-filetypes-batch` — 2026-06-16T05:50:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a26547c0ac366864` | inherit_from_filetypes_json_1e3933ad | ok | 0.9997 | 0.9979 | 0.9921 | 12 | [log](out/autocollie/runs/2026-06-16T05-58-39_20260616T055047-filetypes-batch_inherit_from_filetypes_json_1e3933ad.log) |
+| `1cb4bfc7b364cdee` | batch_control_hardneg_sweep | ok | 0.9787 | 0.8765 | 0.0644 | 13 | [log](out/autocollie/runs/2026-06-16T05-58-56_20260616T055047-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `ce6f2c86dfd67812` | batch_kv_vocab_textmetrics | ok | 0.9806 | 0.8939 | 0.0641 | 18 | [log](out/autocollie/runs/2026-06-16T05-59-11_20260616T055047-filetypes-batch_batch_kv_vocab_textmetrics.log) |
+| `f527c0088863e089` | batch_lowfreq_bigrams_tiered_trigrams | ok | 0.9850 | 0.8948 | 0.0642 | 14 | [log](out/autocollie/runs/2026-06-16T05-59-30_20260616T055047-filetypes-batch_batch_lowfreq_bigrams_tiered_trigrams.log) |
+| `3728e10ba94bd226` | batch_transfer_hardneg_lowfreq | ok | 0.9832 | 0.8951 | 0.0639 | 20 | [log](out/autocollie/runs/2026-06-16T05-59-45_20260616T055047-filetypes-batch_batch_transfer_hardneg_lowfreq.log) |
+| `90016c41cc53e507` | batch_seed_search_kv | ok | 0.9802 | 0.8975 | 0.9936 | 15 | [log](out/autocollie/runs/2026-06-16T06-00-06_20260616T055047-filetypes-batch_batch_seed_search_kv.log) |
+| `72b9dc5d5bf997d6` | batch_ablate_extreme_features | ok | 0.9812 | 0.8953 | 0.0641 | 12 | [log](out/autocollie/runs/2026-06-16T06-00-22_20260616T055047-filetypes-batch_batch_ablate_extreme_features.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Aims to improve recall@3 FP/M by upweighting hard negatives to push borderline benigns lower, preserving saturated PR_AUC while fixing the or_loses threshold gap.
+- **`batch_kv_vocab_textmetrics`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Aims to boost PR_AUC and recall@3 FP/M by capturing key-value configuration patterns and text obfuscation metrics common in batch scripts.
+- **`batch_lowfreq_bigrams_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 …` — Aims to improve PR_AUC by lowering bigram frequency floor to capture rare malicious patterns and adding tiered trigrams for deeper context.
+- **`batch_transfer_hardneg_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to lift recall@3 FP/M by transferring the hard-negative weighting strategy from perl/xml routes, paired with lower bigram frequency to catch batch-specific obfuscation.
+- **`batch_seed_search_kv`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 …` — Aims to stabilize recall@3 FP/M gains by averaging across 3 seeds to reduce variance, testing if the kv_vocab signal is robust or seed-dependent.
+- **`batch_ablate_extreme_features`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to maintain PR_AUC while improving recall@3 FP/M by removing noisy extreme/tail features that may be diluting the core signal.
+
+</details>
+
