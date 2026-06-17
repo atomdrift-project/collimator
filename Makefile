@@ -1801,8 +1801,8 @@ mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 # Needs a deployed bundle ($(AZOTH_ROOT)/score_table.npz +
 # route_policies.json) — run after a completed azoth-full-train.
 TRIAGE_DIR        ?= /tmp/triage
-TRIAGE_TOP        ?= 40
-TRIAGE_FETCH      ?= 80
+TRIAGE_TOP        ?= $(if $(TOP),$(TOP),40)
+TRIAGE_FETCH      ?= $(if $(TOP),$(shell echo $$(( $(TOP) * 2 ))),80)
 TRIAGE_SCOPE      ?= ensemble,specialists,filegroups
 # No cutoff: every filetype yields its top-N most label-discordant files,
 # ranked by margin. TRIAGE_LEVEL is only the reference the margin is measured
@@ -1841,7 +1841,7 @@ triage-good: venv
 		--report $(TRIAGE_FP_REPORT) \
 		--output-dir $(TRIAGE_DIR)/mislabeled-good \
 		--samples-dir $(SAMPLES_DIR) \
-		--kind false-positives --db $(DB) \
+		--kind false-positives \
 		--group-by-filetype --top $(TRIAGE_TOP)
 
 # triage-bad: per filetype, the top-$(TRIAGE_TOP) malware the ensemble most
@@ -1859,7 +1859,7 @@ triage-bad: venv
 		--report $(TRIAGE_FN_REPORT) \
 		--output-dir $(TRIAGE_DIR)/mislabeled-bad \
 		--samples-dir $(SAMPLES_DIR) \
-		--kind false-negatives --db $(DB) \
+		--kind false-negatives \
 		--group-by-filetype --top $(TRIAGE_TOP)
 
 near-false-positives-triage: near-false-positives
