@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Copy error-report samples into a clean triage directory.
 
-When a sample is missing from the local samples directory, fall back to
-hopper's ``GET /api/file/{sha256}`` endpoint so triage tarballs don't
-silently lose samples that have been pruned from local disk. Defaults
-to ``HOPPER_URL`` from the env, or http://10.9.8.5:8081/.
+Samples are fetched from hopper's ``GET /api/file/{sha256}`` endpoint by
+sha256. Local-disk lookup was removed: sample paths come from the hopper
+DB and may be absolute paths from whatever host ingested them (e.g.
+``/Users/t/...``), which don't exist on the triage host. Defaults to
+``HOPPER_URL`` from the env, or http://10.9.8.5:8081/.
 """
 
 from __future__ import annotations
@@ -19,41 +20,9 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-import tarfile
-import zipfile
-
 from archive_error_samples import _rows, _sample_path
 
 DEFAULT_HOPPER_URL = "http://10.9.8.5:8081"
-
-
-def _extract_member(archive_path: Path, member_name: str, destination: Path) -> bool:
-    """Extract one member from a local archive into destination. Returns True on success."""
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    # tar / tar.gz / tar.bz2 / tar.xz / tar.zst (zst requires py3.12+ or zstandard)
-    try:
-        with tarfile.open(archive_path, "r:*") as tf:
-            for candidate in (member_name, member_name.lstrip("/")):
-                try:
-                    m = tf.getmember(candidate)
-                except KeyError:
-                    continue
-                f = tf.extractfile(m)
-                if f is not None:
-                    with open(destination, "wb") as out:
-                        shutil.copyfileobj(f, out)
-                    return True
-    except tarfile.TarError:
-        pass
-    # zip / jar / apk / …
-    try:
-        with zipfile.ZipFile(archive_path) as zf:
-            with zf.open(member_name) as f, open(destination, "wb") as out:
-                shutil.copyfileobj(f, out)
-            return True
-    except (zipfile.BadZipFile, KeyError, NotImplementedError, RuntimeError):
-        pass
-    return False
 
 
 def _fetch_from_hopper(sha256: str, destination: Path, hopper_url: str, timeout: float = 10.0) -> bool:
@@ -115,15 +84,15 @@ def _copy_rows(
     hopper_failures: list[int] | None = None,
     hopper_failure_limit: int = 5,
 ) -> int:
-    """Copy up to ``top`` obtainable samples into ``base_dir``.
+    """Fetch up to ``top`` obtainable samples from hopper into ``base_dir``.
 
-    Keeps scanning past locally-missing rows (falling back to hopper) until
-    ``top`` files actually land — so feeding a larger candidate pool than
-    ``top`` covers samples pruned from disk and absent from hopper. Mutates
-    the shared accumulators. Returns the count copied into ``base_dir``.
+    Keeps scanning past rows hopper can't serve until ``top`` files actually
+    land — so feeding a larger candidate pool than ``top`` covers samples
+    absent from hopper. Mutates the shared accumulators. Returns the count
+    landed in ``base_dir``.
 
-    When ``extract_members`` is False, archive members are not extracted —
-    the outer archive is copied instead (deduped across members).
+    When ``extract_members`` is False, archive members land under the outer
+    archive's name (deduped across members) rather than in a per-member subdir.
     """
     here = 0
     for row in rows:
@@ -156,31 +125,7 @@ def _copy_rows(
         else:
             destination = base_dir / outer_arcname
 
-        if outer_path.exists():
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            if is_archive_member and extract_members:
-                if _extract_member(outer_path, member_name, destination):
-                    copied.append(str(destination.relative_to(base_dir)))
-                    here += 1
-                    continue
-                # extraction failed (e.g. password-protected) — copy whole archive
-                archive_dest = base_dir / outer_arcname
-                if not archive_dest.exists():
-                    archive_dest.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(outer_path, archive_dest)
-                copied.append(outer_arcname)
-                here += 1
-                continue
-            else:
-                if outer_path.is_dir():
-                    shutil.copytree(outer_path, destination, symlinks=True)
-                else:
-                    shutil.copy2(outer_path, destination)
-                copied.append(outer_arcname)
-                here += 1
-                continue
-
-        # Missing locally (or extraction failed) — try hopper if configured.
+        # Fetch from hopper by sha256 — the only source.
         if not hopper_url:
             missing.append(raw_path)
             continue
