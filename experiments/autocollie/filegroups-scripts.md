@@ -688,3 +688,15 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260617T173726-filegroups-scripts` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `167cac9fb9801408` | inherit_from_filetypes_json_1e3933ad | ok | 0.9958 | 0.9949 | 0.9689 | 227 | [log](out/autocollie/runs/2026-06-17T17-44-21_20260617T173726-filegroups-scripts_inherit_from_filetypes_json_1e3933ad.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

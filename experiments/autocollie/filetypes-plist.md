@@ -980,3 +980,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260617T173726-filetypes-plist` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f862e17bfab9773d` | inherit_from_filetypes_json_1e3933ad | ok | 0.2000 | 0.5000 | 0.3333 | 24 | [log](out/autocollie/runs/2026-06-17T17-45-00_20260617T173726-filetypes-plist_inherit_from_filetypes_json_1e3933ad.log) |
+| `26978b71a1ce1078` | plist_ctrl_textenc_metrics_train_tune | ok | 0.0917 | 0.5163 | 0.0941 | 33 | [log](out/autocollie/runs/2026-06-17T17-45-46_20260617T173726-filetypes-plist_plist_ctrl_textenc_metrics_train_tune.log) |
+| `5a46c0d87dcc9649` | plist_feat_kv_vocab_textenc | ok | 0.1864 | 0.7809 | 0.0250 | 30 | [log](out/autocollie/runs/2026-06-17T17-46-32_20260617T173726-filetypes-plist_plist_feat_kv_vocab_textenc.log) |
+| `562e6ca4f08bfecc` | plist_feat_sevfrac_trigrams | ok | 0.1864 | 0.7809 | 0.0250 | 25 | [log](out/autocollie/runs/2026-06-17T17-47-03_20260617T173726-filetypes-plist_plist_feat_sevfrac_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_textenc_metrics_train_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature set (text_encoding + text_metrics_full) while tuning training hyperparameters (num_leaves, learning_rate) to improve PR_AUC by refining tree splits without rebuilding the feature matrix.
+- **`plist_feat_kv_vocab_textenc`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab research family alongside text_encoding to capture structured plist key-value patterns, aiming to boost PR_AUC by adding high-signal lexical features specific to plist structure.
+- **`plist_feat_sevfrac_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adds severity_fractions and objective_trigrams to capture minimal malicious payloads and objective co-occurrences, targeting recall@3FPM gains on the low-FP tail by better ranking subtle threats.
+
+</details>
+

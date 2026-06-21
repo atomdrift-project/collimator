@@ -878,3 +878,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260617T173727-filegroups-portable` — 2026-06-17T17:37:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c0d6529324310b84` | inherit_from_filetypes_json_1e3933ad | ok | 0.9856 | 0.9973 | 0.9378 | 34 | [log](out/autocollie/runs/2026-06-17T17-44-12_20260617T173727-filegroups-portable_inherit_from_filetypes_json_1e3933ad.log) |
+| `12db0c3a8639ab68` | ctrl_baseline_hardneg_tune | ok | 0.8956 | 0.9504 | 0.8692 | 44 | [log](out/autocollie/runs/2026-06-17T17-45-02_20260617T173727-filegroups-portable_ctrl_baseline_hardneg_tune.log) |
+| `39efe0fed0f5cc3d` | feat_kv_vocab_textenc_split | ok | 0.8934 | 0.9603 | 0.8078 | 40 | [log](out/autocollie/runs/2026-06-17T17-45-56_20260617T173727-filegroups-portable_feat_kv_vocab_textenc_split.log) |
+| `092c40b55d8f3862` | feat_symbol_vocab_bigrams | ok | 0.8934 | 0.9603 | 0.8078 | 15 | [log](out/autocollie/runs/2026-06-17T17-46-48_20260617T173727-filegroups-portable_feat_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_baseline_hardneg_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate baseline features to hit matrix cache; tune hard_negative_fraction and hard_negative_weight to improve recall@3FPM by focusing the model on difficult benign samples near the decision boundary.
+- **`feat_kv_vocab_textenc_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding research vocabs to capture structural key-value pairs and encoding artifacts in portable files, aiming to boost PR_AUC by separating malicious payloads from benign archives.
+- **`feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and symbol_bigrams to extract import/symbol co-occurrence patterns from portable binaries, targeting recall@3FPM improvement by catching known malicious API sequences that standard n-grams miss.
+
+</details>
+

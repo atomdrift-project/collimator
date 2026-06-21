@@ -51,12 +51,12 @@ def _extract_member(archive_path: Path, member_name: str, destination: Path) -> 
             with zf.open(member_name) as f, open(destination, "wb") as out:
                 shutil.copyfileobj(f, out)
             return True
-    except (zipfile.BadZipFile, KeyError, NotImplementedError):
+    except (zipfile.BadZipFile, KeyError, NotImplementedError, RuntimeError):
         pass
     return False
 
 
-def _fetch_from_hopper(sha256: str, destination: Path, hopper_url: str, timeout: float = 60.0) -> bool:
+def _fetch_from_hopper(sha256: str, destination: Path, hopper_url: str, timeout: float = 10.0) -> bool:
     """GET /api/file/{sha256} → destination. Returns True on success."""
     if not sha256:
         return False
@@ -76,14 +76,21 @@ def _fetch_from_hopper(sha256: str, destination: Path, hopper_url: str, timeout:
 
 
 
+_TEMP_ROOTS = (Path("/var/tmp"), Path(tempfile.gettempdir()))
+
+
 def _clear_directory(path: Path) -> None:
     resolved = path.resolve(strict=False)
-    temp_root = Path(tempfile.gettempdir()).resolve(strict=False)
-    try:
-        inside_temp = os.path.commonpath([str(resolved), str(temp_root)]) == str(temp_root)
-    except ValueError:
-        inside_temp = False
-    if not inside_temp or resolved == temp_root:
+    inside_temp = False
+    for root in _TEMP_ROOTS:
+        r = root.resolve(strict=False)
+        try:
+            if os.path.commonpath([str(resolved), str(r)]) == str(r) and resolved != r:
+                inside_temp = True
+                break
+        except ValueError:
+            pass
+    if not inside_temp:
         raise ValueError(f"refusing to clear non-temp triage directory: {path}")
     path.mkdir(parents=True, exist_ok=True)
     for child in path.iterdir():
@@ -104,6 +111,9 @@ def _copy_rows(
     copied: list[str],
     fetched: list[str],
     missing: list[str],
+    extract_members: bool = True,
+    hopper_failures: list[int] | None = None,
+    hopper_failure_limit: int = 5,
 ) -> int:
     """Copy up to ``top`` obtainable samples into ``base_dir``.
 
@@ -111,6 +121,9 @@ def _copy_rows(
     ``top`` files actually land — so feeding a larger candidate pool than
     ``top`` covers samples pruned from disk and absent from hopper. Mutates
     the shared accumulators. Returns the count copied into ``base_dir``.
+
+    When ``extract_members`` is False, archive members are not extracted —
+    the outer archive is copied instead (deduped across members).
     """
     here = 0
     for row in rows:
@@ -125,9 +138,10 @@ def _copy_rows(
         is_archive_member = "!!" in raw_path
         member_name = raw_path.split("!!", 1)[1] if is_archive_member else None
 
-        # Deduplicate on (outer_path, member_name) so two different members of
-        # the same archive both land rather than the second being skipped.
-        if is_archive_member:
+        # For member extraction: dedupe on (outer_path, member_name).
+        # When copying whole archives: dedupe on outer_path so multiple members
+        # of the same archive only copy it once.
+        if is_archive_member and extract_members:
             dedupe_key = outer_path.resolve(strict=False) / (member_name or "")
         else:
             dedupe_key = outer_path.resolve(strict=False)
@@ -135,7 +149,7 @@ def _copy_rows(
             continue
         seen.add(dedupe_key)
 
-        if is_archive_member:
+        if is_archive_member and extract_members:
             # Place the extracted member under <outer_arcname>/<member_name>
             # so the archive it came from is visible in the path.
             destination = base_dir / outer_arcname / member_name
@@ -144,12 +158,19 @@ def _copy_rows(
 
         if outer_path.exists():
             destination.parent.mkdir(parents=True, exist_ok=True)
-            if is_archive_member:
+            if is_archive_member and extract_members:
                 if _extract_member(outer_path, member_name, destination):
                     copied.append(str(destination.relative_to(base_dir)))
                     here += 1
                     continue
-                # extraction failed — fall through to missing
+                # extraction failed (e.g. password-protected) — copy whole archive
+                archive_dest = base_dir / outer_arcname
+                if not archive_dest.exists():
+                    archive_dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(outer_path, archive_dest)
+                copied.append(outer_arcname)
+                here += 1
+                continue
             else:
                 if outer_path.is_dir():
                     shutil.copytree(outer_path, destination, symlinks=True)
@@ -164,14 +185,27 @@ def _copy_rows(
             missing.append(raw_path)
             continue
 
+        # Skip hopper if it has failed too many consecutive times (dead service).
+        if hopper_failures is not None and hopper_failures[0] >= hopper_failure_limit:
+            if hopper_failures[0] == hopper_failure_limit:
+                print(f"  hopper: {hopper_failure_limit} consecutive failures — skipping remaining hopper fetches", flush=True)
+                hopper_failures[0] += 1  # only print once
+            missing.append(raw_path)
+            continue
+
         # For archive members, hopper serves the inner file's bytes directly
         # by the row's sha256 — no outer-archive lookup needed.
         target_sha = str(row.get("sha256") or "")
         if target_sha and _fetch_from_hopper(target_sha, destination, hopper_url):
+            if hopper_failures is not None:
+                hopper_failures[0] = 0
+            print(f"  hopper: fetched {target_sha[:12]}… → {destination.name}", flush=True)
             fetched.append(str(destination.relative_to(base_dir)))
             copied.append(str(destination.relative_to(base_dir)))
             here += 1
             continue
+        if hopper_failures is not None and target_sha:
+            hopper_failures[0] += 1
 
         missing.append(raw_path)
     return here
@@ -197,10 +231,13 @@ def copy_report(
     copied: list[str] = []
     missing: list[str] = []
     fetched: list[str] = []
+    hopper_failures: list[int] = [0]
 
     rows = _rows(payload, kind)
     if skip > 0:
         rows = rows[skip:]
+
+    extract_members = kind != "false-negatives"
 
     per_filetype: dict[str, int] = {}
     if group_by_filetype:
@@ -210,8 +247,9 @@ def copy_report(
         for row in rows:
             ft = str(row.get("filetype") or "unknown")
             groups.setdefault(ft, []).append(row)
-        for ft, ft_rows in sorted(groups.items()):
-            per_filetype[ft] = _copy_rows(
+        n_ft = len(groups)
+        for i, (ft, ft_rows) in enumerate(sorted(groups.items()), 1):
+            n = _copy_rows(
                 ft_rows,
                 base_dir=output_dir / ft,
                 samples_dir=samples_dir,
@@ -221,7 +259,11 @@ def copy_report(
                 copied=copied,
                 fetched=fetched,
                 missing=missing,
+                extract_members=extract_members,
+                hopper_failures=hopper_failures,
             )
+            per_filetype[ft] = n
+            print(f"  [{i}/{n_ft}] {ft}: {n} copied", flush=True)
     else:
         _copy_rows(
             rows,
@@ -233,6 +275,8 @@ def copy_report(
             copied=copied,
             fetched=fetched,
             missing=missing,
+            extract_members=extract_members,
+            hopper_failures=hopper_failures,
         )
 
     return {

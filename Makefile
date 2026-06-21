@@ -312,8 +312,7 @@ FALSE_POSITIVES_ARCHIVE ?= /tmp/false-positives.tgz
 FALSE_NEGATIVES_ARCHIVE ?= /tmp/false-negatives.tgz
 NEAR_FALSE_POSITIVES_ARCHIVE ?= /tmp/near-false-positives.tgz
 NEAR_FALSE_NEGATIVES_ARCHIVE ?= /tmp/near-false-negatives.tgz
-NEAR_FALSE_POSITIVES_TRIAGE_DIR ?= /tmp/near-false-positives
-NEAR_FALSE_POSITIVES_TRIAGE_JSON ?= /tmp/near-false-positives.json
+NEAR_FALSE_POSITIVES_TRIAGE_DIR ?= /var/tmp/near-false-positives
 # {FALSE_POSITIVES,FALSE_NEGATIVES,MISLABELED}_TRIAGE_DIR are now derived
 # inside the mislabeled-triage target block from SCOPE/LEVEL/SEVERITY so
 # parallel triages under different scopes don't collide on /tmp paths.
@@ -1715,12 +1714,9 @@ SEVERITY ?= hostile
 MIS_TAG := $(subst $(SPACE),_,$(subst $(COMMA),-,$(subst :,-,$(subst /,-,$(SCOPE)))))-L$(LEVEL)-$(SEVERITY)
 FP_REPORT ?= $(AZOTH_ROOT)/false_positives_$(MIS_TAG).json
 FN_REPORT ?= $(AZOTH_ROOT)/false_negatives_$(MIS_TAG).json
-FP_TRIAGE_DIR ?= /tmp/false-positives-$(MIS_TAG)
-FN_TRIAGE_DIR ?= /tmp/false-negatives-$(MIS_TAG)
-FP_TRIAGE_JSON ?= /tmp/false-positives-$(MIS_TAG).json
-FN_TRIAGE_JSON ?= /tmp/false-negatives-$(MIS_TAG).json
-MIS_TRIAGE_DIR ?= /tmp/mislabeled-$(MIS_TAG)
-MIS_TRIAGE_JSON ?= /tmp/mislabeled-$(MIS_TAG).json
+FP_TRIAGE_DIR ?= /var/tmp/false-positives-$(MIS_TAG)
+FN_TRIAGE_DIR ?= /var/tmp/false-negatives-$(MIS_TAG)
+MIS_TRIAGE_DIR ?= /var/tmp/mislabeled-$(MIS_TAG)
 
 .PHONY: mislabeled-fp-report mislabeled-fn-report \
         false-positives-triage false-negatives-triage \
@@ -1752,7 +1748,6 @@ false-positives-triage: mislabeled-fp-report
 		--kind false-positives --db $(DB) --top $(TOP_ERRORS)
 	@echo "report:   $(FP_REPORT)"
 	@echo "samples:  $(FP_TRIAGE_DIR)"
-	@echo "to cleave: cleave --format=json $(FP_TRIAGE_DIR) > $(FP_TRIAGE_JSON)"
 
 false-negatives-triage: mislabeled-fn-report
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -1762,7 +1757,6 @@ false-negatives-triage: mislabeled-fn-report
 		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
 	@echo "report:   $(FN_REPORT)"
 	@echo "samples:  $(FN_TRIAGE_DIR)"
-	@echo "to cleave: cleave --format=json $(FN_TRIAGE_DIR) > $(FN_TRIAGE_JSON)"
 
 mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 	$(PYTHON) scripts/triage_error_samples.py \
@@ -1778,7 +1772,6 @@ mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 	@echo "scope:    $(SCOPE) | level: L$(LEVEL) | severity: $(SEVERITY)"
 	@echo "reports:  $(FP_REPORT) + $(FN_REPORT)"
 	@echo "samples:  $(MIS_TRIAGE_DIR)/{false-positives,false-negatives}/"
-	@echo "to cleave: cleave --format=json $(MIS_TRIAGE_DIR) > $(MIS_TRIAGE_JSON)"
 
 # triage: per-filetype mislabeled-data dump for hand review.
 #
@@ -1800,7 +1793,7 @@ mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 #
 # Needs a deployed bundle ($(AZOTH_ROOT)/score_table.npz +
 # route_policies.json) — run after a completed azoth-full-train.
-TRIAGE_DIR        ?= /tmp/triage
+TRIAGE_DIR        ?= /var/tmp/triage
 TRIAGE_TOP        ?= $(if $(TOP),$(TOP),40)
 TRIAGE_FETCH      ?= $(if $(TOP),$(shell echo $$(( $(TOP) * 2 ))),80)
 TRIAGE_SCOPE      ?= ensemble,specialists,filegroups
@@ -1870,7 +1863,7 @@ near-false-positives-triage: near-false-positives
 		--kind near-false-positives \
 		--skip $(SKIP) \
 		--top $(TOP_ERRORS)
-	@echo "samples staged in $(NEAR_FALSE_POSITIVES_TRIAGE_DIR); run 'cleave --format=json $(NEAR_FALSE_POSITIVES_TRIAGE_DIR)' manually if needed."
+	@echo "samples staged in $(NEAR_FALSE_POSITIVES_TRIAGE_DIR)"
 
 benchmark: venv check-db
 	$(PYTHON) -m collimator benchmark --db $(DB) $(WORKERS_ARG) \

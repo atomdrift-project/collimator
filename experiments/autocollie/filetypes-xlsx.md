@@ -490,3 +490,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260617T173726-filetypes-xlsx` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1353560459b70411` | inherit_from_filetypes_json_1e3933ad | ok | 0.9975 | 0.5000 | 0.9988 | 44 | [log](out/autocollie/runs/2026-06-17T17-45-05_20260617T173726-filetypes-xlsx_inherit_from_filetypes_json_1e3933ad.log) |
+| `ea0c39c4db34fdac` | xlsx_control_hardneg_reg_tune | ok | 0.9877 | 0.6786 | 0.4790 | 46 | [log](out/autocollie/runs/2026-06-17T17-46-11_20260617T173726-filetypes-xlsx_xlsx_control_hardneg_reg_tune.log) |
+| `8cb905b84e23cc11` | xlsx_textenc_metrics_full | ok | 0.9853 | 0.6578 | 0.4790 | 27 | [log](out/autocollie/runs/2026-06-17T17-47-03_20260617T173726-filetypes-xlsx_xlsx_textenc_metrics_full.log) |
+| `a92cd42a88ee5f71` | xlsx_kv_vocab_split | ok | 0.9844 | 0.6901 | 0.4790 | 21 | [log](out/autocollie/runs/2026-06-17T17-47-32_20260617T173726-filetypes-xlsx_xlsx_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_hardneg_reg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 …` — Replicates the top-performing feature surface while tuning hard-negative weighting and regularization to lift PR_AUC and stabilize tail recall.
+- **`xlsx_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 …` — Enables text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies, aiming to increase recall@3FPM on macro-laden XLSX files.
+- **`xlsx_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 …` — Activates kv_vocab and kv_value_split to extract granular metadata signals from XLSX properties, targeting PR_AUC gains from structured key-value patterns.
+
+</details>
+

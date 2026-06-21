@@ -1056,3 +1056,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260617T173726-filetypes-jpeg` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4f69046cd9cf700b` | inherit_from_filetypes_json_1e3933ad | ok | 0.9879 | 0.9930 | 0.9286 | 12 | [log](out/autocollie/runs/2026-06-17T17-44-20_20260617T173726-filetypes-jpeg_inherit_from_filetypes_json_1e3933ad.log) |
+| `3f12a9a4f67c8ec5` | jpeg_control_train_hardneg_lr | ok | 0.2695 | 0.6473 | 0.3136 | 28 | [log](out/autocollie/runs/2026-06-17T17-44-49_20260617T173726-filetypes-jpeg_jpeg_control_train_hardneg_lr.log) |
+| `885ca738549e1845` | jpeg_feat_kv_vocab_exif | ok | 0.2145 | 0.5955 | 0.3158 | 39 | [log](out/autocollie/runs/2026-06-17T17-45-25_20260617T173726-filetypes-jpeg_jpeg_feat_kv_vocab_exif.log) |
+| `f11995d33044a7ab` | jpeg_feat_text_metrics_encoding | ok | 0.2145 | 0.5955 | 0.3158 | 45 | [log](out/autocollie/runs/2026-06-17T17-46-11_20260617T173726-filetypes-jpeg_jpeg_feat_text_metrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_hardneg_lr`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to test hard_negative_fraction and learning_rate for improved PR_AUC by better separating tail malware from benign JPEGs.
+- **`jpeg_feat_kv_vocab_exif`** `EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture EXIF/IPTC metadata patterns in JPEGs, aiming to boost PR_AUC by adding structured signal from file headers.
+- **`jpeg_feat_text_metrics_encoding`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and text_encoding to detect obfuscated strings or payload injections in JPEG binaries, targeting recall@3FPM by surfacing hidden malicious content.
+
+</details>
+

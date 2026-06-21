@@ -844,3 +844,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260617T173726-filetypes-vbs` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `20319f9112bdea62` | inherit_from_filetypes_json_1e3933ad | ok | 0.9906 | 0.8450 | 0.9820 | 21 | [log](out/autocollie/runs/2026-06-17T17-44-04_20260617T173726-filetypes-vbs_inherit_from_filetypes_json_1e3933ad.log) |
+| `4d420b4e10dae414` | vbs_control_train_deeper | ok | 0.9966 | 0.9871 | 0.9580 | 39 | [log](out/autocollie/runs/2026-06-17T17-44-46_20260617T173726-filetypes-vbs_vbs_control_train_deeper.log) |
+| `b9c969cdb0b8342e` | vbs_textmetrics_kv_vocab | ok | 0.9965 | 0.9868 | 0.9579 | 65 | [log](out/autocollie/runs/2026-06-17T17-45-47_20260617T173726-filetypes-vbs_vbs_textmetrics_kv_vocab.log) |
+| `d3bbe8d137533e0f` | vbs_tiered_trigrams_lowfreq | ok | 0.9966 | 0.9871 | 0.9580 | 30 | [log](out/autocollie/runs/2026-06-17T17-47-02_20260617T173726-filetypes-vbs_vbs_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_train_deeper`** `EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control baseline matching best feature_env; increases estimators and num_leaves to improve PR_AUC via better tree capacity while ensuring matrix cache hit.
+- **`vbs_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab research families to capture script obfuscation and key-value patterns, aiming to boost PR_AUC with new discriminative signal.
+- **`vbs_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Adds objective and tiered critical trigrams with lower frequency floors to capture rare malicious sequences in VBS scripts, targeting recall@3 FP/M improvement.
+
+</details>
+

@@ -1022,3 +1022,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260617T173726-filetypes-batch` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6d3479a88c56f849` | inherit_from_filetypes_json_1e3933ad | ok | 0.9997 | 0.9976 | 0.9912 | 66 | [log](out/autocollie/runs/2026-06-17T17-45-03_20260617T173726-filetypes-batch_inherit_from_filetypes_json_1e3933ad.log) |
+| `0debc4672cfe7a07` | batch_control_hardneg_sweep | ok | 0.9782 | 0.8927 | 0.0605 | 48 | [log](out/autocollie/runs/2026-06-17T17-46-44_20260617T173726-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `b27653d5355e4fec` | batch_kv_vocab_split | ok | 0.9738 | 0.8830 | 0.0607 | 24 | [log](out/autocollie/runs/2026-06-17T17-47-39_20260617T173726-filetypes-batch_batch_kv_vocab_split.log) |
+| `` | batch_text_metrics_severity_hardneg | fail | — | — | — | 15 | [log](out/autocollie/runs/2026-06-17T17-48-07_20260617T173726-filetypes-batch_batch_text_metrics_severity_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with hard-negative sweep to improve recall@3FPM by upweighting difficult benigns without changing the feature matrix.
+- **`batch_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured key-value patterns in batch files, aiming to boost PR_AUC by adding discriminative lexical signal.
+- **`batch_text_metrics_severity_hardneg`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Adds text_metrics_full and severity_fractions to catch obfuscated/minimal malware, paired with hard-negative training to push recall@3FPM while guarding PR_AUC.
+
+</details>
+

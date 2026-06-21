@@ -970,3 +970,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260617T173728-filetypes-macho` — 2026-06-17T17:37:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1958daddbef8b07b` | inherit_from_filetypes_json_1e3933ad | ok | 0.9963 | 0.9992 | 0.9727 | 138 | [log](out/autocollie/runs/2026-06-17T17-44-32_20260617T173728-filetypes-macho_inherit_from_filetypes_json_1e3933ad.log) |
+| `06620630c66539a5` | macho_control_train_tune | ok | 0.9961 | 0.9992 | 0.9603 | 70 | [log](out/autocollie/runs/2026-06-17T17-47-03_20260617T173728-filetypes-macho_macho_control_train_tune.log) |
+| `` | macho_feat_kv_vocab_split | fail | — | — | — | 6 | [log](out/autocollie/runs/2026-06-17T17-48-15_20260617T173728-filetypes-macho_macho_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent best feature surface to test hard-negative tuning for PR_AUC improvement while preserving ROC_AUC.
+- **`macho_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured key-value signals in Mach-O binaries, aiming to boost PR_AUC by isolating malicious configuration patterns.
+
+</details>
+

@@ -710,3 +710,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260617T173726-filetypes-tar` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0ce816d616fd7fda` | inherit_from_filetypes_json_1e3933ad | ok | 0.9996 | 0.9996 | 0.9905 | 45 | [log](out/autocollie/runs/2026-06-17T17-44-00_20260617T173726-filetypes-tar_inherit_from_filetypes_json_1e3933ad.log) |
+| `fd2a0da9baa42bdb` | tar_ctrl_dart_reg | ok | 0.9889 | 0.9905 | 0.9721 | 74 | [log](out/autocollie/runs/2026-06-17T17-44-54_20260617T173726-filetypes-tar_tar_ctrl_dart_reg.log) |
+| `0499c5695bacadb0` | tar_feat_kv_vocab_textenc | ok | 0.9911 | 0.9938 | 0.9782 | 71 | [log](out/autocollie/runs/2026-06-17T17-46-18_20260617T173726-filetypes-tar_tar_feat_kv_vocab_textenc.log) |
+| `2fa77fa4ed3bf6f9` | tar_feat_lowfreq_bigrams_metrics | ok | 0.9911 | 0.9938 | 0.9752 | 42 | [log](out/autocollie/runs/2026-06-17T17-47-32_20260617T173726-filetypes-tar_tar_feat_lowfreq_bigrams_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_dart_reg`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature set; tests dart boosting and higher reg_lambda to improve PR_AUC by reducing overfitting on rare patterns.
+- **`tar_feat_kv_vocab_textenc`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture archive metadata and encoding patterns, targeting PR_AUC gains through richer feature representation.
+- **`tar_feat_lowfreq_bigrams_metrics`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 200 and enables text_metrics_full to capture rarer patterns and structural signals, aiming to boost recall@3 FP/M by surfacing subtle malicious indicators.
+
+</details>
+

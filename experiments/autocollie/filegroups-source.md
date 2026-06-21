@@ -802,3 +802,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260617T173726-filegroups-source` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1ab45768d3d77f48` | inherit_from_filetypes_json_1e3933ad | ok | 0.9967 | 0.9962 | 0.9722 | 145 | [log](out/autocollie/runs/2026-06-17T17-45-21_20260617T173726-filegroups-source_inherit_from_filetypes_json_1e3933ad.log) |
+| `` | source_control_hardneg_leaves128 | fail | — | — | — | 6 | [log](out/autocollie/runs/2026-06-17T17-48-16_20260617T173726-filegroups-source_source_control_hardneg_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_hardneg_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Aims to improve recall@3FPM by upweighting hard negatives and increasing tree capacity, while keeping PR_AUC flat via L2 regularization.
+
+</details>
+

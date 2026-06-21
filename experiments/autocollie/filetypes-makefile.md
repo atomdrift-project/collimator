@@ -734,3 +734,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260617T173726-filetypes-makefile` — 2026-06-17T17:37:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9982fcb6f755adc4` | inherit_from_filetypes_json_1e3933ad | ok | 0.6357 | 0.8978 | 0.5000 | 18 | [log](out/autocollie/runs/2026-06-17T17-44-29_20260617T173726-filetypes-makefile_inherit_from_filetypes_json_1e3933ad.log) |
+| `84a59a596a0e7b40` | makefile_ctrl_baseline_train | ok | 0.0368 | 0.6101 | 0.0781 | 29 | [log](out/autocollie/runs/2026-06-17T17-44-54_20260617T173726-filetypes-makefile_makefile_ctrl_baseline_train.log) |
+| `3a69210627ec05e4` | makefile_feat_kv_textmetrics | ok | 0.0376 | 0.6210 | 0.0781 | 31 | [log](out/autocollie/runs/2026-06-17T17-45-45_20260617T173726-filetypes-makefile_makefile_feat_kv_textmetrics.log) |
+| `47c2554a677c9cac` | makefile_feat_lowbigram_tiered | ok | 0.0368 | 0.6101 | 0.0781 | 35 | [log](out/autocollie/runs/2026-06-17T17-46-22_20260617T173726-filetypes-makefile_makefile_feat_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_baseline_train`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to isolate training knob effects on PR_AUC and recall@3 FP/M.
+- **`makefile_feat_kv_textmetrics`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture makefile-specific key-value structures and text obfuscation signals, targeting PR_AUC improvement.
+- **`makefile_feat_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables tiered_crit_trigrams to capture rarer syntactic patterns and critical trait co-occurrences, aiming to boost recall@3 FP/M.
+
+</details>
+
