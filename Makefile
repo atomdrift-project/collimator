@@ -1805,6 +1805,13 @@ TRIAGE_LEVEL      ?= 50
 TRIAGE_SEVERITY   ?= hostile
 TRIAGE_FP_REPORT  ?= $(TRIAGE_DIR)/mislabeled-good.report.json
 TRIAGE_FN_REPORT  ?= $(TRIAGE_DIR)/mislabeled-bad.report.json
+# Resolve row_id -> sha256/path against the authoritative hopper DB, NOT the
+# local replica ($(DB)). The replica is built for bulk training reads and is
+# periodically torn down and rebuilt; mid-rebuild it returns no rows, which
+# silently yields empty paths and copies nothing. Triage's lookup is tiny
+# (only the selected top-N ids) so hitting the real DB is cheap. Password
+# comes from ~/.pgpass (hopper-db:5432:hopper:hopper).
+TRIAGE_DB         ?= postgres://hopper@hopper-db:5432/hopper
 
 .PHONY: triage triage-good triage-bad
 # triage runs both sides sequentially (FP then FN) via sub-make so a heavy
@@ -1828,7 +1835,7 @@ triage-good: venv
 		--score-table $(AZOTH_ROOT)/score_table.npz \
 		--route-policies $(AZOTH_ROOT)/route_policies.json \
 		--scope $(TRIAGE_SCOPE) --level $(TRIAGE_LEVEL) --severity $(TRIAGE_SEVERITY) \
-		--no-cutoff --per-filetype-top $(TRIAGE_FETCH) --db $(DB) \
+		--no-cutoff --per-filetype-top $(TRIAGE_FETCH) --db $(TRIAGE_DB) \
 		--output $(TRIAGE_FP_REPORT)
 	$(PYTHON) scripts/triage_error_samples.py \
 		--report $(TRIAGE_FP_REPORT) \
@@ -1846,7 +1853,7 @@ triage-bad: venv
 		--score-table $(AZOTH_ROOT)/score_table.npz \
 		--route-policies $(AZOTH_ROOT)/route_policies.json \
 		--scope $(TRIAGE_SCOPE) --level $(TRIAGE_LEVEL) --severity $(TRIAGE_SEVERITY) \
-		--no-cutoff --per-filetype-top $(TRIAGE_FETCH) --db $(DB) \
+		--no-cutoff --per-filetype-top $(TRIAGE_FETCH) --db $(TRIAGE_DB) \
 		--output $(TRIAGE_FN_REPORT)
 	$(PYTHON) scripts/triage_error_samples.py \
 		--report $(TRIAGE_FN_REPORT) \
