@@ -28,14 +28,26 @@ from archive_error_samples import _rows, _sample_path
 DEFAULT_HOPPER_URL = "http://10.9.8.5:8081"
 
 
+def _parse_retry_after(value: str | None) -> float | None:
+    """Parse a Retry-After header (hopper sends delta-seconds) into a float.
+
+    Returns None if absent or unparseable (e.g. an HTTP-date form), so the
+    caller falls back to its own retry schedule.
+    """
+    if not value:
+        return None
+    try:
+        return max(0.0, float(value.strip()))
+    except ValueError:
+        return None
+
+
 def _fetch_from_hopper(
     sha256: str,
     destination: Path,
     hopper_url: str,
-    timeout: float = 10.0,
-    retries: int = 2,
-    backoff: float = 0.5,
-    backoff_cap: float = 8.0,
+    timeout: float = 90.0,
+    retry_delays: tuple[float, ...] = (15.0, 60.0),
 ) -> tuple[str, str]:
     """GET /api/file/{sha256} → destination.
 
@@ -43,28 +55,33 @@ def _fetch_from_hopper(
     reason (the server response for HTTP errors, the exception for network
     failures) and ``status`` is one of:
       "ok"          file written to ``destination``.
-      "unservable"  hopper ANSWERED with an error code (any 4xx or 5xx). It's
-                    alive but won't serve this sha — typically an archive member
-                    it can't extract: 415 "unsupported archive type", 413 "file
-                    too large", 404 "not found in archive", 500 "extraction
-                    failed". The caller can fall back to fetching the parent
-                    archive whole. Does NOT count toward the dead-service breaker.
-      "unreachable" NO response after ``retries`` — timeout or refused
-                    connection. This is what the dead-service breaker counts.
+      "unservable"  hopper gave a DEFINITIVE code for this sha — 400 (bad sha),
+                    404 (not in DB/archive), 410 (row exists, file deleted from
+                    disk), 413 (member too large), 415 (unsupported container),
+                    422 (encrypted/corrupt/extraction-failed). It's up but won't
+                    ever serve this sha, so the caller can fall back to fetching
+                    the parent archive whole. Does NOT count toward the breaker.
+      "unreachable" no usable response after all retries — either a network
+                    failure (timeout/refused/DNS) or a RETRYABLE server error
+                    (500 DB-lookup error, 503 starting/busy/transient-I/O) that
+                    never cleared. This is what the dead-service breaker counts.
 
-    The received-code-vs-no-response split is the signal: if hopper replied at
-    all it's up (try the parent), only a silent connection counts as down.
+    The split is retryable-vs-definitive, not code-vs-no-response: hopper signals
+    transient trouble with 500/503 (and a 503 carries a Retry-After telling us
+    how long to wait), so those join the network-failure retry path. A 4xx/410/
+    422 is hopper's final answer for this sha, so it isn't retried.
 
-    No-response failures are retried with exponential backoff and full jitter
-    (sleep ∈ [0, min(cap, backoff·2^attempt))): under a burst hopper occasionally
-    can't answer in time, and a lone blip shouldn't read as a dead service. An
-    error *code* is hopper's definitive answer for that sha, so it isn't retried.
+    Network failures and 500s back off on the ``retry_delays`` schedule (15s then
+    60s by default); a 503 waits its Retry-After instead. Each sleep gets up to
+    +25% additive jitter so concurrent fetches don't resynchronize.
     """
     if not sha256:
         return "unservable", "no sha256 in row"
     url = f"{hopper_url.rstrip('/')}/api/file/{sha256}"
     detail = "unknown"
+    retries = len(retry_delays)
     for attempt in range(retries + 1):
+        retry_after = None  # set only by a 503 → overrides the schedule
         try:
             destination.parent.mkdir(parents=True, exist_ok=True)
             with urllib.request.urlopen(url, timeout=timeout) as resp:
@@ -82,15 +99,22 @@ def _fetch_from_hopper(
                 body = e.read(200).decode("utf-8", "replace").strip()
             except Exception:
                 pass
-            # Hopper answered — it's up, this sha just isn't servable. Definitive
-            # for this request (no retry); the caller may try the parent archive.
-            return "unservable", f"HTTP {e.code} {body}".strip()
+            detail = f"HTTP {e.code} {body}".strip()
+            # 500 (DB-lookup hiccup) and 503 (starting/busy/transient I/O) are
+            # hopper telling us to try again; a 503 also carries a Retry-After.
+            # Every other code is its final answer for this sha — don't retry;
+            # the caller may fall back to the parent archive.
+            if e.code not in (500, 503):
+                return "unservable", detail
+            if e.code == 503:
+                retry_after = _parse_retry_after(e.headers.get("Retry-After"))
         except (urllib.error.URLError, OSError, TimeoutError) as e:
             # No HTTP response at all — refused, DNS failure, or timeout.
             reason = getattr(e, "reason", None) or e
             detail = f"{type(e).__name__}: {reason}"
         if attempt < retries:
-            delay = random.uniform(0.0, min(backoff_cap, backoff * (2 ** attempt)))
+            base = retry_after if retry_after is not None else retry_delays[attempt]
+            delay = base + random.uniform(0.0, 0.25 * base)
             print(
                 f"  hopper: {sha256[:12]}… {detail} — retry "
                 f"{attempt + 1}/{retries} in {delay:.2f}s",
