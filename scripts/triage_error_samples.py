@@ -248,7 +248,20 @@ def _copy_rows(
         # the breaker. A small gap between requests keeps it responsive.
         if fetch_delay > 0:
             time.sleep(fetch_delay)
-        if target_sha:
+        # A fetch "within an archive" (the row's path carries the `outer!!member`
+        # marker) makes hopper extract the member by stream-decompressing the
+        # container: a member buried in a large non-seekable xz (a docker image)
+        # can take several minutes, where a standalone file responds in <1s.
+        # So give in-archive fetches a generous 6-minute timeout. Extraction time
+        # is deterministic — a retry re-runs the identical decompress and times
+        # out again — so don't retry; on failure fall back to the parent blob
+        # below (a stored file that serves in ~0.2s) when there is one.
+        member_has_fallback = is_archive_member and parent_sha and parent_sha != target_sha
+        if target_sha and is_archive_member:
+            status, detail = _fetch_from_hopper(
+                target_sha, destination, hopper_url, timeout=360.0, retry_delays=()
+            )
+        elif target_sha:
             status, detail = _fetch_from_hopper(target_sha, destination, hopper_url)
         else:
             status, detail = "unservable", "no sha256 in row"
@@ -266,7 +279,7 @@ def _copy_rows(
         # stored blob even when it can't extract the member — e.g. an embedded
         # file in a PE, or a member of a nested/unsupported archive type. Many
         # members map to one parent, so dedupe the archive fetch via `archives`.
-        if is_archive_member and parent_sha and parent_sha != target_sha:
+        if member_has_fallback:
             cached = archives.get(parent_sha) if archives is not None else None
             if cached == "ok":
                 continue  # archive already fetched for a sibling member
