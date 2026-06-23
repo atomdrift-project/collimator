@@ -46,8 +46,8 @@ def _fetch_from_hopper(
     sha256: str,
     destination: Path,
     hopper_url: str,
-    timeout: float = 90.0,
-    retry_delays: tuple[float, ...] = (15.0, 60.0),
+    timeout: float = 45.0,
+    retry_delays: tuple[float, ...] = (3.0, 12.0),
 ) -> tuple[str, str]:
     """GET /api/file/{sha256} → destination.
 
@@ -71,8 +71,8 @@ def _fetch_from_hopper(
     how long to wait), so those join the network-failure retry path. A 4xx/410/
     422 is hopper's final answer for this sha, so it isn't retried.
 
-    Network failures and 500s back off on the ``retry_delays`` schedule (15s then
-    60s by default); a 503 waits its Retry-After instead. Each sleep gets up to
+    Network failures and 500s back off on the ``retry_delays`` schedule (3s then
+    12s by default); a 503 waits its Retry-After instead. Each sleep gets up to
     +25% additive jitter so concurrent fetches don't resynchronize.
     """
     if not sha256:
@@ -459,10 +459,11 @@ def main() -> None:
     parser.add_argument(
         "--fetch-delay",
         type=float,
-        default=float(os.environ.get("TRIAGE_FETCH_DELAY", "0.05")),
+        default=float(os.environ.get("TRIAGE_FETCH_DELAY", "0.0")),
         help="Seconds to pause before each hopper fetch, to keep the single-"
-             "streamed download API responsive under load (default 0.05, or "
-             "$TRIAGE_FETCH_DELAY). Set 0 to fetch as fast as possible.",
+             "streamed download API responsive under load (default 0, or "
+             "$TRIAGE_FETCH_DELAY). Raise it if hopper flaps under back-to-back "
+             "requests.",
     )
     parser.add_argument(
         "--error-report",
