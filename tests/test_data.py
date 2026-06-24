@@ -6,7 +6,9 @@ import tempfile
 from pathlib import Path
 
 from collimator.data import (
+    canonicalize_filetype,
     count_labeled_by_partition_full,
+    expand_filetype_aliases,
     labeled_corpus_metadata_full,
     load_samples,
     normalize_archive_filetype,
@@ -40,6 +42,52 @@ def test_normalize_archive_filetype_strips_pure_compression():
     assert normalize_archive_filetype("") == ""
     assert normalize_archive_filetype(None) == ""
     assert normalize_archive_filetype("  tar.gz  ") == "tar"
+
+
+def test_canonicalize_filetype_folds_old_spellings():
+    """Old cleave label spellings collapse onto filefacts' canonical labels;
+    canonical and unknown inputs are returned unchanged (idempotent).
+    """
+    # Hyphenated / abbreviated old forms.
+    assert canonicalize_filetype("objc") == "objective_c"
+    assert canonicalize_filetype("python-bytecode") == "python_bytecode"
+    assert canonicalize_filetype("github-actions") == "github_actions"
+    assert canonicalize_filetype("systemd") == "systemd_service"
+    assert canonicalize_filetype("pkg-info") == "pkg_info"
+    # Debug-mangled old forms (dropped underscores).
+    assert canonicalize_filetype("pythonsdist") == "python_sdist"
+    assert canonicalize_filetype("javaclass") == "java_class"
+    assert canonicalize_filetype("ociimage") == "oci_image"
+    assert canonicalize_filetype("cargolock") == "cargo.lock"
+    assert canonicalize_filetype("packagejson") == "package.json"
+    # Office subtypes collapse onto the container type filefacts emits.
+    assert canonicalize_filetype("docx") == "ooxml"
+    assert canonicalize_filetype("xls") == "ole_doc"
+    # Media spelling.
+    assert canonicalize_filetype("jpg") == "jpeg"
+    # Canonical labels and unknowns pass through; idempotent; case/space folded.
+    assert canonicalize_filetype("objective_c") == "objective_c"
+    assert canonicalize_filetype("tar.gz") == "tar.gz"
+    assert canonicalize_filetype("pe") == "pe"
+    assert canonicalize_filetype("totally_unknown") == "totally_unknown"
+    assert canonicalize_filetype("  OBJC  ") == "objective_c"
+    assert canonicalize_filetype(None) == ""
+
+
+def test_expand_filetype_aliases_widens_to_stored_spellings():
+    """A canonical route label expands to every stored spelling so an
+    index-backed `file_type IN (...)` filter matches old and new rows alike.
+    """
+    # Canonical request includes itself plus its aliases.
+    assert expand_filetype_aliases(("objective_c",)) == ("objc", "objective_c", "objectivec")
+    # Office container expands to its collapsed subtypes (incl. macro/template
+    # variants); checked by membership so adding subtypes doesn't break this.
+    ooxml_expansion = set(expand_filetype_aliases(("ooxml",)))
+    assert {"ooxml", "docx", "xlsx", "pptx", "xlsm", "docm", "xltx"} <= ooxml_expansion
+    # Passing an old spelling canonicalizes first, then expands the same way.
+    assert expand_filetype_aliases(("objc",)) == ("objc", "objective_c", "objectivec")
+    # A label with no aliases expands to just itself; empties are dropped.
+    assert expand_filetype_aliases(("pe", "")) == ("pe",)
 
 
 def _create_test_db(samples: list[tuple[str, str, str | None] | dict[str, str | int | None]]) -> Path:

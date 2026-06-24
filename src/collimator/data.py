@@ -24,11 +24,16 @@ this still doesn't address (family-level correlation, temporal drift).
 from __future__ import annotations
 
 import json
-import os
 import logging
+import os
 import random
 import sqlite3
-
+import time
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 # Pure-compression suffixes — formats with no multi-file container of
 # their own. When they appear AT THE END of a compound filetype string
@@ -68,12 +73,116 @@ def normalize_archive_filetype(file_type: str | None) -> str:
             break
         normalized = head
     return normalized
-import time
-from collections.abc import Iterator
-from contextlib import contextmanager
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
+
+
+# Historical / variant filetype spellings → the canonical label filefacts now
+# emits (`filefacts::FileType::label`). hopper's `file_type` column is derived
+# from each report's stored cleave JSON, so the catalog holds a MIX: rows
+# analyzed before the nomenclature unification carry the old spellings
+# (hyphenated `python-bytecode`, abbreviated `objc`, or Debug-mangled
+# `pythonsdist`/`cargolock` where cleave's old fallback dropped underscores),
+# while rows analyzed since carry the canonical label. Canonicalizing at read
+# time lets old and new samples train under ONE vocabulary without rewriting
+# the corpus.
+#
+# This map is the deploy-side mirror of filefacts' label scheme — keep it in
+# sync with `filefacts::FileType::label` (only entries whose stored spelling
+# differs from the canonical label need listing). Office subtypes collapse onto
+# the container type because filefacts identifies the container, not the
+# member: `.docx`/`.xlsx`/`.pptx` are all `ooxml`, `.doc`/`.xls`/`.ppt` all
+# `ole_doc`.
+_FILETYPE_ALIASES: dict[str, tuple[str, ...]] = {
+    "objective_c": ("objc", "objectivec"),
+    "github_actions": ("github-actions", "githubactions"),
+    "systemd_service": ("systemd",),
+    "desktop_entry": ("desktop-entry",),
+    "python_bytecode": ("python-bytecode", "pyc"),
+    "pkg_info": ("pkg-info", "pkginfo"),
+    "src_info": ("srcinfo",),
+    "vbs": ("vbscript",),
+    "jpeg": ("jpg",),
+    "java_class": ("javaclass",),
+    "python_sdist": ("pythonsdist",),
+    "oci_image": ("ociimage",),
+    "gentoo_binpkg": ("gentoobinpkg",),
+    "vsix_manifest": ("vsixmanifest",),
+    "chrome_manifest": ("chromemanifest", "chrome-manifest"),
+    "package.json": ("packagejson",),
+    "composer.json": ("composerjson",),
+    "composer.lock": ("composerlock",),
+    "cargo.lock": ("cargolock",),
+    "poetry.lock": ("poetrylock",),
+    "pipfile.lock": ("pipfilelock",),
+    "gemfile.lock": ("gemfilelock",),
+    "yarn.lock": ("yarnlock",),
+    "pnpm-lock.yaml": ("pnpmlock", "pnpm-lock", "pnpm.lock"),
+    "requirements.txt": ("requirementstxt",),
+    "go.sum": ("gosum",),
+    "go.mod": ("gomod",),
+    # Office formats — filefacts identifies the OPC/OLE container, not the
+    # member, so every Word/Excel/PowerPoint subtype (including macro-enabled
+    # and template variants) collapses onto its container. MSI is also an
+    # OLE2/CFBF file, which cleave identifies as `ole_doc`.
+    "ole_doc": ("oledoc", "ole", "doc", "xls", "ppt", "msg", "msi"),
+    "ooxml": (
+        "docx", "xlsx", "pptx",
+        "xlsm", "xltx", "xltm", "xlsb", "xlam",
+        "pptm", "ppsm", "potm", "potx", "ppam", "sldm", "sldx",
+        "docm", "dotx",
+    ),
+    # Legacy / foreign labels folded to the nearest filefacts type so old rows
+    # join the matching cohort instead of orphaning: HTA is HTML-based, MSIX is
+    # a ZIP application package, bare `.dat` is opaque data. Bare `pkg` is the
+    # macOS XAR installer — every such row in the catalog is a `.pkg` from a
+    # macOS software domain (adoptium/go.dev/nodejs.org/github releases), with
+    # no Arch `.pkg.tar.*` or FreeBSD-repo signal, so it disambiguates to macOS.
+    "html": ("hta",),
+    "zip": ("msix",),
+    "data": ("dat",),
+    "pkg_macos": ("pkg",),
+}
+
+# Reverse index built once: every alias → its canonical label.
+_ALIAS_TO_CANONICAL: dict[str, str] = {
+    alias: canonical
+    for canonical, aliases in _FILETYPE_ALIASES.items()
+    for alias in aliases
+}
+
+
+def canonicalize_filetype(file_type: str | None) -> str:
+    """Map any historical filetype spelling onto its canonical filefacts label.
+
+    `objc` → `objective_c`, `python-bytecode` → `python_bytecode`,
+    `pythonsdist` → `python_sdist`, `docx` → `ooxml`. Canonical labels and
+    unknown strings pass through unchanged (the function is idempotent), so it
+    is safe to apply to every sample regardless of when it was analyzed.
+    Lowercases and trims as a side-effect, matching `normalize_archive_filetype`.
+    """
+    if file_type is None:
+        return ""
+    normalized = str(file_type).strip().lower()
+    return _ALIAS_TO_CANONICAL.get(normalized, normalized)
+
+
+def expand_filetype_aliases(file_types: tuple[str, ...]) -> tuple[str, ...]:
+    """Expand canonical route labels to every spelling that may sit in the DB.
+
+    A route asks for canonical names (`objective_c`, `ole_doc`); the catalog
+    still holds old rows under `objc`/`oledoc`/`doc`/…. This returns the
+    canonical label plus all its known aliases so an index-backed
+    `file_type IN (...)` filter matches both old and new rows. Inputs are
+    canonicalized first, so passing an old label (`objc`) also works.
+    """
+    out: set[str] = set()
+    for ft in file_types:
+        canonical = canonicalize_filetype(ft)
+        if not canonical:
+            continue
+        out.add(canonical)
+        out.update(_FILETYPE_ALIASES.get(canonical, ()))
+    return tuple(sorted(out))
+
 
 log = logging.getLogger(__name__)
 
@@ -738,7 +847,12 @@ def stream_partitioned_metadata_grouped(
         filters.append("id <= %s" if _is_pg(db_path) else "id <= ?")
         params.append(int(max_id))
     if file_types:
-        normalized = tuple(sorted({str(ft) for ft in file_types if str(ft)}))
+        # Expand canonical route labels to every stored spelling (old + new),
+        # so an index-backed filter still matches rows analyzed before the
+        # filetype nomenclature was unified.
+        normalized = expand_filetype_aliases(
+            tuple(str(ft) for ft in file_types if str(ft))
+        )
         if normalized:
             if _is_pg(db_path):
                 filters.append("file_type = ANY(%s)")

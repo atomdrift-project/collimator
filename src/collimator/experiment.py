@@ -49,6 +49,14 @@ from .model import predict_proba
 # the metadata scan while re-running vocab + extraction.
 
 
+# Filegroup membership in filefacts' canonical filetype vocabulary
+# (`filefacts::FileType::label`). Names that diverged historically have been
+# folded to the canonical form (`vbscript` → `vbs`, `pyc` → `python_bytecode`),
+# and granular office/media subtypes collapse onto the container type filefacts
+# actually emits (`doc`/`xls`/`ppt` → `ole_doc`, `docx`/`xlsx`/`pptx` →
+# `ooxml`). Old rows in the catalog still match because `data.py`'s
+# `expand_filetype_aliases` widens each canonical label to its stored spellings
+# at query time.
 EXPERIMENT_FILEGROUPS: dict[str, tuple[str, ...]] = {
     "scripts": (
         "batch",
@@ -61,14 +69,13 @@ EXPERIMENT_FILEGROUPS: dict[str, tuple[str, ...]] = {
         "ruby",
         "shell",
         "typescript",
-        "vbscript",
+        "vbs",
     ),
     "native": ("elf", "macho", "pe"),
-    "portable": ("dex", "java_class", "pyc", "wasm"),
-    "documents": ("doc", "docx", "html", "ole", "pdf", "ppt", "pptx", "rtf", "xls", "xlsx"),
+    "portable": ("java_class", "python_bytecode", "wasm"),
+    "documents": ("html", "ole_doc", "ooxml", "pdf", "rtf"),
     "source": (
         "c",
-        "cpp",
         "csharp",
         "go",
         "java",
@@ -78,8 +85,8 @@ EXPERIMENT_FILEGROUPS: dict[str, tuple[str, ...]] = {
         "scala",
         "swift",
     ),
-    "config": ("ini", "json", "package.json", "plist", "toml", "xml", "yaml", "yml"),
-    "media": ("bmp", "gif", "jpg", "jpeg", "mp3", "mp4", "png", "svg", "webp"),
+    "config": ("json", "package.json", "plist", "xml"),
+    "media": ("jpeg", "png", "svg"),
 }
 
 
@@ -702,7 +709,15 @@ def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndar
                     pass
                 file_types_by_row[row_id] = file_type
 
-    return np.asarray([file_types_by_row.get(row_id, "unknown") for row_id in row_ids], dtype=object)
+    # Canonicalize so old and new spellings collapse to one label before the
+    # array feeds stratification and per-filetype reporting.
+    return np.asarray(
+        [
+            data.canonicalize_filetype(file_types_by_row.get(row_id, "unknown"))
+            for row_id in row_ids
+        ],
+        dtype=object,
+    )
 
 
 def _fetch_file_types_lightweight(
