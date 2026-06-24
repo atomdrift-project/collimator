@@ -6,6 +6,13 @@ sha256. Local-disk lookup was removed: sample paths come from the hopper
 DB and may be absolute paths from whatever host ingested them (e.g.
 ``/Users/t/...``), which don't exist on the triage host. Defaults to
 ``HOPPER_URL`` from the env, or http://10.9.8.5:8081/.
+
+Archive members are fetched as their WHOLE containing archive (the row's
+``parent`` sha) rather than asking hopper to stream-extract each member —
+a stored-blob read is ~0.2s where an in-archive extract can run for
+minutes, and one archive covers all of its flagged members. Each sha is
+downloaded at most once per run; a repeat (sibling member, the same
+archive under another filetype, or a file already on disk) is reused.
 """
 
 from __future__ import annotations
@@ -156,27 +163,29 @@ def _copy_rows(
     samples_dir: Path,
     top: int,
     hopper_url: str | None,
-    seen: set[Path],
+    landed: dict[str, Path],
     copied: list[str],
     fetched: list[str],
     missing: list[str],
     errors: list[dict[str, Any]] | None = None,
-    archives: dict[str, str] | None = None,
-    extract_members: bool = True,
     hopper_failures: list[int] | None = None,
     hopper_failure_limit: int = 10,
     fetch_delay: float = 0.0,
 ) -> tuple[int, Counter]:
     """Fetch up to ``top`` obtainable samples from hopper into ``base_dir``.
 
-    Keeps scanning past rows hopper can't serve until ``top`` files actually
-    land — so feeding a larger candidate pool than ``top`` covers samples
-    absent from hopper. Mutates the shared accumulators. Returns
-    ``(landed, skip_reasons)`` where ``skip_reasons`` tallies, by server
-    response, why rows didn't land (so the caller can surface the breakdown).
+    Archive members are served as their WHOLE containing archive (the row's
+    ``parent`` sha) rather than asking hopper to stream-extract the member: a
+    stored-blob read is ~0.2s where an in-archive extract can run for minutes,
+    and one archive download covers every flagged member inside it. The
+    reviewer opens the landed archive to inspect the member that flagged.
 
-    When ``extract_members`` is False, archive members land under the outer
-    archive's name (deduped across members) rather than in a per-member subdir.
+    Each sha is downloaded at most once per run (tracked in ``landed``): a
+    repeat — a sibling member, the same archive flagged under another filetype,
+    or a file already on disk — is reused without hitting the network. Keeps
+    scanning past rows hopper can't serve until ``top`` files actually land.
+    Mutates the shared accumulators. Returns ``(landed_count, skip_reasons)``
+    where ``skip_reasons`` tallies, by server response, why rows didn't land.
     """
     here = 0
     skipped: Counter[str] = Counter()
@@ -198,29 +207,51 @@ def _copy_rows(
         resolved = _sample_path(samples_dir, row)
         if resolved is None:
             continue
-        outer_path, outer_arcname = resolved
+        _, outer_arcname = resolved
 
         raw_path = str(row.get("path") or "")
         is_archive_member = "!!" in raw_path
-        member_name = raw_path.split("!!", 1)[1] if is_archive_member else None
+        target_sha = str(row.get("sha256") or "")
+        parent_sha = str(row.get("parent") or "")
 
-        # For member extraction: dedupe on (outer_path, member_name).
-        # When copying whole archives: dedupe on outer_path so multiple members
-        # of the same archive only copy it once.
-        if is_archive_member and extract_members:
-            dedupe_key = outer_path.resolve(strict=False) / (member_name or "")
+        # Archive member → grab the whole containing archive (its `parent` sha)
+        # as a stored blob; the reviewer inspects the flagged member inside it.
+        # Standalone files, and the rare member with no recorded parent, fetch
+        # by their own sha.
+        if is_archive_member and parent_sha and parent_sha != target_sha:
+            fetch_sha = parent_sha
         else:
-            dedupe_key = outer_path.resolve(strict=False)
-        if dedupe_key in seen:
+            fetch_sha = target_sha
+        if not fetch_sha:
+            missing.append(raw_path)
+            skipped["no sha256 in row"] += 1
+            _record_error(row, raw_path, "unservable", "no sha256 in row")
             continue
-        seen.add(dedupe_key)
 
-        if is_archive_member and extract_members:
-            # Place the extracted member under <outer_arcname>/<member_name>
-            # so the archive it came from is visible in the path.
-            destination = base_dir / outer_arcname / member_name
-        else:
-            destination = base_dir / outer_arcname
+        # Sha-stamp the landed name so same-named archives of differing content
+        # can't collide — keeps the on-disk reuse check below sound.
+        destination = base_dir / f"{fetch_sha[:12]}__{outer_arcname}"
+
+        # Already have these bytes? Reuse them instead of re-downloading.
+        prior = landed.get(fetch_sha)
+        if prior is not None and prior.exists():
+            if prior == destination:
+                # A sibling member of an archive already landed in this bucket —
+                # don't spend a quota slot on a file that's already here.
+                continue
+            # Same archive needed under another filetype: copy it across locally
+            # rather than fetching it again, and count it toward this bucket.
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(prior, destination)
+            copied.append(str(destination.relative_to(base_dir)))
+            here += 1
+            continue
+        if destination.exists():
+            # Left on disk by a prior run (or pre-placed) — reuse as-is.
+            landed[fetch_sha] = destination
+            copied.append(str(destination.relative_to(base_dir)))
+            here += 1
+            continue
 
         # Fetch from hopper by sha256 — the only source.
         if not hopper_url:
@@ -239,77 +270,30 @@ def _copy_rows(
             _record_error(row, raw_path, "skipped", "breaker tripped")
             continue
 
-        # Hopper serves standalone files and members of the archive types it
-        # can extract (gz/jar/vsix/…) directly by the row's sha256.
-        target_sha = str(row.get("sha256") or "")
-        parent_sha = str(row.get("parent") or "")
         # Throttle: hopper is single-streamed and falls behind under rapid-fire
-        # requests (members trigger extraction work), timing out and tripping
-        # the breaker. A small gap between requests keeps it responsive.
+        # requests. A small gap between requests keeps it responsive.
         if fetch_delay > 0:
             time.sleep(fetch_delay)
-        # A fetch "within an archive" (the row's path carries the `outer!!member`
-        # marker) makes hopper extract the member by stream-decompressing the
-        # container: a member buried in a large non-seekable xz (a docker image)
-        # can take several minutes, where a standalone file responds in <1s.
-        # So give in-archive fetches a generous 6-minute timeout. Extraction time
-        # is deterministic — a retry re-runs the identical decompress and times
-        # out again — so don't retry; on failure fall back to the parent blob
-        # below (a stored file that serves in ~0.2s) when there is one.
-        member_has_fallback = is_archive_member and parent_sha and parent_sha != target_sha
-        if target_sha and is_archive_member:
-            status, detail = _fetch_from_hopper(
-                target_sha, destination, hopper_url, timeout=360.0, retry_delays=()
-            )
-        elif target_sha:
-            status, detail = _fetch_from_hopper(target_sha, destination, hopper_url)
-        else:
-            status, detail = "unservable", "no sha256 in row"
+        # Whole archives can be large, so allow a generous transfer window — it's
+        # still a stored-blob read, not extraction. Standalone files respond fast.
+        timeout = 180.0 if is_archive_member else 45.0
+        status, detail = _fetch_from_hopper(fetch_sha, destination, hopper_url, timeout=timeout)
         if status == "ok":
             if hopper_failures is not None:
                 hopper_failures[0] = 0
-            print(f"  hopper: fetched {target_sha[:12]}… → {destination.name}", flush=True)
+            landed[fetch_sha] = destination
+            print(f"  hopper: fetched {fetch_sha[:12]}… → {destination.name}", flush=True)
             fetched.append(str(destination.relative_to(base_dir)))
             copied.append(str(destination.relative_to(base_dir)))
             here += 1
             continue
-
-        # Couldn't serve the member directly. Fall back to the containing
-        # archive (its `parent` sha): hopper serves the whole archive as a
-        # stored blob even when it can't extract the member — e.g. an embedded
-        # file in a PE, or a member of a nested/unsupported archive type. Many
-        # members map to one parent, so dedupe the archive fetch via `archives`.
-        if member_has_fallback:
-            cached = archives.get(parent_sha) if archives is not None else None
-            if cached == "ok":
-                continue  # archive already fetched for a sibling member
-            if cached is None:
-                archive_dest = base_dir / "_archives" / outer_arcname
-                if fetch_delay > 0:
-                    time.sleep(fetch_delay)
-                pstatus, pdetail = _fetch_from_hopper(parent_sha, archive_dest, hopper_url)
-                if archives is not None:
-                    archives[parent_sha] = "ok" if pstatus == "ok" else f"{pstatus}: {pdetail}"
-                if pstatus == "ok":
-                    if hopper_failures is not None:
-                        hopper_failures[0] = 0
-                    print(f"  hopper: member unservable → fetched parent archive "
-                          f"{parent_sha[:12]}… → {archive_dest.name}", flush=True)
-                    fetched.append(str(archive_dest.relative_to(base_dir)))
-                    copied.append(str(archive_dest.relative_to(base_dir)))
-                    here += 1
-                    continue
-                status, detail = pstatus, f"member {detail} → parent {pdetail}"
-            else:
-                status = "unreachable" if cached.startswith("unreachable") else "unservable"
-                detail = f"member {detail} → parent {cached}"
 
         if status == "unreachable":
             if hopper_failures is not None:
                 hopper_failures[0] += 1
             # A genuine no-response failure (hopper down) — rare and worth
             # surfacing individually with the reason.
-            print(f"  hopper: FAILED {target_sha[:12]}… {detail}", flush=True)
+            print(f"  hopper: FAILED {fetch_sha[:12]}… {detail}", flush=True)
 
         missing.append(raw_path)
         skipped[detail] += 1
@@ -335,19 +319,16 @@ def copy_report(
 
     _clear_directory(output_dir)
 
-    seen: set[Path] = set()
+    landed: dict[str, Path] = {}  # sha256 -> first on-disk path, deduped run-wide
     copied: list[str] = []
     missing: list[str] = []
     fetched: list[str] = []
     errors: list[dict[str, Any]] = []
-    archives: dict[str, str] = {}  # parent sha -> fetch outcome, deduped run-wide
     hopper_failures: list[int] = [0]
 
     rows = _rows(payload, kind)
     if skip > 0:
         rows = rows[skip:]
-
-    extract_members = kind != "false-negatives"
 
     per_filetype: dict[str, int] = {}
     if group_by_filetype:
@@ -369,13 +350,11 @@ def copy_report(
                 samples_dir=samples_dir,
                 top=top,
                 hopper_url=hopper_url,
-                seen=seen,
+                landed=landed,
                 copied=copied,
                 fetched=fetched,
                 missing=missing,
                 errors=errors,
-                archives=archives,
-                extract_members=extract_members,
                 hopper_failures=[0],
                 fetch_delay=fetch_delay,
             )
@@ -392,13 +371,11 @@ def copy_report(
             samples_dir=samples_dir,
             top=top,
             hopper_url=hopper_url,
-            seen=seen,
+            landed=landed,
             copied=copied,
             fetched=fetched,
             missing=missing,
             errors=errors,
-            archives=archives,
-            extract_members=extract_members,
             hopper_failures=hopper_failures,
             fetch_delay=fetch_delay,
         )
@@ -425,7 +402,6 @@ def copy_report(
         "per_filetype_copied": per_filetype,
         "copied": len(copied),
         "fetched_from_hopper": len(fetched),
-        "parent_archives_fetched": sum(1 for v in archives.values() if v == "ok"),
         "errors_logged": len(errors),
         "missing": missing,
     }

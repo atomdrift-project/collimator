@@ -700,6 +700,11 @@ azoth-publish-train: venv check-db
 	@# Deploy. --partition=all uses the full OOF coverage; AZOTH_USE_OOF_ROUTE_SCORES=1
 	@# swaps each specialist's in-fold scores for its honest OOF scores at calibration.
 	$(MAKE) azoth-deploy AZOTH_CALIBRATE_PARTITION=all AZOTH_USE_OOF_ROUTE_SCORES=1
+	@# Regenerate per-route SHAP against the freshly deployed boosters. _azoth-train
+	@# does this after its azoth-deploy; the inlined publish recipe must too, or the
+	@# bundle ships with stale SHAP that ascan --extra refuses (feature-space digest
+	@# mismatch). Pure inference, ~seconds/route.
+	$(MAKE) azoth-shap
 	@echo "azoth-publish-train: complete; full-OOF bundle deployed."
 	@echo "azoth-publish-train: archived fold bundles at out/models/azoth.oof-fold-{a,b}/"
 
