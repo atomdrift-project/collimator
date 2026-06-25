@@ -2282,3 +2282,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260625T194940-filetypes-pdf` — 2026-06-25T19:49:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0c3dc17dbc4192a1` | inherit_from_filetypes_json_1e3933ad | ok | 1.0000 | 0.9990 | 0.9976 | 48 | [log](out/autocollie/runs/2026-06-25T19-58-43_20260625T194940-filetypes-pdf_inherit_from_filetypes_json_1e3933ad.log) |
+| `53bbbb5c2f1270ab` | pdf_control_hardneg_015_16 | ok | 0.9935 | 0.9794 | 0.8565 | 61 | [log](out/autocollie/runs/2026-06-25T20-00-12_20260625T194940-filetypes-pdf_pdf_control_hardneg_015_16.log) |
+| `a6cdad5e8cbcba6c` | pdf_feat_kv_vocab_textenc | ok | 0.9881 | 0.9605 | 0.8563 | 62 | [log](out/autocollie/runs/2026-06-25T20-01-28_20260625T194940-filetypes-pdf_pdf_feat_kv_vocab_textenc.log) |
+| `39b84714dec78d06` | pdf_feat_obfuscation_linebuckets | ok | 0.9887 | 0.9638 | 0.8564 | 39 | [log](out/autocollie/runs/2026-06-25T20-02-33_20260625T194940-filetypes-pdf_pdf_feat_obfuscation_linebuckets.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_hardneg_015_16`** `EXP_BIGRAM_MIN_FREQ=100 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control run replicating best recent feature set while sweeping hard negatives to improve recall@3 FP/M by upweighting difficult benigns.
+- **`pdf_feat_kv_vocab_textenc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture PDF metadata and encoding anomalies, aiming to boost PR_AUC by adding discriminative signal for malicious documents.
+- **`pdf_feat_obfuscation_linebuckets`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_BIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Activates document_obfuscation_features and line_length_buckets to target obfuscated PDFs, aiming to improve recall@3 FP/M by surfacing structural evasion patterns.
+
+</details>
+

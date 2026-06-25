@@ -891,3 +891,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260625T194940-filetypes-powershell` — 2026-06-25T19:49:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ece9f3fd57eb8b1d` | inherit_from_filetypes_json_1e3933ad | ok | 0.9995 | 0.9971 | 0.9882 | 70 | [log](out/autocollie/runs/2026-06-25T19-59-25_20260625T194940-filetypes-powershell_inherit_from_filetypes_json_1e3933ad.log) |
+| `2b3854e64cb3fe5d` | ps_control_train_tweak | ok | 0.9912 | 0.9778 | 0.9469 | 73 | [log](out/autocollie/runs/2026-06-25T20-01-05_20260625T194940-filetypes-powershell_ps_control_train_tweak.log) |
+| `d79d9407c224a8ec` | ps_textenc_metrics_full | ok | 0.9915 | 0.9785 | 0.9469 | 48 | [log](out/autocollie/runs/2026-06-25T20-02-28_20260625T194940-filetypes-powershell_ps_textenc_metrics_full.log) |
+| `` | ps_lowbigram_kv_vocab | fail | — | — | — | 32 | [log](out/autocollie/runs/2026-06-25T20-03-17_20260625T194940-filetypes-powershell_ps_lowbigram_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_control_train_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicate best feature set with increased estimators and num_leaves to squeeze PR_AUC gains while maintaining ROC_AUC.
+- **`ps_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enable text_encoding and text_metrics_full to capture script obfuscation and structural text signals, aiming to improve recall@3FPM and PR_AUC.
+- **`ps_lowbigram_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Lower bigram_min_freq to 100 and enable kv_vocab to capture rarer PowerShell patterns and key-value structures, targeting PR_AUC improvement.
+
+</details>
+

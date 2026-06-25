@@ -830,3 +830,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260625T194958-filetypes-kotlin` — 2026-06-25T19:49:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2793398dd2da9ad7` | inherit_from_filetypes_json_1e3933ad | ok | 0.9998 | 0.9929 | 0.9982 | 109 | [log](out/autocollie/runs/2026-06-25T19-59-21_20260625T194958-filetypes-kotlin_inherit_from_filetypes_json_1e3933ad.log) |
+| `716e8d7d2d6f1ecd` | kotlin_ctrl_hardneg_tail | ok | 0.9812 | 0.9886 | 0.7651 | 71 | [log](out/autocollie/runs/2026-06-25T20-01-39_20260625T194958-filetypes-kotlin_kotlin_ctrl_hardneg_tail.log) |
+| `` | kotlin_feat_kv_vocab | fail | — | — | — | 45 | [log](out/autocollie/runs/2026-06-25T20-03-03_20260625T194958-filetypes-kotlin_kotlin_feat_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative upweighting to improve recall@3 FP/M by focusing the model on difficult benign/malware boundaries.
+- **`kotlin_feat_kv_vocab`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured config/gradle patterns, aiming to boost PR_AUC and recall@3 FP/M via new key-value signal.
+
+</details>
+

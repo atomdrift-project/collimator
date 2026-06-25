@@ -720,3 +720,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260625T194940-filetypes-pkg-info` — 2026-06-25T19:49:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cfb021a13bb739fd` | inherit_from_filetypes_json_1e3933ad | ok | 0.9926 | 0.5000 | 0.9963 | 67 | [log](out/autocollie/runs/2026-06-25T19-59-11_20260625T194940-filetypes-pkg-info_inherit_from_filetypes_json_1e3933ad.log) |
+| `87e8f9c56b25e4c9` | pkginfo_control_hardneg_tweak | ok | 0.9937 | 0.9794 | 0.9849 | 45 | [log](out/autocollie/runs/2026-06-25T20-00-44_20260625T194940-filetypes-pkg-info_pkginfo_control_hardneg_tweak.log) |
+| `6ccc7a36f5b6b440` | pkginfo_kv_vocab_split | ok | 0.9977 | 0.9931 | 0.9853 | 49 | [log](out/autocollie/runs/2026-06-25T20-01-42_20260625T194940-filetypes-pkg-info_pkginfo_kv_vocab_split.log) |
+| `e6d7b8a503193124` | pkginfo_tiered_trigrams_lowfreq | ok | 0.9967 | 0.9896 | 0.9845 | 32 | [log](out/autocollie/runs/2026-06-25T20-02-33_20260625T194940-filetypes-pkg-info_pkginfo_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_hardneg_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3 FP/M by upweighting hard negatives and increasing tree capacity while keeping the proven feature surface to hit the matrix cache.
+- **`pkginfo_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Aims to improve PR AUC by enabling key-value vocabulary and value splitting to capture structured metadata patterns in package manifests.
+- **`pkginfo_tiered_trigrams_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=280 …` — Aims to improve recall@3 FP/M by lowering bigram frequency floor and enabling tiered critical trigrams to catch rare malicious dependency chains.
+
+</details>
+

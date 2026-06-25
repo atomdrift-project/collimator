@@ -223,12 +223,15 @@ def _label_int(label: str) -> int:
 
 
 def _fetch_file_types(db_path: Path | str, row_ids: np.ndarray) -> dict[int, str]:
-    """Return {row_id: canonical_file_type}. Compound labels like `tar.gz`
-    are collapsed onto their container (`tar`) via
-    [data.normalize_archive_filetype] before they ever land in the score
-    table — every downstream consumer (route discovery, specialist
-    training, per-filetype metrics, litmus route lookup) inherits the
-    normalized form."""
+    """Return {row_id: canonical_file_type}. Each stored `file_type` is mapped
+    to its canonical filefacts label via [data.route_filetype] — compression
+    suffixes collapse onto the container (`tar.gz` → `tar`) AND historical
+    spellings fold onto the filefacts form (`python-bytecode` →
+    `python_bytecode`, `xlsx` → `ooxml`) — before it ever lands in the score
+    table. Every downstream consumer (route discovery, specialist training,
+    per-filetype metrics, scan route lookup) inherits the canonical form, so
+    old and new spellings of one type train a single specialist named the way
+    scan receives it from filefacts at runtime."""
     ids = [int(row_id) for row_id in row_ids]
     out: dict[int, str] = {}
     with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
@@ -241,7 +244,7 @@ def _fetch_file_types(db_path: Path | str, row_ids: np.ndarray) -> dict[int, str
                         [chunk],
                     )
                     out.update({
-                        int(row_id): data.normalize_archive_filetype(file_type)
+                        int(row_id): data.route_filetype(file_type)
                         for row_id, file_type in cur
                     })
         else:
@@ -252,7 +255,7 @@ def _fetch_file_types(db_path: Path | str, row_ids: np.ndarray) -> dict[int, str
                     f"FROM samples WHERE id IN ({placeholders})"
                 )
                 out.update({
-                    int(row_id): data.normalize_archive_filetype(file_type)
+                    int(row_id): data.route_filetype(file_type)
                     for row_id, file_type in conn.execute(query, chunk)
                 })
     return out

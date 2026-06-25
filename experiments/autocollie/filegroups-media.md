@@ -758,3 +758,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260625T194943-filegroups-media` — 2026-06-25T19:49:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7df133053d92384f` | inherit_from_filetypes_json_1e3933ad | ok | 0.9746 | 0.9785 | 0.9406 | 19 | [log](out/autocollie/runs/2026-06-25T19-58-41_20260625T194943-filegroups-media_inherit_from_filetypes_json_1e3933ad.log) |
+| `cae8d31594fe2ff5` | media_control_train_opt_v2 | ok | 0.3016 | 0.6857 | 0.1609 | 74 | [log](out/autocollie/runs/2026-06-25T19-59-42_20260625T194943-filegroups-media_media_control_train_opt_v2.log) |
+| `2314c7e2b14f36c6` | media_text_metrics_kv_vocab | ok | 0.2934 | 0.6644 | 0.1609 | 28 | [log](out/autocollie/runs/2026-06-25T20-01-11_20260625T194943-filegroups-media_media_text_metrics_kv_vocab.log) |
+| `ff4006cc8efa0b2f` | media_severity_fractions_metrics | ok | 0.2934 | 0.6644 | 0.1609 | 39 | [log](out/autocollie/runs/2026-06-25T20-01-52_20260625T194943-filegroups-media_media_severity_fractions_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_train_opt_v2`** `EXP_EXTREME_FEATURES=0 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best recent feature_env (extreme_features off) to test training knob adjustments (num_leaves, reg_lambda) aiming to improve PR_AUC by reducing overfitting on the tail.
+- **`media_text_metrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab research features to capture structural and key-value signals in media containers, aiming to boost recall@3FPM by surfacing hidden malicious metadata.
+- **`media_severity_fractions_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Enables severity_fractions and size_normalized_metrics to capture density-independent malicious signals, aiming to improve recall@3FPM by promoting minimal droppers that evade size-based thresholds.
+
+</details>
+

@@ -402,17 +402,19 @@ def _eligible_filetypes(
         + " ORDER BY total DESC"
     )
     params.extend([min_bad, min_good])
-    # Group raw rows by normalized file_type so compressed archive variants
-    # (tar.gz, tar.bz2, tar.xz, …) merge onto their container (tar) before
-    # we apply the bad/good thresholds. This matches the score-table's
-    # normalized labels (see data.normalize_archive_filetype) and gives
-    # one specialist per container — a tar.gz file at scan time hits the
-    # same model the tar.zst file does, since both share the tar route.
+    # Group raw rows by canonical route label so both compressed archive
+    # variants (tar.gz, tar.bz2, tar.xz, … → tar) AND historical spellings
+    # (python-bytecode → python_bytecode, xlsx → ooxml) merge onto one route
+    # before we apply the bad/good thresholds. This matches the score-table's
+    # labels (see data.route_filetype) and gives one specialist per canonical
+    # filefacts type — a tar.gz file hits the same model the tar.zst file does,
+    # and a row stored as `xlsx` trains the same `ooxml` specialist scan routes
+    # OOXML files to at scan time.
     grouped: dict[str, dict[str, Any]] = {}
     with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
         rows = data._execute(conn, query, params)  # noqa: SLF001
         for file_type, bad, good, total in rows:
-            normalized = data.normalize_archive_filetype(file_type)
+            normalized = data.route_filetype(file_type)
             if not normalized:
                 continue
             entry = grouped.setdefault(
@@ -1203,6 +1205,28 @@ def _train_one(
         x_train = _mask_sparse_columns(x_train, allowed_mask)
         x_bench = _mask_sparse_columns(x_bench, allowed_mask)
     sample_file_types = _file_types(train_rows, test=False)
+
+    # A slice with zero malware samples can't teach a specialist anything —
+    # there are no positives to learn from, so any model it produces is
+    # constant-benign and carries no signal. Skip before training rather than
+    # crashing in the metrics path; litmus routes these files to the
+    # filegroup/general ensemble (same end state as the constant-predictor skip
+    # below).
+    n_malware = int((y_train > 0).sum())
+    if n_malware == 0:
+        LOG.info(
+            "%s: no malware samples (%d benign) — refusing to emit a route; "
+            "litmus will route these files to the filegroup/general ensemble",
+            name, len(y_train),
+        )
+        return {
+            "name": name,
+            "kind": kind,
+            "file_types": list(file_types),
+            "error": True,
+            "skip_reason": "no_malware_samples",
+        }
+
     LOG.info("%s: training (seed=%d)", name, config.seed)
     result = train.train(
         x_train,

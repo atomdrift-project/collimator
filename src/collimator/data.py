@@ -184,6 +184,29 @@ def expand_filetype_aliases(file_types: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(sorted(out))
 
 
+def route_filetype(file_type: str | None) -> str:
+    """The canonical route label for a stored `file_type`.
+
+    Composes the two normalizations in the order the publish path needs:
+    first strip compression suffixes onto the container
+    ([`normalize_archive_filetype`]: `tar.gz` → `tar`), then fold the
+    historical spelling onto the filefacts label
+    ([`canonicalize_filetype`]: `python-bytecode` → `python_bytecode`,
+    `xlsx` → `ooxml`). The result is exactly the label `scan` receives from
+    filefacts at runtime, so a route named by this function is reachable by
+    scan's exact-match lookup.
+
+    Use this everywhere a route/specialist NAME is derived from a stored
+    file_type (score table, specialist discovery, route summaries). Old and
+    new spellings of one type collapse to a single route, so its specialist
+    trains on the union instead of fragmenting across duplicate routes.
+    `normalize_archive_filetype` alone is NOT enough — it leaves spellings
+    untouched — and must stay the pure compression rule it is (scan mirrors
+    it verbatim in model.rs).
+    """
+    return canonicalize_filetype(normalize_archive_filetype(file_type))
+
+
 log = logging.getLogger(__name__)
 
 # canonical_sha256 last-byte ranges. test < TEST_BUCKET_MAX, dev in

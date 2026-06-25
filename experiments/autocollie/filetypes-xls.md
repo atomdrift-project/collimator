@@ -624,3 +624,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260625T194940-filetypes-xls` — 2026-06-25T19:49:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8d97b4db86756236` | inherit_from_filetypes_json_1e3933ad | ok | 0.9999 | 0.9989 | 0.9941 | 103 | [log](out/autocollie/runs/2026-06-25T19-58-53_20260625T194940-filetypes-xls_inherit_from_filetypes_json_1e3933ad.log) |
+| `be4d101e7cdb32c4` | xls_control_train_tune_v6 | ok | 0.9956 | 0.9872 | 0.9667 | 84 | [log](out/autocollie/runs/2026-06-25T20-01-08_20260625T194940-filetypes-xls_xls_control_train_tune_v6.log) |
+| `` | xls_feat_kv_vocab_textenc | fail | — | — | — | 7 | [log](out/autocollie/runs/2026-06-25T20-03-42_20260625T194940-filetypes-xls_xls_feat_kv_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xls_control_train_tune_v6`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set and increase tree capacity to improve PR_AUC and recall@3 FP/M by reducing underfitting on complex XLS structures.
+- **`xls_feat_kv_vocab_textenc`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture macro and document structure signals, aiming to boost PR_AUC and recall@3 FP/M by isolating obfuscated malicious documents.
+
+</details>
+

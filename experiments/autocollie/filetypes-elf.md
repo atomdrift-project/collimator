@@ -1424,3 +1424,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260625T194940-filetypes-elf` — 2026-06-25T19:49:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `744aad83fd8e7692` | inherit_from_filetypes_json_1e3933ad | ok | 0.9999 | 0.9999 | 0.9963 | 210 | [log](out/autocollie/runs/2026-06-25T19-58-25_20260625T194940-filetypes-elf_inherit_from_filetypes_json_1e3933ad.log) |
+| `` | elf_control_train_tweak | fail | — | — | — | 62 | [log](out/autocollie/runs/2026-06-25T20-02-47_20260625T194940-filetypes-elf_elf_control_train_tweak.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_train_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env while tuning training knobs to improve PR_AUC via better tree complexity and regularization.
+
+</details>
+

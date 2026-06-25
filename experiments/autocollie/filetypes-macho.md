@@ -986,3 +986,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260625T194940-filetypes-macho` — 2026-06-25T19:49:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `524af0144441d6ef` | inherit_from_filetypes_json_1e3933ad | ok | 0.9942 | 0.9988 | 0.9608 | 88 | [log](out/autocollie/runs/2026-06-25T19-58-22_20260625T194940-filetypes-macho_inherit_from_filetypes_json_1e3933ad.log) |
+| `9e97ff7b4a8bf8a8` | macho_control_train_tune | ok | 0.9927 | 0.9983 | 0.9540 | 119 | [log](out/autocollie/runs/2026-06-25T20-00-26_20260625T194940-filetypes-macho_macho_control_train_tune.log) |
+| `` | macho_symbol_vocab_bigrams | fail | — | — | — | 77 | [log](out/autocollie/runs/2026-06-25T20-02-32_20260625T194940-filetypes-macho_macho_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating recent feature surface to isolate training knob effects on PR_AUC and recall@3FPM.
+- **`macho_symbol_vocab_bigrams`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=250 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 …` — Enable symbol_vocab and symbol_bigrams to capture Mach-O import co-occurrence patterns, targeting PR_AUC improvement.
+
+</details>
+

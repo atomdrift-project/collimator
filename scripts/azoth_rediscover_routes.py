@@ -73,10 +73,12 @@ def main() -> int:
     with open(summary_path) as f:
         existing = json.load(f)
 
-    # Re-run discovery; this applies the current normalize_archive_filetype
-    # rule, so compound archive labels (tar.gz, tar.bz2, …) merge onto
-    # their container (tar). The returned routes are keyed by the
-    # normalized name and carry `file_types` listing every raw variant.
+    # Re-run discovery; this applies the current route_filetype rule, so
+    # compound archive labels (tar.gz, tar.bz2, …) merge onto their container
+    # (tar) AND historical spellings fold onto the filefacts label
+    # (python-bytecode → python_bytecode, xlsx → ooxml). The returned routes
+    # are keyed by the canonical name and carry `file_types` listing every raw
+    # variant.
     discovered = _eligible_filetypes(
         args.db,
         max_id=args.max_id,
@@ -99,11 +101,12 @@ def main() -> int:
         if kind != "filetype":
             new_results.append(item)
             continue
-        # Skip filetype residues from before normalization changed: an
-        # entry named "tar.gz" whose normalized form "tar" is now the
-        # canonical route is folded — drop the summary entry, keep the
-        # on-disk model untouched for the next full retrain to overwrite.
-        normalized = data.normalize_archive_filetype(name)
+        # Skip filetype residues from before the nomenclature changed: an
+        # entry named "tar.gz" (→ "tar") or "python-bytecode" (→
+        # "python_bytecode") whose canonical form is now the live route is
+        # folded — drop the summary entry, keep the on-disk model untouched
+        # for the next full retrain to overwrite.
+        normalized = data.route_filetype(name)
         if normalized != name and normalized in normalized_names:
             dropped_filetype_names.append((name, normalized))
             continue

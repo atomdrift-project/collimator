@@ -12,6 +12,7 @@ from collimator.data import (
     labeled_corpus_metadata_full,
     load_samples,
     normalize_archive_filetype,
+    route_filetype,
     stream_labeled_metadata_full_with_size,
     stream_labeled_samples_full,
 )
@@ -88,6 +89,38 @@ def test_expand_filetype_aliases_widens_to_stored_spellings():
     assert expand_filetype_aliases(("objc",)) == ("objc", "objective_c", "objectivec")
     # A label with no aliases expands to just itself; empties are dropped.
     assert expand_filetype_aliases(("pe", "")) == ("pe",)
+
+
+def test_route_filetype_composes_compression_and_canonicalization():
+    """The publish-path route label strips compression AND folds the spelling,
+    so old and new stored spellings of one type collapse onto a single route
+    named the way scan receives it from filefacts."""
+    # Both normalizations apply: compression-stripping...
+    assert route_filetype("tar.gz") == "tar"
+    assert route_filetype("tar.bz2.xz") == "tar"
+    # ...and spelling-folding onto the filefacts label.
+    assert route_filetype("python-bytecode") == "python_bytecode"
+    assert route_filetype("pyc") == "python_bytecode"
+    assert route_filetype("objc") == "objective_c"
+    # Office subtypes collapse onto the container specialist scan can reach.
+    assert route_filetype("xlsx") == "ooxml"
+    assert route_filetype("docx") == "ooxml"
+    assert route_filetype("xls") == "ole_doc"
+    assert route_filetype("doc") == "ole_doc"
+    # Every stored spelling of one type maps to the SAME route — the merge.
+    assert (
+        route_filetype("python-bytecode")
+        == route_filetype("python_bytecode")
+        == route_filetype("pyc")
+    )
+    # Canonical labels and unknowns pass through; idempotent; trims/lowercases.
+    assert route_filetype("ooxml") == "ooxml"
+    assert route_filetype("pe") == "pe"
+    assert route_filetype("totally_unknown") == "totally_unknown"
+    assert route_filetype("  PYTHON-BYTECODE  ") == "python_bytecode"
+    assert route_filetype(None) == ""
+    # Bare compression leaves stay put (no specialist of their own).
+    assert route_filetype("gz") == "gz"
 
 
 def _create_test_db(samples: list[tuple[str, str, str | None] | dict[str, str | int | None]]) -> Path:

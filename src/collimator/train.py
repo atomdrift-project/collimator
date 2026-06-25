@@ -819,7 +819,10 @@ def train(
         eval_preds = all_preds
 
     y_binary = (eval_preds >= optimal_threshold).astype(int)
-    cm = confusion_matrix(eval_y, y_binary).tolist()
+    # labels=[0, 1] forces a 2x2 matrix even when the eval set is single-class
+    # (e.g. a benign-only slice predicts all-benign); without it sklearn infers
+    # one label and returns a 1x1 matrix, so the unpacking below would IndexError.
+    cm = confusion_matrix(eval_y, y_binary, labels=[0, 1]).tolist()
 
     # cm layout: [[TN, FP], [FN, TP]]
     tn, fp, fn, tp = cm[0][0], cm[0][1], cm[1][0], cm[1][1]

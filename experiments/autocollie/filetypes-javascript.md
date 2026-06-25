@@ -1481,3 +1481,15 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260625T194940-filetypes-javascript` — 2026-06-25T19:49:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d47fe9ce420ca88c` | inherit_from_filetypes_json_1e3933ad | ok | 0.9979 | 0.9975 | 0.9785 | 269 | [log](out/autocollie/runs/2026-06-25T19-58-50_20260625T194940-filetypes-javascript_inherit_from_filetypes_json_1e3933ad.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

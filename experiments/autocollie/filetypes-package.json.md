@@ -902,3 +902,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260625T194940-filetypes-package.json` — 2026-06-25T19:49:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d4483c2273ca4533` | inherit_from_filetypes_json_1e3933ad | ok | 0.9991 | 0.9988 | 0.9939 | 20 | [log](out/autocollie/runs/2026-06-25T19-57-50_20260625T194940-filetypes-package.json_inherit_from_filetypes_json_1e3933ad.log) |
+| `53fcb4fbb68c4646` | pkg_json_control_dart_lr003 | ok | 0.9949 | 0.9944 | 0.9845 | 28 | [log](out/autocollie/runs/2026-06-25T19-58-15_20260625T194940-filetypes-package.json_pkg_json_control_dart_lr003.log) |
+| `0cc780b2e1b39219` | pkg_json_kv_vocab_split_5k | ok | 0.9965 | 0.9959 | 0.9917 | 53 | [log](out/autocollie/runs/2026-06-25T19-58-49_20260625T194940-filetypes-package.json_pkg_json_kv_vocab_split_5k.log) |
+| `dddc9effa0ee4eab` | pkg_json_text_metrics_tiered_tri | ok | 0.9965 | 0.9959 | 0.9917 | 85 | [log](out/autocollie/runs/2026-06-25T19-59-46_20260625T194940-filetypes-package.json_pkg_json_text_metrics_tiered_tri.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_control_dart_lr003`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with dart boosting and lower LR to improve tail recall@3FPM while preserving PR_AUC.
+- **`pkg_json_kv_vocab_split_5k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture structured JSON key-value signals, aiming to boost PR_AUC and recall@3FPM.
+- **`pkg_json_text_metrics_tiered_tri`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and tiered_crit_trigrams to capture document obfuscation and higher-order trait co-occurrences, targeting PR_AUC gains.
+
+</details>
+
