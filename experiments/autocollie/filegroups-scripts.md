@@ -820,3 +820,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T170730-filegroups-scripts` — 2026-06-28T17:07:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dcf3f0f5f283eaac` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9938 | 0.9927 | 0.9581 | 1 | [log](out/autocollie/runs/2026-06-28T17-13-50_20260628T170730-filegroups-scripts_inherit_from_filetypes_gem_06bdacaa.log) |
+| `9651870d8d1451cf` | scripts_control_train_tweak | ok | 0.9491 | 0.9528 | 0.6652 | 9 | [log](out/autocollie/runs/2026-06-28T17-13-55_20260628T170730-filegroups-scripts_scripts_control_train_tweak.log) |
+| `5f1784d9f0ab98d8` | scripts_textenc_metrics_full | dup | 0.9484 | 0.9503 | 0.6643 | 1 | [log](out/autocollie/runs/2026-06-28T17-14-07_20260628T170730-filegroups-scripts_scripts_textenc_metrics_full.log) |
+| `f3de63979205a0dd` | scripts_kv_vocab_split | ok | 0.9218 | 0.9222 | 0.6633 | 9 | [log](out/autocollie/runs/2026-06-28T17-14-08_20260628T170730-filegroups-scripts_scripts_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_train_tweak`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best feature set to isolate training effects; aims to improve PR_AUC by increasing tree capacity and hard-negative weighting to better separate tail malware from benign scripts.
+- **`scripts_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture script obfuscation and structural text signals; aims to boost PR_AUC by adding high-signal features that distinguish malicious script payloads.
+- **`scripts_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to recover per-element signal in script configurations; aims to improve recall@3FPM by identifying subtle malicious patterns in key-value pairs that standard n-grams miss.
+
+</details>
+

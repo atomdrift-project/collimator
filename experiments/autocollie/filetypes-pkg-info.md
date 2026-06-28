@@ -846,3 +846,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T163637-filetypes-pkg-info` — 2026-06-28T16:36:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ad77a23662e5bf29` | inherit_from_filetypes_gem_06bdacaa | dup | 1.0000 | 0.9985 | 0.9959 | 1 | [log](out/autocollie/runs/2026-06-28T16-42-56_20260628T163637-filetypes-pkg-info_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d916627597120371` | pkginfo_control_train_tune_v2 | ok | 0.9921 | 0.9895 | 0.9805 | 1 | [log](out/autocollie/runs/2026-06-28T16-42-58_20260628T163637-filetypes-pkg-info_pkginfo_control_train_tune_v2.log) |
+| `d30e113849f93d33` | pkginfo_kv_textenc_vocab_expand | ok | 0.9936 | 0.9875 | 0.9802 | 9 | [log](out/autocollie/runs/2026-06-28T16-43-01_20260628T163637-filetypes-pkg-info_pkginfo_kv_textenc_vocab_expand.log) |
+| `673ed0a5ba8cb953` | pkginfo_textmetrics_tiered_trig | ok | 0.9923 | 0.9857 | 0.9802 | 10 | [log](out/autocollie/runs/2026-06-28T16-43-10_20260628T163637-filetypes-pkg-info_pkginfo_textmetrics_tiered_trig.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_train_tune_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating the best recent feature surface to isolate training knob effects, aiming to improve PR_AUC and recall@3FPM via deeper trees and lower learning rate.
+- **`pkginfo_kv_textenc_vocab_expand`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_TRIGRAM_MAX=10000 …` — Expands kv_vocab and text_encoding to capture rarer package metadata patterns, targeting PR_AUC and recall@3FPM gains by enriching the feature space with research vocabs.
+- **`pkginfo_textmetrics_tiered_trig`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_TRIGRAM_MAX=15000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and relaxes tiered trigram bounds to capture structural obfuscation signals, aiming to boost recall@3FPM while maintaining PR_AUC.
+
+</details>
+

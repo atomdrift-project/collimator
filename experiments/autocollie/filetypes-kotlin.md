@@ -954,3 +954,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T171340-filetypes-kotlin` — 2026-06-28T17:13:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d70ca7f6064d2c11` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9949 | 0.9971 | 1 | [log](out/autocollie/runs/2026-06-28T17-20-29_20260628T171340-filetypes-kotlin_inherit_from_filetypes_gem_06bdacaa.log) |
+| `00c436af3752cd83` | kotlin_ctrl_hardneg_sweep | ok | 0.9691 | 0.9737 | 0.7500 | 18 | [log](out/autocollie/runs/2026-06-28T17-20-33_20260628T171340-filetypes-kotlin_kotlin_ctrl_hardneg_sweep.log) |
+| `bfd1656a82cd271b` | kotlin_feat_kv_textenc_vocab | ok | 0.9747 | 0.9828 | 0.7413 | 20 | [log](out/autocollie/runs/2026-06-28T17-20-53_20260628T171340-filetypes-kotlin_kotlin_feat_kv_textenc_vocab.log) |
+| `2bec4205b682d034` | kotlin_feat_textmetrics_trigrams | ok | 0.9750 | 0.9836 | 0.7413 | 19 | [log](out/autocollie/runs/2026-06-28T17-21-16_20260628T171340-filetypes-kotlin_kotlin_feat_textmetrics_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best recent feature surface; tests hard-negative upweighting to lift recall@3FPM by focusing the model on difficult benign-malware boundaries without hurting PR_AUC.
+- **`kotlin_feat_kv_textenc_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture structural and encoding patterns in Kotlin source, aiming to boost PR_AUC by adding discriminative lexical signal.
+- **`kotlin_feat_textmetrics_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and tiered_crit_trigrams to better model obfuscation and complex control flow in Kotlin scripts, targeting recall@3FPM gains while preserving ROC_AUC.
+
+</details>
+

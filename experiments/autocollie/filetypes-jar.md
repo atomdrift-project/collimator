@@ -848,3 +848,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T164243-filetypes-jar` — 2026-06-28T16:42:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `12a6351c4610f24b` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9832 | 0.9712 | 0.9284 | 1 | [log](out/autocollie/runs/2026-06-28T16-49-17_20260628T164243-filetypes-jar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `6adb95c73f378376` | jar_control_hardneg_tail | ok | 0.9400 | 0.9634 | 0.8409 | 3 | [log](out/autocollie/runs/2026-06-28T16-49-19_20260628T164243-filetypes-jar_jar_control_hardneg_tail.log) |
+| `8c64324cdda28e66` | jar_kv_vocab_manifest_signal | ok | 0.9247 | 0.9535 | 0.8374 | 26 | [log](out/autocollie/runs/2026-06-28T16-49-23_20260628T164243-filetypes-jar_jar_kv_vocab_manifest_signal.log) |
+| `9311b38a1a7fa20f` | jar_symbol_text_encoding_combo | ok | 0.9249 | 0.9533 | 0.8383 | 25 | [log](out/autocollie/runs/2026-06-28T16-49-50_20260628T164243-filetypes-jar_jar_symbol_text_encoding_combo.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_hardneg_tail`** `EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by applying hard-negative mining to the best recent feature set, forcing the model to better separate borderline malware from benign JARs without hurting PR_AUC.
+- **`jar_kv_vocab_manifest_signal`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab to capture JAR manifest and metadata key-value pairs, providing high-signal structural features that distinguish malicious configurations from benign ones.
+- **`jar_symbol_text_encoding_combo`** `EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC and recall@3FPM by combining symbol_vocab and text_encoding to capture Java class/method naming patterns and obfuscation artifacts common in packed or malicious JARs.
+
+</details>
+

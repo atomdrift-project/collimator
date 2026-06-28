@@ -1,6 +1,6 @@
 # Promote PASS — `9a252530d540b599` on `filetypes/package.json`
 
-Generated 2026-06-28T10:16:33Z
+Generated 2026-06-28T16:48:20Z
 
 full-train holds — PR_AUC 0.9983 -> 0.9983, AUC 0.9983 -> 0.9983, Brier 0.0081 -> 0.0072
 

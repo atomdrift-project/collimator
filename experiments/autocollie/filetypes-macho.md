@@ -1128,3 +1128,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T165650-filetypes-macho` — 2026-06-28T16:56:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9951 | 0.9989 | 0.9698 | 1 | [log](out/autocollie/runs/2026-06-28T17-03-05_20260628T165650-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `2e70e196ab521fb5` | macho_control_train_hardneg_v1 | ok | 0.9939 | 0.9986 | 0.9686 | 4 | [log](out/autocollie/runs/2026-06-28T17-03-08_20260628T165650-filetypes-macho_macho_control_train_hardneg_v1.log) |
+| `be7579744ca365cf` | macho_feat_kv_symbol_vocab_expanded | ok | 0.9931 | 0.9983 | 0.9570 | 24 | [log](out/autocollie/runs/2026-06-28T17-03-13_20260628T165650-filetypes-macho_macho_feat_kv_symbol_vocab_expanded.log) |
+| `2f6e5ccee7637f75` | macho_feat_tiered_trigrams_textenc | ok | 0.9929 | 0.9983 | 0.9677 | 27 | [log](out/autocollie/runs/2026-06-28T17-03-38_20260628T165650-filetypes-macho_macho_feat_tiered_trigrams_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_hardneg_v1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Control feature set with hard-negative mining and increased leaves to improve tail recall@3FPM while preserving PR_AUC.
+- **`macho_feat_kv_symbol_vocab_expanded`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 …` — Expand KV and symbol vocab caps to capture rare Mach-O specific traits and imports, aiming to boost PR_AUC and recall@3FPM.
+- **`macho_feat_tiered_trigrams_textenc`** `EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Add tiered critical trigrams and text encoding features to model complex trait co-occurrences and obfuscation patterns, targeting PR_AUC and recall@3FPM.
+
+</details>
+

@@ -88,6 +88,36 @@ def _policy_routes(policy: dict[str, Any]) -> set[str]:
     return routes
 
 
+def _blend_errors(policy: dict[str, Any]) -> list[str]:
+    """Structural check on learned-blend policies: ``routes`` is paired
+    positionally with a float ``weights`` vector, so the two must be the same
+    length and non-empty. A mismatch means a writer or route-pruner desynced the
+    arrays (e.g. dropping a route name without its weight); the deployed Rust
+    loader rejects such a blend at scan time, so fail here — one second locally,
+    before the litmus build — rather than minutes into the deploy gate."""
+    errors: list[str] = []
+
+    def walk(obj: Any, path: str) -> None:
+        if isinstance(obj, dict):
+            if isinstance(obj.get("routes"), list) and isinstance(obj.get("weights"), list):
+                routes, weights = obj["routes"], obj["weights"]
+                if len(routes) != len(weights):
+                    errors.append(
+                        f"{path}: blend routes/weights length mismatch "
+                        f"({len(routes)} routes vs {len(weights)} weights)"
+                    )
+                elif not routes:
+                    errors.append(f"{path}: blend has no routes")
+            for key, val in obj.items():
+                walk(val, f"{path}/{key}")
+        elif isinstance(obj, list):
+            for i, val in enumerate(obj):
+                walk(val, f"{path}[{i}]")
+
+    walk(policy.get("routes", {}), "routes")
+    return errors
+
+
 def validate(root: Path) -> list[str]:
     config_path = root / "config.json"
     policy_path = root / "route_policies.json"
@@ -140,6 +170,8 @@ def validate(root: Path) -> list[str]:
                 errors.append(
                     f"{route_name}: filegroup {group!r} does not match config mapping {mapped!r}",
                 )
+
+    errors.extend(_blend_errors(policy))
 
     return errors
 

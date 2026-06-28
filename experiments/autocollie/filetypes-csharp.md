@@ -968,3 +968,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T162052-filetypes-csharp` — 2026-06-28T16:20:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5d2d79c1d95b19a1` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9909 | 0.9941 | 0.9431 | 1 | [log](out/autocollie/runs/2026-06-28T16-27-10_20260628T162052-filetypes-csharp_inherit_from_filetypes_gem_06bdacaa.log) |
+| `f2ea35882f940d49` | csharp_ctrl_hardneg_tail | ok | 0.4934 | 0.8759 | 0.3750 | 2 | [log](out/autocollie/runs/2026-06-28T16-27-12_20260628T162052-filetypes-csharp_csharp_ctrl_hardneg_tail.log) |
+| `828c7a5e48dba458` | csharp_feat_symbol_vocab_8k | ok | 0.4907 | 0.8791 | 0.3772 | 8 | [log](out/autocollie/runs/2026-06-28T16-27-15_20260628T162052-filetypes-csharp_csharp_feat_symbol_vocab_8k.log) |
+| `19d89481c1f494c6` | csharp_feat_textenc_kv | ok | 0.4992 | 0.8700 | 0.3766 | 9 | [log](out/autocollie/runs/2026-06-28T16-27-24_20260628T162052-filetypes-csharp_csharp_feat_textenc_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_ctrl_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, keeping PR_AUC flat.
+- **`csharp_feat_symbol_vocab_8k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to boost PR_AUC by expanding symbol vocabulary to capture rare but malicious C# API calls, while lowering bigram frequency floor to retain signal.
+- **`csharp_feat_textenc_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by adding text encoding and full text metrics to catch obfuscated C# strings, while keeping PR_AUC stable.
+
+</details>
+

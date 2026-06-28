@@ -1182,3 +1182,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T171340-filetypes-jpeg` — 2026-06-28T17:13:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8552aae69148e3a1` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9822 | 0.9888 | 0.9195 | 1 | [log](out/autocollie/runs/2026-06-28T17-20-46_20260628T171340-filetypes-jpeg_inherit_from_filetypes_gem_06bdacaa.log) |
+| `9991007a71a0819b` | jpeg_control_train_capacity_v2 | ok | 0.2659 | 0.6070 | 0.2982 | 4 | [log](out/autocollie/runs/2026-06-28T17-20-50_20260628T171340-filetypes-jpeg_jpeg_control_train_capacity_v2.log) |
+| `9f2392c3e0ff6043` | jpeg_feat_textenc_kv_vocab | ok | 0.2666 | 0.6427 | 0.3176 | 10 | [log](out/autocollie/runs/2026-06-28T17-20-56_20260628T171340-filetypes-jpeg_jpeg_feat_textenc_kv_vocab.log) |
+| `c31ed4c38b262214` | jpeg_transfer_data_gz_overlay | ok | 0.2649 | 0.5882 | 0.3291 | 13 | [log](out/autocollie/runs/2026-06-28T17-21-07_20260628T171340-filetypes-jpeg_jpeg_transfer_data_gz_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_capacity_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control replicating best recent feature_env; increases capacity and regularization to improve PR_AUC and recall@3 FP/M by reducing underfitting on the tail.
+- **`jpeg_feat_textenc_kv_vocab`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and kv_vocab research families to capture JPEG metadata and overlay text, targeting PR_AUC and recall@3 FP/M gains from new lexical signal.
+- **`jpeg_transfer_data_gz_overlay`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 …` — Transfers sister-route config (disable clusters, stricter bigram freq) and adds overlay_signal for packer detection, aiming to boost PR_AUC and ROC_AUC by reducing noise and capturing structural anomalies.
+
+</details>
+

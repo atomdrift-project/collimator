@@ -1166,3 +1166,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T164820-filetypes-batch` — 2026-06-28T16:48:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afd2a3a5ce658ba8` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9981 | 0.9876 | 1 | [log](out/autocollie/runs/2026-06-28T16-55-32_20260628T164820-filetypes-batch_inherit_from_filetypes_gem_06bdacaa.log) |
+| `0bf92f2102abceed` | batch_control_hardneg_sweep_v2 | ok | 0.9641 | 0.7231 | 0.1717 | 10 | [log](out/autocollie/runs/2026-06-28T16-55-35_20260628T164820-filetypes-batch_batch_control_hardneg_sweep_v2.log) |
+| `8cd9ddad0712145a` | batch_textmetrics_hardneg_sweep | ok | 0.9867 | 0.9037 | 0.1716 | 11 | [log](out/autocollie/runs/2026-06-28T16-55-47_20260628T164820-filetypes-batch_batch_textmetrics_hardneg_sweep.log) |
+| `1e4b08ae68533e08` | batch_kv_vocab_expansion_low_freq | ok | 0.9855 | 0.8904 | 0.1715 | 11 | [log](out/autocollie/runs/2026-06-28T16-55-59_20260628T164820-filetypes-batch_batch_kv_vocab_expansion_low_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep_v2`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature set to test hard-negative tuning (fraction=0.01, weight=16) and scale_pos_weight_mult=0.75 to improve recall@3 FP/M without hurting PR_AUC.
+- **`batch_textmetrics_hardneg_sweep`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture obfuscation signals in batch scripts, paired with hard_negative_fraction=0.015 and weight=12 to boost recall@3 FP/M while maintaining PR_AUC.
+- **`batch_kv_vocab_expansion_low_freq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab_max to 20000 and lowers bigram_min_freq to 50 to capture rare script patterns, aiming to improve PR_AUC by adding discriminative signal for borderline malware.
+
+</details>
+

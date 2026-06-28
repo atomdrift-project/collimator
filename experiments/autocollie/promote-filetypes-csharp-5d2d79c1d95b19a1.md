@@ -1,6 +1,6 @@
 # Promote REJECTED — `5d2d79c1d95b19a1` on `filetypes/csharp`
 
-Generated 2026-06-28T11:00:43Z
+Generated 2026-06-28T17:13:39Z
 
 AUC regressed at full-train: 0.9941 -> 0.9927
 

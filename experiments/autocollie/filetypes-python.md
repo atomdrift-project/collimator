@@ -1816,3 +1816,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T171340-filetypes-python` — 2026-06-28T17:13:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0dcf80ccc8faaeb2` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9884 | 0.9923 | 0.9489 | 1 | [log](out/autocollie/runs/2026-06-28T17-20-43_20260628T171340-filetypes-python_inherit_from_filetypes_gem_06bdacaa.log) |
+| `965c222fd8818efd` | ctrl_train_hardneg_reg | ok | 0.9100 | 0.9546 | 0.8515 | 35 | [log](out/autocollie/runs/2026-06-28T17-20-49_20260628T171340-filetypes-python_ctrl_train_hardneg_reg.log) |
+| `eeb0921608318c8f` | feat_kv_textenc_metrics | ok | 0.9020 | 0.9464 | 0.8342 | 26 | [log](out/autocollie/runs/2026-06-28T17-21-25_20260628T171340-filetypes-python_feat_kv_textenc_metrics.log) |
+| `4e019e61bd83e305` | feat_tiered_trigrams_low_freq | ok | 0.8976 | 0.9409 | 0.8446 | 23 | [log](out/autocollie/runs/2026-06-28T17-21-52_20260628T171340-filetypes-python_feat_tiered_trigrams_low_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_hardneg_reg`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control replicating best recent feature surface; tests hard-negative weighting and L2 regularization to improve PR_AUC by reducing false positives at the tail.
+- **`feat_kv_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab, text_encoding, and text_metrics_full to capture Python obfuscation and config patterns, aiming to increase PR_AUC and recall@3FPM.
+- **`feat_tiered_trigrams_low_freq`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lowers tiered trigram and bigram frequency floors to capture rarer Python-specific attack signatures, targeting PR_AUC gains.
+
+</details>
+

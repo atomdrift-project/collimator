@@ -1,6 +1,6 @@
 # Confirm PASS — fa8d5bccea9a86b0 on `filetypes/powershell`
 
-Cycle `20260628T110111-confirm-fa8d5bccea9a86b0` — 2026-06-28T11:01:11Z
+Cycle `20260628T170730-confirm-fa8d5bccea9a86b0` — 2026-06-28T17:07:30Z
 
 PR_AUC held across 3 seeds (orig 0.9990)
 

@@ -2252,3 +2252,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T171339-filegroups-documents` — 2026-06-28T17:13:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bad3bad57923b09f` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9990 | 0.9906 | 1 | [log](out/autocollie/runs/2026-06-28T17-20-12_20260628T171339-filegroups-documents_inherit_from_filetypes_gem_06bdacaa.log) |
+| `10da7a0e50497753` | docs_control_scalepos05_leaves128 | ok | 0.9321 | 0.8932 | 0.8396 | 3 | [log](out/autocollie/runs/2026-06-28T17-20-23_20260628T171339-filegroups-documents_docs_control_scalepos05_leaves128.log) |
+| `faafe1fe6befdc3d` | docs_textmetrics_kv_vocab_full | ok | 0.9240 | 0.8861 | 0.8397 | 15 | [log](out/autocollie/runs/2026-06-28T17-20-29_20260628T171339-filegroups-documents_docs_textmetrics_kv_vocab_full.log) |
+| `0d91be43303ab95c` | docs_severity_fractions_kv_split | ok | 0.9122 | 0.8562 | 0.8399 | 18 | [log](out/autocollie/runs/2026-06-28T17-20-47_20260628T171339-filegroups-documents_docs_severity_fractions_kv_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_scalepos05_leaves128`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features; lowers scale_pos_weight_mult to 0.5 and increases num_leaves to 128 to tighten low-FPR ranking and boost recall@3FPM.
+- **`docs_textmetrics_kv_vocab_full`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value structure signals, targeting PR_AUC improvement.
+- **`docs_severity_fractions_kv_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Activates severity_fractions and kv_value_split to better isolate minimal dropper signals and split opaque KV blobs, aiming to lift PR_AUC.
+
+</details>
+

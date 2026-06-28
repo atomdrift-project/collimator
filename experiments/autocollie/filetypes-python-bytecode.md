@@ -818,3 +818,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T172006-filetypes-python-bytecode` — 2026-06-28T17:20:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5f43252a3ea79247` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9961 | 0.9977 | 0.9839 | 1 | [log](out/autocollie/runs/2026-06-28T17-27-07_20260628T172006-filetypes-python-bytecode_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c507face331b270e` | pybc_ctrl_train_reg_minchild | ok | 0.7975 | 0.8905 | 0.7967 | 2 | [log](out/autocollie/runs/2026-06-28T17-27-10_20260628T172006-filetypes-python-bytecode_pybc_ctrl_train_reg_minchild.log) |
+| `7d6ad520ce01cf21` | pybc_feat_kv_vocab_textmetrics | ok | 0.7929 | 0.8909 | 0.7995 | 14 | [log](out/autocollie/runs/2026-06-28T17-27-13_20260628T172006-filetypes-python-bytecode_pybc_feat_kv_vocab_textmetrics.log) |
+| `240e65692c3b4dc1` | pybc_feat_tiered_trigrams_hardneg | ok | 0.8072 | 0.9042 | 0.8337 | 14 | [log](out/autocollie/runs/2026-06-28T17-27-28_20260628T172006-filetypes-python-bytecode_pybc_feat_tiered_trigrams_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_reg_minchild`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adjusting regularization and tree depth on the current best feature set, leveraging matrix cache hits to validate training stability.
+- **`pybc_feat_kv_vocab_textmetrics`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC and recall@3FPM by enabling kv_vocab and text_metrics_full to capture key-value structural signals and text obfuscation metrics specific to python bytecode.
+- **`pybc_feat_tiered_trigrams_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling tiered_crit_trigrams and applying hard-negative weighting to sharpen the decision boundary for malicious bytecode patterns at low FPR.
+
+</details>
+

@@ -1958,3 +1958,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T170730-filetypes-go` — 2026-06-28T17:07:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `547e71ec06e78952` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9214 | 0.9731 | 0.8424 | 1 | [log](out/autocollie/runs/2026-06-28T17-13-55_20260628T170730-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `b4158838c57347a1` | go_ctrl_train_leaves128_reg | ok | 0.3603 | 0.7006 | 0.1571 | 3 | [log](out/autocollie/runs/2026-06-28T17-13-59_20260628T170730-filetypes-go_go_ctrl_train_leaves128_reg.log) |
+| `534bcf5439147d91` | go_feat_kv_sym_vocab_expansion | ok | 0.3543 | 0.6865 | 0.1622 | 13 | [log](out/autocollie/runs/2026-06-28T17-14-03_20260628T170730-filetypes-go_go_feat_kv_sym_vocab_expansion.log) |
+| `609f9d8294d1fd87` | go_feat_text_metrics_encoding_trigrams | ok | 0.3548 | 0.6850 | 0.1656 | 16 | [log](out/autocollie/runs/2026-06-28T17-14-19_20260628T170730-filetypes-go_go_feat_text_metrics_encoding_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_leaves128_reg`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and adding L2 regularization to reduce overfitting on rare Go patterns while sharpening ranking.
+- **`go_feat_kv_sym_vocab_expansion`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and symbol_vocab with higher caps to capture rare but discriminative Go import paths and struct fields.
+- **`go_feat_text_metrics_encoding_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by enabling text_metrics_full and text_encoding to detect obfuscation patterns, combined with tiered_crit_trigrams for multi-step attack chains.
+
+</details>
+

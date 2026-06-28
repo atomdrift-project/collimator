@@ -1,6 +1,6 @@
 # Promote PASS — `8d4a0163c1226671` on `filetypes/shell`
 
-Generated 2026-06-28T12:44:36Z
+Generated 2026-06-28T16:36:37Z
 
 full-train holds — PR_AUC 0.9959 -> 0.9950, AUC 0.9968 -> 0.9961, Brier 0.0146 -> 0.0190
 

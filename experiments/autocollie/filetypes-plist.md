@@ -1106,3 +1106,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T172006-filetypes-plist` — 2026-06-28T17:20:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `182055fa01649622` | inherit_from_filetypes_gem_06bdacaa | dup | 0.2174 | 0.5000 | 0.3571 | 2 | [log](out/autocollie/runs/2026-06-28T17-27-15_20260628T172006-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `4679fde9b396121f` | plist_ctrl_train_tune_v7 | ok | 0.1693 | 0.7653 | 0.1136 | 8 | [log](out/autocollie/runs/2026-06-28T17-27-18_20260628T172006-filetypes-plist_plist_ctrl_train_tune_v7.log) |
+| `02c9271fa3c86e68` | plist_feat_kv_textmetrics_v2 | ok | 0.1665 | 0.7777 | 0.1136 | 8 | [log](out/autocollie/runs/2026-06-28T17-27-28_20260628T172006-filetypes-plist_plist_feat_kv_textmetrics_v2.log) |
+| `a3524084c06d14e1` | plist_feat_tiered_trigrams_v2 | ok | 0.1803 | 0.8175 | 0.1136 | 9 | [log](out/autocollie/runs/2026-06-28T17-27-36_20260628T172006-filetypes-plist_plist_feat_tiered_trigrams_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v7`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env while increasing leaves and estimators to improve PR_AUC ranking via deeper trees, reusing matrix cache.
+- **`plist_feat_kv_textmetrics_v2`** `EXP_BIGRAM_MIN_FREQ=150 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab cap and enables full text metrics to capture plist structural obfuscation signals, targeting PR_AUC and recall@3FPM gains.
+- **`plist_feat_tiered_trigrams_v2`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_KV_VOCAB=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_TRIGRAM_MAX=3000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Lowers tiered trigram frequency floor and expands vocab to capture rare malicious plist patterns, aiming to boost PR_AUC without overfitting.
+
+</details>
+

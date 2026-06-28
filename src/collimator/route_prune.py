@@ -86,6 +86,42 @@ def weak_filetype_specialists(
     return weak
 
 
+def _is_blend(obj: Any) -> bool:
+    """A learned-blend policy: ``routes`` names paired positionally with a
+    float ``weights`` vector (plus ``intercept``/``threshold``). Detected
+    structurally so the scrub recurses into it as a unit, not as two
+    independent member lists."""
+    return (
+        isinstance(obj, dict)
+        and isinstance(obj.get("routes"), list)
+        and isinstance(obj.get("weights"), list)
+    )
+
+
+def _prune_blend(blend: dict[str, Any], drop: frozenset[str]) -> None:
+    """Drop ``drop`` routes from a learned blend, removing each route and its
+    positionally-aligned weight together. The generic list-scrub below only
+    matches *string* members, so on its own it strips a dropped route name out
+    of ``routes`` while leaving its float weight in ``weights`` — yielding the
+    ``len(weights) == len(routes) + 1`` corruption that makes litmus reject the
+    bundle (``blend routes/weights length mismatch``). Nightly retrains routinely
+    add/drop specialists, so this lockstep prune is the steady-state path.
+
+    The surviving weights/intercept/threshold are kept as-is: the LR was fit
+    jointly so the operating point is now approximate, but dropped routes are
+    weak/parity-failed specialists (small marginal contribution) and there's no
+    benign/malware data at prune time to honestly recalibrate. A blend that
+    loses every route is removed by the caller so the level falls back to its
+    OR-rule / single-route policy."""
+    routes = blend["routes"]
+    weights = blend["weights"]
+    if len(routes) != len(weights):
+        return  # already malformed; lockstep prune can't realign it
+    kept = [(r, w) for r, w in zip(routes, weights) if not (isinstance(r, str) and r in drop)]
+    blend["routes"] = [r for r, _ in kept]
+    blend["weights"] = [w for _, w in kept]
+
+
 def _scrub_members(obj: Any, drop: frozenset[str]) -> None:
     """Recursively strip dropped routes used as ensemble *members*: keys in
     threshold maps, elements of ``allowed_routes``/``models`` lists, and a
@@ -93,6 +129,8 @@ def _scrub_members(obj: Any, drop: frozenset[str]) -> None:
     Does NOT touch top-level ``routes`` dict keys — callers scrub policy
     *bodies*, so a filetype's own routing policy survives."""
     if isinstance(obj, dict):
+        if _is_blend(obj):
+            _prune_blend(obj, drop)
         for key in [k for k in obj if k in drop]:
             del obj[key]
         for key, val in list(obj.items()):
@@ -100,11 +138,17 @@ def _scrub_members(obj: Any, drop: frozenset[str]) -> None:
                 obj[key] = "general"
             elif isinstance(val, (dict, list)):
                 _scrub_members(val, drop)
+                # A blend that lost every route is no longer a policy; drop it so
+                # the level falls back to its OR-rule / single-route threshold.
+                if _is_blend(val) and not val["routes"]:
+                    del obj[key]
     elif isinstance(obj, list):
         obj[:] = [x for x in obj if not (isinstance(x, str) and x in drop)]
         for item in obj:
             if isinstance(item, (dict, list)):
                 _scrub_members(item, drop)
+        # Drop blends emptied by the recursion above (after pruning, not before).
+        obj[:] = [x for x in obj if not (_is_blend(x) and not x["routes"])]
 
 
 def _prune_config(config: dict[str, Any], drop: frozenset[str]) -> None:

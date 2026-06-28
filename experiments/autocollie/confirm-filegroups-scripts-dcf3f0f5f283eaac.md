@@ -1,6 +1,6 @@
 # Confirm PASS — dcf3f0f5f283eaac on `filegroups/scripts`
 
-Cycle `20260628T120353-confirm-dcf3f0f5f283eaac` — 2026-06-28T12:03:53Z
+Cycle `20260628T172006-confirm-dcf3f0f5f283eaac` — 2026-06-28T17:20:06Z
 
 PR_AUC held across 3 seeds (orig 0.9938)
 

@@ -986,3 +986,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T171338-filegroups-portable` — 2026-06-28T17:13:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ec9ad0bc528b955` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9927 | 0.9982 | 0.9486 | 1 | [log](out/autocollie/runs/2026-06-28T17-19-41_20260628T171338-filegroups-portable_inherit_from_filetypes_gem_06bdacaa.log) |
+| `30ec91b5f1df13fc` | ctrl_train_hardneg_tail | dup | 0.8739 | 0.9481 | 0.8431 | 1 | [log](out/autocollie/runs/2026-06-28T17-19-46_20260628T171338-filegroups-portable_ctrl_train_hardneg_tail.log) |
+| `d52624c632269c55` | feat_kv_vocab_split_15k | ok | 0.8677 | 0.9582 | 0.8363 | 11 | [log](out/autocollie/runs/2026-06-28T17-19-48_20260628T171338-filegroups-portable_feat_kv_vocab_split_15k.log) |
+| `b1f84cb0687b5356` | feat_tiered_trigrams_textenc | ok | 0.8753 | 0.9639 | 0.8331 | 11 | [log](out/autocollie/runs/2026-06-28T17-20-00_20260628T171338-filegroups-portable_feat_tiered_trigrams_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature surface to isolate training signal; aims to improve PR_AUC by upweighting hard negatives to better separate borderline malware at the strict-FP tail.
+- **`feat_kv_vocab_split_15k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured key-value patterns in portable files; aims to boost PR_AUC by adding high-signal lexical features that distinguish malicious configs from benign ones.
+- **`feat_tiered_trigrams_textenc`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Adds tiered critical trigrams and text encoding features to capture multi-step attack chains and encoding artifacts; aims to improve recall@3FPM by surfacing subtle malicious sequences buried in benign noise.
+
+</details>
+

@@ -618,3 +618,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T163044-filetypes-java` — 2026-06-28T16:30:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `01fc76810f750736` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9704 | 0.9872 | 0.9149 | 1 | [log](out/autocollie/runs/2026-06-28T16-37-37_20260628T163044-filetypes-java_inherit_from_filetypes_gem_06bdacaa.log) |
+| `67e13703fa809e4c` | java_control_train_tune_v4 | ok | 0.4466 | 0.9458 | 0.1460 | 9 | [log](out/autocollie/runs/2026-06-28T16-37-40_20260628T163044-filetypes-java_java_control_train_tune_v4.log) |
+| `323b147410d25164` | java_symbol_vocab_textenc_expand | ok | 0.4042 | 0.9378 | 0.1442 | 9 | [log](out/autocollie/runs/2026-06-28T16-37-49_20260628T163044-filetypes-java_java_symbol_vocab_textenc_expand.log) |
+| `9ab75557fdb930aa` | java_tiered_trigrams_low_freq | ok | 0.4042 | 0.9378 | 0.1442 | 9 | [log](out/autocollie/runs/2026-06-28T16-37-59_20260628T163044-filetypes-java_java_tiered_trigrams_low_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune_v4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Control run replicating best recent feature_env (textmetrics+kv_vocab) while tuning training knobs (num_leaves, learning_rate) to improve PR_AUC without changing features.
+- **`java_symbol_vocab_textenc_expand`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables symbol_vocab and text_encoding research vocabs to capture Java class structure and string patterns, aiming to boost PR_AUC by adding discriminative lexical signal.
+- **`java_tiered_trigrams_low_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lowers bigram_min_freq to 25 and enables tiered_crit_trigrams to capture rarer Java-specific attack patterns, targeting recall@3FPM improvement.
+
+</details>
+

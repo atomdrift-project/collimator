@@ -1,62 +1,13 @@
-# Promote REJECTED — `fa8d5bccea9a86b0` on `filetypes/powershell`
+# Promote PASS — `fa8d5bccea9a86b0` on `filetypes/powershell`
 
-Generated 2026-06-28T11:19:55Z
+Generated 2026-06-28T17:13:38Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T11-01-13_20260628T110112-promote-fa8d5bccea9a86b0_azoth-validate.log; tail: 2026-06-28 07:03:09,116 INFO azoth_calibrate_ensemble: filetypes/msi: using cached scores
-2026-06-28 07:03:09,118 INFO collimator.features: DB-backed feature extraction: 1547473 rows, 8 workers, batch_size=1024
-2026-06-28 07:03:09,376 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-06-28 07:03:09,751 INFO azoth_calibrate_ensemble: filetypes/npm: using cached scores
-2026-06-28 07:03:10,099 INFO azoth_calibrate_ensemble: filetypes/dockerfile: using cached scores
-2026-06-28 07:03:10,151 INFO azoth_calibrate_ensemble: filetypes/cargo.toml: using cached scores
-2026-06-28 07:03:10,414 WARNING azoth_calibrate_ensemble: filegroups/media: skipped 138629 rows absent from general score cache
-2026-06-28 07:03:10,482 INFO azoth_calibrate_ensemble: filetypes/crx: using cached scores
-2026-06-28 07:03:10,628 WARNING azoth_calibrate_ensemble: filetypes/powershell: skipped 1614 rows absent from general score cache
-2026-06-28 07:03:10,651 INFO azoth_calibrate_ensemble: filetypes/chrome-manifest: using cached scores
-2026-06-28 07:03:11,183 INFO azoth_calibrate_ensemble: filetypes/powershell: loaded route feature matrix cache out/cache/azoth-route-features/filetypes_powershell-1872261008-48501bdce9d85a97-172b08d8417e358d.matrix.npz (8491 rows, 1378 features, nnz=689878)
-2026-06-28 07:03:11,278 INFO azoth_calibrate_ensemble: filegroups/media: loaded route feature matrix cache out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-e249e6d2b15fa70b.matrix.npz (275289 rows, 222 features, nnz=2414072)
-2026-06-28 07:03:11,317 INFO azoth_calibrate_ensemble: filetypes/powershell: refreshed 8491 rows in 2.8s (fetch 2.1s, filter 0.0s, load 0.6s, extract 0.0s, matrix 0.0s, predict 0.1s, write 0.0s; feature_cache_read 0.0s, feature_cache_write 0.0s; features=1378 nnz=689878)
-2026-06-28 07:03:18,169 INFO azoth_calibrate_ensemble: filegroups/media: refreshed 275289 rows in 18.5s (fetch 10.7s, filter 0.1s, load 0.1s, extract 0.0s, matrix 0.0s, predict 6.6s, write 0.3s; feature_cache_read 0.7s, feature_cache_write 0.0s; features=222 nnz=2414072)
-concurrent.futures.process._RemoteTraceback: 
-"""
-Traceback (most recent call last):
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/process.py", line 264, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1008, in _score_route_worker
-    return _score_route(
-           ^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 467, in _score_route
-    feature_cache_write_s = _save_route_feature_cache(
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 196, in _save_route_feature_cache
-    tmp_matrix.replace(matrix_path)
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1376, in replace
-    os.replace(self, target)
-FileNotFoundError: [Errno 2] No such file or directory: 'out/cache/azoth-route-features/filetypes_pe-1872261008-4e507e5852f86a82-704b01b5013c605d.matrix.tmp.npz' -> 'out/cache/azoth-route-features/filetypes_pe-1872261008-4e507e5852f86a82-704b01b5013c605d.matrix.npz'
-"""
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1398, in <module>
-    raise SystemExit(main())
-                     ^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1226, in main
-    route_scores[general_offset + idx] = fut.result()
-                                         ^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 449, in result
-    return self.__get_result()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
-    raise self._exception
-FileNotFoundError: [Errno 2] No such file or directory: 'out/cache/azoth-route-features/filetypes_pe-1872261008-4e507e5852f86a82-704b01b5013c605d.matrix.tmp.npz' -> 'out/cache/azoth-route-features/filetypes_pe-1872261008-4e507e5852f86a82-704b01b5013c605d.matrix.npz'
-make[1]: *** [Makefile:1234: azoth-calibrate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+full-train holds — PR_AUC 0.9990 -> 0.9988, AUC 0.9951 -> 0.9951, Brier 0.0207 -> 0.0222
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9990)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
@@ -67,57 +18,129 @@ make[1]: Leaving directory '/home/t/collimator')
 | ROC AUC | 0.9951 | 0.9946 | 0.9951 |
 | F1 | 0.9839 | 0.9842 | 0.9855 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T11-01-13_20260628T110112-promote-fa8d5bccea9a86b0_azoth-validate.log; tail: 2026-06-28 07:03:09,116 INFO azoth_calibrate_ensemble: filetypes/msi: using cached scores
-2026-06-28 07:03:09,118 INFO collimator.features: DB-backed feature extraction: 1547473 rows, 8 workers, batch_size=1024
-2026-06-28 07:03:09,376 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-06-28 07:03:09,751 INFO azoth_calibrate_ensemble: filetypes/npm: using cached scores
-2026-06-28 07:03:10,099 INFO azoth_calibrate_ensemble: filetypes/dockerfile: using cached scores
-2026-06-28 07:03:10,151 INFO azoth_calibrate_ensemble: filetypes/cargo.toml: using cached scores
-2026-06-28 07:03:10,414 WARNING azoth_calibrate_ensemble: filegroups/media: skipped 138629 rows absent from general score cache
-2026-06-28 07:03:10,482 INFO azoth_calibrate_ensemble: filetypes/crx: using cached scores
-2026-06-28 07:03:10,628 WARNING azoth_calibrate_ensemble: filetypes/powershell: skipped 1614 rows absent from general score cache
-2026-06-28 07:03:10,651 INFO azoth_calibrate_ensemble: filetypes/chrome-manifest: using cached scores
-2026-06-28 07:03:11,183 INFO azoth_calibrate_ensemble: filetypes/powershell: loaded route feature matrix cache out/cache/azoth-route-features/filetypes_powershell-1872261008-48501bdce9d85a97-172b08d8417e358d.matrix.npz (8491 rows, 1378 features, nnz=689878)
-2026-06-28 07:03:11,278 INFO azoth_calibrate_ensemble: filegroups/media: loaded route feature matrix cache out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-e249e6d2b15fa70b.matrix.npz (275289 rows, 222 features, nnz=2414072)
-2026-06-28 07:03:11,317 INFO azoth_calibrate_ensemble: filetypes/powershell: refreshed 8491 rows in 2.8s (fetch 2.1s, filter 0.0s, load 0.6s, extract 0.0s, matrix 0.0s, predict 0.1s, write 0.0s; feature_cache_read 0.0s, feature_cache_write 0.0s; features=1378 nnz=689878)
-2026-06-28 07:03:18,169 INFO azoth_calibrate_ensemble: filegroups/media: refreshed 275289 rows in 18.5s (fetch 10.7s, filter 0.1s, load 0.1s, extract 0.0s, matrix 0.0s, predict 6.6s, write 0.3s; feature_cache_read 0.7s, feature_cache_write 0.0s; features=222 nnz=2414072)
-concurrent.futures.process._RemoteTraceback: 
-"""
-Traceback (most recent call last):
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/process.py", line 264, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1008, in _score_route_worker
-    return _score_route(
-           ^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 467, in _score_route
-    feature_cache_write_s = _save_route_feature_cache(
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 196, in _save_route_feature_cache
-    tmp_matrix.replace(matrix_path)
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1376, in replace
-    os.replace(self, target)
-FileNotFoundError: [Errno 2] No such file or directory: 'out/cache/azoth-route-features/filetypes_pe-1872261008-4e507e5852f86a82-704b01b5013c605d.matrix.tmp.npz' -> 'out/cache/azoth-route-features/filetypes_pe-1872261008-4e507e5852f86a82-704b01b5013c605d.matrix.npz'
-"""
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-The above exception was the direct cause of the following exception:
+The candidate bundle lives at:
 
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1398, in <module>
-    raise SystemExit(main())
-                     ^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1226, in main
-    route_scores[general_offset + idx] = fut.result()
-                                         ^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 449, in result
-    return self.__get_result()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
-    raise self._exception
-FileNotFoundError: [Errno 2] No such file or directory: 'out/cache/azoth-route-features/filetypes_pe-1872261008-4e507e5852f86a82-704b01b5013c605d.matrix.tmp.npz' -> 'out/cache/azoth-route-features/filetypes_pe-1872261008-4e507e5852f86a82-704b01b5013c605d.matrix.npz'
-make[1]: *** [Makefile:1234: azoth-calibrate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+```
+/home/t/collimator/out/models/azoth-candidate-filetypes-powershell-fa8d5bccea9a86b0
+```
+
+## Candidate knobs (raw EXP_* form)
+
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ALLOWED_FEATURES_FILE=/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=1.25
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0.2
+EXP_HARD_NEGATIVE_WEIGHT=5
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=0
+EXP_KV_VOCAB_MAX=5000
+EXP_LEARNING_RATE=0.05
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=96
+EXP_NUM_THREADS=8
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SEVERITY_FRACTION_FEATURES=0
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=0
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
+
+## To deploy (HUMAN)
+
+Read `/home/t/collimator/out/models/azoth-candidate-filetypes-powershell-fa8d5bccea9a86b0/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
+
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-powershell-fa8d5bccea9a86b0
+```
+
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

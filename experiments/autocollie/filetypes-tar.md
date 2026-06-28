@@ -854,3 +854,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T170730-filetypes-tar` — 2026-06-28T17:07:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de3716e7aa06c241` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9973 | 0.9984 | 0.9189 | 1 | [log](out/autocollie/runs/2026-06-28T17-13-27_20260628T170730-filetypes-tar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `231c58880fd114e7` | tar_ctrl_textenc_train_tune | ok | 0.9820 | 0.9929 | 0.9079 | 2 | [log](out/autocollie/runs/2026-06-28T17-13-29_20260628T170730-filetypes-tar_tar_ctrl_textenc_train_tune.log) |
+| `146113cc102df4c0` | tar_feat_kv_vocab_expand | ok | 0.9817 | 0.9927 | 0.8784 | 14 | [log](out/autocollie/runs/2026-06-28T17-13-31_20260628T170730-filetypes-tar_tar_feat_kv_vocab_expand.log) |
+| `f88e825cc2f46669` | tar_feat_text_tiered_trigrams | ok | 0.9807 | 0.9921 | 0.8630 | 15 | [log](out/autocollie/runs/2026-06-28T17-13-46_20260628T170730-filetypes-tar_tar_feat_text_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_textenc_train_tune`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best recent feature_env; increases num_leaves and reg_lambda to improve PR_AUC ranking without changing features.
+- **`tar_feat_kv_vocab_expand`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with higher cap to capture more key-value signal, targeting PR_AUC improvement.
+- **`tar_feat_text_tiered_trigrams`** `EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 …` — Expands tiered trigram vocab and text metrics to boost recall@3FPM on obfuscated tar payloads.
+
+</details>
+
