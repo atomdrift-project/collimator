@@ -1,57 +1,8 @@
 # Promote REJECTED — `65f71553d88b8f51` on `filetypes/shell`
 
-Generated 2026-06-14T22:17:39Z
+Generated 2026-06-28T13:24:27Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-14T22-13-56_20260614T221347-promote-65f71553d88b8f51_azoth-validate.log; tail: 2026-06-14 18:17:30,645 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-65f71553d88b8f51/filetypes/shell/models/seed_42.onnx
-2026-06-14 18:17:31,134 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-14 18:17:31,932 INFO filetypes/shell/models/seed_42.txt -> seed_42.onnx OK (delta=8.89e-08 on 200 rows, 1789 ms)
-2026-06-14 18:17:32,439 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-65f71553d88b8f51/filetypes/shell/models/seed_43.onnx
-2026-06-14 18:17:32,935 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-14 18:17:33,702 INFO filetypes/shell/models/seed_43.txt -> seed_43.onnx OK (delta=9.28e-08 on 200 rows, 1770 ms)
-2026-06-14 18:17:34,176 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-65f71553d88b8f51/filetypes/shell/models/seed_44.onnx
-2026-06-14 18:17:34,639 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-14 18:17:35,419 INFO filetypes/shell/models/seed_44.txt -> seed_44.onnx OK (delta=9.53e-08 on 200 rows, 1717 ms)
-
-converted 3/3 files (0 intentionally skipped, 0 failed)
-staged runtime azoth bundle: /tmp/tmp.P8s2Tk0RXf
-azoth bundle ok: /tmp/tmp.P8s2Tk0RXf
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 82 unimpacted (drift treated as pre-existing)
-
-per-route regressions (informational; does not block deploy):
-  shell :: filetypes/shell recall@1FP-on-slice dropped 1.85pp (80.92% → 79.08%)
-
-14 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + applescript: L50 hostile ensemble recall +23.08pp above LWM (0.00% → 23.08%)
-  + dockerfile: L50 hostile ensemble recall +5.56pp above LWM (0.00% → 5.56%)
-  + jar: L50 hostile ensemble recall +8.98pp above LWM (55.51% → 64.49%)
-  + jpeg: L50 hostile ensemble recall +6.38pp above LWM (3.85% → 10.23%)
-  + objc: L50 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
-  + package.json: L50 hostile ensemble recall +3.39pp above LWM (85.89% → 89.28%)
-  + pdf: L50 hostile ensemble recall +1.12pp above LWM (4.48% → 5.60%)
-  + perl: L50 hostile ensemble recall +4.82pp above LWM (51.28% → 56.10%)
-  + php: L50 hostile ensemble recall +4.47pp above LWM (43.22% → 47.69%)
-  + pkg-info: L50 hostile ensemble recall +0.94pp above LWM (94.75% → 95.69%)
-  + ruby: L50 hostile ensemble recall +1.68pp above LWM (41.18% → 42.86%)
-  + vbs: L50 hostile ensemble recall +6.18pp above LWM (56.69% → 62.87%)
-  + whl: L50 hostile ensemble recall +33.33pp above LWM (0.00% → 33.33%)
-  + xml: L50 hostile ensemble recall +6.95pp above LWM (2.52% → 9.47%)
-
-1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/atomdrift/scan/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - shell: L50 hostile ENSEMBLE recall dropped 6.21pp (70.15% → 63.95%; tolerance 1.70pp; deployed 95% CI lower = 68.07%)
-
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - shell: L50 hostile ENSEMBLE recall dropped 8.11pp BELOW LOW-WATER-MARK (72.05% → 63.95%; LWM tolerance 0.90pp)
-
-net-improvement-fallback DID NOT rescue: net malware-caught delta = -115 TPs across 79 compared filetypes; worst high-volume drop (>=1500 mal) = 6.21pp on 'shell' (cap = 5.00pp); worst drop overall = 6.21pp on 'shell' (small-route, not gated)
-  reason: aggregate TP delta is not positive
-  reason: a high-volume filetype cratered (6.21pp on 'shell', >=1500 malware) exceeds catastrophe cap (5.00pp)
-
-compared 79 filetypes (mal≥1, ben≥1); 4 below threshold and skipped.
-
-blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run, or pass --net-improvement-fallback to ship a net-positive deploy whose only regressions are on small routes (below --catastrophe-min-mal). A high-volume filetype cratering past --max-net-route-regression blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.
-make[2]: *** [Makefile:1321: azoth-validate] Error 1)
+AUC regressed at full-train: 0.9966 -> 0.9943
 
 ## Gates
 
@@ -62,62 +13,13 @@ make[2]: *** [Makefile:1321: azoth-validate] Error 1)
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `65f71553d88b8f51` | `b69b99e827cbb668` | `46c8dbdd33d1576a` |
-| PR AUC | 0.9949 | 0.9964 | 0.9966 |
-| ROC AUC | 0.9966 | 0.9966 | 0.9967 |
-| F1 | 0.9339 | 0.9584 | 0.9599 |
+| key | `65f71553d88b8f51` | `0dae45d16790bc4a` | `c090926267603c1c` |
+| PR AUC | 0.9949 | 0.9924 | 0.9924 |
+| ROC AUC | 0.9966 | 0.9943 | 0.9943 |
+| F1 | 0.9339 | 0.9478 | 0.9495 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-14T22-13-56_20260614T221347-promote-65f71553d88b8f51_azoth-validate.log; tail: 2026-06-14 18:17:30,645 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-65f71553d88b8f51/filetypes/shell/models/seed_42.onnx
-2026-06-14 18:17:31,134 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-14 18:17:31,932 INFO filetypes/shell/models/seed_42.txt -> seed_42.onnx OK (delta=8.89e-08 on 200 rows, 1789 ms)
-2026-06-14 18:17:32,439 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-65f71553d88b8f51/filetypes/shell/models/seed_43.onnx
-2026-06-14 18:17:32,935 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-14 18:17:33,702 INFO filetypes/shell/models/seed_43.txt -> seed_43.onnx OK (delta=9.28e-08 on 200 rows, 1770 ms)
-2026-06-14 18:17:34,176 INFO exported LightGBM ONNX to /home/t/collimator/out/models/azoth-candidate-filetypes-shell-65f71553d88b8f51/filetypes/shell/models/seed_44.onnx
-2026-06-14 18:17:34,639 INFO DB-backed feature extraction: 200 rows, 4 workers, batch_size=1024
-2026-06-14 18:17:35,419 INFO filetypes/shell/models/seed_44.txt -> seed_44.onnx OK (delta=9.53e-08 on 200 rows, 1717 ms)
-
-converted 3/3 files (0 intentionally skipped, 0 failed)
-staged runtime azoth bundle: /tmp/tmp.P8s2Tk0RXf
-azoth bundle ok: /tmp/tmp.P8s2Tk0RXf
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 82 unimpacted (drift treated as pre-existing)
-
-per-route regressions (informational; does not block deploy):
-  shell :: filetypes/shell recall@1FP-on-slice dropped 1.85pp (80.92% → 79.08%)
-
-14 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + applescript: L50 hostile ensemble recall +23.08pp above LWM (0.00% → 23.08%)
-  + dockerfile: L50 hostile ensemble recall +5.56pp above LWM (0.00% → 5.56%)
-  + jar: L50 hostile ensemble recall +8.98pp above LWM (55.51% → 64.49%)
-  + jpeg: L50 hostile ensemble recall +6.38pp above LWM (3.85% → 10.23%)
-  + objc: L50 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
-  + package.json: L50 hostile ensemble recall +3.39pp above LWM (85.89% → 89.28%)
-  + pdf: L50 hostile ensemble recall +1.12pp above LWM (4.48% → 5.60%)
-  + perl: L50 hostile ensemble recall +4.82pp above LWM (51.28% → 56.10%)
-  + php: L50 hostile ensemble recall +4.47pp above LWM (43.22% → 47.69%)
-  + pkg-info: L50 hostile ensemble recall +0.94pp above LWM (94.75% → 95.69%)
-  + ruby: L50 hostile ensemble recall +1.68pp above LWM (41.18% → 42.86%)
-  + vbs: L50 hostile ensemble recall +6.18pp above LWM (56.69% → 62.87%)
-  + whl: L50 hostile ensemble recall +33.33pp above LWM (0.00% → 33.33%)
-  + xml: L50 hostile ensemble recall +6.95pp above LWM (2.52% → 9.47%)
-
-1 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/atomdrift/scan/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - shell: L50 hostile ENSEMBLE recall dropped 6.21pp (70.15% → 63.95%; tolerance 1.70pp; deployed 95% CI lower = 68.07%)
-
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - shell: L50 hostile ENSEMBLE recall dropped 8.11pp BELOW LOW-WATER-MARK (72.05% → 63.95%; LWM tolerance 0.90pp)
-
-net-improvement-fallback DID NOT rescue: net malware-caught delta = -115 TPs across 79 compared filetypes; worst high-volume drop (>=1500 mal) = 6.21pp on 'shell' (cap = 5.00pp); worst drop overall = 6.21pp on 'shell' (small-route, not gated)
-  reason: aggregate TP delta is not positive
-  reason: a high-volume filetype cratered (6.21pp on 'shell', >=1500 malware) exceeds catastrophe cap (5.00pp)
-
-compared 79 filetypes (mal≥1, ben≥1); 4 below threshold and skipped.
-
-blocked by: deployed-tolerance gate (1 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (1 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run, or pass --net-improvement-fallback to ship a net-positive deploy whose only regressions are on small routes (below --catastrophe-min-mal). A high-volume filetype cratering past --max-net-route-regression blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.
-make[2]: *** [Makefile:1321: azoth-validate] Error 1)
+AUC regressed at full-train: 0.9966 -> 0.9943

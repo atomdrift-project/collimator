@@ -1476,3 +1476,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T143328-filegroups-config` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d3757ef3cf99524` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9985 | 0.9984 | 0.9881 | 1 | [log](out/autocollie/runs/2026-06-28T14-42-08_20260628T143328-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `86ce8085f637cbc8` | config_ctrl_training_tune | ok | 0.8981 | 0.9216 | 0.8747 | 9 | [log](out/autocollie/runs/2026-06-28T14-42-13_20260628T143328-filegroups-config_config_ctrl_training_tune.log) |
+| `71f8f3ef60c594e2` | config_feat_kv_vocab_10k | ok | 0.8980 | 0.9223 | 0.8795 | 25 | [log](out/autocollie/runs/2026-06-28T14-42-25_20260628T143328-filegroups-config_config_feat_kv_vocab_10k.log) |
+| `a1ce5ce71a213645` | config_feat_textenc_metrics | ok | 0.8960 | 0.9212 | 0.8775 | 14 | [log](out/autocollie/runs/2026-06-28T14-42-51_20260628T143328-filegroups-config_config_feat_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_training_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and regularization to better rank malicious configs without overfitting.
+- **`config_feat_kv_vocab_10k`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab to capture structured key-value patterns common in config files, which are often missed by plain n-grams.
+- **`config_feat_textenc_metrics`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by enabling text_encoding and text_metrics_full to detect obfuscation and structural anomalies in malicious config payloads.
+
+</details>
+

@@ -1,62 +1,13 @@
-# Promote REJECTED — `0dcf80ccc8faaeb2` on `filetypes/python`
+# Promote PASS — `0dcf80ccc8faaeb2` on `filetypes/python`
 
-Generated 2026-06-28T08:12:53Z
+Generated 2026-06-28T14:33:28Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T08-00-48_20260628T080047-promote-0dcf80ccc8faaeb2_azoth-validate.log; tail: 2026-06-28 04:12:41,559 INFO azoth_calibrate_ensemble: L10 on test: hostile recall=61.37% fp=113 (FP/100M=14993.82)
-2026-06-28 04:12:41,579 INFO azoth_calibrate_ensemble: L20 on test: hostile recall=62.01% fp=3210 (FP/100M=425930.55)
-2026-06-28 04:12:41,598 INFO azoth_calibrate_ensemble: L30 on test: hostile recall=64.59% fp=3288 (FP/100M=436280.26)
-2026-06-28 04:12:41,618 INFO azoth_calibrate_ensemble: L40 on test: hostile recall=65.32% fp=5345 (FP/100M=709220.80)
-2026-06-28 04:12:41,638 INFO azoth_calibrate_ensemble: L50 on test: hostile recall=65.88% fp=5419 (FP/100M=719039.76)
-2026-06-28 04:12:41,659 INFO azoth_calibrate_ensemble: L60 on test: hostile recall=66.65% fp=5493 (FP/100M=728858.72)
-2026-06-28 04:12:41,680 INFO azoth_calibrate_ensemble: L70 on test: hostile recall=67.84% fp=5556 (FP/100M=737218.10)
-2026-06-28 04:12:41,703 INFO azoth_calibrate_ensemble: L80 on test: hostile recall=68.08% fp=5610 (FP/100M=744383.29)
-2026-06-28 04:12:41,726 INFO azoth_calibrate_ensemble: L90 on test: hostile recall=69.51% fp=5677 (FP/100M=753273.43)
-2026-06-28 04:12:41,750 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.95% fp=5741 (FP/100M=761765.50)
-2026-06-28 04:12:41,776 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.39% fp=6299 (FP/100M=835805.77)
-2026-06-28 04:12:41,799 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=75.03% fp=6750 (FP/100M=895648.34)
-2026-06-28 04:12:41,819 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.63% fp=7431 (FP/100M=986009.31)
-2026-06-28 04:12:41,841 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.72% fp=9163 (FP/100M=1215826.04)
-2026-06-28 04:12:41,860 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.48% fp=11036 (FP/100M=1464351.87)
-2026-06-28 04:12:41,880 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=72.20% fp=11728 (FP/100M=1556172.41)
-2026-06-28 04:12:41,900 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=74.30% fp=8842 (FP/100M=1173232.99)
-2026-06-28 04:12:41,921 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=75.27% fp=8874 (FP/100M=1177479.02)
-2026-06-28 04:12:41,943 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.96% fp=7514 (FP/100M=997022.47)
-2026-06-28 04:12:41,966 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.05% fp=7019 (FP/100M=931341.59)
-2026-06-28 04:12:41,989 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.90% fp=6436 (FP/100M=853984.11)
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/test_metrics.json
-.venv/bin/python scripts/azoth_route_policy_search.py \
-	 \
-	--config /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/config.json \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/score_table.npz \
-	--output /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/route_policies.json \
-	--csv /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/route_policies.csv \
-	--markdown /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/route_policies.md \
-	 \
-	--previous-bundle out/models/azoth \
-	--workers 128
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1960, in <module>
-    raise SystemExit(main())
-                     ^^^^^^
-  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1793, in main
-    routes = _route_arrays(score_table)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 48, in _route_arrays
-    names = [str(name) for name in score_table["route_names"]]
-                                   ~~~~~~~~~~~^^^^^^^^^^^^^^^
-  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_npyio_impl.py", line 245, in __getitem__
-    with self.zip.open(key) as bytes:
-         ^^^^^^^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1639, in open
-    raise BadZipFile("Truncated file header")
-zipfile.BadZipFile: Truncated file header
-make[1]: *** [Makefile:1338: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+full-train holds — PR_AUC 0.9884 -> 0.9901, AUC 0.9923 -> 0.9936, Brier 0.0261 -> 0.0254
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9884)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
@@ -67,57 +18,129 @@ make[1]: Leaving directory '/home/t/collimator')
 | ROC AUC | 0.9923 | 0.9935 | 0.9936 |
 | F1 | 0.9489 | 0.9536 | 0.9512 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T08-00-48_20260628T080047-promote-0dcf80ccc8faaeb2_azoth-validate.log; tail: 2026-06-28 04:12:41,559 INFO azoth_calibrate_ensemble: L10 on test: hostile recall=61.37% fp=113 (FP/100M=14993.82)
-2026-06-28 04:12:41,579 INFO azoth_calibrate_ensemble: L20 on test: hostile recall=62.01% fp=3210 (FP/100M=425930.55)
-2026-06-28 04:12:41,598 INFO azoth_calibrate_ensemble: L30 on test: hostile recall=64.59% fp=3288 (FP/100M=436280.26)
-2026-06-28 04:12:41,618 INFO azoth_calibrate_ensemble: L40 on test: hostile recall=65.32% fp=5345 (FP/100M=709220.80)
-2026-06-28 04:12:41,638 INFO azoth_calibrate_ensemble: L50 on test: hostile recall=65.88% fp=5419 (FP/100M=719039.76)
-2026-06-28 04:12:41,659 INFO azoth_calibrate_ensemble: L60 on test: hostile recall=66.65% fp=5493 (FP/100M=728858.72)
-2026-06-28 04:12:41,680 INFO azoth_calibrate_ensemble: L70 on test: hostile recall=67.84% fp=5556 (FP/100M=737218.10)
-2026-06-28 04:12:41,703 INFO azoth_calibrate_ensemble: L80 on test: hostile recall=68.08% fp=5610 (FP/100M=744383.29)
-2026-06-28 04:12:41,726 INFO azoth_calibrate_ensemble: L90 on test: hostile recall=69.51% fp=5677 (FP/100M=753273.43)
-2026-06-28 04:12:41,750 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.95% fp=5741 (FP/100M=761765.50)
-2026-06-28 04:12:41,776 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.39% fp=6299 (FP/100M=835805.77)
-2026-06-28 04:12:41,799 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=75.03% fp=6750 (FP/100M=895648.34)
-2026-06-28 04:12:41,819 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.63% fp=7431 (FP/100M=986009.31)
-2026-06-28 04:12:41,841 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.72% fp=9163 (FP/100M=1215826.04)
-2026-06-28 04:12:41,860 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.48% fp=11036 (FP/100M=1464351.87)
-2026-06-28 04:12:41,880 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=72.20% fp=11728 (FP/100M=1556172.41)
-2026-06-28 04:12:41,900 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=74.30% fp=8842 (FP/100M=1173232.99)
-2026-06-28 04:12:41,921 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=75.27% fp=8874 (FP/100M=1177479.02)
-2026-06-28 04:12:41,943 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.96% fp=7514 (FP/100M=997022.47)
-2026-06-28 04:12:41,966 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.05% fp=7019 (FP/100M=931341.59)
-2026-06-28 04:12:41,989 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.90% fp=6436 (FP/100M=853984.11)
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/test_metrics.json
-.venv/bin/python scripts/azoth_route_policy_search.py \
-	 \
-	--config /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/config.json \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/score_table.npz \
-	--output /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/route_policies.json \
-	--csv /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/route_policies.csv \
-	--markdown /home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/route_policies.md \
-	 \
-	--previous-bundle out/models/azoth \
-	--workers 128
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1960, in <module>
-    raise SystemExit(main())
-                     ^^^^^^
-  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1793, in main
-    routes = _route_arrays(score_table)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 48, in _route_arrays
-    names = [str(name) for name in score_table["route_names"]]
-                                   ~~~~~~~~~~~^^^^^^^^^^^^^^^
-  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_npyio_impl.py", line 245, in __getitem__
-    with self.zip.open(key) as bytes:
-         ^^^^^^^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1639, in open
-    raise BadZipFile("Truncated file header")
-zipfile.BadZipFile: Truncated file header
-make[1]: *** [Makefile:1338: azoth-validate] Error 1
-make[1]: Leaving directory '/home/t/collimator')
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
+
+The candidate bundle lives at:
+
+```
+/home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2
+```
+
+## Candidate knobs (raw EXP_* form)
+
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ALLOWED_FEATURES_FILE=/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=1.25
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0.2
+EXP_HARD_NEGATIVE_WEIGHT=5
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=0
+EXP_KV_VOCAB_MAX=5000
+EXP_LEARNING_RATE=0.05
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=96
+EXP_NUM_THREADS=8
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SEVERITY_FRACTION_FEATURES=0
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=0
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
+
+## To deploy (HUMAN)
+
+Read `/home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
+
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-python-0dcf80ccc8faaeb2
+```
+
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

@@ -1,6 +1,6 @@
 # Confirm PASS — 4ad340c2d2c773a1 on `filegroups/documents`
 
-Cycle `20260614T200959-confirm-4ad340c2d2c773a1` — 2026-06-14T20:09:59Z
+Cycle `20260628T121244-confirm-4ad340c2d2c773a1` — 2026-06-28T12:12:44Z
 
 PR_AUC held across 3 seeds (orig 1.0000)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 1.0000)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `4ad340c2d2c773a1` | `70cbaef6b64f72cb` | `70cbaef6b64f72cb` | `70cbaef6b64f72cb` |
-| PR AUC | 1.0000 | 1.0000 | 0.9998 | 0.9999 |
-| ROC AUC | 0.9997 | 0.9989 | 0.9955 | 0.9962 |
+| key | `4ad340c2d2c773a1` | `f60d00cc0ede4315` | `f60d00cc0ede4315` | `f60d00cc0ede4315` |
+| PR AUC | 1.0000 | 0.9999 | 0.9998 | 0.9998 |
+| ROC AUC | 0.9997 | 0.9968 | 0.9949 | 0.9950 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 

@@ -1,6 +1,6 @@
 # Confirm PASS — ed58b8f67b18373d on `filetypes/zip`
 
-Cycle `20260614T204111-confirm-ed58b8f67b18373d` — 2026-06-14T20:41:11Z
+Cycle `20260628T123750-confirm-ed58b8f67b18373d` — 2026-06-28T12:37:50Z
 
 PR_AUC held across 3 seeds (orig 0.9996)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 0.9996)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `ed58b8f67b18373d` | `8eee07be53f24512` | `8eee07be53f24512` | `8eee07be53f24512` |
-| PR AUC | 0.9996 | 0.9997 | 0.9996 | 0.9996 |
-| ROC AUC | 0.9960 | 0.9978 | 0.9973 | 0.9976 |
+| key | `ed58b8f67b18373d` | `32fcd545116dc2df` | `32fcd545116dc2df` | `32fcd545116dc2df` |
+| PR AUC | 0.9996 | 0.9997 | 0.9997 | 0.9996 |
+| ROC AUC | 0.9960 | 0.9984 | 0.9982 | 0.9980 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 

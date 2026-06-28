@@ -1017,3 +1017,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T155720-filetypes-powershell` — 2026-06-28T15:57:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fa8d5bccea9a86b0` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9990 | 0.9951 | 0.9839 | 1 | [log](out/autocollie/runs/2026-06-28T16-03-48_20260628T155720-filetypes-powershell_inherit_from_filetypes_gem_06bdacaa.log) |
+| `1e27e62e200042b0` | ps_ctrl_textmetrics_hardneg_train | ok | 0.9922 | 0.9812 | 0.9543 | 3 | [log](out/autocollie/runs/2026-06-28T16-04-05_20260628T155720-filetypes-powershell_ps_ctrl_textmetrics_hardneg_train.log) |
+| `23c0b770f28f8cb1` | ps_feat_kv_textenc_lowbigram | ok | 0.9906 | 0.9774 | 0.9500 | 13 | [log](out/autocollie/runs/2026-06-28T16-04-09_20260628T155720-filetypes-powershell_ps_feat_kv_textenc_lowbigram.log) |
+| `8437eccb8f22c076` | ps_feat_tiered_tri_hardneg | ok | 0.9939 | 0.9854 | 0.9543 | 15 | [log](out/autocollie/runs/2026-06-28T16-04-24_20260628T155720-filetypes-powershell_ps_feat_tiered_tri_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_textmetrics_hardneg_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 …` — Control spec replicating best recent feature set (text_metrics_full) while tuning training knobs (num_leaves=128, reg_lambda=2.0, estimators=300) to improve PR_AUC via matrix cache hit.
+- **`ps_feat_kv_textenc_lowbigram`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable kv_vocab and text_encoding research families with bigram_min_freq=200 to capture PowerShell script structure and obfuscation, targeting PR_AUC gain.
+- **`ps_feat_tiered_tri_hardneg`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Combine tiered_crit_trigrams with hard negatives to better rank malicious PowerShell patterns while suppressing benign noise, aiming for higher recall@3FPM.
+
+</details>
+

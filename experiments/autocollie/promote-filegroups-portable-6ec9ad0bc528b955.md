@@ -1,6 +1,6 @@
 # Promote PASS — `6ec9ad0bc528b955` on `filegroups/portable`
 
-Generated 2026-06-28T08:47:52Z
+Generated 2026-06-28T13:50:56Z
 
 full-train holds — PR_AUC 0.9927 -> 0.9924, AUC 0.9982 -> 0.9983, Brier 0.0141 -> 0.0133
 

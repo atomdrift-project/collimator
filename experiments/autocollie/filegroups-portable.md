@@ -968,3 +968,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T124436-filegroups-portable` — 2026-06-28T12:44:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6ec9ad0bc528b955` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9927 | 0.9982 | 0.9486 | 1 | [log](out/autocollie/runs/2026-06-28T12-52-32_20260628T124436-filegroups-portable_inherit_from_filetypes_gem_06bdacaa.log) |
+| `698cd926b72fa906` | ctrl_train_hardneg_tail | ok | 0.8731 | 0.9509 | 0.8470 | 5 | [log](out/autocollie/runs/2026-06-28T12-52-38_20260628T124436-filegroups-portable_ctrl_train_hardneg_tail.log) |
+| `8d36f4e1ff88c697` | feat_kv_vocab_split_10k | ok | 0.8770 | 0.9631 | 0.8414 | 18 | [log](out/autocollie/runs/2026-06-28T12-52-46_20260628T124436-filegroups-portable_feat_kv_vocab_split_10k.log) |
+| `8c6689a34bfc2859` | feat_tiered_trigrams_lowcrit | ok | 0.8715 | 0.9579 | 0.8414 | 17 | [log](out/autocollie/runs/2026-06-28T12-53-05_20260628T124436-filegroups-portable_feat_tiered_trigrams_lowcrit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, while keeping PR_AUC flat via matrix cache reuse.
+- **`feat_kv_vocab_split_10k`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and kv_value_split to extract structured metadata signals that distinguish malicious portable payloads from benign archives.
+- **`feat_tiered_trigrams_lowcrit`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling tiered_crit_trigrams with a lower min_crit to capture subtle malicious co-occurrence patterns in portable file structures without adding excessive noise.
+
+</details>
+

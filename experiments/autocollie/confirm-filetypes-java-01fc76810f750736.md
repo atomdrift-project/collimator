@@ -1,6 +1,6 @@
 # Confirm FAIL — 01fc76810f750736 on `filetypes/java`
 
-Cycle `20260628T081950-confirm-01fc76810f750736` — 2026-06-28T08:19:50Z
+Cycle `20260628T132032-confirm-01fc76810f750736` — 2026-06-28T13:20:32Z
 
 averaged ensemble PR_AUC regressed: 0.9704 -> 0.9263 (tol 0.0050, K=3)
 

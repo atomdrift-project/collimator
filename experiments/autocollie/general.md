@@ -1010,3 +1010,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T143328-general` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bcf4c762c9457cdb` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9972 | 0.9970 | 0.9591 | 1 | [log](out/autocollie/runs/2026-06-28T14-42-51_20260628T143328-general_inherit_from_filetypes_gem_06bdacaa.log) |
+| `1e74152f35259cd0` | control_train_tune_leaves128_lr003 | dup | 0.9700 | 0.9620 | 0.9003 | 2 | [log](out/autocollie/runs/2026-06-28T14-42-52_20260628T143328-general_control_train_tune_leaves128_lr003.log) |
+| `6551511062c69515` | feat_kv_vocab_20k_textmetrics_full | ok | 0.9707 | 0.9634 | 0.9014 | 94 | [log](out/autocollie/runs/2026-06-28T14-42-53_20260628T143328-general_feat_kv_vocab_20k_textmetrics_full.log) |
+| `f06e24c5b2bf2a28` | feat_tiered_trigrams_severity_fractions | ok | 0.9680 | 0.9595 | 0.9023 | 132 | [log](out/autocollie/runs/2026-06-28T14-44-28_20260628T143328-general_feat_tiered_trigrams_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_train_tune_leaves128_lr003`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating best recent feature_env to hit matrix cache; tunes num_leaves and learning_rate to improve PR_AUC ranking stability.
+- **`feat_kv_vocab_20k_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 …` — Enables kv_vocab and text_metrics_full research vocabs to capture richer structural signals, aiming to lift recall@3FPM and PR_AUC.
+- **`feat_tiered_trigrams_severity_fractions`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 …` — Adds tiered_crit_trigrams and severity_fractions to better rank low-severity malware, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+

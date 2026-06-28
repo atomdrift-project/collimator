@@ -952,3 +952,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T152736-filetypes-vbs` — 2026-06-28T15:27:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `048f002a9f25c7cc` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9885 | 0.8323 | 0.9799 | 3 | [log](out/autocollie/runs/2026-06-28T15-34-28_20260628T152736-filetypes-vbs_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c550cae658565f70` | vbs_control_train_tune | ok | 0.9961 | 0.9859 | 0.9573 | 33 | [log](out/autocollie/runs/2026-06-28T15-34-38_20260628T152736-filetypes-vbs_vbs_control_train_tune.log) |
+| `fef40712e8621c58` | vbs_kv_textmetrics_full | ok | 0.9952 | 0.9827 | 0.9561 | 4 | [log](out/autocollie/runs/2026-06-28T15-35-13_20260628T152736-filetypes-vbs_vbs_kv_textmetrics_full.log) |
+| `b7f613ef65575872` | vbs_tiered_trigrams_lowfreq | ok | 0.9963 | 0.9864 | 0.9566 | 23 | [log](out/autocollie/runs/2026-06-28T15-35-20_20260628T152736-filetypes-vbs_vbs_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating best feature_env to isolate training knob effects on PR_AUC and ROC_AUC stability.
+- **`vbs_kv_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 …` — Enables kv_vocab and text_metrics_full to capture structural and key-value signals in VBS scripts, aiming to boost PR_AUC by reducing false negatives on obfuscated payloads.
+- **`vbs_tiered_trigrams_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lowers tiered trigram frequency and crit thresholds to capture rare malicious patterns, targeting recall@3 FP/M improvement while monitoring PR_AUC guardrails.
+
+</details>
+

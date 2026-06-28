@@ -1619,3 +1619,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T154606-filetypes-javascript` — 2026-06-28T15:46:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89ff83fb2785f5ad` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9978 | 0.9974 | 0.9792 | 1 | [log](out/autocollie/runs/2026-06-28T15-52-52_20260628T154606-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `2d974a57ea62b1cf` | ctrl_best_env_train_tune_v7 | dup | 0.9836 | 0.9774 | 0.9448 | 1 | [log](out/autocollie/runs/2026-06-28T15-52-58_20260628T154606-filetypes-javascript_ctrl_best_env_train_tune_v7.log) |
+| `c00824ee3f5a64a8` | feat_textenc_metrics_kv_vocab | ok | 0.9823 | 0.9754 | 0.9438 | 35 | [log](out/autocollie/runs/2026-06-28T15-53-00_20260628T154606-filetypes-javascript_feat_textenc_metrics_kv_vocab.log) |
+| `8dffd7a2ae25a4ce` | feat_lowfreq_ngrams_kv | ok | 0.9830 | 0.9769 | 0.9447 | 32 | [log](out/autocollie/runs/2026-06-28T15-53-37_20260628T154606-filetypes-javascript_feat_lowfreq_ngrams_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_env_train_tune_v7`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env while increasing estimators and leaves to improve PR_AUC via deeper model capacity.
+- **`feat_textenc_metrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables text_encoding and text_metrics_full research vocabs alongside kv_vocab to capture structural and lexical signals, targeting PR_AUC gains.
+- **`feat_lowfreq_ngrams_kv`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=15000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 …` — Lowers tiered trigram and bigram frequency floors to capture rare malicious patterns, aiming to boost recall@3 FP/M without hurting ROC_AUC.
+
+</details>
+

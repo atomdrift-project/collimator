@@ -1528,3 +1528,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T150023-filetypes-shell` — 2026-06-28T15:00:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8d4a0163c1226671` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9959 | 0.9968 | 0.9736 | 2 | [log](out/autocollie/runs/2026-06-28T15-07-54_20260628T150023-filetypes-shell_inherit_from_filetypes_gem_06bdacaa.log) |
+| `581d7d5d662473c1` | shell_control_kv8k_reg_tune | ok | 0.9627 | 0.9803 | 0.9311 | 25 | [log](out/autocollie/runs/2026-06-28T15-07-58_20260628T150023-filetypes-shell_shell_control_kv8k_reg_tune.log) |
+| `291a48462b187750` | shell_textenc_metrics_full_kv10k | ok | 0.9564 | 0.9722 | 0.9306 | 24 | [log](out/autocollie/runs/2026-06-28T15-08-25_20260628T150023-filetypes-shell_shell_textenc_metrics_full_kv10k.log) |
+| `56ee432f1828d300` | shell_kv12k_obj_trigrams_tiered | ok | 0.9563 | 0.9719 | 0.9349 | 30 | [log](out/autocollie/runs/2026-06-28T15-08-50_20260628T150023-filetypes-shell_shell_kv12k_obj_trigrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_kv8k_reg_tune`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 …` — control run replicating top PR_AUC feature set while tuning regularization to stabilize ranking and maintain PR_AUC
+- **`shell_textenc_metrics_full_kv10k`** `EXP_BIGRAM_MIN_FREQ=75 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — enables text encoding and full text metrics to capture shell script obfuscation patterns, aiming to improve PR_AUC and recall@3FPM
+- **`shell_kv12k_obj_trigrams_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — expands KV vocab and adds objective/trigram features to better rank malicious shell payloads, targeting recall@3FPM gains
+
+</details>
+

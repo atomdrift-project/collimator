@@ -836,3 +836,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T124436-filetypes-tar` — 2026-06-28T12:44:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de3716e7aa06c241` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9973 | 0.9984 | 0.9189 | 1 | [log](out/autocollie/runs/2026-06-28T12-51-54_20260628T124436-filetypes-tar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `aa2d7abae0116d98` | tar_ctrl_train_leaves128_reg15 | ok | 0.9804 | 0.9918 | 0.8552 | 3 | [log](out/autocollie/runs/2026-06-28T12-51-58_20260628T124436-filetypes-tar_tar_ctrl_train_leaves128_reg15.log) |
+| `9b4b0600421b08cf` | tar_feat_textenc_metrics_full | ok | 0.9816 | 0.9926 | 0.8630 | 19 | [log](out/autocollie/runs/2026-06-28T12-52-03_20260628T124436-filetypes-tar_tar_feat_textenc_metrics_full.log) |
+| `dadb5a5b6df016f9` | tar_feat_kv_tiered_trigrams | ok | 0.9808 | 0.9920 | 0.8859 | 22 | [log](out/autocollie/runs/2026-06-28T12-52-23_20260628T124436-filetypes-tar_tar_feat_kv_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_train_leaves128_reg15`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and L2 regularization to better separate tail malware from benign archives.
+- **`tar_feat_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_metrics_full and text_encoding to capture obfuscation and encoding patterns in archived payloads.
+- **`tar_feat_kv_tiered_trigrams`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding tiered trigram vocab and enabling kv_vocab to capture archive metadata and deeper path co-occurrences.
+
+</details>
+

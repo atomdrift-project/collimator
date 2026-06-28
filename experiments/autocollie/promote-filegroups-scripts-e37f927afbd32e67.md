@@ -1,57 +1,57 @@
 # Promote REJECTED — `e37f927afbd32e67` on `filegroups/scripts`
 
-Generated 2026-06-14T22:04:34Z
+Generated 2026-06-28T13:17:03Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-14T21-53-26_20260614T214853-promote-e37f927afbd32e67_azoth-validate.log; tail:   powershell: L50 hostile ensemble recall +1.62pp (50.81% → 52.44%)
-
-per-route improvements (≥0.10pp, informational):
-  batch :: filegroups/scripts recall@1FP-on-slice +0.46pp (1.76% → 2.21%)
-  powershell :: filegroups/scripts recall@1FP-on-slice +5.17pp (54.51% → 59.68%)
-  powershell :: filetypes/powershell recall@1FP-on-slice +12.85pp (44.31% → 57.16%)
-  python :: filegroups/scripts recall@1FP-on-slice +2.50pp (52.76% → 55.26%)
-  ruby :: filegroups/scripts recall@1FP-on-slice +19.05pp (19.05% → 38.10%)
-
-per-route regressions (informational; does not block deploy):
-  javascript :: filegroups/scripts recall@1FP-on-slice dropped 3.03pp (65.46% → 62.44%)
-  perl :: filegroups/scripts recall@1FP-on-slice dropped 2.44pp (63.41% → 60.98%)
-  php :: filegroups/scripts recall@1FP-on-slice dropped 5.05pp (55.54% → 50.49%)
-  shell :: filegroups/scripts recall@1FP-on-slice dropped 7.54pp (72.46% → 64.92%)
-
-14 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + applescript: L50 hostile ensemble recall +23.08pp above LWM (0.00% → 23.08%)
-  + batch: L50 hostile ensemble recall +1.17pp above LWM (0.96% → 2.13%)
-  + dockerfile: L50 hostile ensemble recall +5.56pp above LWM (0.00% → 5.56%)
-  + jar: L50 hostile ensemble recall +8.98pp above LWM (55.51% → 64.49%)
-  + jpeg: L50 hostile ensemble recall +6.38pp above LWM (3.85% → 10.23%)
-  + objc: L50 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
-  + package.json: L50 hostile ensemble recall +3.39pp above LWM (85.89% → 89.28%)
-  + pdf: L50 hostile ensemble recall +1.12pp above LWM (4.48% → 5.60%)
-  + php: L50 hostile ensemble recall +3.34pp above LWM (43.22% → 46.56%)
-  + pkg-info: L50 hostile ensemble recall +0.94pp above LWM (94.75% → 95.69%)
-  + ruby: L50 hostile ensemble recall +1.68pp above LWM (41.18% → 42.86%)
-  + vbs: L50 hostile ensemble recall +6.18pp above LWM (56.69% → 62.87%)
-  + whl: L50 hostile ensemble recall +33.33pp above LWM (0.00% → 33.33%)
-  + xml: L50 hostile ensemble recall +6.95pp above LWM (2.52% → 9.47%)
-
-2 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/atomdrift/scan/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - python: L50 hostile ENSEMBLE recall dropped 4.92pp (48.37% → 43.45%; tolerance 1.70pp; deployed 95% CI lower = 46.51%)
-  - shell: L50 hostile ENSEMBLE recall dropped 2.87pp (70.15% → 67.28%; tolerance 1.70pp; deployed 95% CI lower = 68.07%)
-
-4 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - javascript: L50 hostile ENSEMBLE recall dropped 3.26pp BELOW LOW-WATER-MARK (63.33% → 60.07%; LWM tolerance 0.90pp)
-  - lua: L50 hostile ENSEMBLE recall dropped 23.08pp BELOW LOW-WATER-MARK (69.23% → 46.15%; LWM tolerance 0.90pp)
-  - python: L50 hostile ENSEMBLE recall dropped 5.01pp BELOW LOW-WATER-MARK (48.46% → 43.45%; LWM tolerance 0.90pp)
-  - shell: L50 hostile ENSEMBLE recall dropped 4.77pp BELOW LOW-WATER-MARK (72.05% → 67.28%; LWM tolerance 0.90pp)
-
-net-improvement-fallback DID NOT rescue: net malware-caught delta = -131 TPs across 79 compared filetypes; worst high-volume drop (>=1500 mal) = 4.92pp on 'python' (cap = 5.00pp); worst drop overall = 4.92pp on 'python' (small-route, not gated)
-  reason: aggregate TP delta is not positive
-
-compared 79 filetypes (mal≥1, ben≥1); 4 below threshold and skipped.
-
-blocked by: deployed-tolerance gate (2 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (4 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run, or pass --net-improvement-fallback to ship a net-positive deploy whose only regressions are on small routes (below --catastrophe-min-mal). A high-volume filetype cratering past --max-net-route-regression blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.
-make[2]: *** [Makefile:1321: azoth-validate] Error 1)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T13-04-21_20260628T130420-promote-e37f927afbd32e67_azoth-validate.log; tail: 2026-06-28 09:16:58,027 INFO azoth_calibrate_ensemble: L90 on test: hostile recall=69.51% fp=5684 (FP/100M=754202.25)
+2026-06-28 09:16:58,053 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.94% fp=5747 (FP/100M=762561.63)
+2026-06-28 09:16:58,079 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.39% fp=6277 (FP/100M=832886.61)
+2026-06-28 09:16:58,106 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=75.02% fp=6726 (FP/100M=892463.82)
+2026-06-28 09:16:58,132 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.63% fp=7407 (FP/100M=982824.78)
+2026-06-28 09:16:58,159 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.72% fp=9145 (FP/100M=1213437.64)
+2026-06-28 09:16:58,185 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.47% fp=11018 (FP/100M=1461963.47)
+2026-06-28 09:16:58,213 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=72.19% fp=11707 (FP/100M=1553385.95)
+2026-06-28 09:16:58,240 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=74.30% fp=8821 (FP/100M=1170446.52)
+2026-06-28 09:16:58,267 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=75.27% fp=8853 (FP/100M=1174692.56)
+2026-06-28 09:16:58,293 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.96% fp=7492 (FP/100M=994103.32)
+2026-06-28 09:16:58,320 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.04% fp=6997 (FP/100M=928422.44)
+2026-06-28 09:16:58,346 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.90% fp=6414 (FP/100M=851064.96)
+wrote /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/test_metrics.json
+.venv/bin/python scripts/azoth_route_policy_search.py \
+	 \
+	--config /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/config.json \
+	--score-table /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/score_table.npz \
+	--output /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/route_policies.json \
+	--csv /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/route_policies.csv \
+	--markdown /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/route_policies.md \
+	 \
+	--previous-bundle out/models/azoth \
+	--workers 128
+Traceback (most recent call last):
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1960, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1791, in main
+    file_types = np.asarray([str(value) for value in score_table["file_types"]])
+                                                     ~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_npyio_impl.py", line 257, in __getitem__
+    return format.read_array(
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_format_impl.py", line 869, in read_array
+    data = _read_bytes(fp, read_size, "array data")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_format_impl.py", line 1013, in _read_bytes
+    r = fp.read(size - len(data))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1008, in read
+    data = self._read1(n)
+           ^^^^^^^^^^^^^^
+  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1076, in _read1
+    data += self._read2(n - len(data))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1111, in _read2
+    raise EOFError
+EOFError
+make[2]: *** [Makefile:1338: azoth-validate] Error 1)
 
 ## Gates
 
@@ -62,62 +62,62 @@ make[2]: *** [Makefile:1321: azoth-validate] Error 1)
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `e37f927afbd32e67` | `670eda909ab4340b` | `a0abad5f5c238143` |
-| PR AUC | 0.9970 | 0.9982 | 0.9982 |
-| ROC AUC | 0.9964 | 0.9979 | 0.9979 |
-| F1 | 0.9723 | 0.9806 | 0.9800 |
+| key | `e37f927afbd32e67` | `b2c82d803e6ef512` | `3bf77613a28d3c8c` |
+| PR AUC | 0.9970 | 0.9954 | 0.9953 |
+| ROC AUC | 0.9964 | 0.9963 | 0.9962 |
+| F1 | 0.9723 | 0.9664 | 0.9670 |
 
 ## Disposition
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-14T21-53-26_20260614T214853-promote-e37f927afbd32e67_azoth-validate.log; tail:   powershell: L50 hostile ensemble recall +1.62pp (50.81% → 52.44%)
-
-per-route improvements (≥0.10pp, informational):
-  batch :: filegroups/scripts recall@1FP-on-slice +0.46pp (1.76% → 2.21%)
-  powershell :: filegroups/scripts recall@1FP-on-slice +5.17pp (54.51% → 59.68%)
-  powershell :: filetypes/powershell recall@1FP-on-slice +12.85pp (44.31% → 57.16%)
-  python :: filegroups/scripts recall@1FP-on-slice +2.50pp (52.76% → 55.26%)
-  ruby :: filegroups/scripts recall@1FP-on-slice +19.05pp (19.05% → 38.10%)
-
-per-route regressions (informational; does not block deploy):
-  javascript :: filegroups/scripts recall@1FP-on-slice dropped 3.03pp (65.46% → 62.44%)
-  perl :: filegroups/scripts recall@1FP-on-slice dropped 2.44pp (63.41% → 60.98%)
-  php :: filegroups/scripts recall@1FP-on-slice dropped 5.05pp (55.54% → 50.49%)
-  shell :: filegroups/scripts recall@1FP-on-slice dropped 7.54pp (72.46% → 64.92%)
-
-14 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + applescript: L50 hostile ensemble recall +23.08pp above LWM (0.00% → 23.08%)
-  + batch: L50 hostile ensemble recall +1.17pp above LWM (0.96% → 2.13%)
-  + dockerfile: L50 hostile ensemble recall +5.56pp above LWM (0.00% → 5.56%)
-  + jar: L50 hostile ensemble recall +8.98pp above LWM (55.51% → 64.49%)
-  + jpeg: L50 hostile ensemble recall +6.38pp above LWM (3.85% → 10.23%)
-  + objc: L50 hostile ensemble recall +20.00pp above LWM (0.00% → 20.00%)
-  + package.json: L50 hostile ensemble recall +3.39pp above LWM (85.89% → 89.28%)
-  + pdf: L50 hostile ensemble recall +1.12pp above LWM (4.48% → 5.60%)
-  + php: L50 hostile ensemble recall +3.34pp above LWM (43.22% → 46.56%)
-  + pkg-info: L50 hostile ensemble recall +0.94pp above LWM (94.75% → 95.69%)
-  + ruby: L50 hostile ensemble recall +1.68pp above LWM (41.18% → 42.86%)
-  + vbs: L50 hostile ensemble recall +6.18pp above LWM (56.69% → 62.87%)
-  + whl: L50 hostile ensemble recall +33.33pp above LWM (0.00% → 33.33%)
-  + xml: L50 hostile ensemble recall +6.95pp above LWM (2.52% → 9.47%)
-
-2 DEPLOYED-TOLERANCE regression(s) (vs currently-deployed bundle /home/t/.local/share/atomdrift/scan/models/azoth) — THIS IS WHAT BLOCKS THE DEPLOY:
-  - python: L50 hostile ENSEMBLE recall dropped 4.92pp (48.37% → 43.45%; tolerance 1.70pp; deployed 95% CI lower = 46.51%)
-  - shell: L50 hostile ENSEMBLE recall dropped 2.87pp (70.15% → 67.28%; tolerance 1.70pp; deployed 95% CI lower = 68.07%)
-
-4 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - javascript: L50 hostile ENSEMBLE recall dropped 3.26pp BELOW LOW-WATER-MARK (63.33% → 60.07%; LWM tolerance 0.90pp)
-  - lua: L50 hostile ENSEMBLE recall dropped 23.08pp BELOW LOW-WATER-MARK (69.23% → 46.15%; LWM tolerance 0.90pp)
-  - python: L50 hostile ENSEMBLE recall dropped 5.01pp BELOW LOW-WATER-MARK (48.46% → 43.45%; LWM tolerance 0.90pp)
-  - shell: L50 hostile ENSEMBLE recall dropped 4.77pp BELOW LOW-WATER-MARK (72.05% → 67.28%; LWM tolerance 0.90pp)
-
-net-improvement-fallback DID NOT rescue: net malware-caught delta = -131 TPs across 79 compared filetypes; worst high-volume drop (>=1500 mal) = 4.92pp on 'python' (cap = 5.00pp); worst drop overall = 4.92pp on 'python' (small-route, not gated)
-  reason: aggregate TP delta is not positive
-
-compared 79 filetypes (mal≥1, ben≥1); 4 below threshold and skipped.
-
-blocked by: deployed-tolerance gate (2 filetype(s) regressed vs deployed beyond the 1.70pp tolerance; see list above for the actual drops), low-water-mark gate (4 filetype(s) below LWM beyond the 0.90pp tolerance vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run, or pass --net-improvement-fallback to ship a net-positive deploy whose only regressions are on small routes (below --catastrophe-min-mal). A high-volume filetype cratering past --max-net-route-regression blocks regardless; AZOTH_ALLOW_REGRESSION is the only override for that.
-make[2]: *** [Makefile:1321: azoth-validate] Error 1)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T13-04-21_20260628T130420-promote-e37f927afbd32e67_azoth-validate.log; tail: 2026-06-28 09:16:58,027 INFO azoth_calibrate_ensemble: L90 on test: hostile recall=69.51% fp=5684 (FP/100M=754202.25)
+2026-06-28 09:16:58,053 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.94% fp=5747 (FP/100M=762561.63)
+2026-06-28 09:16:58,079 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.39% fp=6277 (FP/100M=832886.61)
+2026-06-28 09:16:58,106 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=75.02% fp=6726 (FP/100M=892463.82)
+2026-06-28 09:16:58,132 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.63% fp=7407 (FP/100M=982824.78)
+2026-06-28 09:16:58,159 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.72% fp=9145 (FP/100M=1213437.64)
+2026-06-28 09:16:58,185 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.47% fp=11018 (FP/100M=1461963.47)
+2026-06-28 09:16:58,213 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=72.19% fp=11707 (FP/100M=1553385.95)
+2026-06-28 09:16:58,240 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=74.30% fp=8821 (FP/100M=1170446.52)
+2026-06-28 09:16:58,267 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=75.27% fp=8853 (FP/100M=1174692.56)
+2026-06-28 09:16:58,293 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.96% fp=7492 (FP/100M=994103.32)
+2026-06-28 09:16:58,320 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.04% fp=6997 (FP/100M=928422.44)
+2026-06-28 09:16:58,346 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.90% fp=6414 (FP/100M=851064.96)
+wrote /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/test_metrics.json
+.venv/bin/python scripts/azoth_route_policy_search.py \
+	 \
+	--config /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/config.json \
+	--score-table /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/score_table.npz \
+	--output /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/route_policies.json \
+	--csv /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/route_policies.csv \
+	--markdown /home/t/collimator/out/models/azoth-candidate-filegroups-scripts-e37f927afbd32e67/route_policies.md \
+	 \
+	--previous-bundle out/models/azoth \
+	--workers 128
+Traceback (most recent call last):
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1960, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1791, in main
+    file_types = np.asarray([str(value) for value in score_table["file_types"]])
+                                                     ~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_npyio_impl.py", line 257, in __getitem__
+    return format.read_array(
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_format_impl.py", line 869, in read_array
+    data = _read_bytes(fp, read_size, "array data")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_format_impl.py", line 1013, in _read_bytes
+    r = fp.read(size - len(data))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1008, in read
+    data = self._read1(n)
+           ^^^^^^^^^^^^^^
+  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1076, in _read1
+    data += self._read2(n - len(data))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1111, in _read2
+    raise EOFError
+EOFError
+make[2]: *** [Makefile:1338: azoth-validate] Error 1)

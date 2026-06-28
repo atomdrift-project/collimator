@@ -1,6 +1,6 @@
 # Promote PASS — `076145546b051bf2` on `filetypes/xml`
 
-Generated 2026-06-28T11:51:01Z
+Generated 2026-06-28T15:57:20Z
 
 full-train holds — PR_AUC 0.9995 -> 1.0000, AUC 0.9999 -> 1.0000, Brier 0.0071 -> 0.0069
 

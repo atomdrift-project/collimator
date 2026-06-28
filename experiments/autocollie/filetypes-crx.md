@@ -132,3 +132,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T143328-filetypes-crx` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `087068514b16ce47` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9912 | 0.9837 | 0.9610 | 1 | [log](out/autocollie/runs/2026-06-28T14-42-02_20260628T143328-filetypes-crx_inherit_from_filetypes_gem_06bdacaa.log) |
+| `29bc3becffabbf85` | crx_control_train_tune | dup | 0.9966 | 0.9966 | 0.9091 | 1 | [log](out/autocollie/runs/2026-06-28T14-42-07_20260628T143328-filetypes-crx_crx_control_train_tune.log) |
+| `43d5ace023a8759e` | crx_kv_textmetrics_vocab | ok | 0.9966 | 0.9966 | 0.9091 | 24 | [log](out/autocollie/runs/2026-06-28T14-42-10_20260628T143328-filetypes-crx_crx_kv_textmetrics_vocab.log) |
+| `389ed01f89716b74` | crx_textenc_tiered_trigrams_lowfreq | ok | 0.9966 | 0.9966 | 0.9091 | 27 | [log](out/autocollie/runs/2026-06-28T14-42-39_20260628T143328-filetypes-crx_crx_textenc_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_control_train_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature surface to test training hyperparameter tuning, aiming to improve PR_AUC and recall@3FPM by better regularizing the model.
+- **`crx_kv_textmetrics_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture manifest key-value patterns and script obfuscation signals, aiming to boost PR_AUC and recall@3FPM.
+- **`crx_textenc_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Expands tiered trigram vocab and lowers bigram frequency floor to capture rarer malicious script patterns, targeting recall@3FPM gains.
+
+</details>
+

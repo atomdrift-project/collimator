@@ -1010,3 +1010,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T152736-filetypes-package.json` — 2026-06-28T15:27:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9a252530d540b599` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9983 | 0.9983 | 0.9884 | 2 | [log](out/autocollie/runs/2026-06-28T15-35-31_20260628T152736-filetypes-package.json_inherit_from_filetypes_gem_06bdacaa.log) |
+| `15d4d649f1a52018` | pkg_json_control_train_v4 | ok | 0.9968 | 0.9973 | 0.9896 | 26 | [log](out/autocollie/runs/2026-06-28T15-35-35_20260628T152736-filetypes-package.json_pkg_json_control_train_v4.log) |
+| `25004b032451e761` | pkg_json_kv_vocab_split_20k | ok | 0.9967 | 0.9971 | 0.9778 | 32 | [log](out/autocollie/runs/2026-06-28T15-36-04_20260628T152736-filetypes-package.json_pkg_json_kv_vocab_split_20k.log) |
+| `bd9c76c897d1173b` | pkg_json_severity_fractions_traits | ok | 0.9968 | 0.9972 | 0.9801 | 24 | [log](out/autocollie/runs/2026-06-28T15-36-38_20260628T152736-filetypes-package.json_pkg_json_severity_fractions_traits.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_control_train_v4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control using best recent feature set; tests hard-negative upweighting and lower scale_pos_weight_mult to improve recall@3 FP/M while preserving PR_AUC.
+- **`pkg_json_kv_vocab_split_20k`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables kv_vocab and kv_value_split with higher vocab cap to capture more package dependency signal, aiming to boost PR_AUC and recall@3 FP/M.
+- **`pkg_json_severity_fractions_traits`** `EXP_BIGRAM_MIN_FREQ=150 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_SCORE_WEIGHTED_TRAITS=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables severity_fractions and score_weighted_traits to better rank minimal droppers and suspicious configs, aiming to improve recall@3 FP/M and PR_AUC.
+
+</details>
+

@@ -2390,3 +2390,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T124436-filetypes-pdf` — 2026-06-28T12:44:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d887d7dae3e83d19` | inherit_from_filetypes_gem_06bdacaa | dup | 1.0000 | 0.9991 | 0.9945 | 1 | [log](out/autocollie/runs/2026-06-28T12-52-30_20260628T124436-filetypes-pdf_inherit_from_filetypes_gem_06bdacaa.log) |
+| `affa518b40b3ce04` | pdf_control_hardneg_015_16 | ok | 0.9946 | 0.9835 | 0.8563 | 5 | [log](out/autocollie/runs/2026-06-28T12-52-33_20260628T124436-filetypes-pdf_pdf_control_hardneg_015_16.log) |
+| `e4bac01435b2fa1c` | pdf_feat_textmetrics_obfuscation_hardneg | ok | 0.9894 | 0.9660 | 0.8558 | 22 | [log](out/autocollie/runs/2026-06-28T12-52-39_20260628T124436-filetypes-pdf_pdf_feat_textmetrics_obfuscation_hardneg.log) |
+| `724d7158cc159665` | pdf_feat_kv_vocab_split_trigrams | ok | 0.9946 | 0.9834 | 0.8561 | 20 | [log](out/autocollie/runs/2026-06-28T12-53-03_20260628T124436-filetypes-pdf_pdf_feat_kv_vocab_split_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_hardneg_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating the best recent feature_env; tests hard-negative sweep (0.015/16) to lift recall@3FPM while keeping PR_AUC flat.
+- **`pdf_feat_textmetrics_obfuscation_hardneg`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture PDF obfuscation signals; aims to boost PR_AUC and recall@3FPM by adding structural text features.
+- **`pdf_feat_kv_vocab_split_trigrams`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Enables kv_vocab with value splitting and tiered_crit_trigrams to extract structured PDF metadata signals; pairs with hard-negative sweep to improve tail recall@3FPM.
+
+</details>
+

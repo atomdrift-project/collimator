@@ -924,3 +924,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T143328-filetypes-php` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b5c3939397dfdb31` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9878 | 0.9956 | 0.9558 | 3 | [log](out/autocollie/runs/2026-06-28T14-41-49_20260628T143328-filetypes-php_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c9330ae14c240b23` | php_control_train_hardneg_v3 | ok | 0.8492 | 0.9409 | 0.8190 | 4 | [log](out/autocollie/runs/2026-06-28T14-41-55_20260628T143328-filetypes-php_php_control_train_hardneg_v3.log) |
+| `8c01c66cedd4096e` | php_feat_kv_vocab_textenc | dup | 0.8467 | 0.9447 | 0.7755 | 1 | [log](out/autocollie/runs/2026-06-28T14-42-00_20260628T143328-filetypes-php_php_feat_kv_vocab_textenc.log) |
+| `7dac4cce9aa2ab12` | php_feat_lowbigram_textmetrics | ok | 0.8479 | 0.9404 | 0.7878 | 24 | [log](out/autocollie/runs/2026-06-28T14-42-02_20260628T143328-filetypes-php_php_feat_lowbigram_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_hardneg_v3`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with tuned hard-negative weighting to improve recall@3FPM by focusing the model on difficult benign samples.
+- **`php_feat_kv_vocab_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture PHP-specific configuration patterns and encoding artifacts, aiming to boost PR_AUC.
+- **`php_feat_lowbigram_textmetrics`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq and enable text_metrics_full to capture obfuscation signals in PHP scripts, targeting PR_AUC and recall@3FPM.
+
+</details>
+

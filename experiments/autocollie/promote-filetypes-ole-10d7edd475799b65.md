@@ -1,56 +1,56 @@
 # Promote REJECTED — `10d7edd475799b65` on `filetypes/ole`
 
-Generated 2026-06-28T02:38:38Z
+Generated 2026-06-28T13:55:42Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T02-37-00_20260628T023558-promote-10d7edd475799b65_azoth-validate.log; tail: 2026-06-27 22:38:23,644 INFO collimator.features: DB-backed feature extraction: 14118 rows, 8 workers, batch_size=1024
-2026-06-27 22:38:24,068 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-06-27 22:38:24,446 INFO azoth_calibrate_ensemble: filetypes/npm: using cached scores
-2026-06-27 22:38:25,059 INFO azoth_calibrate_ensemble: filetypes/cargo.toml: using cached scores
-2026-06-27 22:38:25,283 INFO azoth_calibrate_ensemble: filetypes/dockerfile: using cached scores
-2026-06-27 22:38:25,514 INFO azoth_calibrate_ensemble: filetypes/crx: using cached scores
-2026-06-27 22:38:25,737 INFO azoth_calibrate_ensemble: filetypes/chrome-manifest: using cached scores
-2026-06-27 22:38:26,278 INFO azoth_calibrate_ensemble: filetypes/ole: saved route feature matrix cache out/cache/azoth-route-features/filetypes_ole-1872261008-5531c74186faa27c-66e672425f9cfc23.matrix.npz
-2026-06-27 22:38:26,378 INFO azoth_calibrate_ensemble: filetypes/ole: refreshed 14118 rows in 5.0s (fetch 1.6s, filter 0.0s, load 0.6s, extract 2.6s, matrix 0.0s, predict 0.1s, write 0.0s; feature_cache_read 0.0s, feature_cache_write 0.0s; features=2179 nnz=426927)
-2026-06-27 22:38:26,668 WARNING azoth_calibrate_ensemble: filegroups/media: skipped 29415 rows absent from general score cache
-2026-06-27 22:38:26,869 INFO collimator.features: DB-backed feature extraction: 275253 rows, 8 workers, batch_size=1024
-2026-06-27 22:38:31,576 WARNING azoth_calibrate_ensemble: filetypes/pkg-info: skipped 3370 rows absent from general score cache
-2026-06-27 22:38:31,741 INFO azoth_calibrate_ensemble: filetypes/pkg-info: loaded route feature matrix cache out/cache/azoth-route-features/filetypes_pkg-info-1872261008-097724a6fa631ac5-6e35cbe3d9367a30.matrix.npz (14059 rows, 417 features, nnz=681740)
-2026-06-27 22:38:31,891 INFO azoth_calibrate_ensemble: filetypes/pkg-info: refreshed 14059 rows in 10.9s (fetch 10.6s, filter 0.0s, load 0.1s, extract 0.0s, matrix 0.0s, predict 0.1s, write 0.0s; feature_cache_read 0.0s, feature_cache_write 0.0s; features=417 nnz=681740)
-concurrent.futures.process._RemoteTraceback: 
-"""
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T13-50-58_20260628T135057-promote-10d7edd475799b65_azoth-validate.log; tail: 2026-06-28 09:55:32,712 INFO azoth_calibrate_ensemble: L10 on test: hostile recall=61.37% fp=124 (FP/100M=16453.39)
+2026-06-28 09:55:32,734 INFO azoth_calibrate_ensemble: L20 on test: hostile recall=61.99% fp=3222 (FP/100M=427522.81)
+2026-06-28 09:55:32,756 INFO azoth_calibrate_ensemble: L30 on test: hostile recall=64.54% fp=3305 (FP/100M=438535.97)
+2026-06-28 09:55:32,776 INFO azoth_calibrate_ensemble: L40 on test: hostile recall=65.28% fp=5371 (FP/100M=712670.70)
+2026-06-28 09:55:32,797 INFO azoth_calibrate_ensemble: L50 on test: hostile recall=65.84% fp=5441 (FP/100M=721958.91)
+2026-06-28 09:55:32,818 INFO azoth_calibrate_ensemble: L60 on test: hostile recall=66.61% fp=5506 (FP/100M=730583.67)
+2026-06-28 09:55:32,838 INFO azoth_calibrate_ensemble: L70 on test: hostile recall=67.79% fp=5567 (FP/100M=738677.68)
+2026-06-28 09:55:32,859 INFO azoth_calibrate_ensemble: L80 on test: hostile recall=68.02% fp=5622 (FP/100M=745975.55)
+2026-06-28 09:55:32,881 INFO azoth_calibrate_ensemble: L90 on test: hostile recall=69.45% fp=5689 (FP/100M=754865.69)
+2026-06-28 09:55:32,904 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.88% fp=5752 (FP/100M=763225.08)
+2026-06-28 09:55:32,927 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.31% fp=6291 (FP/100M=834744.26)
+2026-06-28 09:55:32,949 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=74.97% fp=6734 (FP/100M=893525.32)
+2026-06-28 09:55:32,969 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.51% fp=7415 (FP/100M=983886.29)
+2026-06-28 09:55:32,989 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.29% fp=9099 (FP/100M=1207333.97)
+2026-06-28 09:55:33,009 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.04% fp=10970 (FP/100M=1455594.42)
+2026-06-28 09:55:33,030 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=71.76% fp=11659 (FP/100M=1547016.89)
+2026-06-28 09:55:33,051 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=73.87% fp=8773 (FP/100M=1164077.47)
+2026-06-28 09:55:33,072 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=74.84% fp=8805 (FP/100M=1168323.51)
+2026-06-28 09:55:33,092 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.93% fp=7515 (FP/100M=997155.16)
+2026-06-28 09:55:33,113 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.01% fp=7021 (FP/100M=931606.97)
+2026-06-28 09:55:33,135 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.87% fp=6438 (FP/100M=854249.49)
+wrote /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/test_metrics.json
+.venv/bin/python scripts/azoth_route_policy_search.py \
+	 \
+	--config /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/config.json \
+	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/score_table.npz \
+	--output /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/route_policies.json \
+	--csv /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/route_policies.csv \
+	--markdown /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/route_policies.md \
+	 \
+	--previous-bundle out/models/azoth \
+	--workers 128
 Traceback (most recent call last):
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/process.py", line 264, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1008, in _score_route_worker
-    return _score_route(
-           ^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 467, in _score_route
-    feature_cache_write_s = _save_route_feature_cache(
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 196, in _save_route_feature_cache
-    tmp_matrix.replace(matrix_path)
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1376, in replace
-    os.replace(self, target)
-FileNotFoundError: [Errno 2] No such file or directory: 'out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-2d23c209b9f2fe97.matrix.tmp.npz' -> 'out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-2d23c209b9f2fe97.matrix.npz'
-"""
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1398, in <module>
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1960, in <module>
     raise SystemExit(main())
                      ^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1226, in main
-    route_scores[general_offset + idx] = fut.result()
-                                         ^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 449, in result
-    return self.__get_result()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
-    raise self._exception
-FileNotFoundError: [Errno 2] No such file or directory: 'out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-2d23c209b9f2fe97.matrix.tmp.npz' -> 'out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-2d23c209b9f2fe97.matrix.npz'
-make[1]: *** [Makefile:1234: azoth-calibrate] Error 1
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1793, in main
+    routes = _route_arrays(score_table)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 48, in _route_arrays
+    names = [str(name) for name in score_table["route_names"]]
+                                   ~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_npyio_impl.py", line 245, in __getitem__
+    with self.zip.open(key) as bytes:
+         ^^^^^^^^^^^^^^^^^^
+  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1639, in open
+    raise BadZipFile("Truncated file header")
+zipfile.BadZipFile: Truncated file header
+make[1]: *** [Makefile:1338: azoth-validate] Error 1
 make[1]: Leaving directory '/home/t/collimator')
 
 ## Gates
@@ -71,53 +71,53 @@ make[1]: Leaving directory '/home/t/collimator')
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T02-37-00_20260628T023558-promote-10d7edd475799b65_azoth-validate.log; tail: 2026-06-27 22:38:23,644 INFO collimator.features: DB-backed feature extraction: 14118 rows, 8 workers, batch_size=1024
-2026-06-27 22:38:24,068 INFO azoth_calibrate_ensemble: filetypes/docx: using cached scores
-2026-06-27 22:38:24,446 INFO azoth_calibrate_ensemble: filetypes/npm: using cached scores
-2026-06-27 22:38:25,059 INFO azoth_calibrate_ensemble: filetypes/cargo.toml: using cached scores
-2026-06-27 22:38:25,283 INFO azoth_calibrate_ensemble: filetypes/dockerfile: using cached scores
-2026-06-27 22:38:25,514 INFO azoth_calibrate_ensemble: filetypes/crx: using cached scores
-2026-06-27 22:38:25,737 INFO azoth_calibrate_ensemble: filetypes/chrome-manifest: using cached scores
-2026-06-27 22:38:26,278 INFO azoth_calibrate_ensemble: filetypes/ole: saved route feature matrix cache out/cache/azoth-route-features/filetypes_ole-1872261008-5531c74186faa27c-66e672425f9cfc23.matrix.npz
-2026-06-27 22:38:26,378 INFO azoth_calibrate_ensemble: filetypes/ole: refreshed 14118 rows in 5.0s (fetch 1.6s, filter 0.0s, load 0.6s, extract 2.6s, matrix 0.0s, predict 0.1s, write 0.0s; feature_cache_read 0.0s, feature_cache_write 0.0s; features=2179 nnz=426927)
-2026-06-27 22:38:26,668 WARNING azoth_calibrate_ensemble: filegroups/media: skipped 29415 rows absent from general score cache
-2026-06-27 22:38:26,869 INFO collimator.features: DB-backed feature extraction: 275253 rows, 8 workers, batch_size=1024
-2026-06-27 22:38:31,576 WARNING azoth_calibrate_ensemble: filetypes/pkg-info: skipped 3370 rows absent from general score cache
-2026-06-27 22:38:31,741 INFO azoth_calibrate_ensemble: filetypes/pkg-info: loaded route feature matrix cache out/cache/azoth-route-features/filetypes_pkg-info-1872261008-097724a6fa631ac5-6e35cbe3d9367a30.matrix.npz (14059 rows, 417 features, nnz=681740)
-2026-06-27 22:38:31,891 INFO azoth_calibrate_ensemble: filetypes/pkg-info: refreshed 14059 rows in 10.9s (fetch 10.6s, filter 0.0s, load 0.1s, extract 0.0s, matrix 0.0s, predict 0.1s, write 0.0s; feature_cache_read 0.0s, feature_cache_write 0.0s; features=417 nnz=681740)
-concurrent.futures.process._RemoteTraceback: 
-"""
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T13-50-58_20260628T135057-promote-10d7edd475799b65_azoth-validate.log; tail: 2026-06-28 09:55:32,712 INFO azoth_calibrate_ensemble: L10 on test: hostile recall=61.37% fp=124 (FP/100M=16453.39)
+2026-06-28 09:55:32,734 INFO azoth_calibrate_ensemble: L20 on test: hostile recall=61.99% fp=3222 (FP/100M=427522.81)
+2026-06-28 09:55:32,756 INFO azoth_calibrate_ensemble: L30 on test: hostile recall=64.54% fp=3305 (FP/100M=438535.97)
+2026-06-28 09:55:32,776 INFO azoth_calibrate_ensemble: L40 on test: hostile recall=65.28% fp=5371 (FP/100M=712670.70)
+2026-06-28 09:55:32,797 INFO azoth_calibrate_ensemble: L50 on test: hostile recall=65.84% fp=5441 (FP/100M=721958.91)
+2026-06-28 09:55:32,818 INFO azoth_calibrate_ensemble: L60 on test: hostile recall=66.61% fp=5506 (FP/100M=730583.67)
+2026-06-28 09:55:32,838 INFO azoth_calibrate_ensemble: L70 on test: hostile recall=67.79% fp=5567 (FP/100M=738677.68)
+2026-06-28 09:55:32,859 INFO azoth_calibrate_ensemble: L80 on test: hostile recall=68.02% fp=5622 (FP/100M=745975.55)
+2026-06-28 09:55:32,881 INFO azoth_calibrate_ensemble: L90 on test: hostile recall=69.45% fp=5689 (FP/100M=754865.69)
+2026-06-28 09:55:32,904 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.88% fp=5752 (FP/100M=763225.08)
+2026-06-28 09:55:32,927 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.31% fp=6291 (FP/100M=834744.26)
+2026-06-28 09:55:32,949 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=74.97% fp=6734 (FP/100M=893525.32)
+2026-06-28 09:55:32,969 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.51% fp=7415 (FP/100M=983886.29)
+2026-06-28 09:55:32,989 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.29% fp=9099 (FP/100M=1207333.97)
+2026-06-28 09:55:33,009 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.04% fp=10970 (FP/100M=1455594.42)
+2026-06-28 09:55:33,030 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=71.76% fp=11659 (FP/100M=1547016.89)
+2026-06-28 09:55:33,051 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=73.87% fp=8773 (FP/100M=1164077.47)
+2026-06-28 09:55:33,072 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=74.84% fp=8805 (FP/100M=1168323.51)
+2026-06-28 09:55:33,092 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.93% fp=7515 (FP/100M=997155.16)
+2026-06-28 09:55:33,113 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.01% fp=7021 (FP/100M=931606.97)
+2026-06-28 09:55:33,135 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.87% fp=6438 (FP/100M=854249.49)
+wrote /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/test_metrics.json
+.venv/bin/python scripts/azoth_route_policy_search.py \
+	 \
+	--config /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/config.json \
+	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/score_table.npz \
+	--output /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/route_policies.json \
+	--csv /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/route_policies.csv \
+	--markdown /home/t/collimator/out/models/azoth-candidate-filetypes-ole-10d7edd475799b65/route_policies.md \
+	 \
+	--previous-bundle out/models/azoth \
+	--workers 128
 Traceback (most recent call last):
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/process.py", line 264, in _process_worker
-    r = call_item.fn(*call_item.args, **call_item.kwargs)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1008, in _score_route_worker
-    return _score_route(
-           ^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 467, in _score_route
-    feature_cache_write_s = _save_route_feature_cache(
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 196, in _save_route_feature_cache
-    tmp_matrix.replace(matrix_path)
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py", line 1376, in replace
-    os.replace(self, target)
-FileNotFoundError: [Errno 2] No such file or directory: 'out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-2d23c209b9f2fe97.matrix.tmp.npz' -> 'out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-2d23c209b9f2fe97.matrix.npz'
-"""
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1398, in <module>
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1960, in <module>
     raise SystemExit(main())
                      ^^^^^^
-  File "/home/t/collimator/scripts/azoth_calibrate_ensemble.py", line 1226, in main
-    route_scores[general_offset + idx] = fut.result()
-                                         ^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 449, in result
-    return self.__get_result()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
-    raise self._exception
-FileNotFoundError: [Errno 2] No such file or directory: 'out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-2d23c209b9f2fe97.matrix.tmp.npz' -> 'out/cache/azoth-route-features/filegroups_media-1872261008-f1d3d7a6681083b5-2d23c209b9f2fe97.matrix.npz'
-make[1]: *** [Makefile:1234: azoth-calibrate] Error 1
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 1793, in main
+    routes = _route_arrays(score_table)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/t/collimator/scripts/azoth_route_policy_search.py", line 48, in _route_arrays
+    names = [str(name) for name in score_table["route_names"]]
+                                   ~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/t/collimator/.venv/lib/python3.12/site-packages/numpy/lib/_npyio_impl.py", line 245, in __getitem__
+    with self.zip.open(key) as bytes:
+         ^^^^^^^^^^^^^^^^^^
+  File "/home/t/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/zipfile/__init__.py", line 1639, in open
+    raise BadZipFile("Truncated file header")
+zipfile.BadZipFile: Truncated file header
+make[1]: *** [Makefile:1338: azoth-validate] Error 1
 make[1]: Leaving directory '/home/t/collimator')

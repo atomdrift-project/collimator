@@ -1088,3 +1088,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T132032-filetypes-plist` — 2026-06-28T13:20:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `182055fa01649622` | inherit_from_filetypes_gem_06bdacaa | dup | 0.2174 | 0.5000 | 0.3571 | 2 | [log](out/autocollie/runs/2026-06-28T13-28-21_20260628T132032-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `0a421dcd22e3d239` | plist_ctrl_train_tune_v6 | ok | 0.1670 | 0.7642 | 0.1136 | 6 | [log](out/autocollie/runs/2026-06-28T13-28-24_20260628T132032-filetypes-plist_plist_ctrl_train_tune_v6.log) |
+| `4cffc638f67b6e99` | plist_feat_kv_textmetrics_vocab | ok | 0.1851 | 0.8254 | 0.1136 | 11 | [log](out/autocollie/runs/2026-06-28T13-28-32_20260628T132032-filetypes-plist_plist_feat_kv_textmetrics_vocab.log) |
+| `075dadbe00d17731` | plist_feat_tiered_trigrams_lowfreq | ok | 0.1574 | 0.7427 | 0.1136 | 9 | [log](out/autocollie/runs/2026-06-28T13-28-44_20260628T132032-filetypes-plist_plist_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v6`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent best feature_env; adjusts num_leaves and reg_lambda to improve PR_AUC by refining tree splits without rebuilding the feature matrix.
+- **`plist_feat_kv_textmetrics_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture plist key-value structures and text obfuscation signals, aiming to boost PR_AUC by adding high-signal features for structural patterns.
+- **`plist_feat_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Expands tiered trigram vocab and lowers min_freq to capture rare malicious plist sequences, targeting recall@3FPM by surfacing low-prevalence attack patterns that standard bigrams miss.
+
+</details>
+

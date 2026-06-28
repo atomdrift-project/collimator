@@ -1564,3 +1564,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T154540-filetypes-elf` — 2026-06-28T15:45:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a9c235d19e755d39` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9998 | 0.9956 | 1 | [log](out/autocollie/runs/2026-06-28T15-51-56_20260628T154540-filetypes-elf_inherit_from_filetypes_gem_06bdacaa.log) |
+| `f553a3427bf0e0d5` | elf_control_hardneg_lr_leaves | ok | 0.9998 | 0.9998 | 0.9942 | 9 | [log](out/autocollie/runs/2026-06-28T15-52-00_20260628T154540-filetypes-elf_elf_control_hardneg_lr_leaves.log) |
+| `f7b9a410d6d1ace7` | elf_feat_symbol_vocab_bigrams | ok | 0.9997 | 0.9997 | 0.9921 | 4 | [log](out/autocollie/runs/2026-06-28T15-52-11_20260628T154540-filetypes-elf_elf_feat_symbol_vocab_bigrams.log) |
+| `3e0058c9171e541b` | elf_feat_overlay_mbc_trigrams | ok | 0.9997 | 0.9997 | 0.9927 | 36 | [log](out/autocollie/runs/2026-06-28T15-52-16_20260628T154540-filetypes-elf_elf_feat_overlay_mbc_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_lr_leaves`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, while keeping PR_AUC flat.
+- **`elf_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing co-occurrence patterns of ELF imports/symbols that single symbols miss, adding rank signal for packed/malicious binaries.
+- **`elf_feat_overlay_mbc_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_OVERLAY_SIGNAL=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by combining packer overlay metrics with MBC ID presence and lower-frequency trigrams to catch obfuscated ELF malware that evades standard n-gram thresholds.
+
+</details>
+

@@ -1,6 +1,6 @@
 # Confirm PASS — 622dcaef385f1b6f on `filegroups/scripts`
 
-Cycle `20260616T092210-confirm-622dcaef385f1b6f` — 2026-06-16T09:22:10Z
+Cycle `20260628T131710-confirm-622dcaef385f1b6f` — 2026-06-28T13:17:10Z
 
 PR_AUC held across 3 seeds (orig 0.9961)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 0.9961)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `622dcaef385f1b6f` | `6e4b6281bf1d47fa` | `6e4b6281bf1d47fa` | `6e4b6281bf1d47fa` |
-| PR AUC | 0.9961 | 0.9982 | 0.9982 | 0.9982 |
-| ROC AUC | 0.9956 | 0.9979 | 0.9979 | 0.9979 |
+| key | `622dcaef385f1b6f` | `b2c82d803e6ef512` | `b2c82d803e6ef512` | `b2c82d803e6ef512` |
+| PR AUC | 0.9961 | 0.9951 | 0.9952 | 0.9952 |
+| ROC AUC | 0.9956 | 0.9961 | 0.9961 | 0.9962 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 

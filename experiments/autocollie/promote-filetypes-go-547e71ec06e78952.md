@@ -1,6 +1,6 @@
 # Promote PASS — `547e71ec06e78952` on `filetypes/go`
 
-Generated 2026-06-28T10:16:34Z
+Generated 2026-06-28T12:03:53Z
 
 full-train holds — PR_AUC 0.9214 -> 0.9250, AUC 0.9731 -> 0.9733, Brier 0.0412 -> 0.0400
 

@@ -1962,3 +1962,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T143328-filetypes-pe` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43c088fe3f8039fc` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9988 | 0.9989 | 0.9853 | 3 | [log](out/autocollie/runs/2026-06-28T14-42-37_20260628T143328-filetypes-pe_inherit_from_filetypes_gem_06bdacaa.log) |
+| `fef3a5f7bf54badd` | pe_control_fpr_target_hardneg | dup | 0.9983 | 0.9984 | 0.0000 | 1 | [log](out/autocollie/runs/2026-06-28T14-42-48_20260628T143328-filetypes-pe_pe_control_fpr_target_hardneg.log) |
+| `3dff97483497f531` | pe_feat_symbol_vocab_bigrams_hardneg | ok | 0.9983 | 0.9984 | 0.9806 | 139 | [log](out/autocollie/runs/2026-06-28T14-42-51_20260628T143328-filetypes-pe_pe_feat_symbol_vocab_bigrams_hardneg.log) |
+| `c4d101dee1d065d2` | pe_feat_kv_vocab_split_hardneg | ok | 0.9983 | 0.9983 | 0.9811 | 150 | [log](out/autocollie/runs/2026-06-28T14-45-12_20260628T143328-filetypes-pe_pe_feat_kv_vocab_split_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_fpr_target_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Control feature set with max_recall_at_fpr threshold tuning and moderate hard-negative weighting to directly optimize recall@3FPM at the deployed operating point without changing the feature matrix.
+- **`pe_feat_symbol_vocab_bigrams_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_BIGRAM=20 EXP_SYMBOL_VOCAB=1 …` — Expands symbol vocab and bigram caps to capture finer-grained API co-occurrence patterns, paired with hard-negative weighting to improve PR_AUC and recall@3FPM by sharpening ranking at low FPR.
+- **`pe_feat_kv_vocab_split_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab with value splitting to recover per-element signal in structured metadata, combined with aggressive hard-negative weighting to boost recall@3FPM while maintaining PR_AUC.
+
+</details>
+

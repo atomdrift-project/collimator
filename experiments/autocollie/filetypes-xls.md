@@ -748,3 +748,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T143328-filetypes-xls` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e7884ec9f83a209f` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9989 | 0.9932 | 4 | [log](out/autocollie/runs/2026-06-28T14-41-37_20260628T143328-filetypes-xls_inherit_from_filetypes_gem_06bdacaa.log) |
+| `780b3600fe72fefc` | xls_control_train_hardneg_v3 | dup | 0.9969 | 0.9904 | 0.9672 | 1 | [log](out/autocollie/runs/2026-06-28T14-42-07_20260628T143328-filetypes-xls_xls_control_train_hardneg_v3.log) |
+| `349eb8e76e3b5845` | xls_feat_text_metrics_encoding | dup | 0.9960 | 0.9876 | 0.9682 | 2 | [log](out/autocollie/runs/2026-06-28T14-42-11_20260628T143328-filetypes-xls_xls_feat_text_metrics_encoding.log) |
+| `dfb945975aefe03c` | xls_feat_lowbigram_tiered_trigrams | ok | 0.9961 | 0.9878 | 0.9674 | 33 | [log](out/autocollie/runs/2026-06-28T14-42-18_20260628T143328-filetypes-xls_xls_feat_lowbigram_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xls_control_train_hardneg_v3`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set and increase hard-negative sampling to improve recall@3FPM by better separating difficult benigns from malware.
+- **`xls_feat_text_metrics_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies in XLS, aiming to boost PR_AUC by distinguishing malicious macros from benign formatting.
+- **`xls_feat_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 250 and enable tiered_crit_trigrams to capture rarer malicious patterns in XLS, targeting PR_AUC improvement while controlling noise via severity filtering.
+
+</details>
+

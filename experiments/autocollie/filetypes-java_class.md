@@ -966,3 +966,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260628T143328-filetypes-java_class` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f631902369e1a0bd` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9794 | 0.9962 | 0.6585 | 1 | [log](out/autocollie/runs/2026-06-28T14-41-01_20260628T143328-filetypes-java_class_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c0904ffdb66375a2` | java_class_control_train_v6 | ok | 0.8742 | 0.9546 | 0.8601 | 2 | [log](out/autocollie/runs/2026-06-28T14-41-06_20260628T143328-filetypes-java_class_java_class_control_train_v6.log) |
+| `f33f1c9f50b834a8` | java_class_symbol_kv_vocab | ok | 0.8751 | 0.9529 | 0.8619 | 8 | [log](out/autocollie/runs/2026-06-28T14-41-10_20260628T143328-filetypes-java_class_java_class_symbol_kv_vocab.log) |
+| `415c1bef4b4085f0` | java_class_textenc_metrics_lowbigram | ok | 0.8742 | 0.9581 | 0.8674 | 8 | [log](out/autocollie/runs/2026-06-28T14-41-18_20260628T143328-filetypes-java_class_java_class_textenc_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_train_v6`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and adding L2 regularization (reg_lambda=1.5) to better rank tail malware while controlling overfitting on the replicated best feature set.
+- **`java_class_symbol_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling symbol and KV vocab features to capture class/method naming patterns and metadata structures that distinguish malicious Java bytecode.
+- **`java_class_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_encoding and text_metrics_full to detect obfuscation in string constants, while lowering bigram_min_freq to 200 to capture rarer malicious patterns.
+
+</details>
+

@@ -1112,3 +1112,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T115101-filetypes-text` — 2026-06-28T11:51:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d8d0f6451f21a15b` | inherit_from_filetypes_gem_06bdacaa | dup | 0.8689 | 0.9154 | 0.7805 | 1 | [log](out/autocollie/runs/2026-06-28T11-58-36_20260628T115101-filetypes-text_inherit_from_filetypes_gem_06bdacaa.log) |
+| `76b816d46fcf73df` | text_ctrl_train_tune_v8 | ok | 0.1323 | 0.6287 | 0.0789 | 9 | [log](out/autocollie/runs/2026-06-28T11-58-40_20260628T115101-filetypes-text_text_ctrl_train_tune_v8.log) |
+| `c783fcc87a5602c0` | text_feat_textmetrics_encoding_v3 | ok | 0.1284 | 0.5951 | 0.0662 | 8 | [log](out/autocollie/runs/2026-06-28T11-58-50_20260628T115101-filetypes-text_text_feat_textmetrics_encoding_v3.log) |
+| `c0f1cbb376cde244` | text_feat_kv_vocab_tiered_trig | ok | 0.1361 | 0.5755 | 0.0749 | 8 | [log](out/autocollie/runs/2026-06-28T11-58-59_20260628T115101-filetypes-text_text_feat_kv_vocab_tiered_trig.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_train_tune_v8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating the top recent feature_env to cache-hit the matrix, while adjusting num_leaves and learning_rate to stabilize PR_AUC and reduce variance at the tail.
+- **`text_feat_textmetrics_encoding_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables text_metrics_full and text_encoding to capture structural obfuscation and encoding anomalies in text files, targeting PR_AUC gains by adding high-signal features for malicious document payloads.
+- **`text_feat_kv_vocab_tiered_trig`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Activates kv_vocab with a moderate cap and enables tiered_crit_trigrams to capture key-value pair patterns and severity-weighted trigram co-occurrences, aiming to boost recall@3 FP/M by surfacing subtle malicious metadata in text files.
+
+</details>
+
+## Cycle `20260628T143328-filetypes-text` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d8d0f6451f21a15b` | inherit_from_filetypes_gem_06bdacaa | dup | 0.8689 | 0.9154 | 0.7805 | 1 | [log](out/autocollie/runs/2026-06-28T14-42-10_20260628T143328-filetypes-text_inherit_from_filetypes_gem_06bdacaa.log) |
+| `2bf6627aa407d40c` | text_ctrl_train_tune_v9 | ok | 0.1317 | 0.6361 | 0.0833 | 7 | [log](out/autocollie/runs/2026-06-28T14-42-15_20260628T143328-filetypes-text_text_ctrl_train_tune_v9.log) |
+| `d08277e8063671ea` | text_feat_textmetrics_encoding_v4 | ok | 0.1284 | 0.5951 | 0.0662 | 6 | [log](out/autocollie/runs/2026-06-28T14-42-25_20260628T143328-filetypes-text_text_feat_textmetrics_encoding_v4.log) |
+| `27f37e05f8d18d83` | text_feat_kv_vocab_lowfreq_v2 | ok | 0.1316 | 0.6360 | 0.0791 | 15 | [log](out/autocollie/runs/2026-06-28T14-42-32_20260628T143328-filetypes-text_text_feat_kv_vocab_lowfreq_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_train_tune_v9`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; increases num_leaves and estimators to improve PR_AUC by allowing deeper decision boundaries without overfitting.
+- **`text_feat_textmetrics_encoding_v4`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture structural obfuscation and encoding anomalies, aiming to boost PR_AUC by adding high-signal features for document/text malware.
+- **`text_feat_kv_vocab_lowfreq_v2`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=280 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 …` — Expands kv_vocab_max and lowers kv_min_freq to capture rare malicious key-value patterns, targeting recall@3FPM gains by surfacing tail malware signals.
+
+</details>
+

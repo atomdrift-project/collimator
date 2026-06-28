@@ -992,8 +992,14 @@ def _write_score_table(
     for idx, route in enumerate(route_scores):
         scores[idx, route["indices"]] = route["probs"]
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Atomic write via a process-unique temp + os.replace. np.savez_compressed
+    # streams a zip straight to the target, so a killed/overlapping writer (the
+    # autocollie loop runs calibrate concurrently) would leave a truncated .npz
+    # that crashes every downstream reader with EOFError. The pid suffix keeps
+    # the temp private; os.replace makes the final file appear all-at-once.
+    tmp = path.with_name(path.name.removesuffix(".npz") + f".tmp.{os.getpid()}.npz")
     np.savez_compressed(
-        path,
+        tmp,
         row_ids=row_ids,
         labels=labels,
         file_types=file_types,
@@ -1002,6 +1008,7 @@ def _write_score_table(
         route_kinds=kinds,
         scores=scores,
     )
+    os.replace(tmp, path)
     return _file_sha256(path)
 
 

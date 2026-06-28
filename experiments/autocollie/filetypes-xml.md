@@ -920,3 +920,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T143328-filetypes-xml` — 2026-06-28T14:33:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `076145546b051bf2` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9995 | 0.9999 | 0.9767 | 2 | [log](out/autocollie/runs/2026-06-28T14-43-00_20260628T143328-filetypes-xml_inherit_from_filetypes_gem_06bdacaa.log) |
+| `55a73a2554c9d8ab` | xml_control_training_tune | ok | 0.1951 | 0.6703 | 0.1764 | 10 | [log](out/autocollie/runs/2026-06-28T14-43-05_20260628T143328-filetypes-xml_xml_control_training_tune.log) |
+| `418b2ffef4b037a0` | xml_textmetrics_kv_vocab_tune | ok | 0.1948 | 0.6669 | 0.1653 | 10 | [log](out/autocollie/runs/2026-06-28T14-43-16_20260628T143328-filetypes-xml_xml_textmetrics_kv_vocab_tune.log) |
+| `4ceb7f8d54c37fde` | xml_tiered_trigrams_bigram_freq | ok | 0.1942 | 0.6679 | 0.1764 | 15 | [log](out/autocollie/runs/2026-06-28T14-43-27_20260628T143328-filetypes-xml_xml_tiered_trigrams_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_training_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adjusting tree complexity and regularization on the best recent feature set to reduce overfitting and improve ranking.
+- **`xml_textmetrics_kv_vocab_tune`** `EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Aims to boost recall@3FPM by enabling text_metrics_full and kv_vocab with lower frequency floors to capture rare XML obfuscation patterns and key-value anomalies.
+- **`xml_tiered_trigrams_bigram_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling tiered_crit_trigrams and objective_trigrams alongside a lower bigram_min_freq to capture more granular XML structure and attack patterns.
+
+</details>
+

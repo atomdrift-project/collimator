@@ -1,19 +1,19 @@
 # Promote REJECTED — `bb916910a782f656` on `filetypes/zip`
 
-Generated 2026-06-28T08:19:50Z
+Generated 2026-06-28T13:59:04Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T08-12-55_20260628T081254-promote-bb916910a782f656_azoth-validate.log; tail: 2026-06-28 04:19:41,916 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.95% fp=5740 (FP/100M=761632.81)
-2026-06-28 04:19:42,102 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.39% fp=6297 (FP/100M=835540.39)
-2026-06-28 04:19:42,136 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=75.03% fp=6748 (FP/100M=895382.97)
-2026-06-28 04:19:42,169 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.63% fp=7427 (FP/100M=985478.55)
-2026-06-28 04:19:42,217 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.72% fp=9159 (FP/100M=1215295.29)
-2026-06-28 04:19:42,250 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.48% fp=11032 (FP/100M=1463821.11)
-2026-06-28 04:19:42,285 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=72.20% fp=11724 (FP/100M=1555641.66)
-2026-06-28 04:19:42,323 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=74.30% fp=8838 (FP/100M=1172702.23)
-2026-06-28 04:19:42,361 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=75.27% fp=8870 (FP/100M=1176948.27)
-2026-06-28 04:19:42,409 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.96% fp=7510 (FP/100M=996491.71)
-2026-06-28 04:19:42,640 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.05% fp=7015 (FP/100M=930810.83)
-2026-06-28 04:19:42,694 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.90% fp=6432 (FP/100M=853453.35)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T13-55-44_20260628T135543-promote-bb916910a782f656_azoth-validate.log; tail: 2026-06-28 09:59:01,314 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.87% fp=5735 (FP/100M=760969.37)
+2026-06-28 09:59:01,339 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.30% fp=6282 (FP/100M=833550.06)
+2026-06-28 09:59:01,367 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=74.97% fp=6728 (FP/100M=892729.19)
+2026-06-28 09:59:01,398 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.51% fp=7421 (FP/100M=984682.42)
+2026-06-28 09:59:01,428 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.29% fp=9168 (FP/100M=1216489.48)
+2026-06-28 09:59:01,459 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.05% fp=11218 (FP/100M=1488501.20)
+2026-06-28 09:59:01,489 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=71.77% fp=11933 (FP/100M=1583373.58)
+2026-06-28 09:59:01,520 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=73.88% fp=9047 (FP/100M=1200434.16)
+2026-06-28 09:59:01,551 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=74.84% fp=9079 (FP/100M=1204680.19)
+2026-06-28 09:59:01,582 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.93% fp=7512 (FP/100M=996757.09)
+2026-06-28 09:59:01,614 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.01% fp=7017 (FP/100M=931076.21)
+2026-06-28 09:59:01,646 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.87% fp=6434 (FP/100M=853718.73)
 wrote /home/t/collimator/out/models/azoth-candidate-filetypes-zip-bb916910a782f656/test_metrics.json
 .venv/bin/python scripts/azoth_route_policy_search.py \
 	 \
@@ -71,18 +71,18 @@ make[1]: Leaving directory '/home/t/collimator')
 
 This spec did not survive the promotion ladder.
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T08-12-55_20260628T081254-promote-bb916910a782f656_azoth-validate.log; tail: 2026-06-28 04:19:41,916 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.95% fp=5740 (FP/100M=761632.81)
-2026-06-28 04:19:42,102 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.39% fp=6297 (FP/100M=835540.39)
-2026-06-28 04:19:42,136 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=75.03% fp=6748 (FP/100M=895382.97)
-2026-06-28 04:19:42,169 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.63% fp=7427 (FP/100M=985478.55)
-2026-06-28 04:19:42,217 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.72% fp=9159 (FP/100M=1215295.29)
-2026-06-28 04:19:42,250 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.48% fp=11032 (FP/100M=1463821.11)
-2026-06-28 04:19:42,285 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=72.20% fp=11724 (FP/100M=1555641.66)
-2026-06-28 04:19:42,323 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=74.30% fp=8838 (FP/100M=1172702.23)
-2026-06-28 04:19:42,361 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=75.27% fp=8870 (FP/100M=1176948.27)
-2026-06-28 04:19:42,409 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.96% fp=7510 (FP/100M=996491.71)
-2026-06-28 04:19:42,640 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.05% fp=7015 (FP/100M=930810.83)
-2026-06-28 04:19:42,694 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.90% fp=6432 (FP/100M=853453.35)
+azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-06-28T13-55-44_20260628T135543-promote-bb916910a782f656_azoth-validate.log; tail: 2026-06-28 09:59:01,314 INFO azoth_calibrate_ensemble: L100 on test: hostile recall=69.87% fp=5735 (FP/100M=760969.37)
+2026-06-28 09:59:01,339 INFO azoth_calibrate_ensemble: L200 on test: hostile recall=73.30% fp=6282 (FP/100M=833550.06)
+2026-06-28 09:59:01,367 INFO azoth_calibrate_ensemble: L300 on test: hostile recall=74.97% fp=6728 (FP/100M=892729.19)
+2026-06-28 09:59:01,398 INFO azoth_calibrate_ensemble: L500 on test: hostile recall=77.51% fp=7421 (FP/100M=984682.42)
+2026-06-28 09:59:01,428 INFO azoth_calibrate_ensemble: L1000 on test: hostile recall=80.29% fp=9168 (FP/100M=1216489.48)
+2026-06-28 09:59:01,459 INFO azoth_calibrate_ensemble: L2000 on test: hostile recall=82.05% fp=11218 (FP/100M=1488501.20)
+2026-06-28 09:59:01,489 INFO azoth_calibrate_ensemble: L5000 on test: hostile recall=71.77% fp=11933 (FP/100M=1583373.58)
+2026-06-28 09:59:01,520 INFO azoth_calibrate_ensemble: L7500 on test: hostile recall=73.88% fp=9047 (FP/100M=1200434.16)
+2026-06-28 09:59:01,551 INFO azoth_calibrate_ensemble: L10000 on test: hostile recall=74.84% fp=9079 (FP/100M=1204680.19)
+2026-06-28 09:59:01,582 INFO azoth_calibrate_ensemble: L15000 on test: hostile recall=75.93% fp=7512 (FP/100M=996757.09)
+2026-06-28 09:59:01,614 INFO azoth_calibrate_ensemble: L20000 on test: hostile recall=77.01% fp=7017 (FP/100M=931076.21)
+2026-06-28 09:59:01,646 INFO azoth_calibrate_ensemble: L25000 on test: hostile recall=77.87% fp=6434 (FP/100M=853718.73)
 wrote /home/t/collimator/out/models/azoth-candidate-filetypes-zip-bb916910a782f656/test_metrics.json
 .venv/bin/python scripts/azoth_route_policy_search.py \
 	 \
