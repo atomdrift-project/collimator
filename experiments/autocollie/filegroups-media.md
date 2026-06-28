@@ -776,3 +776,111 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260627T204056-filegroups-media` — 2026-06-27T20:40:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3d27f2362f791915` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9870 | 0.9858 | 0.9315 | 35 | [log](out/autocollie/runs/2026-06-27T20-49-55_20260627T204056-filegroups-media_inherit_from_filetypes_gem_06bdacaa.log) |
+| `1545a87c5f4e8599` | media_control_extreme_off_train_tune | ok | 0.3163 | 0.7286 | 0.1568 | 41 | [log](out/autocollie/runs/2026-06-27T20-50-52_20260627T204056-filegroups-media_media_control_extreme_off_train_tune.log) |
+| `8914e667b1e4fce5` | media_text_metrics_kv_vocab | ok | 0.3152 | 0.7285 | 0.1569 | 18 | [log](out/autocollie/runs/2026-06-27T20-51-40_20260627T204056-filegroups-media_media_text_metrics_kv_vocab.log) |
+| `bb265bfb02c2fe9e` | media_low_bigram_freq_tiered_trigrams | ok | 0.3152 | 0.7285 | 0.1569 | 24 | [log](out/autocollie/runs/2026-06-27T20-51-59_20260627T204056-filegroups-media_media_low_bigram_freq_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_extreme_off_train_tune`** `EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity (num_leaves=128, estimators=300) on the proven extreme_features-disabled surface, leveraging matrix cache hits.
+- **`media_text_metrics_kv_vocab`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and kv_vocab to capture document obfuscation and metadata signals common in malicious media files.
+- **`media_low_bigram_freq_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering bigram_min_freq to 100 and enabling tiered_crit_trigrams to capture rarer, high-crit patterns in media payloads, transferring signal from xml/html routes.
+
+</details>
+
+## Cycle `20260628T003602-filegroups-media` — 2026-06-28T00:36:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3d27f2362f791915` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9870 | 0.9858 | 0.9315 | 3 | [log](out/autocollie/runs/2026-06-28T00-45-52_20260628T003602-filegroups-media_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d1266b17987b8252` | media_control_hardneg_tail | ok | 0.3051 | 0.7310 | 0.1565 | 36 | [log](out/autocollie/runs/2026-06-28T00-46-20_20260628T003602-filegroups-media_media_control_hardneg_tail.log) |
+| `81335ce771a809aa` | media_textmetrics_kv_vocab | ok | 0.2572 | 0.6102 | 0.1567 | 36 | [log](out/autocollie/runs/2026-06-28T00-47-11_20260628T003602-filegroups-media_media_textmetrics_kv_vocab.log) |
+| `0e0c054d5193fce6` | media_textenc_clusters_off_seed3 | ok | 0.2597 | 0.6177 | 0.1567 | 36 | [log](out/autocollie/runs/2026-06-28T00-47-51_20260628T003602-filegroups-media_media_textenc_clusters_off_seed3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env; uses hard-negative upweighting to improve recall@3 FP/M by focusing gradient updates on difficult benign samples near the decision boundary.
+- **`media_textmetrics_kv_vocab`** `EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value structural signals, aiming to lift PR_AUC by resolving ambiguous media files that standard n-grams miss.
+- **`media_textenc_clusters_off_seed3`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Ports sister-route success by disabling noisy clusters group and enabling text_encoding; uses seed_search_k=3 to stabilize recall@3 FP/M gains against RNG variance.
+
+</details>
+
+## Cycle `20260628T054104-filegroups-media` — 2026-06-28T05:41:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3d27f2362f791915` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9870 | 0.9858 | 0.9315 | 3 | [log](out/autocollie/runs/2026-06-28T05-49-38_20260628T054104-filegroups-media_inherit_from_filetypes_gem_06bdacaa.log) |
+| `8562611a01a8ab2d` | media_control_hardneg_tail | ok | 0.3051 | 0.7310 | 0.1565 | 3 | [log](out/autocollie/runs/2026-06-28T05-49-47_20260628T054104-filegroups-media_media_control_hardneg_tail.log) |
+| `47278c46d0b46e14` | media_textmetrics_kv_vocab | ok | 0.2597 | 0.6177 | 0.1567 | 3 | [log](out/autocollie/runs/2026-06-28T05-49-53_20260628T054104-filegroups-media_media_textmetrics_kv_vocab.log) |
+| `92e5d326697c9cc5` | media_textenc_lowbigram_tiered | ok | 0.2813 | 0.6725 | 0.1569 | 23 | [log](out/autocollie/runs/2026-06-28T05-49-58_20260628T054104-filegroups-media_media_textenc_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best feature_env; tuning hard_negative_weight and num_leaves to improve recall@3FPM by sharpening the decision boundary at the strict-FP tail.
+- **`media_textmetrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture metadata histograms and key-value patterns in media files, aiming to boost PR_AUC by adding high-signal structural features that distinguish malicious media from benign.
+- **`media_textenc_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and lowers bigram_min_freq to 200 while adjusting tiered_trigram_min_crit to 2, targeting recall@3FPM improvements by surfacing rare encoding artifacts and low-crit n-gram co-occurrences typical of packed media.
+
+</details>
+
+## Cycle `20260628T063319-filegroups-media` — 2026-06-28T06:33:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3d27f2362f791915` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9870 | 0.9858 | 0.9315 | 3 | [log](out/autocollie/runs/2026-06-28T06-42-04_20260628T063319-filegroups-media_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d95b5366865fcea5` | media_control_hardneg_tail_v2 | ok | 0.2858 | 0.6838 | 0.1605 | 4 | [log](out/autocollie/runs/2026-06-28T06-42-13_20260628T063319-filegroups-media_media_control_hardneg_tail_v2.log) |
+| `24e4509c5f238e31` | media_textmetrics_kv_vocab | ok | 0.2813 | 0.6725 | 0.1569 | 16 | [log](out/autocollie/runs/2026-06-28T06-42-21_20260628T063319-filegroups-media_media_textmetrics_kv_vocab.log) |
+| `eea113b110d83b9e` | media_lowbigram_tiered_crit | ok | 0.2813 | 0.6725 | 0.1569 | 66 | [log](out/autocollie/runs/2026-06-28T06-42-40_20260628T063319-filegroups-media_media_lowbigram_tiered_crit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_hardneg_tail_v2`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates baseline features; increases hard_negative_weight and lowers scale_pos_weight_mult to improve recall@3FPM by sharpening the decision boundary at the strict-FP tail.
+- **`media_textmetrics_kv_vocab`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to boost PR_AUC by adding high-signal features for media/document malware.
+- **`media_lowbigram_tiered_crit`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=8000 EXP_TIERED_BIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and tiered_bigram_min_crit to include rarer, lower-crit n-grams that may carry early-stage infection signals, targeting PR_AUC improvement without hurting ROC_AUC.
+
+</details>
+
+## Cycle `20260628T085636-filegroups-media` — 2026-06-28T08:56:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3d27f2362f791915` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9870 | 0.9858 | 0.9315 | 1 | [log](out/autocollie/runs/2026-06-28T09-04-52_20260628T085636-filegroups-media_inherit_from_filetypes_gem_06bdacaa.log) |
+| `42b8e3f436f3dd5c` | media_control_hardneg_opt | ok | 0.3228 | 0.7461 | 0.1591 | 3 | [log](out/autocollie/runs/2026-06-28T09-04-58_20260628T085636-filegroups-media_media_control_hardneg_opt.log) |
+| `fff6f3711a29b7c4` | media_textenc_kv_lowbigram | ok | 0.2800 | 0.6665 | 0.1566 | 17 | [log](out/autocollie/runs/2026-06-28T09-05-06_20260628T085636-filegroups-media_media_textenc_kv_lowbigram.log) |
+| `f544f1818755b3a8` | media_docobf_severity_frac | ok | 0.2800 | 0.6665 | 0.1566 | 32 | [log](out/autocollie/runs/2026-06-28T09-05-25_20260628T085636-filegroups-media_media_docobf_severity_frac.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_hardneg_opt`** `EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning hard-negative sampling and tree complexity on the baseline feature set to better separate tail malware from benign media files.
+- **`media_textenc_kv_lowbigram`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_encoding and kv_vocab to capture structural metadata signals, while lowering bigram_min_freq to 200 to retain rare but malicious media patterns.
+- **`media_docobf_severity_frac`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding document_obfuscation_features and severity_fractions to better rank obfuscated media payloads that evade standard n-gram detection.
+
+</details>
+
+## Cycle `20260628T103459-filegroups-media` — 2026-06-28T10:34:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3d27f2362f791915` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9870 | 0.9858 | 0.9315 | 1 | [log](out/autocollie/runs/2026-06-28T10-42-35_20260628T103459-filegroups-media_inherit_from_filetypes_gem_06bdacaa.log) |
+| `331a64375b1c7e9d` | media_control_scale_pos | ok | 0.2569 | 0.6073 | 0.1567 | 2 | [log](out/autocollie/runs/2026-06-28T10-42-38_20260628T103459-filegroups-media_media_control_scale_pos.log) |
+| `8914e667b1e4fce5` | media_kv_textmetrics_vocab | dup | 0.3152 | 0.7285 | 0.1569 | 2 | [log](out/autocollie/runs/2026-06-28T10-42-42_20260628T103459-filegroups-media_media_kv_textmetrics_vocab.log) |
+| `7904b58e1a328cbe` | media_docobf_line_length | ok | 0.2800 | 0.6664 | 0.1566 | 12 | [log](out/autocollie/runs/2026-06-28T10-42-45_20260628T103459-filegroups-media_media_docobf_line_length.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_scale_pos`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting benigns via scale_pos_weight_mult=0.75, reducing false positives at the strict operating point while keeping PR_AUC flat.
+- **`media_kv_textmetrics_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and text_metrics_full to capture metadata and obfuscation signals prevalent in media files.
+- **`media_docobf_line_length`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by adding document_obfuscation_features and line_length_buckets to better detect packed or obfuscated media payloads.
+
+</details>
+

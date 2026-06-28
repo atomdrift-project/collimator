@@ -846,3 +846,111 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260627T120333-filetypes-kotlin` — 2026-06-27T12:03:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d70ca7f6064d2c11` | inherit_from_filetypes_json_1e3933ad | ok | 0.9999 | 0.9949 | 0.9971 | 76 | [log](out/autocollie/runs/2026-06-27T12-11-18_20260627T120333-filetypes-kotlin_inherit_from_filetypes_json_1e3933ad.log) |
+| `234d322f6adec7da` | kotlin_ctrl_hardneg_tail | ok | 0.9421 | 0.9539 | 0.7404 | 38 | [log](out/autocollie/runs/2026-06-27T12-12-45_20260627T120333-filetypes-kotlin_kotlin_ctrl_hardneg_tail.log) |
+| `ee33e5b8be0306eb` | kotlin_feat_textenc | ok | 0.9751 | 0.9838 | 0.7405 | 39 | [log](out/autocollie/runs/2026-06-27T12-13-30_20260627T120333-filetypes-kotlin_kotlin_feat_textenc.log) |
+| `ea9f358f27929625` | kotlin_feat_textmetrics | ok | 0.9748 | 0.9835 | 0.7405 | 59 | [log](out/autocollie/runs/2026-06-27T12-14-10_20260627T120333-filetypes-kotlin_kotlin_feat_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set with hard-negative upweighting to improve recall@3FPM by focusing on difficult benigns.
+- **`kotlin_feat_textenc`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable text encoding features to capture character-level patterns in Kotlin source, targeting PR_AUC improvement.
+- **`kotlin_feat_textmetrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable full text metrics to capture obfuscation and formatting patterns in Kotlin source, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260627T204056-filetypes-kotlin` — 2026-06-27T20:40:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d70ca7f6064d2c11` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9949 | 0.9971 | 1 | [log](out/autocollie/runs/2026-06-27T20-47-45_20260627T204056-filetypes-kotlin_inherit_from_filetypes_gem_06bdacaa.log) |
+| `84ad9e4fe4f3ba56` | kotlin_ctrl_leaves128_lr003 | ok | 0.9751 | 0.9836 | 0.7507 | 3 | [log](out/autocollie/runs/2026-06-27T20-47-49_20260627T204056-filetypes-kotlin_kotlin_ctrl_leaves128_lr003.log) |
+| `ea9f358f27929625` | kotlin_feat_textmetrics_full | dup | 0.9748 | 0.9835 | 0.7405 | 1 | [log](out/autocollie/runs/2026-06-27T20-47-54_20260627T204056-filetypes-kotlin_kotlin_feat_textmetrics_full.log) |
+| `056010e901b7d30a` | kotlin_feat_symbol_vocab | ok | 0.9768 | 0.9854 | 0.7406 | 18 | [log](out/autocollie/runs/2026-06-27T20-47-56_20260627T204056-filetypes-kotlin_kotlin_feat_symbol_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control to test if deeper trees and slower learning improve PR_AUC by reducing overfit on the high-signal baseline feature set.
+- **`kotlin_feat_textmetrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by adding structural text obfuscation metrics that capture Kotlin script packing patterns.
+- **`kotlin_feat_symbol_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by introducing symbol presence features to catch malicious API usage patterns missed by n-grams.
+
+</details>
+
+## Cycle `20260628T013019-filetypes-kotlin` — 2026-06-28T01:30:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d70ca7f6064d2c11` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9949 | 0.9971 | 2 | [log](out/autocollie/runs/2026-06-28T01-39-23_20260628T013019-filetypes-kotlin_inherit_from_filetypes_gem_06bdacaa.log) |
+| `0b9a41e5df564d20` | kotlin_ctrl_hardneg_01_12 | ok | 0.9736 | 0.9773 | 0.7512 | 6 | [log](out/autocollie/runs/2026-06-28T01-39-30_20260628T013019-filetypes-kotlin_kotlin_ctrl_hardneg_01_12.log) |
+| `84fe85b12607b16b` | kotlin_feat_textmetrics_encoding | ok | 0.9758 | 0.9844 | 0.7410 | 42 | [log](out/autocollie/runs/2026-06-28T01-39-38_20260628T013019-filetypes-kotlin_kotlin_feat_textmetrics_encoding.log) |
+| `01fdff969e610802` | kotlin_feat_symbol_vocab_hardneg | ok | 0.9698 | 0.9775 | 0.7408 | 7 | [log](out/autocollie/runs/2026-06-28T01-40-23_20260628T013019-filetypes-kotlin_kotlin_feat_symbol_vocab_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep (frac=0.01, weight=12) to improve recall@3FPM by upweighting difficult benigns at the tail.
+- **`kotlin_feat_textmetrics_encoding`** `EXP_BIGRAM_MIN_FREQ=100 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture script obfuscation patterns, targeting PR_AUC gain on Kotlin source/text files.
+- **`kotlin_feat_symbol_vocab_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Add symbol_vocab to capture API co-occurrence, paired with hard-negative sweep (frac=0.015, weight=16) to sharpen low-FPR ranking for recall@3FPM.
+
+</details>
+
+## Cycle `20260628T063319-filetypes-kotlin` — 2026-06-28T06:33:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d70ca7f6064d2c11` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9949 | 0.9971 | 2 | [log](out/autocollie/runs/2026-06-28T06-41-56_20260628T063319-filetypes-kotlin_inherit_from_filetypes_gem_06bdacaa.log) |
+| `94b02724791a076d` | kotlin_ctrl_hardneg_sweep | ok | 0.9746 | 0.9798 | 0.7542 | 11 | [log](out/autocollie/runs/2026-06-28T06-42-06_20260628T063319-filetypes-kotlin_kotlin_ctrl_hardneg_sweep.log) |
+| `53ddca505f84c0a1` | kotlin_feat_textmetrics_encoding | ok | 0.9758 | 0.9844 | 0.7410 | 17 | [log](out/autocollie/runs/2026-06-28T06-42-20_20260628T063319-filetypes-kotlin_kotlin_feat_textmetrics_encoding.log) |
+| `ca7884a72d05000e` | kotlin_feat_symbol_vocab_bigrams | ok | 0.9765 | 0.9844 | 0.7408 | 79 | [log](out/autocollie/runs/2026-06-28T06-42-41_20260628T063319-filetypes-kotlin_kotlin_feat_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to improve recall@3FPM by upweighting difficult benigns, while maintaining PR_AUC guardrails.
+- **`kotlin_feat_textmetrics_encoding`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture obfuscation patterns in Kotlin scripts, aiming to boost PR_AUC and recall@3FPM.
+- **`kotlin_feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Expand symbol vocab and enable symbol_bigrams to capture API co-occurrence patterns, targeting PR_AUC gains from structural code signals.
+
+</details>
+
+## Cycle `20260628T080745-filetypes-kotlin` — 2026-06-28T08:07:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d70ca7f6064d2c11` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9949 | 0.9971 | 1 | [log](out/autocollie/runs/2026-06-28T08-15-01_20260628T080745-filetypes-kotlin_inherit_from_filetypes_gem_06bdacaa.log) |
+| `2e6c869f32736ffc` | kotlin_ctrl_hardneg_sweep | ok | 0.9746 | 0.9798 | 0.7542 | 8 | [log](out/autocollie/runs/2026-06-28T08-15-06_20260628T080745-filetypes-kotlin_kotlin_ctrl_hardneg_sweep.log) |
+| `911bbc27ebe3be9d` | kotlin_feat_textmetrics_encoding | ok | 0.9736 | 0.9824 | 0.7407 | 23 | [log](out/autocollie/runs/2026-06-28T08-15-15_20260628T080745-filetypes-kotlin_kotlin_feat_textmetrics_encoding.log) |
+| `5c84f6ea3ae6c393` | kotlin_feat_kv_vocab_safe | ok | 0.9741 | 0.9825 | 0.7410 | 21 | [log](out/autocollie/runs/2026-06-28T08-15-39_20260628T080745-filetypes-kotlin_kotlin_feat_kv_vocab_safe.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with hard-negative sweep to improve recall@3 FP/M by upweighting difficult benigns, while preserving PR_AUC guardrails.
+- **`kotlin_feat_textmetrics_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture obfuscation and encoding artifacts in Kotlin scripts, targeting PR_AUC gains.
+- **`kotlin_feat_kv_vocab_safe`** `EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=20 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Re-enable kv_vocab with conservative caps to recover key-value signal without OOM, targeting recall@3 FP/M improvements.
+
+</details>
+
+## Cycle `20260628T094443-filetypes-kotlin` — 2026-06-28T09:44:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d70ca7f6064d2c11` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9949 | 0.9971 | 1 | [log](out/autocollie/runs/2026-06-28T09-52-28_20260628T094443-filetypes-kotlin_inherit_from_filetypes_gem_06bdacaa.log) |
+| `bfe35702994cc387` | kotlin_ctrl_symvocab_hardneg | ok | 0.9773 | 0.9835 | 0.7463 | 20 | [log](out/autocollie/runs/2026-06-28T09-52-32_20260628T094443-filetypes-kotlin_kotlin_ctrl_symvocab_hardneg.log) |
+| `e32ce7a15bae8955` | kotlin_feat_kv_textenc_safe | ok | 0.9739 | 0.9823 | 0.7409 | 21 | [log](out/autocollie/runs/2026-06-28T09-52-54_20260628T094443-filetypes-kotlin_kotlin_feat_kv_textenc_safe.log) |
+| `5abc3c7e3ec91ac7` | kotlin_feat_textmetrics_trigrams | ok | 0.9698 | 0.9761 | 0.7410 | 21 | [log](out/autocollie/runs/2026-06-28T09-53-16_20260628T094443-filetypes-kotlin_kotlin_feat_textmetrics_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_symvocab_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best symbol vocab surface; hard-negative sweep aims to lift recall@3FPM by upweighting difficult benigns without degrading PR_AUC.
+- **`kotlin_feat_kv_textenc_safe`** `EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=20 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables conservative KV vocab and text encoding to capture lexical/structural signals, aiming to improve PR_AUC by resolving ambiguous source patterns.
+- **`kotlin_feat_textmetrics_trigrams`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Adds full text metrics and tiered trigrams to capture deeper structural/lexical patterns, targeting recall@3FPM gains through richer ranking signal.
+
+</details>
+

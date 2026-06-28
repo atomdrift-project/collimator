@@ -1002,3 +1002,129 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260627T120333-filetypes-macho` — 2026-06-27T12:03:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_json_1e3933ad | ok | 0.9951 | 0.9989 | 0.9698 | 101 | [log](out/autocollie/runs/2026-06-27T12-10-53_20260627T120333-filetypes-macho_inherit_from_filetypes_json_1e3933ad.log) |
+| `44e03ae4aa89a115` | macho_control_train_tune_v2 | ok | 0.9925 | 0.9983 | 0.9592 | 69 | [log](out/autocollie/runs/2026-06-27T12-12-44_20260627T120333-filetypes-macho_macho_control_train_tune_v2.log) |
+| `39e18714eebe8d48` | macho_feat_kv_vocab_split_safe | ok | 0.9918 | 0.9981 | 0.9420 | 71 | [log](out/autocollie/runs/2026-06-27T12-13-58_20260627T120333-filetypes-macho_macho_feat_kv_vocab_split_safe.log) |
+| `7391124355d41996` | macho_feat_symbol_vocab_bigrams | ok | 0.9918 | 0.9981 | 0.9420 | 40 | [log](out/autocollie/runs/2026-06-27T12-15-11_20260627T120333-filetypes-macho_macho_feat_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune_v2`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and regularization (reg_lambda=2.0) to better rank tail malware without overfitting.
+- **`macho_feat_kv_vocab_split_safe`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab and kv_value_split to recover granular signal in Mach-O metadata, using conservative vocab limits to avoid prior crashes.
+- **`macho_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling symbol_vocab and symbol_bigrams to capture Mach-O import co-occurrence patterns, with reduced caps to prevent OOM.
+
+</details>
+
+## Cycle `20260627T204056-filetypes-macho` — 2026-06-27T20:40:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9951 | 0.9989 | 0.9698 | 3 | [log](out/autocollie/runs/2026-06-27T20-49-25_20260627T204056-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `a345762b734646b7` | macho_control_train_tune_v3 | ok | 0.9916 | 0.9981 | 0.9575 | 12 | [log](out/autocollie/runs/2026-06-27T20-49-33_20260627T204056-filetypes-macho_macho_control_train_tune_v3.log) |
+| `d54c21e8f6a6b6ca` | macho_feat_kv_vocab_symbol_bigrams | ok | 0.9925 | 0.9983 | 0.9563 | 84 | [log](out/autocollie/runs/2026-06-27T20-49-46_20260627T204056-filetypes-macho_macho_feat_kv_vocab_symbol_bigrams.log) |
+| `b424334f49bf3668` | macho_feat_overlay_mbc_trigrams | ok | 0.9925 | 0.9983 | 0.9563 | 70 | [log](out/autocollie/runs/2026-06-27T20-51-15_20260627T204056-filetypes-macho_macho_feat_overlay_mbc_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune_v3`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent best feature_env to establish baseline PR_AUC while testing higher estimators and lower learning rate for better tail recall.
+- **`macho_feat_kv_vocab_symbol_bigrams`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 …` — Enables kv_vocab and symbol_bigrams to capture key-value pairs and import co-occurrences, aiming to improve PR_AUC by adding structural signal for Mach-O binaries.
+- **`macho_feat_overlay_mbc_trigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_OVERLAY_SIGNAL=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Adds overlay_signal and mbc_id_vocab with tiered trigrams to detect packers and behavioral patterns, targeting recall@3FPM improvement.
+
+</details>
+
+## Cycle `20260628T003602-filetypes-macho` — 2026-06-28T00:36:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9951 | 0.9989 | 0.9698 | 2 | [log](out/autocollie/runs/2026-06-28T00-45-34_20260628T003602-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `b9d97b9b51e8399e` | macho_control_train_tune_v4 | ok | 0.9937 | 0.9987 | 0.9643 | 17 | [log](out/autocollie/runs/2026-06-28T00-45-41_20260628T003602-filetypes-macho_macho_control_train_tune_v4.log) |
+| `879bf146aa4fde23` | macho_feat_kv_vocab_expanded | ok | 0.9937 | 0.9986 | 0.9594 | 130 | [log](out/autocollie/runs/2026-06-28T00-46-00_20260628T003602-filetypes-macho_macho_feat_kv_vocab_expanded.log) |
+| `f696619c2981488c` | macho_feat_symbol_bigrams_tiered | ok | 0.9937 | 0.9986 | 0.9594 | 64 | [log](out/autocollie/runs/2026-06-28T00-48-14_20260628T003602-filetypes-macho_macho_feat_symbol_bigrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune_v4`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Tune tree complexity and hard-negative weighting to improve PR_AUC and recall@3FPM by better separating borderline malware while reusing the cached feature matrix.
+- **`macho_feat_kv_vocab_expanded`** `EXP_KV_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expand KV vocabulary to capture Mach-O specific metadata and load command patterns, targeting PR_AUC and recall@3FPM gains from richer structural signal.
+- **`macho_feat_symbol_bigrams_tiered`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Enable symbol bigrams with lower frequency floor to catch co-occurrence patterns in Mach-O imports, aiming to boost PR_AUC by resolving obfuscated binaries.
+
+</details>
+
+## Cycle `20260628T054104-filetypes-macho` — 2026-06-28T05:41:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9951 | 0.9989 | 0.9698 | 1 | [log](out/autocollie/runs/2026-06-28T05-49-20_20260628T054104-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `923d303eb17a04c5` | macho_control_train_tune_v5 | ok | 0.9918 | 0.9981 | 0.9420 | 5 | [log](out/autocollie/runs/2026-06-28T05-49-26_20260628T054104-filetypes-macho_macho_control_train_tune_v5.log) |
+| `303664af12f4295c` | macho_feat_kv_vocab_safe | ok | 0.9929 | 0.9983 | 0.9545 | 56 | [log](out/autocollie/runs/2026-06-28T05-49-34_20260628T054104-filetypes-macho_macho_feat_kv_vocab_safe.log) |
+| `ee5424136b6d1d66` | macho_feat_overlay_mbc_trigrams | ok | 0.9929 | 0.9983 | 0.9545 | 103 | [log](out/autocollie/runs/2026-06-28T05-50-33_20260628T054104-filetypes-macho_macho_feat_overlay_mbc_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune_v5`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control run replicating best recent feature_env to ensure matrix cache hit; increases num_leaves to 128 and estimators to 300 to improve PR_AUC and recall@3FPM by allowing deeper trees to capture complex Mach-O patterns.
+- **`macho_feat_kv_vocab_safe`** `EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab (research) with conservative cap (8000) and min_freq=5 to avoid prior crash; aims to lift PR_AUC by adding structured metadata signal that complements existing n-grams.
+- **`macho_feat_overlay_mbc_trigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 …` — Activates overlay_signal, mbc_id_vocab, and tiered_crit_trigrams to capture packer artifacts and behavior co-occurrences; targets recall@3FPM by surfacing low-FPR structural and behavioral anomalies.
+
+</details>
+
+## Cycle `20260628T063319-filetypes-macho` — 2026-06-28T06:33:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9951 | 0.9989 | 0.9698 | 2 | [log](out/autocollie/runs/2026-06-28T06-42-37_20260628T063319-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `ab57695c005fe837` | macho_control_train_tune_v6 | ok | 0.9925 | 0.9983 | 0.9512 | 22 | [log](out/autocollie/runs/2026-06-28T06-42-42_20260628T063319-filetypes-macho_macho_control_train_tune_v6.log) |
+| `17d1c5e5a86df93d` | macho_feat_kv_vocab_expanded_v2 | ok | 0.9934 | 0.9984 | 0.9690 | 91 | [log](out/autocollie/runs/2026-06-28T06-43-08_20260628T063319-filetypes-macho_macho_feat_kv_vocab_expanded_v2.log) |
+| `d44faadb40462ce2` | macho_feat_symbol_bigrams_overlay | ok | 0.9934 | 0.9984 | 0.9690 | 28 | [log](out/autocollie/runs/2026-06-28T06-44-40_20260628T063319-filetypes-macho_macho_feat_symbol_bigrams_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune_v6`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent best feature set; increases estimators and leaves to improve PR_AUC and recall@3FPM via better model capacity.
+- **`macho_feat_kv_vocab_expanded_v2`** `EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with higher cap and lower min_freq to capture Mach-O specific metadata patterns, aiming to boost PR_AUC and recall@3FPM.
+- **`macho_feat_symbol_bigrams_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigrams and overlay signal to detect packing/dropper patterns and import co-occurrences, targeting recall@3FPM and PR_AUC.
+
+</details>
+
+## Cycle `20260628T093436-filetypes-macho` — 2026-06-28T09:34:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9951 | 0.9989 | 0.9698 | 2 | [log](out/autocollie/runs/2026-06-28T09-41-57_20260628T093436-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `867b37b61de9147d` | macho_control_train_tune_v7 | ok | 0.9927 | 0.9984 | 0.9656 | 3 | [log](out/autocollie/runs/2026-06-28T09-42-01_20260628T093436-filetypes-macho_macho_control_train_tune_v7.log) |
+| `f1b28083ec3fa5a6` | macho_feat_textenc_metrics_full | ok | 0.9932 | 0.9983 | 0.9662 | 26 | [log](out/autocollie/runs/2026-06-28T09-42-04_20260628T093436-filetypes-macho_macho_feat_textenc_metrics_full.log) |
+| `a5132abb6f9458ca` | macho_feat_kv_vocab_conservative | ok | 0.9932 | 0.9983 | 0.9662 | 26 | [log](out/autocollie/runs/2026-06-28T09-42-32_20260628T093436-filetypes-macho_macho_feat_kv_vocab_conservative.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune_v7`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Replicate best feature set and lower scale_pos_weight_mult to 0.75 to tighten FP tail, targeting recall@3FPM gain while preserving PR_AUC.
+- **`macho_feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Enable text_encoding and text_metrics_full to capture string obfuscation and structural text patterns, aiming to improve PR_AUC.
+- **`macho_feat_kv_vocab_conservative`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_KV_MIN_FREQ=50 …` — Enable kv_vocab with conservative max 8000 and min_freq 50 to capture metadata/config patterns without OOM risk, targeting PR_AUC lift.
+
+</details>
+
+## Cycle `20260628T103459-filetypes-macho` — 2026-06-28T10:34:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9951 | 0.9989 | 0.9698 | 4 | [log](out/autocollie/runs/2026-06-28T10-43-09_20260628T103459-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d09ec397bd7781bd` | macho_control_train_tune_v8 | ok | 0.9926 | 0.9982 | 0.9636 | 67 | [log](out/autocollie/runs/2026-06-28T10-43-18_20260628T103459-filetypes-macho_macho_control_train_tune_v8.log) |
+| `4f6f6a1e25605773` | macho_feat_symbol_bigrams_expanded | ok | 0.9925 | 0.9982 | 0.9388 | 115 | [log](out/autocollie/runs/2026-06-28T10-44-28_20260628T103459-filetypes-macho_macho_feat_symbol_bigrams_expanded.log) |
+| `d8f88fd8964d379a` | macho_feat_textenc_metrics_kv | ok | 0.9925 | 0.9982 | 0.9388 | 56 | [log](out/autocollie/runs/2026-06-28T10-46-24_20260628T103459-filetypes-macho_macho_feat_textenc_metrics_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune_v8`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent baseline features to test if deeper trees and lower LR improve PR_AUC without hurting ROC_AUC.
+- **`macho_feat_symbol_bigrams_expanded`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 …` — Expands symbol vocab and bigrams to capture Mach-O import co-occurrence patterns, aiming to lift PR_AUC by resolving ambiguous benign/malware boundaries.
+- **`macho_feat_textenc_metrics_kv`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables text encoding and full text metrics alongside expanded KV vocab to capture obfuscation signals in Mach-O string sections, targeting recall@3FPM gains.
+
+</details>
+

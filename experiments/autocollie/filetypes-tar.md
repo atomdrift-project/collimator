@@ -728,3 +728,111 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260627T120333-filetypes-tar` — 2026-06-27T12:03:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de3716e7aa06c241` | inherit_from_filetypes_json_1e3933ad | ok | 0.9973 | 0.9984 | 0.9189 | 51 | [log](out/autocollie/runs/2026-06-27T12-11-10_20260627T120333-filetypes-tar_inherit_from_filetypes_json_1e3933ad.log) |
+| `f66bcc041243f287` | tar_ctrl_training_tune | ok | 0.9807 | 0.9922 | 0.8859 | 44 | [log](out/autocollie/runs/2026-06-27T12-12-14_20260627T120333-filetypes-tar_tar_ctrl_training_tune.log) |
+| `e175a98cc6d4317f` | tar_feat_kv_text_vocab | ok | 0.9802 | 0.9920 | 0.8707 | 36 | [log](out/autocollie/runs/2026-06-27T12-13-16_20260627T120333-filetypes-tar_tar_feat_kv_text_vocab.log) |
+| `dcd654bd2dcde756` | tar_feat_textmetrics_lowfreq | ok | 0.9816 | 0.9926 | 0.8784 | 56 | [log](out/autocollie/runs/2026-06-27T12-14-04_20260627T120333-filetypes-tar_tar_feat_textmetrics_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_training_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent feature baseline; tunes num_leaves and reg_lambda to improve PR_AUC and recall@3FPM by balancing tree capacity and regularization.
+- **`tar_feat_kv_text_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture structured metadata and encoding anomalies in tar contents, targeting PR_AUC gains from richer feature surface.
+- **`tar_feat_textmetrics_lowfreq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and lowers bigram_min_freq to 50 to surface obfuscation and rare pattern signals, aiming to boost recall@3FPM without hurting ROC_AUC.
+
+</details>
+
+## Cycle `20260627T204056-filetypes-tar` — 2026-06-27T20:40:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de3716e7aa06c241` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9973 | 0.9984 | 0.9189 | 2 | [log](out/autocollie/runs/2026-06-27T20-49-25_20260627T204056-filetypes-tar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `3b6f836c78cedd9e` | tar_ctrl_training_tune_v2 | ok | 0.9792 | 0.9906 | 0.8859 | 4 | [log](out/autocollie/runs/2026-06-27T20-49-30_20260627T204056-filetypes-tar_tar_ctrl_training_tune_v2.log) |
+| `93297c07695cafe7` | tar_feat_kv_vocab_lowfreq | ok | 0.9805 | 0.9919 | 0.8859 | 46 | [log](out/autocollie/runs/2026-06-27T20-49-35_20260627T204056-filetypes-tar_tar_feat_kv_vocab_lowfreq.log) |
+| `bc4009a5e5889777` | tar_feat_textenc_metrics_full | ok | 0.9819 | 0.9925 | 0.8630 | 50 | [log](out/autocollie/runs/2026-06-27T20-50-28_20260627T204056-filetypes-tar_tar_feat_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_training_tune_v2`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and lowering learning rate to better fit the recent best feature surface without overfitting.
+- **`tar_feat_kv_vocab_lowfreq`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab with a low min_freq to capture rare but malicious key-value pairs in tar metadata and embedded files.
+- **`tar_feat_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=25 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_encoding and text_metrics_full to better rank obfuscated or suspicious text payloads within tar archives.
+
+</details>
+
+## Cycle `20260628T003629-filetypes-tar` — 2026-06-28T00:36:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de3716e7aa06c241` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9973 | 0.9984 | 0.9189 | 3 | [log](out/autocollie/runs/2026-06-28T00-45-53_20260628T003629-filetypes-tar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `39b75d819aea2231` | tar_ctrl_training_tune_v3 | ok | 0.9831 | 0.9935 | 0.9079 | 10 | [log](out/autocollie/runs/2026-06-28T00-46-15_20260628T003629-filetypes-tar_tar_ctrl_training_tune_v3.log) |
+| `92eecd54d63d2b55` | tar_feat_kv_vocab_textenc | ok | 0.9811 | 0.9923 | 0.8933 | 67 | [log](out/autocollie/runs/2026-06-28T00-46-41_20260628T003629-filetypes-tar_tar_feat_kv_vocab_textenc.log) |
+| `ce858e6f9f9bd765` | tar_feat_textenc_bigram_expand | ok | 0.9817 | 0.9928 | 0.8933 | 49 | [log](out/autocollie/runs/2026-06-28T00-48-09_20260628T003629-filetypes-tar_tar_feat_textenc_bigram_expand.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_training_tune_v3`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 …` — Control run replicating best feature surface to test if increased tree capacity and regularization improve PR_AUC without hurting ROC_AUC.
+- **`tar_feat_kv_vocab_textenc`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds KV vocab to capture archive metadata patterns alongside text encoding, aiming to boost recall@3FPM by surfacing rare malicious metadata keys.
+- **`tar_feat_textenc_bigram_expand`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Expands bigram vocab cap to capture longer archive path combinations, aiming to improve recall@3FPM by surfacing niche malicious configurations while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260628T054104-filetypes-tar` — 2026-06-28T05:41:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de3716e7aa06c241` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9973 | 0.9984 | 0.9189 | 2 | [log](out/autocollie/runs/2026-06-28T05-49-37_20260628T054104-filetypes-tar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `f66bcc041243f287` | tar_ctrl_training_tune_v4 | dup | 0.9807 | 0.9922 | 0.8859 | 1 | [log](out/autocollie/runs/2026-06-28T05-49-43_20260628T054104-filetypes-tar_tar_ctrl_training_tune_v4.log) |
+| `f5ee6d3ab2c3c10f` | tar_feat_textenc_metrics_full_v2 | ok | 0.9822 | 0.9929 | 0.8784 | 36 | [log](out/autocollie/runs/2026-06-28T05-49-47_20260628T054104-filetypes-tar_tar_feat_textenc_metrics_full_v2.log) |
+| `bb0c745bc7b571ae` | tar_feat_kv_vocab_extreme_off | ok | 0.9816 | 0.9927 | 0.8707 | 67 | [log](out/autocollie/runs/2026-06-28T05-50-24_20260628T054104-filetypes-tar_tar_feat_kv_vocab_extreme_off.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_training_tune_v4`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128, estimators=300) while applying stronger L2 regularization (reg_lambda=2.0) to better rank tail malware without overfitting the small tar corpus.
+- **`tar_feat_textenc_metrics_full_v2`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_encoding and text_metrics_full to capture obfuscation and structural signals in archived scripts/documents, while raising bigram_min_freq to 50 to reduce noise and stabilize PR_AUC.
+- **`tar_feat_kv_vocab_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab to extract structured metadata from tar contents, while disabling extreme_features to remove noisy tail signals that may dilute ranking quality.
+
+</details>
+
+## Cycle `20260628T063319-filetypes-tar` — 2026-06-28T06:33:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de3716e7aa06c241` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9973 | 0.9984 | 0.9189 | 2 | [log](out/autocollie/runs/2026-06-28T06-42-06_20260628T063319-filetypes-tar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `099911bbb446f89e` | tar_ctrl_training_tune_v4 | ok | 0.9822 | 0.9930 | 0.8784 | 4 | [log](out/autocollie/runs/2026-06-28T06-42-13_20260628T063319-filetypes-tar_tar_ctrl_training_tune_v4.log) |
+| `92eecd54d63d2b55` | tar_feat_kv_vocab_textenc_v2 | dup | 0.9811 | 0.9923 | 0.8933 | 2 | [log](out/autocollie/runs/2026-06-28T06-42-18_20260628T063319-filetypes-tar_tar_feat_kv_vocab_textenc_v2.log) |
+| `b5f754dd9e68fb50` | tar_feat_tiered_trigrams_extended | ok | 0.9816 | 0.9927 | 0.8707 | 65 | [log](out/autocollie/runs/2026-06-28T06-42-22_20260628T063319-filetypes-tar_tar_feat_tiered_trigrams_extended.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_training_tune_v4`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 …` — Replicate strong textenc/bigram surface and tune training knobs to maximize PR_AUC while preserving ROC_AUC.
+- **`tar_feat_kv_vocab_textenc_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 …` — Enable kv_vocab to capture archive metadata patterns and improve recall@3FPM, combined with textenc for rank stability.
+- **`tar_feat_tiered_trigrams_extended`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_EXTENDED_METRICS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 …` — Add tiered_crit_trigrams and extended_metrics to capture complex structural signals, aiming to lift PR_AUC by resolving ambiguous archive contents.
+
+</details>
+
+## Cycle `20260628T103459-filetypes-tar` — 2026-06-28T10:34:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `de3716e7aa06c241` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9973 | 0.9984 | 0.9189 | 2 | [log](out/autocollie/runs/2026-06-28T10-43-25_20260628T103459-filetypes-tar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `ba733971f4fca602` | tar_ctrl_training_tune_v5 | ok | 0.9785 | 0.9905 | 0.8784 | 44 | [log](out/autocollie/runs/2026-06-28T10-43-33_20260628T103459-filetypes-tar_tar_ctrl_training_tune_v5.log) |
+| `df01186622aa32f2` | tar_feat_kv_textenc_vocab | ok | 0.9808 | 0.9920 | 0.8859 | 67 | [log](out/autocollie/runs/2026-06-28T10-44-25_20260628T103459-filetypes-tar_tar_feat_kv_textenc_vocab.log) |
+| `3b57812acbec876e` | tar_feat_tiered_trigrams_expand | ok | 0.9808 | 0.9920 | 0.8859 | 47 | [log](out/autocollie/runs/2026-06-28T10-45-36_20260628T103459-filetypes-tar_tar_feat_tiered_trigrams_expand.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_training_tune_v5`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity (num_leaves=128) and regularization (reg_lambda=2.0) on the baseline feature set to better separate tail malware from benign archives.
+- **`tar_feat_kv_textenc_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC and recall@3FPM by enabling kv_vocab and text_encoding to capture structural metadata and text content signals that are highly discriminative for tar archives.
+- **`tar_feat_tiered_trigrams_expand`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling tiered_crit_trigrams with a larger vocab cap to capture longer sequential patterns in archive contents that bigrams miss.
+
+</details>
+

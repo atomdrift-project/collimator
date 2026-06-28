@@ -1040,3 +1040,129 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260627T141056-filetypes-batch` — 2026-06-27T14:10:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afd2a3a5ce658ba8` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9999 | 0.9981 | 0.9876 | 20 | [log](out/autocollie/runs/2026-06-27T14-17-08_20260627T141056-filetypes-batch_inherit_from_filetypes_gem_06bdacaa.log) |
+| `8c75c9f5aa4eb7be` | batch_control_hardneg_sweep | ok | 0.9783 | 0.8573 | 0.1702 | 14 | [log](out/autocollie/runs/2026-06-27T14-17-36_20260627T141056-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `a017f4909bc3efb1` | batch_text_metrics_kv_vocab | ok | 0.9658 | 0.6901 | 0.1704 | 12 | [log](out/autocollie/runs/2026-06-27T14-17-53_20260627T141056-filetypes-batch_batch_text_metrics_kv_vocab.log) |
+| `077ecaace032b5ad` | batch_tiered_crit_trigrams | ok | 0.9851 | 0.8760 | 0.1704 | 13 | [log](out/autocollie/runs/2026-06-27T14-18-06_20260627T141056-filetypes-batch_batch_tiered_crit_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env for cache hit; hard-negative sweep aims to improve recall@3FPM by upweighting difficult benigns to sharpen the decision boundary.
+- **`batch_text_metrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture obfuscation and config patterns in batch files, targeting PR_AUC and recall@3FPM gains.
+- **`batch_tiered_crit_trigrams`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Adds tiered_crit_trigrams to model higher-order severity patterns, aiming to lift PR_AUC by distinguishing malicious script structures from benign ones.
+
+</details>
+
+## Cycle `20260627T204116-filetypes-batch` — 2026-06-27T20:41:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afd2a3a5ce658ba8` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9981 | 0.9876 | 2 | [log](out/autocollie/runs/2026-06-27T20-49-37_20260627T204116-filetypes-batch_inherit_from_filetypes_gem_06bdacaa.log) |
+| `3f15d53ec3f343fe` | batch_control_hardneg_recall | ok | 0.9806 | 0.8839 | 0.1703 | 7 | [log](out/autocollie/runs/2026-06-27T20-49-46_20260627T204116-filetypes-batch_batch_control_hardneg_recall.log) |
+| `66f6cca753b98f30` | batch_kv_vocab_split_pr | ok | 0.9786 | 0.8342 | 0.1701 | 40 | [log](out/autocollie/runs/2026-06-27T20-49-56_20260627T204116-filetypes-batch_batch_kv_vocab_split_pr.log) |
+| `39b07309095f37a3` | batch_textmetrics_hardneg_tail | ok | 0.9824 | 0.8965 | 0.1702 | 42 | [log](out/autocollie/runs/2026-06-27T20-50-39_20260627T204116-filetypes-batch_batch_textmetrics_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_recall`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with hard-negative tuning (fraction=0.01, weight=12) and lower scale_pos_weight_mult (0.75) to push recall@3FPM by focusing the model on difficult benigns and relaxing the positive weight threshold.
+- **`batch_kv_vocab_split_pr`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab and kv_value_split to capture structured key-value patterns in batch scripts, aiming to improve PR_AUC by adding high-signal lexical features without overfitting.
+- **`batch_textmetrics_hardneg_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full with a stronger hard-negative sweep (fraction=0.02, weight=18) to improve recall@3FPM by leveraging structural text features while aggressively penalizing hard benigns.
+
+</details>
+
+## Cycle `20260628T003635-filetypes-batch` — 2026-06-28T00:36:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afd2a3a5ce658ba8` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9981 | 0.9876 | 3 | [log](out/autocollie/runs/2026-06-28T00-44-56_20260628T003635-filetypes-batch_inherit_from_filetypes_gem_06bdacaa.log) |
+| `8c75c9f5aa4eb7be` | batch_control_hardneg_sweep | dup | 0.9783 | 0.8573 | 0.1702 | 2 | [log](out/autocollie/runs/2026-06-28T00-45-09_20260628T003635-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `66f6cca753b98f30` | batch_kv_vocab_split_pr | dup | 0.9786 | 0.8342 | 0.1701 | 2 | [log](out/autocollie/runs/2026-06-28T00-45-14_20260628T003635-filetypes-batch_batch_kv_vocab_split_pr.log) |
+| `6654b86d554a824a` | batch_textenc_bigram_floor | ok | 0.9823 | 0.8596 | 0.1702 | 15 | [log](out/autocollie/runs/2026-06-28T00-45-17_20260628T003635-filetypes-batch_batch_textenc_bigram_floor.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by applying moderate hard-negative upweighting to sharpen the decision boundary at the strict-FP tail, reusing the cached matrix from the best PR-AUC run.
+- **`batch_kv_vocab_split_pr`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by introducing structured KV pair features that capture batch-specific configuration and command patterns missed by raw n-grams.
+- **`batch_textenc_bigram_floor`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by adding text encoding signals to detect obfuscation artifacts in batch scripts, while raising bigram min-freq to control noise and preserve ROC_AUC.
+
+</details>
+
+## Cycle `20260628T070002-filetypes-batch` — 2026-06-28T07:00:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afd2a3a5ce658ba8` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9981 | 0.9876 | 1 | [log](out/autocollie/runs/2026-06-28T07-08-34_20260628T070002-filetypes-batch_inherit_from_filetypes_gem_06bdacaa.log) |
+| `8c75c9f5aa4eb7be` | batch_control_hardneg_sweep | dup | 0.9783 | 0.8573 | 0.1702 | 1 | [log](out/autocollie/runs/2026-06-28T07-08-37_20260628T070002-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `377bbacebc89f12d` | batch_textenc_metrics_hardneg | ok | 0.9833 | 0.8884 | 0.1703 | 18 | [log](out/autocollie/runs/2026-06-28T07-08-40_20260628T070002-filetypes-batch_batch_textenc_metrics_hardneg.log) |
+| `6fca2ca243f879c0` | batch_kv_vocab_split_recall | ok | 0.9778 | 0.7990 | 0.1704 | 13 | [log](out/autocollie/runs/2026-06-28T07-08-59_20260628T070002-filetypes-batch_batch_kv_vocab_split_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to improve tail recall@3 FP/M without changing matrix cache.
+- **`batch_textenc_metrics_hardneg`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=14 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and text_encoding to capture script obfuscation signals, paired with hard-negative training to boost PR_AUC and recall@3 FP/M.
+- **`batch_kv_vocab_split_recall`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab and kv_value_split to extract structured config signals from batch files, aiming to improve PR_AUC by capturing rare malicious key-value patterns.
+
+</details>
+
+## Cycle `20260628T081951-filetypes-batch` — 2026-06-28T08:19:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afd2a3a5ce658ba8` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9981 | 0.9876 | 1 | [log](out/autocollie/runs/2026-06-28T08-28-02_20260628T081951-filetypes-batch_inherit_from_filetypes_gem_06bdacaa.log) |
+| `7d0042e93ae18d07` | batch_control_hardneg18_leaves128 | ok | 0.9853 | 0.8975 | 0.1702 | 13 | [log](out/autocollie/runs/2026-06-28T08-28-06_20260628T081951-filetypes-batch_batch_control_hardneg18_leaves128.log) |
+| `4713a05becbac5ba` | batch_kv_vocab_hardneg01_16 | ok | 0.9822 | 0.8994 | 0.1702 | 14 | [log](out/autocollie/runs/2026-06-28T08-28-20_20260628T081951-filetypes-batch_batch_kv_vocab_hardneg01_16.log) |
+| `31f2585596ca7692` | batch_textenc_trigrams_hardneg02_12 | ok | 0.9835 | 0.8972 | 0.1702 | 12 | [log](out/autocollie/runs/2026-06-28T08-28-35_20260628T081951-filetypes-batch_batch_textenc_trigrams_hardneg02_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg18_leaves128`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Control run replicating best recent feature surface to isolate training knob effects on PR_AUC and recall@3FPM.
+- **`batch_kv_vocab_hardneg01_16`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab research family to capture key-value patterns, paired with hard-negative sweep to improve tail recall@3FPM without PR_AUC regression.
+- **`batch_textenc_trigrams_hardneg02_12`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Adds text_encoding and tiered trigrams for richer script signal, combined with aggressive hard-negative weighting to push recall@3FPM while guarding PR_AUC.
+
+</details>
+
+## Cycle `20260628T085636-filetypes-batch` — 2026-06-28T08:56:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afd2a3a5ce658ba8` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9981 | 0.9876 | 7 | [log](out/autocollie/runs/2026-06-28T09-06-08_20260628T085636-filetypes-batch_inherit_from_filetypes_gem_06bdacaa.log) |
+| `cb0f8786b9bd40ee` | batch_control_hardneg_sweep | ok | 0.9822 | 0.8994 | 0.1702 | 42 | [log](out/autocollie/runs/2026-06-28T09-06-22_20260628T085636-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `55f0091c11657ca3` | batch_kv_textenc_hardneg | ok | 0.9861 | 0.8864 | 0.1703 | 33 | [log](out/autocollie/runs/2026-06-28T09-07-06_20260628T085636-filetypes-batch_batch_kv_textenc_hardneg.log) |
+| `2703e92f61bc647f` | batch_textmetrics_trigrams | ok | 0.9501 | 0.5523 | 0.1703 | 5 | [log](out/autocollie/runs/2026-06-28T09-07-41_20260628T085636-filetypes-batch_batch_textmetrics_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating the top PR_AUC feature_env to hit the matrix cache; sweeps hard_negative_fraction/weight to improve recall@3FPM by better penalizing hard benigns that leak into the malware tail.
+- **`batch_kv_textenc_hardneg`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables kv_vocab and text_encoding research families to capture key-value distributions and encoding artifacts, aiming to lift PR_AUC by adding discriminative signal for batch script obfuscation.
+- **`batch_textmetrics_trigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and expands tiered_trigram_max to model structural text anomalies and longer path co-occurrences, targeting ROC_AUC improvement by reducing false negatives on complex batch payloads.
+
+</details>
+
+## Cycle `20260628T103459-filetypes-batch` — 2026-06-28T10:34:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `afd2a3a5ce658ba8` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9981 | 0.9876 | 6 | [log](out/autocollie/runs/2026-06-28T10-44-04_20260628T103459-filetypes-batch_inherit_from_filetypes_gem_06bdacaa.log) |
+| `3f15d53ec3f343fe` | batch_control_hardneg_sweep_01_12 | dup | 0.9806 | 0.8839 | 0.1703 | 5 | [log](out/autocollie/runs/2026-06-28T10-44-19_20260628T103459-filetypes-batch_batch_control_hardneg_sweep_01_12.log) |
+| `b16edfb9ed1928f6` | batch_kv_textenc_vocab_expansion | ok | 0.9778 | 0.7990 | 0.1706 | 67 | [log](out/autocollie/runs/2026-06-28T10-44-29_20260628T103459-filetypes-batch_batch_kv_textenc_vocab_expansion.log) |
+| `5149e9b9c15225ca` | batch_symbol_vocab_tiered_trigrams_hardneg | ok | 0.9814 | 0.8754 | 0.1704 | 53 | [log](out/autocollie/runs/2026-06-28T10-45-38_20260628T103459-filetypes-batch_batch_symbol_vocab_tiered_trigrams_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent feature_env to isolate hard-negative training signal; aims to improve recall@3FPM by upweighting difficult benigns without altering feature surface.
+- **`batch_kv_textenc_vocab_expansion`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding research families to capture structural and encoding signals; aims to boost PR_AUC by adding discriminative features for batch scripts.
+- **`batch_symbol_vocab_tiered_trigrams_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Adds symbol_vocab and tiered_crit_trigrams to capture co-occurrence patterns; pairs with hard-negative sweep to improve tail recall@3FPM while maintaining PR_AUC guardrails.
+
+</details>
+

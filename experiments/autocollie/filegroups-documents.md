@@ -2144,3 +2144,111 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260627T120337-filegroups-documents` — 2026-06-27T12:03:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bad3bad57923b09f` | inherit_from_filetypes_json_1e3933ad | ok | 0.9999 | 0.9990 | 0.9906 | 40 | [log](out/autocollie/runs/2026-06-27T12-10-30_20260627T120337-filegroups-documents_inherit_from_filetypes_json_1e3933ad.log) |
+| `ebcf3e13861521c5` | docs_control_train_tweak | ok | 0.9011 | 0.8269 | 0.8398 | 39 | [log](out/autocollie/runs/2026-06-27T12-13-17_20260627T120337-filegroups-documents_docs_control_train_tweak.log) |
+| `b2c5ebae60db29bf` | docs_textmetrics_kv_vocab | ok | 0.9295 | 0.8943 | 0.8381 | 51 | [log](out/autocollie/runs/2026-06-27T12-14-12_20260627T120337-filegroups-documents_docs_textmetrics_kv_vocab.log) |
+| `94a4a6b6870f3fe7` | docs_textenc_tiered_trigrams | ok | 0.8995 | 0.8207 | 0.8398 | 26 | [log](out/autocollie/runs/2026-06-27T12-15-04_20260627T120337-filegroups-documents_docs_textenc_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_train_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env; increases num_leaves and estimators to improve recall@3FPM by allowing finer decision boundaries while keeping PR_AUC flat.
+- **`docs_textmetrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and structured KV patterns, aiming to improve PR_AUC by adding high-signal document-specific features.
+- **`docs_textenc_tiered_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and tiered_crit_trigrams to detect encoding anomalies and critical path sequences, targeting recall@3FPM improvement at the strict-FP tail.
+
+</details>
+
+## Cycle `20260627T225213-filegroups-documents` — 2026-06-27T22:52:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bad3bad57923b09f` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9990 | 0.9906 | 1 | [log](out/autocollie/runs/2026-06-27T22-58-42_20260627T225213-filegroups-documents_inherit_from_filetypes_gem_06bdacaa.log) |
+| `ebcf3e13861521c5` | docs_control_train_tweak | dup | 0.9011 | 0.8269 | 0.8398 | 1 | [log](out/autocollie/runs/2026-06-27T22-58-53_20260627T225213-filegroups-documents_docs_control_train_tweak.log) |
+| `169e633116277069` | docs_textenc_kv_vocab | ok | 0.9042 | 0.8343 | 0.8386 | 16 | [log](out/autocollie/runs/2026-06-27T22-58-58_20260627T225213-filegroups-documents_docs_textenc_kv_vocab.log) |
+| `ae2cfa94caf25a52` | docs_obfuscation_tiered_trigrams | ok | 0.9166 | 0.8664 | 0.8384 | 16 | [log](out/autocollie/runs/2026-06-27T22-59-15_20260627T225213-filegroups-documents_docs_obfuscation_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_train_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by increasing tree capacity and boosting iterations to better separate tail malware, while keeping PR_AUC flat via the cached feature matrix.
+- **`docs_textenc_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_encoding and kv_vocab to capture document structure and metadata signals that complement existing n-gram features.
+- **`docs_obfuscation_tiered_trigrams`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by adding document_obfuscation_features and tiered_crit_trigrams to better rank heavily obfuscated malicious documents that evade standard n-gram detection.
+
+</details>
+
+## Cycle `20260628T003602-filegroups-documents` — 2026-06-28T00:36:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bad3bad57923b09f` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9990 | 0.9906 | 1 | [log](out/autocollie/runs/2026-06-28T00-44-27_20260628T003602-filegroups-documents_inherit_from_filetypes_gem_06bdacaa.log) |
+| `6ecb57644031ef9a` | docs_control_hardneg_tail | ok | 0.9455 | 0.9261 | 0.8396 | 4 | [log](out/autocollie/runs/2026-06-28T00-44-30_20260628T003602-filegroups-documents_docs_control_hardneg_tail.log) |
+| `527a42fb722863fd` | docs_textmetrics_encoding_full | ok | 0.9232 | 0.8849 | 0.8387 | 15 | [log](out/autocollie/runs/2026-06-28T00-44-36_20260628T003602-filegroups-documents_docs_textmetrics_encoding_full.log) |
+| `342b205a7a58c69e` | docs_kv_vocab_expansion | ok | 0.9031 | 0.8314 | 0.8399 | 18 | [log](out/autocollie/runs/2026-06-28T00-44-52_20260628T003602-filegroups-documents_docs_kv_vocab_expansion.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR without changing the feature matrix.
+- **`docs_textmetrics_encoding_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture document-specific obfuscation and encoding artifacts that standard n-grams miss.
+- **`docs_kv_vocab_expansion`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by expanding kv_vocab_max and lowering kv_min_freq to capture rare but high-signal metadata patterns in malicious documents.
+
+</details>
+
+## Cycle `20260628T054104-filegroups-documents` — 2026-06-28T05:41:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bad3bad57923b09f` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9990 | 0.9906 | 3 | [log](out/autocollie/runs/2026-06-28T05-49-55_20260628T054104-filegroups-documents_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c8e6234c460e4759` | docs_control_extra_trees_tail | ok | 0.9396 | 0.9006 | 0.8401 | 13 | [log](out/autocollie/runs/2026-06-28T05-50-06_20260628T054104-filegroups-documents_docs_control_extra_trees_tail.log) |
+| `dadc05b5e8d49a59` | docs_textmetrics_kv_vocab_expansion | ok | 0.9249 | 0.8885 | 0.8398 | 49 | [log](out/autocollie/runs/2026-06-28T05-50-24_20260628T054104-filegroups-documents_docs_textmetrics_kv_vocab_expansion.log) |
+| `3eb0706965ef45cb` | docs_lowbigram_tiered_trigrams | ok | 0.9031 | 0.8314 | 0.8399 | 49 | [log](out/autocollie/runs/2026-06-28T05-51-16_20260628T054104-filegroups-documents_docs_lowbigram_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_extra_trees_tail`** `EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding extra_trees ensemble noise to reduce overfitting on rare patterns, while keeping features identical to the best recent run for a matrix cache hit.
+- **`docs_textmetrics_kv_vocab_expansion`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC and recall@3FPM by enabling text_metrics_full and text_encoding to capture document obfuscation signals, alongside an expanded kv_vocab to recover per-element signal in document metadata.
+- **`docs_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by lowering bigram_min_freq to 100 to catch rarer malicious patterns in documents, while tiered trigrams add structured severity-prefixed signal from sister route wins.
+
+</details>
+
+## Cycle `20260628T063319-filegroups-documents` — 2026-06-28T06:33:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bad3bad57923b09f` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9990 | 0.9906 | 2 | [log](out/autocollie/runs/2026-06-28T06-42-36_20260628T063319-filegroups-documents_inherit_from_filetypes_gem_06bdacaa.log) |
+| `2d4fc874a327a76e` | docs_control_hardneg_extra_trees | ok | 0.9408 | 0.9010 | 0.8412 | 24 | [log](out/autocollie/runs/2026-06-28T06-42-41_20260628T063319-filegroups-documents_docs_control_hardneg_extra_trees.log) |
+| `ff1b5a1575c6e009` | docs_textmetrics_encoding_full | ok | 0.9208 | 0.8797 | 0.8399 | 32 | [log](out/autocollie/runs/2026-06-28T06-43-19_20260628T063319-filegroups-documents_docs_textmetrics_encoding_full.log) |
+| `bb9414c3d96003cc` | docs_kv_vocab_expansion | ok | 0.9122 | 0.8562 | 0.8399 | 15 | [log](out/autocollie/runs/2026-06-28T06-43-56_20260628T063319-filegroups-documents_docs_kv_vocab_expansion.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_hardneg_extra_trees`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by combining hard negatives with extra_trees regularization to reduce overfitting on the benign tail while preserving ranking quality.
+- **`docs_textmetrics_encoding_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_metrics_full and text_encoding to capture structural obfuscation and encoding anomalies specific to document malware.
+- **`docs_kv_vocab_expansion`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by expanding kv_vocab_max and lowering kv_min_freq to capture rare but high-signal key-value pairs in malicious documents.
+
+</details>
+
+## Cycle `20260628T085636-filegroups-documents` — 2026-06-28T08:56:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bad3bad57923b09f` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9990 | 0.9906 | 1 | [log](out/autocollie/runs/2026-06-28T09-05-22_20260628T085636-filegroups-documents_inherit_from_filetypes_gem_06bdacaa.log) |
+| `a9e5adbe0a8424dc` | docs_control_hardneg_tail_opt | ok | 0.9339 | 0.8943 | 0.8401 | 29 | [log](out/autocollie/runs/2026-06-28T09-05-31_20260628T085636-filegroups-documents_docs_control_hardneg_tail_opt.log) |
+| `a22e4ab5e13c4ddf` | docs_textmetrics_encoding_full | ok | 0.9237 | 0.8848 | 0.8386 | 48 | [log](out/autocollie/runs/2026-06-28T09-06-03_20260628T085636-filegroups-documents_docs_textmetrics_encoding_full.log) |
+| `cecbb8be380b6ce3` | docs_kv_vocab_split_lowfreq | ok | 0.9122 | 0.8562 | 0.8399 | 43 | [log](out/autocollie/runs/2026-06-28T09-06-53_20260628T085636-filegroups-documents_docs_kv_vocab_split_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_hardneg_tail_opt`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by tuning hard-negative weighting and extra_trees regularization on the best recent feature set, preserving PR_AUC guardrails.
+- **`docs_textmetrics_encoding_full`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=350 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies, targeting better ranking of malicious docs.
+- **`docs_kv_vocab_split_lowfreq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 …` — Aims to improve PR_AUC by expanding kv_vocab and enabling kv_value_split to recover per-element signal in document metadata, while lowering bigram_min_freq to capture rarer malicious patterns.
+
+</details>
+

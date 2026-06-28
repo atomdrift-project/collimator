@@ -779,3 +779,93 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T010145-filetypes-ole` — 2026-06-28T01:01:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10d7edd475799b65` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9999 | 0.9991 | 0.9935 | 33 | [log](out/autocollie/runs/2026-06-28T01-08-05_20260628T010145-filetypes-ole_inherit_from_filetypes_gem_06bdacaa.log) |
+| `b485f5c9b8974604` | ole_control_train_hardneg | ok | 0.9972 | 0.9911 | 0.9683 | 21 | [log](out/autocollie/runs/2026-06-28T01-08-46_20260628T010145-filetypes-ole_ole_control_train_hardneg.log) |
+| `58e373ffce466bb9` | ole_feat_textmetrics_kv_vocab | ok | 0.9964 | 0.9890 | 0.9683 | 18 | [log](out/autocollie/runs/2026-06-28T01-09-11_20260628T010145-filetypes-ole_ole_feat_textmetrics_kv_vocab.log) |
+| `20a0594822795f93` | ole_feat_textenc_tieredtrigrams | ok | 0.9964 | 0.9890 | 0.9683 | 20 | [log](out/autocollie/runs/2026-06-28T01-09-31_20260628T010145-filetypes-ole_ole_feat_textenc_tieredtrigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_train_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best feature set while tuning hard_negative_fraction and num_leaves to improve recall@3 FP/M without hurting PR_AUC.
+- **`ole_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and KV patterns, aiming to boost PR_AUC and recall@3 FP/M.
+- **`ole_feat_textenc_tieredtrigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Adds text_encoding and tiered_crit_trigrams to capture cross-lingual and severity-prefixed patterns, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260628T042429-filetypes-ole` — 2026-06-28T04:24:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10d7edd475799b65` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9991 | 0.9935 | 2 | [log](out/autocollie/runs/2026-06-28T04-32-50_20260628T042429-filetypes-ole_inherit_from_filetypes_gem_06bdacaa.log) |
+| `b485f5c9b8974604` | ole_control_train_hardneg | dup | 0.9972 | 0.9911 | 0.9683 | 6 | [log](out/autocollie/runs/2026-06-28T04-33-11_20260628T042429-filetypes-ole_ole_control_train_hardneg.log) |
+| `8de8947673cb87b6` | ole_feat_kv_vocab_textenc | ok | 0.9964 | 0.9891 | 0.9683 | 44 | [log](out/autocollie/runs/2026-06-28T04-33-27_20260628T042429-filetypes-ole_ole_feat_kv_vocab_textenc.log) |
+| `a5bc59241fc75b51` | ole_feat_doc_obfuscation_tiered | ok | 0.9964 | 0.9891 | 0.9683 | 39 | [log](out/autocollie/runs/2026-06-28T04-34-13_20260628T042429-filetypes-ole_ole_feat_doc_obfuscation_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_train_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best feature_env to test hard-negative training for improved recall@3 FP/M without changing feature surface.
+- **`ole_feat_kv_vocab_textenc`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables kv_vocab and text_encoding to capture OLE metadata and encoding artifacts, aiming to boost PR_AUC.
+- **`ole_feat_doc_obfuscation_tiered`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Adds document_obfuscation_features and tiered_crit_trigrams to detect macro obfuscation patterns, targeting recall@3 FP/M.
+
+</details>
+
+## Cycle `20260628T054104-filetypes-ole` — 2026-06-28T05:41:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10d7edd475799b65` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9991 | 0.9935 | 1 | [log](out/autocollie/runs/2026-06-28T05-50-21_20260628T054104-filetypes-ole_inherit_from_filetypes_gem_06bdacaa.log) |
+| `b485f5c9b8974604` | ole_control_hardneg_tail | dup | 0.9972 | 0.9911 | 0.9683 | 4 | [log](out/autocollie/runs/2026-06-28T05-50-25_20260628T054104-filetypes-ole_ole_control_hardneg_tail.log) |
+| `8de8947673cb87b6` | ole_feat_kv_textenc_vocab | dup | 0.9964 | 0.9891 | 0.9683 | 3 | [log](out/autocollie/runs/2026-06-28T05-50-34_20260628T054104-filetypes-ole_ole_feat_kv_textenc_vocab.log) |
+| `03ccc4b99582738e` | ole_feat_textmetrics_trigrams | ok | 0.9964 | 0.9891 | 0.9683 | 66 | [log](out/autocollie/runs/2026-06-28T05-50-42_20260628T054104-filetypes-ole_ole_feat_textmetrics_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_control_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set with hard negatives to boost recall@3 FP/M without hurting PR AUC.
+- **`ole_feat_kv_textenc_vocab`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable kv_vocab and text_encoding to capture document metadata and encoding patterns, aiming to improve PR AUC.
+- **`ole_feat_textmetrics_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and tiered_crit_trigrams to capture structural document signals, targeting recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260628T074426-filetypes-ole` — 2026-06-28T07:44:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10d7edd475799b65` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9991 | 0.9935 | 1 | [log](out/autocollie/runs/2026-06-28T07-51-31_20260628T074426-filetypes-ole_inherit_from_filetypes_gem_06bdacaa.log) |
+| `59609dac088ae2f2` | ole_ctrl_train_reg_leaves | ok | 0.9963 | 0.9887 | 0.9681 | 10 | [log](out/autocollie/runs/2026-06-28T07-51-41_20260628T074426-filetypes-ole_ole_ctrl_train_reg_leaves.log) |
+| `a5c5511f46a5a874` | ole_feat_textmetrics_kv_vocab | ok | 0.9964 | 0.9891 | 0.9683 | 20 | [log](out/autocollie/runs/2026-06-28T07-51-54_20260628T074426-filetypes-ole_ole_feat_textmetrics_kv_vocab.log) |
+| `14034feca7e668f7` | ole_feat_textenc_tiered_trigrams | ok | 0.9964 | 0.9891 | 0.9683 | 21 | [log](out/autocollie/runs/2026-06-28T07-52-16_20260628T074426-filetypes-ole_ole_feat_textenc_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_train_reg_leaves`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=14 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing regularization and tree depth to reduce overfitting on the dominant benign class while preserving ranking quality.
+- **`ole_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and kv_vocab to capture document obfuscation and key-value structure signals missed by standard n-grams.
+- **`ole_feat_textenc_tiered_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by adding text_encoding and expanding tiered trigram coverage to detect complex macro execution chains in OLE streams.
+
+</details>
+
+## Cycle `20260628T103459-filetypes-ole` — 2026-06-28T10:34:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10d7edd475799b65` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9991 | 0.9935 | 1 | [log](out/autocollie/runs/2026-06-28T10-42-58_20260628T103459-filetypes-ole_inherit_from_filetypes_gem_06bdacaa.log) |
+| `1f318b61eeb94de3` | ole_ctrl_train_reg_leaves | ok | 0.9963 | 0.9885 | 0.9683 | 14 | [log](out/autocollie/runs/2026-06-28T10-43-05_20260628T103459-filetypes-ole_ole_ctrl_train_reg_leaves.log) |
+| `838a0a357f83d45d` | ole_feat_kv_vocab_textenc | ok | 0.9964 | 0.9891 | 0.9683 | 59 | [log](out/autocollie/runs/2026-06-28T10-43-22_20260628T103459-filetypes-ole_ole_feat_kv_vocab_textenc.log) |
+| `c5a8642b3307ba07` | ole_feat_tiered_trigrams_lowbigram | ok | 0.9964 | 0.9891 | 0.9683 | 73 | [log](out/autocollie/runs/2026-06-28T10-44-26_20260628T103459-filetypes-ole_ole_feat_tiered_trigrams_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_train_reg_leaves`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Tune regularization and tree depth to improve PR_AUC while preserving ROC_AUC, using cached feature matrix.
+- **`ole_feat_kv_vocab_textenc`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture structural and encoding signals in OLE streams, aiming to boost PR_AUC by distinguishing malicious macros from benign document structures.
+- **`ole_feat_tiered_trigrams_lowbigram`** `EXP_BIGRAM_MIN_FREQ=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 300 and enable tiered_crit_trigrams to capture rarer malicious patterns in OLE streams, targeting recall@3 FP/M improvement.
+
+</details>
+

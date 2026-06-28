@@ -177,8 +177,16 @@ def _save_route_feature_cache(
         spec_hash=spec_hash,
         rows_hash=rows_hash,
     )
-    tmp_matrix = matrix_path.with_name(matrix_path.name.removesuffix(".npz") + ".tmp.npz")
-    tmp_meta = meta_path.with_suffix(meta_path.suffix + ".tmp")
+    # Process-unique temp names. The cache dir is shared across concurrent
+    # calibrate runs (autocollie-loop runs route experiments in parallel, and
+    # every experiment's calibrate scores *all* routes — so the largest route,
+    # PE, is written by several processes at once). A deterministic temp name
+    # let the first writer's os.replace() consume the shared temp out from under
+    # the others, crashing them with FileNotFoundError. The pid suffix keeps each
+    # writer's temp private; os.replace stays atomic so the final file is sound.
+    pid = os.getpid()
+    tmp_matrix = matrix_path.with_name(matrix_path.name.removesuffix(".npz") + f".tmp.{pid}.npz")
+    tmp_meta = meta_path.with_suffix(meta_path.suffix + f".tmp.{pid}")
     sp.save_npz(tmp_matrix, matrix, compressed=False)
     meta = {
         "route": route_name,

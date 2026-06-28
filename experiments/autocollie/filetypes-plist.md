@@ -998,3 +998,93 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260627T123525-filetypes-plist` — 2026-06-27T12:35:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `182055fa01649622` | inherit_from_filetypes_gem_06bdacaa | ok | 0.2174 | 0.5000 | 0.3571 | 3 | [log](out/autocollie/runs/2026-06-27T12-41-12_20260627T123525-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `436bceda9f61fae2` | plist_feat_kv_vocab_textenc | ok | 0.1936 | 0.6461 | 0.1136 | 7 | [log](out/autocollie/runs/2026-06-27T12-41-18_20260627T123525-filetypes-plist_plist_feat_kv_vocab_textenc.log) |
+| `8ac10463c08cfe4d` | plist_feat_lowfreq_ngrams_metrics | ok | 0.1926 | 0.6563 | 0.1136 | 7 | [log](out/autocollie/runs/2026-06-27T12-41-28_20260627T123525-filetypes-plist_plist_feat_lowfreq_ngrams_metrics.log) |
+| `88c76cd18952102e` | plist_ctrl_textenc_train_tune | ok | 0.1517 | 0.6666 | 0.1136 | 7 | [log](out/autocollie/runs/2026-06-27T12-41-36_20260627T123525-filetypes-plist_plist_ctrl_textenc_train_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_feat_kv_vocab_textenc`** `EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — aims to improve recall@3FPM by capturing plist-specific key-value patterns that often encode malicious payloads or suspicious configurations
+- **`plist_feat_lowfreq_ngrams_metrics`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — aims to improve PR_AUC by lowering n-gram frequency floors to capture rarer but highly indicative plist text patterns while leveraging full text metrics for structural signal
+- **`plist_ctrl_textenc_train_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — aims to improve PR_AUC by adjusting tree complexity and regularization on the best-performing feature surface to better rank the tail without overfitting
+
+</details>
+
+## Cycle `20260627T224501-filetypes-plist` — 2026-06-27T22:45:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `182055fa01649622` | inherit_from_filetypes_gem_06bdacaa | dup | 0.2174 | 0.5000 | 0.3571 | 1 | [log](out/autocollie/runs/2026-06-27T22-51-09_20260627T224501-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `59ffc890ab95378c` | plist_ctrl_train_tune_v2 | ok | 0.1902 | 0.6533 | 0.1136 | 7 | [log](out/autocollie/runs/2026-06-27T22-51-12_20260627T224501-filetypes-plist_plist_ctrl_train_tune_v2.log) |
+| `dcef6faf80b92554` | plist_feat_kv_textenc_vocab | ok | 0.1612 | 0.6528 | 0.1136 | 7 | [log](out/autocollie/runs/2026-06-27T22-51-20_20260627T224501-filetypes-plist_plist_feat_kv_textenc_vocab.log) |
+| `454dde2f4e41c7e5` | plist_feat_lowfreq_ngrams_tiered | ok | 0.1785 | 0.6453 | 0.1136 | 7 | [log](out/autocollie/runs/2026-06-27T22-51-28_20260627T224501-filetypes-plist_plist_feat_lowfreq_ngrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and regularization (reg_lambda=2.0) to better rank malicious plists without overfitting to benign noise.
+- **`plist_feat_kv_textenc_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM and PR_AUC by enabling kv_vocab and text_metrics_full to capture structural key-value pairs and obfuscation signals unique to plist files.
+- **`plist_feat_lowfreq_ngrams_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Aims to improve recall@3FPM by lowering bigram_min_freq to 50 and enabling tiered_crit_trigrams to capture rare but high-severity malicious patterns in plist payloads.
+
+</details>
+
+## Cycle `20260628T042458-filetypes-plist` — 2026-06-28T04:24:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `182055fa01649622` | inherit_from_filetypes_gem_06bdacaa | dup | 0.2174 | 0.5000 | 0.3571 | 2 | [log](out/autocollie/runs/2026-06-28T04-32-37_20260628T042458-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d5d62654bb1b04f1` | plist_ctrl_train_tune_v3 | ok | 0.1333 | 0.5649 | 0.1136 | 24 | [log](out/autocollie/runs/2026-06-28T04-32-48_20260628T042458-filetypes-plist_plist_ctrl_train_tune_v3.log) |
+| `c95c80bed6642e77` | plist_feat_kv_textenc_split | ok | 0.1593 | 0.7489 | 0.1136 | 27 | [log](out/autocollie/runs/2026-06-28T04-33-15_20260628T042458-filetypes-plist_plist_feat_kv_textenc_split.log) |
+| `20978739793ccfeb` | plist_feat_tiered_trigrams_lowfreq | ok | 0.1593 | 0.7489 | 0.1136 | 24 | [log](out/autocollie/runs/2026-06-28T04-33-44_20260628T042458-filetypes-plist_plist_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v3`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature set while increasing num_leaves and lowering learning_rate to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`plist_feat_kv_textenc_split`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab, text_encoding, and kv_value_split to capture structural plist obfuscation signals, aiming to boost PR_AUC by distinguishing malicious key-value patterns from benign configs.
+- **`plist_feat_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and enables tiered_crit_trigrams to capture rare malicious sequences, targeting recall@3FPM gains by surfacing low-prevalence attack patterns.
+
+</details>
+
+## Cycle `20260628T054104-filetypes-plist` — 2026-06-28T05:41:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `182055fa01649622` | inherit_from_filetypes_gem_06bdacaa | dup | 0.2174 | 0.5000 | 0.3571 | 1 | [log](out/autocollie/runs/2026-06-28T05-49-50_20260628T054104-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `941ba5f8e580e3f2` | plist_ctrl_train_tune_v4 | ok | 0.1651 | 0.7584 | 0.1136 | 5 | [log](out/autocollie/runs/2026-06-28T05-49-54_20260628T054104-filetypes-plist_plist_ctrl_train_tune_v4.log) |
+| `9146548babd953f9` | plist_feat_kv_textenc_vocab_tuned | ok | 0.1589 | 0.7498 | 0.1136 | 22 | [log](out/autocollie/runs/2026-06-28T05-50-00_20260628T054104-filetypes-plist_plist_feat_kv_textenc_vocab_tuned.log) |
+| `3818419419861620` | plist_feat_textmetrics_obj_trigrams | ok | 0.1534 | 0.7274 | 0.1136 | 30 | [log](out/autocollie/runs/2026-06-28T05-50-24_20260628T054104-filetypes-plist_plist_feat_textmetrics_obj_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v4`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features to test if increasing num_leaves and estimators improves PR_AUC while keeping ROC_AUC flat.
+- **`plist_feat_kv_textenc_vocab_tuned`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding with conservative caps to capture structured plist patterns, aiming to boost PR_AUC by adding rank signal for malicious configs.
+- **`plist_feat_textmetrics_obj_trigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MAX=2000` — Activates text_metrics_full and objective_trigrams to extract obfuscation and objective-path signals, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+
+## Cycle `20260628T085617-filetypes-plist` — 2026-06-28T08:56:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `182055fa01649622` | inherit_from_filetypes_gem_06bdacaa | dup | 0.2174 | 0.5000 | 0.3571 | 2 | [log](out/autocollie/runs/2026-06-28T09-05-03_20260628T085617-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `9adf89721a274f91` | plist_ctrl_train_tune_v5 | ok | 0.1545 | 0.7062 | 0.1124 | 5 | [log](out/autocollie/runs/2026-06-28T09-05-08_20260628T085617-filetypes-plist_plist_ctrl_train_tune_v5.log) |
+| `d00c084ec98a09d1` | plist_feat_kv_textenc_vocab | ok | 0.1641 | 0.7584 | 0.1136 | 15 | [log](out/autocollie/runs/2026-06-28T09-05-15_20260628T085617-filetypes-plist_plist_feat_kv_textenc_vocab.log) |
+| `0ce95b61d6931f03` | plist_feat_textmetrics_kvsplit | ok | 0.1534 | 0.7274 | 0.1136 | 24 | [log](out/autocollie/runs/2026-06-28T09-05-32_20260628T085617-filetypes-plist_plist_feat_textmetrics_kvsplit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v5`** `EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning tree complexity and regularization on the baseline feature set to reduce overfitting on rare benign patterns.
+- **`plist_feat_kv_textenc_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and text_encoding to capture structured key-value pairs and encoding artifacts common in malicious plists.
+- **`plist_feat_textmetrics_kvsplit`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by activating text_metrics_full and kv_value_split to extract fine-grained structural and tokenized signals from plist payloads.
+
+</details>
+

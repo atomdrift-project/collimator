@@ -1872,3 +1872,93 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260627T204113-filetypes-pe` — 2026-06-27T20:41:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43c088fe3f8039fc` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9988 | 0.9989 | 0.9853 | 267 | [log](out/autocollie/runs/2026-06-27T20-50-18_20260627T204113-filetypes-pe_inherit_from_filetypes_gem_06bdacaa.log) |
+| `870d39db9e492335` | pe_control_max_recall_fpr | ok | 0.9983 | 0.9983 | 0.0000 | 115 | [log](out/autocollie/runs/2026-06-27T20-56-04_20260627T204113-filetypes-pe_pe_control_max_recall_fpr.log) |
+| `923901725bcc66e1` | pe_feat_symbol_vocab_hardneg | ok | 0.9983 | 0.9984 | 0.9814 | 200 | [log](out/autocollie/runs/2026-06-27T20-58-17_20260627T204113-filetypes-pe_pe_feat_symbol_vocab_hardneg.log) |
+| `773b400392f70877` | pe_feat_kv_vocab_split | ok | 0.9982 | 0.9983 | 0.9804 | 212 | [log](out/autocollie/runs/2026-06-27T21-01-44_20260627T204113-filetypes-pe_pe_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_max_recall_fpr`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by directly optimizing the threshold at the deployed strict-FP operating point (5e-07) while keeping the feature surface identical to the best recent run for a matrix cache hit.
+- **`pe_feat_symbol_vocab_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 …` — Aims to improve PR_AUC and recall@3FPM by adding symbol bigram vocab to capture PE import co-occurrence patterns, combined with a hard-negative sweep to sharpen the decision boundary on difficult benigns.
+- **`pe_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Targets PR_AUC by enabling kv_vocab and kv_value_split to recover granular PE metadata signal, distinguishing subtle benign/malware metadata patterns that aggregate features miss.
+
+</details>
+
+## Cycle `20260628T003605-filetypes-pe` — 2026-06-28T00:36:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43c088fe3f8039fc` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9988 | 0.9989 | 0.9853 | 3 | [log](out/autocollie/runs/2026-06-28T00-45-44_20260628T003605-filetypes-pe_inherit_from_filetypes_gem_06bdacaa.log) |
+| `eed9fda8b36af648` | pe_control_hardneg_threshold | ok | 0.9982 | 0.9983 | 0.0000 | 56 | [log](out/autocollie/runs/2026-06-28T00-48-46_20260628T003605-filetypes-pe_pe_control_hardneg_threshold.log) |
+| `0794a2a98a04a1c6` | pe_feat_symbol_vocab_bigrams | ok | 0.9984 | 0.9984 | 0.9819 | 140 | [log](out/autocollie/runs/2026-06-28T00-50-00_20260628T003605-filetypes-pe_pe_feat_symbol_vocab_bigrams.log) |
+| `b5c54e4c03c68b6b` | pe_feat_overlay_pe_flags | ok | 0.9983 | 0.9984 | 0.9794 | 95 | [log](out/autocollie/runs/2026-06-28T00-52-21_20260628T003605-filetypes-pe_pe_feat_overlay_pe_flags.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_threshold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.01 …` — Control feature set with hard-negative sweep and max_recall_at_fpr threshold to directly target deployed tail recall.
+- **`pe_feat_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.015 …` — Enable symbol_vocab and symbol_bigrams to capture PE import co-occurrence patterns, aiming to lift PR_AUC and ROC_AUC.
+- **`pe_feat_overlay_pe_flags`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.02 …` — Add PE-specific structural and overlay metrics to improve ranking of packed/dropper binaries, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260628T061102-filetypes-pe` — 2026-06-28T06:11:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43c088fe3f8039fc` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9988 | 0.9989 | 0.9853 | 2 | [log](out/autocollie/runs/2026-06-28T06-19-35_20260628T061102-filetypes-pe_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d395c588715ee8ea` | pe_control_hardneg_01_12 | ok | 0.9984 | 0.9984 | 0.9829 | 114 | [log](out/autocollie/runs/2026-06-28T06-19-43_20260628T061102-filetypes-pe_pe_control_hardneg_01_12.log) |
+| `4a1fdacbf3caab9b` | pe_feat_kv_vocab_split | ok | 0.9983 | 0.9984 | 0.9813 | 100 | [log](out/autocollie/runs/2026-06-28T06-21-39_20260628T061102-filetypes-pe_pe_feat_kv_vocab_split.log) |
+| `099782cc9162481a` | pe_feat_symtri_threshold_fpr | ok | 0.9983 | 0.9984 | 0.0000 | 97 | [log](out/autocollie/runs/2026-06-28T06-23-21_20260628T061102-filetypes-pe_pe_feat_symtri_threshold_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 EXP_SYMBOL_BIGRAMS=1 …` — Targets recall@3FPM by applying a hard-negative sweep to better separate difficult benigns from malware at the strict-FP tail.
+- **`pe_feat_kv_vocab_split`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 …` — Targets PR_AUC by enabling kv_vocab and kv_value_split to extract finer-grained PE header and metadata signals.
+- **`pe_feat_symtri_threshold_fpr`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 EXP_PE_TEMPORAL_ANOMALY=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_TRIGRAMS=1 …` — Targets recall@3FPM by adding symbol_trigrams and pe_temporal_anomaly while using max_recall_at_fpr thresholding to optimize the deployed operating point.
+
+</details>
+
+## Cycle `20260628T074426-filetypes-pe` — 2026-06-28T07:44:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43c088fe3f8039fc` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9988 | 0.9989 | 0.9853 | 1 | [log](out/autocollie/runs/2026-06-28T07-51-53_20260628T074426-filetypes-pe_inherit_from_filetypes_gem_06bdacaa.log) |
+| `fef3a5f7bf54badd` | pe_control_threshold_fpr_hardneg | ok | 0.9983 | 0.9984 | 0.0000 | 23 | [log](out/autocollie/runs/2026-06-28T07-52-00_20260628T074426-filetypes-pe_pe_control_threshold_fpr_hardneg.log) |
+| `95930315674c3af1` | pe_feat_symbol_vocab_bigrams_hardneg | ok | 0.9983 | 0.9983 | 0.9822 | 28 | [log](out/autocollie/runs/2026-06-28T07-52-25_20260628T074426-filetypes-pe_pe_feat_symbol_vocab_bigrams_hardneg.log) |
+| `883a417c8b8e2e92` | pe_feat_kv_vocab_split_hardneg | ok | 0.9983 | 0.9983 | 0.9810 | 109 | [log](out/autocollie/runs/2026-06-28T07-52-54_20260628T074426-filetypes-pe_pe_feat_kv_vocab_split_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_threshold_fpr_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Control feature set with max_recall_at_fpr threshold targeting 5e-07 FPR and hard-negative sweep (0.01/12) to improve recall@3FPM while preserving PR_AUC.
+- **`pe_feat_symbol_vocab_bigrams_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 …` — Enables symbol_vocab and symbol_bigrams to capture import co-occurrence patterns, paired with hard-negative sweep (0.015/16) to boost PR_AUC and recall@3FPM.
+- **`pe_feat_kv_vocab_split_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 …` — Enables kv_vocab and kv_value_split to recover per-element signal in PE metadata, paired with hard-negative sweep (0.02/18) to improve tail recall@3FPM.
+
+</details>
+
+## Cycle `20260628T090520-filetypes-pe` — 2026-06-28T09:05:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43c088fe3f8039fc` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9988 | 0.9989 | 0.9853 | 1 | [log](out/autocollie/runs/2026-06-28T09-14-56_20260628T090520-filetypes-pe_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c58a52342b007533` | pe_control_hardneg_sweep_fpr_target | ok | 0.9983 | 0.9984 | 0.0000 | 24 | [log](out/autocollie/runs/2026-06-28T09-15-04_20260628T090520-filetypes-pe_pe_control_hardneg_sweep_fpr_target.log) |
+| `01252b8c7a317ddf` | pe_feat_symbol_vocab_bigrams | ok | 0.9983 | 0.9983 | 0.9821 | 93 | [log](out/autocollie/runs/2026-06-28T09-15-30_20260628T090520-filetypes-pe_pe_feat_symbol_vocab_bigrams.log) |
+| `037ad8638694a823` | pe_feat_pe_flags_overlay_section | ok | 0.9983 | 0.9984 | 0.9825 | 111 | [log](out/autocollie/runs/2026-06-28T09-17-04_20260628T090520-filetypes-pe_pe_feat_pe_flags_overlay_section.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_sweep_fpr_target`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr …` — Control feature set with hard-negative sweep and max_recall_at_fpr threshold to directly optimize recall@3FPM at the deployed tail while preserving matrix cache.
+- **`pe_feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 …` — Enable symbol_vocab and symbol_bigrams to capture import co-occurrence patterns for PE files, aiming to improve PR_AUC by adding structural signal.
+- **`pe_feat_pe_flags_overlay_section`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 …` — Enable PE-format flags, temporal anomaly, overlay signal, and nonstandard section signal to capture packer/dropper artifacts, targeting recall@3FPM gains.
+
+</details>
+

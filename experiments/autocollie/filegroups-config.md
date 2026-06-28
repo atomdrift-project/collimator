@@ -1368,3 +1368,111 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T013805-filegroups-config` — 2026-06-28T01:38:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d3757ef3cf99524` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9985 | 0.9984 | 0.9881 | 96 | [log](out/autocollie/runs/2026-06-28T01-47-30_20260628T013805-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `4aa8aec33e4c2b35` | config_ctrl_scalepos_05_leaves128 | ok | 0.8986 | 0.9177 | 0.8800 | 56 | [log](out/autocollie/runs/2026-06-28T01-50-15_20260628T013805-filegroups-config_config_ctrl_scalepos_05_leaves128.log) |
+| `34992d2e9e3a298b` | config_feat_kv_vocab_5k | ok | 0.8949 | 0.9148 | 0.8746 | 45 | [log](out/autocollie/runs/2026-06-28T01-51-26_20260628T013805-filegroups-config_config_feat_kv_vocab_5k.log) |
+| `a042904a86f80fe5` | config_feat_text_metrics_full | ok | 0.8964 | 0.9191 | 0.8775 | 48 | [log](out/autocollie/runs/2026-06-28T01-52-16_20260628T013805-filegroups-config_config_feat_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_scalepos_05_leaves128`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting benign samples to boost malware scores at the strict-FP tail, while keeping PR_AUC flat via moderate tree complexity.
+- **`config_feat_kv_vocab_5k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling key-value vocabulary features to capture structured config patterns that distinguish malicious from benign files.
+- **`config_feat_text_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by promoting full text metrics to detect formatting anomalies and obfuscation signals common in malicious configuration files.
+
+</details>
+
+## Cycle `20260628T042458-filegroups-config` — 2026-06-28T04:24:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d3757ef3cf99524` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9985 | 0.9984 | 0.9881 | 1 | [log](out/autocollie/runs/2026-06-28T04-31-30_20260628T042458-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `284a755ac09fe08d` | config_ctrl_leaves128_lr003 | ok | 0.8975 | 0.9271 | 0.8718 | 3 | [log](out/autocollie/runs/2026-06-28T04-31-40_20260628T042458-filegroups-config_config_ctrl_leaves128_lr003.log) |
+| `34992d2e9e3a298b` | config_feat_kv_vocab_5k | dup | 0.8949 | 0.9148 | 0.8746 | 1 | [log](out/autocollie/runs/2026-06-28T04-31-44_20260628T042458-filegroups-config_config_feat_kv_vocab_5k.log) |
+| `a042904a86f80fe5` | config_feat_text_metrics_full | dup | 0.8964 | 0.9191 | 0.8775 | 1 | [log](out/autocollie/runs/2026-06-28T04-31-46_20260628T042458-filegroups-config_config_feat_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by refining tree depth and learning rate on the proven feature surface to better separate tail malware from benign configs.
+- **`config_feat_kv_vocab_5k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling KV vocabulary features to capture structural key-value patterns that distinguish malicious configs.
+- **`config_feat_text_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by adding full text metrics to better identify obfuscated or malicious config structures at the strict-FP tail.
+
+</details>
+
+## Cycle `20260628T054104-filegroups-config` — 2026-06-28T05:41:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d3757ef3cf99524` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9985 | 0.9984 | 0.9881 | 2 | [log](out/autocollie/runs/2026-06-28T05-49-07_20260628T054104-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `53587025255fc52f` | config_ctrl_hardneg_leaves128 | ok | 0.9001 | 0.9205 | 0.8753 | 5 | [log](out/autocollie/runs/2026-06-28T05-49-19_20260628T054104-filegroups-config_config_ctrl_hardneg_leaves128.log) |
+| `34992d2e9e3a298b` | config_feat_kv_vocab_5k | dup | 0.8949 | 0.9148 | 0.8746 | 2 | [log](out/autocollie/runs/2026-06-28T05-49-28_20260628T054104-filegroups-config_config_feat_kv_vocab_5k.log) |
+| `db7f9cabb68251cd` | config_feat_textenc_metrics_lowbigram | ok | 0.8956 | 0.9216 | 0.8778 | 22 | [log](out/autocollie/runs/2026-06-28T05-49-31_20260628T054104-filegroups-config_config_feat_textenc_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_hardneg_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by upweighting hard negatives to sharpen the decision boundary at the tail, while keeping ROC_AUC flat.
+- **`config_feat_kv_vocab_5k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM and PR_AUC by capturing malicious key-value patterns in configs via research vocab, without degrading ROC_AUC.
+- **`config_feat_textenc_metrics_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding text encoding signals and full text metrics while lowering bigram frequency floor to catch rarer malicious config patterns.
+
+</details>
+
+## Cycle `20260628T063319-filegroups-config` — 2026-06-28T06:33:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d3757ef3cf99524` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9985 | 0.9984 | 0.9881 | 2 | [log](out/autocollie/runs/2026-06-28T06-42-33_20260628T063319-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `383dae1fe0c382c2` | config_ctrl_hardneg_lr005 | ok | 0.9046 | 0.9271 | 0.8776 | 36 | [log](out/autocollie/runs/2026-06-28T06-42-43_20260628T063319-filegroups-config_config_ctrl_hardneg_lr005.log) |
+| `b139360dede57655` | config_feat_textenc_metrics_full | ok | 0.8960 | 0.9212 | 0.8775 | 44 | [log](out/autocollie/runs/2026-06-28T06-43-33_20260628T063319-filegroups-config_config_feat_textenc_metrics_full.log) |
+| `61a0119873e4c5af` | config_feat_kv_vocab_lowbigram | ok | 0.8940 | 0.9186 | 0.8782 | 23 | [log](out/autocollie/runs/2026-06-28T06-44-18_20260628T063319-filegroups-config_config_feat_kv_vocab_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_hardneg_lr005`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Aims to improve PR_AUC by tuning hard-negative weighting and learning rate to better rank tail malware against benign configs without changing features.
+- **`config_feat_textenc_metrics_full`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Aims to boost PR_AUC and recall@3FPM by enabling text_metrics_full and text_encoding to capture obfuscation and structural anomalies in malicious config files.
+- **`config_feat_kv_vocab_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Aims to improve recall@3FPM by enabling kv_vocab and lowering bigram_min_freq to 100 to capture sparse key-value patterns and rare n-grams indicative of malicious configs.
+
+</details>
+
+## Cycle `20260628T103459-filegroups-config` — 2026-06-28T10:34:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d3757ef3cf99524` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9985 | 0.9984 | 0.9881 | 5 | [log](out/autocollie/runs/2026-06-28T10-43-41_20260628T103459-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `469bf6ac0a387a20` | config_ctrl_hardneg_lr005_leaves128 | ok | 0.9056 | 0.9309 | 0.8754 | 27 | [log](out/autocollie/runs/2026-06-28T10-43-56_20260628T103459-filegroups-config_config_ctrl_hardneg_lr005_leaves128.log) |
+| `2124106c6eb655db` | config_feat_textenc_metrics_full | ok | 0.8907 | 0.9142 | 0.8743 | 68 | [log](out/autocollie/runs/2026-06-28T10-44-29_20260628T103459-filegroups-config_config_feat_textenc_metrics_full.log) |
+| `6e9428804d6b29e2` | config_feat_kv_vocab_obj_trigrams | ok | 0.8941 | 0.9197 | 0.8611 | 44 | [log](out/autocollie/runs/2026-06-28T10-45-38_20260628T103459-filegroups-config_config_feat_kv_vocab_obj_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_hardneg_lr005_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by refining hard-negative weighting and tree complexity on the best recent feature set, leveraging matrix cache hits.
+- **`config_feat_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling text_metrics_full and text_encoding to capture obfuscation and encoding artifacts prevalent in malicious configuration files.
+- **`config_feat_kv_vocab_obj_trigrams`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by expanding kv_vocab and enabling objective_trigrams to better rank low-FPR malicious config patterns.
+
+</details>
+
+## Cycle `20260628T113537-filegroups-config` — 2026-06-28T11:35:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d3757ef3cf99524` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9985 | 0.9984 | 0.9881 | 1 | [log](out/autocollie/runs/2026-06-28T11-43-38_20260628T113537-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `314656c663c4cc47` | config_ctrl_baseline_training | ok | 0.9056 | 0.9342 | 0.8805 | 3 | [log](out/autocollie/runs/2026-06-28T11-43-42_20260628T113537-filegroups-config_config_ctrl_baseline_training.log) |
+| `09b513acbfc8029e` | config_feat_kv_textmetrics_lowbigram | ok | 0.8953 | 0.9193 | 0.8643 | 13 | [log](out/autocollie/runs/2026-06-28T11-43-47_20260628T113537-filegroups-config_config_feat_kv_textmetrics_lowbigram.log) |
+| `524897ad47be49fd` | config_feat_tiered_trigrams_severity | ok | 0.9030 | 0.9300 | 0.8798 | 18 | [log](out/autocollie/runs/2026-06-28T11-44-01_20260628T113537-filegroups-config_config_feat_tiered_trigrams_severity.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_baseline_training`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating best feature_env to isolate training knob effects on PR_AUC and recall@3FPM.
+- **`config_feat_kv_textmetrics_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full to capture config-specific key-value and structural text signals, targeting PR_AUC improvement.
+- **`config_feat_tiered_trigrams_severity`** `EXP_BIGRAM_MAX=6000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Adds tiered_crit_trigrams and severity_fractions to better rank malicious config patterns, aiming to boost recall@3FPM while maintaining ROC_AUC.
+
+</details>
+

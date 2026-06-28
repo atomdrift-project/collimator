@@ -922,3 +922,75 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260628T023838-filetypes-png` — 2026-06-28T02:38:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `69177b180ca1f059` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9893 | 0.9729 | 0.9375 | 27 | [log](out/autocollie/runs/2026-06-28T02-46-54_20260628T023838-filetypes-png_inherit_from_filetypes_gem_06bdacaa.log) |
+| `43d390a77ff68ad5` | png_ctrl_hardneg_tail | ok | 0.2164 | 0.6769 | 0.1154 | 30 | [log](out/autocollie/runs/2026-06-28T02-47-39_20260628T023838-filetypes-png_png_ctrl_hardneg_tail.log) |
+| `c8b9812b4093f79a` | png_feat_textmetrics_encoding | ok | 0.2874 | 0.7125 | 0.1135 | 28 | [log](out/autocollie/runs/2026-06-28T02-48-16_20260628T023838-filetypes-png_png_feat_textmetrics_encoding.log) |
+| `d8b02c134b0eafb8` | png_feat_kv_tiered_trigrams | ok | 0.2874 | 0.7125 | 0.1135 | 24 | [log](out/autocollie/runs/2026-06-28T02-48-50_20260628T023838-filetypes-png_png_feat_kv_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_hardneg_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to better separate tail malware from benign PNGs, while keeping PR_AUC flat.
+- **`png_feat_textmetrics_encoding`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and text_encoding to capture obfuscation and structural anomalies in PNG text chunks, adding orthogonal signal to existing bigrams.
+- **`png_feat_kv_tiered_trigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by adding kv_vocab to capture metadata key-value patterns and tiered_crit_trigrams for severity-weighted structural signals, targeting tail malware detection.
+
+</details>
+
+## Cycle `20260628T033942-filetypes-png` — 2026-06-28T03:39:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `69177b180ca1f059` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9893 | 0.9729 | 0.9375 | 2 | [log](out/autocollie/runs/2026-06-28T03-47-15_20260628T033942-filetypes-png_inherit_from_filetypes_gem_06bdacaa.log) |
+| `68c8e8d5f4ed77ac` | png_ctrl_train_tail_opt | ok | 0.2228 | 0.6762 | 0.1153 | 2 | [log](out/autocollie/runs/2026-06-28T03-47-19_20260628T033942-filetypes-png_png_ctrl_train_tail_opt.log) |
+| `e5468cfd8d04c1b4` | png_feat_kv_textenc_vocab | ok | 0.2855 | 0.7070 | 0.1135 | 11 | [log](out/autocollie/runs/2026-06-28T03-47-24_20260628T033942-filetypes-png_png_feat_kv_textenc_vocab.log) |
+| `0e3b7f57f3321a0a` | png_feat_textmetrics_tiered | ok | 0.2855 | 0.7070 | 0.1135 | 12 | [log](out/autocollie/runs/2026-06-28T03-47-36_20260628T033942-filetypes-png_png_feat_textmetrics_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_tail_opt`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with optimized training knobs (higher leaves, lower LR, hard negatives) to improve recall@3 FP/M by better separating tail malware from benign noise.
+- **`png_feat_kv_textenc_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture PNG metadata chunk patterns and embedded text obfuscation, targeting PR_AUC gains from richer structural signal.
+- **`png_feat_textmetrics_tiered`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and tiered_crit_trigrams to capture document-like obfuscation and critical path co-occurrences, aiming to boost recall@3 FP/M while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260628T070002-filetypes-png` — 2026-06-28T07:00:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `69177b180ca1f059` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9893 | 0.9729 | 0.9375 | 1 | [log](out/autocollie/runs/2026-06-28T07-09-09_20260628T070002-filetypes-png_inherit_from_filetypes_gem_06bdacaa.log) |
+| `4806b8419ce6e34b` | png_ctrl_tail_opt_hardneg | ok | 0.2164 | 0.6769 | 0.1154 | 3 | [log](out/autocollie/runs/2026-06-28T07-09-15_20260628T070002-filetypes-png_png_ctrl_tail_opt_hardneg.log) |
+| `c4e54b2ac8c9f189` | png_feat_textmetrics_full_vocab | ok | 0.2844 | 0.7076 | 0.1152 | 15 | [log](out/autocollie/runs/2026-06-28T07-09-20_20260628T070002-filetypes-png_png_feat_textmetrics_full_vocab.log) |
+| `5297bbf971d91632` | png_feat_kv_split_lowfreq | ok | 0.2844 | 0.7076 | 0.1152 | 17 | [log](out/autocollie/runs/2026-06-28T07-09-37_20260628T070002-filetypes-png_png_feat_kv_split_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_tail_opt_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, while keeping PR_AUC and ROC_AUC flat via cache-hit feature set.
+- **`png_feat_textmetrics_full_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_metrics_full and text_encoding to capture PNG chunk metadata and obfuscation patterns, expanding rank signal beyond standard n-grams.
+- **`png_feat_kv_split_lowfreq`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_value_split and lowering kv_min_freq to recover granular signal from PNG text chunk key-value pairs, targeting missed malware with sparse but high-crit metadata.
+
+</details>
+
+## Cycle `20260628T081253-filetypes-png` — 2026-06-28T08:12:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `69177b180ca1f059` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9893 | 0.9729 | 0.9375 | 1 | [log](out/autocollie/runs/2026-06-28T08-19-31_20260628T081253-filetypes-png_inherit_from_filetypes_gem_06bdacaa.log) |
+| `9755c338d3d22d01` | png_ctrl_train_capacity_lr | ok | 0.2483 | 0.6465 | 0.1150 | 1 | [log](out/autocollie/runs/2026-06-28T08-19-34_20260628T081253-filetypes-png_png_ctrl_train_capacity_lr.log) |
+| `dac82cf1dd6e916f` | png_feat_textmetrics_full | ok | 0.2821 | 0.7006 | 0.1135 | 8 | [log](out/autocollie/runs/2026-06-28T08-19-37_20260628T081253-filetypes-png_png_feat_textmetrics_full.log) |
+| `5f0db437f6ab8912` | png_feat_kv_vocab_tiered_trigrams | ok | 0.2821 | 0.7006 | 0.1135 | 8 | [log](out/autocollie/runs/2026-06-28T08-19-46_20260628T081253-filetypes-png_png_feat_kv_vocab_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_capacity_lr`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent feature surface; increases num_leaves and lowers learning_rate to improve PR_AUC by allowing deeper splits on rare malware patterns without overfitting.
+- **`png_feat_textmetrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full research vocab to capture structural text anomalies in PNG metadata and chunks, aiming to boost PR_AUC by adding discriminative signal for obfuscated payloads.
+- **`png_feat_kv_vocab_tiered_trigrams`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab and tiered_crit_trigrams to capture key-value metadata patterns and severity-prefixed trigrams, targeting recall@3FPM by surfacing low-FPR malware signals in PNG headers.
+
+</details>
+

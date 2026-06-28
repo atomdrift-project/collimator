@@ -1832,3 +1832,129 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260627T120333-filetypes-go` — 2026-06-27T12:03:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `547e71ec06e78952` | inherit_from_filetypes_json_1e3933ad | ok | 0.9214 | 0.9731 | 0.8424 | 59 | [log](out/autocollie/runs/2026-06-27T12-11-07_20260627T120333-filetypes-go_inherit_from_filetypes_json_1e3933ad.log) |
+| `98a6e76b3ccd259a` | go_ctrl_hardneg_tuned_leaves128 | ok | 0.3471 | 0.6886 | 0.1592 | 41 | [log](out/autocollie/runs/2026-06-27T12-13-16_20260627T120333-filetypes-go_go_ctrl_hardneg_tuned_leaves128.log) |
+| `eceec8f2967c95df` | go_feat_textmetrics_encoding | ok | 0.3649 | 0.7081 | 0.1597 | 42 | [log](out/autocollie/runs/2026-06-27T12-14-22_20260627T120333-filetypes-go_go_feat_textmetrics_encoding.log) |
+| `b490fbb64244a968` | go_feat_lowfreq_bigrams_trigrams | ok | 0.3571 | 0.6961 | 0.1599 | 23 | [log](out/autocollie/runs/2026-06-27T12-15-05_20260627T120333-filetypes-go_go_feat_lowfreq_bigrams_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_hardneg_tuned_leaves128`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by refining hard-negative weighting and increasing tree capacity to better separate borderline Go malware from benign scripts, while keeping ROC_AUC flat.
+- **`go_feat_textmetrics_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and text_encoding to capture obfuscation and structural anomalies in Go source files, while monitoring PR_AUC for stability.
+- **`go_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by lowering bigram_min_freq and tiered_trigram_min_crit to capture rarer but highly indicative Go-specific attack patterns, while keeping ROC_AUC stable to avoid overfitting.
+
+</details>
+
+## Cycle `20260627T204056-filetypes-go` — 2026-06-27T20:40:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `547e71ec06e78952` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9214 | 0.9731 | 0.8424 | 1 | [log](out/autocollie/runs/2026-06-27T20-47-45_20260627T204056-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `10466710f3009380` | go_ctrl_train_tuned | ok | 0.3571 | 0.6961 | 0.1599 | 2 | [log](out/autocollie/runs/2026-06-27T20-47-53_20260627T204056-filetypes-go_go_ctrl_train_tuned.log) |
+| `b23942642919ba41` | go_feat_kv_vocab | ok | 0.3425 | 0.6900 | 0.1612 | 14 | [log](out/autocollie/runs/2026-06-27T20-48-01_20260627T204056-filetypes-go_go_feat_kv_vocab.log) |
+| `7490848f8c52683b` | go_feat_symbol_vocab | ok | 0.3425 | 0.6900 | 0.1612 | 12 | [log](out/autocollie/runs/2026-06-27T20-48-16_20260627T204056-filetypes-go_go_feat_symbol_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_tuned`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to test if increasing estimators and leaves improves PR_AUC without changing features.
+- **`go_feat_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured key-value patterns in Go configs/code, aiming to boost PR_AUC by adding discriminative signal.
+- **`go_feat_symbol_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab to capture Go import and function name patterns, targeting PR_AUC improvement via code-structure signal.
+
+</details>
+
+## Cycle `20260628T042429-filetypes-go` — 2026-06-28T04:24:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `547e71ec06e78952` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9214 | 0.9731 | 0.8424 | 1 | [log](out/autocollie/runs/2026-06-28T04-31-49_20260628T042429-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `b9745a4b84d03520` | go_ctrl_train_hardneg | ok | 0.3574 | 0.6939 | 0.1603 | 6 | [log](out/autocollie/runs/2026-06-28T04-31-58_20260628T042429-filetypes-go_go_ctrl_train_hardneg.log) |
+| `b23942642919ba41` | go_feat_kv_vocab_10k | dup | 0.3425 | 0.6900 | 0.1612 | 1 | [log](out/autocollie/runs/2026-06-28T04-32-07_20260628T042429-filetypes-go_go_feat_kv_vocab_10k.log) |
+| `9729282505ccde11` | go_feat_symbol_bigrams_lowfreq | ok | 0.3512 | 0.6798 | 0.1633 | 24 | [log](out/autocollie/runs/2026-06-28T04-32-10_20260628T042429-filetypes-go_go_feat_symbol_bigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test hard-negative upweighting to improve recall@3 FP/M by focusing model on difficult benign samples while preserving PR AUC.
+- **`go_feat_kv_vocab_10k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture Go module paths and build metadata, aiming to boost PR AUC by distinguishing malicious dependencies from benign ones.
+- **`go_feat_symbol_bigrams_lowfreq`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Lower symbol bigram min_freq to capture rare Go import co-occurrences, targeting PR AUC gains from fine-grained package interaction signals.
+
+</details>
+
+## Cycle `20260628T065524-filetypes-go` — 2026-06-28T06:55:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `547e71ec06e78952` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9214 | 0.9731 | 0.8424 | 2 | [log](out/autocollie/runs/2026-06-28T07-03-24_20260628T065524-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `8e8dd66061cc3eb7` | go_ctrl_train_tuned_leaves | ok | 0.3519 | 0.6941 | 0.1594 | 4 | [log](out/autocollie/runs/2026-06-28T07-03-29_20260628T065524-filetypes-go_go_ctrl_train_tuned_leaves.log) |
+| `c8b6ad6af5bdc387` | go_feat_kv_vocab_10k | ok | 0.3535 | 0.6811 | 0.1654 | 16 | [log](out/autocollie/runs/2026-06-28T07-03-34_20260628T065524-filetypes-go_go_feat_kv_vocab_10k.log) |
+| `2582bf48580bd5aa` | go_feat_obj_trigrams | ok | 0.3535 | 0.6811 | 0.1654 | 16 | [log](out/autocollie/runs/2026-06-28T07-03-52_20260628T065524-filetypes-go_go_feat_obj_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_tuned_leaves`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent feature env; tweaks num_leaves and reg_lambda to improve PR_AUC by reducing overfitting on rare patterns.
+- **`go_feat_kv_vocab_10k`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture Go struct/config patterns, aiming to boost PR_AUC by adding high-signal key-value features that separate malicious configs from benign ones.
+- **`go_feat_obj_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enables objective_trigrams to capture multi-step attack patterns in Go code, targeting recall@3 FP/M improvement by identifying complex malicious behaviors.
+
+</details>
+
+## Cycle `20260628T082532-filetypes-go` — 2026-06-28T08:25:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `547e71ec06e78952` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9214 | 0.9731 | 0.8424 | 1 | [log](out/autocollie/runs/2026-06-28T08-33-09_20260628T082532-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `424b64db9b63d5d2` | go_ctrl_train_hardneg_posdown | ok | 0.3560 | 0.6943 | 0.1613 | 3 | [log](out/autocollie/runs/2026-06-28T08-33-16_20260628T082532-filetypes-go_go_ctrl_train_hardneg_posdown.log) |
+| `d75a8c5e372efa02` | go_feat_kv_vocab_split | ok | 0.3575 | 0.6944 | 0.1610 | 13 | [log](out/autocollie/runs/2026-06-28T08-33-22_20260628T082532-filetypes-go_go_feat_kv_vocab_split.log) |
+| `a5fe7f04754794d4` | go_feat_sym_text_noclusters | ok | 0.3575 | 0.6944 | 0.1610 | 14 | [log](out/autocollie/runs/2026-06-28T08-33-36_20260628T082532-filetypes-go_go_feat_sym_text_noclusters.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hardneg_posdown`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives and up-weighting hard negatives to sharpen the decision boundary at low FPR.
+- **`go_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by enabling KV vocab with value splitting to capture Go-specific structural patterns that standard n-grams miss.
+- **`go_feat_sym_text_noclusters`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=12000 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to boost recall@3FPM by disabling the noisy clusters group and adding symbol/text encoding features to better separate malicious Go source from benign.
+
+</details>
+
+## Cycle `20260628T103019-filetypes-go` — 2026-06-28T10:30:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `547e71ec06e78952` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9214 | 0.9731 | 0.8424 | 1 | [log](out/autocollie/runs/2026-06-28T10-37-50_20260628T103019-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `f347ff213fe464ad` | go_ctrl_train_hardneg_posdown | ok | 0.3559 | 0.7032 | 0.1612 | 3 | [log](out/autocollie/runs/2026-06-28T10-37-56_20260628T103019-filetypes-go_go_ctrl_train_hardneg_posdown.log) |
+| `6aac49a7786d51ac` | go_feat_kv_sym_vocab_expansion | ok | 0.3571 | 0.6987 | 0.1629 | 16 | [log](out/autocollie/runs/2026-06-28T10-38-03_20260628T103019-filetypes-go_go_feat_kv_sym_vocab_expansion.log) |
+| `e7b31f60be4b522f` | go_feat_text_metrics_encoding | ok | 0.3649 | 0.7081 | 0.1597 | 3 | [log](out/autocollie/runs/2026-06-28T10-38-22_20260628T103019-filetypes-go_go_feat_text_metrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hardneg_posdown`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature set to test if increasing hard_negative_weight and lowering scale_pos_weight_mult improves recall@3FPM by focusing the model on difficult benigns while suppressing FP at the tail.
+- **`go_feat_kv_sym_vocab_expansion`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Expands KV and symbol vocabularies to capture rare Go-specific package imports and configuration keys, aiming to lift PR_AUC by improving separation of malicious vs benign Go artifacts.
+- **`go_feat_text_metrics_encoding`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture obfuscation and string density patterns in Go files, targeting recall@3FPM by surfacing hidden malicious payloads that evade standard n-gram features.
+
+</details>
+
+## Cycle `20260628T110043-filetypes-go` — 2026-06-28T11:00:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `547e71ec06e78952` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9214 | 0.9731 | 0.8424 | 1 | [log](out/autocollie/runs/2026-06-28T11-08-37_20260628T110043-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `43c01f141d77d849` | go_ctrl_train_hardneg_leaves | ok | 0.3654 | 0.7019 | 0.1600 | 3 | [log](out/autocollie/runs/2026-06-28T11-08-53_20260628T110043-filetypes-go_go_ctrl_train_hardneg_leaves.log) |
+| `38f4ba20a45d95f1` | go_feat_kv_vocab_15k | ok | 0.3511 | 0.6880 | 0.1638 | 16 | [log](out/autocollie/runs/2026-06-28T11-08-59_20260628T110043-filetypes-go_go_feat_kv_vocab_15k.log) |
+| `a972e54875f9318e` | go_feat_sym_vocab_10k | ok | 0.3511 | 0.6880 | 0.1638 | 13 | [log](out/autocollie/runs/2026-06-28T11-09-16_20260628T110043-filetypes-go_go_feat_sym_vocab_10k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hardneg_leaves`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set and tune hard negatives + leaves to improve recall@3FPM by focusing the model on difficult benigns, while preserving PR_AUC.
+- **`go_feat_kv_vocab_15k`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value structural patterns, aiming to boost PR_AUC by adding discriminative signal for Go configs and binaries.
+- **`go_feat_sym_vocab_10k`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab to capture import/function lexical patterns, targeting PR_AUC improvement via richer code-level features that distinguish malicious Go artifacts.
+
+</details>
+

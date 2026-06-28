@@ -1493,3 +1493,129 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260627T120333-filetypes-javascript` — 2026-06-27T12:03:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89ff83fb2785f5ad` | inherit_from_filetypes_json_1e3933ad | ok | 0.9978 | 0.9974 | 0.9792 | 197 | [log](out/autocollie/runs/2026-06-27T12-10-38_20260627T120333-filetypes-javascript_inherit_from_filetypes_json_1e3933ad.log) |
+| `2d974a57ea62b1cf` | ctrl_best_env_train_tune | ok | 0.9836 | 0.9774 | 0.9448 | 71 | [log](out/autocollie/runs/2026-06-27T12-16-03_20260627T120333-filetypes-javascript_ctrl_best_env_train_tune.log) |
+| `aef423918be7f6ce` | feat_kv_vocab_15k | ok | 0.9836 | 0.9774 | 0.9448 | 35 | [log](out/autocollie/runs/2026-06-27T12-17-23_20260627T120333-filetypes-javascript_feat_kv_vocab_15k.log) |
+| `61a18ea945a4adb1` | feat_text_metrics_lowbigram | ok | 0.9822 | 0.9752 | 0.9451 | 32 | [log](out/autocollie/runs/2026-06-27T12-17-59_20260627T120333-filetypes-javascript_feat_text_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_env_train_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best PR_AUC feature set to test if deeper trees (num_leaves=128) and more estimators (300) improve recall@3FPM while keeping PR_AUC flat.
+- **`feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with max 15000 to capture key-value pair signals in JS configs, aiming to boost PR_AUC by distinguishing malicious payloads from benign scripts.
+- **`feat_text_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and lowers bigram_min_freq to 100 to capture obfuscation patterns and rare n-grams, targeting recall@3FPM improvement.
+
+</details>
+
+## Cycle `20260627T204056-filetypes-javascript` — 2026-06-27T20:40:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89ff83fb2785f5ad` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9978 | 0.9974 | 0.9792 | 4 | [log](out/autocollie/runs/2026-06-27T20-49-41_20260627T204056-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `87d982cc17b1277b` | ctrl_best_env_train_tune_v2 | ok | 0.9811 | 0.9726 | 0.9457 | 26 | [log](out/autocollie/runs/2026-06-27T20-51-15_20260627T204056-filetypes-javascript_ctrl_best_env_train_tune_v2.log) |
+| `f785c5e2e97ae63c` | feat_kv_vocab_textmetrics | ok | 0.9832 | 0.9775 | 0.9431 | 77 | [log](out/autocollie/runs/2026-06-27T20-51-59_20260627T204056-filetypes-javascript_feat_kv_vocab_textmetrics.log) |
+| `b0acb368a5a7ff4a` | feat_textenc_lowbigram | ok | 0.9824 | 0.9756 | 0.9439 | 68 | [log](out/autocollie/runs/2026-06-27T20-53-18_20260627T204056-filetypes-javascript_feat_textenc_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_env_train_tune_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env for matrix cache hit; tunes num_leaves and learning_rate to improve PR_AUC and recall@3 FP/M via finer splits and stable convergence.
+- **`feat_kv_vocab_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture JS key-value obfuscation and structural text signals, aiming to increase PR_AUC and recall@3 FP/M.
+- **`feat_textenc_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and lowers bigram_min_freq to 100 to capture rare encoding artifacts and low-frequency path patterns, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260628T042429-filetypes-javascript` — 2026-06-28T04:24:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89ff83fb2785f5ad` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9978 | 0.9974 | 0.9792 | 4 | [log](out/autocollie/runs/2026-06-28T04-32-21_20260628T042429-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `aeb2b521fe3cc6e7` | ctrl_best_env_train_tune_v3 | ok | 0.9813 | 0.9735 | 0.9439 | 24 | [log](out/autocollie/runs/2026-06-28T04-32-41_20260628T042429-filetypes-javascript_ctrl_best_env_train_tune_v3.log) |
+| `88060ed3b6f8f5e4` | feat_kv_vocab_textenc_lowfreq | ok | 0.9824 | 0.9756 | 0.9459 | 106 | [log](out/autocollie/runs/2026-06-28T04-33-08_20260628T042429-filetypes-javascript_feat_kv_vocab_textenc_lowfreq.log) |
+| `b9c051d66457331a` | feat_text_metrics_full_tiered_trigrams | ok | 0.9820 | 0.9749 | 0.9465 | 58 | [log](out/autocollie/runs/2026-06-28T04-34-57_20260628T042429-filetypes-javascript_feat_text_metrics_full_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_env_train_tune_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control spec replicating best recent feature_env to hit matrix cache; tweaks training capacity and regularization to improve PR_AUC by reducing overfitting.
+- **`feat_kv_vocab_textenc_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables kv_vocab and text_encoding research families to capture JS structural and encoding signals, targeting higher recall@3 FP/M by surfacing obfuscated payload patterns.
+- **`feat_text_metrics_full_tiered_trigrams`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 …` — Adds text_metrics_full and tiered_crit_trigrams to improve PR_AUC by incorporating document obfuscation metrics and severity-weighted trigram co-occurrences.
+
+</details>
+
+## Cycle `20260628T070002-filetypes-javascript` — 2026-06-28T07:00:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89ff83fb2785f5ad` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9978 | 0.9974 | 0.9792 | 1 | [log](out/autocollie/runs/2026-06-28T07-08-03_20260628T070002-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `9be5969e45574e3e` | ctrl_best_env_train_tune_v4 | ok | 0.9810 | 0.9734 | 0.9451 | 63 | [log](out/autocollie/runs/2026-06-28T07-08-08_20260628T070002-filetypes-javascript_ctrl_best_env_train_tune_v4.log) |
+| `2f626a6c84c6d2ce` | feat_textenc_kv_lowbigram | ok | 0.9816 | 0.9745 | 0.9452 | 68 | [log](out/autocollie/runs/2026-06-28T07-09-13_20260628T070002-filetypes-javascript_feat_textenc_kv_lowbigram.log) |
+| `5f0372a4346e82f5` | feat_textmetrics_tiered_trigrams | ok | 0.9815 | 0.9741 | 0.9453 | 60 | [log](out/autocollie/runs/2026-06-28T07-10-23_20260628T070002-filetypes-javascript_feat_textmetrics_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_env_train_tune_v4`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 …` — Aims to improve PR_AUC by using deeper trees (num_leaves=128) and slower learning (lr=0.03) to better rank tail malware without overfitting on the best recent feature set.
+- **`feat_textenc_kv_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_encoding and kv_vocab while lowering bigram_min_freq to 50 to capture rarer JS obfuscation patterns missed by high-frequency filters.
+- **`feat_textmetrics_tiered_trigrams`** `EXP_ESTIMATORS=280 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding text_metrics_full and tiered_crit_trigrams to better distinguish malicious JS payloads from benign scripts using structural and severity-prefixed n-gram signals.
+
+</details>
+
+## Cycle `20260628T101634-filetypes-javascript` — 2026-06-28T10:16:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89ff83fb2785f5ad` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9978 | 0.9974 | 0.9792 | 1 | [log](out/autocollie/runs/2026-06-28T10-23-53_20260628T101634-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `2a25d1bce3707103` | ctrl_best_env_train_tune_v5 | ok | 0.9817 | 0.9748 | 0.9456 | 10 | [log](out/autocollie/runs/2026-06-28T10-23-59_20260628T101634-filetypes-javascript_ctrl_best_env_train_tune_v5.log) |
+| `51b15e34d5b94a74` | feat_textmetrics_kv_lowbigram | ok | 0.9825 | 0.9760 | 0.9438 | 70 | [log](out/autocollie/runs/2026-06-28T10-24-10_20260628T101634-filetypes-javascript_feat_textmetrics_kv_lowbigram.log) |
+| `e0d0eb3b17d8bda9` | feat_textenc_tiered_trigrams | ok | 0.9817 | 0.9741 | 0.9452 | 61 | [log](out/autocollie/runs/2026-06-28T10-25-23_20260628T101634-filetypes-javascript_feat_textenc_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_env_train_tune_v5`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature surface to isolate training hyperparameter effects on PR_AUC and recall@3FPM via deeper trees and slower learning.
+- **`feat_textmetrics_kv_lowbigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab with lower bigram_min_freq to capture obfuscation and rare KV signals, targeting PR_AUC improvement.
+- **`feat_textenc_tiered_trigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and tiered_crit_trigrams with relaxed tiered_trigram_min_freq to surface low-frequency malicious patterns, aiming to boost recall@3FPM.
+
+</details>
+
+## Cycle `20260628T103459-filetypes-javascript` — 2026-06-28T10:34:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89ff83fb2785f5ad` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9978 | 0.9974 | 0.9792 | 1 | [log](out/autocollie/runs/2026-06-28T10-42-57_20260628T103459-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `2269217c4a5da2cc` | ctrl_best_env_train_tune_v6 | ok | 0.9818 | 0.9746 | 0.9424 | 28 | [log](out/autocollie/runs/2026-06-28T10-42-59_20260628T103459-filetypes-javascript_ctrl_best_env_train_tune_v6.log) |
+| `a0fe18dcf773a115` | feat_kv_textenc_lowbigram | ok | 0.9820 | 0.9751 | 0.9461 | 30 | [log](out/autocollie/runs/2026-06-28T10-43-33_20260628T103459-filetypes-javascript_feat_kv_textenc_lowbigram.log) |
+| `886aa038c54fc1a1` | feat_textmetrics_tiered_trigrams | ok | 0.9820 | 0.9749 | 0.9445 | 154 | [log](out/autocollie/runs/2026-06-28T10-44-07_20260628T103459-filetypes-javascript_feat_textmetrics_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_env_train_tune_v6`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best recent feature surface; tuning num_leaves and learning_rate to improve PR_AUC by refining decision boundaries at the tail without altering the feature matrix.
+- **`feat_kv_textenc_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding with lower bigram_min_freq to capture rare obfuscation patterns in JS, aiming to boost recall@3FPM by surfacing hidden malicious constructs.
+- **`feat_textmetrics_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and tiered_crit_trigrams to better rank structural anomalies in JS, targeting PR_AUC gains by reducing false positives on benign high-entropy scripts.
+
+</details>
+
+## Cycle `20260628T103338-filetypes-javascript` — 2026-06-28T10:33:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89ff83fb2785f5ad` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9978 | 0.9974 | 0.9792 | 1 | [log](out/autocollie/runs/2026-06-28T10-42-41_20260628T103338-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `6f328fb2f5512120` | ctrl_best_env_train_tune_v6 | ok | 0.9826 | 0.9759 | 0.9458 | 79 | [log](out/autocollie/runs/2026-06-28T10-42-45_20260628T103338-filetypes-javascript_ctrl_best_env_train_tune_v6.log) |
+| `ddf1a346ead3d2f4` | feat_textenc_metrics_full_lowbigram | ok | 0.9825 | 0.9759 | 0.9452 | 132 | [log](out/autocollie/runs/2026-06-28T10-44-07_20260628T103338-filetypes-javascript_feat_textenc_metrics_full_lowbigram.log) |
+| `dea8f134f39b2f55` | feat_kv_vocab_10k_tiered_trigrams | ok | 0.9820 | 0.9748 | 0.9451 | 76 | [log](out/autocollie/runs/2026-06-28T10-46-21_20260628T103338-filetypes-javascript_feat_kv_vocab_10k_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_best_env_train_tune_v6`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control run replicating best recent feature_env to test training regularization (reg_lambda, min_child_samples) for PR_AUC stability.
+- **`feat_textenc_metrics_full_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text_encoding and text_metrics_full families with low bigram_min_freq to capture obfuscation signals and improve recall@3FPM.
+- **`feat_kv_vocab_10k_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Expand kv_vocab to 10k and enable tiered_crit_trigrams to capture structured JS object patterns, targeting PR_AUC gain.
+
+</details>
+

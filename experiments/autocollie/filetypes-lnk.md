@@ -686,3 +686,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260627T120333-filetypes-lnk` — 2026-06-27T12:03:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a6bffcc0a8e3d23a` | inherit_from_filetypes_json_1e3933ad | ok | 0.9912 | 0.8402 | 0.9862 | 37 | [log](out/autocollie/runs/2026-06-27T12-11-00_20260627T120333-filetypes-lnk_inherit_from_filetypes_json_1e3933ad.log) |
+| `8a9bfcfcd1252773` | lnk_ctrl_dart_regularized | ok | 0.9953 | 0.9793 | 0.9263 | 14 | [log](out/autocollie/runs/2026-06-27T12-11-49_20260627T120333-filetypes-lnk_lnk_ctrl_dart_regularized.log) |
+| `e722103614f54a14` | lnk_transfer_xml_lowbigram | ok | 0.9846 | 0.9274 | 0.9278 | 16 | [log](out/autocollie/runs/2026-06-27T12-12-09_20260627T120333-filetypes-lnk_lnk_transfer_xml_lowbigram.log) |
+| `7b72e637e78ba409` | lnk_research_kv_split_v2 | ok | 0.9846 | 0.9274 | 0.9278 | 15 | [log](out/autocollie/runs/2026-06-27T12-12-29_20260627T120333-filetypes-lnk_lnk_research_kv_split_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_json_1e3933ad`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/json (key=1e3933ad1f6aca4a, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_ctrl_dart_regularized`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by switching to dart boosting with extra_trees to add dropout-style regularization, reducing overfitting at the strict-FP tail while preserving PR_AUC.
+- **`lnk_transfer_xml_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by porting the low bigram_min_freq (50) from the top xml route, capturing rarer but high-signal path bigrams in LNK files while keeping other features baseline.
+- **`lnk_research_kv_split_v2`** `EXP_KV_MIN_FREQ=3 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and kv_value_split with a higher vocab cap (20000) and lower min_freq (3) to capture rare but malicious LNK metadata key-value pairs.
+
+</details>
+
