@@ -26,12 +26,15 @@ log = logging.getLogger(__name__)
 #
 # Grid is dense in the strict region (L0-L10, where finer resolution
 # actually pays off once the benign corpus is large enough to resolve
-# sub-FP/M budgets), decade-aligned in the mid region (L10-L100, to match
-# litmus's `-0..-9` shorthand 0/10/20/.../90), quarter-decade in the
-# mid-loose region (L100-L300: 125/150/175/250 fill in between the
-# decade points, still resolvable on the ~4M-benign general route at
-# ~5-10 FP), sparser toward L1000, and very sparse in the noisy tail
-# (L2000-L25000).
+# sub-FP/M budgets), half-decade in the low-mid region (L10-L30: 15/25
+# split the decades once the corpus can resolve them), decade-aligned in
+# the mid region (L30-L100, to match litmus's `-0..-9` shorthand
+# 0/10/20/.../90), quarter-decade in the mid-loose region (L100-L300:
+# 125/150/175/250 fill in between the decade points, still resolvable on
+# the ~4M-benign general route at ~5-10 FP), and quarter-decade through
+# the tail (L500-L6000: 750/1250/1500/1750/2250/2500/3000/4000/6000 keep
+# the loose band evenly sampled), staying sparse in the very noisy far
+# tail (L7500-L25000).
 # The loose-and-noisier tail exists for three reasons:
 #   1. The azoth READMEs' corpus-weighted recall chart needs informational
 #      headroom — operators want to see how recall would grow if the FP
@@ -50,8 +53,9 @@ log = logging.getLogger(__name__)
 #      with weak-but-real signal end up in the suspicious bucket rather
 #      than being silently dropped as benign.
 _LEVELS_PER_100M: tuple[int, ...] = (
-    0, 1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
-    125, 150, 175, 200, 250, 300, 500, 1000, 2000, 5000, 7500, 10000, 15000, 20000, 25000,
+    0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100,
+    125, 150, 175, 200, 250, 300, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500,
+    3000, 4000, 5000, 6000, 7500, 10000, 15000, 20000, 25000,
 )
 SEVERITY_LEVEL_TARGETS = [
     {
@@ -70,13 +74,16 @@ _CHART_LEVELS_PER_100M: tuple[int, ...] = _LEVELS_PER_100M
 # ============================================================================
 # CANONICAL DEPLOY OPERATING POINT
 # ============================================================================
-# 50 FP/100M = 0.5 FP/M — the deploy tuning goal. Chosen over the stricter L4
-# because the trainable benign pool (~4.2M) cannot resolve FP budgets below
-# ~24/100M: at L4 the budget rounds to 0 FP and the threshold collapses to
-# "max benign score" (recall@0FP), which is unmeasurable and untunable. L50
-# resolves to ~2 FP, so calibration and the gates get a real, controllable
-# signal. Tighten back toward L4 once labeled benigns grow (the ~18M `unknown`
-# reservoir): at 20M benigns L5 resolves, at 100M L1.
+# 25 FP/100M = 0.25 FP/M — the deploy tuning goal. Moved down from L50 (2026-07):
+# L25 is the knee of the hostile curve — reaching it from L20 is nearly free
+# (+1.79pp recall for ~32 benign FP), whereas L30 costs ~2.6x the FP for +0.61pp
+# and L40 quadruples FP again (the L30->L40 cliff) for only +0.32pp. L25 sits
+# just ABOVE the resolution floor: the trainable benign pool (~4.2M) cannot
+# resolve FP budgets below ~24/100M (at L4 the budget rounds to 0 FP and the
+# threshold collapses to "max benign score", unmeasurable and untunable), so L25
+# (~1 FP) is essentially the strictest resolvable point today. Tighten further
+# only once labeled benigns grow (the ~18M `unknown` reservoir): at 20M benigns
+# L5 resolves, at 100M L1.
 #
 # To change the default, update this SINGLE integer — collimator's one knob.
 # Whatever value you choose MUST appear in `_LEVELS_PER_100M` above (the
@@ -84,7 +91,7 @@ _CHART_LEVELS_PER_100M: tuple[int, ...] = _LEVELS_PER_100M
 # reads it via `default_recall_per_100M_field()` and `DEFAULT_SEVERITY_TARGET`,
 # and azoth_calibrate_ensemble bakes it into every bundle's config.json as
 # `default_severity_level` — which is how the tuning goal travels cross-repo.
-DEFAULT_SEVERITY_LEVEL = 50
+DEFAULT_SEVERITY_LEVEL = 25
 
 # This is the cross-repo source of truth for the deploy tuning goal. It does
 # NOT propagate via mirror constants — it travels embedded in the model:
