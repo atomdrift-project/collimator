@@ -1030,3 +1030,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260703T003633-filetypes-png` — 2026-07-03T00:36:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e420d0c5e85512ee` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.2874 | 0.7125 | 0.1135 | 2 | [log](out/autocollie/runs/2026-07-03T00-44-01_20260703T003633-filetypes-png_inherit_from_filetypes_registry_1ffaf151.log) |
+| `75702c956e12e4ea` | png_ctrl_train_optimize_leaves_lr | ok | 0.2445 | 0.6430 | 0.1150 | 1 | [log](out/autocollie/runs/2026-07-03T00-44-19_20260703T003633-filetypes-png_png_ctrl_train_optimize_leaves_lr.log) |
+| `1ea2613ff735a0af` | png_feat_kv_textmetrics_vocab | ok | 0.2467 | 0.6430 | 0.1169 | 7 | [log](out/autocollie/runs/2026-07-03T00-44-24_20260703T003633-filetypes-png_png_feat_kv_textmetrics_vocab.log) |
+| `7bad41e46918061f` | png_feat_lowfreq_tiered_ngrams | ok | 0.2467 | 0.6430 | 0.1169 | 7 | [log](out/autocollie/runs/2026-07-03T00-44-31_20260703T003633-filetypes-png_png_feat_lowfreq_tiered_ngrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_optimize_leaves_lr`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by fine-tuning tree complexity and learning rate on the current best feature set to better separate tail malware from benign PNGs without overfitting.
+- **`png_feat_kv_textmetrics_vocab`** `EXP_KV_MIN_FREQ=3 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab and text_metrics_full to capture structural metadata and text chunk anomalies specific to malicious PNGs, adding high-signal features to the ranking surface.
+- **`png_feat_lowfreq_tiered_ngrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=8000 EXP_TIERED_BIGRAM_MIN_FREQ=25 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Aims to increase recall@3FPM by lowering tiered n-gram frequency floors to capture rare but highly indicative malicious metadata patterns in PNG files, while capping vocab size to control noise.
+
+</details>
+

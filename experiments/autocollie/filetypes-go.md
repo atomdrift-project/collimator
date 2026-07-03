@@ -1976,3 +1976,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260703T064932-filetypes-go` — 2026-07-03T06:49:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10466710f3009380` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.3571 | 0.6961 | 0.1599 | 1 | [log](out/autocollie/runs/2026-07-03T06-56-57_20260703T064932-filetypes-go_inherit_from_filetypes_registry_1ffaf151.log) |
+| `7ec87c26829ff72f` | go_ctrl_train_hn_leaves128 | ok | 0.3574 | 0.6939 | 0.1603 | 4 | [log](out/autocollie/runs/2026-07-03T06-57-34_20260703T064932-filetypes-go_go_ctrl_train_hn_leaves128.log) |
+| `bee564987443f1b6` | go_feat_kv_sym_vocab_15k_10k | ok | 0.3726 | 0.6945 | 0.1668 | 15 | [log](out/autocollie/runs/2026-07-03T06-57-40_20260703T064932-filetypes-go_go_feat_kv_sym_vocab_15k_10k.log) |
+| `fc343ba700c0383c` | go_feat_text_metrics_encoding_v2 | ok | 0.3788 | 0.7044 | 0.1632 | 19 | [log](out/autocollie/runs/2026-07-03T06-57-57_20260703T064932-filetypes-go_go_feat_text_metrics_encoding_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hn_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features; tunes hard-negative weighting and tree complexity to improve PR_AUC by better separating hard benigns from malware.
+- **`go_feat_kv_sym_vocab_15k_10k`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Expands KV and symbol vocabs to capture Go-specific imports and string patterns, targeting PR_AUC gains from richer lexical signal.
+- **`go_feat_text_metrics_encoding_v2`** `EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text metrics and encoding features to detect obfuscation and structural anomalies in Go source, aiming to boost recall@3FPM by surfacing low-FPR tail samples.
+
+</details>
+

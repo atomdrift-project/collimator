@@ -636,3 +636,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260702T224222-filetypes-java` — 2026-07-02T22:42:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `01fc76810f750736` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9704 | 0.9872 | 0.9149 | 1 | [log](out/autocollie/runs/2026-07-02T22-50-20_20260702T224222-filetypes-java_inherit_from_filetypes_gem_06bdacaa.log) |
+| `893409f3d34d60d1` | java_control_train_tune_v5 | ok | 0.2470 | 0.8710 | 0.1452 | 17 | [log](out/autocollie/runs/2026-07-02T22-50-33_20260702T224222-filetypes-java_java_control_train_tune_v5.log) |
+| `f2c7e34f9be5959b` | java_kv_textmetrics_vocab_expand | ok | 0.2964 | 0.8952 | 0.1509 | 21 | [log](out/autocollie/runs/2026-07-02T22-50-58_20260702T224222-filetypes-java_java_kv_textmetrics_vocab_expand.log) |
+| `df4bf123cde757c8` | java_symbol_tiered_trigrams_scalepos | ok | 0.2724 | 0.8790 | 0.1573 | 33 | [log](out/autocollie/runs/2026-07-02T22-51-33_20260702T224222-filetypes-java_java_symbol_tiered_trigrams_scalepos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune_v5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Target PR_AUC by increasing model capacity (num_leaves, estimators) and applying hard-negative mining to better separate tail malware from benigns while keeping the proven feature surface.
+- **`java_kv_textmetrics_vocab_expand`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 …` — Target PR_AUC by enabling kv_vocab and text_metrics_full to capture structural and textual obfuscation signals specific to Java archives, while lowering bigram_min_freq to retain rare malicious patterns.
+- **`java_symbol_tiered_trigrams_scalepos`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Target recall@3FPM by enabling symbol_vocab and tiered_crit_trigrams for deeper code-pattern matching, while lowering scale_pos_weight_mult to 0.75 to suppress benign false positives at the strict operating point.
+
+</details>
+

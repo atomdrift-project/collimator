@@ -984,3 +984,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260702T224224-filetypes-java_class` — 2026-07-02T22:42:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f631902369e1a0bd` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9794 | 0.9962 | 0.6585 | 2 | [log](out/autocollie/runs/2026-07-02T22-51-08_20260702T224224-filetypes-java_class_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d54e3097a0184cfa` | java_class_control_train_v7 | ok | 0.8487 | 0.9447 | 0.8300 | 23 | [log](out/autocollie/runs/2026-07-02T22-51-43_20260702T224224-filetypes-java_class_java_class_control_train_v7.log) |
+| `820125df067178bd` | java_class_kv_vocab_symbol_bigrams | ok | 0.8487 | 0.9447 | 0.8300 | 17 | [log](out/autocollie/runs/2026-07-02T22-52-11_20260702T224224-filetypes-java_class_java_class_kv_vocab_symbol_bigrams.log) |
+| `ece86317001cbaf3` | java_class_text_metrics_lowbigram | ok | 0.8444 | 0.9429 | 0.8023 | 15 | [log](out/autocollie/runs/2026-07-02T22-52-32_20260702T224224-filetypes-java_class_java_class_text_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_train_v7`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Control run replicating best recent feature_env to test training-only tweaks for PR_AUC stability and recall@3FPM gains.
+- **`java_class_kv_vocab_symbol_bigrams`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 …` — Enables kv_vocab and symbol_bigrams to capture key-value pairs and import co-occurrences, aiming to boost PR_AUC and recall@3FPM.
+- **`java_class_text_metrics_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and lowers bigram_min_freq to 200 to capture rarer patterns, targeting PR_AUC improvement.
+
+</details>
+

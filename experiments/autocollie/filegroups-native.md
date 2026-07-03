@@ -932,3 +932,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260703T015402-filegroups-native` — 2026-07-03T01:54:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6c481e73c1a0b3fc` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9987 | 0.9987 | 0.9862 | 6 | [log](out/autocollie/runs/2026-07-03T01-59-58_20260703T015402-filegroups-native_inherit_from_filetypes_registry_1ffaf151.log) |
+| `41099be28aebad5e` | native_control_hardneg_lr002_scale075 | ok | 0.9984 | 0.9984 | 0.9575 | 12 | [log](out/autocollie/runs/2026-07-03T02-01-10_20260703T015402-filegroups-native_native_control_hardneg_lr002_scale075.log) |
+| `eb5684e12cb37776` | native_symbol_bigrams_20k_lowfreq | ok | 0.9989 | 0.9989 | 0.9875 | 76 | [log](out/autocollie/runs/2026-07-03T02-01-24_20260703T015402-filegroups-native_native_symbol_bigrams_20k_lowfreq.log) |
+| `cb8eeae1b2db0bff` | native_overlay_section_tiered_trigrams | ok | 0.9989 | 0.9989 | 0.9875 | 82 | [log](out/autocollie/runs/2026-07-03T02-02-42_20260703T015402-filegroups-native_native_overlay_section_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_hardneg_lr002_scale075`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with tuned hard negatives and lower scale_pos_weight_mult to improve recall@3FPM by reducing benign tail noise.
+- **`native_symbol_bigrams_20k_lowfreq`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=15000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 EXP_TRAIN_SAMPLES=30000` — Expands symbol vocab and bigrams with lower min_freq to capture rare malicious API co-occurrences, targeting PR_AUC gain.
+- **`native_overlay_section_tiered_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Adds overlay and nonstandard section signals plus tiered trigrams to better rank packed/dropper malware, targeting recall@3FPM.
+
+</details>
+

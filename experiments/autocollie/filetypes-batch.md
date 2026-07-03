@@ -1184,3 +1184,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260703T043200-filetypes-batch` — 2026-07-03T04:32:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dba83e782f248b29` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9851 | 0.8760 | 0.1704 | 2 | [log](out/autocollie/runs/2026-07-03T04-40-01_20260703T043200-filetypes-batch_inherit_from_filetypes_registry_1ffaf151.log) |
+| `8c75c9f5aa4eb7be` | batch_control_hardneg_sweep | dup | 0.9783 | 0.8573 | 0.1702 | 1 | [log](out/autocollie/runs/2026-07-03T04-40-13_20260703T043200-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `5ce2654a7db8c683` | batch_kv_textmetrics_vocab | ok | 0.9808 | 0.8467 | 0.2976 | 15 | [log](out/autocollie/runs/2026-07-03T04-40-16_20260703T043200-filetypes-batch_batch_kv_textmetrics_vocab.log) |
+| `06e93cb0ff6647d2` | batch_symbol_tiered_seed_search | ok | 0.9881 | 0.8861 | 0.2975 | 14 | [log](out/autocollie/runs/2026-07-03T04-40-32_20260703T043200-filetypes-batch_batch_symbol_tiered_seed_search.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative tuning to improve recall@3 FP/M by upweighting difficult benigns without changing the feature matrix.
+- **`batch_kv_textmetrics_vocab`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structural and textual signals, targeting PR_AUC improvement by expanding the feature surface.
+- **`batch_symbol_tiered_seed_search`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Adds symbol_vocab and tiered_crit_trigrams for richer co-occurrence patterns, with seed_search_k=3 to stabilize recall@3 FP/M gains against seed variance.
+
+</details>
+

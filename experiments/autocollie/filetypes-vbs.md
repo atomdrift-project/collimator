@@ -970,3 +970,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260703T043200-filetypes-vbs` — 2026-07-03T04:32:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `94a5d0fed4368196` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9962 | 0.9860 | 0.9560 | 4 | [log](out/autocollie/runs/2026-07-03T04-39-15_20260703T043200-filetypes-vbs_inherit_from_filetypes_registry_1ffaf151.log) |
+| `c550cae658565f70` | vbs_control_train_tune | dup | 0.9961 | 0.9859 | 0.9573 | 2 | [log](out/autocollie/runs/2026-07-03T04-39-27_20260703T043200-filetypes-vbs_vbs_control_train_tune.log) |
+| `79b8790bd0a0a858` | vbs_textmetrics_kv_vocab | ok | 0.9974 | 0.9911 | 0.9576 | 20 | [log](out/autocollie/runs/2026-07-03T04-39-41_20260703T043200-filetypes-vbs_vbs_textmetrics_kv_vocab.log) |
+| `96022f6b28e33b37` | vbs_textenc_kv_split | ok | 0.9973 | 0.9905 | 0.9576 | 17 | [log](out/autocollie/runs/2026-07-03T04-40-03_20260703T043200-filetypes-vbs_vbs_textenc_kv_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating best feature_env; tests higher num_leaves and lower learning_rate to improve PR_AUC ranking without changing features.
+- **`vbs_textmetrics_kv_vocab`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture script obfuscation and key-value patterns, aiming to boost PR_AUC and recall@3FPM.
+- **`vbs_textenc_kv_split`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Tests text_encoding and kv_value_split to extract finer-grained script structure signals, targeting PR_AUC improvement.
+
+</details>
+

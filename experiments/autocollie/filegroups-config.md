@@ -1494,3 +1494,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260703T023136-filegroups-config` — 2026-07-03T02:31:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5bc8789d2cf86137` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9019 | 0.9290 | 0.8690 | 3 | [log](out/autocollie/runs/2026-07-03T02-37-45_20260703T023136-filegroups-config_inherit_from_filetypes_registry_1ffaf151.log) |
+| `5bc8789d2cf86137` | config_ctrl_training_tune | dup | 0.9019 | 0.9290 | 0.8690 | 1 | [log](out/autocollie/runs/2026-07-03T02-37-59_20260703T023136-filegroups-config_config_ctrl_training_tune.log) |
+| `85e0e9347dd83f70` | config_feat_kv_textmetrics | ok | 0.8989 | 0.9208 | 0.8777 | 13 | [log](out/autocollie/runs/2026-07-03T02-38-00_20260703T023136-filegroups-config_config_feat_kv_textmetrics.log) |
+| `a827ca7215ff9c4e` | config_feat_tiered_trigrams_lowfreq | ok | 0.9020 | 0.9242 | 0.8639 | 15 | [log](out/autocollie/runs/2026-07-03T02-38-15_20260703T023136-filegroups-config_config_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_ctrl_training_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating baseline feature_env to test training capacity boost (estimators=300, num_leaves=128) aiming to improve PR_AUC via better tree complexity without changing features.
+- **`config_feat_kv_textmetrics`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture key-value structure and text obfuscation signals in config files, targeting PR_AUC improvement by adding discriminative features for malicious configs.
+- **`config_feat_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables tiered_crit_trigrams to capture rarer malicious patterns and severity-weighted trigrams, aiming to boost recall@3FPM and PR_AUC by surfacing low-frequency attack indicators.
+
+</details>
+

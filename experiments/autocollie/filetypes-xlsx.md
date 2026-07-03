@@ -634,3 +634,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260703T043200-filetypes-xlsx` — 2026-07-03T04:32:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ff28d70f79afeb1a` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9813 | 0.6496 | 0.5188 | 2 | [log](out/autocollie/runs/2026-07-03T04-39-00_20260703T043200-filetypes-xlsx_inherit_from_filetypes_registry_1ffaf151.log) |
+| `06ba4c8a340d6c3c` | xlsx_control_hardneg_lr_tune | ok | 0.9852 | 0.7261 | 0.5192 | 2 | [log](out/autocollie/runs/2026-07-03T04-39-07_20260703T043200-filetypes-xlsx_xlsx_control_hardneg_lr_tune.log) |
+| `74cece2f012c4d3e` | xlsx_text_metrics_full_encoding | ok | 0.9833 | 0.7030 | 0.5190 | 15 | [log](out/autocollie/runs/2026-07-03T04-39-37_20260703T043200-filetypes-xlsx_xlsx_text_metrics_full_encoding.log) |
+| `97a7730e471c7bbc` | xlsx_kv_vocab_split_tune | ok | 0.9833 | 0.7030 | 0.5190 | 15 | [log](out/autocollie/runs/2026-07-03T04-39-55_20260703T043200-filetypes-xlsx_xlsx_kv_vocab_split_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_hardneg_lr_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature env to test aggressive hard-negative weighting and lower LR, aiming to stabilize PR_AUC while maintaining ROC_AUC.
+- **`xlsx_text_metrics_full_encoding`** `EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture obfuscation signals in XLSX XML payloads, targeting PR_AUC improvement by better separating benign macros from malicious ones.
+- **`xlsx_kv_vocab_split_tune`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to extract granular key-value signals from XLSX metadata, aiming to boost recall@3FPM by isolating malicious formula patterns.
+
+</details>
+

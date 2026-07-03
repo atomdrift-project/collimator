@@ -1,6 +1,6 @@
 # Promote REJECTED — `01fc76810f750736` on `filetypes/java`
 
-Generated 2026-06-28T17:13:40Z
+Generated 2026-07-03T00:36:35Z
 
 confirm did not hold: averaged ensemble PR_AUC regressed: 0.9704 -> 0.9263 (tol 0.0050, K=3)
 

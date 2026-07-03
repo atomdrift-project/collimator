@@ -942,3 +942,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260703T061219-filetypes-php` — 2026-07-03T06:12:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2707147f0b53bcde` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.8475 | 0.9418 | 0.7997 | 3 | [log](out/autocollie/runs/2026-07-03T06-18-50_20260703T061219-filetypes-php_inherit_from_filetypes_registry_1ffaf151.log) |
+| `1fb2122305c6c888` | php_control_train_hardneg_v4 | ok | 0.8520 | 0.9527 | 0.7863 | 4 | [log](out/autocollie/runs/2026-07-03T06-19-12_20260703T061219-filetypes-php_php_control_train_hardneg_v4.log) |
+| `509949ad23aef142` | php_feat_textenc_metrics_kv_vocab | ok | 0.8549 | 0.9404 | 0.7954 | 19 | [log](out/autocollie/runs/2026-07-03T06-19-20_20260703T061219-filetypes-php_php_feat_textenc_metrics_kv_vocab.log) |
+| `2d40d9dfaf6b394c` | php_feat_kv_split_tiered_trigrams | ok | 0.8537 | 0.9410 | 0.8318 | 20 | [log](out/autocollie/runs/2026-07-03T06-19-40_20260703T061219-filetypes-php_php_feat_kv_split_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_hardneg_v4`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by increasing hard-negative weight and leaves to better separate borderline malware from benign PHP scripts.
+- **`php_feat_textenc_metrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Aims to boost PR_AUC by enabling text_encoding, text_metrics_full, and kv_vocab to capture obfuscation and key-value patterns common in PHP web shells.
+- **`php_feat_kv_split_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_value_split and tiered_crit_trigrams to isolate rare malicious KV pairs and critical trigram co-occurrences.
+
+</details>
+

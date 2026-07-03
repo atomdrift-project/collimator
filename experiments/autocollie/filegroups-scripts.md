@@ -838,3 +838,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260703T030129-filegroups-scripts` — 2026-07-03T03:01:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f75ef39e9b31eca7` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9497 | 0.9498 | 0.6621 | 8 | [log](out/autocollie/runs/2026-07-03T03-09-12_20260703T030129-filegroups-scripts_inherit_from_filetypes_registry_1ffaf151.log) |
+| `e52ba8c5a22badd8` | scripts_control_dart_boosting | ok | 0.8974 | 0.8838 | 0.6918 | 34 | [log](out/autocollie/runs/2026-07-03T03-10-32_20260703T030129-filegroups-scripts_scripts_control_dart_boosting.log) |
+| `f3de63979205a0dd` | scripts_kv_vocab_split | dup | 0.9218 | 0.9222 | 0.6633 | 1 | [log](out/autocollie/runs/2026-07-03T03-11-08_20260703T030129-filegroups-scripts_scripts_kv_vocab_split.log) |
+| `1435fda873c27509` | scripts_low_freq_trigrams | ok | 0.9315 | 0.9336 | 0.6970 | 40 | [log](out/autocollie/runs/2026-07-03T03-11-10_20260703T030129-filegroups-scripts_scripts_low_freq_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_dart_boosting`** `EXP_BIGRAM_MIN_FREQ=100 EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Control replicating best feature_env; tests boosting_type=dart to improve PR_AUC by adding dropout regularization that reduces overfit on script noise.
+- **`scripts_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to parse structured script metadata into atomic tokens, aiming to lift PR_AUC by capturing high-signal config/package keys.
+- **`scripts_low_freq_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 and enables tiered_crit_trigrams to capture rarer malicious patterns, targeting recall@3FPM gains on obfuscated scripts.
+
+</details>
+

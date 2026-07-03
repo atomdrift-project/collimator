@@ -902,3 +902,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260703T021046-filegroups-media` — 2026-07-03T02:10:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a5afd284d52afdf8` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.2595 | 0.6202 | 0.1567 | 2 | [log](out/autocollie/runs/2026-07-03T02-17-41_20260703T021046-filegroups-media_inherit_from_filetypes_registry_1ffaf151.log) |
+| `76b92d31e4a8cd7a` | media_control_hardneg_lr | ok | 0.2673 | 0.6341 | 0.1565 | 2 | [log](out/autocollie/runs/2026-07-03T02-17-50_20260703T021046-filegroups-media_media_control_hardneg_lr.log) |
+| `d2e7cad275c1a316` | media_textmetrics_full_sevfrac | ok | 0.3407 | 0.7504 | 0.1566 | 9 | [log](out/autocollie/runs/2026-07-03T02-17-55_20260703T021046-filegroups-media_media_textmetrics_full_sevfrac.log) |
+| `739734f5cba4b62c` | media_kv_vocab_tiered_trigrams | ok | 0.3443 | 0.7566 | 0.1567 | 8 | [log](out/autocollie/runs/2026-07-03T02-18-06_20260703T021046-filegroups-media_media_kv_vocab_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_hardneg_lr`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control run replicating the best recent feature set; adjusts hard_negative_weight and learning_rate to improve PR_AUC by refining the decision boundary for hard negatives without altering the feature matrix.
+- **`media_textmetrics_full_sevfrac`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture document obfuscation patterns in media files, aiming to increase recall@3FPM by surfacing structural anomalies that standard n-grams miss.
+- **`media_kv_vocab_tiered_trigrams`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab and tiered_crit_trigrams to extract metadata key-value pairs and critical path trigrams, targeting PR_AUC gains through richer structural and semantic signals.
+
+</details>
+

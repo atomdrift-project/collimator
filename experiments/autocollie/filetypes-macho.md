@@ -1146,3 +1146,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260702T224222-filetypes-macho` — 2026-07-02T22:42:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d927d17cc3b11904` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9951 | 0.9989 | 0.9698 | 2 | [log](out/autocollie/runs/2026-07-02T22-49-47_20260702T224222-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d58d76e2eb967225` | macho_control_train_tune_v2 | ok | 0.9939 | 0.9988 | 0.9669 | 11 | [log](out/autocollie/runs/2026-07-02T22-49-57_20260702T224222-filetypes-macho_macho_control_train_tune_v2.log) |
+| `fbaf85b17f69f250` | macho_feat_kv_vocab_expanded | ok | 0.9906 | 0.9966 | 0.9516 | 47 | [log](out/autocollie/runs/2026-07-02T22-50-12_20260702T224222-filetypes-macho_macho_feat_kv_vocab_expanded.log) |
+| `81f398be30bd6a97` | macho_feat_symbol_vocab_overlay | ok | 0.9906 | 0.9966 | 0.9516 | 72 | [log](out/autocollie/runs/2026-07-02T22-51-00_20260702T224222-filetypes-macho_macho_feat_symbol_vocab_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune_v2`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features to isolate training effects; aims to improve PR_AUC by tuning hard-negative weighting and tree complexity to better separate tail malware.
+- **`macho_feat_kv_vocab_expanded`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals in Mach-O binaries; aims to boost PR_AUC by adding discriminative metadata features while keeping ROC_AUC flat.
+- **`macho_feat_symbol_vocab_overlay`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=12000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and overlay_signal to capture import patterns and packer artifacts; aims to improve recall@3FPM by highlighting structural malware indicators without increasing false positives.
+
+</details>
+

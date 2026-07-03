@@ -836,3 +836,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260702T224222-filetypes-python-bytecode` — 2026-07-02T22:42:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5f43252a3ea79247` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9961 | 0.9977 | 0.9839 | 1 | [log](out/autocollie/runs/2026-07-02T22-50-51_20260702T224222-filetypes-python-bytecode_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d370a12dafeccb41` | pybc_ctrl_train_hardneg_reg | ok | 0.8086 | 0.9016 | 0.8042 | 9 | [log](out/autocollie/runs/2026-07-02T22-51-09_20260702T224222-filetypes-python-bytecode_pybc_ctrl_train_hardneg_reg.log) |
+| `f0c6f47ffef2f9fc` | pybc_feat_kv_textmetrics_vocab | dup | 0.7921 | 0.8905 | 0.7967 | 2 | [log](out/autocollie/runs/2026-07-02T22-51-30_20260702T224222-filetypes-python-bytecode_pybc_feat_kv_textmetrics_vocab.log) |
+| `08dc7c549edd30c7` | pybc_feat_lowfreq_bigrams_trigrams | ok | 0.8408 | 0.8884 | 0.8214 | 31 | [log](out/autocollie/runs/2026-07-02T22-51-36_20260702T224222-filetypes-python-bytecode_pybc_feat_lowfreq_bigrams_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_hardneg_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Aims to improve PR_AUC by tuning hard_negative_weight and reg_lambda on the best recent feature set to better separate borderline malware from benign bytecode without overfitting.
+- **`pybc_feat_kv_textmetrics_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_KV_VOCAB=1 …` — Aims to improve PR_AUC by enabling kv_vocab and text_metrics_full to capture structural metadata and text-level obfuscation signals unique to python bytecode.
+- **`pybc_feat_lowfreq_bigrams_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_LEARNING_RATE=0.05 …` — Aims to improve recall@3FPM by lowering bigram_min_freq and enabling tiered_crit_trigrams to surface rare but highly malicious bytecode patterns that current thresholds filter out.
+
+</details>
+

@@ -1834,3 +1834,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260702T224222-filetypes-python` — 2026-07-02T22:42:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0dcf80ccc8faaeb2` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9884 | 0.9923 | 0.9489 | 2 | [log](out/autocollie/runs/2026-07-02T22-49-51_20260702T224222-filetypes-python_inherit_from_filetypes_gem_06bdacaa.log) |
+| `1b3e9f45e75fe214` | ctrl_train_hardneg_leaves128 | ok | 0.9093 | 0.9526 | 0.8546 | 13 | [log](out/autocollie/runs/2026-07-02T22-50-23_20260702T224222-filetypes-python_ctrl_train_hardneg_leaves128.log) |
+| `386af961d92976b6` | feat_kv_textenc_vocab | ok | 0.8967 | 0.9390 | 0.8287 | 76 | [log](out/autocollie/runs/2026-07-02T22-50-44_20260702T224222-filetypes-python_feat_kv_textenc_vocab.log) |
+| `4b16bb557f4c3cb7` | feat_textmetrics_lowbigram | ok | 0.8948 | 0.9354 | 0.8336 | 42 | [log](out/autocollie/runs/2026-07-02T22-52-06_20260702T224222-filetypes-python_feat_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_hardneg_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree complexity and adjusting hard-negative weights to better rank tail malware without increasing false positives.
+- **`feat_kv_textenc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab and text_encoding to capture structured config patterns and encoding artifacts common in Python malware.
+- **`feat_textmetrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering bigram_min_freq to 25 and enabling text_metrics_full to detect obfuscation and structural anomalies in Python scripts.
+
+</details>
+

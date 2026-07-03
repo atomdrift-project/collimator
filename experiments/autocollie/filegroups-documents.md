@@ -2270,3 +2270,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260703T064932-filegroups-documents` — 2026-07-03T06:49:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ebcf3e13861521c5` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9011 | 0.8269 | 0.8398 | 1 | [log](out/autocollie/runs/2026-07-03T06-56-31_20260703T064932-filegroups-documents_inherit_from_filetypes_registry_1ffaf151.log) |
+| `a2d5ccdf1d174e28` | docs_control_hardneg_tail_recall | ok | 0.9374 | 0.9037 | 0.8397 | 4 | [log](out/autocollie/runs/2026-07-03T06-56-41_20260703T064932-filegroups-documents_docs_control_hardneg_tail_recall.log) |
+| `95af5a05109c48c8` | docs_textmetrics_kv_vocab_full | ok | 0.9188 | 0.8765 | 0.8398 | 19 | [log](out/autocollie/runs/2026-07-03T06-57-00_20260703T064932-filegroups-documents_docs_textmetrics_kv_vocab_full.log) |
+| `682146615a4a54fb` | docs_tiered_trigrams_obj_trigrams | ok | 0.9143 | 0.8675 | 0.8395 | 18 | [log](out/autocollie/runs/2026-07-03T06-57-21_20260703T064932-filegroups-documents_docs_tiered_trigrams_obj_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_hardneg_tail_recall`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative upweighting to improve recall@3FPM by focusing the model on difficult benign samples, while keeping PR_AUC flat.
+- **`docs_textmetrics_kv_vocab_full`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, targeting PR_AUC gains through richer structural signal.
+- **`docs_tiered_trigrams_obj_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Add tiered critical trigrams and objective trigrams to improve recall@3FPM by capturing higher-order semantic sequences in documents, with minimal PR_AUC regression risk.
+
+</details>
+

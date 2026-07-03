@@ -1148,3 +1148,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260702T224222-filetypes-text` — 2026-07-02T22:42:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d8d0f6451f21a15b` | inherit_from_filetypes_gem_06bdacaa | dup | 0.8689 | 0.9154 | 0.7805 | 2 | [log](out/autocollie/runs/2026-07-02T22-51-07_20260702T224222-filetypes-text_inherit_from_filetypes_gem_06bdacaa.log) |
+| `bd51d054551c602e` | text_ctrl_train_tune_v10 | ok | 0.0923 | 0.5477 | 0.1038 | 26 | [log](out/autocollie/runs/2026-07-02T22-51-36_20260702T224222-filetypes-text_text_ctrl_train_tune_v10.log) |
+| `d597518cb2e5cb68` | text_feat_textmetrics_full_v1 | ok | 0.0900 | 0.5311 | 0.1038 | 11 | [log](out/autocollie/runs/2026-07-02T22-52-06_20260702T224222-filetypes-text_text_feat_textmetrics_full_v1.log) |
+| `761c3dcb975261a8` | text_feat_encoding_seedsearch_v1 | ok | 0.0900 | 0.5483 | 0.1036 | 17 | [log](out/autocollie/runs/2026-07-02T22-52-20_20260702T224222-filetypes-text_text_feat_encoding_seedsearch_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_train_tune_v10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating best PR_AUC feature surface; increases num_leaves and estimators with lower LR to improve PR_AUC and recall@3 FP/M via finer decision boundaries.
+- **`text_feat_textmetrics_full_v1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enables text_metrics_full research vocab to capture structural text obfuscation signals, aiming to boost PR_AUC by distinguishing malicious document payloads from benign text.
+- **`text_feat_encoding_seedsearch_v1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=280 …` — Activates text_encoding research vocab and uses seed_search_k=3 to average out RNG variance, targeting stable PR_AUC gains from finer-grained lexical features while preserving ROC_AUC.
+
+</details>
+

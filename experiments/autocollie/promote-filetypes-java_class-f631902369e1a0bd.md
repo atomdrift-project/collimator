@@ -1,6 +1,6 @@
 # Promote PASS — `f631902369e1a0bd` on `filetypes/java_class`
 
-Generated 2026-06-28T15:00:23Z
+Generated 2026-07-03T01:54:02Z
 
 full-train holds — PR_AUC 0.9794 -> 0.9805, AUC 0.9962 -> 0.9971, Brier 0.0169 -> 0.0141
 

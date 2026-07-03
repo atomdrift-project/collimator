@@ -924,3 +924,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260703T011936-filegroups-source` — 2026-07-03T01:19:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1f0a35bcaf1dce15` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.8321 | 0.7961 | 0.5233 | 1 | [log](out/autocollie/runs/2026-07-03T01-26-45_20260703T011936-filegroups-source_inherit_from_filetypes_registry_1ffaf151.log) |
+| `1f0a35bcaf1dce15` | source_control_training_tweak_v3 | dup | 0.8321 | 0.7961 | 0.5233 | 1 | [log](out/autocollie/runs/2026-07-03T01-27-06_20260703T011936-filegroups-source_source_control_training_tweak_v3.log) |
+| `1b8083fa32ece294` | source_feat_kv_vocab_10k_textenc | ok | 0.8717 | 0.8515 | 0.5719 | 16 | [log](out/autocollie/runs/2026-07-03T01-27-08_20260703T011936-filegroups-source_source_feat_kv_vocab_10k_textenc.log) |
+| `71c8d504b5d3a638` | source_feat_tiered_trigrams_lowcrit | ok | 0.8717 | 0.8515 | 0.5719 | 16 | [log](out/autocollie/runs/2026-07-03T01-27-26_20260703T011936-filegroups-source_source_feat_tiered_trigrams_lowcrit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_training_tweak_v3`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity with higher num_leaves and more estimators while keeping the feature surface identical to the best recent run for cache hits.
+- **`source_feat_kv_vocab_10k_textenc`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab to capture key-value pair signals in source files, paired with text_encoding to improve PR_AUC via richer lexical features.
+- **`source_feat_tiered_trigrams_lowcrit`** `EXP_BIGRAM_MAX=8000 EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TRAIN_SAMPLES=30000` — Aims to increase PR_AUC by lowering tiered_trigram_min_crit to 2 to capture more subtle malicious patterns in source code, while keeping bigram_max high for context.
+
+</details>
+

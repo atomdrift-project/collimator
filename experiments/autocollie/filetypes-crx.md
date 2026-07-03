@@ -150,3 +150,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260702T224222-filetypes-crx` — 2026-07-02T22:42:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `087068514b16ce47` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9912 | 0.9837 | 0.9610 | 1 | [log](out/autocollie/runs/2026-07-02T22-49-43_20260702T224222-filetypes-crx_inherit_from_filetypes_gem_06bdacaa.log) |
+| `777c99e1705ab45b` | crx_control_train_tune_capacity | ok | 0.9966 | 0.9966 | 0.9091 | 3 | [log](out/autocollie/runs/2026-07-02T22-49-53_20260702T224222-filetypes-crx_crx_control_train_tune_capacity.log) |
+| `46c899037b43c989` | crx_kv_split_textmetrics_recall | ok | 0.9956 | 0.9958 | 0.8989 | 27 | [log](out/autocollie/runs/2026-07-02T22-50-11_20260702T224222-filetypes-crx_crx_kv_split_textmetrics_recall.log) |
+| `dc68e3b286fd3ce9` | crx_textenc_lowbigram_pr_auc | ok | 0.9956 | 0.9958 | 0.8989 | 30 | [log](out/autocollie/runs/2026-07-02T22-50-40_20260702T224222-filetypes-crx_crx_textenc_lowbigram_pr_auc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_control_train_tune_capacity`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing num_leaves and estimators on the best recent feature surface to better rank borderline malware without rebuilding the matrix.
+- **`crx_kv_split_textmetrics_recall`** `EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_value_split to tokenize manifest strings, exposing granular malicious payloads that opaque blobs miss while retaining text_metrics_full for structure.
+- **`crx_textenc_lowbigram_pr_auc`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC by lowering bigram_min_freq to 50 to capture rare but high-signal co-occurrences in CRX metadata, paired with text_encoding for robust string representation.
+
+</details>
+

@@ -1,6 +1,6 @@
 # Promote PASS — `bb916910a782f656` on `filetypes/zip`
 
-Generated 2026-06-28T16:30:44Z
+Generated 2026-07-03T02:56:41Z
 
 full-train holds — PR_AUC 0.9995 -> 0.9997, AUC 0.9971 -> 0.9983, Brier 0.0188 -> 0.0116
 

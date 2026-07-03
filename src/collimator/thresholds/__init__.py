@@ -27,8 +27,11 @@ log = logging.getLogger(__name__)
 # Grid is dense in the strict region (L0-L10, where finer resolution
 # actually pays off once the benign corpus is large enough to resolve
 # sub-FP/M budgets), decade-aligned in the mid region (L10-L100, to match
-# litmus's `-0..-9` shorthand 0/10/20/.../90), sparse in the mid-loose
-# region (L200-L1000), and very sparse in the noisy tail (L2000-L25000).
+# litmus's `-0..-9` shorthand 0/10/20/.../90), quarter-decade in the
+# mid-loose region (L100-L300: 125/150/175/250 fill in between the
+# decade points, still resolvable on the ~4M-benign general route at
+# ~5-10 FP), sparser toward L1000, and very sparse in the noisy tail
+# (L2000-L25000).
 # The loose-and-noisier tail exists for three reasons:
 #   1. The azoth READMEs' corpus-weighted recall chart needs informational
 #      headroom — operators want to see how recall would grow if the FP
@@ -48,7 +51,7 @@ log = logging.getLogger(__name__)
 #      than being silently dropped as benign.
 _LEVELS_PER_100M: tuple[int, ...] = (
     0, 1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
-    200, 300, 500, 1000, 2000, 5000, 7500, 10000, 15000, 20000, 25000,
+    125, 150, 175, 200, 250, 300, 500, 1000, 2000, 5000, 7500, 10000, 15000, 20000, 25000,
 )
 SEVERITY_LEVEL_TARGETS = [
     {

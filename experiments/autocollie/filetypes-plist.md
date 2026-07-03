@@ -1124,3 +1124,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260702T224225-filetypes-plist` — 2026-07-02T22:42:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `182055fa01649622` | inherit_from_filetypes_gem_06bdacaa | dup | 0.2174 | 0.5000 | 0.3571 | 1 | [log](out/autocollie/runs/2026-07-02T22-50-21_20260702T224225-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d5d62654bb1b04f1` | plist_ctrl_train_tune_v8 | dup | 0.1333 | 0.5649 | 0.1136 | 1 | [log](out/autocollie/runs/2026-07-02T22-50-30_20260702T224225-filetypes-plist_plist_ctrl_train_tune_v8.log) |
+| `ffd0d1c97f310945` | plist_feat_textenc_kv_vocab | ok | 0.1497 | 0.6417 | 0.1136 | 15 | [log](out/autocollie/runs/2026-07-02T22-50-34_20260702T224225-filetypes-plist_plist_feat_textenc_kv_vocab.log) |
+| `97a0e5d4130c7005` | plist_feat_tiered_trigrams_lowfreq | ok | 0.1466 | 0.6277 | 0.1136 | 15 | [log](out/autocollie/runs/2026-07-02T22-50-52_20260702T224225-filetypes-plist_plist_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v8`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature set; increases estimators and lowers learning rate to improve PR_AUC ranking stability without changing the matrix.
+- **`plist_feat_textenc_kv_vocab`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and kv_vocab research families to capture plist structural and encoding signals, targeting PR_AUC gain.
+- **`plist_feat_tiered_trigrams_lowfreq`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_FREQ=2 EXP_TRAIN_SAMPLES=30000` — Lowers tiered trigram min_freq and increases max to capture rare malicious plist patterns, aiming to boost recall@3FPM.
+
+</details>
+

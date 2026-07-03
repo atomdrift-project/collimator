@@ -1582,3 +1582,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260702T224224-filetypes-elf` — 2026-07-02T22:42:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a9c235d19e755d39` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9999 | 0.9998 | 0.9956 | 1 | [log](out/autocollie/runs/2026-07-02T22-49-10_20260702T224224-filetypes-elf_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c78ab8204ceca340` | elf_control_hardneg_lr_leaves | dup | 0.9998 | 0.9998 | 0.9942 | 1 | [log](out/autocollie/runs/2026-07-02T22-49-25_20260702T224224-filetypes-elf_elf_control_hardneg_lr_leaves.log) |
+| `1ae57aca94ef3a69` | elf_feat_symbol_vocab_bigrams_overlay | ok | 0.9997 | 0.9997 | 0.9940 | 51 | [log](out/autocollie/runs/2026-07-02T22-49-30_20260702T224224-filetypes-elf_elf_feat_symbol_vocab_bigrams_overlay.log) |
+| `f38f98773269d7c5` | elf_feat_kv_vocab_split_trigrams | ok | 0.9997 | 0.9997 | 0.9940 | 109 | [log](out/autocollie/runs/2026-07-02T22-50-23_20260702T224224-filetypes-elf_elf_feat_kv_vocab_split_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg_lr_leaves`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3 FP/M by tuning hard-negative weighting and tree depth on the baseline feature set, leveraging matrix cache for fast iteration.
+- **`elf_feat_symbol_vocab_bigrams_overlay`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_OVERLAY_SIGNAL=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC and recall@3 FP/M by enabling symbol vocab and bigrams to capture ELF import co-occurrence patterns, plus overlay_signal for packer detection.
+- **`elf_feat_kv_vocab_split_trigrams`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by extracting fine-grained key-value metadata from ELF sections via kv_value_split and combining with severity-prefixed trigrams to catch subtle malicious configs.
+
+</details>
+

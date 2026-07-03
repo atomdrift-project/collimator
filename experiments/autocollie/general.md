@@ -1028,3 +1028,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260702T224222-general` — 2026-07-02T22:42:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bcf4c762c9457cdb` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9972 | 0.9970 | 0.9591 | 3 | [log](out/autocollie/runs/2026-07-02T22-52-09_20260702T224222-general_inherit_from_filetypes_gem_06bdacaa.log) |
+| `0c9dfc49b8fd0db5` | control_kv20k_textmetrics_train_tune | ok | 0.9771 | 0.9719 | 0.9035 | 36 | [log](out/autocollie/runs/2026-07-02T22-52-12_20260702T224222-general_control_kv20k_textmetrics_train_tune.log) |
+| `c80b66a5acb0a0de` | feat_symbol_vocab_bigrams_tiered | ok | 0.9683 | 0.9580 | 0.9048 | 63 | [log](out/autocollie/runs/2026-07-02T22-52-48_20260702T224222-general_feat_symbol_vocab_bigrams_tiered.log) |
+| `e2ce6185577233ba` | feat_textenc_kv_vocab_lowfreq | ok | 0.9693 | 0.9598 | 0.9061 | 61 | [log](out/autocollie/runs/2026-07-02T22-53-51_20260702T224222-general_feat_textenc_kv_vocab_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_kv20k_textmetrics_train_tune`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicates best recent feature set and tunes training knobs (num_leaves=128, reg_lambda=2.0, hard_negative_fraction=0.1) to improve PR_AUC while keeping ROC_AUC flat.
+- **`feat_symbol_vocab_bigrams_tiered`** `EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=10 EXP_SYMBOL_MIN_FREQ_BIGRAM=20 EXP_SYMBOL_VOCAB=1 …` — Enables symbol_vocab and symbol_bigrams to capture import co-occurrence patterns, aiming to boost recall@3FPM by distinguishing malicious API sequences from benign ones.
+- **`feat_textenc_kv_vocab_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_encoding and kv_vocab with lower bigram_min_freq to capture rarer text patterns and KV pairs, targeting PR_AUC improvement via finer-grained signal.
+
+</details>
+

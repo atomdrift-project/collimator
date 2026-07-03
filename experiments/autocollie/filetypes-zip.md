@@ -980,3 +980,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260702T224222-filetypes-zip` — 2026-07-02T22:42:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bb916910a782f656` | inherit_from_filetypes_gem_06bdacaa | dup | 0.9995 | 0.9971 | 0.9870 | 1 | [log](out/autocollie/runs/2026-07-02T22-49-35_20260702T224222-filetypes-zip_inherit_from_filetypes_gem_06bdacaa.log) |
+| `0e0286500c055359` | zip_control_hardneg_015_16 | ok | 0.9734 | 0.8807 | 0.8135 | 50 | [log](out/autocollie/runs/2026-07-02T22-50-20_20260702T224222-filetypes-zip_zip_control_hardneg_015_16.log) |
+| `5ed4f0aebc482ef3` | zip_kv_vocab_textmetrics_full | ok | 0.9696 | 0.8639 | 0.8138 | 151 | [log](out/autocollie/runs/2026-07-02T22-51-19_20260702T224222-filetypes-zip_zip_kv_vocab_textmetrics_full.log) |
+| `ec201eeb51445a6d` | zip_severity_fractions_suspicious_trigrams | ok | 0.9704 | 0.8686 | 0.8144 | 95 | [log](out/autocollie/runs/2026-07-02T22-53-51_20260702T224222-filetypes-zip_zip_severity_fractions_suspicious_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep to improve recall@3FPM at strict-FP operating point without changing ranking.
+- **`zip_kv_vocab_textmetrics_full`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structured config/script signals inside archives, targeting PR_AUC and recall@3FPM gains.
+- **`zip_severity_fractions_suspicious_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Adds severity_fractions and suspicious_trigrams to highlight minimal malicious payloads and improve tail recall@3FPM.
+
+</details>
+

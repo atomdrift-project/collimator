@@ -972,3 +972,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260703T043027-filetypes-kotlin` — 2026-07-03T04:30:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `91388e12d33567c9` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9751 | 0.9838 | 0.7405 | 4 | [log](out/autocollie/runs/2026-07-03T04-38-59_20260703T043027-filetypes-kotlin_inherit_from_filetypes_registry_1ffaf151.log) |
+| `e2472e2c08246326` | kotlin_ctrl_hardneg_01_16 | ok | 0.9724 | 0.9828 | 0.7639 | 18 | [log](out/autocollie/runs/2026-07-03T04-39-17_20260703T043027-filetypes-kotlin_kotlin_ctrl_hardneg_01_16.log) |
+| `091cf068619aefb7` | kotlin_feat_kv_textenc_metrics | ok | 0.9692 | 0.9815 | 0.7585 | 26 | [log](out/autocollie/runs/2026-07-03T04-39-36_20260703T043027-filetypes-kotlin_kotlin_feat_kv_textenc_metrics.log) |
+| `6f367dc9e5a02698` | kotlin_feat_tiered_trigrams_lowfreq | ok | 0.9692 | 0.9815 | 0.7585 | 25 | [log](out/autocollie/runs/2026-07-03T04-40-05_20260703T043027-filetypes-kotlin_kotlin_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_01_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by upweighting hard negatives to push borderline malware higher in the ranking without hurting PR_AUC, leveraging the route's or_loses diagnostic shape.
+- **`kotlin_feat_kv_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to boost PR_AUC by enabling kv_vocab and text_encoding alongside text_metrics_full to capture structural and lexical signals specific to Kotlin source files, improving rank quality.
+- **`kotlin_feat_tiered_trigrams_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve recall@3FPM by lowering bigram_min_freq to 100 and enabling tiered_crit_trigrams to capture rarer but highly indicative Kotlin patterns, increasing tail recall.
+
+</details>
+
