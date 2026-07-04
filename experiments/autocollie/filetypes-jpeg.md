@@ -1236,3 +1236,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T185704-filetypes-jpeg` — 2026-07-04T18:57:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `be0913eaa7d805a0` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.2672 | 0.6376 | 0.3103 | 1 | [log](out/autocollie/runs/2026-07-04T19-03-46_20260704T185704-filetypes-jpeg_inherit_from_filetypes_registry_1ffaf151.log) |
+| `3d998eb1624417de` | jpeg_control_train_opt_v2 | dup | 0.2262 | 0.6683 | 0.3234 | 1 | [log](out/autocollie/runs/2026-07-04T19-04-00_20260704T185704-filetypes-jpeg_jpeg_control_train_opt_v2.log) |
+| `474ae8afe9ab6ed5` | jpeg_feat_kv_textenc_vocab | ok | 0.2680 | 0.6436 | 0.3043 | 8 | [log](out/autocollie/runs/2026-07-04T19-04-02_20260704T185704-filetypes-jpeg_jpeg_feat_kv_textenc_vocab.log) |
+| `c5644cb4e210d57c` | jpeg_feat_tiered_trigrams_lowfreq | ok | 0.2680 | 0.6436 | 0.3043 | 8 | [log](out/autocollie/runs/2026-07-04T19-04-11_20260704T185704-filetypes-jpeg_jpeg_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_opt_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature set while tuning tree complexity and LR to improve PR_AUC by reducing overfitting on rare JPEG metadata patterns.
+- **`jpeg_feat_kv_textenc_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture EXIF metadata and embedded string patterns, aiming to boost PR_AUC by surfacing hidden steganographic or metadata signals.
+- **`jpeg_feat_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=2000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq and enables tiered_crit_trigrams to capture rarer structural/metadata co-occurrences, targeting improved recall@3FPM and PR_AUC by better ranking subtle malicious artifacts.
+
+</details>
+

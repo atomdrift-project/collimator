@@ -1016,3 +1016,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T185704-filetypes-zip` — 2026-07-04T18:57:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c1ed526362f9e1b7` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9698 | 0.8659 | 0.8139 | 1 | [log](out/autocollie/runs/2026-07-04T19-05-14_20260704T185704-filetypes-zip_inherit_from_filetypes_registry_1ffaf151.log) |
+| `11036cb45556054a` | zip_control_hardneg_01_12_scalepos | ok | 0.9693 | 0.8610 | 0.8133 | 38 | [log](out/autocollie/runs/2026-07-04T19-05-19_20260704T185704-filetypes-zip_zip_control_hardneg_01_12_scalepos.log) |
+| `` | zip_kv_vocab_textmetrics_full | fail | — | — | — | 17 | [log](out/autocollie/runs/2026-07-04T19-06-00_20260704T185704-filetypes-zip_zip_kv_vocab_textmetrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_01_12_scalepos`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep (0.01/12) and lower scale_pos_weight_mult (0.75) to improve recall@3 FP/M by shifting the decision boundary for strict-FP operating point.
+- **`zip_kv_vocab_textmetrics_full`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structural and key-value signals in zip payloads, targeting PR_AUC gain by adding discriminative feature surface.
+
+</details>
+

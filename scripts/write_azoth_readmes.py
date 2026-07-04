@@ -44,6 +44,10 @@ _DEFAULT_LEVEL_LABEL = f"L{DEFAULT_SEVERITY_LEVEL}"
 _DEFAULT_LEVEL_PHRASE = (
     f"{_DEFAULT_LEVEL_LABEL} ({DEFAULT_SEVERITY_LEVEL / 100.0:g} FP/M)"
 )
+# Full span of severity levels litmus can report, derived from the deploy
+# grid so the README prose tracks the grid instead of hardcoding an
+# endpoint (the grid runs from the strictest L0 to the loosest tail level).
+_LEVEL_RANGE_LABEL = f"L{RECALL_CURVE_LEVELS[0]}..L{RECALL_CURVE_LEVELS[-1]}"
 
 # Stroke colors for SVG recall curves. Kept in one place so per-filetype and
 # top-level charts stay visually consistent.
@@ -445,6 +449,38 @@ def _load_per_filetype_metrics(root: Path) -> dict[str, Any]:
         return {"filetypes": {}, "filegroups": {}, "all_files": {}}
     with open(path) as f:
         return json.load(f)
+
+
+def _warn_if_operating_level_unresolved(metrics: dict[str, Any]) -> None:
+    """Loudly flag metrics that can't populate the headline recall column.
+
+    The bundle README headlines ``Recall @ L{DEFAULT_SEVERITY_LEVEL}``, read
+    from ``per_filetype_metrics.json``. If that metrics file was computed on
+    an older grid (e.g. a pre-L25 bundle, or one whose carry-forward reused
+    stale per-filetype entries), the field is absent and the whole column
+    renders as em dashes — silently. In the real deploy pipeline
+    compute_routed_metrics always runs before this script, so this only trips
+    on an out-of-band README regen against a stale metrics file; recompute the
+    metrics (``make azoth-deploy`` / ``azoth-validate``) to fix it.
+    """
+    field = default_recall_per_100M_field()
+    ft_dict = (metrics or {}).get("filetypes", {}) or {}
+    resolved = any(
+        isinstance((entry or {}).get("ensemble"), dict)
+        and isinstance(entry["ensemble"].get(field), (int, float))
+        and not (isinstance(entry["ensemble"].get(field), float)
+                 and math.isnan(entry["ensemble"][field]))
+        for entry in ft_dict.values()
+    )
+    if ft_dict and not resolved:
+        print(
+            f"WARNING: per_filetype_metrics.json carries no {field} for any "
+            f"filetype — the 'Recall @ {_DEFAULT_LEVEL_LABEL}' column will be "
+            f"blank. The metrics predate the current L{DEFAULT_SEVERITY_LEVEL} "
+            f"grid; recompute them (make azoth-deploy / azoth-validate) before "
+            f"regenerating READMEs.",
+            file=sys.stderr,
+        )
 
 
 def _load_deployed_eval(root: Path) -> dict[str, Any]:
@@ -1297,6 +1333,7 @@ def _write_bundle(root: Path) -> None:
     with open(root / "config.json") as f:
         config = json.load(f)
     metrics = _load_per_filetype_metrics(root)
+    _warn_if_operating_level_unresolved(metrics)
     eval_data = _load_deployed_eval(root)
     n_eval = eval_data.get("rows") or metrics.get("n_rows_evaluated", 0)
     fit_rows = _int(config.get("fit_rows") or config.get("rows"))
@@ -1336,7 +1373,7 @@ def _write_bundle(root: Path) -> None:
         "",
         "Input is a JSON report produced by `cleave`. Output is one "
         "verdict — `benign` or `hostile` — qualified by a severity level "
-        "L0..L20. Litmus reads the hostile threshold at the chosen level "
+        f"{_LEVEL_RANGE_LABEL}. Litmus reads the hostile threshold at the chosen level "
         "(consumers can label anything firing above the configured critical "
         "level as suspicious if they want a softer tier); the deployed "
         f"default is {_DEFAULT_LEVEL_PHRASE}. Lower levels tighten the "

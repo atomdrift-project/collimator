@@ -371,6 +371,19 @@ def main() -> int:
     # doesn't block the deploy (not THIS promote's responsibility).
     preexisting_drift: list[str] = []
     lwm_ft = (lwm_eval.get("filetypes") or {}) if lwm_eval else {}
+    # A low-water-mark pinned before the operating level moved (e.g. an
+    # L50-era pin still on disk after the default flipped to L25) carries no
+    # rows at level_key, so every per-filetype LWM comparison below silently
+    # finds lwm_recall=None and skips — the cumulative-drift floor quietly
+    # stops protecting anything. Say so loudly; the fix is to re-pin
+    # (make azoth-set-low-water-mark) against a bundle on the current grid.
+    if lwm_ft and not _has_level(lwm_ft, level_key):
+        print(
+            f"warning: low-water-mark has no {level_key} rows — it predates "
+            f"the current grid / operating level. The LWM drift gate is "
+            f"inert until you re-pin it (make azoth-set-low-water-mark).",
+            file=sys.stderr,
+        )
     # Net-improvement accounting: per-filetype (delta_tp, recall_drop) so the
     # fallback can decide whether the aggregate is net-positive AND no single
     # filetype crossed the catastrophe cap.

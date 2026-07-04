@@ -2462,3 +2462,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T185704-filetypes-pdf` — 2026-07-04T18:57:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a926c4e0c8242abd` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9782 | 0.9270 | 0.8563 | 1 | [log](out/autocollie/runs/2026-07-04T19-05-04_20260704T185704-filetypes-pdf_inherit_from_filetypes_registry_1ffaf151.log) |
+| `961291c7bbc29e5a` | pdf_control_hardneg_015_16_scalepos075 | ok | 0.9920 | 0.9750 | 0.8562 | 3 | [log](out/autocollie/runs/2026-07-04T19-05-08_20260704T185704-filetypes-pdf_pdf_control_hardneg_015_16_scalepos075.log) |
+| `1a60d40423164ce9` | pdf_feat_textmetrics_obfuscation_hardneg_02_18 | ok | 0.9947 | 0.9838 | 0.8560 | 3 | [log](out/autocollie/runs/2026-07-04T19-05-14_20260704T185704-filetypes-pdf_pdf_feat_textmetrics_obfuscation_hardneg_02_18.log) |
+| `28176d16330713d9` | pdf_feat_kv_vocab_split_hardneg_01_12 | ok | 0.9896 | 0.9677 | 0.8562 | 6 | [log](out/autocollie/runs/2026-07-04T19-05-19_20260704T185704-filetypes-pdf_pdf_feat_kv_vocab_split_hardneg_01_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_hardneg_015_16_scalepos075`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set from best PR_AUC run; lowers scale_pos_weight_mult to 0.75 to push recall@3FPM by down-weighting benigns at the strict-FP tail, addressing the or_loses shape.
+- **`pdf_feat_textmetrics_obfuscation_hardneg_02_18`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture PDF-specific obfuscation signals; pairs with hard_negative sweep (0.02/18) to improve PR_AUC by focusing on hard benigns.
+- **`pdf_feat_kv_vocab_split_hardneg_01_12`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab and kv_value_split to recover per-element signal in PDF metadata; uses hard_negative sweep (0.01/12) to boost recall@3FPM without ranking damage.
+
+</details>
+

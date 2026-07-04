@@ -978,3 +978,15 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T185705-filetypes-php` — 2026-07-04T18:57:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2707147f0b53bcde` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.8475 | 0.9418 | 0.7997 | 3 | [log](out/autocollie/runs/2026-07-04T19-06-06_20260704T185705-filetypes-php_inherit_from_filetypes_registry_1ffaf151.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

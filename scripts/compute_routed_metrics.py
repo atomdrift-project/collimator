@@ -81,6 +81,43 @@ DEFAULT_LEVEL = _DEFAULT_SEVERITY_LEVEL_FROM_THRESHOLDS
 RECALL_CURVE_LEVELS: tuple[int, ...] = tuple(_CHART_LEVELS_PER_100M)
 
 
+def _entry_recall_levels(entry: dict[str, Any]) -> set[int]:
+    """The per-100M levels a metrics entry actually carries recall for.
+
+    Reads across the entry's ``general``/``specialist``/``ensemble`` blocks
+    (all produced by ``_metrics`` over the same grid, so any one is
+    representative) and returns the set of integer levels ``N`` for which a
+    ``recall_at_N_per_100M`` key exists.
+    """
+    levels: set[int] = set()
+    for block_name in ("ensemble", "specialist", "general"):
+        block = entry.get(block_name)
+        if not isinstance(block, dict):
+            continue
+        for key in block:
+            if key.startswith("recall_at_") and key.endswith("_per_100M"):
+                mid = key[len("recall_at_"):-len("_per_100M")]
+                if mid.isdigit():
+                    levels.add(int(mid))
+    return levels
+
+
+def _entry_covers_current_grid(entry: dict[str, Any]) -> bool:
+    """Whether a previous-bundle metrics entry was computed on the current
+    recall grid, so it can be carried forward without leaving holes.
+
+    Score-identity is not sufficient for carry-forward: the deploy grid
+    (``_LEVELS_PER_100M``) and operating level can change even when a
+    route's scores don't (e.g. a pure recalibrate that moves the default
+    from L50 to L25). A prior entry computed on the old grid lacks the new
+    levels' ``recall_at_N_per_100M`` fields — carrying it forward would
+    blank the operating-level column and punch holes in the recall curve
+    for exactly the big, stable routes that never get retrained. Requiring
+    the full current grid forces a recompute whenever the grid moved.
+    """
+    return set(RECALL_CURVE_LEVELS).issubset(_entry_recall_levels(entry))
+
+
 def _test_mask_cache_key(db_path: str, row_ids: np.ndarray) -> str:
     """Stable cache key for a score table's row order and split source."""
     arr = np.ascontiguousarray(row_ids)
@@ -1041,14 +1078,27 @@ def compute_per_filetype_metrics(
                 unchanged = unchanged_filetypes(
                     changed, DEPLOYMENT_GROUPS, avail, all_fts_in_policies,
                 )
-                LOG.info(
-                    "carry-forward: %d/%d routes changed; %d/%d filetypes can be carried forward from prev metrics",
-                    len(changed), len(avail),
-                    len(unchanged), len(all_fts_in_policies),
-                )
+                stale_grid = 0
                 for ft in unchanged:
-                    if ft in prev_ft_entries:
-                        carry_forward[ft] = prev_ft_entries[ft]
+                    prev_entry = prev_ft_entries.get(ft)
+                    if prev_entry is None:
+                        continue
+                    # Score-identity alone isn't enough: if the recall grid
+                    # or operating level moved since the prev bundle (e.g. a
+                    # pure recalibrate flipping the default L50->L25), the
+                    # prior entry lacks the new levels and must be recomputed.
+                    if not _entry_covers_current_grid(prev_entry):
+                        stale_grid += 1
+                        continue
+                    carry_forward[ft] = prev_entry
+                LOG.info(
+                    "carry-forward: %d/%d routes changed; %d/%d filetypes carried "
+                    "forward from prev metrics (%d eligible-but-recomputed: prev "
+                    "grid predates current L%d grid)",
+                    len(changed), len(avail),
+                    len(carry_forward), len(all_fts_in_policies),
+                    stale_grid, DEFAULT_LEVEL,
+                )
         except Exception as e:  # noqa: BLE001
             LOG.warning(
                 "carry-forward setup failed (%s); recomputing all filetypes from scratch",

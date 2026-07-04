@@ -1066,3 +1066,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T185704-filetypes-png` — 2026-07-04T18:57:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e420d0c5e85512ee` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.2874 | 0.7125 | 0.1135 | 2 | [log](out/autocollie/runs/2026-07-04T19-05-23_20260704T185704-filetypes-png_inherit_from_filetypes_registry_1ffaf151.log) |
+| `75702c956e12e4ea` | png_ctrl_train_leaves_reg | dup | 0.2445 | 0.6430 | 0.1150 | 2 | [log](out/autocollie/runs/2026-07-04T19-05-29_20260704T185704-filetypes-png_png_ctrl_train_leaves_reg.log) |
+| `9d68767850d71085` | png_feat_kv_lowfreq_bigrams | ok | 0.2527 | 0.6528 | 0.1169 | 13 | [log](out/autocollie/runs/2026-07-04T19-05-33_20260704T185704-filetypes-png_png_feat_kv_lowfreq_bigrams.log) |
+| `10b67b022a98c363` | png_feat_textenc_metrics_full | ok | 0.2397 | 0.6300 | 0.1152 | 2 | [log](out/autocollie/runs/2026-07-04T19-05-47_20260704T185704-filetypes-png_png_feat_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_leaves_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and tightening regularization (reg_lambda=1.5) on the best recent feature set to better rank tail malware without overfitting.
+- **`png_feat_kv_lowfreq_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_KV_VOCAB=1 …` — Aims to boost recall@3FPM and PR_AUC by enabling kv_vocab to capture metadata payloads and lowering bigram_min_freq to 200 to catch rarer steganographic patterns in PNG files.
+- **`png_feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to improve PR_AUC by enabling text_encoding and text_metrics_full to detect obfuscated text streams and structural anomalies common in malicious PNGs, complementing the baseline n-gram features.
+
+</details>
+

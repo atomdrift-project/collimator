@@ -884,3 +884,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T185705-filetypes-jar` — 2026-07-04T18:57:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7851a3a067df8d5e` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9238 | 0.9526 | 0.8362 | 1 | [log](out/autocollie/runs/2026-07-04T19-04-27_20260704T185705-filetypes-jar_inherit_from_filetypes_registry_1ffaf151.log) |
+| `5606b6983f1fa4f3` | jar_control_hardneg_tail_v3 | ok | 0.9252 | 0.9536 | 0.8373 | 3 | [log](out/autocollie/runs/2026-07-04T19-04-30_20260704T185705-filetypes-jar_jar_control_hardneg_tail_v3.log) |
+| `b82a4395a5650f0d` | jar_kv_vocab_manifest_split | dup | 0.9229 | 0.9506 | 0.8594 | 1 | [log](out/autocollie/runs/2026-07-04T19-04-34_20260704T185705-filetypes-jar_jar_kv_vocab_manifest_split.log) |
+| `102456e8b95e9dd0` | jar_textenc_metrics_full | ok | 0.9219 | 0.9503 | 0.8453 | 32 | [log](out/autocollie/runs/2026-07-04T19-04-36_20260704T185705-filetypes-jar_jar_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_hardneg_tail_v3`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features; tests hard-negative upweighting to improve recall@3 FP/M by focusing on difficult benigns.
+- **`jar_kv_vocab_manifest_split`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture manifest metadata patterns; aims to boost PR_AUC by adding structured signal from JAR manifests.
+- **`jar_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=500 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture obfuscation and structural text patterns in JAR resources; targets PR_AUC improvement via richer text signal.
+
+</details>
+

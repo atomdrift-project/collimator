@@ -784,3 +784,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T185705-filetypes-xls` — 2026-07-04T18:57:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d59b09f84440c16a` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9960 | 0.9876 | 0.9682 | 1 | [log](out/autocollie/runs/2026-07-04T19-04-19_20260704T185705-filetypes-xls_inherit_from_filetypes_registry_1ffaf151.log) |
+| `38a40f477c53f8e9` | xls_control_train_reg_lambda_leaves | ok | 0.9972 | 0.9915 | 0.9676 | 3 | [log](out/autocollie/runs/2026-07-04T19-04-25_20260704T185705-filetypes-xls_xls_control_train_reg_lambda_leaves.log) |
+| `977b7cff27af963a` | xls_feat_kv_vocab_10k | ok | 0.9960 | 0.9876 | 0.9682 | 5 | [log](out/autocollie/runs/2026-07-04T19-04-54_20260704T185705-filetypes-xls_xls_feat_kv_vocab_10k.log) |
+| `3ada8823dea9c2be` | xls_feat_text_metrics_full | ok | 0.9961 | 0.9880 | 0.9683 | 19 | [log](out/autocollie/runs/2026-07-04T19-05-01_20260704T185705-filetypes-xls_xls_feat_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xls_control_train_reg_lambda_leaves`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature surface; tweaks tree complexity and L2 regularization to stabilize PR_AUC while probing tail recall.
+- **`xls_feat_kv_vocab_10k`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab to capture structured metadata patterns in XLS files, aiming to boost PR_AUC by adding discriminative key-value signals.
+- **`xls_feat_text_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates full text metrics to detect obfuscation and structural anomalies in spreadsheet macros, targeting recall@3 FP/M improvement.
+
+</details>
+

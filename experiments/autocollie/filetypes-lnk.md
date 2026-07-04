@@ -740,3 +740,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T185704-filetypes-lnk` — 2026-07-04T18:57:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a66290850e6d8cda` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9846 | 0.9274 | 0.9278 | 1 | [log](out/autocollie/runs/2026-07-04T19-04-38_20260704T185704-filetypes-lnk_inherit_from_filetypes_registry_1ffaf151.log) |
+| `8bdb7326feccf6bc` | lnk_ctrl_dart_reg_training | ok | 0.9910 | 0.9634 | 0.9259 | 4 | [log](out/autocollie/runs/2026-07-04T19-05-12_20260704T185704-filetypes-lnk_lnk_ctrl_dart_reg_training.log) |
+| `7d857a3712c8cd4f` | lnk_feat_kv_vocab_split | ok | 0.9933 | 0.9680 | 0.9297 | 10 | [log](out/autocollie/runs/2026-07-04T19-05-19_20260704T185704-filetypes-lnk_lnk_feat_kv_vocab_split.log) |
+| `b8af114fbb608206` | lnk_feat_text_metrics_encoding | ok | 0.9933 | 0.9680 | 0.9297 | 12 | [log](out/autocollie/runs/2026-07-04T19-05-34_20260704T185704-filetypes-lnk_lnk_feat_text_metrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_ctrl_dart_reg_training`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent best feature set while tuning LightGBM regularization and boosting type to improve PR_AUC without changing the feature matrix.
+- **`lnk_feat_kv_vocab_split`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture granular metadata tokens in LNK files, aiming to boost PR_AUC by isolating malicious path/value patterns.
+- **`lnk_feat_text_metrics_encoding`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full to extract structural text obfuscation signals, targeting recall@3 FP/M gains on malicious shortcut payloads.
+
+</details>
+

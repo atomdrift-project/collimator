@@ -872,3 +872,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T185704-filetypes-python-bytecode` — 2026-07-04T18:57:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `20226c80099de39b` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.7975 | 0.8970 | 0.7986 | 1 | [log](out/autocollie/runs/2026-07-04T19-05-24_20260704T185704-filetypes-python-bytecode_inherit_from_filetypes_registry_1ffaf151.log) |
+| `1e9f8dd3f9648b54` | pybc_ctrl_train_reg_leaves | ok | 0.8390 | 0.8891 | 0.8225 | 3 | [log](out/autocollie/runs/2026-07-04T19-05-32_20260704T185704-filetypes-python-bytecode_pybc_ctrl_train_reg_leaves.log) |
+| `563d840e509d6114` | pybc_feat_textmetrics_full | ok | 0.8397 | 0.8948 | 0.8295 | 19 | [log](out/autocollie/runs/2026-07-04T19-05-37_20260704T185704-filetypes-python-bytecode_pybc_feat_textmetrics_full.log) |
+| `` | pybc_feat_kv_vocab_lowfreq | fail | — | — | — | 20 | [log](out/autocollie/runs/2026-07-04T19-05-57_20260704T185704-filetypes-python-bytecode_pybc_feat_kv_vocab_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_reg_leaves`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating best feature_env to test if increasing num_leaves and reg_lambda improves PR_AUC while keeping ROC_AUC flat.
+- **`pybc_feat_textmetrics_full`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full research vocab to capture structural text signals, aiming to boost PR_AUC by adding high-signal obfuscation features.
+- **`pybc_feat_kv_vocab_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab capacity and lowers min_freq to capture rare bytecode metadata patterns, targeting recall@3FPM gains without hurting PR_AUC.
+
+</details>
+

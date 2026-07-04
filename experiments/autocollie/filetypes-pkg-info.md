@@ -882,3 +882,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T185705-filetypes-pkg-info` — 2026-07-04T18:57:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f8ff8e237e8fb87a` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9923 | 0.9856 | 0.9802 | 1 | [log](out/autocollie/runs/2026-07-04T19-05-46_20260704T185705-filetypes-pkg-info_inherit_from_filetypes_registry_1ffaf151.log) |
+| `40f2ebba004e1399` | pkginfo_control_train_tune | ok | 0.9919 | 0.9883 | 0.9817 | 25 | [log](out/autocollie/runs/2026-07-04T19-05-49_20260704T185705-filetypes-pkg-info_pkginfo_control_train_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_train_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 …` — Replicate best feature set to establish baseline; tweak num_leaves and learning_rate to improve PR_AUC by better fitting the existing feature matrix without cache rebuild.
+
+</details>
+
