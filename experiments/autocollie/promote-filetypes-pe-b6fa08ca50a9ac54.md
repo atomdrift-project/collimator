@@ -1,123 +1,146 @@
-# Promote REJECTED — `b6fa08ca50a9ac54` on `filetypes/pe`
+# Promote PASS — `b6fa08ca50a9ac54` on `filetypes/pe`
 
-Generated 2026-05-25T19:07:47Z
+Generated 2026-07-04T12:44:55Z
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T19-03-17_20260525T190315-promote-b6fa08ca50a9ac54_azoth-validate.log; tail: calibration complete; computing per-filetype metrics
-filetypes/pyproject.toml: 0 rows in score table; skipping
-filetypes/xlsb: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/per_filetype_metrics.json (filetypes: 79, filegroups: 0)
-.venv/bin/python scripts/azoth_route_policy_eval.py \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/score_table.npz \
-	--general-scores /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/general/threshold_scores.npz \
-	--route-policies /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policies.json \
-	--partition test \
-	--output-md /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policy_eval_oof.md \
-	--output-json /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policy_eval_oof.md
-.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54
-staged runtime azoth bundle: /tmp/tmp.IpQsXCzxxy
-azoth bundle ok: /tmp/tmp.IpQsXCzxxy
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 64 unimpacted (drift treated as pre-existing)
-
-ensemble improvements (≥0.10pp):
-  c: L3 hostile ensemble recall +1.30pp (10.02% → 11.33%)
-  elf: L3 hostile ensemble recall +0.70pp (92.79% → 93.49%)
-  javascript: L3 hostile ensemble recall +5.92pp (66.20% → 72.12%)
-  package.json: L3 hostile ensemble recall +4.25pp (86.78% → 91.03%)
-  xml: L3 hostile ensemble recall +6.16pp (2.74% → 8.90%)
-
-per-route improvements (≥0.10pp, informational):
-  c :: filetypes/c recall@3FP/M +0.28pp (13.53% → 13.82%)
-  elf :: filetypes/elf recall@3FP/M +3.40pp (93.40% → 96.81%)
-  go :: filetypes/go recall@3FP/M +0.34pp (4.84% → 5.18%)
-  javascript :: filetypes/javascript recall@3FP/M +11.24pp (65.71% → 76.95%)
-  package.json :: filegroups/config recall@3FP/M +0.83pp (98.71% → 99.54%)
-  package.json :: filetypes/package.json recall@3FP/M +1.02pp (98.66% → 99.68%)
-  pe :: filetypes/pe recall@3FP/M +13.87pp (61.35% → 75.22%)
-  xml :: filegroups/config recall@3FP/M +12.33pp (3.42% → 15.75%)
-
-4 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + c: L3 hostile ensemble recall +1.30pp above LWM (10.02% → 11.33%)
-  + javascript: L3 hostile ensemble recall +5.92pp above LWM (66.20% → 72.12%)
-  + package.json: L3 hostile ensemble recall +4.25pp above LWM (86.78% → 91.03%)
-  + xml: L3 hostile ensemble recall +6.16pp above LWM (2.74% → 8.90%)
-
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - pe: L3 hostile ENSEMBLE recall dropped 3.21pp BELOW LOW-WATER-MARK (61.96% → 58.74%; LWM tolerance 0.90pp)
-
-compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
-
-blocked by: deployed-tolerance gate (1.70pp), low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
-
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1136: azoth-validate] Error 1)
+full-train holds — PR_AUC 0.9997 -> 0.9999, AUC 0.9997 -> 0.9997, Brier 0.0059 -> 0.0043
 
 ## Gates
 
 - **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9997)
-- **Full-train** (inflated profile, original seed): **REJECTED** — see metrics below
+- **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `b6fa08ca50a9ac54` | `96a4083ae34b084c` | `7b8a38aeb675012b` |
-| PR AUC | 0.9997 | 1.0000 | 1.0000 |
-| ROC AUC | 0.9997 | 0.9999 | 0.9999 |
-| F1 | 0.9918 | 0.9989 | 0.9978 |
+| key | `b6fa08ca50a9ac54` | `0f16e9d9ad9c6710` | `8fd9378ed85c9782` |
+| PR AUC | 0.9997 | 1.0000 | 0.9999 |
+| ROC AUC | 0.9997 | 0.9997 | 0.9997 |
+| F1 | 0.9918 | 0.9973 | 0.9952 |
 
-## Disposition
+## Status: candidate bundle is built; litmus validation skipped
 
-This spec did not survive the promotion ladder.
+Autocollie ran the research and bundle gates below, but intentionally skipped litmus runtime compatibility (`AZOTH_SKIP_LITMUS_VALIDATE=1`) so undeployable feature ideas can prove whether they are worth runtime work:
 
-azoth-validate failed: exit status 2 (log /home/t/collimator/out/autocollie/runs/2026-05-25T19-03-17_20260525T190315-promote-b6fa08ca50a9ac54_azoth-validate.log; tail: calibration complete; computing per-filetype metrics
-filetypes/pyproject.toml: 0 rows in score table; skipping
-filetypes/xlsb: 0 rows in score table; skipping
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/per_filetype_metrics.json (filetypes: 79, filegroups: 0)
-.venv/bin/python scripts/azoth_route_policy_eval.py \
-	--score-table /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/score_table.npz \
-	--general-scores /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/general/threshold_scores.npz \
-	--route-policies /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policies.json \
-	--partition test \
-	--output-md /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policy_eval_oof.md \
-	--output-json /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policy_eval_oof.json
-wrote /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/route_policy_eval_oof.md
-.venv/bin/python scripts/write_azoth_readmes.py --azoth-root /home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54
-staged runtime azoth bundle: /tmp/tmp.IpQsXCzxxy
-azoth bundle ok: /tmp/tmp.IpQsXCzxxy
---source-bundle out/models/azoth: 1 routes changed → 1 filetypes impacted, 64 unimpacted (drift treated as pre-existing)
+- `azoth-calibrate` regenerated the score table and per-route policies with the candidate's model in place.
+- `azoth_route_policy_search.py` chose the best routing per route.
+- `azoth_policy_global_metrics.py --fail-on-budget` confirmed the global FP/M budget is *not* busted.
+- `validate_azoth_bundle.py` confirmed the bundle layout is well-formed.
+- Litmus parity was not run. Before deployment, run full validation without the skip flag or use `make azoth-deploy`, which still runs litmus checks.
 
-ensemble improvements (≥0.10pp):
-  c: L3 hostile ensemble recall +1.30pp (10.02% → 11.33%)
-  elf: L3 hostile ensemble recall +0.70pp (92.79% → 93.49%)
-  javascript: L3 hostile ensemble recall +5.92pp (66.20% → 72.12%)
-  package.json: L3 hostile ensemble recall +4.25pp (86.78% → 91.03%)
-  xml: L3 hostile ensemble recall +6.16pp (2.74% → 8.90%)
+The candidate bundle lives at:
 
-per-route improvements (≥0.10pp, informational):
-  c :: filetypes/c recall@3FP/M +0.28pp (13.53% → 13.82%)
-  elf :: filetypes/elf recall@3FP/M +3.40pp (93.40% → 96.81%)
-  go :: filetypes/go recall@3FP/M +0.34pp (4.84% → 5.18%)
-  javascript :: filetypes/javascript recall@3FP/M +11.24pp (65.71% → 76.95%)
-  package.json :: filegroups/config recall@3FP/M +0.83pp (98.71% → 99.54%)
-  package.json :: filetypes/package.json recall@3FP/M +1.02pp (98.66% → 99.68%)
-  pe :: filetypes/pe recall@3FP/M +13.87pp (61.35% → 75.22%)
-  xml :: filegroups/config recall@3FP/M +12.33pp (3.42% → 15.75%)
+```
+/home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54
+```
 
-4 low-water-mark improvement(s) (>0.90pp above LWM, informational):
-  + c: L3 hostile ensemble recall +1.30pp above LWM (10.02% → 11.33%)
-  + javascript: L3 hostile ensemble recall +5.92pp above LWM (66.20% → 72.12%)
-  + package.json: L3 hostile ensemble recall +4.25pp above LWM (86.78% → 91.03%)
-  + xml: L3 hostile ensemble recall +6.16pp above LWM (2.74% → 8.90%)
+## Candidate knobs (raw EXP_* form)
 
-1 LOW-WATER-MARK regression(s) (pinned reference: out/models/azoth_low_water_mark/route_policy_eval_oof.json):
-  - pe: L3 hostile ENSEMBLE recall dropped 3.21pp BELOW LOW-WATER-MARK (61.96% → 58.74%; LWM tolerance 0.90pp)
+```
+EXP_AIR_GAP_SIGNAL=1
+EXP_ALLOWED_FEATURES_FILE=/home/t/collimator/src/collimator/data/azoth_allowed_features_importance10k.json
+EXP_ATTACK_CODE_NGRAMS=1
+EXP_ATTACK_FEATURES=1
+EXP_ATTACK_NGRAMS=0
+EXP_BETA=2
+EXP_BIGRAM_MAX=5000
+EXP_BIGRAM_MIN_FREQ=1000
+EXP_BLINDFOLD=1
+EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
+EXP_CRIT_CATEGORY_NGRAMS=1
+EXP_DISABLE_FEATURE_GROUPS=clusters
+EXP_DOCUMENT_OBFUSCATION_FEATURES=0
+EXP_EMBER_LITE_FEATURES=0
+EXP_ESTIMATORS=400
+EXP_EXTENDED_METRICS=1
+EXP_EXTREME_FEATURES=1
+EXP_FILETYPE_INTERACTIONS=0
+EXP_FILE_SEVERITY_DISTRIBUTION=1
+EXP_FORMAT_HINTS=0
+EXP_HARD_NEGATIVE_FRACTION=0
+EXP_HARD_NEGATIVE_WEIGHT=1
+EXP_HOSTILE_ESCALATION_FEATURES=1
+EXP_HOSTILE_WEIGHTED_DENSITY=1
+EXP_KV_MIN_FREQ=5
+EXP_KV_SHAPE_FEATURES=0
+EXP_KV_VALUE_SPLIT=1
+EXP_KV_VOCAB=1
+EXP_KV_VOCAB_MAX=15000
+EXP_LEARNING_RATE=0.05
+EXP_LINE_LENGTH_BUCKETS=0
+EXP_MAX_DEPTH=12
+EXP_MAX_TEST_SAMPLES=80000
+EXP_MBC_ID_VOCAB=0
+EXP_METRIC_MIN_FREQ_PCT=5
+EXP_METRIC_RATIO_FEATURES=0
+EXP_MIN_CHILD_SAMPLES=100
+EXP_MIN_SAMPLE_SCORE=3
+EXP_MTIME_KURTOSIS=0
+EXP_NGRAM_MIN_CRIT=0
+EXP_NGRAM_PATH_DEPTH=0
+EXP_NONSTANDARD_SECTION_SIGNAL=0
+EXP_NUM_LEAVES=96
+EXP_NUM_THREADS=8
+EXP_OBJECTIVE_TRIGRAMS=0
+EXP_OVERLAY_SIGNAL=0
+EXP_PACKAGED_CAPABILITY_MODE=paths
+EXP_PE_FORMAT_FLAGS=0
+EXP_PE_TEMPORAL_ANOMALY=0
+EXP_REG_ALPHA=0
+EXP_REG_LAMBDA=1
+EXP_REPETITION_PENALTY_FEATURES=1
+EXP_SCORE_WEIGHTED_TRAITS=1
+EXP_SEVERITY_FRACTION_FEATURES=0
+EXP_SILENT_PACKER_SIGNAL=0
+EXP_SIZE_NORMALIZED_METRICS=0
+EXP_SOFT_PRESENCE=1
+EXP_STRUCT_FILE_RISK_COVERAGE=1
+EXP_SUSPICIOUS_BREADTH_DENSITY=1
+EXP_SUSPICIOUS_TRIGRAMS=0
+EXP_SYMBOL_BIGRAMS=0
+EXP_SYMBOL_BIGRAM_MAX=5000
+EXP_SYMBOL_MIN_FREQ=5
+EXP_SYMBOL_MIN_FREQ_BIGRAM=10
+EXP_SYMBOL_MIN_FREQ_TRIGRAM=10
+EXP_SYMBOL_TRIGRAMS=0
+EXP_SYMBOL_TRIGRAM_MAX=2000
+EXP_SYMBOL_VOCAB=0
+EXP_SYMBOL_VOCAB_MAX=5000
+EXP_TAXONOMY_FEATURES=0
+EXP_TEXT_ENCODING_FEATURES=0
+EXP_TEXT_METRICS_FULL=0
+EXP_TIERED_BIGRAM_MAX=5000
+EXP_TIERED_BIGRAM_MIN_CRIT=3
+EXP_TIERED_BIGRAM_MIN_FREQ=5
+EXP_TIERED_BIGRAM_PATH_DEPTH=3
+EXP_TIERED_CRIT_BIGRAMS=1
+EXP_TIERED_CRIT_QUADGRAMS=0
+EXP_TIERED_CRIT_TRIGRAMS=0
+EXP_TIERED_QUADGRAM_MAX=5000
+EXP_TIERED_QUADGRAM_MIN_CRIT=3
+EXP_TIERED_QUADGRAM_MIN_FREQ=5
+EXP_TIERED_QUADGRAM_PATH_DEPTH=3
+EXP_TIERED_TRIGRAM_MAX=5000
+EXP_TIERED_TRIGRAM_MIN_CRIT=3
+EXP_TIERED_TRIGRAM_MIN_FREQ=5
+EXP_TIERED_TRIGRAM_PATH_DEPTH=3
+EXP_TOP_K_RISK_FILES=1
+EXP_TOP_K_RISK_FILES_MIN_CRIT=0
+EXP_TRAIN_SAMPLES=600000
+EXP_TRAIT_CONFIDENCE_MOMENTS=0
+EXP_TRAIT_ID_LEXICAL_DISTANCE=0
+EXP_TRIGRAM_MAX=500
+EXP_TRIGRAM_MAX_BENIGN_FRAC=0.01
+EXP_TRIGRAM_MIN_FREQ=5
+SEED=42
+```
 
-compared 63 filetypes (mal≥1, ben≥1); 2 below threshold and skipped.
+## To deploy (HUMAN)
 
-blocked by: deployed-tolerance gate (1.70pp), low-water-mark gate (0.90pp vs out/models/azoth_low_water_mark/route_policy_eval_oof.json)
+Read `/home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
 
-If this regression is intentional, set AZOTH_ALLOW_REGRESSION=1 and re-run (or pass --net-improvement-fallback for shared-route promotes to address the deployed-tolerance gate only — the LWM gate is unconditional and AZOTH_ALLOW_REGRESSION is the only override for it).
-make[2]: *** [Makefile:1136: azoth-validate] Error 1)
+```
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-pe-b6fa08ca50a9ac54
+```
+
+The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

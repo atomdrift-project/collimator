@@ -1,6 +1,6 @@
 # Promote REJECTED — `3818c4f8f221f75d` on `filetypes/shell`
 
-Generated 2026-06-28T13:04:17Z
+Generated 2026-07-04T08:10:07Z
 
 AUC regressed at full-train: 0.9976 -> 0.9956
 

@@ -1,6 +1,6 @@
 # Promote REJECTED — `6a3094941f9958c7` on `filegroups/source`
 
-Generated 2026-06-28T12:36:18Z
+Generated 2026-07-04T08:09:59Z
 
 AUC regressed at full-train: 0.9982 -> 0.9966
 

@@ -1,6 +1,6 @@
-# Confirm PASS — b0756a90274b0c7a on `filegroups/config`
+# Confirm PASS — 93f42142e90e8cf0 on `filegroups/config`
 
-Cycle `20260704T125138-confirm-b0756a90274b0c7a` — 2026-07-04T12:51:38Z
+Cycle `20260704T125212-confirm-93f42142e90e8cf0` — 2026-07-04T12:52:12Z
 
 PR_AUC held across 3 seeds (orig 0.9998)
 
@@ -8,9 +8,9 @@ PR_AUC held across 3 seeds (orig 0.9998)
 
 | | original | seed=43 | seed=44 | seed=45 | 
 |---|---|---|---|---|
-| key | `b0756a90274b0c7a` | `fedd2d80548095ec` | `fedd2d80548095ec` | `fedd2d80548095ec` |
+| key | `93f42142e90e8cf0` | `73b9344f5857c159` | `73b9344f5857c159` | `73b9344f5857c159` |
 | PR AUC | 0.9998 | 0.9980 | 0.9980 | 0.9981 |
-| ROC AUC | 0.9995 | 0.9980 | 0.9980 | 0.9980 |
+| ROC AUC | 0.9996 | 0.9980 | 0.9980 | 0.9980 |
 | Recall@3FPM | — | 0.0000 | 0.0000 | 0.0000 |
 | verdict | — | PASS | PASS | PASS |
 
@@ -19,5 +19,5 @@ PR_AUC held across 3 seeds (orig 0.9998)
 The held-out signal reproduced under all 3 confirm seeds. To proceed to full-corpus training and policy comparison:
 
 ```
-make autocollie-promote KEY=b0756a90274b0c7a
+make autocollie-promote KEY=93f42142e90e8cf0
 ```

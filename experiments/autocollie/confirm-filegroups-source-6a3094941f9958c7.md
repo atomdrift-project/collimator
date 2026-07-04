@@ -1,6 +1,6 @@
 # Confirm PASS — 6a3094941f9958c7 on `filegroups/source`
 
-Cycle `20260628T123532-confirm-6a3094941f9958c7` — 2026-06-28T12:35:32Z
+Cycle `20260704T080957-confirm-6a3094941f9958c7` — 2026-07-04T08:09:57Z
 
 PR_AUC held across 3 seeds (orig 0.9990)
 

@@ -1,22 +1,22 @@
-# Promote PASS — `2eec235e9e44772f` on `filetypes/pe`
+# Promote PASS — `741d735681797882` on `filetypes/javascript`
 
-Generated 2026-07-04T11:43:07Z
+Generated 2026-07-04T10:26:59Z
 
-full-train holds — PR_AUC 0.9997 -> 0.9999, AUC 0.9997 -> 0.9997, Brier 0.0058 -> 0.0043
+full-train holds — PR_AUC 0.9994 -> 0.9990, AUC 0.9990 -> 0.9988, Brier 0.0121 -> 0.0101
 
 ## Gates
 
-- **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9997)
+- **Confirm** (different seed, original profile): **PASS** — PR_AUC held across 3 seeds (orig 0.9994)
 - **Full-train** (inflated profile, original seed): **PASS** — see metrics below
 
 ## Metrics
 
 | | original (screen) | confirm (seed=43) | full-train (samples=600000) |
 |---|---|---|---|
-| key | `2eec235e9e44772f` | `36bb00c606ccf012` | `8fd9378ed85c9782` |
-| PR AUC | 0.9997 | 1.0000 | 0.9999 |
-| ROC AUC | 0.9997 | 0.9997 | 0.9997 |
-| F1 | 0.9905 | 0.9977 | 0.9952 |
+| key | `741d735681797882` | `25d914ff909ad3ac` | `b507461f5fcfef8a` |
+| PR AUC | 0.9994 | 0.9988 | 0.9990 |
+| ROC AUC | 0.9990 | 0.9987 | 0.9988 |
+| F1 | 0.9874 | 0.9842 | 0.9838 |
 
 ## Status: candidate bundle is built; litmus validation skipped
 
@@ -31,7 +31,7 @@ Autocollie ran the research and bundle gates below, but intentionally skipped li
 The candidate bundle lives at:
 
 ```
-/home/t/collimator/out/models/azoth-candidate-filetypes-pe-2eec235e9e44772f
+/home/t/collimator/out/models/azoth-candidate-filetypes-javascript-741d735681797882
 ```
 
 ## Candidate knobs (raw EXP_* form)
@@ -44,7 +44,7 @@ EXP_ATTACK_FEATURES=1
 EXP_ATTACK_NGRAMS=0
 EXP_BETA=2
 EXP_BIGRAM_MAX=5000
-EXP_BIGRAM_MIN_FREQ=1000
+EXP_BIGRAM_MIN_FREQ=100
 EXP_BLINDFOLD=1
 EXP_CONFIDENCE_WEIGHTED_NGRAMS=0
 EXP_CRIT_CATEGORY_NGRAMS=1
@@ -63,9 +63,9 @@ EXP_HOSTILE_ESCALATION_FEATURES=1
 EXP_HOSTILE_WEIGHTED_DENSITY=1
 EXP_KV_MIN_FREQ=5
 EXP_KV_SHAPE_FEATURES=0
-EXP_KV_VALUE_SPLIT=1
-EXP_KV_VOCAB=1
-EXP_KV_VOCAB_MAX=15000
+EXP_KV_VALUE_SPLIT=0
+EXP_KV_VOCAB=0
+EXP_KV_VOCAB_MAX=5000
 EXP_LEARNING_RATE=0.05
 EXP_LINE_LENGTH_BUCKETS=0
 EXP_MAX_DEPTH=12
@@ -107,8 +107,8 @@ EXP_SYMBOL_TRIGRAM_MAX=2000
 EXP_SYMBOL_VOCAB=0
 EXP_SYMBOL_VOCAB_MAX=5000
 EXP_TAXONOMY_FEATURES=0
-EXP_TEXT_ENCODING_FEATURES=0
-EXP_TEXT_METRICS_FULL=0
+EXP_TEXT_ENCODING_FEATURES=1
+EXP_TEXT_METRICS_FULL=1
 EXP_TIERED_BIGRAM_MAX=5000
 EXP_TIERED_BIGRAM_MIN_CRIT=3
 EXP_TIERED_BIGRAM_MIN_FREQ=5
@@ -137,10 +137,10 @@ SEED=42
 
 ## To deploy (HUMAN)
 
-Read `/home/t/collimator/out/models/azoth-candidate-filetypes-pe-2eec235e9e44772f/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
+Read `/home/t/collimator/out/models/azoth-candidate-filetypes-javascript-741d735681797882/global_policy_metrics.md` and `route_policies.md` first. If you're convinced, ship the candidate bundle:
 
 ```
-make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-pe-2eec235e9e44772f
+make azoth-deploy AZOTH_ROOT=/home/t/collimator/out/models/azoth-candidate-filetypes-javascript-741d735681797882
 ```
 
 The deploy target runs litmus compatibility checks. If this candidate uses runtime-incompatible features, deploy will fail until litmus support is added.

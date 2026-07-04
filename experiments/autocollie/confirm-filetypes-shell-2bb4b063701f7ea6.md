@@ -1,6 +1,6 @@
 # Confirm PASS — 2bb4b063701f7ea6 on `filetypes/shell`
 
-Cycle `20260628T132307-confirm-2bb4b063701f7ea6` — 2026-06-28T13:23:07Z
+Cycle `20260704T081008-confirm-2bb4b063701f7ea6` — 2026-07-04T08:10:08Z
 
 PR_AUC held across 3 seeds (orig 0.9968)
 
