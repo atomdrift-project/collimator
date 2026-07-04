@@ -1655,3 +1655,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T135242-filetypes-javascript` — 2026-07-04T13:52:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2d974a57ea62b1cf` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9836 | 0.9774 | 0.9448 | 2 | [log](out/autocollie/runs/2026-07-04T14-00-03_20260704T135242-filetypes-javascript_inherit_from_filetypes_registry_1ffaf151.log) |
+| `4c35a97d48bd1a26` | js_control_textenc_metrics_bigram100 | ok | 0.9832 | 0.9765 | 0.9463 | 95 | [log](out/autocollie/runs/2026-07-04T14-02-20_20260704T135242-filetypes-javascript_js_control_textenc_metrics_bigram100.log) |
+| `827746ce716e16ab` | js_kv_vocab_split_15k | ok | 0.9835 | 0.9770 | 0.9456 | 54 | [log](out/autocollie/runs/2026-07-04T14-03-57_20260704T135242-filetypes-javascript_js_kv_vocab_split_15k.log) |
+| `823bb1b7ace2a505` | js_low_bigram_freq_text_metrics | ok | 0.9835 | 0.9772 | 0.9465 | 41 | [log](out/autocollie/runs/2026-07-04T14-04-52_20260704T135242-filetypes-javascript_js_low_bigram_freq_text_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_textenc_metrics_bigram100`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Replicates top PR_AUC feature set; adjusts estimators and LR to stabilize PR_AUC and lift recall@3FPM.
+- **`js_kv_vocab_split_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture JS object/key-value structures, aiming to boost PR_AUC with discriminative KV signal.
+- **`js_low_bigram_freq_text_metrics`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=320 EXP_LEARNING_RATE=0.045 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 to capture rarer JS obfuscation patterns, targeting recall@3FPM gains while preserving PR_AUC.
+
+</details>
+

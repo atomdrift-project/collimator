@@ -1004,3 +1004,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T135300-filetypes-csharp` — 2026-07-04T13:53:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4a86b82944532e50` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.4890 | 0.8595 | 0.3743 | 3 | [log](out/autocollie/runs/2026-07-04T14-00-14_20260704T135300-filetypes-csharp_inherit_from_filetypes_registry_1ffaf151.log) |
+| `18f102efc58d8fc8` | csharp_ctrl_textenc_kv_train | ok | 0.4897 | 0.8553 | 0.3759 | 11 | [log](out/autocollie/runs/2026-07-04T14-00-28_20260704T135300-filetypes-csharp_csharp_ctrl_textenc_kv_train.log) |
+| `d7cc46499deda3bc` | csharp_feat_symbol_vocab_bigrams | ok | 0.4615 | 0.8619 | 0.3736 | 40 | [log](out/autocollie/runs/2026-07-04T14-01-25_20260704T135300-filetypes-csharp_csharp_feat_symbol_vocab_bigrams.log) |
+| `02dc9c9710591321` | csharp_feat_text_metrics_hardneg | ok | 0.5009 | 0.8648 | 0.3834 | 32 | [log](out/autocollie/runs/2026-07-04T14-02-40_20260704T135300-filetypes-csharp_csharp_feat_text_metrics_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_ctrl_textenc_kv_train`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicate best feature set and tune training knobs to improve PR_AUC while preserving ROC_AUC.
+- **`csharp_feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 …` — Enable symbol_vocab and symbol_bigrams to capture C# import co-occurrence patterns, aiming to boost PR_AUC with structural signal.
+- **`csharp_feat_text_metrics_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable text_metrics_full to capture obfuscation patterns, paired with hard negatives to sharpen the boundary and improve recall@3 FP/M.
+
+</details>
+

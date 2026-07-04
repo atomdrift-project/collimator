@@ -642,3 +642,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T145223-filetypes-rtf` — 2026-07-04T14:52:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ec9a9a70feae0553` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9989 | 0.9933 | 0.9893 | 2 | [log](out/autocollie/runs/2026-07-04T14-57-39_20260704T145223-filetypes-rtf_inherit_from_filetypes_registry_1ffaf151.log) |
+| `1af517c58a0108b8` | rtf_ctrl_hardneg_tune_leaves128 | ok | 0.9998 | 0.9984 | 0.9880 | 2 | [log](out/autocollie/runs/2026-07-04T14-57-43_20260704T145223-filetypes-rtf_rtf_ctrl_hardneg_tune_leaves128.log) |
+| `0701123c80a58e44` | rtf_feat_textmetrics_kv_vocab | ok | 0.9994 | 0.9953 | 0.9887 | 6 | [log](out/autocollie/runs/2026-07-04T14-59-11_20260704T145223-filetypes-rtf_rtf_feat_textmetrics_kv_vocab.log) |
+| `07010867e57d88a1` | rtf_feat_lowbigram_obfuscation | ok | 0.9994 | 0.9953 | 0.9887 | 6 | [log](out/autocollie/runs/2026-07-04T14-59-27_20260704T145223-filetypes-rtf_rtf_feat_lowbigram_obfuscation.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_hardneg_tune_leaves128`** `EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with tuned hard-negative fraction and weight to improve recall@3 FP/M by better separating borderline benign RTFs from malware.
+- **`rtf_feat_textmetrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture RTF-specific obfuscation patterns and macro key-value pairs, aiming to boost PR_AUC and recall@3 FP/M.
+- **`rtf_feat_lowbigram_obfuscation`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and enable document_obfuscation_features to capture rare malicious RTF control sequences, targeting PR_AUC improvement.
+
+</details>
+

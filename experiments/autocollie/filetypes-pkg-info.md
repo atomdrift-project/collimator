@@ -864,3 +864,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T131312-filetypes-pkg-info` — 2026-07-04T13:13:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f8ff8e237e8fb87a` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9923 | 0.9856 | 0.9802 | 2 | [log](out/autocollie/runs/2026-07-04T13-20-27_20260704T131312-filetypes-pkg-info_inherit_from_filetypes_registry_1ffaf151.log) |
+| `6c760cd1c7548fcf` | pkginfo_control_hardneg_tune | ok | 0.9918 | 0.9826 | 0.9787 | 18 | [log](out/autocollie/runs/2026-07-04T13-20-38_20260704T131312-filetypes-pkg-info_pkginfo_control_hardneg_tune.log) |
+| `a9076c698dfeff8c` | pkginfo_kv_textmetrics_vocab | ok | 0.9957 | 0.9930 | 0.9802 | 21 | [log](out/autocollie/runs/2026-07-04T13-20-59_20260704T131312-filetypes-pkg-info_pkginfo_kv_textmetrics_vocab.log) |
+| `dacc8d6983ae167c` | pkginfo_tiered_trigrams_lowfreq | ok | 0.9946 | 0.9914 | 0.9798 | 30 | [log](out/autocollie/runs/2026-07-04T13-21-24_20260704T131312-filetypes-pkg-info_pkginfo_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_hardneg_tune`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative training to improve PR_AUC by focusing on difficult benign/malware boundaries.
+- **`pkginfo_kv_textmetrics_vocab`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture package metadata and structural signals, aiming to boost PR_AUC by adding discriminative features.
+- **`pkginfo_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=3` — Enable tiered_crit_trigrams with lower frequency floor to capture rare malicious patterns, aiming to improve recall@3FPM by boosting tail signal.
+
+</details>
+

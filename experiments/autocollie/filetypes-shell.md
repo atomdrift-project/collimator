@@ -1564,3 +1564,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T154120-filetypes-shell` — 2026-07-04T15:41:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1a19a6952ca9e85f` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9615 | 0.9788 | 0.9177 | 1 | [log](out/autocollie/runs/2026-07-04T15-49-15_20260704T154120-filetypes-shell_inherit_from_filetypes_registry_1ffaf151.log) |
+| `c6326a992d099c37` | shell_control_scalepos075_leaves128 | ok | 0.9615 | 0.9782 | 0.9375 | 3 | [log](out/autocollie/runs/2026-07-04T15-49-30_20260704T154120-filetypes-shell_shell_control_scalepos075_leaves128.log) |
+| `261c6f8593dc0d17` | shell_kv_vocab_15k_value_split | ok | 0.9614 | 0.9782 | 0.8938 | 21 | [log](out/autocollie/runs/2026-07-04T15-49-34_20260704T154120-filetypes-shell_shell_kv_vocab_15k_value_split.log) |
+| `9764a6849bf6fcea` | shell_textenc_metrics_lowbigram25 | ok | 0.9603 | 0.9760 | 0.9252 | 28 | [log](out/autocollie/runs/2026-07-04T15-49-56_20260704T154120-filetypes-shell_shell_textenc_metrics_lowbigram25.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_scalepos075_leaves128`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Control feature set with scale_pos_weight_mult=0.75 and num_leaves=128 to tighten low-FPR ranking and improve recall@3 FP/M without changing the matrix.
+- **`shell_kv_vocab_15k_value_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured shell config signals, targeting PR_AUC gains from finer-grained key-value tokenization.
+- **`shell_textenc_metrics_lowbigram25`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full while lowering bigram_min_freq to 25 to capture rarer script patterns, aiming to boost recall@3 FP/M on obfuscated shell payloads.
+
+</details>
+

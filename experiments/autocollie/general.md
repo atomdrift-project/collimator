@@ -1046,3 +1046,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T131248-general` — 2026-07-04T13:12:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c0f67ad0b00b8087` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9712 | 0.9635 | 0.9020 | 2 | [log](out/autocollie/runs/2026-07-04T13-22-48_20260704T131248-general_inherit_from_filetypes_registry_1ffaf151.log) |
+| `4aa42c2b8bf6ae6c` | control_best_feat_train_tune | ok | 0.9756 | 0.9699 | 0.9067 | 98 | [log](out/autocollie/runs/2026-07-04T13-22-50_20260704T131248-general_control_best_feat_train_tune.log) |
+| `29e06a2ab732a0cc` | feat_kv_textmetrics_lowfreq | ok | 0.9698 | 0.9606 | 0.9054 | 70 | [log](out/autocollie/runs/2026-07-04T13-24-28_20260704T131248-general_feat_kv_textmetrics_lowfreq.log) |
+| `4adb4b328be30365` | feat_symbol_vocab_textenc | ok | 0.9714 | 0.9621 | 0.9016 | 59 | [log](out/autocollie/runs/2026-07-04T13-25-38_20260704T131248-general_feat_symbol_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_best_feat_train_tune`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env; tests if higher capacity and hard negatives improve recall@3FPM by better separating tail malware while keeping PR_AUC flat.
+- **`feat_kv_textmetrics_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full with lower bigram_min_freq to capture rarer malicious patterns, targeting PR_AUC and recall@3FPM gains through richer feature signal.
+- **`feat_symbol_vocab_textenc`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adds symbol_vocab and text_encoding to capture structural and encoding anomalies, aiming to boost recall@3FPM on obfuscated samples that evade standard n-grams.
+
+</details>
+

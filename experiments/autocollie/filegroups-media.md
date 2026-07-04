@@ -920,3 +920,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T131249-filegroups-media` — 2026-07-04T13:12:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a5afd284d52afdf8` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.2595 | 0.6202 | 0.1567 | 3 | [log](out/autocollie/runs/2026-07-04T13-20-58_20260704T131249-filegroups-media_inherit_from_filetypes_registry_1ffaf151.log) |
+| `088e95166b739d9a` | media_control_hardneg_opt | ok | 0.3256 | 0.7125 | 0.1629 | 29 | [log](out/autocollie/runs/2026-07-04T13-21-08_20260704T131249-filegroups-media_media_control_hardneg_opt.log) |
+| `7be0d9811e35d0ba` | media_textenc_metrics_full | ok | 0.3480 | 0.7628 | 0.1589 | 22 | [log](out/autocollie/runs/2026-07-04T13-21-42_20260704T131249-filegroups-media_media_textenc_metrics_full.log) |
+| `f2b2b446ac8a9e7a` | media_sevfrac_docobf_lowfreq | ok | 0.3511 | 0.7655 | 0.1589 | 21 | [log](out/autocollie/runs/2026-07-04T13-22-07_20260704T131249-filegroups-media_media_sevfrac_docobf_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_hardneg_opt`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best feature_env to hit the matrix cache; tunes hard_negative_weight and scale_pos_weight_mult to improve recall@3FPM by better separating hard benigns from malware without degrading PR_AUC.
+- **`media_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full research vocabs to capture document obfuscation signals, aiming to increase PR_AUC and recall@3FPM on media files containing embedded malicious scripts.
+- **`media_sevfrac_docobf_lowfreq`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adds severity_fractions and document_obfuscation_features while lowering bigram_min_freq to 250 to recover rare malicious patterns, targeting PR_AUC gains on obfuscated media documents.
+
+</details>
+

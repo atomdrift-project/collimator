@@ -1218,3 +1218,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T131248-filetypes-jpeg` — 2026-07-04T13:12:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `be0913eaa7d805a0` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.2672 | 0.6376 | 0.3103 | 2 | [log](out/autocollie/runs/2026-07-04T13-20-47_20260704T131248-filetypes-jpeg_inherit_from_filetypes_registry_1ffaf151.log) |
+| `9707cef7029b5f16` | jpeg_control_train_opt_v2 | dup | 0.2756 | 0.6500 | 0.3190 | 1 | [log](out/autocollie/runs/2026-07-04T13-20-54_20260704T131248-filetypes-jpeg_jpeg_control_train_opt_v2.log) |
+| `3fa4cb60f3d69e57` | jpeg_feat_kv_vocab_lowfreq | ok | 0.2676 | 0.6435 | 0.3103 | 19 | [log](out/autocollie/runs/2026-07-04T13-20-58_20260704T131248-filetypes-jpeg_jpeg_feat_kv_vocab_lowfreq.log) |
+| `628de7553bcfb78a` | jpeg_feat_textmetrics_tiered_trigrams | ok | 0.2676 | 0.6435 | 0.3103 | 24 | [log](out/autocollie/runs/2026-07-04T13-21-20_20260704T131248-filetypes-jpeg_jpeg_feat_textmetrics_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_opt_v2`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity and regularization to better rank malware at the strict-FP tail without changing features.
+- **`jpeg_feat_kv_vocab_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab to capture rare EXIF/IPTC metadata patterns and lowering bigram_min_freq to 100 to reduce noise while retaining signal.
+- **`jpeg_feat_textmetrics_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_metrics_full to detect embedded script obfuscation and adding tiered_crit_trigrams to capture multi-step attack chains in metadata.
+
+</details>
+

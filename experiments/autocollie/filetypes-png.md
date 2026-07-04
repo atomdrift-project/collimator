@@ -1048,3 +1048,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T131248-filetypes-png` — 2026-07-04T13:12:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e420d0c5e85512ee` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.2874 | 0.7125 | 0.1135 | 2 | [log](out/autocollie/runs/2026-07-04T13-21-12_20260704T131248-filetypes-png_inherit_from_filetypes_registry_1ffaf151.log) |
+| `e420d0c5e85512ee` | png_ctrl_train_optimize | dup | 0.2874 | 0.7125 | 0.1135 | 2 | [log](out/autocollie/runs/2026-07-04T13-21-22_20260704T131248-filetypes-png_png_ctrl_train_optimize.log) |
+| `3aba9e6700cdb1ee` | png_feat_kv_textenc_lowfreq | ok | 0.2558 | 0.6618 | 0.1169 | 24 | [log](out/autocollie/runs/2026-07-04T13-21-29_20260704T131248-filetypes-png_png_feat_kv_textenc_lowfreq.log) |
+| `3160915e66677a8d` | png_feat_tiered_trigrams_obj | ok | 0.2558 | 0.6618 | 0.1169 | 18 | [log](out/autocollie/runs/2026-07-04T13-22-00_20260704T131248-filetypes-png_png_feat_tiered_trigrams_obj.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_train_optimize`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env while tuning training knobs to improve PR_AUC by reducing overfitting on the current feature surface.
+- **`png_feat_kv_textenc_lowfreq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding research vocabs to capture PNG metadata key-value pairs and encoding anomalies, aiming to boost PR_AUC.
+- **`png_feat_tiered_trigrams_obj`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=50` — Activates tiered_crit_trigrams and objective_trigrams to detect rare malicious patterns in PNG chunks, targeting recall@3FPM.
+
+</details>
+

@@ -856,3 +856,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T135943-filegroups-scripts` — 2026-07-04T13:59:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f75ef39e9b31eca7` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9497 | 0.9498 | 0.6621 | 1 | [log](out/autocollie/runs/2026-07-04T14-09-09_20260704T135943-filegroups-scripts_inherit_from_filetypes_registry_1ffaf151.log) |
+| `fac5f53f3ccd4bc5` | scripts_control_hardneg_train | ok | 0.9510 | 0.9553 | 0.6642 | 8 | [log](out/autocollie/runs/2026-07-04T14-09-28_20260704T135943-filegroups-scripts_scripts_control_hardneg_train.log) |
+| `ab6588b72daefd67` | scripts_feat_kv_textmetrics | ok | 0.9336 | 0.9345 | 0.6951 | 32 | [log](out/autocollie/runs/2026-07-04T14-09-36_20260704T135943-filegroups-scripts_scripts_feat_kv_textmetrics.log) |
+| `dc6b100dbc70b81c` | scripts_feat_lowfreq_ngrams | ok | 0.9334 | 0.9357 | 0.6957 | 31 | [log](out/autocollie/runs/2026-07-04T14-10-10_20260704T135943-filegroups-scripts_scripts_feat_lowfreq_ngrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_hardneg_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best recent feature_env to establish a baseline PR_AUC, while testing hard-negative weighting to improve recall@3FPM at the strict-FP tail without altering the feature surface.
+- **`scripts_feat_kv_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structural obfuscation and key-value patterns in scripts, aiming to lift PR_AUC by adding orthogonal signal to the existing n-gram features.
+- **`scripts_feat_lowfreq_ngrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Lowers bigram and trigram frequency floors to include rarer patterns characteristic of novel or obfuscated malware, targeting recall@3FPM gains while maintaining PR_AUC stability via conservative thresholds.
+
+</details>
+

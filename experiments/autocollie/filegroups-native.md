@@ -950,3 +950,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T154136-filegroups-native` — 2026-07-04T15:41:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6c481e73c1a0b3fc` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9987 | 0.9987 | 0.9862 | 1 | [log](out/autocollie/runs/2026-07-04T15-49-59_20260704T154136-filegroups-native_inherit_from_filetypes_registry_1ffaf151.log) |
+| `309f90afbd8e8b5b` | native_control_best_feat_lr003_leaves128 | ok | 0.9987 | 0.9988 | 0.9850 | 93 | [log](out/autocollie/runs/2026-07-04T15-51-47_20260704T154136-filegroups-native_native_control_best_feat_lr003_leaves128.log) |
+| `72d038b149724e88` | native_kv_vocab_15k_lowfreq_bigrams | ok | 0.9989 | 0.9989 | 0.9873 | 84 | [log](out/autocollie/runs/2026-07-04T15-53-21_20260704T154136-filegroups-native_native_kv_vocab_15k_lowfreq_bigrams.log) |
+| `c35ea7473b82ab64` | native_tiered_trigrams_overlay_packer | ok | 0.9988 | 0.9989 | 0.9869 | 100 | [log](out/autocollie/runs/2026-07-04T15-54-46_20260704T154136-filegroups-native_native_tiered_trigrams_overlay_packer.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_best_feat_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=20000 EXP_SYMBOL_MIN_FREQ_BIGRAM=50 EXP_TRAIN_SAMPLES=30000 …` — Control spec replicating best PR_AUC feature set while tuning learning_rate and num_leaves to stabilize ranking and improve PR_AUC without rebuilding the feature matrix.
+- **`native_kv_vocab_15k_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab research family with lowered min_freq to capture rare configuration/dependency patterns in native files, aiming to boost PR_AUC by adding orthogonal signal to existing symbol features.
+- **`native_tiered_trigrams_overlay_packer`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 EXP_REG_LAMBDA=1.5 EXP_SILENT_PACKER_SIGNAL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 …` — Adds tiered_crit_trigrams and overlay/packer signals to capture higher-order malicious trait co-occurrences and packing artifacts, targeting recall@3FPM improvement for obfuscated native payloads.
+
+</details>
+

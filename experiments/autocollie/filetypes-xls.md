@@ -766,3 +766,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T135242-filetypes-xls` — 2026-07-04T13:52:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d59b09f84440c16a` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9960 | 0.9876 | 0.9682 | 8 | [log](out/autocollie/runs/2026-07-04T14-00-12_20260704T135242-filetypes-xls_inherit_from_filetypes_registry_1ffaf151.log) |
+| `217e1001d048a8bf` | xls_control_train_extra_trees | ok | 0.9972 | 0.9912 | 0.9728 | 12 | [log](out/autocollie/runs/2026-07-04T14-00-28_20260704T135242-filetypes-xls_xls_control_train_extra_trees.log) |
+| `c9c18b62f8d3b783` | xls_feat_text_metrics_encoding | dup | 0.9960 | 0.9876 | 0.9682 | 3 | [log](out/autocollie/runs/2026-07-04T14-00-56_20260704T135242-filetypes-xls_xls_feat_text_metrics_encoding.log) |
+| `f8971090acfb04bd` | xls_feat_kv_vocab_split_tiered | ok | 0.9961 | 0.9880 | 0.9683 | 72 | [log](out/autocollie/runs/2026-07-04T14-01-04_20260704T135242-filetypes-xls_xls_feat_kv_vocab_split_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xls_control_train_extra_trees`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with extra_trees enabled to reduce variance and improve recall@3FPM at the strict-FP tail.
+- **`xls_feat_text_metrics_encoding`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture document obfuscation signals, targeting PR_AUC improvement on XLS macro payloads.
+- **`xls_feat_kv_vocab_split_tiered`** `EXP_BIGRAM_MIN_FREQ=750 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with value splitting to extract structured metadata signals, aiming to boost recall@3FPM by better separating benign templates from malicious macros.
+
+</details>
+

@@ -1022,3 +1022,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T131248-filegroups-portable` — 2026-07-04T13:12:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ca9f078a9d35182c` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.8803 | 0.9626 | 0.8324 | 8 | [log](out/autocollie/runs/2026-07-04T13-21-56_20260704T131248-filegroups-portable_inherit_from_filetypes_registry_1ffaf151.log) |
+| `03a85d958057e24f` | ctrl_train_extra_trees | ok | 0.8435 | 0.9177 | 0.8474 | 26 | [log](out/autocollie/runs/2026-07-04T13-22-21_20260704T131248-filegroups-portable_ctrl_train_extra_trees.log) |
+| `444e602bb0b97cd5` | feat_text_metrics_encoding | ok | 0.8467 | 0.9104 | 0.8311 | 26 | [log](out/autocollie/runs/2026-07-04T13-22-51_20260704T131248-filegroups-portable_feat_text_metrics_encoding.log) |
+| `477243a5204ed782` | feat_kv_vocab_20k_lowfreq | ok | 0.8464 | 0.9052 | 0.3031 | 26 | [log](out/autocollie/runs/2026-07-04T13-23-20_20260704T131248-filegroups-portable_feat_kv_vocab_20k_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_extra_trees`** `EXP_EXTRA_TREES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control on best recent feature set; tests extra_trees and higher leaves to improve PR_AUC via better tail generalization.
+- **`feat_text_metrics_encoding`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding research vocabs to capture obfuscation signals, aiming to boost recall@3FPM and PR_AUC.
+- **`feat_kv_vocab_20k_lowfreq`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab to 20k with lower min_freq to capture rare high-signal patterns, targeting PR_AUC improvement.
+
+</details>
+

@@ -722,3 +722,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T151345-filetypes-lnk` — 2026-07-04T15:13:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a66290850e6d8cda` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9846 | 0.9274 | 0.9278 | 1 | [log](out/autocollie/runs/2026-07-04T15-21-22_20260704T151345-filetypes-lnk_inherit_from_filetypes_registry_1ffaf151.log) |
+| `5ee6dc7e3f07b583` | lnk_ctrl_dart_reg_training | ok | 0.9906 | 0.9631 | 0.9286 | 6 | [log](out/autocollie/runs/2026-07-04T15-22-11_20260704T151345-filetypes-lnk_lnk_ctrl_dart_reg_training.log) |
+| `903899ed409324be` | lnk_feat_kv_vocab_split | dup | 0.9933 | 0.9680 | 0.9297 | 1 | [log](out/autocollie/runs/2026-07-04T15-22-20_20260704T151345-filetypes-lnk_lnk_feat_kv_vocab_split.log) |
+| `29b90385afb5e9ec` | lnk_feat_text_metrics_encoding | ok | 0.9933 | 0.9680 | 0.9297 | 6 | [log](out/autocollie/runs/2026-07-04T15-22-24_20260704T151345-filetypes-lnk_lnk_feat_text_metrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_ctrl_dart_reg_training`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control run replicating best recent feature_env with dart boosting and higher regularization to stabilize PR_AUC and improve tail recall.
+- **`lnk_feat_kv_vocab_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables kv_vocab and kv_value_split to parse LNK path/property strings into finer tokens, targeting PR_AUC gains from granular key-value signals.
+- **`lnk_feat_text_metrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables text_metrics_full and text_encoding to capture structural text anomalies in LNK files, aiming to boost recall@3FPM without hurting PR_AUC.
+
+</details>
+

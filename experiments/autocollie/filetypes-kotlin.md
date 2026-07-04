@@ -990,3 +990,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T135242-filetypes-kotlin` — 2026-07-04T13:52:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `91388e12d33567c9` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9751 | 0.9838 | 0.7405 | 4 | [log](out/autocollie/runs/2026-07-04T14-00-54_20260704T135242-filetypes-kotlin_inherit_from_filetypes_registry_1ffaf151.log) |
+| `bfe35702994cc387` | kotlin_ctrl_hardneg_01_12 | dup | 0.9773 | 0.9835 | 0.7463 | 4 | [log](out/autocollie/runs/2026-07-04T14-01-06_20260704T135242-filetypes-kotlin_kotlin_ctrl_hardneg_01_12.log) |
+| `e4ce732715354c73` | kotlin_feat_textmetrics_encoding | ok | 0.9758 | 0.9844 | 0.7410 | 17 | [log](out/autocollie/runs/2026-07-04T14-01-18_20260704T135242-filetypes-kotlin_kotlin_feat_textmetrics_encoding.log) |
+| `6a76df3979ce6fec` | kotlin_feat_symvocab_tiered_trigrams | ok | 0.9623 | 0.9761 | 0.7513 | 74 | [log](out/autocollie/runs/2026-07-04T14-01-42_20260704T135242-filetypes-kotlin_kotlin_feat_symvocab_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep (fraction=0.01, weight=12) to improve recall@3FPM by upweighting difficult benigns, targeting PR_AUC gain.
+- **`kotlin_feat_textmetrics_encoding`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture obfuscation and encoding patterns in Kotlin scripts, aiming to boost PR_AUC and recall@3FPM.
+- **`kotlin_feat_symvocab_tiered_trigrams`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Combine symbol_vocab with tiered_crit_trigrams to capture high-severity co-occurrence patterns, targeting PR_AUC improvement via richer structural signal.
+
+</details>
+

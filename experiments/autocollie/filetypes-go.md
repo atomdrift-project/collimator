@@ -1994,3 +1994,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T135245-filetypes-go` — 2026-07-04T13:52:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10466710f3009380` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.3571 | 0.6961 | 0.1599 | 3 | [log](out/autocollie/runs/2026-07-04T14-00-36_20260704T135245-filetypes-go_inherit_from_filetypes_registry_1ffaf151.log) |
+| `2cac1c492ed56a05` | go_ctrl_train_hn_lr003_leaves128 | ok | 0.3515 | 0.6891 | 0.1605 | 11 | [log](out/autocollie/runs/2026-07-04T14-00-51_20260704T135245-filetypes-go_go_ctrl_train_hn_lr003_leaves128.log) |
+| `4fde4bdb314cb205` | go_feat_kv_vocab_textmetrics_v1 | ok | 0.3798 | 0.7020 | 0.1831 | 64 | [log](out/autocollie/runs/2026-07-04T14-01-08_20260704T135245-filetypes-go_go_feat_kv_vocab_textmetrics_v1.log) |
+| `06100b78b50d393a` | go_feat_symbol_bigrams_tiered_trigrams | ok | 0.3751 | 0.6916 | 0.1707 | 38 | [log](out/autocollie/runs/2026-07-04T14-02-15_20260704T135245-filetypes-go_go_feat_symbol_bigrams_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hn_lr003_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control feature set from best PR_AUC run; tweak LR and leaves to improve recall@3FPM while keeping PR_AUC flat.
+- **`go_feat_kv_vocab_textmetrics_v1`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture key-value pairs and text structure in Go files, aiming to boost PR_AUC and recall@3FPM.
+- **`go_feat_symbol_bigrams_tiered_trigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 …` — Expand symbol bigrams and enable tiered_crit_trigrams to capture deeper co-occurrence patterns, targeting PR_AUC improvement.
+
+</details>
+

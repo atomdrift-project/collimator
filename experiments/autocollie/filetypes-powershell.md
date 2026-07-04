@@ -1035,3 +1035,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T135244-filetypes-powershell` — 2026-07-04T13:52:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0f969eae714b07d2` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9908 | 0.9779 | 0.9545 | 4 | [log](out/autocollie/runs/2026-07-04T13-59-21_20260704T135244-filetypes-powershell_inherit_from_filetypes_registry_1ffaf151.log) |
+| `3b2d18423f5e7b59` | ps_ctrl_tiered_tri_train_tune | ok | 0.9906 | 0.9775 | 0.9538 | 22 | [log](out/autocollie/runs/2026-07-04T13-59-31_20260704T135244-filetypes-powershell_ps_ctrl_tiered_tri_train_tune.log) |
+| `6e55fdb4dfb4cbaf` | ps_feat_textmetrics_full_hardneg | ok | 0.9931 | 0.9834 | 0.9544 | 27 | [log](out/autocollie/runs/2026-07-04T14-00-01_20260704T135244-filetypes-powershell_ps_feat_textmetrics_full_hardneg.log) |
+| `94fef97ec6be00e9` | ps_feat_kv_vocab_safe_freq | ok | 0.9913 | 0.9793 | 0.9532 | 62 | [log](out/autocollie/runs/2026-07-04T14-00-33_20260704T135244-filetypes-powershell_ps_feat_kv_vocab_safe_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_tiered_tri_train_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env; increases num_leaves and estimators to improve PR_AUC by allowing deeper decision boundaries.
+- **`ps_feat_textmetrics_full_hardneg`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture PowerShell obfuscation patterns, targeting PR_AUC gain while preserving ROC_AUC.
+- **`ps_feat_kv_vocab_safe_freq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with safe bigram_min_freq=200 to avoid OOM, targeting recall@3 FP/M via key-value configuration signal.
+
+</details>
+

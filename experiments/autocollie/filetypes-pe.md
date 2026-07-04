@@ -1998,3 +1998,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T135242-filetypes-pe` — 2026-07-04T13:52:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `48d857ba1068133d` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9983 | 0.9983 | 0.9795 | 2 | [log](out/autocollie/runs/2026-07-04T14-00-28_20260704T135242-filetypes-pe_inherit_from_filetypes_registry_1ffaf151.log) |
+| `b2b6ec5fdb7a2147` | pe_control_hardneg_threshold_fpr | ok | 0.9983 | 0.9984 | 0.0000 | 37 | [log](out/autocollie/runs/2026-07-04T14-03-33_20260704T135242-filetypes-pe_pe_control_hardneg_threshold_fpr.log) |
+| `19758732680bf004` | pe_feat_symbol_vocab_bigrams | ok | 0.9982 | 0.9983 | 0.9804 | 15 | [log](out/autocollie/runs/2026-07-04T14-04-12_20260704T135242-filetypes-pe_pe_feat_symbol_vocab_bigrams.log) |
+| `97e917929c0ede69` | pe_feat_textenc_overlay_hardneg | ok | 0.9983 | 0.9983 | 0.9816 | 106 | [log](out/autocollie/runs/2026-07-04T14-04-30_20260704T135242-filetypes-pe_pe_feat_textenc_overlay_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_threshold_fpr`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=2.5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by optimizing the threshold at the deployed FPR target and applying hard-negative weighting to sharpen the tail, using the cached feature matrix.
+- **`pe_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 …` — Aims to improve PR_AUC by enabling symbol_vocab and symbol_bigrams to capture API co-occurrence patterns common in PE malware.
+- **`pe_feat_textenc_overlay_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 EXP_PE_FORMAT_FLAGS=1 …` — Aims to improve recall@3FPM by adding text_encoding and overlay_signal to detect packed/obfuscated strings, combined with a hard-negative sweep to sharpen ranking.
+
+</details>
+

@@ -1,6 +1,6 @@
 # Promote REJECTED — `e420d0c5e85512ee` on `filetypes/png`
 
-Generated 2026-07-03T02:57:19Z
+Generated 2026-07-04T13:51:09Z
 
 confirm did not hold: averaged ensemble PR_AUC regressed: 0.2874 -> 0.0891 (tol 0.0050, K=3)
 

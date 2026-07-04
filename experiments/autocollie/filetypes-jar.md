@@ -866,3 +866,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T131248-filetypes-jar` — 2026-07-04T13:12:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7851a3a067df8d5e` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9238 | 0.9526 | 0.8362 | 3 | [log](out/autocollie/runs/2026-07-04T13-20-08_20260704T131248-filetypes-jar_inherit_from_filetypes_registry_1ffaf151.log) |
+| `6311018e10bb8d62` | jar_control_hardneg_tail_v2 | ok | 0.9238 | 0.9526 | 0.8362 | 3 | [log](out/autocollie/runs/2026-07-04T13-20-21_20260704T131248-filetypes-jar_jar_control_hardneg_tail_v2.log) |
+| `b82a4395a5650f0d` | jar_kv_vocab_manifest_signal | ok | 0.9229 | 0.9506 | 0.8594 | 60 | [log](out/autocollie/runs/2026-07-04T13-20-29_20260704T131248-filetypes-jar_jar_kv_vocab_manifest_signal.log) |
+| `90b68bc5c0029a7a` | jar_text_encoding_severity_frac | ok | 0.9224 | 0.9515 | 0.8227 | 11 | [log](out/autocollie/runs/2026-07-04T13-21-33_20260704T131248-filetypes-jar_jar_text_encoding_severity_frac.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_hardneg_tail_v2`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating the best recent feature_env; tunes hard_negative_weight and num_leaves to improve recall@3FPM by better separating hard benigns from malware while keeping PR_AUC flat.
+- **`jar_kv_vocab_manifest_signal`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to extract manifest and class metadata signals, aiming to increase PR_AUC by capturing structural differences in malicious JARs.
+- **`jar_text_encoding_severity_frac`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to detect obfuscation patterns in embedded resources, targeting recall@3FPM gains by surfacing low-FPR malware signals.
+
+</details>
+

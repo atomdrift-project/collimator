@@ -988,3 +988,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T131248-filetypes-vbs` — 2026-07-04T13:12:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `94a5d0fed4368196` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9962 | 0.9860 | 0.9560 | 1 | [log](out/autocollie/runs/2026-07-04T13-20-04_20260704T131248-filetypes-vbs_inherit_from_filetypes_registry_1ffaf151.log) |
+| `cd8a67b3691cc6ee` | vbs_control_hardneg_tweak | ok | 0.9989 | 0.9960 | 0.9622 | 13 | [log](out/autocollie/runs/2026-07-04T13-20-10_20260704T131248-filetypes-vbs_vbs_control_hardneg_tweak.log) |
+| `73262a9c481eada6` | vbs_lowfreq_bigrams_textenc | ok | 0.9973 | 0.9907 | 0.9573 | 16 | [log](out/autocollie/runs/2026-07-04T13-20-24_20260704T131248-filetypes-vbs_vbs_lowfreq_bigrams_textenc.log) |
+| `81044007474c709a` | vbs_kv_split_obj_trigrams | ok | 0.9973 | 0.9907 | 0.9573 | 24 | [log](out/autocollie/runs/2026-07-04T13-20-42_20260704T131248-filetypes-vbs_vbs_kv_split_obj_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg_tweak`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env to hit matrix cache; tests hard-negative upweighting to improve recall@3FPM while preserving PR_AUC.
+- **`vbs_lowfreq_bigrams_textenc`** `EXP_BIGRAM_MIN_FREQ=250 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 250 to capture rarer script patterns and enables text_encoding for character-level signal, aiming to lift PR_AUC and recall@3FPM.
+- **`vbs_kv_split_obj_trigrams`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_value_split to recover per-token signal in list-valued keys and objective_trigrams for higher-order co-occurrences, targeting PR_AUC gains on complex scripts.
+
+</details>
+

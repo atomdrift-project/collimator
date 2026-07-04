@@ -942,3 +942,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T135242-filegroups-source` — 2026-07-04T13:52:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1f0a35bcaf1dce15` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.8321 | 0.7961 | 0.5233 | 4 | [log](out/autocollie/runs/2026-07-04T14-01-45_20260704T135242-filegroups-source_inherit_from_filetypes_registry_1ffaf151.log) |
+| `23096b768b7685bc` | source_control_kv10k_textenc_train_tweak | ok | 0.8610 | 0.8376 | 0.5598 | 60 | [log](out/autocollie/runs/2026-07-04T14-02-20_20260704T135242-filegroups-source_source_control_kv10k_textenc_train_tweak.log) |
+| `1e459a4ec5ccb254` | source_feat_textmetrics_full_kv_vocab | ok | 0.8636 | 0.8430 | 0.5490 | 32 | [log](out/autocollie/runs/2026-07-04T14-03-23_20260704T135242-filegroups-source_source_feat_textmetrics_full_kv_vocab.log) |
+| `79d3235f3626e1e9` | source_feat_tiered_crit_trigrams_highbigram | ok | 0.8672 | 0.8472 | 0.5595 | 31 | [log](out/autocollie/runs/2026-07-04T14-03-59_20260704T135242-filegroups-source_source_feat_tiered_crit_trigrams_highbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_kv10k_textenc_train_tweak`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Control spec replicating best recent feature_env to establish baseline PR_AUC while tuning num_leaves and learning_rate to improve recall@3FPM.
+- **`source_feat_textmetrics_full_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full research vocab alongside kv_vocab to capture structural obfuscation signals, aiming to improve PR_AUC and recall@3FPM.
+- **`source_feat_tiered_crit_trigrams_highbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Tests tiered_crit_trigrams with expanded bigram vocab to capture longer attack patterns, targeting ROC_AUC and PR_AUC gains.
+
+</details>
+

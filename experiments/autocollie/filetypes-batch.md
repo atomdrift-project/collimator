@@ -1202,3 +1202,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T131250-filetypes-batch` — 2026-07-04T13:12:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dba83e782f248b29` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9851 | 0.8760 | 0.1704 | 1 | [log](out/autocollie/runs/2026-07-04T13-20-28_20260704T131250-filetypes-batch_inherit_from_filetypes_registry_1ffaf151.log) |
+| `e97ad4f539424b19` | batch_control_hardneg_sweep | ok | 0.9793 | 0.8789 | 0.1703 | 7 | [log](out/autocollie/runs/2026-07-04T13-20-33_20260704T131250-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `dd237089a824414b` | batch_kv_vocab_expansion | ok | 0.9891 | 0.8901 | 0.2974 | 23 | [log](out/autocollie/runs/2026-07-04T13-20-43_20260704T131250-filetypes-batch_batch_kv_vocab_expansion.log) |
+| `4defc3ac4afacdb9` | batch_textmetrics_encoding_hardneg | ok | 0.9895 | 0.9294 | 0.2978 | 44 | [log](out/autocollie/runs/2026-07-04T13-21-09_20260704T131250-filetypes-batch_batch_textmetrics_encoding_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best feature_env; applies hard-negative sweep to improve recall@3FPM by focusing on difficult benigns.
+- **`batch_kv_vocab_expansion`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to extract structured key-value signals from batch scripts, aiming to increase PR_AUC by capturing metadata patterns.
+- **`batch_textmetrics_encoding_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds text_metrics_full and text_encoding to detect obfuscation in batch files, paired with hard-negative tuning to boost recall@3FPM.
+
+</details>
+

@@ -998,3 +998,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T131248-filetypes-zip` — 2026-07-04T13:12:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c1ed526362f9e1b7` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9698 | 0.8659 | 0.8139 | 31 | [log](out/autocollie/runs/2026-07-04T13-20-40_20260704T131248-filetypes-zip_inherit_from_filetypes_registry_1ffaf151.log) |
+| `919d043972b0c0ad` | zip_control_hardneg_015_16 | ok | 0.9727 | 0.8771 | 0.8137 | 91 | [log](out/autocollie/runs/2026-07-04T13-21-46_20260704T131248-filetypes-zip_zip_control_hardneg_015_16.log) |
+| `235282351823dcda` | zip_kv_textmetrics_full | ok | 0.9705 | 0.8692 | 0.8134 | 119 | [log](out/autocollie/runs/2026-07-04T13-23-21_20260704T131248-filetypes-zip_zip_kv_textmetrics_full.log) |
+| `5e4fd07e7e0c57a0` | zip_quadgrams_suspicious_trigrams | ok | 0.9714 | 0.8721 | 0.8146 | 116 | [log](out/autocollie/runs/2026-07-04T13-25-22_20260704T131248-filetypes-zip_zip_quadgrams_suspicious_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env to isolate training signal; hard-negative sweep targets recall@3FPM by upweighting difficult benigns that cause threshold regression.
+- **`zip_kv_textmetrics_full`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture archive metadata and embedded script obfuscation, aiming to lift PR_AUC by adding discriminative signal for packed payloads.
+- **`zip_quadgrams_suspicious_trigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TIERED_CRIT_QUADGRAMS=1 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=10` — Adds tiered_crit_quadgrams and suspicious_trigrams to model longer co-occurrence patterns in archive structures, targeting ROC_AUC and PR_AUC gains from richer n-gram context.
+
+</details>
+

@@ -2444,3 +2444,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T131248-filetypes-pdf` — 2026-07-04T13:12:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a926c4e0c8242abd` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9782 | 0.9270 | 0.8563 | 2 | [log](out/autocollie/runs/2026-07-04T13-20-08_20260704T131248-filetypes-pdf_inherit_from_filetypes_registry_1ffaf151.log) |
+| `4b018db04bee7ffb` | pdf_control_hardneg_015_16_leaves128 | ok | 0.9933 | 0.9793 | 0.8565 | 4 | [log](out/autocollie/runs/2026-07-04T13-20-23_20260704T131248-filetypes-pdf_pdf_control_hardneg_015_16_leaves128.log) |
+| `d92bd5012264b118` | pdf_feat_textmetrics_obfuscation | ok | 0.9867 | 0.9563 | 0.8562 | 2 | [log](out/autocollie/runs/2026-07-04T13-20-28_20260704T131248-filetypes-pdf_pdf_feat_textmetrics_obfuscation.log) |
+| `6ccb79693220e143` | pdf_feat_kv_split_hardneg_02_18 | ok | 0.9922 | 0.9751 | 0.8563 | 21 | [log](out/autocollie/runs/2026-07-04T13-20-34_20260704T131248-filetypes-pdf_pdf_feat_kv_split_hardneg_02_18.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_hardneg_015_16_leaves128`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best feature_env; increases num_leaves to 128 to improve PR_AUC ranking capacity while keeping hard-negative sweep stable.
+- **`pdf_feat_textmetrics_obfuscation`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture PDF-specific obfuscation signals, targeting recall@3FPM gains.
+- **`pdf_feat_kv_split_hardneg_02_18`** `EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab with value splitting and applies hard_negative_fraction 0.02 / weight 18 to sharpen decision boundary, aiming to lift PR_AUC and recall@3FPM.
+
+</details>
+

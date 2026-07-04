@@ -1164,3 +1164,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T135008-filetypes-macho` — 2026-07-04T13:50:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `923d303eb17a04c5` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9918 | 0.9981 | 0.9420 | 1 | [log](out/autocollie/runs/2026-07-04T13-57-21_20260704T135008-filetypes-macho_inherit_from_filetypes_registry_1ffaf151.log) |
+| `0b144894d304ef62` | macho_control_hardneg_sweep | ok | 0.9931 | 0.9985 | 0.9671 | 5 | [log](out/autocollie/runs/2026-07-04T13-57-28_20260704T135008-filetypes-macho_macho_control_hardneg_sweep.log) |
+| `8c082d7fde19ef6b` | macho_feat_kv_symbol_vocab | ok | 0.9902 | 0.9966 | 0.9528 | 24 | [log](out/autocollie/runs/2026-07-04T13-57-35_20260704T135008-filetypes-macho_macho_feat_kv_symbol_vocab.log) |
+| `43450b992a8605e1` | macho_feat_overlay_threshold_fpr | ok | 0.9902 | 0.9966 | 0.0000 | 23 | [log](out/autocollie/runs/2026-07-04T13-58-00_20260704T135008-filetypes-macho_macho_feat_overlay_threshold_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_hardneg_sweep`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative upweighting to improve recall@3FPM by focusing on difficult benigns.
+- **`macho_feat_kv_symbol_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables KV and symbol vocabs to capture Mach-O metadata and imports, aiming to boost PR_AUC and recall@3FPM.
+- **`macho_feat_overlay_threshold_fpr`** `EXP_MAX_TEST_SAMPLES=20000 EXP_OVERLAY_SIGNAL=1 EXP_SILENT_PACKER_SIGNAL=1 EXP_THRESHOLD_FPR_TARGET=2.5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Adds packer/overlay signals for Mach-O droppers and optimizes threshold for strict-FP tail to maximize recall@3FPM.
+
+</details>
+

@@ -872,3 +872,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T154307-filetypes-tar` — 2026-07-04T15:43:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `35ddd3af68281258` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9802 | 0.9920 | 0.8707 | 2 | [log](out/autocollie/runs/2026-07-04T15-49-54_20260704T154307-filetypes-tar_inherit_from_filetypes_registry_1ffaf151.log) |
+| `906f7b3783b175e7` | tar_ctrl_hardneg_sweep | ok | 0.9835 | 0.9928 | 0.8472 | 27 | [log](out/autocollie/runs/2026-07-04T15-50-02_20260704T154307-filetypes-tar_tar_ctrl_hardneg_sweep.log) |
+| `b3e8f2ef50db0eaf` | tar_feat_textenc_metrics_full | ok | 0.9826 | 0.9932 | 0.8933 | 2 | [log](out/autocollie/runs/2026-07-04T15-50-33_20260704T154307-filetypes-tar_tar_feat_textenc_metrics_full.log) |
+| `070dfad94a037e54` | tar_feat_kv_vocab_tiered | ok | 0.9863 | 0.9952 | 0.8784 | 22 | [log](out/autocollie/runs/2026-07-04T15-50-36_20260704T154307-filetypes-tar_tar_feat_kv_vocab_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_sweep`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative upweighting to improve tail recall@3FPM without regressing PR_AUC.
+- **`tar_feat_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to capture document obfuscation signals, targeting PR_AUC and recall@3FPM gains.
+- **`tar_feat_kv_vocab_tiered`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=2 EXP_TRAIN_SAMPLES=30000` — Expand kv_vocab and tiered trigrams to capture archive metadata patterns, aiming to lift PR_AUC.
+
+</details>
+

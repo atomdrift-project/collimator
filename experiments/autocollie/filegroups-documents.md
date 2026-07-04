@@ -2288,3 +2288,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T135008-filegroups-documents` — 2026-07-04T13:50:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ebcf3e13861521c5` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.9011 | 0.8269 | 0.8398 | 1 | [log](out/autocollie/runs/2026-07-04T13-59-25_20260704T135008-filegroups-documents_inherit_from_filetypes_registry_1ffaf151.log) |
+| `ef821e57c85be0be` | docs_control_hardneg_leaves128 | ok | 0.9374 | 0.9037 | 0.8397 | 6 | [log](out/autocollie/runs/2026-07-04T13-59-31_20260704T135008-filegroups-documents_docs_control_hardneg_leaves128.log) |
+| `31e2c0a46e5b39c6` | docs_textmetrics_kv_vocab_full | ok | 0.9237 | 0.8829 | 0.8398 | 3 | [log](out/autocollie/runs/2026-07-04T13-59-39_20260704T135008-filegroups-documents_docs_textmetrics_kv_vocab_full.log) |
+| `4dc6334ae7e799bd` | docs_tiered_trigrams_low_freq | ok | 0.9201 | 0.8753 | 0.8398 | 20 | [log](out/autocollie/runs/2026-07-04T13-59-44_20260704T135008-filegroups-documents_docs_tiered_trigrams_low_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_hardneg_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature set to hit matrix cache, tuning hard_negative_weight and num_leaves to improve PR_AUC and recall@3FPM by better separating hard negatives.
+- **`docs_textmetrics_kv_vocab_full`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to boost PR_AUC and recall@3FPM.
+- **`docs_tiered_trigrams_low_freq`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_OBJECTIVE_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Lower tiered trigram min_freq and enable objective_trigrams to capture rarer malicious sequences in documents, targeting PR_AUC improvement.
+
+</details>
+

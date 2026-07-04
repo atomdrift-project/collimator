@@ -1166,3 +1166,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T143302-filetypes-text` — 2026-07-04T14:33:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `57b572055393a40c` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.1306 | 0.6297 | 0.0706 | 1 | [log](out/autocollie/runs/2026-07-04T14-39-43_20260704T143302-filetypes-text_inherit_from_filetypes_registry_1ffaf151.log) |
+| `b1aa257a749d6766` | text_ctrl_train_tune_v11 | ok | 0.0792 | 0.5379 | 0.0919 | 1 | [log](out/autocollie/runs/2026-07-04T14-39-48_20260704T143302-filetypes-text_text_ctrl_train_tune_v11.log) |
+| `b17cb1e8dae85091` | text_feat_textmetrics_full_v2 | ok | 0.0910 | 0.5317 | 0.1038 | 8 | [log](out/autocollie/runs/2026-07-04T14-39-51_20260704T143302-filetypes-text_text_feat_textmetrics_full_v2.log) |
+| `2650369dde56283a` | text_feat_kv_encoding_lowfreq_v1 | ok | 0.0765 | 0.5312 | 0.1038 | 7 | [log](out/autocollie/runs/2026-07-04T14-40-00_20260704T143302-filetypes-text_text_feat_kv_encoding_lowfreq_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_train_tune_v11`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; increases estimators and num_leaves with lower learning_rate to improve PR_AUC by allowing deeper, more refined splits without overfitting.
+- **`text_feat_textmetrics_full_v2`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture document obfuscation signals aiming to boost PR_AUC by separating malicious text structures from benign noise.
+- **`text_feat_kv_encoding_lowfreq_v1`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=280 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding while lowering bigram_min_freq to 50 to capture rarer malicious patterns, targeting recall@3FPM gains at the strict-FP tail.
+
+</details>
+

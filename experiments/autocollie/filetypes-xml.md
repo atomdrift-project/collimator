@@ -956,3 +956,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260704T135243-filetypes-xml` — 2026-07-04T13:52:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2c02037b2dd7a561` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.1937 | 0.6714 | 0.1764 | 2 | [log](out/autocollie/runs/2026-07-04T14-00-16_20260704T135243-filetypes-xml_inherit_from_filetypes_registry_1ffaf151.log) |
+| `9122c546925b6734` | xml_control_hardneg_lr_tune | ok | 0.1973 | 0.6519 | 0.1771 | 3 | [log](out/autocollie/runs/2026-07-04T14-00-26_20260704T135243-filetypes-xml_xml_control_hardneg_lr_tune.log) |
+| `03babbe7b1bd837c` | xml_text_metrics_kv_vocab | ok | 0.2006 | 0.6257 | 0.1616 | 26 | [log](out/autocollie/runs/2026-07-04T14-00-31_20260704T135243-filetypes-xml_xml_text_metrics_kv_vocab.log) |
+| `c1845e18df595c04` | xml_tiered_trigrams_low_crit | ok | 0.2011 | 0.6164 | 0.1616 | 35 | [log](out/autocollie/runs/2026-07-04T14-01-00_20260704T135243-filetypes-xml_xml_tiered_trigrams_low_crit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_hardneg_lr_tune`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features to test hard-negative weighting and learning rate for PR_AUC improvement while preserving ROC_AUC.
+- **`xml_text_metrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture structural XML obfuscation and key-value patterns, aiming to boost recall@3FPM and PR_AUC.
+- **`xml_tiered_trigrams_low_crit`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Lowers tiered_trigram_min_crit to 2 and increases tiered_trigram_max to expand low-severity signal coverage, targeting PR_AUC gains from rare XML patterns.
+
+</details>
+

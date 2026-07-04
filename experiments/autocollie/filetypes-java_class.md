@@ -1002,3 +1002,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260704T135204-filetypes-java_class` — 2026-07-04T13:52:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dcab08dfb5b174c0` | inherit_from_filetypes_registry_1ffaf151 | dup | 0.8747 | 0.9549 | 0.8674 | 1 | [log](out/autocollie/runs/2026-07-04T13-59-23_20260704T135204-filetypes-java_class_inherit_from_filetypes_registry_1ffaf151.log) |
+| `3e06485ed2d4df09` | java_class_control_train_hardneg | ok | 0.8734 | 0.9537 | 0.8548 | 3 | [log](out/autocollie/runs/2026-07-04T13-59-38_20260704T135204-filetypes-java_class_java_class_control_train_hardneg.log) |
+| `ef78bf9cc8bae592` | java_class_textenc_metrics_full | ok | 0.8440 | 0.9373 | 0.7923 | 13 | [log](out/autocollie/runs/2026-07-04T13-59-42_20260704T135204-filetypes-java_class_java_class_textenc_metrics_full.log) |
+| `43a1826a9c0dcf12` | java_class_kv_symbol_vocab_expanded | ok | 0.8447 | 0.9381 | 0.8167 | 13 | [log](out/autocollie/runs/2026-07-04T13-59-56_20260704T135204-filetypes-java_class_java_class_kv_symbol_vocab_expanded.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_train_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at low FPR, while keeping PR_AUC flat.
+- **`java_class_textenc_metrics_full`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies specific to Java class files, while keeping ROC_AUC stable.
+- **`java_class_kv_symbol_vocab_expanded`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 …` — Aims to improve PR_AUC by expanding kv_vocab and symbol_vocab to capture rare but high-signal key-value pairs and symbol co-occurrences in Java bytecode, targeting better ranking of malicious classes.
+
+</details>
+
