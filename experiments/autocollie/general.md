@@ -1064,3 +1064,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T155019-general` — 2026-07-05T15:50:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `17c1b832200c1b19` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9737 | 0.9676 | 0.9077 | 204 | [log](out/autocollie/runs/2026-07-05T16-00-41_20260705T155019-general_inherit_from_filetypes_registry_1ffaf151.log) |
+| `207f04c6eaa05631` | control_best_feat_train_tune_v2 | ok | 0.9732 | 0.9665 | 0.9027 | 7 | [log](out/autocollie/runs/2026-07-05T16-04-05_20260705T155019-general_control_best_feat_train_tune_v2.log) |
+| `210782fee0647f55` | feat_kv_textmetrics_lowfreq | ok | 0.9726 | 0.9662 | 0.9061 | 57 | [log](out/autocollie/runs/2026-07-05T16-04-12_20260705T155019-general_feat_kv_textmetrics_lowfreq.log) |
+| `201a4212dc6cb28e` | feat_symbol_vocab_textenc_bigrams | ok | 0.9739 | 0.9679 | 0.9073 | 52 | [log](out/autocollie/runs/2026-07-05T16-05-09_20260705T155019-general_feat_symbol_vocab_textenc_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_best_feat_train_tune_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Replicates best recent feature set to isolate training knob effects, aiming to improve PR_AUC via deeper trees and stronger regularization without altering the feature matrix.
+- **`feat_kv_textmetrics_lowfreq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables kv_vocab and text_metrics_full with lower bigram_min_freq to capture rare structural and obfuscation signals, targeting PR_AUC improvement by better separating malicious from benign general files.
+- **`feat_symbol_vocab_textenc_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=320 …` — Adds symbol_vocab, symbol_bigrams, and text_encoding to capture API co-occurrence and encoding anomalies, aiming to boost recall@3FPM by surfacing packed/obfuscated binaries that evade standard n-gram features.
+
+</details>
+
+## Cycle `20260706T053347-general` — 2026-07-06T05:33:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `06908d4eefbe7622` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9970 | 0.9967 | 0.9717 | 110 | [log](out/autocollie/runs/2026-07-06T05-42-30_20260706T053347-general_inherit_from_filetypes_gem_06bdacaa.log) |
+| `394d8d408a43e31e` | control_best_feat_train_tune | ok | 0.9766 | 0.9709 | 0.9081 | 102 | [log](out/autocollie/runs/2026-07-06T05-44-20_20260706T053347-general_control_best_feat_train_tune.log) |
+| `2a8477bb57d1d450` | feat_kv_textmetrics_full | ok | 0.9768 | 0.9713 | 0.9077 | 53 | [log](out/autocollie/runs/2026-07-06T05-46-03_20260706T053347-general_feat_kv_textmetrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_best_feat_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating best recent feature_env; increases num_leaves and estimators to capture complex interactions and improve PR_AUC ranking quality.
+- **`feat_kv_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 …` — Enables kv_vocab and text_metrics_full to capture structural and obfuscation signals in general files, aiming to boost recall@3FPM by identifying subtle malicious patterns missed by n-grams alone.
+
+</details>
+

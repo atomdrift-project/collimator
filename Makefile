@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final azoth-shap false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
+.PHONY: azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final azoth-check-bundle-layout azoth-shap false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -949,7 +949,7 @@ repin:
 #
 # Categories cleaned:
 #   - top-level deployed artifacts (config.json, score_table.npz, *.md, *.csv, *.json)
-#   - per-route deployed artifacts (model.txt, feature_spec.json, calibrator.json,
+#   - per-route deployed artifacts (model.{txt,json,onnx}, feature_spec.json, calibrator.json,
 #     benchmark.json, README.md, threshold_scores.npz, calibration_scores.npz,
 #     threshold_tuning.json)
 #   - per-route models/ subdirectories (catches multi-seed leftovers like
@@ -973,11 +973,31 @@ azoth-clean-bundle:
 	    \( -name '*.json' -o -name '*.md' -o -name '*.csv' -o -name '*.npz' \) -delete; \
 	for d in $(AZOTH_ROOT)/general $(AZOTH_ROOT)/filegroups/* $(AZOTH_ROOT)/filetypes/*; do \
 	    [ -d "$$d" ] || continue; \
-	    rm -f "$$d"/model.txt "$$d"/model.json "$$d"/feature_spec.json \
+	    rm -f "$$d"/model.txt "$$d"/model.json "$$d"/model.onnx "$$d"/feature_spec.json \
 	          "$$d"/calibrator.json "$$d"/benchmark.json "$$d"/README.md \
 	          "$$d"/threshold_scores.npz "$$d"/calibration_scores.npz \
 	          "$$d"/threshold_tuning.json; \
 	    rm -rf "$$d"/models; \
+	done
+
+# azoth-check-bundle-layout: fail fast on an ambiguous bundle layout — a stale
+# top-level model.{onnx,txt,json} (a pre-multi-seed fossil) left sitting next to
+# a freshly-trained models/seed_* dir. bundle.model_files() rejects this, but not
+# until write_azoth_readmes runs ~40 stages into a deploy. azoth-clean-bundle now
+# sweeps the fossil on retrain; this guards the deploy/validate paths against a
+# bundle that reached them without a clean (e.g. a hand-assembled AZOTH_ROOT).
+# Same route set as azoth-clean-bundle so the two stay symmetric.
+azoth-check-bundle-layout:
+	@for d in $(AZOTH_ROOT)/general $(AZOTH_ROOT)/filegroups/* $(AZOTH_ROOT)/filetypes/*; do \
+	    [ -d "$$d" ] || continue; \
+	    _legacy=$$(find "$$d" -maxdepth 1 -type f \( -name model.onnx -o -name model.txt -o -name model.json \) 2>/dev/null); \
+	    _seeds=$$(find "$$d/models" -maxdepth 1 -type f -name 'seed_*' 2>/dev/null); \
+	    if [ -n "$$_legacy" ] && [ -n "$$_seeds" ]; then \
+	        echo "error: $$d has both legacy (model.*) and multi-seed (models/seed_*) artifacts — ambiguous bundle layout."; \
+	        echo "       stale: $$_legacy"; \
+	        echo "       fix: remove the stale legacy file, or run 'make azoth-clean-bundle AZOTH_ROOT=$(AZOTH_ROOT)' first."; \
+	        exit 1; \
+	    fi; \
 	done
 
 filetype-matrix: venv check-db
@@ -1334,6 +1354,7 @@ azoth-validate: azoth-calibrate
 	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/model.txt || ls $(AZOTH_ROOT)/general/models/seed_*.txt >/dev/null 2>&1 || { echo "error: $(AZOTH_ROOT)/general missing model.txt or models/seed_*.txt"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
+	@$(MAKE) azoth-check-bundle-layout
 	@if [ "$(AZOTH_VALIDATE_DIAGNOSTICS)" = "1" ] || [ "$(AZOTH_VALIDATE_DIAGNOSTICS)" = "true" ] || [ "$(AZOTH_VALIDATE_DIAGNOSTICS)" = "yes" ]; then \
 	  $(PYTHON) scripts/azoth_route_diagnostics.py \
 	    --config $(AZOTH_CONFIG) \
@@ -1487,6 +1508,7 @@ azoth-deploy: azoth-calibrate
 	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/model.txt || ls $(AZOTH_ROOT)/general/models/seed_*.txt >/dev/null 2>&1 || { echo "error: $(AZOTH_ROOT)/general missing model.txt or models/seed_*.txt"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
+	@$(MAKE) azoth-check-bundle-layout
 	@if [ "$(AZOTH_DEPLOY_DIAGNOSTICS)" = "1" ] || [ "$(AZOTH_DEPLOY_DIAGNOSTICS)" = "true" ] || [ "$(AZOTH_DEPLOY_DIAGNOSTICS)" = "yes" ]; then \
 	  $(PYTHON) scripts/azoth_route_diagnostics.py \
 	    --config $(AZOTH_CONFIG) \
@@ -1548,6 +1570,7 @@ azoth-deploy-final: venv
 	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/model.txt || ls $(AZOTH_ROOT)/general/models/seed_*.txt >/dev/null 2>&1 || { echo "error: $(AZOTH_ROOT)/general missing model.txt or models/seed_*.txt"; exit 1; }
 	@test -f $(AZOTH_ROOT)/general/feature_spec.json || { echo "error: $(AZOTH_ROOT)/general/feature_spec.json not found"; exit 1; }
+	@$(MAKE) azoth-check-bundle-layout
 	@test -f $(AZOTH_DIAGNOSTICS) || { echo "error: $(AZOTH_DIAGNOSTICS) not found; run make azoth-deploy or regenerate diagnostics first"; exit 1; }
 	@test -f $(AZOTH_SLICE_METRICS) || { echo "error: $(AZOTH_SLICE_METRICS) not found; run make azoth-deploy or regenerate diagnostics first"; exit 1; }
 	@test -f $(AZOTH_ROUTE_POLICIES) || { echo "error: $(AZOTH_ROUTE_POLICIES) not found; run make azoth-deploy or make azoth-policies first"; exit 1; }
@@ -2316,6 +2339,37 @@ autocollie: venv check-db autocollie-build
 #       move on. Best for "throw a bunch of stuff at the wall overnight."
 autocollie-loop: PASSES=0
 autocollie-loop: autocollie
+
+.PHONY: nightly install-nightly uninstall-nightly nightly-logs nightly-status
+
+# nightly: run the full unattended pipeline once (scripts/nightly.sh):
+#   repin -> azoth-publish-train (trains + regression-gates + OOF-deploys into
+#   ../azoth) -> commit & push the azoth bundle -> autocollie sweep over every
+#   known route (general + all filegroups + all filetypes), 2 experiments each
+#   (NIGHTLY_EXPERIMENTS). Safe to run by hand; an flock guard prevents it from
+#   colliding with the scheduled run. Output is tee'd to out/nightly/ and (when
+#   run under the timer) captured in journald.
+nightly:
+	scripts/nightly.sh
+
+# install-nightly: install a systemd --user timer that runs `make nightly` daily
+# at 23:00. Override the schedule with NIGHTLY_ONCALENDAR (systemd OnCalendar
+# syntax), e.g.  make install-nightly NIGHTLY_ONCALENDAR='*-*-* 03:00:00'
+install-nightly:
+	NIGHTLY_ONCALENDAR="$(NIGHTLY_ONCALENDAR)" scripts/install_nightly.sh
+
+uninstall-nightly:
+	scripts/install_nightly.sh --remove
+
+# nightly-logs: follow the running / most recent nightly run.
+nightly-logs:
+	journalctl --user -u azoth-nightly.service -f
+
+# nightly-status: show the timer schedule and the last run's result.
+nightly-status:
+	@systemctl --user list-timers azoth-nightly.timer --no-pager 2>/dev/null || true
+	@echo
+	@systemctl --user status azoth-nightly.service --no-pager 2>/dev/null || true
 
 clean:
 	rm -rf $(OUT_DIR)

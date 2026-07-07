@@ -660,3 +660,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T184915-filetypes-rtf` — 2026-07-05T18:49:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `db0a2ee8399c6c03` | inherit_from_filetypes_gem_06bdacaa | ok | 0.0000 | 0.0000 | 1.0000 | 7 | [log](out/autocollie/runs/2026-07-05T18-56-47_20260705T184915-filetypes-rtf_inherit_from_filetypes_gem_06bdacaa.log) |
+| `a12b601a3f9fcfd7` | rtf_ctrl_hardneg_tune_leaves128 | ok | 0.9995 | 0.9976 | 0.9861 | 6 | [log](out/autocollie/runs/2026-07-05T18-56-58_20260705T184915-filetypes-rtf_rtf_ctrl_hardneg_tune_leaves128.log) |
+| `45536252048aa77e` | rtf_feat_textmetrics_obfuscation | ok | 0.9993 | 0.9963 | 0.9861 | 6 | [log](out/autocollie/runs/2026-07-05T18-57-16_20260705T184915-filetypes-rtf_rtf_feat_textmetrics_obfuscation.log) |
+| `2dcaaa325f383ed5` | rtf_feat_kv_vocab_lowfreq | ok | 0.9993 | 0.9963 | 0.9861 | 5 | [log](out/autocollie/runs/2026-07-05T18-57-22_20260705T184915-filetypes-rtf_rtf_feat_kv_vocab_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_ctrl_hardneg_tune_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the top PR_AUC feature surface to test if increasing hard_negative_weight and estimators improves recall@3FPM without degrading PR_AUC.
+- **`rtf_feat_textmetrics_obfuscation`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture RTF-specific structural noise and macro obfuscation, aiming to boost PR_AUC and recall@3FPM by separating benign complex documents from malicious ones.
+- **`rtf_feat_kv_vocab_lowfreq`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab with low min_freq to model RTF control word and metadata key-value pairs, targeting PR_AUC gains by identifying malicious configuration patterns that n-gram features miss.
+
+</details>
+

@@ -802,3 +802,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T163015-filetypes-xls` — 2026-07-05T16:30:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `417474721b3ad7a7` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9961 | 0.9890 | 0.9677 | 25 | [log](out/autocollie/runs/2026-07-05T16-36-41_20260705T163015-filetypes-xls_inherit_from_filetypes_registry_1ffaf151.log) |
+| `05d1d634e1160aab` | xls_control_train_hardneg_tail | ok | 0.9969 | 0.9910 | 0.9676 | 4 | [log](out/autocollie/runs/2026-07-05T16-37-12_20260705T163015-filetypes-xls_xls_control_train_hardneg_tail.log) |
+| `93010c60e1202ae7` | xls_feat_text_metrics_lowbigram | ok | 0.9959 | 0.9882 | 0.9678 | 22 | [log](out/autocollie/runs/2026-07-05T16-38-43_20260705T163015-filetypes-xls_xls_feat_text_metrics_lowbigram.log) |
+| `a9a3b2422eff89a0` | xls_feat_kv_vocab_split | ok | 0.9961 | 0.9890 | 0.9677 | 20 | [log](out/autocollie/runs/2026-07-05T16-39-58_20260705T163015-filetypes-xls_xls_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xls_control_train_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to sharpen the decision boundary at the strict-FP tail, while keeping PR_AUC flat.
+- **`xls_feat_text_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by adding structural text metrics and lowering bigram frequency floor to capture rarer malicious patterns in XLS files.
+- **`xls_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding KV vocabulary and splitting string values to isolate malicious tokens in XLS metadata.
+
+</details>
+

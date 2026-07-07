@@ -1870,3 +1870,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T155037-filetypes-python` — 2026-07-05T15:50:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `507cf92a0f90a536` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.8728 | 0.9119 | 0.8387 | 69 | [log](out/autocollie/runs/2026-07-05T15-57-23_20260705T155037-filetypes-python_inherit_from_filetypes_registry_1ffaf151.log) |
+| `c4508c01d8490e79` | ctrl_train_extra_trees_reg | ok | 0.9138 | 0.9464 | 0.8424 | 29 | [log](out/autocollie/runs/2026-07-05T15-59-25_20260705T155037-filetypes-python_ctrl_train_extra_trees_reg.log) |
+| `c766d14b3b9ff7b8` | feat_textmetrics_kv_vocab | ok | 0.9084 | 0.9369 | 0.8438 | 114 | [log](out/autocollie/runs/2026-07-05T16-00-05_20260705T155037-filetypes-python_feat_textmetrics_kv_vocab.log) |
+| `13c2ebbfc4cd4897` | feat_lowbigram_min_freq | ok | 0.8729 | 0.9119 | 0.8393 | 40 | [log](out/autocollie/runs/2026-07-05T16-02-00_20260705T155037-filetypes-python_feat_lowbigram_min_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_extra_trees_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control feature set with extra_trees and L2 regularization to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`feat_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture obfuscation and config patterns, targeting PR_AUC improvement via richer structural signal.
+- **`feat_lowbigram_min_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 50 to include rarer malicious n-grams, targeting recall@3 FP/M by surfacing low-frequency attack patterns.
+
+</details>
+
+## Cycle `20260706T025315-filetypes-python` — 2026-07-06T02:53:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `88bd6ca1bafd0168` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9758 | 0.9882 | 0.9158 | 197 | [log](out/autocollie/runs/2026-07-06T03-01-19_20260706T025315-filetypes-python_inherit_from_filetypes_gem_06bdacaa.log) |
+| `657aed5d12f992d5` | ctrl_train_extra_trees_reg_v2 | ok | 0.9143 | 0.9487 | 0.8426 | 51 | [log](out/autocollie/runs/2026-07-06T03-05-12_20260706T025315-filetypes-python_ctrl_train_extra_trees_reg_v2.log) |
+| `7e5e19d16c97676a` | feat_kv_vocab_textmetrics | ok | 0.9056 | 0.9344 | 0.8227 | 25 | [log](out/autocollie/runs/2026-07-06T03-06-09_20260706T025315-filetypes-python_feat_kv_vocab_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_extra_trees_reg_v2`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Replicates best feature env to hit matrix cache; increases num_leaves and estimators with extra_trees to improve PR_AUC by capturing more complex decision boundaries while controlling overfit via reg_lambda.
+- **`feat_kv_vocab_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structural and key-value signals specific to Python scripts, aiming to boost recall@3FPM by identifying obfuscated or malicious config patterns missed by bigrams alone.
+
+</details>
+

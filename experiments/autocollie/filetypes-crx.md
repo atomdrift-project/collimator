@@ -168,3 +168,37 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T163015-filetypes-crx` — 2026-07-05T16:30:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5d2379ad628c9823` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.8319 | 0.8266 | 0.7410 | 23 | [log](out/autocollie/runs/2026-07-05T16-37-42_20260705T163015-filetypes-crx_inherit_from_filetypes_registry_1ffaf151.log) |
+| `5d2379ad628c9823` | crx_control_train_tune_leaves128 | dup | 0.8319 | 0.8266 | 0.7410 | 1 | [log](out/autocollie/runs/2026-07-05T16-38-15_20260705T163015-filetypes-crx_crx_control_train_tune_leaves128.log) |
+| `465f4fc179c8765a` | crx_kv_vocab_textmetrics_pr_auc | ok | 0.8319 | 0.8266 | 0.7410 | 29 | [log](out/autocollie/runs/2026-07-05T16-38-49_20260705T163015-filetypes-crx_crx_kv_vocab_textmetrics_pr_auc.log) |
+| `825ef44066d836f8` | crx_tiered_trigrams_recall | ok | 0.8319 | 0.8266 | 0.7410 | 23 | [log](out/autocollie/runs/2026-07-05T16-39-27_20260705T163015-filetypes-crx_crx_tiered_trigrams_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_control_train_tune_leaves128`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating recent feature_env to establish baseline PR_AUC while testing higher tree capacity (num_leaves=128) to improve ranking precision.
+- **`crx_kv_vocab_textmetrics_pr_auc`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture manifest key-value patterns and text obfuscation signals, aiming to boost PR_AUC by reducing false positives on benign extensions.
+- **`crx_tiered_trigrams_recall`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=50 EXP_TRAIN_SAMPLES=30000` — Activates tiered_crit_trigrams with lower frequency floor to capture longer malicious path sequences in extension code, targeting recall@3FPM improvement at the strict-FP tail.
+
+</details>
+
+## Cycle `20260706T025322-filetypes-crx` — 2026-07-06T02:53:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e54d57605165eacf` | inherit_from_filetypes_gem_06bdacaa | ok | 0.8917 | 0.9007 | 0.7574 | 36 | [log](out/autocollie/runs/2026-07-06T03-01-02_20260706T025322-filetypes-crx_inherit_from_filetypes_gem_06bdacaa.log) |
+| `98393df9b4fa1d21` | crx_control_train_hardneg | ok | 0.8155 | 0.8119 | 0.7261 | 68 | [log](out/autocollie/runs/2026-07-06T03-01-52_20260706T025322-filetypes-crx_crx_control_train_hardneg.log) |
+| `1fc7bce777939ebe` | crx_kv_textmetrics_vocab | ok | 0.8197 | 0.8154 | 0.7239 | 60 | [log](out/autocollie/runs/2026-07-06T03-04-07_20260706T025322-filetypes-crx_crx_kv_textmetrics_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_control_train_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative mining to improve recall@3FPM by focusing the model on difficult benign samples near the decision boundary.
+- **`crx_kv_textmetrics_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture structural and key-value signals, aiming to boost PR_AUC by adding discriminative features for CRX manifests.
+
+</details>
+

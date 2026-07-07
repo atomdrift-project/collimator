@@ -1220,3 +1220,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T155021-filetypes-batch` — 2026-07-05T15:50:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9a3a6dba03efea9e` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9306 | 0.4291 | 0.2954 | 40 | [log](out/autocollie/runs/2026-07-05T15-58-03_20260705T155021-filetypes-batch_inherit_from_filetypes_registry_1ffaf151.log) |
+| `a5239bb5e56c0b09` | batch_control_hardneg_sweep | ok | 0.9874 | 0.9133 | 0.2951 | 14 | [log](out/autocollie/runs/2026-07-05T15-59-12_20260705T155021-filetypes-batch_batch_control_hardneg_sweep.log) |
+| `81f9dfafbd39d295` | batch_kv_vocab_split_expansion | ok | 0.9837 | 0.8571 | 0.2954 | 46 | [log](out/autocollie/runs/2026-07-05T15-59-41_20260705T155021-filetypes-batch_batch_kv_vocab_split_expansion.log) |
+| `311f7616d6c8dfe0` | batch_textenc_tiered_bigram_floor | ok | 0.9890 | 0.9139 | 0.2953 | 54 | [log](out/autocollie/runs/2026-07-05T16-00-38_20260705T155021-filetypes-batch_batch_textenc_tiered_bigram_floor.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature set; tunes hard-negative knobs to lift recall@3 FP/M while keeping PR_AUC flat.
+- **`batch_kv_vocab_split_expansion`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.005 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables kv_vocab and kv_value_split to recover per-element signal in batch configs, aiming to improve PR_AUC by resolving ambiguous key-value patterns.
+- **`batch_textenc_tiered_bigram_floor`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=320 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=14 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_SCALE_POS_WEIGHT_MULT=0.8 EXP_TEXT_ENCODING_FEATURES=1 …` — Adds text_encoding features and lowers tiered bigram frequency floor to capture rarer script patterns, targeting PR_AUC gains while hard negatives stabilize recall@3 FP/M.
+
+</details>
+

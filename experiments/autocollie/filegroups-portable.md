@@ -1040,3 +1040,37 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T155023-filegroups-portable` — 2026-07-05T15:50:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `06ed05ce7dd954f5` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.8541 | 0.9358 | 0.8285 | 77 | [log](out/autocollie/runs/2026-07-05T15-58-09_20260705T155023-filegroups-portable_inherit_from_filetypes_registry_1ffaf151.log) |
+| `6913aa457a0d8572` | ctrl_train_leaves128_lr003 | ok | 0.8518 | 0.9280 | 0.8298 | 5 | [log](out/autocollie/runs/2026-07-05T16-00-24_20260705T155023-filegroups-portable_ctrl_train_leaves128_lr003.log) |
+| `86194253698d192b` | feat_text_metrics_full_lowbigram | ok | 0.8477 | 0.9211 | 0.8272 | 48 | [log](out/autocollie/runs/2026-07-05T16-00-33_20260705T155023-filegroups-portable_feat_text_metrics_full_lowbigram.log) |
+| `6150b422cd9863d3` | feat_kv_vocab_split_15k | ok | 0.8541 | 0.9358 | 0.8285 | 34 | [log](out/autocollie/runs/2026-07-05T16-01-25_20260705T155023-filegroups-portable_feat_kv_vocab_split_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and slowing learning rate to better separate tail malware from benigns without overfitting.
+- **`feat_text_metrics_full_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3 FP/M by enabling text_metrics_full and text_encoding to capture obfuscation patterns, while lowering bigram_min_freq to 100 to retain rare but malicious n-grams.
+- **`feat_kv_vocab_split_15k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding kv_vocab to 15k with kv_value_split to recover per-element signal from metadata blobs, enhancing rank quality for config-heavy portables.
+
+</details>
+
+## Cycle `20260706T035516-filegroups-portable` — 2026-07-06T03:55:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb99432f9a4e7a6d` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9909 | 0.9978 | 0.9586 | 19 | [log](out/autocollie/runs/2026-07-06T04-01-36_20260706T035516-filegroups-portable_inherit_from_filetypes_gem_06bdacaa.log) |
+| `9a0aaf4595918a56` | feat_kv_vocab_split_20k_train_tweak | ok | 0.8540 | 0.9304 | 0.8264 | 19 | [log](out/autocollie/runs/2026-07-06T04-02-05_20260706T035516-filegroups-portable_feat_kv_vocab_split_20k_train_tweak.log) |
+| `a7fd77e0254a4037` | feat_text_metrics_encoding_lowbigram | ok | 0.8599 | 0.9403 | 0.8260 | 13 | [log](out/autocollie/runs/2026-07-06T04-02-28_20260706T035516-filegroups-portable_feat_text_metrics_encoding_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`feat_kv_vocab_split_20k_train_tweak`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured key-value signals, aiming to improve PR_AUC by isolating malicious config patterns; training tweaks increase capacity for complex splits.
+- **`feat_text_metrics_encoding_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=160 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Activates text_metrics_full and text_encoding to surface document obfuscation and encoding anomalies, targeting recall@3FPM gains on packed/portable scripts; lower bigram_min_freq captures rarer malicious sequences.
+
+</details>
+

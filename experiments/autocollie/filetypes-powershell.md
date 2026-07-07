@@ -1053,3 +1053,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T162524-filetypes-powershell` — 2026-07-05T16:25:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2fbd76d8a42c9533` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9865 | 0.9775 | 0.9510 | 20 | [log](out/autocollie/runs/2026-07-05T16-32-22_20260705T162524-filetypes-powershell_inherit_from_filetypes_registry_1ffaf151.log) |
+| `dd1c16646ff3e894` | ps_ctrl_tiered_tri_train_tune | ok | 0.9861 | 0.9767 | 0.9503 | 18 | [log](out/autocollie/runs/2026-07-05T16-32-50_20260705T162524-filetypes-powershell_ps_ctrl_tiered_tri_train_tune.log) |
+| `2e2040e9ed3e0932` | ps_feat_textenc_hardneg | ok | 0.9902 | 0.9837 | 0.9545 | 16 | [log](out/autocollie/runs/2026-07-05T16-33-30_20260705T162524-filetypes-powershell_ps_feat_textenc_hardneg.log) |
+| `7cc5122233c477eb` | ps_feat_kv_vocab_safe | ok | 0.9870 | 0.9786 | 0.9483 | 14 | [log](out/autocollie/runs/2026-07-05T16-33-48_20260705T162524-filetypes-powershell_ps_feat_kv_vocab_safe.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_tiered_tri_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best tiered_tri+textmetrics feature set; tunes num_leaves and learning_rate to improve PR_AUC while preserving ROC_AUC.
+- **`ps_feat_textenc_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_encoding research vocab with hard negatives to capture obfuscation patterns, targeting PR_AUC gain.
+- **`ps_feat_kv_vocab_safe`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enables kv_vocab with conservative limits to extract key-value signal from PS scripts, aiming for recall@3FPM improvement.
+
+</details>
+

@@ -1032,3 +1032,37 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T174754-filetypes-zip` — 2026-07-05T17:47:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c780ebe8f91a5374` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9473 | 0.8156 | 0.8054 | 102 | [log](out/autocollie/runs/2026-07-05T17-55-49_20260705T174754-filetypes-zip_inherit_from_filetypes_registry_1ffaf151.log) |
+| `73d55889c52203c2` | zip_control_hardneg_015_16 | ok | 0.9500 | 0.8260 | 0.8064 | 16 | [log](out/autocollie/runs/2026-07-05T17-58-05_20260705T174754-filetypes-zip_zip_control_hardneg_015_16.log) |
+| `0c07fb7425bf6db3` | zip_textenc_kv_vocab | ok | 0.9460 | 0.8101 | 0.8070 | 101 | [log](out/autocollie/runs/2026-07-05T17-58-24_20260705T174754-filetypes-zip_zip_textenc_kv_vocab.log) |
+| `4574eafbaa0d07b5` | zip_symbol_vocab_tiered_crit | ok | 0.9473 | 0.8158 | 0.8056 | 114 | [log](out/autocollie/runs/2026-07-05T18-00-07_20260705T174754-filetypes-zip_zip_symbol_vocab_tiered_crit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to push borderline malware higher, while keeping PR_AUC flat via controlled fraction and weight.
+- **`zip_textenc_kv_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_encoding and kv_vocab to capture structural and obfuscation signals specific to ZIP archives.
+- **`zip_symbol_vocab_tiered_crit`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and PR_AUC by leveraging symbol co-occurrence and severity-tiered trigrams to better rank malicious archives.
+
+</details>
+
+## Cycle `20260706T085539-filetypes-zip` — 2026-07-06T08:55:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2f54a79239e251ce` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9987 | 0.9940 | 0.9722 | 138 | [log](out/autocollie/runs/2026-07-06T09-02-27_20260706T085539-filetypes-zip_inherit_from_filetypes_gem_06bdacaa.log) |
+| `6b1b366dd166e194` | zip_control_hardneg_01_12 | ok | 0.9478 | 0.8189 | 0.8069 | 123 | [log](out/autocollie/runs/2026-07-06T09-05-15_20260706T085539-filetypes-zip_zip_control_hardneg_01_12.log) |
+| `` | zip_textenc_kv_vocab_tiered | fail | — | — | — | 70 | [log](out/autocollie/runs/2026-07-06T09-07-21_20260706T085539-filetypes-zip_zip_textenc_kv_vocab_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Control feature set to hit matrix cache; sweep hard_negative_fraction=0.01 and hard_negative_weight=12 to lift recall@3FPM by focusing on hard negatives.
+- **`zip_textenc_kv_vocab_tiered`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enable text_encoding and kv_vocab research families with tiered_crit_trigrams to capture obfuscation signals in archived scripts/docs, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+

@@ -992,3 +992,37 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T155019-filetypes-xml` — 2026-07-05T15:50:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e0d3cd94960661c3` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.1093 | 0.5425 | 0.1509 | 50 | [log](out/autocollie/runs/2026-07-05T15-58-38_20260705T155019-filetypes-xml_inherit_from_filetypes_registry_1ffaf151.log) |
+| `a33bf8bb404190b7` | xml_control_hardneg_lr_tune | ok | 0.1439 | 0.5583 | 0.1513 | 18 | [log](out/autocollie/runs/2026-07-05T16-00-03_20260705T155019-filetypes-xml_xml_control_hardneg_lr_tune.log) |
+| `562403b925a54576` | xml_text_metrics_kv_vocab_expand | ok | 0.0842 | 0.5424 | 0.1509 | 29 | [log](out/autocollie/runs/2026-07-05T16-00-24_20260705T155019-filetypes-xml_xml_text_metrics_kv_vocab_expand.log) |
+| `40110b5e59773614` | xml_textenc_tiered_trigrams_low_crit | ok | 0.1093 | 0.5425 | 0.1509 | 28 | [log](out/autocollie/runs/2026-07-05T16-00-58_20260705T155019-filetypes-xml_xml_textenc_tiered_trigrams_low_crit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_hardneg_lr_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating recent feature env to hit matrix cache; tuning hard_negative_weight and learning_rate to improve PR_AUC by better separating hard benigns from malware.
+- **`xml_text_metrics_kv_vocab_expand`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables text_metrics_full and kv_vocab research families to capture XML structural and key-value patterns, aiming to increase PR_AUC by adding high-signal features for malicious payloads.
+- **`xml_textenc_tiered_trigrams_low_crit`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Activates text_encoding and lowers tiered_trigram_min_crit to capture subtle malicious text patterns in XML, targeting recall@3FPM gains without harming ROC_AUC.
+
+</details>
+
+## Cycle `20260706T025316-filetypes-xml` — 2026-07-06T02:53:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5ea4eef0206ab018` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9995 | 0.9999 | 0.9512 | 27 | [log](out/autocollie/runs/2026-07-06T03-02-00_20260706T025316-filetypes-xml_inherit_from_filetypes_gem_06bdacaa.log) |
+| `8417d3565ec85b25` | xml_control_hardneg_scale_pos | ok | 0.2233 | 0.6987 | 0.1399 | 41 | [log](out/autocollie/runs/2026-07-06T03-02-52_20260706T025316-filetypes-xml_xml_control_hardneg_scale_pos.log) |
+| `0b34e7b3547f1e32` | xml_text_metrics_kv_vocab_low_freq | ok | 0.2271 | 0.6959 | 0.1399 | 28 | [log](out/autocollie/runs/2026-07-06T03-03-38_20260706T025316-filetypes-xml_xml_text_metrics_kv_vocab_low_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_hardneg_scale_pos`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates best PR_AUC feature set; lowers scale_pos_weight_mult to 0.75 to suppress benign FP noise at the tail, aiming to improve recall@3FPM while keeping PR_AUC flat.
+- **`xml_text_metrics_kv_vocab_low_freq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture XML structural and key-value patterns; lowers bigram_min_freq to 200 to retain rare but malicious XML tags, aiming to boost PR_AUC.
+
+</details>
+

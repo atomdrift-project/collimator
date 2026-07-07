@@ -874,3 +874,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T163015-filegroups-scripts` — 2026-07-05T16:30:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0111b425d2843795` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9461 | 0.9477 | 0.7007 | 91 | [log](out/autocollie/runs/2026-07-05T16-38-44_20260705T163015-filegroups-scripts_inherit_from_filetypes_registry_1ffaf151.log) |
+| `cc1cce5cc4376f7a` | scripts_control_textenc_train_tune | ok | 0.9529 | 0.9542 | 0.7014 | 97 | [log](out/autocollie/runs/2026-07-05T16-41-41_20260705T163015-filegroups-scripts_scripts_control_textenc_train_tune.log) |
+| `47dc4cccb6b0e27a` | scripts_feat_kv_textmetrics_lowfreq | ok | 0.9500 | 0.9496 | 0.6990 | 69 | [log](out/autocollie/runs/2026-07-05T16-43-21_20260705T163015-filegroups-scripts_scripts_feat_kv_textmetrics_lowfreq.log) |
+| `078d862ae5cf8466` | scripts_feat_tiered_trigrams_lowcrit | ok | 0.9461 | 0.9477 | 0.7007 | 72 | [log](out/autocollie/runs/2026-07-05T16-44-31_20260705T163015-filegroups-scripts_scripts_feat_tiered_trigrams_lowcrit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_textenc_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Control spec replicating the top textenc/trigrams/kv feature surface to test if aggressive hard-negative weighting and deeper trees improve PR_AUC by sharpening the decision boundary at the tail.
+- **`scripts_feat_kv_textmetrics_lowfreq`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables kv_vocab and text_metrics_full with low frequency floors to capture rare script obfuscation patterns, aiming to boost recall@3FPM and PR_AUC by adding high-signal sparse features.
+- **`scripts_feat_tiered_trigrams_lowcrit`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=280 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=10 …` — Lowers tiered trigram min_crit and min_freq to include more script-specific behavioral sequences, targeting PR_AUC gains from finer-grained malicious pattern detection without overfitting.
+
+</details>
+
+## Cycle `20260706T025317-filegroups-scripts` — 2026-07-06T02:53:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3633212d860403e3` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9934 | 0.9921 | 0.9579 | 226 | [log](out/autocollie/runs/2026-07-06T03-01-22_20260706T025317-filegroups-scripts_inherit_from_filetypes_gem_06bdacaa.log) |
+| `b7605325910114dd` | scripts_feat_textenc_metrics_lowfreq | ok | 0.9532 | 0.9541 | 0.7028 | 66 | [log](out/autocollie/runs/2026-07-06T03-06-18_20260706T025317-filegroups-scripts_scripts_feat_textenc_metrics_lowfreq.log) |
+| `33f09716c6dd7de1` | scripts_feat_kv_vocab_highcap | ok | 0.9536 | 0.9535 | 0.7020 | 27 | [log](out/autocollie/runs/2026-07-06T03-07-28_20260706T025317-filegroups-scripts_scripts_feat_kv_vocab_highcap.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_feat_textenc_metrics_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full while lowering bigram_min_freq to 100 to capture rarer script patterns, aiming to improve PR_AUC by adding discriminative text signal.
+- **`scripts_feat_kv_vocab_highcap`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with kv_vocab_max=15000 and kv_min_freq=5 to extract more key-value pairs from scripts, aiming to boost recall@3FPM by surfacing hidden configuration signals.
+
+</details>
+

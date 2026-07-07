@@ -1120,3 +1120,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T155021-filetypes-rust` — 2026-07-05T15:50:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d91795f4123a5485` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.1634 | 0.7536 | 0.1447 | 41 | [log](out/autocollie/runs/2026-07-05T15-57-44_20260705T155021-filetypes-rust_inherit_from_filetypes_registry_1ffaf151.log) |
+| `b576e4f4c4deba95` | rust_control_training_tweak | ok | 0.0834 | 0.5459 | 0.1281 | 5 | [log](out/autocollie/runs/2026-07-05T15-58-46_20260705T155021-filetypes-rust_rust_control_training_tweak.log) |
+| `4be6f4d97febdf61` | rust_kv_symbol_vocab | ok | 0.1634 | 0.7536 | 0.1447 | 36 | [log](out/autocollie/runs/2026-07-05T15-58-56_20260705T155021-filetypes-rust_rust_kv_symbol_vocab.log) |
+| `5ac6a5e841bb8549` | rust_text_metrics_trigrams | ok | 0.1207 | 0.7494 | 0.1345 | 33 | [log](out/autocollie/runs/2026-07-05T15-59-37_20260705T155021-filetypes-rust_rust_text_metrics_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_control_training_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree complexity and estimators while keeping regularization tight, reusing the cached feature matrix from the best recent run.
+- **`rust_kv_symbol_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab and symbol_vocab to capture Rust-specific configuration keys and function call patterns that improve tail recall.
+- **`rust_text_metrics_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding text_metrics_full and tiered_crit_trigrams to better rank malicious Rust source files against benign ones using structural and severity-aware n-gram signals.
+
+</details>
+

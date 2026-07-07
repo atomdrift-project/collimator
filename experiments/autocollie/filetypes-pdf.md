@@ -2480,3 +2480,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T163254-filetypes-pdf` — 2026-07-05T16:32:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5e0e9c88182bfc3b` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9360 | 0.8671 | 0.8525 | 14 | [log](out/autocollie/runs/2026-07-05T16-40-18_20260705T163254-filetypes-pdf_inherit_from_filetypes_registry_1ffaf151.log) |
+| `71144e09dc35242e` | pdf_control_hardneg_01_12_leaves128 | ok | 0.9900 | 0.9710 | 0.8522 | 19 | [log](out/autocollie/runs/2026-07-05T16-40-42_20260705T163254-filetypes-pdf_pdf_control_hardneg_01_12_leaves128.log) |
+| `5981e7ba920aca8c` | pdf_feat_kv_vocab_split_hardneg_015_16 | ok | 0.9686 | 0.9061 | 0.8527 | 18 | [log](out/autocollie/runs/2026-07-05T16-41-03_20260705T163254-filetypes-pdf_pdf_feat_kv_vocab_split_hardneg_015_16.log) |
+| `4f7debde1c13d38e` | pdf_feat_abl_clusters_line_length_hardneg_02_18 | ok | 0.9910 | 0.9742 | 0.8528 | 29 | [log](out/autocollie/runs/2026-07-05T16-41-23_20260705T163254-filetypes-pdf_pdf_feat_abl_clusters_line_length_hardneg_02_18.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_hardneg_01_12_leaves128`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Replicates best feature set with lighter hard-negative sweep (0.01/12) to test if reduced negative pressure improves PR_AUC and recall@3 FP/M by preventing over-penalization of borderline malware.
+- **`pdf_feat_kv_vocab_split_hardneg_015_16`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 …` — Enables kv_vocab and kv_value_split to capture structured PDF metadata and embedded object signals, aiming to boost PR_AUC and recall@3 FP/M by recovering per-element patterns missed by blob features.
+- **`pdf_feat_abl_clusters_line_length_hardneg_02_18`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Disables noisy cluster features and adds line_length_buckets to sharpen document obfuscation signal, targeting higher recall@3 FP/M by reducing benign noise while maintaining PR_AUC.
+
+</details>
+

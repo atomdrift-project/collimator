@@ -1142,3 +1142,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T155019-filetypes-plist` — 2026-07-05T15:50:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `54d059a25d8eb8e7` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.0366 | 0.2344 | 0.0600 | 27 | [log](out/autocollie/runs/2026-07-05T15-58-40_20260705T155019-filetypes-plist_inherit_from_filetypes_registry_1ffaf151.log) |
+| `9e16af4099f0ad7b` | plist_ctrl_train_tune_v8 | ok | 0.1040 | 0.6766 | 0.0899 | 18 | [log](out/autocollie/runs/2026-07-05T15-59-25_20260705T155019-filetypes-plist_plist_ctrl_train_tune_v8.log) |
+| `35f03eab0cb55672` | plist_feat_kv_split_textenc_v2 | ok | 0.0664 | 0.4195 | 0.1224 | 31 | [log](out/autocollie/runs/2026-07-05T16-00-17_20260705T155019-filetypes-plist_plist_feat_kv_split_textenc_v2.log) |
+| `ed3c2ee549b1e33b` | plist_feat_tiered_trigrams_lowfreq | ok | 0.0664 | 0.4195 | 0.1224 | 23 | [log](out/autocollie/runs/2026-07-05T16-01-34_20260705T155019-filetypes-plist_plist_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v8`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 …` — Replicates best feature set while tuning training knobs (num_leaves, lr, reg_lambda) to improve PR_AUC and recall@3FPM via better tree complexity and regularization.
+- **`plist_feat_kv_split_textenc_v2`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_value_split and expands kv_vocab_max to capture finer-grained key-value signals, aiming to boost PR_AUC by resolving opaque blob features.
+- **`plist_feat_tiered_trigrams_lowfreq`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=25 …` — Lowers tiered_trigram_min_freq and increases tiered_trigram_max to capture rarer malicious patterns in plist structures, targeting recall@3FPM gains.
+
+</details>
+

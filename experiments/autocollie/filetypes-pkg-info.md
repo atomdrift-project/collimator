@@ -896,3 +896,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T155024-filetypes-pkg-info` — 2026-07-05T15:50:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8fae2f0675e21804` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9919 | 0.9886 | 0.9829 | 21 | [log](out/autocollie/runs/2026-07-05T15-57-17_20260705T155024-filetypes-pkg-info_inherit_from_filetypes_registry_1ffaf151.log) |
+| `b6e777789ccb7839` | pkginfo_control_train_tune_v2 | ok | 0.9898 | 0.9836 | 0.9832 | 2 | [log](out/autocollie/runs/2026-07-05T15-57-44_20260705T155024-filetypes-pkg-info_pkginfo_control_train_tune_v2.log) |
+| `f95b1c8c7dc8421a` | pkginfo_textenc_kv_split | ok | 0.9919 | 0.9886 | 0.9829 | 16 | [log](out/autocollie/runs/2026-07-05T15-57-48_20260705T155024-filetypes-pkg-info_pkginfo_textenc_kv_split.log) |
+| `90337ea07474f656` | pkginfo_lowfreq_trigrams_ratios | ok | 0.9919 | 0.9886 | 0.9829 | 32 | [log](out/autocollie/runs/2026-07-05T15-58-05_20260705T155024-filetypes-pkg-info_pkginfo_lowfreq_trigrams_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_train_tune_v2`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning tree complexity and regularization on the best feature set.
+- **`pkginfo_textenc_kv_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_encoding and kv_value_split to capture encoding artifacts and granular KV signals.
+- **`pkginfo_lowfreq_trigrams_ratios`** `EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000 EXP_TRIGRAM_MIN_FREQ=5` — Aims to improve recall@3 FP/M by lowering trigram frequency floor and adding metric ratios to catch rare malicious patterns.
+
+</details>
+
+## Cycle `20260706T025315-filetypes-pkg-info` — 2026-07-06T02:53:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6937a6915cb145f4` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9998 | 0.9955 | 0.9959 | 24 | [log](out/autocollie/runs/2026-07-06T03-01-36_20260706T025315-filetypes-pkg-info_inherit_from_filetypes_gem_06bdacaa.log) |
+| `039cceb248a571b5` | pkginfo_control_train_tune_v3 | ok | 0.9885 | 0.9805 | 0.9828 | 39 | [log](out/autocollie/runs/2026-07-06T03-02-20_20260706T025315-filetypes-pkg-info_pkginfo_control_train_tune_v3.log) |
+| `7f55cebbcfb868b9` | pkginfo_textmetrics_kv_vocab | ok | 0.9884 | 0.9801 | 0.9828 | 29 | [log](out/autocollie/runs/2026-07-06T03-03-06_20260706T025315-filetypes-pkg-info_pkginfo_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_train_tune_v3`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.08 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best recent feature_env; tunes num_leaves and learning_rate to improve PR_AUC ranking without altering the feature matrix.
+- **`pkginfo_textmetrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, targeting PR_AUC and recall@3 FP/M gains.
+
+</details>
+

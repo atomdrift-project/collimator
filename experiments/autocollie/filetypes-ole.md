@@ -941,3 +941,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T163403-filetypes-ole` — 2026-07-05T16:34:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8f62e0f38e466b2e` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9961 | 0.9890 | 0.9677 | 53 | [log](out/autocollie/runs/2026-07-05T16-41-44_20260705T163403-filetypes-ole_inherit_from_filetypes_registry_1ffaf151.log) |
+| `fff869d779a51168` | ole_ctrl_train_tuning_v3 | ok | 0.9970 | 0.9916 | 0.9709 | 7 | [log](out/autocollie/runs/2026-07-05T16-42-51_20260705T163403-filetypes-ole_ole_ctrl_train_tuning_v3.log) |
+| `df303322fd4a689d` | ole_feat_textmetrics_kv_vocab | ok | 0.9959 | 0.9882 | 0.9678 | 39 | [log](out/autocollie/runs/2026-07-05T16-43-00_20260705T163403-filetypes-ole_ole_feat_textmetrics_kv_vocab.log) |
+| `71b425f74a2c2f5c` | ole_feat_tiered_trigrams_lowbigram | ok | 0.9958 | 0.9879 | 0.9678 | 39 | [log](out/autocollie/runs/2026-07-05T16-43-41_20260705T163403-filetypes-ole_ole_feat_tiered_trigrams_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_train_tuning_v3`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning tree complexity and regularization on the control feature set, preserving ROC_AUC.
+- **`ole_feat_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3 FP/M and PR_AUC by enabling text_metrics_full and kv_vocab to capture document obfuscation and structured data patterns.
+- **`ole_feat_tiered_trigrams_lowbigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Aims to increase PR_AUC by adding tiered critical trigrams and lowering bigram frequency to capture rare malicious sequences without degrading ROC_AUC.
+
+</details>
+

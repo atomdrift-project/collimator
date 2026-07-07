@@ -890,3 +890,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T155019-filetypes-python-bytecode` — 2026-07-05T15:50:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6a940b130460b94b` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.7606 | 0.9005 | 0.7890 | 57 | [log](out/autocollie/runs/2026-07-05T15-57-46_20260705T155019-filetypes-python-bytecode_inherit_from_filetypes_registry_1ffaf151.log) |
+| `8e8c855bf55fe54c` | pybc_ctrl_train_reg_leaves_lr | ok | 0.7650 | 0.9033 | 0.7831 | 7 | [log](out/autocollie/runs/2026-07-05T15-59-26_20260705T155019-filetypes-python-bytecode_pybc_ctrl_train_reg_leaves_lr.log) |
+| `482e5dc3da26aaae` | pybc_feat_textmetrics_encoding | ok | 0.7606 | 0.9005 | 0.7890 | 48 | [log](out/autocollie/runs/2026-07-05T15-59-36_20260705T155019-filetypes-python-bytecode_pybc_feat_textmetrics_encoding.log) |
+| `a65ab4b794f8b7c3` | pybc_feat_kv_split_lowfreq_bigrams | ok | 0.7609 | 0.9140 | 0.7915 | 49 | [log](out/autocollie/runs/2026-07-05T16-00-28_20260705T155019-filetypes-python-bytecode_pybc_feat_kv_split_lowfreq_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_reg_leaves_lr`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and lowering learning rate to reduce overfitting on the best feature surface.
+- **`pybc_feat_textmetrics_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and text_encoding to capture obfuscation and encoding artifacts in bytecode strings.
+- **`pybc_feat_kv_split_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=25 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by expanding KV vocab with value splitting and lowering bigram_min_freq to 25 to capture rare but malicious bytecode patterns.
+
+</details>
+
+## Cycle `20260706T060856-filetypes-python-bytecode` — 2026-07-06T06:08:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `05333554c30e1f55` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9948 | 0.9972 | 0.9764 | 17 | [log](out/autocollie/runs/2026-07-06T06-16-10_20260706T060856-filetypes-python-bytecode_inherit_from_filetypes_gem_06bdacaa.log) |
+| `a822a5bd7fb7fe51` | pybc_ctrl_train_reg_leaves | ok | 0.7650 | 0.8871 | 0.7836 | 15 | [log](out/autocollie/runs/2026-07-06T06-16-36_20260706T060856-filetypes-python-bytecode_pybc_ctrl_train_reg_leaves.log) |
+| `ddac40249395abad` | pybc_feat_textmetrics_encoding | ok | 0.7626 | 0.8840 | 0.7762 | 11 | [log](out/autocollie/runs/2026-07-06T06-16-53_20260706T060856-filetypes-python-bytecode_pybc_feat_textmetrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_reg_leaves`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; increases num_leaves and reg_lambda to improve PR_AUC ranking without rebuilding matrix cache.
+- **`pybc_feat_textmetrics_encoding`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding research vocabs to capture obfuscation signals in bytecode, aiming to boost PR_AUC and recall@3FPM.
+
+</details>
+

@@ -1202,3 +1202,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T155943-filetypes-text` — 2026-07-05T15:59:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5863e48055e78ecc` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.0798 | 0.5274 | 0.1029 | 25 | [log](out/autocollie/runs/2026-07-05T16-08-47_20260705T155943-filetypes-text_inherit_from_filetypes_registry_1ffaf151.log) |
+| `0379693d3d4f5e52` | text_ctrl_hardneg_tune_v1 | ok | 0.0915 | 0.5371 | 0.1029 | 1 | [log](out/autocollie/runs/2026-07-05T16-09-20_20260705T155943-filetypes-text_text_ctrl_hardneg_tune_v1.log) |
+| `d6bd3fc1ef470c19` | text_feat_textmetrics_enc_v2 | ok | 0.1056 | 0.5487 | 0.0897 | 7 | [log](out/autocollie/runs/2026-07-05T16-09-22_20260705T155943-filetypes-text_text_feat_textmetrics_enc_v2.log) |
+| `a5d76618a17bd19c` | text_feat_kv_split_v2 | ok | 0.0798 | 0.5274 | 0.1029 | 6 | [log](out/autocollie/runs/2026-07-05T16-09-30_20260705T155943-filetypes-text_text_feat_kv_split_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_hardneg_tune_v1`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning hard_negative_weight and num_leaves on the best recent feature set to better rank tail malware without increasing false positives.
+- **`text_feat_textmetrics_enc_v2`** `EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=0 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and text_encoding to capture document obfuscation and encoding anomalies, while lowering bigram_min_freq to 50 to retain rare malicious n-grams.
+- **`text_feat_kv_split_v2`** `EXP_BLINDFOLD=0 EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and kv_value_split to extract structured key-value signals from text metadata, compensating for noisy blindfold features.
+
+</details>
+

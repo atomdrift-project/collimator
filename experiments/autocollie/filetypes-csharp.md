@@ -1022,3 +1022,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T163403-filetypes-csharp` — 2026-07-05T16:34:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `680f46388251d2fd` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.4404 | 0.8614 | 0.3821 | 17 | [log](out/autocollie/runs/2026-07-05T16-40-26_20260705T163403-filetypes-csharp_inherit_from_filetypes_registry_1ffaf151.log) |
+| `c186ffa5b85ca757` | csharp_ctrl_hardneg_lr003 | ok | 0.4577 | 0.8492 | 0.3897 | 7 | [log](out/autocollie/runs/2026-07-05T16-40-55_20260705T163403-filetypes-csharp_csharp_ctrl_hardneg_lr003.log) |
+| `d397165a0f944bd0` | csharp_feat_kv_textenc_metrics | ok | 0.4481 | 0.8653 | 0.3862 | 23 | [log](out/autocollie/runs/2026-07-05T16-41-21_20260705T163403-filetypes-csharp_csharp_feat_kv_textenc_metrics.log) |
+| `b5320fdec8397b19` | csharp_feat_symbol_bigrams_tiered | ok | 0.4404 | 0.8614 | 0.3821 | 27 | [log](out/autocollie/runs/2026-07-05T16-42-10_20260705T163403-filetypes-csharp_csharp_feat_symbol_bigrams_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_ctrl_hardneg_lr003`** `EXP_ESTIMATORS=400 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control feature set with lower learning rate and more estimators to improve PR_AUC via better convergence on hard negatives.
+- **`csharp_feat_kv_textenc_metrics`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture C# configuration and obfuscation patterns, targeting PR_AUC gains.
+- **`csharp_feat_symbol_bigrams_tiered`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=8000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Adds symbol bigrams and tiered trigrams to model API call sequences, aiming to boost recall@3FPM.
+
+</details>
+

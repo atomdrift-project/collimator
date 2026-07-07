@@ -960,3 +960,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T163403-filegroups-source` — 2026-07-05T16:34:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `da0a84486494483b` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.8589 | 0.8357 | 0.5235 | 95 | [log](out/autocollie/runs/2026-07-05T16-41-17_20260705T163403-filegroups-source_inherit_from_filetypes_registry_1ffaf151.log) |
+| `c1e27cfbef57f990` | source_control_train_tuning | ok | 0.8529 | 0.8292 | 0.5242 | 6 | [log](out/autocollie/runs/2026-07-05T16-43-56_20260705T163403-filegroups-source_source_control_train_tuning.log) |
+| `9165276b845f9226` | source_feat_textmetrics_kv_vocab | ok | 0.8644 | 0.8468 | 0.5234 | 27 | [log](out/autocollie/runs/2026-07-05T16-44-05_20260705T163403-filegroups-source_source_feat_textmetrics_kv_vocab.log) |
+| `a10d75ad44f5569e` | source_feat_tiered_trigrams_lowfreq | ok | 0.8602 | 0.8358 | 0.5235 | 33 | [log](out/autocollie/runs/2026-07-05T16-44-34_20260705T163403-filegroups-source_source_feat_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_train_tuning`** `EXP_ESTIMATORS=300 EXP_MAX_DEPTH=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adjusting tree depth and regularization on the current best feature set to reduce overfitting.
+- **`source_feat_textmetrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_metrics_full and kv_vocab to capture obfuscation and configuration patterns in source files.
+- **`source_feat_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=25 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering n-gram frequency floors to include rarer but highly discriminative source code patterns.
+
+</details>
+

@@ -2306,3 +2306,37 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T163403-filegroups-documents` — 2026-07-05T16:34:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `eb320c01e7fd1b65` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9302 | 0.8995 | 0.8283 | 21 | [log](out/autocollie/runs/2026-07-05T16-39-51_20260705T163403-filegroups-documents_inherit_from_filetypes_registry_1ffaf151.log) |
+| `d705256697558773` | docs_control_train_tune | ok | 0.9267 | 0.8937 | 0.8287 | 6 | [log](out/autocollie/runs/2026-07-05T16-40-24_20260705T163403-filegroups-documents_docs_control_train_tune.log) |
+| `2d775b0afbffe348` | docs_textmetrics_full_kv_vocab | ok | 0.9332 | 0.9052 | 0.8292 | 23 | [log](out/autocollie/runs/2026-07-05T16-40-31_20260705T163403-filegroups-documents_docs_textmetrics_full_kv_vocab.log) |
+| `d9b43c83a5ee22a1` | docs_obfuscation_line_buckets_low_bigram_freq | ok | 0.9229 | 0.8904 | 0.8285 | 25 | [log](out/autocollie/runs/2026-07-05T16-40-56_20260705T163403-filegroups-documents_docs_obfuscation_line_buckets_low_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_train_tune`** `EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates recent best feature_env to hit matrix cache; tunes num_leaves and reg_lambda to improve PR_AUC by reducing overfit on rare benign patterns.
+- **`docs_textmetrics_full_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value structure signals, aiming to boost PR_AUC and recall@3FPM on complex PDF/DOCX malware.
+- **`docs_obfuscation_line_buckets_low_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates document_obfuscation_features and line_length_buckets while lowering bigram_min_freq to 200 to capture rarer malicious patterns, targeting recall@3FPM gains.
+
+</details>
+
+## Cycle `20260706T025332-filegroups-documents` — 2026-07-06T02:53:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0450bf85d569dd66` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9999 | 0.9988 | 0.9932 | 56 | [log](out/autocollie/runs/2026-07-06T03-02-11_20260706T025332-filegroups-documents_inherit_from_filetypes_gem_06bdacaa.log) |
+| `a039a5a144bdb2ee` | docs_obfuscation_textmetrics_kv | ok | 0.9282 | 0.9066 | 0.8288 | 44 | [log](out/autocollie/runs/2026-07-06T03-03-41_20260706T025332-filegroups-documents_docs_obfuscation_textmetrics_kv.log) |
+| `4b947983969f77cc` | docs_low_bigram_tiered_trigrams | ok | 0.9282 | 0.9066 | 0.8288 | 35 | [log](out/autocollie/runs/2026-07-06T03-04-34_20260706T025332-filegroups-documents_docs_low_bigram_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_obfuscation_textmetrics_kv`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables document_obfuscation_features alongside text_metrics_full and kv_vocab to better isolate obfuscated PDF/DOCX malware, aiming to boost PR_AUC by improving separation of benign docs from obfuscated payloads.
+- **`docs_low_bigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 200 and enables tiered_crit_trigrams to capture rarer malicious n-grams, targeting recall@3FPM gains by surfacing low-frequency attack patterns while keeping ROC_AUC stable.
+
+</details>
+

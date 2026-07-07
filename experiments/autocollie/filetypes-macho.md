@@ -1182,3 +1182,37 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T163028-filetypes-macho` — 2026-07-05T16:30:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ee0085a9b4671c2a` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9857 | 0.9957 | 0.9532 | 36 | [log](out/autocollie/runs/2026-07-05T16-37-39_20260705T163028-filetypes-macho_inherit_from_filetypes_registry_1ffaf151.log) |
+| `aed4f45fd4502d60` | macho_control_train_tune | ok | 0.9850 | 0.9951 | 0.9484 | 6 | [log](out/autocollie/runs/2026-07-05T16-38-22_20260705T163028-filetypes-macho_macho_control_train_tune.log) |
+| `035abe2dc56f5032` | macho_feat_kv_vocab_10k | ok | 0.9852 | 0.9953 | 0.9545 | 38 | [log](out/autocollie/runs/2026-07-05T16-38-30_20260705T163028-filetypes-macho_macho_feat_kv_vocab_10k.log) |
+| `df0645fb4ca77fa7` | macho_feat_textenc_metrics | ok | 0.9852 | 0.9953 | 0.9545 | 31 | [log](out/autocollie/runs/2026-07-05T16-39-09_20260705T163028-filetypes-macho_macho_feat_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_train_tune`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env to establish baseline PR_AUC while tuning tree complexity for better ranking stability.
+- **`macho_feat_kv_vocab_10k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture Mach-O metadata patterns, aiming to lift PR_AUC by distinguishing malicious config/key-value structures from benign ones.
+- **`macho_feat_textenc_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Add text encoding and full text metrics to improve recall@3FPM by detecting obfuscated strings and encoding anomalies in Mach-O payloads.
+
+</details>
+
+## Cycle `20260706T072513-filetypes-macho` — 2026-07-06T07:25:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `07b3ffbe5acfa595` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9914 | 0.9986 | 0.9608 | 28 | [log](out/autocollie/runs/2026-07-06T07-32-59_20260706T072513-filetypes-macho_inherit_from_filetypes_gem_06bdacaa.log) |
+| `46ef8600d9bc4016` | macho_feat_kv_vocab_12k | ok | 0.9860 | 0.9952 | 0.9474 | 26 | [log](out/autocollie/runs/2026-07-06T07-33-32_20260706T072513-filetypes-macho_macho_feat_kv_vocab_12k.log) |
+| `18cff5be7f499838` | macho_feat_textenc_metrics_hardneg | ok | 0.9845 | 0.9937 | 0.9572 | 30 | [log](out/autocollie/runs/2026-07-06T07-34-02_20260706T072513-filetypes-macho_macho_feat_textenc_metrics_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_feat_kv_vocab_12k`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with expanded cap to capture Mach-O metadata signals, aiming to boost PR_AUC by adding structured key-value features.
+- **`macho_feat_textenc_metrics_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to extract string/encoding patterns, targeting recall@3FPM by better identifying obfuscated payloads while using hard negatives to control FPR.
+
+</details>
+

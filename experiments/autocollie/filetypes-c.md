@@ -1396,3 +1396,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260706T025317-filetypes-c` — 2026-07-06T02:53:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c1961897e0f037de` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9749 | 0.9914 | 0.9259 | 95 | [log](out/autocollie/runs/2026-07-06T03-02-12_20260706T025317-filetypes-c_inherit_from_filetypes_gem_06bdacaa.log) |
+| `262af571555d535e` | c_control_train_tweak_symbol_vocab | ok | 0.7167 | 0.8735 | 0.3602 | 47 | [log](out/autocollie/runs/2026-07-06T03-04-26_20260706T025317-filetypes-c_c_control_train_tweak_symbol_vocab.log) |
+| `115cf7047a22a566` | c_feat_kv_textenc_metrics_hardneg | ok | 0.6104 | 0.8186 | 0.3611 | 25 | [log](out/autocollie/runs/2026-07-06T03-05-17_20260706T025317-filetypes-c_c_feat_kv_textenc_metrics_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_train_tweak_symbol_vocab`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Control training tweak on best feature set with added symbol_vocab to capture C function co-occurrence, aiming to improve PR_AUC by better ranking malicious API chains while keeping ROC_AUC flat.
+- **`c_feat_kv_textenc_metrics_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to extract structural signals from C sources, targeting recall@3FPM by isolating malicious patterns in sparse files while using hard negatives to suppress benign FP tail.
+
+</details>
+

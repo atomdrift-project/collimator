@@ -1673,3 +1673,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T170046-filetypes-javascript` — 2026-07-05T17:00:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aa0643b3f5477a16` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9776 | 0.9672 | 0.9351 | 82 | [log](out/autocollie/runs/2026-07-05T17-08-26_20260705T170046-filetypes-javascript_inherit_from_filetypes_registry_1ffaf151.log) |
+| `e248bb582ec18081` | js_control_textenc_metrics_train_tune | ok | 0.9795 | 0.9700 | 0.9381 | 45 | [log](out/autocollie/runs/2026-07-05T17-10-57_20260705T170046-filetypes-javascript_js_control_textenc_metrics_train_tune.log) |
+| `cf4a99ff1dc0e46a` | js_kv_vocab_split_textenc_metrics | ok | 0.9777 | 0.9676 | 0.9354 | 32 | [log](out/autocollie/runs/2026-07-05T17-11-44_20260705T170046-filetypes-javascript_js_kv_vocab_split_textenc_metrics.log) |
+| `14ff8d7bf4b438c6` | js_low_freq_ngrams_severity_fractions | ok | 0.9779 | 0.9683 | 0.9358 | 44 | [log](out/autocollie/runs/2026-07-05T17-12-17_20260705T170046-filetypes-javascript_js_low_freq_ngrams_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_textenc_metrics_train_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Control spec replicating best feature_env to isolate training knob effects on PR_AUC and recall@3 FP/M via increased tree complexity and hard-negative weighting.
+- **`js_kv_vocab_split_textenc_metrics`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=250 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.05 …` — Tests kv_vocab with value splitting alongside text_encoding and text_metrics_full to improve PR_AUC by capturing granular JS dependency and config patterns.
+- **`js_low_freq_ngrams_severity_fractions`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_ENCODING_FEATURES=1 …` — Lowers bigram_min_freq to 25 and enables severity_fractions to boost recall@3 FP/M by capturing rare malicious patterns and minimal dropper signals without hurting ROC_AUC.
+
+</details>
+

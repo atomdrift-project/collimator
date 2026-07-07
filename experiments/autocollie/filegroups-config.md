@@ -1530,3 +1530,37 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260705T183139-filegroups-config` — 2026-07-05T18:31:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `af205b2734763a8d` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.8705 | 0.8957 | 0.8526 | 23 | [log](out/autocollie/runs/2026-07-05T18-38-06_20260705T183139-filegroups-config_inherit_from_filetypes_registry_1ffaf151.log) |
+| `525d0cdcd397854c` | config_control_train_tweak | ok | 0.8668 | 0.8978 | 0.8731 | 2 | [log](out/autocollie/runs/2026-07-05T18-38-44_20260705T183139-filegroups-config_config_control_train_tweak.log) |
+| `a9d80f6f3de33143` | config_text_metrics_encoding | ok | 0.8917 | 0.9168 | 0.8729 | 14 | [log](out/autocollie/runs/2026-07-05T18-38-47_20260705T183139-filegroups-config_config_text_metrics_encoding.log) |
+| `28a8ddaa2df1dd3f` | config_kv_vocab_split | ok | 0.8705 | 0.8957 | 0.8526 | 12 | [log](out/autocollie/runs/2026-07-05T18-39-02_20260705T183139-filegroups-config_config_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_control_train_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — aims to improve PR_AUC by increasing tree capacity and regularization to better rank borderline configs without overfitting
+- **`config_text_metrics_encoding`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — aims to improve PR_AUC by adding text structure and encoding features that capture obfuscation tactics common in malicious config files
+- **`config_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — aims to improve recall@3FPM by enabling key-value vocabulary and splitting compound values to isolate malicious indicators buried in config parameters
+
+</details>
+
+## Cycle `20260706T025315-filegroups-config` — 2026-07-06T02:53:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5cae0220a5f33f5a` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9972 | 0.9976 | 0.9875 | 83 | [log](out/autocollie/runs/2026-07-06T03-01-58_20260706T025315-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `aeb4f924b4075be9` | config_control_train_hardneg | ok | 0.9082 | 0.9292 | 0.8738 | 62 | [log](out/autocollie/runs/2026-07-06T03-04-09_20260706T025315-filegroups-config_config_control_train_hardneg.log) |
+| `b4224ea185aaff52` | config_kv_vocab_split_severity | ok | 0.9020 | 0.9234 | 0.8720 | 26 | [log](out/autocollie/runs/2026-07-06T03-05-15_20260706T025315-filegroups-config_config_kv_vocab_split_severity.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_control_train_hardneg`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env and applies hard-negative weighting to improve recall@3FPM by focusing on difficult benign samples, keeping PR_AUC and ROC_AUC stable.
+- **`config_kv_vocab_split_severity`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables kv_vocab and kv_value_split to recover per-element signal in config key-value pairs, aiming to boost PR_AUC by capturing fine-grained malicious configuration patterns.
+
+</details>
+

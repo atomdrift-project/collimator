@@ -1046,3 +1046,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T182819-filetypes-package.json` — 2026-07-05T18:28:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9e59b4c9132a506e` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.9940 | 0.9947 | 0.9748 | 20 | [log](out/autocollie/runs/2026-07-05T18-36-37_20260705T182819-filetypes-package.json_inherit_from_filetypes_registry_1ffaf151.log) |
+| `1803a503da557e11` | pkg_json_control_train_v6 | ok | 0.9941 | 0.9946 | 0.9750 | 16 | [log](out/autocollie/runs/2026-07-05T18-37-03_20260705T182819-filetypes-package.json_pkg_json_control_train_v6.log) |
+| `6ba4bd56657c9d11` | pkg_json_kv_vocab_split_15k | ok | 0.9940 | 0.9947 | 0.9748 | 14 | [log](out/autocollie/runs/2026-07-05T18-37-20_20260705T182819-filetypes-package.json_pkg_json_kv_vocab_split_15k.log) |
+| `4e3110629c2e919e` | pkg_json_severity_fractions_low_bigram | ok | 0.9939 | 0.9944 | 0.9739 | 13 | [log](out/autocollie/runs/2026-07-05T18-37-35_20260705T182819-filetypes-package.json_pkg_json_severity_fractions_low_bigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_control_train_v6`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 …` — Control replicating best recent feature set to establish baseline PR_AUC while testing deeper trees and lower LR for ranking stability.
+- **`pkg_json_kv_vocab_split_15k`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured dependency semantics, aiming to boost PR_AUC by isolating malicious key-value patterns.
+- **`pkg_json_severity_fractions_low_bigram`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Adds severity_fractions to highlight minimal droppers and lowers bigram_min_freq to 25 to capture rarer patterns, targeting recall@3FPM improvement.
+
+</details>
+
+## Cycle `20260706T041201-filetypes-package.json` — 2026-07-06T04:12:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5081460f53033b33` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9974 | 0.9977 | 0.9894 | 24 | [log](out/autocollie/runs/2026-07-06T04-19-19_20260706T041201-filetypes-package.json_inherit_from_filetypes_gem_06bdacaa.log) |
+| `a344b293a2d38a32` | pkg_json_control_text_metrics_leaves128 | ok | 0.9944 | 0.9949 | 0.9852 | 16 | [log](out/autocollie/runs/2026-07-06T04-19-50_20260706T041201-filetypes-package.json_pkg_json_control_text_metrics_leaves128.log) |
+| `aba7057bff40e477` | pkg_json_kv_vocab_split_hardneg | ok | 0.9944 | 0.9947 | 0.9820 | 15 | [log](out/autocollie/runs/2026-07-06T04-20-08_20260706T041201-filetypes-package.json_pkg_json_kv_vocab_split_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_control_text_metrics_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best recent feature_env but enables text_metrics_full research vocab and increases num_leaves to 128 to improve PR_AUC by capturing document obfuscation signals without overfitting.
+- **`pkg_json_kv_vocab_split_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Enables kv_vocab and kv_value_split to recover per-element signal in package dependencies, paired with hard negatives to boost recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

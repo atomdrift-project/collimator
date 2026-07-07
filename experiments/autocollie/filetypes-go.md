@@ -2012,3 +2012,37 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260705T163403-filetypes-go` — 2026-07-05T16:34:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2e9c824ac1981703` | inherit_from_filetypes_registry_1ffaf151 | ok | 0.4241 | 0.6701 | 0.2677 | 45 | [log](out/autocollie/runs/2026-07-05T16-41-52_20260705T163403-filetypes-go_inherit_from_filetypes_registry_1ffaf151.log) |
+| `6e57e827c40fd5ec` | go_ctrl_train_hn_lr003_leaves128 | ok | 0.4334 | 0.7006 | 0.2694 | 21 | [log](out/autocollie/runs/2026-07-05T16-42-52_20260705T163403-filetypes-go_go_ctrl_train_hn_lr003_leaves128.log) |
+| `ffb75f772cdc980c` | go_feat_kv_vocab_textmetrics_v1 | ok | 0.4319 | 0.7029 | 0.2707 | 32 | [log](out/autocollie/runs/2026-07-05T16-43-17_20260705T163403-filetypes-go_go_feat_kv_vocab_textmetrics_v1.log) |
+| `e7e18fb7b183ac54` | go_feat_tiered_trigrams_obj_trigrams | ok | 0.4320 | 0.7046 | 0.2712 | 24 | [log](out/autocollie/runs/2026-07-05T16-43-51_20260705T163403-filetypes-go_go_feat_tiered_trigrams_obj_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_registry_1ffaf151`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/registry (key=1ffaf15111dff4bb, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hn_lr003_leaves128`** `EXP_BLINDFOLD=0 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 …` — Control run replicating the best feature surface to isolate training hyperparameter effects on PR_AUC and recall@3FPM.
+- **`go_feat_kv_vocab_textmetrics_v1`** `EXP_BLINDFOLD=0 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_VOCAB=1 …` — Enables kv_vocab and text_metrics_full to capture Go-specific structural and key-value signals, aiming to boost PR_AUC and recall@3FPM.
+- **`go_feat_tiered_trigrams_obj_trigrams`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OBJECTIVE_TRIGRAMS=1 EXP_SYMBOL_BIGRAMS=1 …` — Adds tiered_crit_trigrams and objective_trigrams while disabling the noisy clusters group to sharpen high-crit pattern detection, targeting recall@3FPM and PR_AUC.
+
+</details>
+
+## Cycle `20260706T025315-filetypes-go` — 2026-07-06T02:53:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `284d75b298227636` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9546 | 0.9770 | 0.8808 | 22 | [log](out/autocollie/runs/2026-07-06T03-00-29_20260706T025315-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d71845963d3285f4` | go_ctrl_train_hn_lr002_leaves128 | ok | 0.4027 | 0.6391 | 0.2685 | 17 | [log](out/autocollie/runs/2026-07-06T03-00-57_20260706T025315-filetypes-go_go_ctrl_train_hn_lr002_leaves128.log) |
+| `dd71c6464204ef9f` | go_feat_kv_textenc_v1 | ok | 0.3994 | 0.6482 | 0.2632 | 19 | [log](out/autocollie/runs/2026-07-06T03-01-18_20260706T025315-filetypes-go_go_feat_kv_textenc_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hn_lr002_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature_env to serve as a control, tweaking learning_rate and num_leaves to stabilize PR_AUC while maintaining ROC_AUC.
+- **`go_feat_kv_textenc_v1`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture Go-specific string literals and encoding patterns, aiming to improve recall@3FPM by surfacing obfuscated payloads.
+
+</details>
+
