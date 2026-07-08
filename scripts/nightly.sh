@@ -38,18 +38,35 @@ flock -n 9 || { echo "another nightly run is active — exiting."; exit 0; }
 
 # Cap parallelism for the unattended run. The retrain's vocabulary pass
 # (collimator experiment --workers, driven by EXP_WORKERS which defaults from
-# WORKERS) is the memory hot spot: at galadriel's full core count it peaked
-# ~44G and the kernel OOM-killed the 2026-07-06 run ~7min in, mid-build, while
-# the box was also serving as hopper coordinator + local litmus worker. 32
-# keeps it clear of the ceiling. WORKERS is the knob to set (not EXP_WORKERS):
-# azoth-general re-forwards `--set EXP_WORKERS=$(WORKERS)` into the inner
-# sub-make, so an EXP_WORKERS cap alone would be overridden. Override with
-# NIGHTLY_WORKERS; unset it (NIGHTLY_WORKERS=) to fall back to the Makefile
-# default of nproc.
-if [ -n "${NIGHTLY_WORKERS-32}" ]; then
-  export WORKERS="${NIGHTLY_WORKERS-32}"
+# WORKERS) is the memory hot spot, but not because the python side is large:
+# the killed worker on the 2026-07-08 run held only ~11G RSS. Each of the N
+# fetch workers opens its own postgres backend, so worker count is really a
+# multiplier on *concurrent DB memory* — 32 workers on the full-corpus final
+# train (~1.67M rows, ~2x a fold slice) drove a global OOM (CONSTRAINT_NONE,
+# not a cgroup cap) while galadriel was also running atomscan (~35G) and the
+# hopper cluster. The 2026-07-06 run OOM'd at full core count (~7min in); the
+# 2026-07-07 run at 32 cleared both OOF folds but died on the final full train.
+# 16 halves the concurrent fetch fan-out (both python- and postgres-side) and
+# still clears the folds comfortably; the extra wall-clock is free in the 23h
+# window. WORKERS is the knob to set (not EXP_WORKERS): azoth-general
+# re-forwards `--set EXP_WORKERS=$(WORKERS)` into the inner sub-make, so an
+# EXP_WORKERS cap alone would be overridden. Override with NIGHTLY_WORKERS;
+# unset it (NIGHTLY_WORKERS=) to fall back to the Makefile default of nproc.
+if [ -n "${NIGHTLY_WORKERS-16}" ]; then
+  export WORKERS="${NIGHTLY_WORKERS-16}"
   echo "nightly: capping WORKERS=$WORKERS (retrain DB-fetch parallelism)"
 fi
+
+# Bound pass-1 vocabulary memory (the phase the full-train OOM'd in) by pruning
+# singleton n-grams every N merged batches. Off by default in collimator so
+# ad-hoc/autocollie runs stay bit-reproducible; the nightly opts in because the
+# full-corpus vocab is where the dicts blow up. Near-lossless (all min_freqs
+# >= 5). Set NIGHTLY_VOCAB_PRUNE_EVERY= to disable. The mem-aware worker clamp
+# (COLLIMATOR_MEM_AWARE_WORKERS) is on by default in collimator — no export
+# needed; tune its headroom via COLLIMATOR_MEM_RESERVE_GB if desired.
+export COLLIMATOR_VOCAB_PRUNE_EVERY="${NIGHTLY_VOCAB_PRUNE_EVERY-200}"
+[ -n "$COLLIMATOR_VOCAB_PRUNE_EVERY" ] && \
+  echo "nightly: vocab singleton-prune every $COLLIMATOR_VOCAB_PRUNE_EVERY batches"
 
 rc=0
 echo "== repin =="

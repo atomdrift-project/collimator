@@ -4173,6 +4173,53 @@ def resolve_worker_count(n_workers: int) -> int:
     return n_workers if n_workers > 0 else _n_workers_default()
 
 
+def clamp_workers_to_available_ram(n_workers: int) -> int:
+    """Best-effort cap on the DB-fetch worker count from currently-available RAM.
+
+    Each concurrent fetch worker opens its own postgres backend and holds a
+    fetch/count buffer, so on a co-tenanted host (hopper + scan) launching the
+    full worker count when the box is *already* full is what tips it into a
+    global OOM. This reads /proc/meminfo MemAvailable at call time and clamps
+    the resolved worker count so ``(MemAvailable - reserve)`` covers the
+    per-worker headroom. It is a start-of-run snapshot, NOT a peak-usage model
+    — pair it with COLLIMATOR_VOCAB_PRUNE_EVERY, which bounds in-pass vocab
+    growth. Linux-only; on any other platform or a parse failure it returns the
+    request unchanged (never raises). Tune via COLLIMATOR_MEM_RESERVE_GB /
+    COLLIMATOR_MEM_PER_WORKER_GB, or disable with COLLIMATOR_MEM_AWARE_WORKERS=0.
+    """
+    resolved = resolve_worker_count(n_workers)
+    if os.getenv("COLLIMATOR_MEM_AWARE_WORKERS", "1") == "0" or resolved <= 1:
+        return resolved
+    try:
+        reserve = float(os.getenv("COLLIMATOR_MEM_RESERVE_GB", "48"))
+        per_worker = float(os.getenv("COLLIMATOR_MEM_PER_WORKER_GB", "2"))
+        with open("/proc/meminfo") as meminfo:
+            avail_kb = next(
+                int(line.split()[1])
+                for line in meminfo
+                if line.startswith("MemAvailable:")
+            )
+        avail_gb = avail_kb / 1024 / 1024
+        cap = max(1, int((avail_gb - reserve) // max(per_worker, 0.1)))
+        if cap < resolved:
+            log.warning(
+                "mem-aware workers: capping %d -> %d (MemAvailable=%.0f GB, "
+                "reserve=%.0f GB, per_worker=%.1f GB); tune via "
+                "COLLIMATOR_MEM_RESERVE_GB / COLLIMATOR_MEM_PER_WORKER_GB or "
+                "disable with COLLIMATOR_MEM_AWARE_WORKERS=0",
+                resolved, cap, avail_gb, reserve, per_worker,
+            )
+            return cap
+        log.info(
+            "mem-aware workers: %d workers fit (MemAvailable=%.0f GB, "
+            "reserve=%.0f GB, per_worker=%.1f GB)",
+            resolved, avail_gb, reserve, per_worker,
+        )
+        return resolved
+    except (OSError, StopIteration, ValueError):
+        return resolved  # non-Linux or unparseable /proc/meminfo: leave as requested
+
+
 def _batched(items: Iterable[T], batch_size: int) -> Iterable[list[T]]:
     """Yield lists of up to batch_size items from an iterable."""
     it = iter(items)
@@ -4936,6 +4983,40 @@ def build_vocab_from_db(
         for k, v in tier_tri_counts.items():
             tiered_trigram_counts[k] = tiered_trigram_counts.get(k, 0) + v
 
+    # Bound peak vocab memory on large corpora by periodically dropping
+    # count==1 keys from the big n-gram dicts. This is the phase where the
+    # nightly full-train OOM'd (pass 1): these dicts otherwise grow to the full
+    # distinct-key set of a ~2M-file corpus and are only min_freq-pruned at the
+    # very end. We prune ONLY dicts gated purely by a `count >= min_freq` test
+    # (every such min_freq here is >= 5, so a dropped singleton could never have
+    # qualified). benign_*/malware_* dicts feed absence/ceiling tests (rare
+    # element "benign==0", trigram benign ceiling) and are left intact — except
+    # benign_trigrams, dropped in lockstep with trigram_counts to stay
+    # consistent (a trigram at count 1 can't survive, so its benign tally is
+    # moot). Near-lossless but schedule-dependent; set
+    # COLLIMATOR_VOCAB_PRUNE_EVERY=0 for bit-exact reproducibility.
+    prune_every = int(os.getenv("COLLIMATOR_VOCAB_PRUNE_EVERY", "0") or "0")
+    batches_merged = 0
+
+    def _maybe_prune() -> None:
+        prunable = (bigram_counts, element_counts, tiered_bigram_counts, tiered_trigram_counts)
+        before = sum(len(d) for d in prunable) + len(trigram_counts)
+        for k in [k for k, c in trigram_counts.items() if c == 1]:
+            del trigram_counts[k]
+            benign_trigrams.pop(k, None)
+        for d in prunable:
+            for k in [k for k, c in d.items() if c == 1]:
+                del d[k]
+        after = sum(len(d) for d in prunable) + len(trigram_counts)
+        if before != after:
+            log.info(
+                "vocab prune @%d batches: dropped %d singleton n-gram keys "
+                "(%d -> %d entries; bi=%d tri=%d el=%d tbi=%d ttri=%d)",
+                batches_merged, before - after, before, after,
+                len(bigram_counts), len(trigram_counts), len(element_counts),
+                len(tiered_bigram_counts), len(tiered_trigram_counts),
+            )
+
     batch_args = ((db_path, batch) for batch in _batched(row_ids_labels, batch_size))
 
     if nw > 1:
@@ -4948,9 +5029,15 @@ def build_vocab_from_db(
                 max_inflight=2 * nw,
             ):
                 _merge_batch(*res)
+                batches_merged += 1
+                if prune_every and batches_merged % prune_every == 0:
+                    _maybe_prune()
     else:
         for res in map(_vocab_labeled_db_batch_worker, batch_args):
             _merge_batch(*res)
+            batches_merged += 1
+            if prune_every and batches_merged % prune_every == 0:
+                _maybe_prune()
 
     presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
     filetype_vocab = sorted(filetypes)

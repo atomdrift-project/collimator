@@ -953,6 +953,11 @@ def run_experiment(
             [int(s.row_id) for s in sorted_test], dtype=np.int64,
         )
 
+        # Clamp fetch parallelism to available RAM before the two DB passes.
+        # Re-read here (not at CLI parse) so each per-fold / final subprocess
+        # sees the box's state at *its* start, not the nightly's launch moment.
+        n_workers = features.clamp_workers_to_available_ram(n_workers)
+
         log.info("pass 1: building vocabulary (worker-local DB fetching)")
         spec = features.build_vocab_from_db(
             db_path,
