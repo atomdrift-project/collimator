@@ -5,7 +5,7 @@ Samples are fetched from hopper's ``GET /api/file/{sha256}`` endpoint by
 sha256. Local-disk lookup was removed: sample paths come from the hopper
 DB and may be absolute paths from whatever host ingested them (e.g.
 ``/Users/t/...``), which don't exist on the triage host. Defaults to
-``HOPPER_URL`` from the env, or http://10.9.8.5:8081/.
+``HOPPER_URL`` from the env, or http://hopper-api:8081/.
 
 Archive members are fetched as their WHOLE containing archive (the row's
 ``parent`` sha) rather than asking hopper to stream-extract each member —
@@ -32,7 +32,7 @@ from typing import Any
 
 from archive_error_samples import _rows, _sample_path
 
-DEFAULT_HOPPER_URL = "http://10.9.8.5:8081"
+DEFAULT_HOPPER_URL = "http://hopper-api:8081"
 
 
 def _parse_retry_after(value: str | None) -> float | None:
