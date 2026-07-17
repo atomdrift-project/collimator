@@ -1288,3 +1288,35 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260712T105621-filetypes-jpeg` — 2026-07-12T10:56:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bb29f5b8abed2689` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9768 | 0.9755 | 0.8378 | 21 | [log](out/autocollie/runs/2026-07-12T11-06-04_20260712T105621-filetypes-jpeg_inherit_from_filetypes_gem_06bdacaa.log) |
+| `64d5035c04f2bdc6` | jpeg_control_train_reg | ok | 0.2628 | 0.6399 | 0.2979 | 19 | [log](out/autocollie/runs/2026-07-12T11-06-38_20260712T105621-filetypes-jpeg_jpeg_control_train_reg.log) |
+| `f1c18d3f4b3f3bf0` | jpeg_feat_textmetrics_kv_vocab | ok | 0.2576 | 0.6403 | 0.3064 | 15 | [log](out/autocollie/runs/2026-07-12T11-07-07_20260712T105621-filetypes-jpeg_jpeg_feat_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_reg`** `EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to establish baseline; increases reg_lambda to improve PR_AUC by reducing overfit on rare benign patterns while preserving ROC_AUC.
+- **`jpeg_feat_textmetrics_kv_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture steganographic and metadata signals in JPEGs, aiming to boost recall@3FPM by surfacing hidden malicious payloads without hurting PR_AUC.
+
+</details>
+
+## Cycle `20260713T213314-filetypes-jpeg` — 2026-07-13T21:33:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `10ebdf856e9f110f` | inherit_from_filetypes_plist_8b54303f | ok | 0.9768 | 0.9755 | 0.8378 | 10 | [log](out/autocollie/runs/2026-07-13T21-43-09_20260713T213314-filetypes-jpeg_inherit_from_filetypes_plist_8b54303f.log) |
+| `0ed31121b61bebb8` | jpeg_control_train_reg2 | ok | 0.1145 | 0.6016 | 0.2809 | 9 | [log](out/autocollie/runs/2026-07-13T21-43-20_20260713T213314-filetypes-jpeg_jpeg_control_train_reg2.log) |
+| `f7a829e8e08f6197` | jpeg_feat_kv_textenc_lowfreq | ok | 0.2204 | 0.6028 | 0.3239 | 14 | [log](out/autocollie/runs/2026-07-13T21-43-29_20260713T213314-filetypes-jpeg_jpeg_feat_kv_textenc_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_train_reg2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=200 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing regularization (reg_lambda=2.0) and min_child_samples (200) on the baseline feature set to reduce overfitting and stabilize ranking at the tail.
+- **`jpeg_feat_kv_textenc_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM and PR_AUC by enabling kv_vocab and text_encoding to capture metadata and overlay string patterns, while lowering bigram_min_freq to 100 to retain rare malicious n-grams.
+
+</details>
+

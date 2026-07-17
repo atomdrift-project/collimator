@@ -959,3 +959,99 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T121031-filetypes-ole` — 2026-07-09T12:10:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ddfb39fafc65dcd4` | inherit_from_filetypes_gem_06bdacaa | ok | 1.0000 | 0.9992 | 0.9945 | 29 | [log](out/autocollie/runs/2026-07-09T12-17-59_20260709T121031-filetypes-ole_inherit_from_filetypes_gem_06bdacaa.log) |
+| `8c765ffa45ff5eec` | ole_ctrl_train_extra_trees_reg | ok | 0.9970 | 0.9915 | 0.9702 | 26 | [log](out/autocollie/runs/2026-07-09T12-18-36_20260709T121031-filetypes-ole_ole_ctrl_train_extra_trees_reg.log) |
+| `` | ole_feat_textmetrics_kv_vocab | fail | — | — | — | 5 | [log](out/autocollie/runs/2026-07-09T12-19-27_20260709T121031-filetypes-ole_ole_feat_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_train_extra_trees_reg`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env as control; varies extra_trees and reg_lambda to improve PR_AUC and recall@3FPM via regularization and ensemble noise.
+- **`ole_feat_textmetrics_kv_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to boost PR_AUC and recall@3FPM on OLE documents.
+
+</details>
+
+## Cycle `20260711T110951-filetypes-ole` — 2026-07-11T11:09:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `09498743bb6c70da` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9999 | 0.9991 | 0.9933 | 30 | [log](out/autocollie/runs/2026-07-11T11-16-14_20260711T110951-filetypes-ole_inherit_from_filetypes_gem_06bdacaa.log) |
+| `6b1209dc72422691` | ole_feat_textmetrics_full | ok | 0.9958 | 0.9883 | 0.9673 | 18 | [log](out/autocollie/runs/2026-07-11T11-16-50_20260711T110951-filetypes-ole_ole_feat_textmetrics_full.log) |
+| `00fc0cbdb255a11f` | ole_feat_kv_vocab_lowfreq | ok | 0.9958 | 0.9883 | 0.9673 | 17 | [log](out/autocollie/runs/2026-07-11T11-17-40_20260711T110951-filetypes-ole_ole_feat_kv_vocab_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_feat_textmetrics_full`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture document obfuscation signals, aiming to improve PR_AUC by better ranking malicious OLE documents.
+- **`ole_feat_kv_vocab_lowfreq`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab with conservative limits to extract property-set metadata, aiming to improve recall@3FPM on the strict-FP tail.
+
+</details>
+
+## Cycle `20260713T042209-filetypes-ole` — 2026-07-13T04:22:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `06cd2eafbd5be36a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9989 | 0.9939 | 27 | [log](out/autocollie/runs/2026-07-13T04-31-32_20260713T042209-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `c679a0f3cefa7ad0` | ole_ctrl_train_reg_depth | ok | 0.9956 | 0.9873 | 0.9669 | 22 | [log](out/autocollie/runs/2026-07-13T04-32-06_20260713T042209-filetypes-ole_ole_ctrl_train_reg_depth.log) |
+| `cf1b4937ee7a4be3` | ole_feat_textmetrics_lowbigram | ok | 0.9955 | 0.9870 | 0.9669 | 22 | [log](out/autocollie/runs/2026-07-13T04-32-44_20260713T042209-filetypes-ole_ole_feat_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_train_reg_depth`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env as control; increases num_leaves and reg_lambda to improve PR_AUC ranking stability.
+- **`ole_feat_textmetrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full research vocab and lowers bigram_min_freq to 200 to capture rarer document obfuscation patterns, aiming to boost recall@3FPM.
+
+</details>
+
+## Cycle `20260713T214749-filetypes-ole` — 2026-07-13T21:47:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `06d45ae3e0e804b1` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9990 | 0.9936 | 35 | [log](out/autocollie/runs/2026-07-13T21-56-06_20260713T214749-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `2c8b658f176fa5dc` | ole_ctrl_train_reg_depth | ok | 0.9956 | 0.9874 | 0.9670 | 20 | [log](out/autocollie/runs/2026-07-13T21-56-42_20260713T214749-filetypes-ole_ole_ctrl_train_reg_depth.log) |
+| `bb2cd8e419c8f14e` | ole_feat_textmetrics_encoding | ok | 0.9956 | 0.9873 | 0.9670 | 22 | [log](out/autocollie/runs/2026-07-13T21-57-02_20260713T214749-filetypes-ole_ole_feat_textmetrics_encoding.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_train_reg_depth`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_LEARNING_RATE=0.05 …` — Control spec replicating best feature_env to isolate training knob effects on PR_AUC and recall@3FPM by increasing regularization and tree depth to reduce overfitting on the tail.
+- **`ole_feat_textmetrics_encoding`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_LEARNING_RATE=0.05 …` — Enables text_metrics_full and text_encoding research vocabs to capture document obfuscation signals, aiming to improve PR_AUC and recall@3FPM for OLE macros by adding structural text features that distinguish malicious payloads from benign templates.
+
+</details>
+
+## Cycle `20260715T025220-filetypes-ole` — 2026-07-15T02:52:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `436a51a79d5c7880` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9991 | 0.9946 | 118 | [log](out/autocollie/runs/2026-07-15T03-01-58_20260715T025220-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `dc172ffbe4e64697` | ole_ctrl_train_reg_depth | ok | 0.9958 | 0.9880 | 0.9670 | 86 | [log](out/autocollie/runs/2026-07-15T03-04-18_20260715T025220-filetypes-ole_ole_ctrl_train_reg_depth.log) |
+| `c31d12deadc257ce` | ole_feat_lowbigram_tiered | ok | 0.9957 | 0.9877 | 0.9669 | 51 | [log](out/autocollie/runs/2026-07-15T03-05-57_20260715T025220-filetypes-ole_ole_feat_lowbigram_tiered.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_train_reg_depth`** `EXP_ESTIMATORS=300 EXP_MAX_DEPTH=14 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best recent feature_env to maintain PR_AUC while testing higher regularization (reg_lambda=2.0) and deeper trees (max_depth=14) to improve recall@3FPM without overfitting.
+- **`ole_feat_lowbigram_tiered`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables tiered_crit_trigrams to capture subtle malicious patterns in OLE documents, targeting higher PR_AUC and recall@3FPM by enriching the feature surface with low-frequency but high-signal n-grams.
+
+</details>
+
+## Cycle `20260716T104746-filetypes-ole` — 2026-07-16T10:47:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `70e772dc2a498f59` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9991 | 0.9966 | 108 | [log](out/autocollie/runs/2026-07-16T10-55-51_20260716T104746-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `d4064fa115ddb8b3` | ole_ctrl_train_deeper | ok | 0.9959 | 0.9884 | 0.9668 | 88 | [log](out/autocollie/runs/2026-07-16T10-57-58_20260716T104746-filetypes-ole_ole_ctrl_train_deeper.log) |
+| `757b5a42d9a3c366` | ole_feat_textmetrics_lowbigram | ok | 0.9960 | 0.9887 | 0.9671 | 63 | [log](out/autocollie/runs/2026-07-16T10-59-35_20260716T104746-filetypes-ole_ole_feat_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_train_deeper`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control baseline replicating best feature_env; increases num_leaves and estimators to improve PR_AUC and recall@3FPM via better tree capacity without feature noise.
+- **`ole_feat_textmetrics_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables text_metrics_full research vocab to capture document obfuscation signals and lowers bigram_min_freq to 100 to recover rare malicious patterns, targeting recall@3FPM and PR_AUC gains.
+
+</details>
+

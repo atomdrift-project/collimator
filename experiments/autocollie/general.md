@@ -1098,3 +1098,67 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260710T174914-general` — 2026-07-10T17:49:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8097327e967caa7b` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9964 | 0.9959 | 0.9750 | 249 | [log](out/autocollie/runs/2026-07-10T18-01-15_20260710T174914-general_inherit_from_filetypes_gem_06bdacaa.log) |
+| `701bc8bdd27f81a6` | control_baseline_train_tune | ok | 0.9773 | 0.9723 | 0.9099 | 187 | [log](out/autocollie/runs/2026-07-10T18-05-23_20260710T174914-general_control_baseline_train_tune.log) |
+| `d90bc02eb4b482eb` | feat_kv_textmetrics_lowbigram | ok | 0.9777 | 0.9727 | 0.9118 | 87 | [log](out/autocollie/runs/2026-07-10T18-08-31_20260710T174914-general_feat_kv_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_baseline_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best recent feature surface to establish a training-only baseline; aims to improve PR_AUC and recall@3 FP/M via deeper trees and higher regularization to reduce overfitting on the tail.
+- **`feat_kv_textmetrics_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables kv_vocab and text_metrics_full research families while lowering bigram_min_freq to 50 to capture rarer structural signals; aims to boost PR_AUC and recall@3 FP/M by adding high-signal document/script features without degrading ROC_AUC.
+
+</details>
+
+## Cycle `20260712T105621-general` — 2026-07-12T10:56:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1ff25cd2831b1322` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9968 | 0.9964 | 0.9733 | 282 | [log](out/autocollie/runs/2026-07-12T11-08-20_20260712T105621-general_inherit_from_filetypes_gem_06bdacaa.log) |
+| `915700135f501420` | control_baseline_train_tune | ok | 0.9705 | 0.9631 | 0.9051 | 230 | [log](out/autocollie/runs/2026-07-12T11-13-02_20260712T105621-general_control_baseline_train_tune.log) |
+| `96389c0be569611c` | feat_kv_textmetrics_lowbigram | ok | 0.9714 | 0.9644 | 0.9040 | 114 | [log](out/autocollie/runs/2026-07-12T11-16-52_20260712T105621-general_feat_kv_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_baseline_train_tune`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to ensure matrix cache hit; adjusts num_leaves and learning_rate to improve PR_AUC by reducing overfitting while preserving ranking quality.
+- **`feat_kv_textmetrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full to capture key-value and document obfuscation signals, lowering bigram_min_freq to 25 to boost recall@3FPM and PR_AUC.
+
+</details>
+
+## Cycle `20260713T214738-general` — 2026-07-13T21:47:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4e456e26a00c8a65` | inherit_from_filetypes_plist_8b54303f | ok | 0.9972 | 0.9968 | 0.9769 | 149 | [log](out/autocollie/runs/2026-07-13T21-55-42_20260713T214738-general_inherit_from_filetypes_plist_8b54303f.log) |
+| `c2332dc305e68489` | control_baseline_train_tune | ok | 0.9789 | 0.9742 | 0.9089 | 1952 | [log](out/autocollie/runs/2026-07-13T21-58-10_20260713T214738-general_control_baseline_train_tune.log) |
+| `ffb7415dbcc363bf` | feat_kv_textmetrics_full | ok | 0.9792 | 0.9749 | 0.9091 | 87 | [log](out/autocollie/runs/2026-07-13T22-30-43_20260713T214738-general_feat_kv_textmetrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_baseline_train_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature_env to establish a training-only baseline; aims to stabilize PR_AUC via increased leaves and regularization.
+- **`feat_kv_textmetrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text_metrics_full and kv_vocab to capture richer structural and key-value signals; aims to boost recall@3FPM and PR_AUC.
+
+</details>
+
+## Cycle `20260715T025144-general` — 2026-07-15T02:51:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0f6c8b4f209540ff` | inherit_from_filetypes_plist_8b54303f | ok | 0.9968 | 0.9964 | 0.9775 | 465 | [log](out/autocollie/runs/2026-07-15T02-59-57_20260715T025144-general_inherit_from_filetypes_plist_8b54303f.log) |
+| `ea4989c49243ea79` | control_train_tune_leaves128_lr003 | ok | 0.9752 | 0.9682 | 0.9019 | 3550 | [log](out/autocollie/runs/2026-07-15T03-07-42_20260715T025144-general_control_train_tune_leaves128_lr003.log) |
+| `91bd3dc81bc394a1` | feat_kv_textmetrics_full_vocab | ok | 0.9759 | 0.9696 | 0.9040 | 92 | [log](out/autocollie/runs/2026-07-15T04-06-52_20260715T025144-general_feat_kv_textmetrics_full_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_train_tune_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env to hit matrix cache, tuning num_leaves and learning_rate to improve PR_AUC by reducing overfitting on noisy benigns.
+- **`feat_kv_textmetrics_full_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture key-value pairs and document obfuscation signals, aiming to boost recall@3FPM and PR_AUC on mixed filetypes.
+
+</details>
+

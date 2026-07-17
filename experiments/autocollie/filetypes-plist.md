@@ -1160,3 +1160,35 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T105824-filetypes-plist` — 2026-07-09T10:58:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7b572b1618184156` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9444 | 0.9963 | 0.9091 | 23 | [log](out/autocollie/runs/2026-07-09T11-08-24_20260709T105824-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `93861df04a16e922` | plist_feat_kv_textmetrics_v1 | ok | 0.0669 | 0.4298 | 0.1224 | 12 | [log](out/autocollie/runs/2026-07-09T11-08-56_20260709T105824-filetypes-plist_plist_feat_kv_textmetrics_v1.log) |
+| `44f3ae6c3c04ba2a` | plist_feat_lowfreq_bigrams_trigrams | ok | 0.0366 | 0.2341 | 0.0594 | 7 | [log](out/autocollie/runs/2026-07-09T11-09-14_20260709T105824-filetypes-plist_plist_feat_lowfreq_bigrams_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_feat_kv_textmetrics_v1`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structural KV patterns and text obfuscation signals, aiming to improve PR_AUC by adding high-signal features for plist configurations.
+- **`plist_feat_lowfreq_bigrams_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables tiered trigrams to capture rarer malicious patterns, aiming to boost recall@3FPM without degrading ROC_AUC.
+
+</details>
+
+## Cycle `20260712T105621-filetypes-plist` — 2026-07-12T10:56:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8b54303f1c4f4c1d` | inherit_from_filetypes_gem_06bdacaa | ok | 1.0000 | 1.0000 | 0.8000 | 9 | [log](out/autocollie/runs/2026-07-12T11-05-38_20260712T105621-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `e3f22c95029e84c2` | plist_ctrl_train_tune_v1 | ok | 0.0663 | 0.4174 | 0.1031 | 10 | [log](out/autocollie/runs/2026-07-12T11-05-52_20260712T105621-filetypes-plist_plist_ctrl_train_tune_v1.log) |
+| `dbab935479d96d9a` | plist_feat_kv_vocab_bigram200 | ok | 0.0663 | 0.4174 | 0.1031 | 10 | [log](out/autocollie/runs/2026-07-12T11-06-07_20260712T105621-filetypes-plist_plist_feat_kv_vocab_bigram200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_ctrl_train_tune_v1`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — control baseline with increased num_leaves and estimators to improve PR_AUC ranking stability without altering the feature surface
+- **`plist_feat_kv_vocab_bigram200`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — enable kv_vocab and lower bigram_min_freq to capture rare plist keys, targeting PR_AUC gain from structural KV signal
+
+</details>
+

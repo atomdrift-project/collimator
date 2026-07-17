@@ -972,3 +972,83 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260710T174914-filegroups-media` — 2026-07-10T17:49:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2e8a3cfb72675531` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9857 | 0.9782 | 0.9493 | 40 | [log](out/autocollie/runs/2026-07-10T17-58-44_20260710T174914-filegroups-media_inherit_from_filetypes_gem_06bdacaa.log) |
+| `45777480c2d71042` | media_control_hardneg_opt | ok | 0.3112 | 0.7282 | 0.1553 | 48 | [log](out/autocollie/runs/2026-07-10T18-00-21_20260710T174914-filegroups-media_media_control_hardneg_opt.log) |
+| `088bf70750d0b140` | media_kv_vocab_textenc | ok | 0.3908 | 0.8051 | 0.1559 | 14 | [log](out/autocollie/runs/2026-07-10T18-01-14_20260710T174914-filegroups-media_media_kv_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_hardneg_opt`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env; tunes hard_negative_fraction and scale_pos_weight_mult to improve recall@3 FP/M by focusing on hard negatives and reducing FP weight, while preserving PR_AUC.
+- **`media_kv_vocab_textenc`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture media metadata and encoding patterns, aiming to boost PR_AUC and recall@3 FP/M by adding discriminative signal for malicious media payloads.
+
+</details>
+
+## Cycle `20260712T234609-filegroups-media` — 2026-07-12T23:46:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8872f0c9ad7c1565` | inherit_from_filetypes_plist_8b54303f | ok | 0.9863 | 0.9784 | 0.9550 | 10 | [log](out/autocollie/runs/2026-07-12T23-54-12_20260712T234609-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `a11902bf3b7379ab` | media_text_metrics_encoding | ok | 0.2554 | 0.6153 | 0.1549 | 19 | [log](out/autocollie/runs/2026-07-12T23-54-34_20260712T234609-filegroups-media_media_text_metrics_encoding.log) |
+| `2ac2c32be9b561e3` | media_kv_vocab_low_bigram_freq | ok | 0.2591 | 0.6155 | 0.1549 | 6 | [log](out/autocollie/runs/2026-07-12T23-54-59_20260712T234609-filegroups-media_media_kv_vocab_low_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_text_metrics_encoding`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture metadata and obfuscation signals in media files, aiming to lift PR_AUC while preserving ROC_AUC.
+- **`media_kv_vocab_low_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab and lowers bigram_min_freq to 500 to capture rare metadata keys and subtle n-gram patterns, targeting improved recall@3FPM without hurting guardrails.
+
+</details>
+
+## Cycle `20260713T214745-filegroups-media` — 2026-07-13T21:47:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d964e23fc5528c99` | inherit_from_filetypes_plist_8b54303f | ok | 0.9868 | 0.9803 | 0.9275 | 7 | [log](out/autocollie/runs/2026-07-13T21-56-10_20260713T214745-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `38a981307e41ca1d` | media_control_kv_vocab_lr_tweak | ok | 0.3319 | 0.6767 | 0.1503 | 12 | [log](out/autocollie/runs/2026-07-13T21-56-17_20260713T214745-filegroups-media_media_control_kv_vocab_lr_tweak.log) |
+| `0612d0539bc2cd6b` | media_text_encoding_hardneg_tail | ok | 0.2488 | 0.5268 | 0.1543 | 6 | [log](out/autocollie/runs/2026-07-13T21-56-30_20260713T214745-filegroups-media_media_text_encoding_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_kv_vocab_lr_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best feature_env with added kv_vocab to capture metadata signal; lowers learning_rate and increases num_leaves to stabilize PR_AUC ranking.
+- **`media_text_encoding_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Enables text_encoding to detect obfuscated payloads in media containers; pairs with hard_negative_weight to sharpen recall@3FPM at the strict-FP tail.
+
+</details>
+
+## Cycle `20260715T124254-filegroups-media` — 2026-07-15T12:42:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8064967a3dff5620` | inherit_from_filetypes_plist_8b54303f | ok | 0.9864 | 0.9780 | 0.9545 | 86 | [log](out/autocollie/runs/2026-07-15T12-50-01_20260715T124254-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `dd2282cfc241e620` | media_kv_vocab_textenc_pr_auc | ok | 0.3960 | 0.7744 | 0.1555 | 48 | [log](out/autocollie/runs/2026-07-15T12-52-18_20260715T124254-filegroups-media_media_kv_vocab_textenc_pr_auc.log) |
+| `305bf0853ec0384d` | media_text_metrics_full_recall_tail | ok | 0.3918 | 0.7632 | 0.1555 | 10 | [log](out/autocollie/runs/2026-07-15T12-53-22_20260715T124254-filegroups-media_media_text_metrics_full_recall_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_kv_vocab_textenc_pr_auc`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and text_encoding to capture metadata and encoding artifacts in media files, adding discriminative signal for malicious payloads disguised as media.
+- **`media_text_metrics_full_recall_tail`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Targets recall@3FPM by activating text_metrics_full to extract structural text features from media metadata, better separating benign media from obfuscated malicious files at the strict-FP tail.
+
+</details>
+
+## Cycle `20260716T104750-filegroups-media` — 2026-07-16T10:47:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e2c48ab81f1bda59` | inherit_from_filetypes_plist_8b54303f | ok | 0.9870 | 0.9795 | 0.9593 | 11 | [log](out/autocollie/runs/2026-07-16T10-55-05_20260716T104750-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `4d947847c3dab4d5` | media_control_train_tune | ok | 0.3452 | 0.7285 | 0.1540 | 12 | [log](out/autocollie/runs/2026-07-16T10-55-24_20260716T104750-filegroups-media_media_control_train_tune.log) |
+| `f524799b955c5f9d` | media_kv_vocab_pr_auc | ok | 0.3397 | 0.6616 | 0.1544 | 7 | [log](out/autocollie/runs/2026-07-16T10-55-38_20260716T104750-filegroups-media_media_kv_vocab_pr_auc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_train_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env to test if increasing num_leaves and lowering learning_rate improves PR_AUC by better fitting the tail without overfitting.
+- **`media_kv_vocab_pr_auc`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured metadata patterns in media files, aiming to boost PR_AUC by adding discriminative signal for malicious payloads while keeping ROC_AUC flat.
+
+</details>
+

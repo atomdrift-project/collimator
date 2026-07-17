@@ -1220,3 +1220,35 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T105817-filetypes-text` — 2026-07-09T10:58:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `02d99c7b6a6c39d2` | inherit_from_filetypes_gem_06bdacaa | ok | 0.8263 | 0.9106 | 0.7077 | 39 | [log](out/autocollie/runs/2026-07-09T11-08-01_20260709T105817-filetypes-text_inherit_from_filetypes_gem_06bdacaa.log) |
+| `cef9485918f83e39` | text_ctrl_train_tune_v1 | ok | 0.0805 | 0.5386 | 0.1025 | 50 | [log](out/autocollie/runs/2026-07-09T11-09-31_20260709T105817-filetypes-text_text_ctrl_train_tune_v1.log) |
+| `f5a8078fba1f3290` | text_feat_textmetrics_kv_v1 | ok | 0.0852 | 0.5343 | 0.1025 | 9 | [log](out/autocollie/runs/2026-07-09T11-10-44_20260709T105817-filetypes-text_text_feat_textmetrics_kv_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_train_tune_v1`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to establish a baseline; tunes num_leaves and reg_lambda to improve PR_AUC by reducing overfitting on rare benign patterns.
+- **`text_feat_textmetrics_kv_v1`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and kv_vocab to capture structural obfuscation and key-value patterns in text files, aiming to boost recall@3FPM and PR_AUC by adding high-signal features for malicious document traits.
+
+</details>
+
+## Cycle `20260715T231208-filetypes-text` — 2026-07-15T23:12:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0fb7813b0d58e98a` | inherit_from_filetypes_plist_8b54303f | ok | 0.8573 | 0.9353 | 0.7755 | 63 | [log](out/autocollie/runs/2026-07-15T23-21-53_20260715T231208-filetypes-text_inherit_from_filetypes_plist_8b54303f.log) |
+| `247e8a7b5acfed21` | text_ctrl_textmetrics_v1 | ok | 0.0766 | 0.5345 | 0.1018 | 15 | [log](out/autocollie/runs/2026-07-15T23-23-17_20260715T231208-filetypes-text_text_ctrl_textmetrics_v1.log) |
+| `0ab23d9a77c33427` | text_feat_kv_lowbigram_v1 | ok | 0.1260 | 0.6193 | 0.1048 | 10 | [log](out/autocollie/runs/2026-07-15T23-23-39_20260715T231208-filetypes-text_text_feat_kv_lowbigram_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_ctrl_textmetrics_v1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best feature_env but enables text_metrics_full to capture document obfuscation signals, aiming to improve PR_AUC while tuning num_leaves and estimators for better rank quality.
+- **`text_feat_kv_lowbigram_v1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Lowers bigram_min_freq to 100 and enables kv_vocab to capture rare malicious patterns and key-value structures in text files, targeting recall@3FPM and PR_AUC gains.
+
+</details>
+

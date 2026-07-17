@@ -908,3 +908,67 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260711T040610-filegroups-scripts` — 2026-07-11T04:06:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b27cceec12ed1ca2` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9923 | 0.9906 | 0.9544 | 91 | [log](out/autocollie/runs/2026-07-11T04-13-01_20260711T040610-filegroups-scripts_inherit_from_filetypes_gem_06bdacaa.log) |
+| `129995435ada51ff` | scripts_control_train_opt | ok | 0.9353 | 0.9363 | 0.6989 | 79 | [log](out/autocollie/runs/2026-07-11T04-15-45_20260711T040610-filegroups-scripts_scripts_control_train_opt.log) |
+| `8d54756d01602619` | scripts_feat_textenc_kv_vocab | ok | 0.9522 | 0.9538 | 0.7002 | 28 | [log](out/autocollie/runs/2026-07-11T04-17-09_20260711T040610-filegroups-scripts_scripts_feat_textenc_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_train_opt`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env to hit matrix cache; tune num_leaves and learning_rate to improve PR_AUC and recall@3 FP/M without altering features.
+- **`scripts_feat_textenc_kv_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding, text_metrics_full, and kv_vocab to capture script obfuscation and key-value patterns, aiming to boost PR_AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260713T015811-filegroups-scripts` — 2026-07-13T01:58:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7ed85f7da9a6922d` | inherit_from_filetypes_plist_8b54303f | ok | 0.9935 | 0.9921 | 0.9603 | 83 | [log](out/autocollie/runs/2026-07-13T02-06-56_20260713T015811-filegroups-scripts_inherit_from_filetypes_plist_8b54303f.log) |
+| `02bc83abb2c2fdc3` | scripts_control_train_opt | ok | 0.9529 | 0.9528 | 0.7047 | 92 | [log](out/autocollie/runs/2026-07-13T02-09-21_20260713T015811-filegroups-scripts_scripts_control_train_opt.log) |
+| `565e38789adb89db` | scripts_feat_textenc_metrics_lowbigram | ok | 0.9400 | 0.9387 | 0.7012 | 27 | [log](out/autocollie/runs/2026-07-13T02-10-58_20260713T015811-filegroups-scripts_scripts_feat_textenc_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_train_opt`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env with optimized training knobs (hard negatives, lower LR, more leaves) to improve PR_AUC and recall@3FPM via better ranking calibration while hitting matrix cache.
+- **`scripts_feat_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable text_encoding and text_metrics_full research vocabs with lower bigram_min_freq to capture script-specific obfuscation and syntax patterns, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+
+## Cycle `20260713T214740-filegroups-scripts` — 2026-07-13T21:47:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `668e05e2bf389ec2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9929 | 0.9912 | 0.9611 | 78 | [log](out/autocollie/runs/2026-07-13T21-55-56_20260713T214740-filegroups-scripts_inherit_from_filetypes_plist_8b54303f.log) |
+| `a08d886d93681814` | scripts_textenc_metrics_lowbigram | ok | 0.9549 | 0.9552 | 0.7089 | 77 | [log](out/autocollie/runs/2026-07-13T21-57-15_20260713T214740-filegroups-scripts_scripts_textenc_metrics_lowbigram.log) |
+| `06b533b411a9f5a6` | scripts_kv_vocab_split_hardneg | ok | 0.9565 | 0.9571 | 0.7097 | 35 | [log](out/autocollie/runs/2026-07-13T21-58-32_20260713T214740-filegroups-scripts_scripts_kv_vocab_split_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture script obfuscation signals, while lowering bigram_min_freq to 100 to recover rare malicious patterns; aims to improve PR_AUC and recall@3FPM by adding high-signal text features.
+- **`scripts_kv_vocab_split_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 …` — Activates kv_vocab and kv_value_split to parse structured script metadata into finer tokens, paired with hard_negative_fraction to sharpen the decision boundary; targets PR_AUC gains from improved key-value discrimination at the tail.
+
+</details>
+
+## Cycle `20260715T124254-filegroups-scripts` — 2026-07-15T12:42:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `daa5435025a63084` | inherit_from_filetypes_plist_8b54303f | ok | 0.9938 | 0.9923 | 0.9609 | 104 | [log](out/autocollie/runs/2026-07-15T12-50-26_20260715T124254-filegroups-scripts_inherit_from_filetypes_plist_8b54303f.log) |
+| `49d160fb86d9f81d` | scripts_control_training_tune | ok | 0.9440 | 0.9432 | 0.7045 | 81 | [log](out/autocollie/runs/2026-07-15T12-53-38_20260715T124254-filegroups-scripts_scripts_control_training_tune.log) |
+| `47127ba9a2f022b7` | scripts_textenc_metrics_lowbigram | ok | 0.9424 | 0.9430 | 0.7050 | 25 | [log](out/autocollie/runs/2026-07-15T12-55-04_20260715T124254-filegroups-scripts_scripts_textenc_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_training_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature surface to hit matrix cache while tuning num_leaves and estimators to improve PR_AUC by reducing underfitting on complex script patterns.
+- **`scripts_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full while lowering bigram_min_freq to 100 to capture rarer script obfuscation patterns, aiming to boost recall@3FPM by adding structural text signals.
+
+</details>
+

@@ -1691,3 +1691,67 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T105817-filetypes-javascript` — 2026-07-09T10:58:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `df5cf23c16703f77` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9947 | 0.9937 | 0.9626 | 202 | [log](out/autocollie/runs/2026-07-09T11-08-51_20260709T105817-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `be753ea8cc19b5b4` | js_textenc_metrics_full_bigram25 | ok | 0.9808 | 0.9737 | 0.9352 | 218 | [log](out/autocollie/runs/2026-07-09T11-13-43_20260709T105817-filetypes-javascript_js_textenc_metrics_full_bigram25.log) |
+| `41788dc3ef07c138` | js_kv_vocab_split_tiered_bigrams | ok | 0.9802 | 0.9726 | 0.9322 | 54 | [log](out/autocollie/runs/2026-07-09T11-17-34_20260709T105817-filetypes-javascript_js_kv_vocab_split_tiered_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_textenc_metrics_full_bigram25`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable text_encoding and text_metrics_full to capture script obfuscation signals, lowering bigram_min_freq to 25 to catch rare malicious patterns, aiming to improve PR_AUC by boosting true positive ranking at low FPR.
+- **`js_kv_vocab_split_tiered_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Enable kv_vocab with kv_value_split to recover per-element signal in JS dependency strings, combined with tiered bigrams to focus on high-crit paths, aiming to improve recall@3FPM by isolating precise malicious indicators.
+
+</details>
+
+## Cycle `20260711T131803-filetypes-javascript` — 2026-07-11T13:18:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d44df094579f0411` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9950 | 0.9941 | 0.9654 | 123 | [log](out/autocollie/runs/2026-07-11T13-25-18_20260711T131803-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `9c96bc8333303c9b` | js_kv_vocab_textenc_bigram50 | ok | 0.9772 | 0.9693 | 0.9300 | 116 | [log](out/autocollie/runs/2026-07-11T13-28-56_20260711T131803-filetypes-javascript_js_kv_vocab_textenc_bigram50.log) |
+| `c1c012051814d09a` | js_textenc_metrics_split_reg | ok | 0.9792 | 0.9708 | 0.9331 | 50 | [log](out/autocollie/runs/2026-07-11T13-31-00_20260711T131803-filetypes-javascript_js_textenc_metrics_split_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_kv_vocab_textenc_bigram50`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to improve PR_AUC by enabling kv_vocab alongside text_encoding and lowering bigram_min_freq to capture rarer JS obfuscation patterns.
+- **`js_textenc_metrics_split_reg`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 …` — Aims to boost recall@3 FP/M by enabling kv_value_split and increasing regularization on the textenc/metrics surface to reduce overfitting on benign JS noise.
+
+</details>
+
+## Cycle `20260712T105621-filetypes-javascript` — 2026-07-12T10:56:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `769f9afc9d79cf2b` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9944 | 0.9931 | 0.9643 | 213 | [log](out/autocollie/runs/2026-07-12T11-05-47_20260712T105621-filetypes-javascript_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c34b837ff56cab89` | js_kv_textenc_bigram100_lr004 | ok | 0.9791 | 0.9705 | 0.9329 | 134 | [log](out/autocollie/runs/2026-07-12T11-10-54_20260712T105621-filetypes-javascript_js_kv_textenc_bigram100_lr004.log) |
+| `6c505cfad0050156` | js_textmetrics_kvsplit_leaves128 | ok | 0.9807 | 0.9736 | 0.9347 | 67 | [log](out/autocollie/runs/2026-07-12T11-13-19_20260712T105621-filetypes-javascript_js_textmetrics_kvsplit_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_kv_textenc_bigram100_lr004`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Augments baseline with kv_vocab and text_encoding to capture JS object/encoding signals, aiming to lift PR_AUC while tuning LR for stable convergence.
+- **`js_textmetrics_kvsplit_leaves128`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 …` — Activates text_metrics_full and kv_value_split to extract structural and split KV signals, targeting recall@3 FP/M gains with deeper trees and moderate L2 regularization.
+
+</details>
+
+## Cycle `20260715T231208-filetypes-javascript` — 2026-07-15T23:12:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f1ad7a02ebb1cde3` | inherit_from_filetypes_plist_8b54303f | ok | 0.9948 | 0.9937 | 0.9662 | 232 | [log](out/autocollie/runs/2026-07-15T23-20-43_20260715T231208-filetypes-javascript_inherit_from_filetypes_plist_8b54303f.log) |
+| `347f490d722ee90b` | js_textmetrics_kv_vocab_bigram100 | ok | 0.9802 | 0.9725 | 0.9331 | 102 | [log](out/autocollie/runs/2026-07-15T23-26-20_20260715T231208-filetypes-javascript_js_textmetrics_kv_vocab_bigram100.log) |
+| `ab0d0412994a38d8` | js_textenc_lowbigram_lr003 | ok | 0.9781 | 0.9689 | 0.9328 | 28 | [log](out/autocollie/runs/2026-07-15T23-28-07_20260715T231208-filetypes-javascript_js_textenc_lowbigram_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_textmetrics_kv_vocab_bigram100`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and kv_vocab to capture script obfuscation and key-value patterns, aiming to improve PR_AUC and recall@3FPM by adding high-signal features for JS files.
+- **`js_textenc_lowbigram_lr003`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and lowers bigram_min_freq to 50 to capture encoding artifacts and rarer patterns, aiming to boost recall@3FPM while maintaining PR_AUC via conservative learning rate.
+
+</details>
+

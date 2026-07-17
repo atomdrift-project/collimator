@@ -820,3 +820,35 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260710T174914-filetypes-xls` — 2026-07-10T17:49:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7b5fe7fc9b79192e` | inherit_from_filetypes_gem_06bdacaa | ok | 1.0000 | 0.9992 | 0.9947 | 55 | [log](out/autocollie/runs/2026-07-10T17-59-33_20260710T174914-filetypes-xls_inherit_from_filetypes_gem_06bdacaa.log) |
+| `1be0aa341b6f559c` | xls_control_train_extra_trees_reg | ok | 0.9972 | 0.9921 | 0.9715 | 41 | [log](out/autocollie/runs/2026-07-10T18-00-40_20260710T174914-filetypes-xls_xls_control_train_extra_trees_reg.log) |
+| `577068ab54f55bca` | xls_feat_textmetrics_lowbigram_hardneg | ok | 0.9969 | 0.9909 | 0.9674 | 34 | [log](out/autocollie/runs/2026-07-10T18-01-30_20260710T174914-filetypes-xls_xls_feat_textmetrics_lowbigram_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xls_control_train_extra_trees_reg`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env exactly to hit matrix cache, varying only training knobs (extra_trees, reg_lambda) to improve PR_AUC and tail recall without rebuild cost.
+- **`xls_feat_textmetrics_lowbigram_hardneg`** `EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full research vocab and lowers bigram_min_freq to capture rare document obfuscation patterns, aiming to boost recall@3 FP/M with hard_negative tuning to preserve PR_AUC.
+
+</details>
+
+## Cycle `20260713T011353-filetypes-xls` — 2026-07-13T01:13:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8a98408e364fcb32` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9989 | 0.9939 | 34 | [log](out/autocollie/runs/2026-07-13T01-22-26_20260713T011353-filetypes-xls_inherit_from_filetypes_plist_8b54303f.log) |
+| `61f89818a82d5cc9` | xls_control_train_hardneg_tail | ok | 0.9961 | 0.9886 | 0.9672 | 26 | [log](out/autocollie/runs/2026-07-13T01-23-08_20260713T011353-filetypes-xls_xls_control_train_hardneg_tail.log) |
+| `349db3a3672ad5e9` | xls_feat_textmetrics_full_lowbigram | ok | 0.9955 | 0.9870 | 0.9669 | 29 | [log](out/autocollie/runs/2026-07-13T01-24-26_20260713T011353-filetypes-xls_xls_feat_textmetrics_full_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xls_control_train_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Tests hard negative weighting to improve recall@3 FP/M by focusing the model on difficult benign samples, keeping PR_AUC flat.
+- **`xls_feat_textmetrics_full_lowbigram`** `EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture document obfuscation signals in XLS files, aiming to boost PR_AUC by adding structural text features, while lowering bigram_min_freq to 250 to capture rarer malicious patterns.
+
+</details>
+

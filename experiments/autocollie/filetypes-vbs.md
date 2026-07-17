@@ -1040,3 +1040,83 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260711T101407-filetypes-vbs` — 2026-07-11T10:14:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `933f82d502ea31b2` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9998 | 0.9973 | 0.9910 | 16 | [log](out/autocollie/runs/2026-07-11T10-20-38_20260711T101407-filetypes-vbs_inherit_from_filetypes_gem_06bdacaa.log) |
+| `4473c63fce4e3674` | vbs_kv_vocab_baseline_train | ok | 0.9972 | 0.9906 | 0.9557 | 15 | [log](out/autocollie/runs/2026-07-11T10-21-00_20260711T101407-filetypes-vbs_vbs_kv_vocab_baseline_train.log) |
+| `dc2ea89db3730f3a` | vbs_text_metrics_tiered_trigrams | ok | 0.9973 | 0.9908 | 0.9569 | 29 | [log](out/autocollie/runs/2026-07-11T10-21-45_20260711T101407-filetypes-vbs_vbs_text_metrics_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_kv_vocab_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables kv_vocab to extract structured key-value signals from VBS scripts, aiming to lift PR_AUC by adding high-signal features while keeping the baseline feature surface intact.
+- **`vbs_text_metrics_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Activates text_metrics_full and expands tiered trigram capacity to capture obfuscation and script structure, targeting improved recall@3 FP/M by better separating malicious VBS patterns from benign scripts.
+
+</details>
+
+## Cycle `20260712T105621-filetypes-vbs` — 2026-07-12T10:56:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `22050bfdea649807` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9998 | 0.9972 | 0.9936 | 22 | [log](out/autocollie/runs/2026-07-12T11-05-28_20260712T105621-filetypes-vbs_inherit_from_filetypes_gem_06bdacaa.log) |
+| `ee8de71fd27f4b02` | vbs_text_metrics_control | ok | 0.9971 | 0.9903 | 0.9584 | 20 | [log](out/autocollie/runs/2026-07-12T11-05-57_20260712T105621-filetypes-vbs_vbs_text_metrics_control.log) |
+| `d60129578b5af7cf` | vbs_kv_vocab_hardneg | ok | 0.9987 | 0.9956 | 0.9692 | 34 | [log](out/autocollie/runs/2026-07-12T11-07-08_20260712T105621-filetypes-vbs_vbs_kv_vocab_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_text_metrics_control`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by adding text_metrics_full to capture script obfuscation signals, paired with increased num_leaves to better model complex benign/malware boundaries.
+- **`vbs_kv_vocab_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab to extract structured VBS property assignments, combined with hard_negative_weight to sharpen the decision boundary at low FPR.
+
+</details>
+
+## Cycle `20260713T214419-filetypes-vbs` — 2026-07-13T21:44:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `261d5c419b7fd8ca` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9974 | 0.9819 | 15 | [log](out/autocollie/runs/2026-07-13T21-54-32_20260713T214419-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `5bf7f3d69ad05d69` | vbs_control_hardneg_leaves128 | ok | 0.9986 | 0.9951 | 0.9746 | 12 | [log](out/autocollie/runs/2026-07-13T21-54-48_20260713T214419-filetypes-vbs_vbs_control_hardneg_leaves128.log) |
+| `639fe87284c7b948` | vbs_text_kv_vocab_research | ok | 0.9972 | 0.9904 | 0.9574 | 9 | [log](out/autocollie/runs/2026-07-13T21-55-01_20260713T214419-filetypes-vbs_vbs_text_kv_vocab_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Replicates top PR_AUC feature surface; tunes hard-negative weighting and tree capacity to improve PR_AUC while preserving ROC_AUC.
+- **`vbs_text_kv_vocab_research`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=6000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables research vocabs text_metrics_full and kv_vocab to capture VBS obfuscation and configuration patterns, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260715T025142-filetypes-vbs` — 2026-07-15T02:51:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a84ad0559d429ae3` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9975 | 0.9936 | 41 | [log](out/autocollie/runs/2026-07-15T03-00-15_20260715T025142-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `e7fd242f1d781bc9` | vbs_control_lr003_est300 | ok | 0.9973 | 0.9908 | 0.9579 | 33 | [log](out/autocollie/runs/2026-07-15T03-01-09_20260715T025142-filetypes-vbs_vbs_control_lr003_est300.log) |
+| `fa90a744a77750bd` | vbs_kv_vocab_text_metrics_research | ok | 0.9972 | 0.9905 | 0.9582 | 31 | [log](out/autocollie/runs/2026-07-15T03-01-50_20260715T025142-filetypes-vbs_vbs_kv_vocab_text_metrics_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_lr003_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating best feature_env to hit matrix cache; lowers learning rate to 0.03 and increases estimators to 300 to refine PR_AUC ranking stability.
+- **`vbs_kv_vocab_text_metrics_research`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enables kv_vocab and text_metrics_full research families to capture VBS script structure and key-value patterns, targeting higher recall@3FPM and PR_AUC.
+
+</details>
+
+## Cycle `20260716T104746-filetypes-vbs` — 2026-07-16T10:47:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `777bb72d1657485f` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9971 | 0.9933 | 15 | [log](out/autocollie/runs/2026-07-16T10-54-53_20260716T104746-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `af28bd58d55c8e7d` | vbs_control_lr003_leaves128 | ok | 0.9968 | 0.9892 | 0.9557 | 12 | [log](out/autocollie/runs/2026-07-16T10-55-13_20260716T104746-filetypes-vbs_vbs_control_lr003_leaves128.log) |
+| `372d3295fe9dda39` | vbs_text_metrics_kv_vocab_research | ok | 0.9968 | 0.9892 | 0.9583 | 12 | [log](out/autocollie/runs/2026-07-16T10-55-28_20260716T104746-filetypes-vbs_vbs_text_metrics_kv_vocab_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_lr003_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature_env to ensure matrix cache hits; adjusts learning_rate and num_leaves to reduce overfitting and improve PR_AUC at the strict-FP tail.
+- **`vbs_text_metrics_kv_vocab_research`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture VBS script obfuscation patterns and key-value structures, aiming to boost recall@3FPM by adding high-signal features for malicious payloads.
+
+</details>
+

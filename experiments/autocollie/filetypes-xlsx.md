@@ -706,3 +706,88 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260709T105817-filetypes-xlsx` — 2026-07-09T10:58:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c71bf2141538e305` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9947 | 0.5000 | 0.9973 | 24 | [log](out/autocollie/runs/2026-07-09T11-07-57_20260709T105817-filetypes-xlsx_inherit_from_filetypes_gem_06bdacaa.log) |
+| `fbb4ad7fb71b6f82` | xlsx_control_hardneg_lr_tune | ok | 0.9848 | 0.7381 | 0.5207 | 17 | [log](out/autocollie/runs/2026-07-09T11-08-30_20260709T105817-filetypes-xlsx_xlsx_control_hardneg_lr_tune.log) |
+| `7fd2808dcf8f4267` | xlsx_textenc_metrics_full_tune | ok | 0.9854 | 0.7489 | 0.5202 | 17 | [log](out/autocollie/runs/2026-07-09T11-09-32_20260709T105817-filetypes-xlsx_xlsx_textenc_metrics_full_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_hardneg_lr_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run replicating the top PR_AUC feature set; adjusts hard_negative_weight and learning_rate to stabilize ranking and improve PR_AUC while preserving ROC_AUC.
+- **`xlsx_textenc_metrics_full_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables text_metrics_full and text_encoding to capture xlsx obfuscation patterns; lowers bigram_min_freq to 250 to boost recall@3FPM and PR_AUC by surfacing rarer malicious n-grams.
+
+</details>
+
+## Cycle `20260711T110951-filetypes-xlsx` — 2026-07-11T11:09:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5f8c27f4423d9aa4` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9953 | 0.5000 | 0.9977 | 13 | [log](out/autocollie/runs/2026-07-11T11-18-10_20260711T110951-filetypes-xlsx_inherit_from_filetypes_gem_06bdacaa.log) |
+| `3e57e7aea9981b78` | xlsx_control_hardneg_tune | ok | 0.9805 | 0.6944 | 0.5201 | 8 | [log](out/autocollie/runs/2026-07-11T11-18-28_20260711T110951-filetypes-xlsx_xlsx_control_hardneg_tune.log) |
+| `e054655aef8ff6c7` | xlsx_kv_split_textenc_metrics | ok | 0.9901 | 0.8256 | 0.5209 | 7 | [log](out/autocollie/runs/2026-07-11T11-19-22_20260711T110951-filetypes-xlsx_xlsx_kv_split_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_hardneg_tune`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best recent feature_env; tunes hard-negative weighting and tree complexity to improve recall@3 FP/M and PR_AUC while reusing matrix cache.
+- **`xlsx_kv_split_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Enables KV vocab with value splitting and full text metrics to capture XLSX structural and obfuscation signals, aiming to boost PR_AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260712T225927-filetypes-xlsx` — 2026-07-12T22:59:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8ad61431c985a788` | inherit_from_filetypes_plist_8b54303f | ok | 0.9953 | 0.5000 | 0.9977 | 18 | [log](out/autocollie/runs/2026-07-12T23-08-25_20260712T225927-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `0b6852a58836d47a` | xlsx_control_hardneg_tune | ok | 0.9888 | 0.7966 | 0.5199 | 16 | [log](out/autocollie/runs/2026-07-12T23-08-54_20260712T225927-filetypes-xlsx_xlsx_control_hardneg_tune.log) |
+| `7a6b4f141c20cb27` | xlsx_kv_textenc_metrics_full | ok | 0.9868 | 0.7774 | 0.5201 | 8 | [log](out/autocollie/runs/2026-07-12T23-12-26_20260712T225927-filetypes-xlsx_xlsx_kv_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_control_hardneg_tune`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicate best feature env to hit matrix cache; tune hard_negative_weight and scale_pos_weight_mult to improve recall@3FPM by sharpening decision boundaries at the strict-FP tail while preserving PR_AUC.
+- **`xlsx_kv_textenc_metrics_full`** `EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full research families to capture structural and key-value signal unique to XLSX macros, aiming to boost PR_AUC and recall@3FPM by adding discriminative features for obfuscated payloads.
+
+</details>
+
+## Cycle `20260713T213314-filetypes-xlsx` — 2026-07-13T21:33:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `719acf67d9010821` | inherit_from_filetypes_plist_8b54303f | ok | 0.9953 | 0.5000 | 0.9977 | 31 | [log](out/autocollie/runs/2026-07-13T21-43-34_20260713T213314-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `dd2cee7d5737fcac` | xlsx_text_metrics_kv_vocab | ok | 0.9873 | 0.7821 | 0.5201 | 18 | [log](out/autocollie/runs/2026-07-13T21-44-06_20260713T213314-filetypes-xlsx_xlsx_text_metrics_kv_vocab.log) |
+| `b417a45d493f5d4a` | xlsx_tiered_trigrams_hardneg | ok | 0.9843 | 0.7314 | 0.5199 | 16 | [log](out/autocollie/runs/2026-07-13T21-44-25_20260713T213314-filetypes-xlsx_xlsx_tiered_trigrams_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_text_metrics_kv_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns specific to malicious XLSX macros.
+- **`xlsx_tiered_trigrams_hardneg`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SUSPICIOUS_TRIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Aims to improve recall@3FPM by enabling tiered_crit_trigrams and tuning hard_negative_fraction to better separate benign templates from malicious payloads.
+
+</details>
+
+## Cycle `20260715T113450-filetypes-xlsx` — 2026-07-15T11:34:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ba34fe227c64b4f` | inherit_from_filetypes_plist_8b54303f | ok | 0.9953 | 0.5000 | 0.9977 | 11 | [log](out/autocollie/runs/2026-07-15T11-42-22_20260715T113450-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `15f5d7a0bfbb8030` | xlsx_text_metrics_kv_vocab_train | ok | 0.9864 | 0.7690 | 0.5209 | 7 | [log](out/autocollie/runs/2026-07-15T11-42-37_20260715T113450-filetypes-xlsx_xlsx_text_metrics_kv_vocab_train.log) |
+| `a25dee51518bde5e` | xlsx_tiered_trigrams_hardneg | ok | 0.9866 | 0.7578 | 0.5213 | 7 | [log](out/autocollie/runs/2026-07-15T11-42-48_20260715T113450-filetypes-xlsx_xlsx_tiered_trigrams_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_text_metrics_kv_vocab_train`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and kv_vocab to capture XLSX structural and metadata signals, targeting PR_AUC improvement via richer document-level features while tuning num_leaves and estimators for better rank quality.
+- **`xlsx_tiered_trigrams_hardneg`** `EXP_BIGRAM_MIN_FREQ=100 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Enables tiered_crit_trigrams and text_encoding with a lower bigram floor to surface rare malicious patterns, using hard-negative weighting to lift recall@3FPM while guarding ROC_AUC against overfitting.
+
+</details>
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-07-16T11-22-07_20260716T111133-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.

@@ -2345,7 +2345,7 @@ autocollie-loop: autocollie
 # nightly: run the full unattended pipeline once (scripts/nightly.sh):
 #   repin -> azoth-publish-train (trains + regression-gates + OOF-deploys into
 #   ../azoth) -> commit & push the azoth bundle -> autocollie sweep over every
-#   known route (general + all filegroups + all filetypes), 2 experiments each
+#   known route (general + all filegroups + all filetypes), 1 experiment each
 #   (NIGHTLY_EXPERIMENTS). Safe to run by hand; an flock guard prevents it from
 #   colliding with the scheduled run. Output is tee'd to out/nightly/ and (when
 #   run under the timer) captured in journald.
@@ -2361,9 +2361,10 @@ install-nightly:
 uninstall-nightly:
 	scripts/install_nightly.sh --remove
 
-# nightly-logs: follow the running / most recent nightly run.
+# nightly-logs: follow the running / most recent nightly run. The file is the
+# durable source (journald rotates too fast on this box — see nightly.sh).
 nightly-logs:
-	journalctl --user -u azoth-nightly.service -f
+	tail -n 100 -F out/nightly/latest.log
 
 # nightly-status: show the timer schedule and the last run's result.
 nightly-status:

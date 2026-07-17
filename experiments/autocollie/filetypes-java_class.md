@@ -1020,3 +1020,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260715T025135-filetypes-java_class` — 2026-07-15T02:51:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3001dbf55d0017af` | inherit_from_filetypes_plist_8b54303f | ok | 0.9884 | 0.9979 | 0.9506 | 92 | [log](out/autocollie/runs/2026-07-15T03-01-24_20260715T025135-filetypes-java_class_inherit_from_filetypes_plist_8b54303f.log) |
+| `4674efebcd34f23d` | java_class_control_train_hardneg_v2 | ok | 0.8641 | 0.9450 | 0.8674 | 73 | [log](out/autocollie/runs/2026-07-15T03-04-10_20260715T025135-filetypes-java_class_java_class_control_train_hardneg_v2.log) |
+| `98d4c9d27cd226af` | java_class_symbol_vocab_tiered_trigrams | ok | 0.8540 | 0.9207 | 0.8607 | 19 | [log](out/autocollie/runs/2026-07-15T03-05-45_20260715T025135-filetypes-java_class_java_class_symbol_vocab_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_train_hardneg_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=900 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature_env with a slight bigram_min_freq shift to hit matrix cache, then tweak hard_negative_weight and scale_pos_weight_mult to improve recall@3 FP/M while preserving PR_AUC.
+- **`java_class_symbol_vocab_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 …` — Enable symbol_vocab and tiered_crit_trigrams to capture Java class structure and method co-occurrence patterns, aiming to boost PR_AUC and recall@3 FP/M.
+
+</details>
+

@@ -1071,3 +1071,83 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260711T003741-filetypes-powershell` — 2026-07-11T00:37:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3e0d987e78917485` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9987 | 0.9953 | 0.9803 | 13 | [log](out/autocollie/runs/2026-07-11T00-44-02_20260711T003741-filetypes-powershell_inherit_from_filetypes_gem_06bdacaa.log) |
+| `34eec00653b28253` | ps_ctrl_textenc_hardneg_train_tune | ok | 0.9908 | 0.9850 | 0.9513 | 12 | [log](out/autocollie/runs/2026-07-11T00-44-20_20260711T003741-filetypes-powershell_ps_ctrl_textenc_hardneg_train_tune.log) |
+| `2c92ec2c4039b34a` | ps_feat_textmetrics_kv_vocab | ok | 0.9908 | 0.9849 | 0.9521 | 12 | [log](out/autocollie/runs/2026-07-11T00-44-44_20260711T003741-filetypes-powershell_ps_feat_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_textenc_hardneg_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_ENCODING_FEATURES=1 …` — Replicate best recent feature set and tune hard_negative_weight and scale_pos_weight_mult to improve recall@3 FP/M while keeping PR AUC flat.
+- **`ps_feat_textmetrics_kv_vocab`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and kv_vocab research families to capture structural and key-value signal in PowerShell scripts, aiming to boost PR AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260713T023106-filetypes-powershell` — 2026-07-13T02:31:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f8d001ce7e89fd43` | inherit_from_filetypes_plist_8b54303f | ok | 0.9985 | 0.9948 | 0.9797 | 16 | [log](out/autocollie/runs/2026-07-13T02-38-34_20260713T023106-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `275a8966698b65f0` | ps_ctrl_bigram_freq_train_reg | ok | 0.9859 | 0.9768 | 0.9433 | 12 | [log](out/autocollie/runs/2026-07-13T02-38-55_20260713T023106-filetypes-powershell_ps_ctrl_bigram_freq_train_reg.log) |
+| `c38805eacdaf71d8` | ps_feat_textmetrics_kv_vocab | ok | 0.9869 | 0.9786 | 0.9501 | 12 | [log](out/autocollie/runs/2026-07-13T02-39-37_20260713T023106-filetypes-powershell_ps_feat_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_bigram_freq_train_reg`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control-style spec lowering bigram_min_freq to 500 to capture rarer script patterns, paired with higher reg_lambda to control noise; targets PR_AUC improvement by refining ranking of borderline samples.
+- **`ps_feat_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture script obfuscation and key-value structure signals, aiming to boost recall@3FPM by surfacing subtle malicious patterns missed by n-grams alone, while monitoring PR_AUC.
+
+</details>
+
+## Cycle `20260713T213315-filetypes-powershell` — 2026-07-13T21:33:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `842ee72f2482d2fc` | inherit_from_filetypes_plist_8b54303f | ok | 0.9984 | 0.9944 | 0.9783 | 28 | [log](out/autocollie/runs/2026-07-13T21-43-16_20260713T213315-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `1c268e6279b81f05` | ps_ctrl_train_capacity_reg | ok | 0.9860 | 0.9765 | 0.9446 | 40 | [log](out/autocollie/runs/2026-07-13T21-43-46_20260713T213315-filetypes-powershell_ps_ctrl_train_capacity_reg.log) |
+| `c3c5a7c5900613f2` | ps_feat_kv_textmetrics_lowfreq | ok | 0.9862 | 0.9774 | 0.9453 | 24 | [log](out/autocollie/runs/2026-07-13T21-44-28_20260713T213315-filetypes-powershell_ps_feat_kv_textmetrics_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_train_capacity_reg`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env to isolate training effects; aims to improve PR_AUC by increasing tree capacity (num_leaves=128) and L2 regularization (reg_lambda=2.0) to sharpen ranking at the tail while preserving ROC_AUC.
+- **`ps_feat_kv_textmetrics_lowfreq`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture key-value and structural text signals in PowerShell scripts; aims to boost recall@3FPM and PR_AUC by adding discriminative features for obfuscated/config-heavy malware, while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260715T124254-filetypes-powershell` — 2026-07-15T12:42:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ce5daf311bf0b09a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9985 | 0.9947 | 0.9821 | 21 | [log](out/autocollie/runs/2026-07-15T12-49-58_20260715T124254-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `9a75c5f907c3a885` | ps_ctrl_bigram_freq_train | ok | 0.9848 | 0.9747 | 0.9491 | 14 | [log](out/autocollie/runs/2026-07-15T12-50-25_20260715T124254-filetypes-powershell_ps_ctrl_bigram_freq_train.log) |
+| `0c5f2f7976f76f76` | ps_feat_kv_textenc_metrics | ok | 0.9852 | 0.9755 | 0.9510 | 15 | [log](out/autocollie/runs/2026-07-15T12-50-41_20260715T124254-filetypes-powershell_ps_feat_kv_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_bigram_freq_train`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Shifts bigram_min_freq to 250 to capture rarer script n-grams while adjusting training capacity to improve PR_AUC.
+- **`ps_feat_kv_textenc_metrics`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab, text_encoding, and text_metrics_full to extract structural and encoding signals from PowerShell scripts, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+
+## Cycle `20260716T104748-filetypes-powershell` — 2026-07-16T10:47:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cef4e855eac1efdf` | inherit_from_filetypes_plist_8b54303f | ok | 0.9987 | 0.9952 | 0.9806 | 21 | [log](out/autocollie/runs/2026-07-16T10-55-31_20260716T104748-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `0bed1c7d3e8aa2d4` | ps_ctrl_dart_reg_train | ok | 0.9806 | 0.9690 | 0.9472 | 24 | [log](out/autocollie/runs/2026-07-16T10-56-00_20260716T104748-filetypes-powershell_ps_ctrl_dart_reg_train.log) |
+| `4c7d59b7758e5f29` | ps_feat_kv_vocab_15k | ok | 0.9866 | 0.9781 | 0.9529 | 55 | [log](out/autocollie/runs/2026-07-16T10-56-30_20260716T104748-filetypes-powershell_ps_feat_kv_vocab_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_ctrl_dart_reg_train`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control feature set with DART boosting and higher reg_lambda to improve PR_AUC by reducing overfitting on rare benign patterns while preserving matrix cache hits.
+- **`ps_feat_kv_vocab_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured key-value signals in PowerShell scripts, aiming to boost recall@3FPM by identifying malicious configuration patterns missed by n-grams alone.
+
+</details>
+

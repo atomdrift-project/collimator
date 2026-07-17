@@ -924,3 +924,83 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260710T174914-filetypes-tar` — 2026-07-10T17:49:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a3640c6f1ea17352` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9637 | 0.9736 | 0.8670 | 61 | [log](out/autocollie/runs/2026-07-10T17-57-32_20260710T174914-filetypes-tar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `99d1a49821af1660` | tar_ctrl_hardneg_015_16 | ok | 0.9319 | 0.9643 | 0.8397 | 74 | [log](out/autocollie/runs/2026-07-10T17-58-47_20260710T174914-filetypes-tar_tar_ctrl_hardneg_015_16.log) |
+| `12d3073abc3be52f` | tar_feat_kv_textenc_metrics | ok | 0.9225 | 0.9589 | 0.8299 | 55 | [log](out/autocollie/runs/2026-07-10T18-01-24_20260710T174914-filetypes-tar_tar_feat_kv_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by upweighting hard negatives to better separate difficult benigns from malware, keeping features constant for a cache hit.
+- **`tar_feat_kv_textenc_metrics`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC and recall@3 FP/M by enabling kv_vocab and text_encoding to capture archive structure and embedded text signals.
+
+</details>
+
+## Cycle `20260712T225927-filetypes-tar` — 2026-07-12T22:59:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1a751b647b61d767` | inherit_from_filetypes_plist_8b54303f | ok | 0.9560 | 0.9668 | 0.7437 | 59 | [log](out/autocollie/runs/2026-07-12T23-08-48_20260712T225927-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `f95a1c5b70f35ece` | tar_ctrl_hardneg_015_16 | ok | 0.9307 | 0.9625 | 0.8593 | 54 | [log](out/autocollie/runs/2026-07-12T23-09-59_20260712T225927-filetypes-tar_tar_ctrl_hardneg_015_16.log) |
+| `e82ebbe4fd518187` | tar_feat_kv_textenc_metrics | ok | 0.9319 | 0.9615 | 0.8571 | 26 | [log](out/autocollie/runs/2026-07-12T23-15-46_20260712T225927-filetypes-tar_tar_feat_kv_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating recent feature env; sweeps hard-negative fraction/weight to improve tail recall@3FPM by upweighting difficult benigns, while keeping PR_AUC flat.
+- **`tar_feat_kv_textenc_metrics`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structural and text obfuscation signals in tar archives, aiming to boost PR_AUC and recall@3FPM by adding discriminative feature surface.
+
+</details>
+
+## Cycle `20260713T214217-filetypes-tar` — 2026-07-13T21:42:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `db86677a3d4ea357` | inherit_from_filetypes_plist_8b54303f | ok | 0.9603 | 0.9701 | 0.8378 | 30 | [log](out/autocollie/runs/2026-07-13T21-50-13_20260713T214217-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `11030a54f086a92d` | tar_ctrl_hardneg_01_12 | ok | 0.9333 | 0.9643 | 0.8506 | 25 | [log](out/autocollie/runs/2026-07-13T21-50-43_20260713T214217-filetypes-tar_tar_ctrl_hardneg_01_12.log) |
+| `d61c636b9236afae` | tar_feat_kv_textenc_lowbigram | ok | 0.9312 | 0.9620 | 0.8549 | 28 | [log](out/autocollie/runs/2026-07-13T21-51-08_20260713T214217-filetypes-tar_tar_feat_kv_textenc_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Baseline feature set with hard-negative sweep to isolate difficult benigns, aiming to improve recall@3FPM by reducing threshold saturation while keeping PR_AUC flat.
+- **`tar_feat_kv_textenc_lowbigram`** `EXP_BIGRAM_MIN_FREQ=250 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding research families with lowered bigram_min_freq to capture rarer tar/script patterns, targeting PR_AUC and recall@3FPM gains by adding discriminative signal.
+
+</details>
+
+## Cycle `20260715T181738-filetypes-tar` — 2026-07-15T18:17:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6d8e33fb13aa9589` | inherit_from_filetypes_plist_8b54303f | ok | 0.9600 | 0.9708 | 0.8482 | 27 | [log](out/autocollie/runs/2026-07-15T18-24-40_20260715T181738-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `9468b00fd28a716b` | tar_ctrl_hardneg_01_12_scale075 | ok | 0.9331 | 0.9643 | 0.8550 | 29 | [log](out/autocollie/runs/2026-07-15T18-25-13_20260715T181738-filetypes-tar_tar_ctrl_hardneg_01_12_scale075.log) |
+| `47a8818ef2e0d93d` | tar_feat_kv_textenc_lowbigram_v2 | ok | 0.9278 | 0.9612 | 0.8441 | 36 | [log](out/autocollie/runs/2026-07-15T18-25-47_20260715T181738-filetypes-tar_tar_feat_kv_textenc_lowbigram_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_01_12_scale075`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep and reduced scale_pos_weight_mult to improve recall@3 FP/M by focusing on hard negatives and lowering FP threshold.
+- **`tar_feat_kv_textenc_lowbigram_v2`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding research vocabs with lower bigram_min_freq to capture finer-grained archive structure signals, targeting PR_AUC improvement.
+
+</details>
+
+## Cycle `20260716T104746-filetypes-tar` — 2026-07-16T10:47:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `115c421855af325c` | inherit_from_filetypes_plist_8b54303f | ok | 0.9605 | 0.9690 | 0.8696 | 129 | [log](out/autocollie/runs/2026-07-16T10-56-24_20260716T104746-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `0bff7732d3b2fe10` | tar_ctrl_hardneg_015_16_scale075 | ok | 0.9331 | 0.9637 | 0.8367 | 130 | [log](out/autocollie/runs/2026-07-16T10-58-43_20260716T104746-filetypes-tar_tar_ctrl_hardneg_015_16_scale075.log) |
+| `907b07cf1ba07f2f` | tar_feat_kv_textenc_hardneg_02_18 | ok | 0.9385 | 0.9678 | 0.8640 | 85 | [log](out/autocollie/runs/2026-07-16T11-01-02_20260716T104746-filetypes-tar_tar_feat_kv_textenc_hardneg_02_18.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_015_16_scale075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best recent feature_env to hit matrix cache; sweeps hard-negative knobs to improve recall@3FPM by upweighting difficult benigns, addressing the or_loses diagnostic.
+- **`tar_feat_kv_textenc_hardneg_02_18`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enables kv_vocab and text_encoding to capture archive metadata and payload text signals, paired with aggressive hard-negative training to boost PR_AUC and recall@3FPM.
+
+</details>
+

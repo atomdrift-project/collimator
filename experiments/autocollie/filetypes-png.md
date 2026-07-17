@@ -1084,3 +1084,35 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T105817-filetypes-png` — 2026-07-09T10:58:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b4e95019a5d58bae` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9698 | 0.9411 | 0.9692 | 39 | [log](out/autocollie/runs/2026-07-09T11-08-20_20260709T105817-filetypes-png_inherit_from_filetypes_gem_06bdacaa.log) |
+| `fd3b73799756c726` | png_ctrl_training_reg_lambda_leaves | ok | 0.1466 | 0.5303 | 0.1149 | 55 | [log](out/autocollie/runs/2026-07-09T11-09-57_20260709T105817-filetypes-png_png_ctrl_training_reg_lambda_leaves.log) |
+| `8a6d74c9353e9cb3` | png_feat_kv_textmetrics_vocab | ok | 0.1466 | 0.5303 | 0.1149 | 7 | [log](out/autocollie/runs/2026-07-09T11-10-58_20260709T105817-filetypes-png_png_feat_kv_textmetrics_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_training_reg_lambda_leaves`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature_env to hit matrix cache; increase regularization and leaves to improve PR_AUC ranking without changing features.
+- **`png_feat_kv_textmetrics_vocab`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture structural and text-encoding signals in PNG metadata, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+
+## Cycle `20260712T105621-filetypes-png` — 2026-07-12T10:56:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `68b33b187a37362e` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9738 | 0.9449 | 0.9440 | 26 | [log](out/autocollie/runs/2026-07-12T11-05-03_20260712T105621-filetypes-png_inherit_from_filetypes_gem_06bdacaa.log) |
+| `b15c18509f3e4b8c` | png_ctrl_training_capacity_reg | ok | 0.2535 | 0.6729 | 0.1056 | 14 | [log](out/autocollie/runs/2026-07-12T11-05-42_20260712T105621-filetypes-png_png_ctrl_training_capacity_reg.log) |
+| `24d2f161e23defc0` | png_feat_kv_vocab_textenc | ok | 0.2439 | 0.6474 | 0.1040 | 9 | [log](out/autocollie/runs/2026-07-12T11-06-01_20260712T105621-filetypes-png_png_feat_kv_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_training_capacity_reg`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity and L2 regularization to better rank tail malware while preserving ROC_AUC.
+- **`png_feat_kv_vocab_textenc`** `EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by enabling KV vocab and text encoding to capture malicious PNG chunk metadata and embedded string patterns that distinguish droppers from benign images.
+
+</details>
+

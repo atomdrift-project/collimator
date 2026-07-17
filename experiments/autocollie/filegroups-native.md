@@ -986,3 +986,83 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T105817-filegroups-native` — 2026-07-09T10:58:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3acf9741f8eddf64` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9990 | 0.9990 | 0.9868 | 291 | [log](out/autocollie/runs/2026-07-09T11-09-44_20260709T105817-filegroups-native_inherit_from_filetypes_gem_06bdacaa.log) |
+| `16efba74b0c3698c` | native_kv_vocab_25k_symbol_bigrams | ok | 0.9980 | 0.9979 | 0.9850 | 148 | [log](out/autocollie/runs/2026-07-09T11-17-17_20260709T105817-filegroups-native_native_kv_vocab_25k_symbol_bigrams.log) |
+| `02c110bc6c7a6374` | native_tiered_trigrams_lowfreq_bigrams | ok | 0.9980 | 0.9979 | 0.9816 | 96 | [log](out/autocollie/runs/2026-07-09T11-19-53_20260709T105817-filegroups-native_native_tiered_trigrams_lowfreq_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_kv_vocab_25k_symbol_bigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=25000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 …` — Expands KV vocab to 25k and enables symbol bigrams to capture richer structural patterns, targeting PR_AUC improvement while keeping ROC_AUC stable.
+- **`native_tiered_trigrams_lowfreq_bigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=2 EXP_TIERED_TRIGRAM_MIN_FREQ=25 …` — Lowers bigram min freq to 50 and enables tiered trigrams to capture rare but high-signal patterns, aiming to boost recall@3FPM and PR_AUC.
+
+</details>
+
+## Cycle `20260710T191212-filegroups-native` — 2026-07-10T19:12:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `292544d0153a5132` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9991 | 0.9991 | 0.9891 | 179 | [log](out/autocollie/runs/2026-07-10T19-20-08_20260710T191212-filegroups-native_inherit_from_filetypes_gem_06bdacaa.log) |
+| `7a4b19e5d2d06404` | native_control_best_feat_lr002_leaves128 | ok | 0.9984 | 0.9983 | 0.9805 | 126 | [log](out/autocollie/runs/2026-07-10T19-24-52_20260710T191212-filegroups-native_native_control_best_feat_lr002_leaves128.log) |
+| `8b313e3032a03c34` | native_symbol_vocab_20k_bigrams_10k | ok | 0.9986 | 0.9986 | 0.9846 | 116 | [log](out/autocollie/runs/2026-07-10T19-27-13_20260710T191212-filegroups-native_native_symbol_vocab_20k_bigrams_10k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_best_feat_lr002_leaves128`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best PR_AUC feature_env to hit matrix cache, testing lower LR and higher leaves to improve PR_AUC ranking stability.
+- **`native_symbol_vocab_20k_bigrams_10k`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 …` — Enables symbol_vocab and symbol_bigrams to capture PE/ELF import co-occurrence patterns, targeting PR_AUC gain via richer structural signal.
+
+</details>
+
+## Cycle `20260713T052608-filegroups-native` — 2026-07-13T05:26:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ffb481f93a4149b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9992 | 0.9992 | 0.9894 | 111 | [log](out/autocollie/runs/2026-07-13T05-36-10_20260713T052608-filegroups-native_inherit_from_filetypes_plist_8b54303f.log) |
+| `be9da726cd06ba82` | native_control_kv_vocab_15k_lr003 | ok | 0.9985 | 0.9984 | 0.9836 | 131 | [log](out/autocollie/runs/2026-07-13T05-39-10_20260713T052608-filegroups-native_native_control_kv_vocab_15k_lr003.log) |
+| `4af9b67af9588c58` | native_symbol_vocab_20k_bigrams_reg15 | ok | 0.9987 | 0.9987 | 0.9864 | 92 | [log](out/autocollie/runs/2026-07-13T05-41-36_20260713T052608-filegroups-native_native_symbol_vocab_20k_bigrams_reg15.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_kv_vocab_15k_lr003`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline extended with kv_vocab to capture key-value signal, aiming to improve PR_AUC while maintaining ROC_AUC.
+- **`native_symbol_vocab_20k_bigrams_reg15`** `EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 …` — Expand symbol surface with bigrams to catch native binary import patterns, targeting recall@3FPM and PR_AUC.
+
+</details>
+
+## Cycle `20260713T213359-filegroups-native` — 2026-07-13T21:33:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4edcc6147a82ef74` | inherit_from_filetypes_plist_8b54303f | ok | 0.9992 | 0.9992 | 0.9886 | 237 | [log](out/autocollie/runs/2026-07-13T21-43-15_20260713T213359-filegroups-native_inherit_from_filetypes_plist_8b54303f.log) |
+| `154da5aee038d461` | native_symbol_vocab_25k_lr003 | ok | 0.9985 | 0.9985 | 0.9828 | 153 | [log](out/autocollie/runs/2026-07-13T21-47-13_20260713T213359-filegroups-native_native_symbol_vocab_25k_lr003.log) |
+| `383a5cae3e8adad7` | native_kv_vocab_overlay_hardneg | ok | 0.9988 | 0.9988 | 0.9868 | 106 | [log](out/autocollie/runs/2026-07-13T21-49-46_20260713T213359-filegroups-native_native_kv_vocab_overlay_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_symbol_vocab_25k_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=25000 …` — Enables symbol_vocab to capture richer import co-occurrence patterns for native binaries, aiming to improve PR_AUC by better separating malicious API usage from benign libraries.
+- **`native_kv_vocab_overlay_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_OVERLAY_SIGNAL=1 EXP_REG_LAMBDA=1.5 …` — Adds kv_vocab and overlay_signal to detect packed/dropper natives via metadata and section anomalies, paired with hard-negative mining to sharpen low-FPR ranking and boost recall@3FPM.
+
+</details>
+
+## Cycle `20260715T185219-filegroups-native` — 2026-07-15T18:52:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7f24cc0889bae5e5` | inherit_from_filetypes_plist_8b54303f | ok | 0.9991 | 0.9991 | 0.9877 | 129 | [log](out/autocollie/runs/2026-07-15T18-59-04_20260715T185219-filegroups-native_inherit_from_filetypes_plist_8b54303f.log) |
+| `938be0ec1bb24f94` | native_symbol_vocab_bigrams_20k | ok | 0.9985 | 0.9985 | 0.9877 | 204 | [log](out/autocollie/runs/2026-07-15T19-02-48_20260715T185219-filegroups-native_native_symbol_vocab_bigrams_20k.log) |
+| `dd0c0085d6abc5ff` | native_kv_overlay_hardneg_10 | ok | 0.9990 | 0.9990 | 0.9883 | 194 | [log](out/autocollie/runs/2026-07-15T19-06-32_20260715T185219-filegroups-native_native_kv_overlay_hardneg_10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_symbol_vocab_bigrams_20k`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=20000 …` — Aims to improve PR_AUC by capturing import/symbol co-occurrence patterns common in native malware, while lowering bigram_min_freq to 500 reduces noise from benign system binaries.
+- **`native_kv_overlay_hardneg_10`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_OVERLAY_SIGNAL=1 …` — Aims to boost recall@3FPM by highlighting packer/dropper overlays and nonstandard sections, while hard-negative weighting sharpens the decision boundary for borderline benigns.
+
+</details>
+

@@ -1026,3 +1026,67 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T105859-filetypes-xml` — 2026-07-09T10:58:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ab8b9d0de594d77d` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9995 | 0.9999 | 0.9639 | 27 | [log](out/autocollie/runs/2026-07-09T11-07-32_20260709T105859-filetypes-xml_inherit_from_filetypes_gem_06bdacaa.log) |
+| `1bcd3372248202ad` | xml_control_train_tune | ok | 0.2160 | 0.6886 | 0.1626 | 18 | [log](out/autocollie/runs/2026-07-09T11-08-16_20260709T105859-filetypes-xml_xml_control_train_tune.log) |
+| `51fcbc03ab2ea333` | xml_text_metrics_kv_vocab | ok | 0.2111 | 0.6780 | 0.1629 | 11 | [log](out/autocollie/runs/2026-07-09T11-08-38_20260709T105859-filetypes-xml_xml_text_metrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_train_tune`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env to hit matrix cache; tunes num_leaves and reg_lambda to improve PR_AUC and recall@3FPM without changing features.
+- **`xml_text_metrics_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture XML structural and key-value patterns, aiming to boost PR_AUC and recall@3FPM.
+
+</details>
+
+## Cycle `20260712T105621-filetypes-xml` — 2026-07-12T10:56:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e6070d18232d42d5` | inherit_from_filetypes_gem_06bdacaa | ok | 1.0000 | 1.0000 | 0.9639 | 56 | [log](out/autocollie/runs/2026-07-12T11-06-44_20260712T105621-filetypes-xml_inherit_from_filetypes_gem_06bdacaa.log) |
+| `0c834976e08d4d6d` | xml_control_train_tune_textenc | ok | 0.1141 | 0.5460 | 0.1556 | 34 | [log](out/autocollie/runs/2026-07-12T11-08-21_20260712T105621-filetypes-xml_xml_control_train_tune_textenc.log) |
+| `a925a499eff8e8b1` | xml_kv_vocab_hardneg_tail | ok | 0.1597 | 0.5607 | 0.1592 | 7 | [log](out/autocollie/runs/2026-07-12T11-09-01_20260712T105621-filetypes-xml_xml_kv_vocab_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_train_tune_textenc`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control feature set augmented with text_metrics_full to capture XML structural noise; training tweaks (num_leaves, learning_rate) aim to stabilize PR_AUC ranking.
+- **`xml_kv_vocab_hardneg_tail`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture XML attribute patterns and uses hard negatives to push recall@3 FP/M by focusing on borderline malicious configs.
+
+</details>
+
+## Cycle `20260713T214411-filetypes-xml` — 2026-07-13T21:44:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c100969c6084ce6e` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 1.0000 | 1.0000 | 23 | [log](out/autocollie/runs/2026-07-13T21-52-57_20260713T214411-filetypes-xml_inherit_from_filetypes_plist_8b54303f.log) |
+| `cbce1833d41a6601` | xml_control_train_tune | ok | 0.2292 | 0.6921 | 0.1513 | 12 | [log](out/autocollie/runs/2026-07-13T21-53-21_20260713T214411-filetypes-xml_xml_control_train_tune.log) |
+| `26e1a906e5c34901` | xml_text_metrics_kv_vocab | ok | 0.2258 | 0.6835 | 0.1551 | 5 | [log](out/autocollie/runs/2026-07-13T21-53-34_20260713T214411-filetypes-xml_xml_text_metrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_control_train_tune`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env and tune training capacity to stabilize PR_AUC and improve recall@3FPM at the strict-FP tail.
+- **`xml_text_metrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and kv_vocab to capture XML structural obfuscation and key-value patterns, aiming to boost recall@3FPM by surfacing hidden malicious signals.
+
+</details>
+
+## Cycle `20260715T025135-filetypes-xml` — 2026-07-15T02:51:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `59606d768307469f` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 1.0000 | 0.9882 | 60 | [log](out/autocollie/runs/2026-07-15T03-00-28_20260715T025135-filetypes-xml_inherit_from_filetypes_plist_8b54303f.log) |
+| `c7346a6072d546dc` | xml_text_metrics_kv_vocab_control | ok | 0.0900 | 0.5430 | 0.1541 | 58 | [log](out/autocollie/runs/2026-07-15T03-02-37_20260715T025135-filetypes-xml_xml_text_metrics_kv_vocab_control.log) |
+| `8e253f33573f65f7` | xml_text_encoding_kv_split_tail | ok | 0.1737 | 0.6070 | 0.1629 | 21 | [log](out/autocollie/runs/2026-07-15T03-03-45_20260715T025135-filetypes-xml_xml_text_encoding_kv_split_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_text_metrics_kv_vocab_control`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Replicates recent feature surface but enables text_metrics_full and kv_vocab to capture XML structural patterns, aiming to lift PR_AUC by adding discriminative signal for malformed payloads while keeping ROC_AUC flat via L2 regularization.
+- **`xml_text_encoding_kv_split_tail`** `EXP_ESTIMATORS=350 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_TEXT_ENCODING_FEATURES=1 …` — Activates text_encoding and kv_value_split to parse XML namespaces and attribute values, targeting recall@3 FP/M by isolating malicious encoding patterns without bloating the feature matrix.
+
+</details>
+

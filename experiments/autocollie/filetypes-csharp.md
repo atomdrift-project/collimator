@@ -1040,3 +1040,83 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260709T105817-filetypes-csharp` — 2026-07-09T10:58:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0ad91806d2385c44` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9892 | 0.9968 | 0.9482 | 45 | [log](out/autocollie/runs/2026-07-09T11-08-27_20260709T105817-filetypes-csharp_inherit_from_filetypes_gem_06bdacaa.log) |
+| `c44a817e8fbe6bf0` | csharp_ctrl_hardneg_scalepos | ok | 0.4571 | 0.8532 | 0.3818 | 27 | [log](out/autocollie/runs/2026-07-09T11-09-31_20260709T105817-filetypes-csharp_csharp_ctrl_hardneg_scalepos.log) |
+| `a5cdd579477241fa` | csharp_feat_kv_vocab_textenc | ok | 0.4300 | 0.8425 | 0.3818 | 17 | [log](out/autocollie/runs/2026-07-09T11-11-14_20260709T105817-filetypes-csharp_csharp_feat_kv_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_ctrl_hardneg_scalepos`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature_env; adjusts hard_negative_weight and scale_pos_weight_mult to sharpen tail ranking and improve recall@3FPM without changing features.
+- **`csharp_feat_kv_vocab_textenc`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.02 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables kv_vocab and text_encoding research families to extract structural key-value and encoding patterns from C# files, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+
+## Cycle `20260710T174923-filetypes-csharp` — 2026-07-10T17:49:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3bc85353e94c764d` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9908 | 0.9973 | 0.9508 | 14 | [log](out/autocollie/runs/2026-07-10T17-57-08_20260710T174923-filetypes-csharp_inherit_from_filetypes_gem_06bdacaa.log) |
+| `26e5da76f12d1c8a` | csharp_ctrl_leaves128_lr003 | ok | 0.4209 | 0.8395 | 0.3883 | 16 | [log](out/autocollie/runs/2026-07-10T17-57-30_20260710T174923-filetypes-csharp_csharp_ctrl_leaves128_lr003.log) |
+| `1125344b584b0ac1` | csharp_feat_kv_textenc_vocab | ok | 0.4314 | 0.8222 | 0.3829 | 16 | [log](out/autocollie/runs/2026-07-10T17-57-56_20260710T174923-filetypes-csharp_csharp_feat_kv_textenc_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_ctrl_leaves128_lr003`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and lowering learning rate to better rank borderline malware without degrading ROC_AUC.
+- **`csharp_feat_kv_textenc_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab and text_encoding to capture configuration and obfuscation patterns in C# files, while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260712T105621-filetypes-csharp` — 2026-07-12T10:56:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `305f64b0b5d6b88f` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9904 | 0.9971 | 0.9644 | 48 | [log](out/autocollie/runs/2026-07-12T11-06-20_20260712T105621-filetypes-csharp_inherit_from_filetypes_gem_06bdacaa.log) |
+| `dcf40a186f9319b6` | csharp_ctrl_train_hardneg | ok | 0.4529 | 0.8395 | 0.3870 | 26 | [log](out/autocollie/runs/2026-07-12T11-07-31_20260712T105621-filetypes-csharp_csharp_ctrl_train_hardneg.log) |
+| `53da5d7ae3227fe7` | csharp_feat_sym_vocab_textmetrics | ok | 0.4278 | 0.8356 | 0.3803 | 12 | [log](out/autocollie/runs/2026-07-12T11-08-14_20260712T105621-filetypes-csharp_csharp_feat_sym_vocab_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_ctrl_train_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.15 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env to hit matrix cache; tune hard_negative_fraction and num_leaves to sharpen tail ranking, targeting PR_AUC and recall@3FPM improvements.
+- **`csharp_feat_sym_vocab_textmetrics`** `EXP_BIGRAM_MIN_FREQ=500 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and text_metrics_full to capture import co-occurrences and structural text signals in C# assemblies, aiming to boost PR_AUC and recall@3FPM by adding discriminative features while avoiding the noisy kv/textenc combo.
+
+</details>
+
+## Cycle `20260713T215137-filetypes-csharp` — 2026-07-13T21:51:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8608557cacd1bf3d` | inherit_from_filetypes_plist_8b54303f | ok | 0.9900 | 0.9969 | 0.9531 | 18 | [log](out/autocollie/runs/2026-07-13T21-59-11_20260713T215137-filetypes-csharp_inherit_from_filetypes_plist_8b54303f.log) |
+| `feafdea02a2186b0` | csharp_ctrl_train_hardneg | ok | 0.4257 | 0.8266 | 0.3877 | 8 | [log](out/autocollie/runs/2026-07-13T21-59-30_20260713T215137-filetypes-csharp_csharp_ctrl_train_hardneg.log) |
+| `c5336706c5c7fc2b` | csharp_feat_kv_vocab | ok | 0.4262 | 0.8210 | 0.3777 | 8 | [log](out/autocollie/runs/2026-07-13T21-59-39_20260713T215137-filetypes-csharp_csharp_feat_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_ctrl_train_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — aims to improve recall@3 FP/M by upweighting hard negatives to sharpen the decision boundary at low FPR while keeping the feature surface identical to the best recent run
+- **`csharp_feat_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — aims to improve PR_AUC by enabling kv_vocab to capture structured key-value patterns common in C# configuration and manifest files
+
+</details>
+
+## Cycle `20260715T231208-filetypes-csharp` — 2026-07-15T23:12:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8b65fc59cb931213` | inherit_from_filetypes_plist_8b54303f | ok | 0.9886 | 0.9967 | 0.9531 | 28 | [log](out/autocollie/runs/2026-07-15T23-20-39_20260715T231208-filetypes-csharp_inherit_from_filetypes_plist_8b54303f.log) |
+| `45577885dad0d6a7` | csharp_ctrl_train_hardneg | ok | 0.4387 | 0.8342 | 0.3838 | 15 | [log](out/autocollie/runs/2026-07-15T23-21-16_20260715T231208-filetypes-csharp_csharp_ctrl_train_hardneg.log) |
+| `578207a4d2cc3e8b` | csharp_feat_kv_vocab_lowbigram | ok | 0.4234 | 0.8349 | 0.3811 | 14 | [log](out/autocollie/runs/2026-07-15T23-22-27_20260715T231208-filetypes-csharp_csharp_feat_kv_vocab_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_ctrl_train_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by applying hard-negative mining to focus the model on difficult benign samples, reducing false positives at the tail.
+- **`csharp_feat_kv_vocab_lowbigram`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by enabling kv_vocab to capture key-value pair signals and lowering bigram_min_freq to 500 to include rarer but informative n-grams.
+
+</details>
+

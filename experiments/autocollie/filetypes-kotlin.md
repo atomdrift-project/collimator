@@ -1042,3 +1042,83 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260710T174914-filetypes-kotlin` — 2026-07-10T17:49:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b8bb15cae84428aa` | inherit_from_filetypes_gem_06bdacaa | ok | 1.0000 | 0.9992 | 0.9986 | 77 | [log](out/autocollie/runs/2026-07-10T17-58-03_20260710T174914-filetypes-kotlin_inherit_from_filetypes_gem_06bdacaa.log) |
+| `1621e5d6017f14b8` | kotlin_ctrl_hardneg_01_12 | ok | 0.9721 | 0.9832 | 0.7447 | 42 | [log](out/autocollie/runs/2026-07-10T17-59-42_20260710T174914-filetypes-kotlin_kotlin_ctrl_hardneg_01_12.log) |
+| `da1f7ae14f7a8b82` | kotlin_feat_kv_textenc_hardneg | ok | 0.9671 | 0.9810 | 0.7447 | 31 | [log](out/autocollie/runs/2026-07-10T18-00-29_20260710T174914-filetypes-kotlin_kotlin_feat_kv_textenc_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_ctrl_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control baseline with hard-negative sweep to improve recall@3FPM by upweighting difficult benigns, targeting the or_loses diagnostic shape.
+- **`kotlin_feat_kv_textenc_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture structural and encoding signals for PR_AUC gain, paired with hard-negative tuning to boost recall@3FPM.
+
+</details>
+
+## Cycle `20260712T105623-filetypes-kotlin` — 2026-07-12T10:56:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2d76e27134d2db9e` | inherit_from_filetypes_gem_06bdacaa | ok | 1.0000 | 0.9988 | 0.9970 | 54 | [log](out/autocollie/runs/2026-07-12T11-04-21_20260712T105623-filetypes-kotlin_inherit_from_filetypes_gem_06bdacaa.log) |
+| `89aedb64a2d4a361` | kotlin_kv_textenc_vocab | ok | 0.9749 | 0.9848 | 0.7441 | 25 | [log](out/autocollie/runs/2026-07-12T11-05-26_20260712T105623-filetypes-kotlin_kotlin_kv_textenc_vocab.log) |
+| `598d233d4fc6eb9a` | kotlin_textmetrics_kvsplit | ok | 0.9748 | 0.9852 | 0.7440 | 23 | [log](out/autocollie/runs/2026-07-12T11-05-56_20260712T105623-filetypes-kotlin_kotlin_textmetrics_kvsplit.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_kv_textenc_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and text_encoding to capture Kotlin-specific property patterns and encoding anomalies that distinguish malicious scripts.
+- **`kotlin_textmetrics_kvsplit`** `EXP_KV_VALUE_SPLIT=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by activating text_metrics_full and kv_value_split to detect obfuscated Kotlin payloads and split configuration tokens that evade standard n-grams.
+
+</details>
+
+## Cycle `20260713T213314-filetypes-kotlin` — 2026-07-13T21:33:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `84fa43cdb4141532` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9964 | 0.9810 | 30 | [log](out/autocollie/runs/2026-07-13T21-42-25_20260713T213314-filetypes-kotlin_inherit_from_filetypes_plist_8b54303f.log) |
+| `77b13b01833f7609` | kotlin_kv_vocab_split_leaves128 | ok | 0.9707 | 0.9808 | 0.7436 | 24 | [log](out/autocollie/runs/2026-07-13T21-42-55_20260713T213314-filetypes-kotlin_kotlin_kv_vocab_split_leaves128.log) |
+| `ab2ab6224e88f470` | kotlin_textmetrics_lowbigram_reg | ok | 0.9718 | 0.9824 | 0.7436 | 25 | [log](out/autocollie/runs/2026-07-13T21-43-20_20260713T213314-filetypes-kotlin_kotlin_textmetrics_lowbigram_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_kv_vocab_split_leaves128`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured key-value signals in Kotlin configs/scripts, aiming to improve PR_AUC and recall@3FPM by resolving opaque blobs.
+- **`kotlin_textmetrics_lowbigram_reg`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full and text_encoding to capture script obfuscation patterns, while lowering bigram_min_freq to 200 to retain rare malicious n-grams, targeting PR_AUC gains.
+
+</details>
+
+## Cycle `20260715T124254-filetypes-kotlin` — 2026-07-15T12:42:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `45b17bb8d7a30625` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9989 | 0.9984 | 45 | [log](out/autocollie/runs/2026-07-15T12-50-30_20260715T124254-filetypes-kotlin_inherit_from_filetypes_plist_8b54303f.log) |
+| `f29089972b68f747` | kotlin_control_hardneg_01_12 | ok | 0.9704 | 0.9813 | 0.7445 | 17 | [log](out/autocollie/runs/2026-07-15T12-51-25_20260715T124254-filetypes-kotlin_kotlin_control_hardneg_01_12.log) |
+| `c9061f4b96815d85` | kotlin_kv_textenc_hardneg_015_16 | ok | 0.9687 | 0.9808 | 0.7443 | 14 | [log](out/autocollie/runs/2026-07-15T12-51-46_20260715T124254-filetypes-kotlin_kotlin_kv_textenc_hardneg_015_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best feature env for cache hit; adds hard-negative training to lift recall@3 FP/M without degrading PR_AUC.
+- **`kotlin_kv_textenc_hardneg_015_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Enables kv_vocab and text_encoding to capture structural/encoding signals for Kotlin, aiming to improve PR_AUC and recall@3 FP/M.
+
+</details>
+
+## Cycle `20260716T104750-filetypes-kotlin` — 2026-07-16T10:47:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `64493a314b445144` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9988 | 0.9982 | 52 | [log](out/autocollie/runs/2026-07-16T10-55-35_20260716T104750-filetypes-kotlin_inherit_from_filetypes_plist_8b54303f.log) |
+| `f70c5c5c1c1ab948` | kotlin_control_train_tweak | ok | 0.9770 | 0.9850 | 0.7436 | 64 | [log](out/autocollie/runs/2026-07-16T10-57-14_20260716T104750-filetypes-kotlin_kotlin_control_train_tweak.log) |
+| `0699915bf517c0df` | kotlin_kv_vocab_textmetrics | ok | 0.9760 | 0.9847 | 0.7436 | 54 | [log](out/autocollie/runs/2026-07-16T10-58-27_20260716T104750-filetypes-kotlin_kotlin_kv_vocab_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_train_tweak`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control baseline replicating best feature_env; tweaks num_leaves and reg_lambda to improve PR_AUC ranking stability without altering the feature matrix.
+- **`kotlin_kv_vocab_textmetrics`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab research family and text_metrics_full to capture structural and key-value signals, aiming to boost recall@3FPM and PR_AUC by adding discriminative features for Kotlin scripts.
+
+</details>
+

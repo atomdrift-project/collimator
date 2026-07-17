@@ -1564,3 +1564,51 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260710T211350-filegroups-config` — 2026-07-10T21:13:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43a20056004e6c5b` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9974 | 0.9980 | 0.9874 | 39 | [log](out/autocollie/runs/2026-07-10T21-23-15_20260710T211350-filegroups-config_inherit_from_filetypes_gem_06bdacaa.log) |
+| `debdb0ebd4759583` | config_control_train_hardneg | ok | 0.9019 | 0.9269 | 0.8723 | 22 | [log](out/autocollie/runs/2026-07-10T21-24-11_20260710T211350-filegroups-config_config_control_train_hardneg.log) |
+| `696c34d798a26fc5` | config_kv_vocab_lowbigram | ok | 0.9002 | 0.9223 | 0.8634 | 14 | [log](out/autocollie/runs/2026-07-10T21-24-37_20260710T211350-filegroups-config_config_kv_vocab_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_control_train_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicates best feature_env for matrix cache hit; tunes hard_negative_weight and estimators to improve recall@3 FP/M by focusing on difficult benign configs while keeping PR_AUC flat.
+- **`config_kv_vocab_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and lowers bigram_min_freq to 50 to capture config-specific key-value patterns and rare structural n-grams, targeting PR_AUC gains by adding discriminative signal for malicious configs.
+
+</details>
+
+## Cycle `20260713T011353-filegroups-config` — 2026-07-13T01:13:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `63f5609454081e18` | inherit_from_filetypes_plist_8b54303f | ok | 0.9977 | 0.9981 | 0.9892 | 52 | [log](out/autocollie/runs/2026-07-13T01-23-28_20260713T011353-filegroups-config_inherit_from_filetypes_plist_8b54303f.log) |
+| `73235ab41f9a528f` | config_kv_vocab_leaves128 | ok | 0.9019 | 0.9234 | 0.8687 | 29 | [log](out/autocollie/runs/2026-07-13T01-25-02_20260713T011353-filegroups-config_config_kv_vocab_leaves128.log) |
+| `007c38331bd595ce` | config_text_metrics_hardneg | ok | 0.9054 | 0.9299 | 0.8730 | 12 | [log](out/autocollie/runs/2026-07-13T01-25-34_20260713T011353-filegroups-config_config_text_metrics_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_kv_vocab_leaves128`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured key-value signals in configs, aiming to improve PR_AUC while using num_leaves=128 to maintain ranking stability.
+- **`config_text_metrics_hardneg`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full to detect obfuscation patterns, paired with hard negatives to sharpen recall@3FPM at the deployed strict-FP operating point.
+
+</details>
+
+## Cycle `20260715T025135-filegroups-config` — 2026-07-15T02:51:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9fb752d78a1de0b9` | inherit_from_filetypes_plist_8b54303f | ok | 0.9976 | 0.9979 | 0.9890 | 116 | [log](out/autocollie/runs/2026-07-15T03-01-34_20260715T025135-filegroups-config_inherit_from_filetypes_plist_8b54303f.log) |
+| `a297620a06790d49` | config_kv_vocab_split_leaves128 | ok | 0.8934 | 0.9157 | 0.8609 | 117 | [log](out/autocollie/runs/2026-07-15T03-05-23_20260715T025135-filegroups-config_config_kv_vocab_split_leaves128.log) |
+| `01ca7f1e6b02022e` | config_text_encoding_metrics_hardneg | ok | 0.9038 | 0.9274 | 0.8707 | 25 | [log](out/autocollie/runs/2026-07-15T03-07-26_20260715T025135-filegroups-config_config_text_encoding_metrics_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_kv_vocab_split_leaves128`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured config patterns, aiming to improve PR_AUC by adding high-signal key-value features while increasing num_leaves to 128 to model complex interactions.
+- **`config_text_encoding_metrics_hardneg`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to detect obfuscation in config files, aiming to boost recall@3FPM by surfacing structural anomalies, paired with hard_negative_fraction to sharpen the decision boundary.
+
+</details>
+

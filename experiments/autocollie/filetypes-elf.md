@@ -1652,3 +1652,67 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260710T232242-filetypes-elf` — 2026-07-10T23:22:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7fb08166a0c9fdc9` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9999 | 0.9998 | 0.9952 | 84 | [log](out/autocollie/runs/2026-07-10T23-30-16_20260710T232242-filetypes-elf_inherit_from_filetypes_gem_06bdacaa.log) |
+| `88b1d9c20edad39b` | elf_control_train_dart | ok | 0.9990 | 0.9988 | 0.9911 | 46 | [log](out/autocollie/runs/2026-07-10T23-31-58_20260710T232242-filetypes-elf_elf_control_train_dart.log) |
+| `54be9bed8a5b85fe` | elf_feat_symbol_vocab_bigrams | ok | 0.9994 | 0.9993 | 0.9935 | 38 | [log](out/autocollie/runs/2026-07-10T23-32-49_20260710T232242-filetypes-elf_elf_feat_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_train_dart`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating baseline features to hit matrix cache; tests dart boosting to improve tail recall@3FPM via dropout regularization while keeping PR_AUC flat.
+- **`elf_feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and symbol_bigrams to capture ELF import co-occurrence patterns, aiming to lift PR_AUC and recall@3FPM by adding structural binary signal.
+
+</details>
+
+## Cycle `20260713T032441-filetypes-elf` — 2026-07-13T03:24:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bb0ec5f339803388` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9998 | 0.9945 | 49 | [log](out/autocollie/runs/2026-07-13T03-32-25_20260713T032441-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `67806650625612e0` | elf_control_train_extra_trees | ok | 0.9996 | 0.9995 | 0.9934 | 51 | [log](out/autocollie/runs/2026-07-13T03-33-38_20260713T032441-filetypes-elf_elf_control_train_extra_trees.log) |
+| `b88fbd571467d893` | elf_feat_symbol_vocab_bigrams | ok | 0.9993 | 0.9992 | 0.9927 | 31 | [log](out/autocollie/runs/2026-07-13T03-34-38_20260713T032441-filetypes-elf_elf_feat_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_train_extra_trees`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; tests extra_trees and higher estimators to improve recall@3FPM by adding ensemble noise that regularizes the tail, while keeping PR_AUC flat.
+- **`elf_feat_symbol_vocab_bigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 …` — Enables symbol_vocab and symbol_bigrams to capture ELF import co-occurrence patterns, aiming to boost PR_AUC and recall@3FPM by adding structural binary signal that distinguishes packed/malicious binaries from benign ones.
+
+</details>
+
+## Cycle `20260713T214518-filetypes-elf` — 2026-07-13T21:45:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b8ece25cc749529b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9998 | 0.9957 | 49 | [log](out/autocollie/runs/2026-07-13T21-53-30_20260713T214518-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `1df49a563c739540` | elf_control_train_leaves128 | ok | 0.9992 | 0.9991 | 0.9928 | 37 | [log](out/autocollie/runs/2026-07-13T21-54-19_20260713T214518-filetypes-elf_elf_control_train_leaves128.log) |
+| `7a3b97f92c2ecdf4` | elf_feat_symbol_kv_vocab | ok | 0.9991 | 0.9990 | 0.9927 | 26 | [log](out/autocollie/runs/2026-07-13T21-54-56_20260713T214518-filetypes-elf_elf_feat_symbol_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_train_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by increasing model capacity (num_leaves=128) and training longer (estimators=300) on the current best feature surface, leveraging matrix cache hits for fast iteration.
+- **`elf_feat_symbol_kv_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling symbol_vocab and kv_vocab to capture ELF-specific import co-occurrences and metadata patterns, which are highly discriminative for native binaries.
+
+</details>
+
+## Cycle `20260715T181738-filetypes-elf` — 2026-07-15T18:17:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f39dd406bc3c00d1` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9998 | 0.9960 | 47 | [log](out/autocollie/runs/2026-07-15T18-24-57_20260715T181738-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `627cbb1db03a617c` | elf_control_train_symbol_vocab | ok | 0.9991 | 0.9990 | 0.9917 | 38 | [log](out/autocollie/runs/2026-07-15T18-26-22_20260715T181738-filetypes-elf_elf_control_train_symbol_vocab.log) |
+| `f925bac6de6fe5ca` | elf_feat_kv_overlay_bigram | ok | 0.9991 | 0.9989 | 0.0000 | 26 | [log](out/autocollie/runs/2026-07-15T18-27-04_20260715T181738-filetypes-elf_elf_feat_kv_overlay_bigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_train_symbol_vocab`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=50 …` — Control training configuration while enabling symbol_vocab and symbol_bigrams to improve PR_AUC by capturing ELF import co-occurrence patterns.
+- **`elf_feat_kv_overlay_bigram`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Enable kv_vocab and overlay_signal with lower bigram_min_freq to boost recall@3FPM by detecting packed/dropper ELF binaries and rare structural patterns.
+
+</details>
+

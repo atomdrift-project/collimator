@@ -654,3 +654,35 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260715T025136-filetypes-java` — 2026-07-15T02:51:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5808fc0fa5be621e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9351 | 0.9900 | 0.8632 | 66 | [log](out/autocollie/runs/2026-07-15T03-00-43_20260715T025136-filetypes-java_inherit_from_filetypes_plist_8b54303f.log) |
+| `5a3799fded6acb39` | java_control_train_tune_v5 | ok | 0.2959 | 0.8883 | 0.1465 | 60 | [log](out/autocollie/runs/2026-07-15T03-02-39_20260715T025136-filetypes-java_java_control_train_tune_v5.log) |
+| `fc5245a60421f052` | java_kv_textmetrics_vocab_expand | ok | 0.3107 | 0.8814 | 0.1535 | 22 | [log](out/autocollie/runs/2026-07-15T03-04-02_20260715T025136-filetypes-java_java_kv_textmetrics_vocab_expand.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tune_v5`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to ensure matrix cache hit; increases num_leaves to 128 and lowers learning_rate to 0.03 to improve PR_AUC by refining decision boundaries on the tail without overfitting.
+- **`java_kv_textmetrics_vocab_expand`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full to capture key-value pair patterns and text structural metrics, aiming to boost recall@3FPM by surfacing obfuscated or config-heavy malware signals missed by n-grams alone.
+
+</details>
+
+## Cycle `20260716T104746-filetypes-java` — 2026-07-16T10:47:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `638af87aefe96c53` | inherit_from_filetypes_plist_8b54303f | ok | 0.9495 | 0.9947 | 0.8539 | 100 | [log](out/autocollie/runs/2026-07-16T10-55-57_20260716T104746-filetypes-java_inherit_from_filetypes_plist_8b54303f.log) |
+| `abe32d5017464b29` | java_bigram_min_freq_500 | ok | 0.2722 | 0.8410 | 0.1502 | 34 | [log](out/autocollie/runs/2026-07-16T10-58-21_20260716T104746-filetypes-java_java_bigram_min_freq_500.log) |
+| `5d26b8c8b1833db4` | java_kv_textmetrics_research | ok | 0.2717 | 0.8406 | 0.1542 | 28 | [log](out/autocollie/runs/2026-07-16T10-59-06_20260716T104746-filetypes-java_java_kv_textmetrics_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_bigram_min_freq_500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Lowers bigram frequency floor to capture rarer Java-specific patterns, aiming to improve PR_AUC while maintaining ROC_AUC.
+- **`java_kv_textmetrics_research`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables research vocab families to capture structural and metadata signals, aiming to boost recall@3FPM and PR_AUC.
+
+</details>
+

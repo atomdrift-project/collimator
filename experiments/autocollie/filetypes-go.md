@@ -2046,3 +2046,47 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260709T121021-filetypes-go` — 2026-07-09T12:10:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_gem_06bdacaa | fail | — | — | — | 47 | [log](out/autocollie/runs/2026-07-09T12-18-45_20260709T121021-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20260710T174916-filetypes-go` — 2026-07-10T17:49:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `14520471df08960f` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9479 | 0.9727 | 0.8824 | 74 | [log](out/autocollie/runs/2026-07-10T17-58-44_20260710T174916-filetypes-go_inherit_from_filetypes_gem_06bdacaa.log) |
+| `e99ed87133cc3de1` | go_ctrl_train_leaves128_lr004 | ok | 0.4268 | 0.6929 | 0.2701 | 46 | [log](out/autocollie/runs/2026-07-10T18-00-43_20260710T174916-filetypes-go_go_ctrl_train_leaves128_lr004.log) |
+| `d10f6668daaa00e1` | go_feat_kv_textenc_v2 | ok | 0.4244 | 0.6931 | 0.2688 | 17 | [log](out/autocollie/runs/2026-07-10T18-01-37_20260710T174916-filetypes-go_go_feat_kv_textenc_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_leaves128_lr004`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_WEIGHT=6 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3 FP/M by increasing tree capacity and hard-negative weighting to better rank tail malware while keeping training stable.
+- **`go_feat_kv_textenc_v2`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_BIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and text_encoding to capture Go-specific string patterns and encoding signals previously disabled.
+
+</details>
+
+## Cycle `20260712T234609-filetypes-go` — 2026-07-12T23:46:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `67aca28202ffd6d5` | inherit_from_filetypes_plist_8b54303f | ok | 0.9480 | 0.9748 | 0.8805 | 26 | [log](out/autocollie/runs/2026-07-12T23-54-35_20260712T234609-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `f61229124c026a1e` | go_ctrl_train_hn10_leaves112 | ok | 0.3972 | 0.6604 | 0.2693 | 16 | [log](out/autocollie/runs/2026-07-12T23-55-13_20260712T234609-filetypes-go_go_ctrl_train_hn10_leaves112.log) |
+| `9969462907b023ce` | go_feat_kv_vocab_12k | ok | 0.3976 | 0.6619 | 0.2702 | 10 | [log](out/autocollie/runs/2026-07-12T23-55-32_20260712T234609-filetypes-go_go_feat_kv_vocab_12k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_train_hn10_leaves112`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — control feature set with higher hard-negative weight and moderate tree complexity to improve recall@3FPM while keeping PR_AUC flat
+- **`go_feat_kv_vocab_12k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — enable kv_vocab to capture key-value pair signals in Go binaries, targeting PR_AUC gain from new discriminative feature surface
+
+</details>
+

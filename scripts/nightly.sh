@@ -6,14 +6,15 @@
 #   OOF-deploys the bundle into ../azoth via the
 #   $XDG_DATA_HOME/atomdrift/scan/models/azoth symlink)  ->  commit & push the
 #   azoth bundle (only if the deploy actually happened)  ->  autocollie sweep
-#   over every known route, 2 experiments each.
+#   over every known route, 1 experiment each.
 #
 # Run under `systemctl --user start azoth-nightly` (scheduled by
-# `make install-nightly`) or by hand via `make nightly`. All output is captured
-# by journald — view it with `make nightly-logs`.
+# `make install-nightly`) or by hand via `make nightly`. Output is written,
+# line-timestamped, to out/nightly/<start-time>.log (latest.log symlink; view
+# with `make nightly-logs`) and also reaches journald via the service's stdout.
 #
-# Env overrides: NIGHTLY_EXPERIMENTS (default 2), NIGHTLY_ALLOW_REGRESSION=1
-# (bypass the deploy regression gate), NIGHTLY_WORKERS (default 32; caps the
+# Env overrides: NIGHTLY_EXPERIMENTS (default 1), NIGHTLY_ALLOW_REGRESSION=1
+# (bypass the deploy regression gate), NIGHTLY_WORKERS (default 24; caps the
 # retrain's DB-fetch parallelism — see the WORKERS export below).
 set -uo pipefail
 
@@ -34,6 +35,19 @@ mkdir -p out
 exec 9>out/nightly.lock
 flock -n 9 || { echo "another nightly run is active — exiting."; exit 0; }
 
+# Keep our own timestamped log. journald is not durable enough for a multi-hour
+# run on this box: the journal is capped at SystemMaxUse=4G and the
+# hopper/atomscan cluster churns through that in hours, so the run's entries
+# get vacuumed before morning (and an unclean shutdown loses the tail — both
+# bit us on 2026-07-16, leaving no record of an 11h run). The per-line
+# timestamps are what make phase-timing post-mortems possible.
+mkdir -p out/nightly
+nightly_log="out/nightly/$(date +%F-%H%M%S).log"
+ln -sfn "$(basename "$nightly_log")" out/nightly/latest.log
+find out/nightly -name '*.log' -type f -mtime +60 -delete
+exec > >(gawk '{ print strftime("%F %T"), $0; fflush() }' | tee -a "$nightly_log") 2>&1
+echo "nightly: logging to $nightly_log"
+
 [ -n "${NIGHTLY_ALLOW_REGRESSION:-}" ] && export AZOTH_ALLOW_REGRESSION=1
 
 # Cap parallelism for the unattended run. The retrain's vocabulary pass
@@ -46,14 +60,16 @@ flock -n 9 || { echo "another nightly run is active — exiting."; exit 0; }
 # not a cgroup cap) while galadriel was also running atomscan (~35G) and the
 # hopper cluster. The 2026-07-06 run OOM'd at full core count (~7min in); the
 # 2026-07-07 run at 32 cleared both OOF folds but died on the final full train.
-# 16 halves the concurrent fetch fan-out (both python- and postgres-side) and
-# still clears the folds comfortably; the extra wall-clock is free in the 23h
-# window. WORKERS is the knob to set (not EXP_WORKERS): azoth-general
-# re-forwards `--set EXP_WORKERS=$(WORKERS)` into the inner sub-make, so an
-# EXP_WORKERS cap alone would be overridden. Override with NIGHTLY_WORKERS;
-# unset it (NIGHTLY_WORKERS=) to fall back to the Makefile default of nproc.
-if [ -n "${NIGHTLY_WORKERS-16}" ]; then
-  export WORKERS="${NIGHTLY_WORKERS-16}"
+# 24 is a middle ground (2026-07-17, 16 made the run too slow): still under the
+# 32 that OOM'd, and the mem-aware worker clamp (COLLIMATOR_MEM_AWARE_WORKERS,
+# on by default) sheds workers under memory pressure — drop back to 16 if a
+# full train OOMs again. WORKERS is the knob to set (not EXP_WORKERS):
+# azoth-general re-forwards `--set EXP_WORKERS=$(WORKERS)` into the inner
+# sub-make, so an EXP_WORKERS cap alone would be overridden. Override with
+# NIGHTLY_WORKERS; unset it (NIGHTLY_WORKERS=) to fall back to the Makefile
+# default of nproc.
+if [ -n "${NIGHTLY_WORKERS-24}" ]; then
+  export WORKERS="${NIGHTLY_WORKERS-24}"
   echo "nightly: capping WORKERS=$WORKERS (retrain DB-fetch parallelism)"
 fi
 
@@ -89,7 +105,7 @@ else
   echo "is above, or: journalctl --user -u azoth-nightly.service -b"
 fi
 
-echo "== autocollie sweep (every route, ${NIGHTLY_EXPERIMENTS:-2} experiments each) =="
-make autocollie SHUFFLE_ROUTES=1 EXPERIMENTS="${NIGHTLY_EXPERIMENTS:-2}" || rc=1
+echo "== autocollie sweep (every route, ${NIGHTLY_EXPERIMENTS:-1} experiment(s) each) =="
+make autocollie SHUFFLE_ROUTES=1 EXPERIMENTS="${NIGHTLY_EXPERIMENTS:-1}" || rc=1
 
 exit "$rc"

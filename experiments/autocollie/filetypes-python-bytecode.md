@@ -924,3 +924,67 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260710T174914-filetypes-python-bytecode` — 2026-07-10T17:49:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c32b84c607a73447` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9947 | 0.9974 | 0.0000 | 35 | [log](out/autocollie/runs/2026-07-10T17-57-25_20260710T174914-filetypes-python-bytecode_inherit_from_filetypes_gem_06bdacaa.log) |
+| `28500bf36f774e4f` | pybc_ctrl_train_opt | ok | 0.7615 | 0.8864 | 0.7889 | 44 | [log](out/autocollie/runs/2026-07-10T17-58-22_20260710T174914-filetypes-python-bytecode_pybc_ctrl_train_opt.log) |
+| `75e693c1b7ef2eeb` | pybc_feat_kv_vocab_textmetrics | ok | 0.7650 | 0.8806 | 0.7919 | 22 | [log](out/autocollie/runs/2026-07-10T18-03-31_20260710T174914-filetypes-python-bytecode_pybc_feat_kv_vocab_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_opt`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best recent feature_env to ensure matrix cache hits, tuning estimators and num_leaves to improve PR_AUC and recall@3FPM by allowing the model to learn more complex decision boundaries without overfitting.
+- **`pybc_feat_kv_vocab_textmetrics`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=25 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full to capture key-value structural patterns and text-level metrics in bytecode, aiming to boost PR_AUC and recall@3FPM by adding discriminative signals for obfuscated or packed payloads.
+
+</details>
+
+## Cycle `20260712T123834-filetypes-python-bytecode` — 2026-07-12T12:38:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb2901dc0f44ac09` | inherit_from_filetypes_plist_8b54303f | ok | 0.9937 | 0.9973 | 0.9763 | 32 | [log](out/autocollie/runs/2026-07-12T12-46-10_20260712T123834-filetypes-python-bytecode_inherit_from_filetypes_plist_8b54303f.log) |
+| `95fdf3bac144ef74` | pybc_ctrl_train_scalepos075 | ok | 0.7550 | 0.8768 | 0.7985 | 14 | [log](out/autocollie/runs/2026-07-12T12-46-51_20260712T123834-filetypes-python-bytecode_pybc_ctrl_train_scalepos075.log) |
+| `0c4f2b4ed67fa775` | pybc_feat_textmetrics_kv_vocab | ok | 0.7654 | 0.8826 | 0.7949 | 11 | [log](out/autocollie/runs/2026-07-12T12-55-39_20260712T123834-filetypes-python-bytecode_pybc_feat_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_scalepos075`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env and lowers scale_pos_weight_mult to 0.75 to improve recall@3 FP/M by reducing benign class weight at the strict-FP tail.
+- **`pybc_feat_textmetrics_kv_vocab`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=20 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture bytecode structural patterns and metadata, aiming to boost PR_AUC while maintaining ROC_AUC.
+
+</details>
+
+## Cycle `20260713T213314-filetypes-python-bytecode` — 2026-07-13T21:33:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `af60475060665aeb` | inherit_from_filetypes_plist_8b54303f | ok | 0.9924 | 0.9964 | 0.0000 | 49 | [log](out/autocollie/runs/2026-07-13T21-42-29_20260713T213314-filetypes-python-bytecode_inherit_from_filetypes_plist_8b54303f.log) |
+| `98aa6cb2fe628595` | pybc_ctrl_train_leaves128_est300 | ok | 0.7616 | 0.8768 | 0.7925 | 61 | [log](out/autocollie/runs/2026-07-13T21-43-19_20260713T213314-filetypes-python-bytecode_pybc_ctrl_train_leaves128_est300.log) |
+| `53ea43e3631f928b` | pybc_feat_textmetrics_full_bigram500 | ok | 0.7594 | 0.8811 | 0.7934 | 22 | [log](out/autocollie/runs/2026-07-13T21-44-21_20260713T213314-filetypes-python-bytecode_pybc_feat_textmetrics_full_bigram500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_ctrl_train_leaves128_est300`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating best feature_env; increases num_leaves and estimators to improve PR_AUC ranking capacity while keeping matrix cache hits.
+- **`pybc_feat_textmetrics_full_bigram500`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Enables text_metrics_full research vocab to capture structural text signals in bytecode, aiming to boost PR_AUC by adding discriminative features for obfuscated scripts.
+
+</details>
+
+## Cycle `20260715T200131-filetypes-python-bytecode` — 2026-07-15T20:01:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `af577a36031b507b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9945 | 0.9979 | 0.9712 | 33 | [log](out/autocollie/runs/2026-07-15T20-12-40_20260715T200131-filetypes-python-bytecode_inherit_from_filetypes_plist_8b54303f.log) |
+| `53ee9a75c1dad933` | pybc_feat_textmetrics_kv_vocab_safe | ok | 0.7515 | 0.8748 | 0.7870 | 19 | [log](out/autocollie/runs/2026-07-15T20-13-26_20260715T200131-filetypes-python-bytecode_pybc_feat_textmetrics_kv_vocab_safe.log) |
+| `4e5e73843357fe0d` | pybc_feat_symbol_vocab_textenc | ok | 0.7527 | 0.8750 | 0.7851 | 16 | [log](out/autocollie/runs/2026-07-15T20-27-29_20260715T200131-filetypes-python-bytecode_pybc_feat_symbol_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_feat_textmetrics_kv_vocab_safe`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=25 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab with conservative min_freq to capture structural obfuscation and key-value patterns, aiming to improve PR_AUC by adding high-signal features without OOM risk.
+- **`pybc_feat_symbol_vocab_textenc`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and text_encoding to capture import/symbol co-occurrences and encoding anomalies, aiming to improve recall@3FPM by surfacing rare malicious patterns in the tail.
+
+</details>
+

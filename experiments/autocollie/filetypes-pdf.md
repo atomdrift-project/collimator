@@ -2498,3 +2498,67 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260710T174915-filetypes-pdf` — 2026-07-10T17:49:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `77048468a9375d28` | inherit_from_filetypes_gem_06bdacaa | ok | 1.0000 | 0.9995 | 0.9936 | 22 | [log](out/autocollie/runs/2026-07-10T17-57-46_20260710T174915-filetypes-pdf_inherit_from_filetypes_gem_06bdacaa.log) |
+| `e75e5c0f8091074f` | pdf_control_hardneg_01_16_leaves128 | ok | 0.9374 | 0.8686 | 0.8516 | 22 | [log](out/autocollie/runs/2026-07-10T17-58-24_20260710T174915-filetypes-pdf_pdf_control_hardneg_01_16_leaves128.log) |
+| `d0e903712c9232a5` | pdf_feat_textmetrics_obfuscation_kv | ok | 0.9876 | 0.9713 | 0.8520 | 19 | [log](out/autocollie/runs/2026-07-10T17-59-53_20260710T174915-filetypes-pdf_pdf_feat_textmetrics_obfuscation_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_hardneg_01_16_leaves128`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run using best recent feature_env; sweeps hard_negative_fraction=0.01 and hard_negative_weight=16 to lift recall@3 FP/M while preserving PR_AUC.
+- **`pdf_feat_textmetrics_obfuscation_kv`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables text_metrics_full and document_obfuscation_features to capture PDF obfuscation patterns, targeting PR_AUC and recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260713T011353-filetypes-pdf` — 2026-07-13T01:13:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `92cb45c23a446ecb` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9995 | 0.9978 | 15 | [log](out/autocollie/runs/2026-07-13T01-22-40_20260713T011353-filetypes-pdf_inherit_from_filetypes_plist_8b54303f.log) |
+| `5b3e95d59787cae4` | pdf_control_hardneg_01_16 | ok | 0.9406 | 0.8748 | 0.8522 | 14 | [log](out/autocollie/runs/2026-07-13T01-23-06_20260713T011353-filetypes-pdf_pdf_control_hardneg_01_16.log) |
+| `7e2b25a0a4f0438d` | pdf_feat_textmetrics_kv_hardneg | ok | 0.9576 | 0.8935 | 0.8522 | 15 | [log](out/autocollie/runs/2026-07-13T01-24-26_20260713T011353-filetypes-pdf_pdf_feat_textmetrics_kv_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_hardneg_01_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env with hard-negative sweep (fraction=0.01, weight=16) to improve recall@3 FP/M by focusing on difficult boundaries without altering the feature surface.
+- **`pdf_feat_textmetrics_kv_hardneg`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value structure signals, paired with hard-negative sweep to boost PR_AUC and recall@3 FP/M on PDF-specific patterns.
+
+</details>
+
+## Cycle `20260713T214743-filetypes-pdf` — 2026-07-13T21:47:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d9475a74b20d2732` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9995 | 0.9978 | 13 | [log](out/autocollie/runs/2026-07-13T21-54-16_20260713T214743-filetypes-pdf_inherit_from_filetypes_plist_8b54303f.log) |
+| `134216d30730ddfd` | pdf_textmetrics_kv_hardneg | ok | 0.9407 | 0.8738 | 0.8522 | 10 | [log](out/autocollie/runs/2026-07-13T21-54-29_20260713T214743-filetypes-pdf_pdf_textmetrics_kv_hardneg.log) |
+| `2edae95d6cc3fd31` | pdf_docobf_lowbigram_hardneg | ok | 0.9928 | 0.9826 | 0.8520 | 8 | [log](out/autocollie/runs/2026-07-13T21-54-39_20260713T214743-filetypes-pdf_pdf_docobf_lowbigram_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_textmetrics_kv_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, paired with hard-negative training to boost recall@3 FP/M while preserving PR_AUC.
+- **`pdf_docobf_lowbigram_hardneg`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables document_obfuscation_features and lowers bigram_min_freq to 200 to capture rarer PDF patterns, with hard-negative sweep to improve recall@3 FP/M without regressing PR_AUC.
+
+</details>
+
+## Cycle `20260715T025135-filetypes-pdf` — 2026-07-15T02:51:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `21df9b94706f0054` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9995 | 0.9979 | 34 | [log](out/autocollie/runs/2026-07-15T03-01-01_20260715T025135-filetypes-pdf_inherit_from_filetypes_plist_8b54303f.log) |
+| `a75a012624b20bcc` | pdf_textmetrics_kv_hardneg | ok | 0.9333 | 0.8672 | 0.8523 | 28 | [log](out/autocollie/runs/2026-07-15T03-01-57_20260715T025135-filetypes-pdf_pdf_textmetrics_kv_hardneg.log) |
+| `18527cebbcb352e6` | pdf_tiered_trigrams_hardneg | ok | 0.9934 | 0.9813 | 0.8522 | 22 | [log](out/autocollie/runs/2026-07-15T03-02-37_20260715T025135-filetypes-pdf_pdf_tiered_trigrams_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_textmetrics_kv_hardneg`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables text_metrics_full and kv_vocab research vocabs to capture document obfuscation and key-value patterns, paired with hard-negative training to improve recall@3FPM without hurting PR_AUC.
+- **`pdf_tiered_trigrams_hardneg`** `EXP_BIGRAM_MIN_FREQ=200 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 …` — Adds tiered_crit_trigrams to the best recent feature surface for deeper semantic signal, with aggressive hard-negative tuning to lift tail recall@3FPM while maintaining PR_AUC guardrails.
+
+</details>
+

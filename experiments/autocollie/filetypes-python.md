@@ -1904,3 +1904,67 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260710T225032-filetypes-python` — 2026-07-10T22:50:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `34f05bed5ca9c322` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9750 | 0.9883 | 0.9194 | 60 | [log](out/autocollie/runs/2026-07-10T22-58-19_20260710T225032-filetypes-python_inherit_from_filetypes_gem_06bdacaa.log) |
+| `8fde0472a66398fa` | ctrl_train_reg_lambda_leaves | ok | 0.9088 | 0.9408 | 0.8514 | 23 | [log](out/autocollie/runs/2026-07-10T22-59-34_20260710T225032-filetypes-python_ctrl_train_reg_lambda_leaves.log) |
+| `674e6837382d6d9a` | feat_textmetrics_kv_vocab | ok | 0.9063 | 0.9375 | 0.8377 | 20 | [log](out/autocollie/runs/2026-07-10T23-00-01_20260710T225032-filetypes-python_feat_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_reg_lambda_leaves`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; tests if increasing regularization and leaves improves PR_AUC by reducing overfit on rare patterns while preserving ROC_AUC.
+- **`feat_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture script obfuscation and key-value patterns, aiming to boost recall@3FPM and PR_AUC by adding high-signal features for Python malware.
+
+</details>
+
+## Cycle `20260712T214815-filetypes-python` — 2026-07-12T21:48:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5edf7fe3e15cccf2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9729 | 0.9875 | 0.9134 | 80 | [log](out/autocollie/runs/2026-07-12T21-57-17_20260712T214815-filetypes-python_inherit_from_filetypes_plist_8b54303f.log) |
+| `bb93871dde98e1c7` | ctrl_train_lr_leaves_128 | ok | 0.8751 | 0.9131 | 0.8328 | 24 | [log](out/autocollie/runs/2026-07-12T21-59-13_20260712T214815-filetypes-python_ctrl_train_lr_leaves_128.log) |
+| `00e652e7f2e977f5` | feat_textmetrics_kv_vocab | ok | 0.9036 | 0.9354 | 0.8423 | 20 | [log](out/autocollie/runs/2026-07-12T21-59-52_20260712T214815-filetypes-python_feat_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ctrl_train_lr_leaves_128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by tuning num_leaves and learning_rate on the baseline feature set to better separate tail malware without increasing FP.
+- **`feat_textmetrics_kv_vocab`** `EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling text_metrics_full and kv_vocab to capture obfuscation patterns and key-value structures in Python scripts, while keeping PR_AUC stable.
+
+</details>
+
+## Cycle `20260713T213314-filetypes-python` — 2026-07-13T21:33:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0c749d22bca4a328` | inherit_from_filetypes_plist_8b54303f | ok | 0.9731 | 0.9873 | 0.9156 | 108 | [log](out/autocollie/runs/2026-07-13T21-42-33_20260713T213314-filetypes-python_inherit_from_filetypes_plist_8b54303f.log) |
+| `8681e5fd127b0f1a` | python_textmetrics_kv_vocab | ok | 0.8763 | 0.9122 | 0.8417 | 101 | [log](out/autocollie/runs/2026-07-13T21-44-22_20260713T213314-filetypes-python_python_textmetrics_kv_vocab.log) |
+| `cc26143d1793c3a2` | python_lowbigram_tieredtrigrams | ok | 0.8771 | 0.9125 | 0.8383 | 31 | [log](out/autocollie/runs/2026-07-13T21-46-03_20260713T213314-filetypes-python_python_lowbigram_tieredtrigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture script obfuscation and config patterns, targeting PR_AUC improvement.
+- **`python_lowbigram_tieredtrigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables tiered_crit_trigrams to capture rarer malicious patterns, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260715T181738-filetypes-python` — 2026-07-15T18:17:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `794fe43a13001abd` | inherit_from_filetypes_plist_8b54303f | ok | 0.9739 | 0.9876 | 0.9163 | 54 | [log](out/autocollie/runs/2026-07-15T18-24-10_20260715T181738-filetypes-python_inherit_from_filetypes_plist_8b54303f.log) |
+| `30365d5fedd63b54` | python_textenc_metrics_full | ok | 0.8966 | 0.9280 | 0.8474 | 65 | [log](out/autocollie/runs/2026-07-15T18-25-38_20260715T181738-filetypes-python_python_textenc_metrics_full.log) |
+| `0b99a9ded9f6a040` | python_kv_vocab_expanded | ok | 0.8978 | 0.9289 | 0.8398 | 18 | [log](out/autocollie/runs/2026-07-15T18-26-46_20260715T181738-filetypes-python_python_kv_vocab_expanded.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture obfuscation and structural anomalies in Python scripts, aiming to improve PR_AUC and recall@3FPM by adding high-signal text features.
+- **`python_kv_vocab_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_MIN_FREQ=25 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands kv_vocab_max and lowers kv_min_freq to capture rarer key-value patterns in Python configs and scripts, targeting PR_AUC gains from finer-grained KV signal.
+
+</details>
+

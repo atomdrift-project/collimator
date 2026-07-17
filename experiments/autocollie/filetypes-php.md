@@ -1024,3 +1024,67 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T105817-filetypes-php` — 2026-07-09T10:58:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `23fc9ed11c841e20` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9843 | 0.9963 | 0.9498 | 124 | [log](out/autocollie/runs/2026-07-09T11-08-48_20260709T105817-filetypes-php_inherit_from_filetypes_gem_06bdacaa.log) |
+| `5105f5820f93d7e6` | php_control_train_opt_v2 | ok | 0.8400 | 0.9369 | 0.7814 | 35 | [log](out/autocollie/runs/2026-07-09T11-11-40_20260709T105817-filetypes-php_php_control_train_opt_v2.log) |
+| `1456398f7b1077e3` | php_feat_textenc_kv_vocab | ok | 0.8464 | 0.9376 | 0.7878 | 30 | [log](out/autocollie/runs/2026-07-09T11-12-19_20260709T105817-filetypes-php_php_feat_textenc_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_opt_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control replicating best feature env; tuning num_leaves and estimators to improve recall@3FPM by allowing deeper trees to capture subtle PHP malware patterns while maintaining PR_AUC.
+- **`php_feat_textenc_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS= EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables text_encoding, text_metrics_full, and kv_vocab to capture script obfuscation and configuration patterns, aiming to boost PR_AUC and recall@3FPM by adding high-signal lexical features.
+
+</details>
+
+## Cycle `20260713T011353-filetypes-php` — 2026-07-13T01:13:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b9fea2e5275b13a9` | inherit_from_filetypes_plist_8b54303f | ok | 0.9842 | 0.9957 | 0.9510 | 43 | [log](out/autocollie/runs/2026-07-13T01-23-19_20260713T011353-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `58f8ccb82ed6156a` | php_control_train_opt_v3 | ok | 0.8408 | 0.9429 | 0.7873 | 24 | [log](out/autocollie/runs/2026-07-13T01-24-29_20260713T011353-filetypes-php_php_control_train_opt_v3.log) |
+| `2d65aa31e300e4b0` | php_feat_kv_textenc_lowfreq | ok | 0.8454 | 0.9437 | 0.7785 | 12 | [log](out/autocollie/runs/2026-07-13T01-24-59_20260713T011353-filetypes-php_php_feat_kv_textenc_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_opt_v3`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env for matrix cache hit; lower learning_rate and increase num_leaves to refine ranking and improve PR_AUC.
+- **`php_feat_kv_textenc_lowfreq`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable kv_vocab and text_encoding while lowering bigram_min_freq to capture PHP-specific obfuscation and string patterns, targeting higher recall@3FPM and PR_AUC.
+
+</details>
+
+## Cycle `20260713T213314-filetypes-php` — 2026-07-13T21:33:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d0a7f228d32d6ca` | inherit_from_filetypes_plist_8b54303f | ok | 0.9828 | 0.9952 | 0.9428 | 86 | [log](out/autocollie/runs/2026-07-13T21-43-16_20260713T213314-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `61eabe6f8acc634e` | php_control_train_opt_v4 | ok | 0.8464 | 0.9451 | 0.8071 | 52 | [log](out/autocollie/runs/2026-07-13T21-44-43_20260713T213314-filetypes-php_php_control_train_opt_v4.log) |
+| `26836182421d1884` | php_feat_kv_textenc_vocab | ok | 0.8464 | 0.9451 | 0.8071 | 23 | [log](out/autocollie/runs/2026-07-13T21-45-36_20260713T213314-filetypes-php_php_feat_kv_textenc_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_opt_v4`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env for matrix cache hit; tune num_leaves and estimators to improve PR_AUC ranking stability.
+- **`php_feat_kv_textenc_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture PHP-specific KV patterns and text obfuscation, targeting PR_AUC and recall@3 FP/M gains.
+
+</details>
+
+## Cycle `20260715T025135-filetypes-php` — 2026-07-15T02:51:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1619bb7d7555df16` | inherit_from_filetypes_plist_8b54303f | ok | 0.9839 | 0.9960 | 0.9523 | 122 | [log](out/autocollie/runs/2026-07-15T03-00-55_20260715T025135-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `aea8838075dca2c5` | php_control_train_opt_v5 | ok | 0.8471 | 0.9440 | 0.7903 | 90 | [log](out/autocollie/runs/2026-07-15T03-04-05_20260715T025135-filetypes-php_php_control_train_opt_v5.log) |
+| `d90ffa7a2d9fe4cc` | php_feat_kv_textenc_lowfreq | ok | 0.8471 | 0.9426 | 0.8028 | 37 | [log](out/autocollie/runs/2026-07-15T03-05-45_20260715T025135-filetypes-php_php_feat_kv_textenc_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_train_opt_v5`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing tree capacity and regularization to better rank malware while keeping the feature matrix identical for a cache hit.
+- **`php_feat_kv_textenc_lowfreq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM and PR_AUC by enabling kv_vocab and text_encoding to capture PHP obfuscation patterns, while lowering bigram_min_freq to retain rare malicious n-grams.
+
+</details>
+

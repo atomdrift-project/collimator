@@ -1616,3 +1616,51 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260710T174914-filetypes-shell` — 2026-07-10T17:49:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3a98aab9cf8d7233` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9903 | 0.9942 | 0.9527 | 89 | [log](out/autocollie/runs/2026-07-10T17-58-04_20260710T174914-filetypes-shell_inherit_from_filetypes_gem_06bdacaa.log) |
+| `d9deb5e09ab0efd1` | shell_control_bigr50_lr003 | ok | 0.9550 | 0.9722 | 0.8881 | 52 | [log](out/autocollie/runs/2026-07-10T18-00-07_20260710T174914-filetypes-shell_shell_control_bigr50_lr003.log) |
+| `3a0c0e5fde89ad7c` | shell_kv_textenc_metrics_full | ok | 0.9555 | 0.9722 | 0.8976 | 38 | [log](out/autocollie/runs/2026-07-10T18-01-07_20260710T174914-filetypes-shell_shell_kv_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_bigr50_lr003`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control variant lowering bigram_min_freq to 50 to capture rarer shell syntax patterns, aiming to lift PR_AUC while preserving ROC_AUC; paired with lower LR for stable training.
+- **`shell_kv_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab, text_encoding, and text_metrics_full to extract structural and lexical signals from shell scripts, targeting recall@3 FP/M gains by better separating obfuscated malware from benign configs.
+
+</details>
+
+## Cycle `20260713T061833-filetypes-shell` — 2026-07-13T06:18:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d9ff4468e823731f` | inherit_from_filetypes_plist_8b54303f | ok | 0.9914 | 0.9947 | 0.9569 | 28 | [log](out/autocollie/runs/2026-07-13T06-28-11_20260713T061833-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `c13f8f0e5e6eefc3` | shell_textenc_metrics_lowbigram | ok | 0.9545 | 0.9733 | 0.8707 | 18 | [log](out/autocollie/runs/2026-07-13T06-28-46_20260713T061833-filetypes-shell_shell_textenc_metrics_lowbigram.log) |
+| `e0103d6422919c8c` | shell_kv_vocab_tiered_trigrams | ok | 0.9536 | 0.9713 | 0.8697 | 19 | [log](out/autocollie/runs/2026-07-13T06-29-08_20260713T061833-filetypes-shell_shell_kv_vocab_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by enabling text_encoding and text_metrics_full to capture script-specific obfuscation patterns, while lowering bigram_min_freq to 100 to retain rarer but informative shell command sequences.
+- **`shell_kv_vocab_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling kv_vocab to extract structured key-value signals from shell configs, combined with tiered_crit_trigrams to capture multi-step attack patterns without noise.
+
+</details>
+
+## Cycle `20260715T025135-filetypes-shell` — 2026-07-15T02:51:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4d532f89991cd8e9` | inherit_from_filetypes_plist_8b54303f | ok | 0.9908 | 0.9948 | 0.9535 | 145 | [log](out/autocollie/runs/2026-07-15T03-00-56_20260715T025135-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `c68e012336236ee7` | shell_control_training_tweak | ok | 0.9540 | 0.9719 | 0.8752 | 114 | [log](out/autocollie/runs/2026-07-15T03-04-07_20260715T025135-filetypes-shell_shell_control_training_tweak.log) |
+| `166b755bb62204a5` | shell_kv_textenc_metrics | ok | 0.9544 | 0.9722 | 0.8731 | 55 | [log](out/autocollie/runs/2026-07-15T03-06-10_20260715T025135-filetypes-shell_shell_kv_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_training_tweak`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature_env; tuning num_leaves and estimators to improve PR_AUC while maintaining ROC_AUC.
+- **`shell_kv_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture shell-specific key-value patterns and text obfuscation signals, aiming to boost recall@3FPM and PR_AUC.
+
+</details>
+

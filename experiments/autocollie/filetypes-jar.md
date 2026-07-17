@@ -920,3 +920,67 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260711T113559-filetypes-jar` — 2026-07-11T11:35:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aecb01bd106efdd5` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9844 | 0.9818 | 0.9285 | 87 | [log](out/autocollie/runs/2026-07-11T11-42-02_20260711T113559-filetypes-jar_inherit_from_filetypes_gem_06bdacaa.log) |
+| `05c224559dd92376` | jar_control_hardneg_tail_v5 | ok | 0.9253 | 0.9713 | 0.8416 | 49 | [log](out/autocollie/runs/2026-07-11T11-43-53_20260711T113559-filetypes-jar_jar_control_hardneg_tail_v5.log) |
+| `9d9815a01a2e136b` | jar_kv_vocab_textmetrics_full | ok | 0.9090 | 0.9635 | 0.8406 | 49 | [log](out/autocollie/runs/2026-07-11T11-44-53_20260711T113559-filetypes-jar_jar_kv_vocab_textmetrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_hardneg_tail_v5`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Reuse best feature_env and apply hard-negative mining to push recall@3FPM higher while preserving PR_AUC guardrails.
+- **`jar_kv_vocab_textmetrics_full`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to extract manifest key-value pairs and resource text statistics, targeting PR_AUC gains from structural and textual signal in JAR archives.
+
+</details>
+
+## Cycle `20260712T225927-filetypes-jar` — 2026-07-12T22:59:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `130af6b26374668a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9818 | 0.9804 | 0.9126 | 93 | [log](out/autocollie/runs/2026-07-12T23-08-14_20260712T225927-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+| `f2f9436ffdb7da6f` | jar_kv_vocab_bigram_freq500 | ok | 0.9022 | 0.9613 | 0.8225 | 47 | [log](out/autocollie/runs/2026-07-12T23-10-10_20260712T225927-filetypes-jar_jar_kv_vocab_bigram_freq500.log) |
+| `b71f1f8b00833e01` | jar_symbol_vocab_hardneg_tail | ok | 0.9050 | 0.9621 | 0.8358 | 39 | [log](out/autocollie/runs/2026-07-12T23-11-00_20260712T225927-filetypes-jar_jar_symbol_vocab_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_kv_vocab_bigram_freq500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and lowers bigram_min_freq to 500 to capture rarer manifest attributes and code patterns, aiming to improve PR_AUC and recall@3FPM.
+- **`jar_symbol_vocab_hardneg_tail`** `EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=2000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Adds symbol_vocab and symbol_bigrams to model Java class/method co-occurrences, paired with hard_negative_weight to boost tail recall@3FPM while preserving PR_AUC.
+
+</details>
+
+## Cycle `20260715T025135-filetypes-jar` — 2026-07-15T02:51:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `32758a0dceeff15d` | inherit_from_filetypes_plist_8b54303f | ok | 0.9822 | 0.9815 | 0.8886 | 154 | [log](out/autocollie/runs/2026-07-15T03-00-14_20260715T025135-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+| `9f57149c578f3e86` | jar_kv_symbol_vocab_pr_auc | ok | 0.9024 | 0.9611 | 0.8321 | 106 | [log](out/autocollie/runs/2026-07-15T03-03-30_20260715T025135-filetypes-jar_jar_kv_symbol_vocab_pr_auc.log) |
+| `540264340b129a9e` | jar_textenc_metrics_recall | ok | 0.9028 | 0.9622 | 0.7864 | 78 | [log](out/autocollie/runs/2026-07-15T03-05-23_20260715T025135-filetypes-jar_jar_textenc_metrics_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_kv_symbol_vocab_pr_auc`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and symbol_vocab to capture manifest metadata and class/method signatures, aiming to improve PR_AUC by adding discriminative structural signal for JAR archives.
+- **`jar_textenc_metrics_recall`** `EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_encoding and text_metrics_full to better model embedded strings and resource obfuscation, targeting higher recall@3FPM by surfacing low-frequency malicious payloads.
+
+</details>
+
+## Cycle `20260716T104747-filetypes-jar` — 2026-07-16T10:47:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `63af3179eb46aa0e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9873 | 0.9867 | 0.8950 | 56 | [log](out/autocollie/runs/2026-07-16T10-55-14_20260716T104747-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+| `98376a7ea06b2a73` | jar_kv_vocab_pr_auc | ok | 0.9062 | 0.9630 | 0.8544 | 116 | [log](out/autocollie/runs/2026-07-16T10-56-48_20260716T104747-filetypes-jar_jar_kv_vocab_pr_auc.log) |
+| `373054db28308749` | jar_textenc_metrics_recall | ok | 0.9043 | 0.9628 | 0.8475 | 110 | [log](out/autocollie/runs/2026-07-16T10-58-52_20260716T104747-filetypes-jar_jar_textenc_metrics_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_kv_vocab_pr_auc`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing structured manifest/metadata key-value pairs common in JARs, lowering bigram freq to retain rare but malicious patterns.
+- **`jar_textenc_metrics_recall`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by detecting obfuscated scripts and embedded resources via text metrics and encoding features, with lower bigram floor for broader coverage.
+
+</details>
+

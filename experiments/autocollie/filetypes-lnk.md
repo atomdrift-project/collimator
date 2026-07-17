@@ -792,3 +792,99 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260709T105904-filetypes-lnk` — 2026-07-09T10:59:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3a457f7d655448fc` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9967 | 0.9509 | 0.9746 | 8 | [log](out/autocollie/runs/2026-07-09T11-07-41_20260709T105904-filetypes-lnk_inherit_from_filetypes_gem_06bdacaa.log) |
+| `579d4b0fd02349f3` | lnk_control_train_opt | ok | 0.9939 | 0.9708 | 0.9288 | 8 | [log](out/autocollie/runs/2026-07-09T11-07-54_20260709T105904-filetypes-lnk_lnk_control_train_opt.log) |
+| `0b40d84634c9e060` | lnk_feat_kv_vocab_textenc | ok | 0.9940 | 0.9718 | 0.9286 | 11 | [log](out/autocollie/runs/2026-07-09T11-17-15_20260709T105904-filetypes-lnk_lnk_feat_kv_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_control_train_opt`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives and up-weighting hard negatives to reduce false positives at the tail, while preserving PR_AUC.
+- **`lnk_feat_kv_vocab_textenc`** `EXP_BIGRAM_MIN_FREQ=50 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC and recall@3FPM by enabling kv_vocab and text_encoding to capture structured path and text signals specific to LNK files.
+
+</details>
+
+## Cycle `20260711T141218-filetypes-lnk` — 2026-07-11T14:12:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8f9b2cde88f73b17` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9948 | 0.9333 | 0.9782 | 6 | [log](out/autocollie/runs/2026-07-11T14-18-26_20260711T141218-filetypes-lnk_inherit_from_filetypes_gem_06bdacaa.log) |
+| `409121e6c0374eed` | lnk_control_train_reg_opt | ok | 0.9940 | 0.9716 | 0.9281 | 6 | [log](out/autocollie/runs/2026-07-11T14-18-36_20260711T141218-filetypes-lnk_lnk_control_train_reg_opt.log) |
+| `169b3ab86c93d7a0` | lnk_feat_kv_vocab_textenc | ok | 0.9940 | 0.9714 | 0.9297 | 5 | [log](out/autocollie/runs/2026-07-11T14-20-26_20260711T141218-filetypes-lnk_lnk_feat_kv_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_control_train_reg_opt`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing regularization (reg_lambda=2.0) and leaves (num_leaves=128) on the best feature set to smooth decision boundaries and improve ranking.
+- **`lnk_feat_kv_vocab_textenc`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab and text_encoding to capture richer key-value and textual signals in LNK metadata, while maintaining PR_AUC guardrails.
+
+</details>
+
+## Cycle `20260712T105632-filetypes-lnk` — 2026-07-12T10:56:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `be431b892254bae3` | inherit_from_filetypes_gem_06bdacaa | ok | 0.9949 | 0.9334 | 0.9782 | 8 | [log](out/autocollie/runs/2026-07-12T11-05-18_20260712T105632-filetypes-lnk_inherit_from_filetypes_gem_06bdacaa.log) |
+| `37f47b9979c73ab4` | lnk_control_train_leaves_reg | ok | 0.9940 | 0.9715 | 0.9287 | 10 | [log](out/autocollie/runs/2026-07-12T11-05-31_20260712T105632-filetypes-lnk_lnk_control_train_leaves_reg.log) |
+| `58a5ee9ad01e44f8` | lnk_feat_kv_vocab_textenc | ok | 0.9940 | 0.9715 | 0.9299 | 10 | [log](out/autocollie/runs/2026-07-12T11-08-17_20260712T105632-filetypes-lnk_lnk_feat_kv_vocab_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_control_train_leaves_reg`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env for matrix cache hit; increases num_leaves and adjusts reg_lambda to improve PR_AUC by capturing finer decision boundaries on LNK metadata without increasing FP rate.
+- **`lnk_feat_kv_vocab_textenc`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding research families to extract structured path and encoding signals from LNK files; aims to improve recall@3FPM by distinguishing malicious shortcuts from benign ones.
+
+</details>
+
+## Cycle `20260713T214428-filetypes-lnk` — 2026-07-13T21:44:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb167d224e0905ea` | inherit_from_filetypes_plist_8b54303f | ok | 0.9929 | 0.8629 | 0.9863 | 6 | [log](out/autocollie/runs/2026-07-13T21-52-42_20260713T214428-filetypes-lnk_inherit_from_filetypes_plist_8b54303f.log) |
+| `6bd054f66cc99768` | lnk_feat_kv_textenc_vocab | ok | 0.9839 | 0.9247 | 0.9316 | 6 | [log](out/autocollie/runs/2026-07-13T21-52-48_20260713T214428-filetypes-lnk_lnk_feat_kv_textenc_vocab.log) |
+| `e14f273d503b9743` | lnk_ctrl_hardneg_recall | ok | 0.9973 | 0.9872 | 0.9316 | 5 | [log](out/autocollie/runs/2026-07-13T21-52-55_20260713T214428-filetypes-lnk_lnk_ctrl_hardneg_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_feat_kv_textenc_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture richer structural and encoding signals, aiming to improve PR_AUC by better separating malicious LNK payloads from benign shortcuts.
+- **`lnk_ctrl_hardneg_recall`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature set while tuning hard_negative_fraction and hard_negative_weight to focus the model on difficult benign samples, aiming to boost recall@3FPM without hurting PR_AUC.
+
+</details>
+
+## Cycle `20260715T025135-filetypes-lnk` — 2026-07-15T02:51:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b153aa93391e99ef` | inherit_from_filetypes_plist_8b54303f | ok | 0.9930 | 0.8632 | 0.9863 | 16 | [log](out/autocollie/runs/2026-07-15T03-00-58_20260715T025135-filetypes-lnk_inherit_from_filetypes_plist_8b54303f.log) |
+| `e38c1bdbe7e0628a` | lnk_ctrl_hardneg_lr_leaves | ok | 0.9978 | 0.9894 | 0.9308 | 17 | [log](out/autocollie/runs/2026-07-15T03-01-25_20260715T025135-filetypes-lnk_lnk_ctrl_hardneg_lr_leaves.log) |
+| `c0dcae2e0af1b79b` | lnk_feat_kv_textenc_metrics | ok | 0.9840 | 0.9247 | 0.9309 | 20 | [log](out/autocollie/runs/2026-07-15T03-03-48_20260715T025135-filetypes-lnk_lnk_feat_kv_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_ctrl_hardneg_lr_leaves`** `EXP_BIGRAM_MIN_FREQ=500 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best recent feature set but increase hard_negative_weight and num_leaves to sharpen tail ranking, targeting PR_AUC improvement while keeping ROC_AUC flat.
+- **`lnk_feat_kv_textenc_metrics`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=2 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable kv_vocab, text_encoding, and text_metrics_full to capture key-value structure and obfuscation signals, aiming to boost recall@3 FP/M by better separating malicious LNK payloads from benign shortcuts.
+
+</details>
+
+## Cycle `20260716T104802-filetypes-lnk` — 2026-07-16T10:48:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `449ca434308564ce` | inherit_from_filetypes_plist_8b54303f | ok | 0.9930 | 0.8648 | 0.9864 | 6 | [log](out/autocollie/runs/2026-07-16T10-54-30_20260716T104802-filetypes-lnk_inherit_from_filetypes_plist_8b54303f.log) |
+| `ddd738e98f9143a6` | lnk_ctrl_train_opt | ok | 0.9863 | 0.9381 | 0.9313 | 5 | [log](out/autocollie/runs/2026-07-16T10-54-39_20260716T104802-filetypes-lnk_lnk_ctrl_train_opt.log) |
+| `07536dfb6af8acaf` | lnk_feat_kv_textenc | ok | 0.9840 | 0.9244 | 0.9321 | 6 | [log](out/autocollie/runs/2026-07-16T10-54-48_20260716T104802-filetypes-lnk_lnk_feat_kv_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_ctrl_train_opt`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env for cache hit; adjust num_leaves and learning_rate to improve PR_AUC by reducing overfit on benign noise.
+- **`lnk_feat_kv_textenc`** `EXP_BIGRAM_MIN_FREQ=200 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture path and icon string patterns in .lnk files, aiming to boost recall@3FPM by surfacing subtle malicious shortcut configurations.
+
+</details>
+
