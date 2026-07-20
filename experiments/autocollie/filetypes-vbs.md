@@ -1120,3 +1120,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T140245-filetypes-vbs` — 2026-07-18T14:02:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `033e5644d5d6588e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9977 | 0.9926 | 25 | [log](out/autocollie/runs/2026-07-18T14-11-30_20260718T140245-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `5648351d9e53495c` | vbs_text_metrics_kv_vocab | ok | 0.9969 | 0.9894 | 0.9577 | 24 | [log](out/autocollie/runs/2026-07-18T14-12-03_20260718T140245-filetypes-vbs_vbs_text_metrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_text_metrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture script-specific obfuscation and key-value patterns, aiming to improve PR_AUC and recall@3FPM by adding high-signal features for VBS scripts.
+
+</details>
+
+## Cycle `20260720T112212-filetypes-vbs` — 2026-07-20T11:22:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `17438f6058b2db03` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9975 | 0.9897 | 17 | [log](out/autocollie/runs/2026-07-20T11-28-37_20260720T112212-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `004cae20af9abeb2` | vbs_train_scalepos075_leaves128 | ok | 0.9968 | 0.9893 | 0.9539 | 16 | [log](out/autocollie/runs/2026-07-20T11-28-56_20260720T112212-filetypes-vbs_vbs_train_scalepos075_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_train_scalepos075_leaves128`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives to reduce false positives at the strict-FP tail, while keeping PR_AUC flat.
+
+</details>
+

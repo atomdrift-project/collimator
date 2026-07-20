@@ -1004,3 +1004,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260720T114241-filetypes-tar` — 2026-07-20T11:42:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `947f4a1cfa421d95` | inherit_from_filetypes_plist_8b54303f | ok | 0.9625 | 0.9730 | 0.8444 | 29 | [log](out/autocollie/runs/2026-07-20T11-48-49_20260720T114241-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `f79f5f03452a0e74` | tar_ctrl_hardneg_012_18 | ok | 0.9343 | 0.9654 | 0.8708 | 39 | [log](out/autocollie/runs/2026-07-20T11-49-18_20260720T114241-filetypes-tar_tar_ctrl_hardneg_012_18.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_012_18`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Sweep hard-negative fraction/weight to improve recall@3FPM by focusing on difficult benigns, targeting the or_loses diagnostic shape while keeping PR_AUC flat.
+
+</details>
+

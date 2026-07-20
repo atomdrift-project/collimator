@@ -4479,8 +4479,13 @@ def _extract_partitioned_batch_worker(
     list[int], list[int], list[float], list[int],
     list[int], list[int], list[float], list[int],
 ]:
-    """Extract train/test features from a mixed batch into separate sparse rows."""
-    train_offset, test_offset, batch, spec = args
+    """Extract train/test features from a mixed batch into separate sparse rows.
+
+    Emits batch-LOCAL 0-based row indices; the leading offsets in ``args`` are
+    accepted for caller compatibility but intentionally unused (see the row
+    numbering note below).
+    """
+    _train_offset, _test_offset, batch, spec = args
     ctx = _ExtractContext(spec)
     vec = np.zeros(spec.total_features, dtype=np.float32)
 
@@ -4515,15 +4520,25 @@ def _extract_partitioned_batch_worker(
         vec[:] = 0.0
         _extract_into(report, ctx, vec, formula=formula, elements=elements, score=score, mtime=mtime, cluster_id=cluster_id)
         nz = np.nonzero(vec)[0]
+        # Row indices are batch-LOCAL (0-based). Rows can be skipped mid-batch —
+        # a report that fails to coerce (continue above), or an id dropped
+        # because it was concurrently deleted before its fetch. Numbering by an
+        # absolute (train_offset + position) base computed *before* extraction
+        # desyncs from the actual extracted count the moment one row is skipped,
+        # and _assemble_partitioned_matrices then rebases by its own running
+        # total → the block's max row index exceeds its row count → scipy
+        # raises "axis 0 index N exceeds matrix dimension N". Emitting local
+        # 0-based indices keeps each block self-consistent; the assembler
+        # vstacks blocks in order, so global row identity is preserved by order.
         if is_test:
-            row = test_offset + local_test
+            row = local_test
             local_test += 1
             test_rows.extend([row] * len(nz))
             test_cols.extend(nz.tolist())
             test_vals.extend(vec[nz].tolist())
             test_labels.append(label)
         else:
-            row = train_offset + local_train
+            row = local_train
             local_train += 1
             train_rows.extend([row] * len(nz))
             train_cols.extend(nz.tolist())
@@ -4557,6 +4572,35 @@ def _extract_partitioned_db_batch_worker(
     return _extract_partitioned_batch_worker((train_offset, test_offset, batch, spec))
 
 
+# A row selected into the corpus can vanish before this batch's fetch when
+# hopper's cleanup/purge stages DELETE samples concurrently (pg.go
+# purgeUnsupported / applyCleanup). Dropping the odd deleted row from a
+# multi-hour full-corpus pass is correct — but a large fraction missing means
+# something is actually wrong (wrong DB, truncated table), so still fail loudly
+# there. Threshold is per-batch (batches are ~128 rows); a couple of concurrent
+# deletes is <4%, a wrong DB is ~100%.
+_MAX_MISSING_CLEAVE_FRACTION = 0.25
+
+
+def _check_missing_cleave_rows(ids: list[int], reports_map: dict[int, Any]) -> None:
+    """Tolerate a few concurrently-deleted rows; raise on mass loss."""
+    missing = set(ids) - set(reports_map)
+    if not missing:
+        return
+    frac = len(missing) / max(len(ids), 1)
+    if frac > _MAX_MISSING_CLEAVE_FRACTION:
+        raise ValueError(
+            f"missing cleave_result rows during extraction: {len(missing)}/{len(ids)} "
+            f"({frac:.0%}) exceeds {_MAX_MISSING_CLEAVE_FRACTION:.0%} — likely wrong DB "
+            f"or mass deletion"
+        )
+    log.warning(
+        "skipping %d/%d rows that vanished mid-run (concurrent hopper delete)",
+        len(missing),
+        len(ids),
+    )
+
+
 def _extract_labeled_db_batch_worker(
     args: tuple[int, Path | str, list[tuple[int, int]], FeatureSpec],
 ) -> tuple[list[int], list[int], list[float], list[int]]:
@@ -4566,10 +4610,8 @@ def _extract_labeled_db_batch_worker(
     offset, dsn, batch_ids, spec = args
     ids = [rid for rid, _label in batch_ids]
     reports_map = data.fetch_cleave_results(dsn, ids)
-    missing = set(ids) - set(reports_map)
-    if missing:
-        raise ValueError(f"missing cleave_result rows during extraction: {len(missing)}")
-    batch = [(reports_map[rid], label) for rid, label in batch_ids]
+    _check_missing_cleave_rows(ids, reports_map)
+    batch = [(reports_map[rid], label) for rid, label in batch_ids if rid in reports_map]
     return _extract_batch_worker((offset, batch, spec))
 
 
@@ -4591,12 +4633,13 @@ def _extract_labeled_metadata_db_batch_worker(
     fetch_started = time.monotonic()
     reports_map = data.fetch_cleave_results(dsn, ids)
     fetch_sec = time.monotonic() - fetch_started
-    missing = set(ids) - set(reports_map)
-    if missing:
-        raise ValueError(f"missing cleave_result rows during extraction: {len(missing)}")
+    _check_missing_cleave_rows(ids, reports_map)
+    # Keep only rows still present, so the returned metadata stays aligned with
+    # the extracted feature rows (the caller cross-checks their lengths).
+    kept_meta = [row for row in batch_meta if int(row[0]) in reports_map]
     batch = [
         (reports_map[int(row[0])], int(row[4]))
-        for row in batch_meta
+        for row in kept_meta
     ]
     extract_started = time.monotonic()
     rows, cols, vals, labels = _extract_batch_worker((0, batch, spec))
@@ -4608,7 +4651,7 @@ def _extract_labeled_metadata_db_batch_worker(
         "min_row_id": min(ids) if ids else 0,
         "max_row_id": max(ids) if ids else 0,
     }
-    return batch_meta, rows, cols, vals, labels, stats
+    return kept_meta, rows, cols, vals, labels, stats
 
 
 def extract_labeled_from_db_batches(
@@ -5399,7 +5442,10 @@ def _assemble_partitioned_matrices(
 
     Each batch is the 8-tuple emitted by ``_extract_partitioned_batch_worker``:
     ``(train_rows, train_cols, train_vals, train_labels, test_rows, ...)`` where
-    the ``rows`` are *global* row indices (offset by the running partition size).
+    the ``rows`` are batch-LOCAL 0-based indices. Global row identity is carried
+    by block order (blocks vstack in the same order labels concatenate), NOT by
+    the index values — so a batch that dropped rows (concurrent delete, or a
+    report that failed to coerce) still stacks correctly.
 
     Rather than accumulating raw COO triplets and a final ``np.concatenate``
     (which holds the chunk lists, the concatenated copy, and the built CSR all at
@@ -5414,9 +5460,11 @@ def _assemble_partitioned_matrices(
     """
     empty = sp.csr_matrix((0, total_features), dtype=np.float32)
 
-    def _block(rows: list[int], cols: list[int], vals: list[float], base: int, n_rows: int) -> sp.csr_matrix:
-        # Rebase the worker's global row indices to this block (base..base+n_rows).
-        local = np.asarray(rows, dtype=np.int64) - base if rows else np.empty(0, dtype=np.int64)
+    def _block(rows: list[int], cols: list[int], vals: list[float], n_rows: int) -> sp.csr_matrix:
+        # Rows are already batch-local 0-based (see _extract_partitioned_batch_worker),
+        # so a block is self-consistent regardless of how many rows earlier batches
+        # dropped. Global row identity comes from vstack order, not the indices.
+        local = np.asarray(rows, dtype=np.int64) if rows else np.empty(0, dtype=np.int64)
         return sp.csr_matrix(
             (
                 np.asarray(vals, dtype=np.float32),
@@ -5429,19 +5477,15 @@ def _assemble_partitioned_matrices(
     test_blocks: list[sp.csr_matrix] = []
     train_labels: list[np.ndarray] = []
     test_labels: list[np.ndarray] = []
-    train_off = 0
-    test_off = 0
     for (tr, tc, tv, tl, ter, tec, tev, tel) in batch_iter:
         n_tr = len(tl)
         n_te = len(tel)
         if n_tr:
-            train_blocks.append(_block(tr, tc, tv, train_off, n_tr))
+            train_blocks.append(_block(tr, tc, tv, n_tr))
             train_labels.append(np.asarray(tl, dtype=np.float32))
-            train_off += n_tr
         if n_te:
-            test_blocks.append(_block(ter, tec, tev, test_off, n_te))
+            test_blocks.append(_block(ter, tec, tev, n_te))
             test_labels.append(np.asarray(tel, dtype=np.float32))
-            test_off += n_te
 
     X_train = sp.vstack(train_blocks, format="csr") if train_blocks else empty.copy()
     X_test = sp.vstack(test_blocks, format="csr") if test_blocks else empty.copy()

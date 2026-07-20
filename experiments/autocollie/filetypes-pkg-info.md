@@ -1010,3 +1010,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260718T152741-filetypes-pkg-info` — 2026-07-18T15:27:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `89bdc0c435ac6786` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9981 | 0.9970 | 20 | [log](out/autocollie/runs/2026-07-18T15-33-14_20260718T152741-filetypes-pkg-info_inherit_from_filetypes_plist_8b54303f.log) |
+| `5235acf7de9dc427` | pkginfo_kv_vocab_lowbigram | ok | 0.9892 | 0.9850 | 0.9825 | 11 | [log](out/autocollie/runs/2026-07-18T15-33-40_20260718T152741-filetypes-pkg-info_pkginfo_kv_vocab_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_kv_vocab_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and lowers bigram_min_freq to capture rare dependency patterns, targeting PR_AUC improvement by better separating malicious package metadata from benign noise.
+
+</details>
+
+## Cycle `20260720T113751-filetypes-pkg-info` — 2026-07-20T11:37:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `11efecd38338c0fd` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9983 | 0.9970 | 23 | [log](out/autocollie/runs/2026-07-20T11-45-38_20260720T113751-filetypes-pkg-info_inherit_from_filetypes_plist_8b54303f.log) |
+| `24e546fbd9041857` | pkginfo_kv_textenc_vocab_tune | ok | 0.9865 | 0.9793 | 0.9821 | 15 | [log](out/autocollie/runs/2026-07-20T11-46-02_20260720T113751-filetypes-pkg-info_pkginfo_kv_textenc_vocab_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_kv_textenc_vocab_tune`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable kv_vocab and text_encoding to capture structural and encoding signals in package manifests, aiming to improve PR_AUC by better separating malicious metadata patterns from benign noise.
+
+</details>
+

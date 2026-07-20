@@ -1142,3 +1142,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T134111-filetypes-zip` — 2026-07-18T13:41:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f0af54254b96364c` | inherit_from_filetypes_plist_8b54303f | ok | 0.9987 | 0.9943 | 0.9724 | 692 | [log](out/autocollie/runs/2026-07-18T13-47-32_20260718T134111-filetypes-zip_inherit_from_filetypes_plist_8b54303f.log) |
+| `a13228b278f16f21` | zip_hardneg_kv_vocab | ok | 0.9463 | 0.8253 | 0.8060 | 424 | [log](out/autocollie/runs/2026-07-18T14-01-12_20260718T134111-filetypes-zip_zip_hardneg_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_hardneg_kv_vocab`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by upweighting hard negatives to push the decision boundary, while enabling kv_vocab to extract structural metadata signals from zip archives.
+
+</details>
+
+## Cycle `20260720T113729-filetypes-zip` — 2026-07-20T11:37:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a9553338d8d1887a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9987 | 0.9944 | 0.9729 | 255 | [log](out/autocollie/runs/2026-07-20T11-45-48_20260720T113729-filetypes-zip_inherit_from_filetypes_plist_8b54303f.log) |
+| `b5890b481583a1bd` | zip_kv_vocab_5k_lr003 | ok | 0.9408 | 0.8069 | 0.8039 | 306 | [log](out/autocollie/runs/2026-07-20T11-50-04_20260720T113729-filetypes-zip_zip_kv_vocab_5k_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_kv_vocab_5k_lr003`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value pair signals in zip metadata/entries, aiming to improve PR_AUC by distinguishing malicious archives from benign ones based on structural KV patterns.
+
+</details>
+

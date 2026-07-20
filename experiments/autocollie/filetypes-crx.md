@@ -298,3 +298,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260720T112212-filetypes-crx` — 2026-07-20T11:22:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4d62fdbd572ecc19` | inherit_from_filetypes_plist_8b54303f | ok | 0.8819 | 0.8904 | 0.7664 | 26 | [log](out/autocollie/runs/2026-07-20T11-28-28_20260720T112212-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `8b601fb3224ce802` | crx_kv_textmetrics_bigram100 | ok | 0.8236 | 0.8189 | 0.7352 | 38 | [log](out/autocollie/runs/2026-07-20T11-28-55_20260720T112212-filetypes-crx_crx_kv_textmetrics_bigram100.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_kv_textmetrics_bigram100`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by capturing manifest.json key-value patterns and text obfuscation signals specific to CRX packages, while lowering bigram frequency floor to retain rare but malicious script patterns.
+
+</details>
+

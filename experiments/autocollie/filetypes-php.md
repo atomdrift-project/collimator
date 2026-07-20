@@ -1088,3 +1088,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T134834-filetypes-php` — 2026-07-18T13:48:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f5114a9fbdb9aeed` | inherit_from_filetypes_plist_8b54303f | ok | 0.9848 | 0.9960 | 0.9373 | 121 | [log](out/autocollie/runs/2026-07-18T13-57-47_20260718T134834-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `3f541ccf72057f49` | php_textenc_metrics_full_lowfreq | ok | 0.8439 | 0.9404 | 0.7975 | 36 | [log](out/autocollie/runs/2026-07-18T14-00-42_20260718T134834-filetypes-php_php_textenc_metrics_full_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_textenc_metrics_full_lowfreq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and text_metrics_full to capture script obfuscation signals, aiming to improve PR_AUC and recall@3FPM by adding structural text features missing from the baseline.
+
+</details>
+
+## Cycle `20260720T113729-filetypes-php` — 2026-07-20T11:37:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `aec5ac5f5f83bffe` | inherit_from_filetypes_plist_8b54303f | ok | 0.9833 | 0.9952 | 0.9445 | 48 | [log](out/autocollie/runs/2026-07-20T11-47-31_20260720T113729-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `319250183750d31b` | php_kv_vocab_enable | ok | 0.8506 | 0.9450 | 0.8050 | 32 | [log](out/autocollie/runs/2026-07-20T11-48-20_20260720T113729-filetypes-php_php_kv_vocab_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals in PHP scripts, aiming to improve PR_AUC by adding discriminative feature surface while keeping ROC_AUC flat.
+
+</details>
+

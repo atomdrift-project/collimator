@@ -791,3 +791,31 @@ Rejected before run:
 <details><summary>Spec details</summary>
 
 - **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+## Cycle `20260718T135154-filetypes-xlsx` — 2026-07-18T13:51:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f0306b3713cb832a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9953 | 0.5000 | 0.9977 | 27 | [log](out/autocollie/runs/2026-07-18T14-00-19_20260718T135154-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `3bb8816f7b6b38d6` | xlsx_text_metrics_kv_vocab | ok | 0.9863 | 0.8178 | 0.5209 | 18 | [log](out/autocollie/runs/2026-07-18T14-00-57_20260718T135154-filetypes-xlsx_xlsx_text_metrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_text_metrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and kv_vocab to capture document structure and key-value patterns in XLSX files, aiming to improve PR_AUC and recall@3FPM by adding rank signal for obfuscated spreadsheets.
+
+</details>
+
+## Cycle `20260720T112218-filetypes-xlsx` — 2026-07-20T11:22:18Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `99c28854e55f4b8b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9953 | 0.5000 | 0.9977 | 21 | [log](out/autocollie/runs/2026-07-20T11-29-06_20260720T112218-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `5e8da025a00729b4` | xlsx_text_metrics_kv_vocab_doc_obf | ok | 0.9925 | 0.8882 | 0.5210 | 16 | [log](out/autocollie/runs/2026-07-20T11-29-28_20260720T112218-filetypes-xlsx_xlsx_text_metrics_kv_vocab_doc_obf.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_text_metrics_kv_vocab_doc_obf`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns in XLSX XML structures, aiming to improve PR_AUC by adding discriminative signal for macro-laden files.
+
+</details>
+

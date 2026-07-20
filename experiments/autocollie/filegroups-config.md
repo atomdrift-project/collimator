@@ -1612,3 +1612,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260720T112212-filegroups-config` — 2026-07-20T11:22:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `999ab6c821139a99` | inherit_from_filetypes_plist_8b54303f | ok | 0.9982 | 0.9984 | 0.9883 | 150 | [log](out/autocollie/runs/2026-07-20T11-30-23_20260720T112212-filegroups-config_inherit_from_filetypes_plist_8b54303f.log) |
+| `65dfce4bef4a31ee` | config_kv_vocab_split_leaves128 | ok | 0.8879 | 0.9094 | 0.8640 | 59 | [log](out/autocollie/runs/2026-07-20T11-32-54_20260720T112212-filegroups-config_config_kv_vocab_split_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_kv_vocab_split_leaves128`** `EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to capture structured key-value patterns in config files, aiming to improve PR_AUC by adding high-signal lexical features without harming ROC_AUC.
+
+</details>
+

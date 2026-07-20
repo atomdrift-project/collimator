@@ -1116,3 +1116,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T153046-filetypes-png` — 2026-07-18T15:30:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `284c9e076192af1e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9745 | 0.9428 | 0.9688 | 75 | [log](out/autocollie/runs/2026-07-18T15-37-38_20260718T153046-filetypes-png_inherit_from_filetypes_plist_8b54303f.log) |
+| `f9581442d2a95d99` | png_feat_kv_textmetrics_leaves128 | ok | 0.1839 | 0.5654 | 0.1056 | 52 | [log](out/autocollie/runs/2026-07-18T15-39-55_20260718T153046-filetypes-png_png_feat_kv_textmetrics_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_feat_kv_textmetrics_leaves128`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture PNG metadata and text chunk signals, aiming to improve PR_AUC by adding discriminative feature surface for malicious payloads.
+
+</details>
+

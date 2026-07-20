@@ -1058,3 +1058,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260718T134142-filegroups-source` — 2026-07-18T13:41:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `28f0518dfa06d6f2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9938 | 0.9958 | 0.9657 | 305 | [log](out/autocollie/runs/2026-07-18T13-48-39_20260718T134142-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `5f9303d5f25a3035` | source_kv_textenc_lowbigram | ok | 0.8316 | 0.7918 | 0.5220 | 195 | [log](out/autocollie/runs/2026-07-18T13-56-40_20260718T134142-filegroups-source_source_kv_textenc_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_kv_textenc_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding research families and lower bigram_min_freq to 100 to capture rarer source-code patterns, aiming to improve PR_AUC and recall@3FPM.
+
+</details>
+
+## Cycle `20260720T113015-filegroups-source` — 2026-07-20T11:30:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cbcac3d3a69dc0c2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9937 | 0.9956 | 0.9674 | 185 | [log](out/autocollie/runs/2026-07-20T11-39-31_20260720T113015-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `38aab2404eb4dbb5` | source_kv_textenc_vocab | ok | 0.8327 | 0.8013 | 0.5224 | 86 | [log](out/autocollie/runs/2026-07-20T11-42-37_20260720T113015-filegroups-source_source_kv_textenc_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_kv_textenc_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture source-specific key-value pairs and encoding patterns, aiming to improve PR_AUC by adding discriminative signal for malicious source files.
+
+</details>
+

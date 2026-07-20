@@ -2404,3 +2404,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T134148-filegroups-documents` — 2026-07-18T13:41:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `22d0798161ba6548` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9992 | 0.9942 | 70 | [log](out/autocollie/runs/2026-07-18T13-50-15_20260718T134148-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `350eff84536ae84d` | docs_control_training_tune_leaves128 | ok | 0.8715 | 0.8615 | 0.8383 | 104 | [log](out/autocollie/runs/2026-07-18T13-52-09_20260718T134148-filegroups-documents_docs_control_training_tune_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_training_tune_leaves128`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; increases num_leaves and estimators to improve recall@3FPM by allowing deeper trees to capture subtle document obfuscation patterns while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260720T113737-filegroups-documents` — 2026-07-20T11:37:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `51bda13c73475564` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9991 | 0.9751 | 25 | [log](out/autocollie/runs/2026-07-20T11-45-04_20260720T113737-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `7b6e82f167a33347` | docs_text_metrics_obfuscation | ok | 0.9217 | 0.8897 | 0.8370 | 27 | [log](out/autocollie/runs/2026-07-20T11-45-30_20260720T113737-filegroups-documents_docs_text_metrics_obfuscation.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_text_metrics_obfuscation`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture structural obfuscation signals in documents, aiming to improve PR_AUC by better ranking malicious macros/scripts against benign content.
+
+</details>
+

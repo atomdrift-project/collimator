@@ -1052,3 +1052,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T153124-filegroups-media` — 2026-07-18T15:31:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `329a23c2b02b2a03` | inherit_from_filetypes_plist_8b54303f | ok | 0.9885 | 0.9823 | 0.9727 | 99 | [log](out/autocollie/runs/2026-07-18T15-38-46_20260718T153124-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `a87ee0326f94a13c` | media_kv_textenc_pr_auc | ok | 0.3028 | 0.6756 | 0.1547 | 77 | [log](out/autocollie/runs/2026-07-18T15-40-55_20260718T153124-filegroups-media_media_kv_textenc_pr_auc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_kv_textenc_pr_auc`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables kv_vocab and text_encoding to capture metadata and encoding signals in media files, aiming to improve PR_AUC and recall@3 FP/M by adding discriminative features.
+
+</details>
+
+## Cycle `20260720T113729-filegroups-media` — 2026-07-20T11:37:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `77b74e246444db76` | inherit_from_filetypes_plist_8b54303f | ok | 0.9869 | 0.9784 | 0.9550 | 80 | [log](out/autocollie/runs/2026-07-20T11-46-03_20260720T113729-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `09ab518d88d51bae` | media_kv_textmetrics_pr_auc | ok | 0.3212 | 0.6216 | 0.1564 | 62 | [log](out/autocollie/runs/2026-07-20T11-47-24_20260720T113729-filegroups-media_media_kv_textmetrics_pr_auc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_kv_textmetrics_pr_auc`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to add structural and key-value signals, aiming to improve PR_AUC by capturing hidden malicious patterns in media files.
+
+</details>
+

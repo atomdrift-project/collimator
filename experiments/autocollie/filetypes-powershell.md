@@ -1151,3 +1151,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260718T153147-filetypes-powershell` — 2026-07-18T15:31:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7d9df386865c9996` | inherit_from_filetypes_plist_8b54303f | ok | 0.9986 | 0.9947 | 0.9676 | 62 | [log](out/autocollie/runs/2026-07-18T15-37-30_20260718T153147-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `d72d7f798fc6dde0` | ps_feat_textenc_metrics_full | ok | 0.9848 | 0.9747 | 0.9509 | 51 | [log](out/autocollie/runs/2026-07-18T15-38-50_20260718T153147-filetypes-powershell_ps_feat_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture script obfuscation and structural text patterns, aiming to improve PR_AUC and recall@3FPM by adding high-signal text features.
+
+</details>
+
+## Cycle `20260720T112212-filetypes-powershell` — 2026-07-20T11:22:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c957dad702504641` | inherit_from_filetypes_plist_8b54303f | ok | 0.9987 | 0.9951 | 0.9850 | 34 | [log](out/autocollie/runs/2026-07-20T11-28-59_20260720T112212-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `de94afa2f5601604` | ps_feat_textenc_metrics_bigram_freq | ok | 0.9840 | 0.9731 | 0.9432 | 41 | [log](out/autocollie/runs/2026-07-20T11-29-34_20260720T112212-filetypes-powershell_ps_feat_textenc_metrics_bigram_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_feat_textenc_metrics_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture script obfuscation signals, and lower bigram_min_freq to 250 to recover rare but high-value path patterns, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+

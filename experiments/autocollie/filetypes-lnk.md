@@ -888,3 +888,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T152833-filetypes-lnk` — 2026-07-18T15:28:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b2a108e79a759c91` | inherit_from_filetypes_plist_8b54303f | ok | 0.9949 | 0.8981 | 0.9864 | 7 | [log](out/autocollie/runs/2026-07-18T15-33-52_20260718T152833-filetypes-lnk_inherit_from_filetypes_plist_8b54303f.log) |
+| `fb2a8767ca51e306` | lnk_feat_kv_vocab_5k | ok | 0.9973 | 0.9877 | 0.9309 | 6 | [log](out/autocollie/runs/2026-07-18T15-34-02_20260718T152833-filetypes-lnk_lnk_feat_kv_vocab_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_feat_kv_vocab_5k`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured shortcut property signals, aiming to improve PR_AUC by distinguishing malicious shortcut targets from benign ones.
+
+</details>
+
+## Cycle `20260720T112231-filetypes-lnk` — 2026-07-20T11:22:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4870e28035d21f14` | inherit_from_filetypes_plist_8b54303f | ok | 0.9949 | 0.8981 | 0.9864 | 6 | [log](out/autocollie/runs/2026-07-20T11-28-14_20260720T112231-filetypes-lnk_inherit_from_filetypes_plist_8b54303f.log) |
+| `69b1ad4401c8d596` | lnk_feat_kv_vocab_10k_split | ok | 0.9863 | 0.9382 | 0.9296 | 5 | [log](out/autocollie/runs/2026-07-20T11-28-20_20260720T112231-filetypes-lnk_lnk_feat_kv_vocab_10k_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_feat_kv_vocab_10k_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Expands KV vocab to 10k and enables value splitting to capture finer-grained path/argument tokens in LNK files, aiming to improve PR_AUC by reducing false negatives on malicious shortcut targets.
+
+</details>
+

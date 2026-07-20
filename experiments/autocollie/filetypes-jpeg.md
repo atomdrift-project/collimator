@@ -1320,3 +1320,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260718T134111-filetypes-jpeg` — 2026-07-18T13:41:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9444720bdc753036` | inherit_from_filetypes_plist_8b54303f | ok | 0.9800 | 0.9776 | 0.9114 | 22 | [log](out/autocollie/runs/2026-07-18T13-47-50_20260718T134111-filetypes-jpeg_inherit_from_filetypes_plist_8b54303f.log) |
+| `8e1474b7a6975c39` | jpeg_kv_vocab_overlay_train_tune | ok | 0.2644 | 0.6550 | 0.3122 | 19 | [log](out/autocollie/runs/2026-07-18T13-48-26_20260718T134111-filetypes-jpeg_jpeg_kv_vocab_overlay_train_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_kv_vocab_overlay_train_tune`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 …` — Enable kv_vocab to capture malicious metadata patterns and overlay_signal for steganography/payloads, aiming to improve recall@3FPM by surfacing hidden payload signals while keeping PR_AUC flat via conservative training regularization.
+
+</details>
+
+## Cycle `20260720T113014-filetypes-jpeg` — 2026-07-20T11:30:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c77ef0fd228cda8e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9786 | 0.9769 | 0.9425 | 25 | [log](out/autocollie/runs/2026-07-20T11-37-06_20260720T113014-filetypes-jpeg_inherit_from_filetypes_plist_8b54303f.log) |
+| `329d6611eb9f7c43` | jpeg_kv_textenc_vocab_tune | ok | 0.2565 | 0.6515 | 0.3220 | 9 | [log](out/autocollie/runs/2026-07-20T11-37-32_20260720T113014-filetypes-jpeg_jpeg_kv_textenc_vocab_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_kv_textenc_vocab_tune`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_encoding to capture JPEG metadata keys/values and embedded text patterns, targeting PR_AUC improvement by surfacing steganographic or metadata-based malicious signals.
+
+</details>
+

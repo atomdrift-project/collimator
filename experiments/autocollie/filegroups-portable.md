@@ -1150,3 +1150,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T153137-filegroups-portable` — 2026-07-18T15:31:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `13a7af0711269e14` | inherit_from_filetypes_plist_8b54303f | ok | 0.9913 | 0.9972 | 0.9658 | 93 | [log](out/autocollie/runs/2026-07-18T15-38-44_20260718T153137-filegroups-portable_inherit_from_filetypes_plist_8b54303f.log) |
+| `81320a8ce08031da` | portable_kv_textenc_vocab_leaves128 | ok | 0.8175 | 0.8936 | 0.8214 | 62 | [log](out/autocollie/runs/2026-07-18T15-41-09_20260718T153137-filegroups-portable_portable_kv_textenc_vocab_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_kv_textenc_vocab_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full to capture key-value and obfuscation signals, aiming to improve PR_AUC and recall@3FPM by adding discriminative features for portable files while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260720T112936-filegroups-portable` — 2026-07-20T11:29:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58d919a14e392311` | inherit_from_filetypes_plist_8b54303f | ok | 0.9930 | 0.9980 | 0.9590 | 94 | [log](out/autocollie/runs/2026-07-20T11-40-26_20260720T112936-filegroups-portable_inherit_from_filetypes_plist_8b54303f.log) |
+| `efd2007bfedddf58` | portable_kv_textenc_vocab_leaves128 | ok | 0.9925 | 0.9978 | 0.9595 | 16 | [log](out/autocollie/runs/2026-07-20T11-42-01_20260720T112936-filegroups-portable_portable_kv_textenc_vocab_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_kv_textenc_vocab_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=gbdt …` — Enables kv_vocab and text_metrics_full to capture structural and text obfuscation signals for portable files, aiming to improve PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

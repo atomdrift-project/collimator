@@ -1122,3 +1122,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260718T153132-filetypes-kotlin` — 2026-07-18T15:31:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a40ab80d95ae28bf` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9949 | 0.9791 | 109 | [log](out/autocollie/runs/2026-07-18T15-37-31_20260718T153132-filetypes-kotlin_inherit_from_filetypes_plist_8b54303f.log) |
+| `27d8bef85d43ccd0` | kotlin_kv_textmetrics_recall | ok | 0.9705 | 0.9832 | 0.7442 | 36 | [log](out/autocollie/runs/2026-07-18T15-39-50_20260718T153132-filetypes-kotlin_kotlin_kv_textmetrics_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_kv_textmetrics_recall`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable kv_vocab and text_metrics_full to capture structural and textual obfuscation signals in Kotlin source, aiming to improve recall@3FPM while maintaining PR_AUC.
+
+</details>
+
+## Cycle `20260720T112826-filetypes-kotlin` — 2026-07-20T11:28:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2660ae225d581fc8` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9942 | 0.9955 | 50 | [log](out/autocollie/runs/2026-07-20T11-35-04_20260720T112826-filetypes-kotlin_inherit_from_filetypes_plist_8b54303f.log) |
+| `f362d5f321e38c17` | kotlin_kv_textmetrics_vocab | ok | 0.9765 | 0.9857 | 0.7437 | 16 | [log](out/autocollie/runs/2026-07-20T11-35-56_20260720T112826-filetypes-kotlin_kotlin_kv_textmetrics_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_kv_textmetrics_vocab`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture key-value pairs and text structural metrics for Kotlin files, aiming to improve PR_AUC by adding discriminative signal for malicious scripts.
+
+</details>
+

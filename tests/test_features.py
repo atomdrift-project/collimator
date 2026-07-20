@@ -1730,12 +1730,15 @@ def _reset_feature_config_cache():
 
 
 def _ref_partitioned(batches, total_features):
-    """Reference assembly via the original global-COO -> csr_matrix path."""
+    """Reference assembly for the batch-local 0-based contract: offset each
+    batch's local rows by the running row count to reconstruct the global COO.
+    Independent of the assembler's vstack path, so it cross-checks it."""
     import scipy.sparse as sp
     tr_r, tr_c, tr_v, tr_l, te_r, te_c, te_v, te_l = [], [], [], [], [], [], [], []
+    tr_off = te_off = 0
     for (a, b, c, d, e, f, g, h) in batches:
-        tr_r += a; tr_c += b; tr_v += c; tr_l += d
-        te_r += e; te_c += f; te_v += g; te_l += h
+        tr_r += [r + tr_off for r in a]; tr_c += b; tr_v += c; tr_l += d; tr_off += len(d)
+        te_r += [r + te_off for r in e]; te_c += f; te_v += g; te_l += h; te_off += len(h)
     X_train = sp.csr_matrix(
         (np.array(tr_v, np.float32), (np.array(tr_r, np.int64), np.array(tr_c, np.int64))),
         shape=(len(tr_l), total_features),
@@ -1748,12 +1751,14 @@ def _ref_partitioned(batches, total_features):
 
 
 def test_assemble_partitioned_matrices_matches_reference():
-    # Two batches with global row indices, a zero-row in batch 2 (row 2 has no
-    # nonzeros but must still exist), and test rows only in batch 1.
+    # Two batches with batch-LOCAL 0-based row indices. Batch 2 has a leading
+    # zero-row (local row 0 has no nonzeros but must still exist) and its 7.0
+    # entry on local row 1; test rows only in batch 1. Under the old global-index
+    # contract batch 2's row was written as global [3]; local it is [1].
     batches = [
         ([0, 0, 1], [0, 2, 1], [1.0, 3.0, 2.0], [0, 1],
          [0], [3], [5.0], [1]),
-        ([3], [0], [7.0], [1, 0],
+        ([1], [0], [7.0], [1, 0],
          [], [], [], []),
     ]
     Xtr, ytr, Xte, yte = _assemble_partitioned_matrices(iter(batches), total_features=4)

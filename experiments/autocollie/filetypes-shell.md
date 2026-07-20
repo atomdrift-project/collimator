@@ -1664,3 +1664,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260720T112213-filetypes-shell` — 2026-07-20T11:22:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d489385dba49fa40` | inherit_from_filetypes_plist_8b54303f | ok | 0.9915 | 0.9950 | 0.9593 | 46 | [log](out/autocollie/runs/2026-07-20T11-28-10_20260720T112213-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `d6ccbc8e591e8517` | shell_textenc_metrics_full | ok | 0.9531 | 0.9697 | 0.8977 | 69 | [log](out/autocollie/runs/2026-07-20T11-28-56_20260720T112213-filetypes-shell_shell_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture script obfuscation and structural text signals, aiming to improve PR_AUC by better separating malicious shell patterns from benign noise.
+
+</details>
+

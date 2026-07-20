@@ -770,3 +770,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260718T152753-filetypes-makefile` — 2026-07-18T15:27:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ecfceb97cefc49a5` | inherit_from_filetypes_plist_8b54303f | ok | 0.7019 | 0.9317 | 0.4545 | 11 | [log](out/autocollie/runs/2026-07-18T15-33-24_20260718T152753-filetypes-makefile_inherit_from_filetypes_plist_8b54303f.log) |
+| `7f9a1cba9b71eb8b` | makefile_kv_textmetrics_lowbigram | ok | 0.0189 | 0.4759 | 0.0641 | 8 | [log](out/autocollie/runs/2026-07-18T15-33-39_20260718T152753-filetypes-makefile_makefile_kv_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_kv_textmetrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structural and key-value patterns in makefiles, while lowering bigram_min_freq to 50 to recover rare signal, aiming to boost PR_AUC and recall@3FPM.
+
+</details>
+
+## Cycle `20260720T112212-filetypes-makefile` — 2026-07-20T11:22:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `edaddafe996f16a5` | inherit_from_filetypes_plist_8b54303f | ok | 0.4306 | 0.8594 | 0.6154 | 10 | [log](out/autocollie/runs/2026-07-20T11-28-38_20260720T112212-filetypes-makefile_inherit_from_filetypes_plist_8b54303f.log) |
+| `9c24d7d27a5fdbca` | makefile_ctrl_hardneg_leaves128 | ok | 0.0214 | 0.4864 | 0.0784 | 10 | [log](out/autocollie/runs/2026-07-20T11-28-49_20260720T112212-filetypes-makefile_makefile_ctrl_hardneg_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_hardneg_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control spec replicating top PR_AUC feature set; increases hard-negative weight and tree capacity to boost recall@3FPM while preserving PR_AUC.
+
+</details>
+

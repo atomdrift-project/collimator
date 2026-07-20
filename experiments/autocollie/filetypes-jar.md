@@ -984,3 +984,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T134149-filetypes-jar` — 2026-07-18T13:41:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b273e47b007fde3a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9855 | 0.9849 | 0.9120 | 169 | [log](out/autocollie/runs/2026-07-18T13-47-54_20260718T134149-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+| `128f29a248f613b8` | jar_best_feat_dart_tail_recall | ok | 0.8617 | 0.9180 | 0.8231 | 114 | [log](out/autocollie/runs/2026-07-18T13-51-21_20260718T134149-filetypes-jar_jar_best_feat_dart_tail_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_best_feat_dart_tail_recall`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Replicates best PR_AUC feature set; switches to dart boosting and increases leaves to improve recall@3 FP/M while preserving PR/ROC AUC guardrails.
+
+</details>
+
+## Cycle `20260720T112217-filetypes-jar` — 2026-07-20T11:22:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7a7787cfee892944` | inherit_from_filetypes_plist_8b54303f | ok | 0.9849 | 0.9848 | 0.9314 | 47 | [log](out/autocollie/runs/2026-07-20T11-28-15_20260720T112217-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+| `b09d16ef87f305e0` | jar_kv_vocab_pr_auc | ok | 0.9046 | 0.9643 | 0.8456 | 54 | [log](out/autocollie/runs/2026-07-20T11-29-03_20260720T112217-filetypes-jar_jar_kv_vocab_pr_auc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_kv_vocab_pr_auc`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab to capture manifest metadata patterns in JAR files, providing complementary signal to n-grams for ranking malicious archives higher.
+
+</details>
+

@@ -356,8 +356,18 @@ def _score_labeled_corpus(
         corpus_max_row_id = max((sample.row_id for sample in samples), default=0)
         # Use uncompressed NPZ: this cache is meant to save wall-clock time,
         # and deflate compression is slow and effectively single-threaded here.
+        #
+        # Write to a sibling temp file and os.replace() it into place so a
+        # failed write (e.g. ENOSPC mid-save) never leaves a truncated .npz
+        # behind. np.load reads the zip's trailing central directory, so a
+        # partial file poisons every downstream consumer with a confusing
+        # "BadZipFile: File is not a zip file" instead of failing here where
+        # the real cause (out of disk) is obvious.
+        # Temp name must keep the .npz suffix, else np.savez appends its own
+        # (foo.npz.tmp -> foo.npz.tmp.npz) and os.replace would miss it.
+        tmp_path = cache_path.with_name(cache_path.stem + ".tmp.npz")
         np.savez(
-            cache_path,
+            tmp_path,
             row_ids=np.array([sample.row_id for sample in samples], dtype=np.int64),
             sha256=np.array([sample.sha256 for sample in samples]),
             paths=np.array([sample.path for sample in samples]),
@@ -371,6 +381,7 @@ def _score_labeled_corpus(
             corpus_max_row_id=np.array(corpus_max_row_id, dtype=np.int64),
             corpus_requested_max_id=np.array(int(max_id), dtype=np.int64),
         )
+        os.replace(tmp_path, cache_path)
         log.info(
             "saved threshold score cache to %s (%d rows, max_row_id=%d)",
             cache_path,

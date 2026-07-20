@@ -1120,3 +1120,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260720T112945-filetypes-csharp` — 2026-07-20T11:29:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cec9240275b80151` | inherit_from_filetypes_plist_8b54303f | ok | 0.9892 | 0.9969 | 0.9431 | 31 | [log](out/autocollie/runs/2026-07-20T11-37-45_20260720T112945-filetypes-csharp_inherit_from_filetypes_plist_8b54303f.log) |
+| `6f467ec947f8c629` | csharp_feat_symbol_vocab_leaves128 | ok | 0.4253 | 0.8261 | 0.3853 | 17 | [log](out/autocollie/runs/2026-07-20T11-38-17_20260720T112945-filetypes-csharp_csharp_feat_symbol_vocab_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_feat_symbol_vocab_leaves128`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab research family to capture import/symbol co-occurrence patterns for PR_AUC gain, paired with num_leaves=128 to model complex interactions without overfitting.
+
+</details>
+

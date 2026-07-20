@@ -1066,3 +1066,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T134157-filegroups-native` — 2026-07-18T13:41:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `15081cf9c4641040` | inherit_from_filetypes_plist_8b54303f | ok | 0.9992 | 0.9992 | 0.9890 | 540 | [log](out/autocollie/runs/2026-07-18T13-49-06_20260718T134157-filegroups-native_inherit_from_filetypes_plist_8b54303f.log) |
+| `870d20656d39bfb7` | native_symbol_vocab_bigrams_15k_hardneg | ok | 0.9990 | 0.9989 | 0.9866 | 336 | [log](out/autocollie/runs/2026-07-18T14-02-41_20260718T134157-filegroups-native_native_symbol_vocab_bigrams_15k_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_symbol_vocab_bigrams_15k_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=15000 EXP_SYMBOL_MIN_FREQ=5 …` — Enable symbol_vocab and symbol_bigrams to capture import co-occurrence patterns, aiming to improve PR_AUC by adding structural signal that distinguishes malicious native binaries from benign ones.
+
+</details>
+
+## Cycle `20260720T112212-filegroups-native` — 2026-07-20T11:22:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e423e3fc2f2612b3` | inherit_from_filetypes_plist_8b54303f | ok | 0.9990 | 0.9991 | 0.9903 | 229 | [log](out/autocollie/runs/2026-07-20T11-28-43_20260720T112212-filegroups-native_inherit_from_filetypes_plist_8b54303f.log) |
+| `6e4fffd7a6900115` | native_symbol_vocab_bigrams_15k_hardneg | ok | 0.9988 | 0.9988 | 0.9875 | 182 | [log](out/autocollie/runs/2026-07-20T11-32-33_20260720T112212-filegroups-native_native_symbol_vocab_bigrams_15k_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_symbol_vocab_bigrams_15k_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=15000 …` — Enables symbol vocab and bigrams to capture import co-occurrence patterns for native binaries, aiming to improve PR_AUC and recall@3FPM by adding structural signal.
+
+</details>
+

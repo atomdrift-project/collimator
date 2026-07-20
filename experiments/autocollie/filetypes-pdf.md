@@ -2562,3 +2562,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T134157-filetypes-pdf` — 2026-07-18T13:41:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `57326091ccf12436` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9991 | 0.9962 | 13 | [log](out/autocollie/runs/2026-07-18T13-47-46_20260718T134157-filetypes-pdf_inherit_from_filetypes_plist_8b54303f.log) |
+| `9e1d3b490d053413` | pdf_textmetrics_docobf_hardneg | ok | 0.9881 | 0.9678 | 0.8633 | 25 | [log](out/autocollie/runs/2026-07-18T13-48-14_20260718T134157-filetypes-pdf_pdf_textmetrics_docobf_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_textmetrics_docobf_hardneg`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_metrics_full and document_obfuscation_features to capture PDF-specific obfuscation patterns, paired with hard-negative training to sharpen ranking at the strict-FP tail.
+
+</details>
+
+## Cycle `20260720T112912-filetypes-pdf` — 2026-07-20T11:29:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8665f5f4767d1fb5` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9991 | 0.9962 | 17 | [log](out/autocollie/runs/2026-07-20T11-36-27_20260720T112912-filetypes-pdf_inherit_from_filetypes_plist_8b54303f.log) |
+| `5765dc82e6649d0b` | pdf_textmetrics_hardneg_sweep | ok | 0.9915 | 0.9768 | 0.8635 | 10 | [log](out/autocollie/runs/2026-07-20T11-36-45_20260720T112912-filetypes-pdf_pdf_textmetrics_hardneg_sweep.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_textmetrics_hardneg_sweep`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to capture document obfuscation patterns and apply hard_negative_fraction=0.015 with hard_negative_weight=16 to improve recall@3FPM by sharpening the decision boundary on difficult samples, addressing the or_loses diagnostic.
+
+</details>
+

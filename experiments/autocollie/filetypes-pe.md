@@ -2096,3 +2096,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260718T134111-filetypes-pe` — 2026-07-18T13:41:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `570d8afacc6739d2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9993 | 0.9993 | 0.9869 | 468 | [log](out/autocollie/runs/2026-07-18T13-48-15_20260718T134111-filetypes-pe_inherit_from_filetypes_plist_8b54303f.log) |
+| `59acc075f14e6bba` | pe_symbol_vocab_hardneg_threshold_fpr | ok | 0.9985 | 0.9985 | 0.0000 | 373 | [log](out/autocollie/runs/2026-07-18T13-59-45_20260718T134111-filetypes-pe_pe_symbol_vocab_hardneg_threshold_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_symbol_vocab_hardneg_threshold_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.01 …` — Enable symbol_vocab to capture import co-occurrence signal for PR_AUC gain, while using hard_negative_weight=12 and threshold_mode=max_recall_at_fpr to directly optimize recall@3 FP/M at the deployed tail.
+
+</details>
+
+## Cycle `20260720T112230-filetypes-pe` — 2026-07-20T11:22:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bf1da20aadf636be` | inherit_from_filetypes_plist_8b54303f | ok | 0.9993 | 0.9994 | 0.9881 | 241 | [log](out/autocollie/runs/2026-07-20T11-28-54_20260720T112230-filetypes-pe_inherit_from_filetypes_plist_8b54303f.log) |
+| `0bd87f061c48e92c` | pe_symbol_vocab_hardneg_fpr_thresh | ok | 0.9984 | 0.9984 | 0.0000 | 183 | [log](out/autocollie/runs/2026-07-20T11-32-56_20260720T112230-filetypes-pe_pe_symbol_vocab_hardneg_fpr_thresh.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_symbol_vocab_hardneg_fpr_thresh`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Enables symbol_vocab to capture PE import patterns while applying hard-negative weighting and strict FPR thresholding to boost recall@3 FP/M without sacrificing PR_AUC.
+
+</details>
+

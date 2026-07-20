@@ -972,3 +972,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260720T112212-filegroups-scripts` — 2026-07-20T11:22:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `feafe87be08f69a2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9933 | 0.9919 | 0.9607 | 197 | [log](out/autocollie/runs/2026-07-20T11-30-36_20260720T112212-filegroups-scripts_inherit_from_filetypes_plist_8b54303f.log) |
+| `02c6968cc1e8af5e` | scripts_textenc_metrics_kv_vocab | ok | 0.9361 | 0.9361 | 0.7045 | 106 | [log](out/autocollie/runs/2026-07-20T11-33-54_20260720T112212-filegroups-scripts_scripts_textenc_metrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_textenc_metrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Enables text_metrics_full, text_encoding, and kv_vocab to capture script-specific obfuscation and key-value patterns, aiming to improve PR_AUC by adding discriminative signal for malicious scripts while preserving ROC_AUC.
+
+</details>
+

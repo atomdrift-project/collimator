@@ -988,3 +988,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260720T114241-filetypes-python-bytecode` — 2026-07-20T11:42:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `13f2088aa1f9ec1f` | inherit_from_filetypes_plist_8b54303f | ok | 0.9961 | 0.9987 | 0.9782 | 35 | [log](out/autocollie/runs/2026-07-20T11-48-56_20260720T114241-filetypes-python-bytecode_inherit_from_filetypes_plist_8b54303f.log) |
+| `5acceae52f22bae2` | pybc_textmetrics_full_pr_auc | ok | 0.7500 | 0.8753 | 0.7850 | 24 | [log](out/autocollie/runs/2026-07-20T11-49-32_20260720T114241-filetypes-python-bytecode_pybc_textmetrics_full_pr_auc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_textmetrics_full_pr_auc`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture structural text patterns in python bytecode, aiming to improve PR_AUC by adding discriminative signal for obfuscated scripts.
+
+</details>
+

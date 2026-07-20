@@ -1162,3 +1162,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260718T134111-general` — 2026-07-18T13:41:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d412338eb3e16633` | inherit_from_filetypes_plist_8b54303f | ok | 0.9971 | 0.9968 | 0.9774 | 562 | [log](out/autocollie/runs/2026-07-18T13-50-26_20260718T134111-general_inherit_from_filetypes_plist_8b54303f.log) |
+| `0fe1f7d84c77fa7d` | feat_kv_textmetrics_hardneg | ok | 0.9800 | 0.9753 | 0.9071 | 3347 | [log](out/autocollie/runs/2026-07-18T13-59-48_20260718T134111-general_feat_kv_textmetrics_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`feat_kv_textmetrics_hardneg`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Aims to improve recall@3FPM by enabling kv_vocab and text_metrics_full to capture fine-grained structural signals, while using hard_negative_weight to tighten the decision boundary and preserve PR_AUC.
+
+</details>
+
+## Cycle `20260720T113014-general` — 2026-07-20T11:30:14Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7abdf1eeff9c7f98` | inherit_from_filetypes_plist_8b54303f | ok | 0.9969 | 0.9964 | 0.9737 | 320 | [log](out/autocollie/runs/2026-07-20T11-38-25_20260720T113014-general_inherit_from_filetypes_plist_8b54303f.log) |
+| `99690db1d7abef51` | feat_kv_textmetrics_hardneg_v2 | ok | 0.9823 | 0.9787 | 0.9096 | 2066 | [log](out/autocollie/runs/2026-07-20T11-43-45_20260720T113014-general_feat_kv_textmetrics_hardneg_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`feat_kv_textmetrics_hardneg_v2`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable kv_vocab and text_metrics_full to capture richer structural and obfuscation signals, aiming to improve recall@3 FP/M while hard-negative weighting preserves PR_AUC guardrails.
+
+</details>
+

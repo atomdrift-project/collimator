@@ -1036,3 +1036,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260718T140245-filetypes-java_class` — 2026-07-18T14:02:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `41ea6a671694d8b9` | inherit_from_filetypes_plist_8b54303f | ok | 0.9863 | 0.9979 | 0.9352 | 36 | [log](out/autocollie/runs/2026-07-18T14-11-36_20260718T140245-filetypes-java_class_inherit_from_filetypes_plist_8b54303f.log) |
+| `33043e9c12873dbb` | java_class_kv_symbol_vocab | ok | 0.8523 | 0.9270 | 0.8466 | 42 | [log](out/autocollie/runs/2026-07-18T14-13-10_20260718T140245-filetypes-java_class_java_class_kv_symbol_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_kv_symbol_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and symbol_vocab to capture Java constant pool entries and method signatures, aiming to improve PR_AUC by adding discriminative lexical signal for malicious class files.
+
+</details>
+
+## Cycle `20260720T112916-filetypes-java_class` — 2026-07-20T11:29:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `75895df7f854c7cb` | inherit_from_filetypes_plist_8b54303f | ok | 0.9905 | 0.9987 | 0.9484 | 111 | [log](out/autocollie/runs/2026-07-20T11-37-16_20260720T112916-filetypes-java_class_inherit_from_filetypes_plist_8b54303f.log) |
+| `20872a49bc35ada8` | java_class_symbol_vocab_5k | ok | 0.8502 | 0.9387 | 0.8410 | 115 | [log](out/autocollie/runs/2026-07-20T11-39-09_20260720T112916-filetypes-java_class_java_class_symbol_vocab_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_symbol_vocab_5k`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab to capture method/field name patterns in Java bytecode, aiming to improve PR_AUC by adding structural signal without harming ROC_AUC.
+
+</details>
+

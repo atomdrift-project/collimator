@@ -1302,3 +1302,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260720T112212-filetypes-batch` — 2026-07-20T11:22:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8273de8e3d333f9e` | inherit_from_filetypes_plist_8b54303f | ok | 1.0000 | 0.9989 | 0.9972 | 17 | [log](out/autocollie/runs/2026-07-20T11-29-00_20260720T112212-filetypes-batch_inherit_from_filetypes_plist_8b54303f.log) |
+| `ea2c3a5ac9faa148` | batch_hardneg_015_16_est300 | ok | 0.9885 | 0.9216 | 0.2956 | 18 | [log](out/autocollie/runs/2026-07-20T11-29-17_20260720T112212-filetypes-batch_batch_hardneg_015_16_est300.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_hardneg_015_16_est300`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Sweep hard-negative fraction and weight to improve recall@3 FP/M by focusing the model on difficult benign samples, addressing the or_loses diagnostic shape while keeping PR/ROC AUC flat.
+
+</details>
+

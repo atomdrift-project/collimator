@@ -1716,3 +1716,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260720T113015-filetypes-elf` — 2026-07-20T11:30:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `376094c988f30f26` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9998 | 0.9956 | 124 | [log](out/autocollie/runs/2026-07-20T11-36-57_20260720T113015-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `e3a982d1554aedb4` | elf_symbol_vocab_overlay | ok | 0.9996 | 0.9995 | 0.9939 | 163 | [log](out/autocollie/runs/2026-07-20T11-39-02_20260720T113015-filetypes-elf_elf_symbol_vocab_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_symbol_vocab_overlay`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_NUM_LEAVES=128 EXP_OVERLAY_SIGNAL=1 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and overlay_signal to capture ELF-specific import patterns and packer artifacts, aiming to improve PR_AUC by better ranking malicious binaries.
+
+</details>
+
