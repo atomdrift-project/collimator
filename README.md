@@ -1,11 +1,11 @@
 # collimator
 
 A routed-ensemble malware classifier with autonomous experiment search. Reads
-labeled samples from [hopper](https://codeberg.org/atomdrift/hopper), trains a
+labeled samples from [hopper](https://github.com/atomdrift-project/hopper), trains a
 general model plus per-filegroup and per-filetype specialists, calibrates each
 route's score distribution with isotonic regression, computes per-FP/100M
 operating points, and ships a deployable bundle that
-[litmus](https://codeberg.org/atomdrift/litmus) loads at scan time.
+[litmus](https://github.com/atomdrift-project/litmus) loads at scan time.
 
 Part of the toolchain: `cleave → hopper → collimator → litmus`
 
@@ -27,7 +27,7 @@ Part of the toolchain: `cleave → hopper → collimator → litmus`
   per-route thresholds that fits inside a target FP/100M budget. The
   deployed bundle ships every level; the default operating point is L50
   (= 50 FP/100M ≡ 0.5 FP/M).
-- **Autonomous search.** [`autocollie`](https://codeberg.org/atomdrift/autocollie)
+- **Autonomous search.** [`autocollie`](https://github.com/atomdrift-project/autocollie)
   drives a screen → confirm → promote ladder against `make experiment`,
   proposes config changes via an LLM-guided agent, and produces validated
   candidate bundles ready to deploy. Wins flow back into `make azoth-full-train`

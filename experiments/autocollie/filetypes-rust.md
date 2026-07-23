@@ -1152,3 +1152,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260723T022143-filetypes-rust` — 2026-07-23T02:21:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `64f68922510f5e25` | inherit_from_filetypes_plist_8b54303f | ok | 0.8250 | 0.9683 | 0.8000 | 97 | [log](out/autocollie/runs/2026-07-23T02-30-43_20260723T022143-filetypes-rust_inherit_from_filetypes_plist_8b54303f.log) |
+| `40a5141d64ee37d3` | rust_control_training_tweak | ok | 0.0633 | 0.5405 | 0.1189 | 70 | [log](out/autocollie/runs/2026-07-23T02-33-16_20260723T022143-filetypes-rust_rust_control_training_tweak.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_control_training_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to hit matrix cache while tuning training knobs (estimators, num_leaves, reg_lambda) to improve PR_AUC and recall@3FPM by reducing overfitting and allowing deeper trees to capture tail signal.
+
+</details>
+

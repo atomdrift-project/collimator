@@ -1366,7 +1366,7 @@ def _write_bundle(root: Path) -> None:
         f"numbers in this README come from a locked {_int(n_eval)}-row "
         "test partition, disjoint from training and calibration. The "
         "bundle is loaded at scan time by "
-        "[litmus](https://codeberg.org/atomdrift/litmus). EMBER 2024 "
+        "[litmus](https://github.com/atomdrift-project/litmus). EMBER 2024 "
         "reference: Joyce et al., *KDD'25*.",
         "",
         "## Use",

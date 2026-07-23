@@ -1130,3 +1130,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260723T022036-filetypes-png` — 2026-07-23T02:20:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3801085cee5a9e74` | inherit_from_filetypes_plist_8b54303f | ok | 0.9809 | 0.9622 | 0.9531 | 112 | [log](out/autocollie/runs/2026-07-23T02-29-55_20260723T022036-filetypes-png_inherit_from_filetypes_plist_8b54303f.log) |
+| `4fe576640fb0d8f3` | png_ctrl_training_scalepos_leaves128 | ok | 0.2650 | 0.7140 | 0.1056 | 114 | [log](out/autocollie/runs/2026-07-23T02-33-29_20260723T022036-filetypes-png_png_ctrl_training_scalepos_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_ctrl_training_scalepos_leaves128`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by down-weighting positives (scale_pos_weight_mult=0.75) to reduce false positives at the strict-FP operating point, while increasing model capacity (num_leaves=128) to preserve PR_AUC.
+
+</details>
+

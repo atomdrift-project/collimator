@@ -1080,3 +1080,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260723T123838-filegroups-media` — 2026-07-23T12:38:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `37525c51c31c29fc` | inherit_from_filetypes_plist_8b54303f | ok | 0.9861 | 0.9786 | 0.9537 | 7 | [log](out/autocollie/runs/2026-07-23T12-43-57_20260723T123838-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `7bdfed64f611d62a` | media_textmetrics_kv_vocab | ok | 0.3523 | 0.6818 | 0.1541 | 9 | [log](out/autocollie/runs/2026-07-23T12-44-11_20260723T123838-filegroups-media_media_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture document obfuscation and structured metadata signals, aiming to improve PR_AUC and recall@3FPM.
+
+</details>
+

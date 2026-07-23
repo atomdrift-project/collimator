@@ -221,7 +221,7 @@ AZOTH_BUDGET_GATE_ARGS ?= --fail-on-budget --max-budget-multiplier 30
 AZOTH_POLICY_OVERRIDE_ROUTE ?=
 # scan v2 reads its default bundle from <data>/atomdrift/scan/models/<bundle>,
 # where <bundle> is the last segment of SCAN_MODELS_REPO (default repo
-# codeberg.org/atomdrift/azoth.git -> "azoth"). Deploy there so `ascan scan`
+# github.com/atomdrift-project/azoth.git -> "azoth"). Deploy there so `ascan scan`
 # picks up the bundle at runtime without SCAN_MODELS_DIR.
 AZOTH_DEPLOY_DIR ?= $(XDG_DATA_HOME)/atomdrift/scan/models/azoth
 ELF_ROUTE_OUTPUT_DIR ?= $(AZOTH_ROOT)/elf_route_optimization

@@ -1174,3 +1174,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260721T071936-filetypes-package.json` — 2026-07-21T07:19:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7a1bc6af14d51f81` | inherit_from_filetypes_plist_8b54303f | ok | 0.9980 | 0.9983 | 0.9892 | 53 | [log](out/autocollie/runs/2026-07-21T07-25-06_20260721T071936-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `5981fb46c21c35c9` | pkg_json_kv_textmetrics_v1 | ok | 0.9834 | 0.9837 | 0.9746 | 88 | [log](out/autocollie/runs/2026-07-21T07-26-51_20260721T071936-filetypes-package.json_pkg_json_kv_textmetrics_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_kv_textmetrics_v1`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture structured JSON key-value patterns and text obfuscation signals, aiming to improve PR_AUC and recall@3FPM.
+
+</details>
+
+## Cycle `20260723T022036-filetypes-package.json` — 2026-07-23T02:20:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a9138b83a6eb3968` | inherit_from_filetypes_plist_8b54303f | ok | 0.9982 | 0.9984 | 0.9913 | 135 | [log](out/autocollie/runs/2026-07-23T02-29-22_20260723T022036-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `937e4310d563642c` | pkg_json_training_tweak_v1 | ok | 0.9841 | 0.9851 | 0.9775 | 95 | [log](out/autocollie/runs/2026-07-23T02-32-37_20260723T022036-filetypes-package.json_pkg_json_training_tweak_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_training_tweak_v1`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=50 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Tweak training hyperparameters (num_leaves, learning_rate, estimators) on the best feature set to improve PR_AUC and recall@3 FP/M while keeping ROC_AUC flat.
+
+</details>
+

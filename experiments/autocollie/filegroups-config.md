@@ -1626,3 +1626,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260723T072109-filegroups-config` — 2026-07-23T07:21:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e3d8626a77fd3540` | inherit_from_filetypes_plist_8b54303f | ok | 0.9979 | 0.9983 | 0.9893 | 150 | [log](out/autocollie/runs/2026-07-23T07-32-04_20260723T072109-filegroups-config_inherit_from_filetypes_plist_8b54303f.log) |
+| `6b205daa9de94ca2` | config_text_metrics_severity_fractions | ok | 0.8871 | 0.9129 | 0.8709 | 105 | [log](out/autocollie/runs/2026-07-23T07-36-13_20260723T072109-filegroups-config_config_text_metrics_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_text_metrics_severity_fractions`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and severity_fractions to capture structural text patterns and severity distribution in config files, aiming to improve PR_AUC and recall@3 FP/M by better distinguishing malicious config hooks from benign high-density configs.
+
+</details>
+

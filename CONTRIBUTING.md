@@ -104,7 +104,7 @@ issues against each repo with linked context.
 
 ## Reporting issues
 
-Open issues at https://codeberg.org/atomdrift/collimator/issues. Useful
+Open issues at https://github.com/atomdrift-project/collimator/issues. Useful
 information:
 
 - The exact command you ran and its full output (or a tail with the error).

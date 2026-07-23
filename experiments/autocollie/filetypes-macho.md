@@ -1324,3 +1324,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260721T080244-filetypes-macho` — 2026-07-21T08:02:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8d3e159572d2ff02` | inherit_from_filetypes_plist_8b54303f | ok | 0.9900 | 0.9983 | 0.9565 | 68 | [log](out/autocollie/runs/2026-07-21T08-09-15_20260721T080244-filetypes-macho_inherit_from_filetypes_plist_8b54303f.log) |
+| `25d490f56b2792c2` | macho_sym_vocab_bigrams_15k | ok | 0.9832 | 0.9939 | 0.9312 | 27 | [log](out/autocollie/runs/2026-07-21T08-10-29_20260721T080244-filetypes-macho_macho_sym_vocab_bigrams_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_sym_vocab_bigrams_15k`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 …` — Enables symbol_vocab and symbol_bigrams to capture Mach-O import co-occurrence patterns, aiming to improve PR_AUC by better ranking malicious binaries against benign ones.
+
+</details>
+

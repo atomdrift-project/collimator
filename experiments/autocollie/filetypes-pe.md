@@ -2124,3 +2124,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260721T071948-filetypes-pe` — 2026-07-21T07:19:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `eced9382aa73f02b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9994 | 0.9994 | 0.9878 | 282 | [log](out/autocollie/runs/2026-07-21T07-25-52_20260721T071948-filetypes-pe_inherit_from_filetypes_plist_8b54303f.log) |
+| `ad09a9c160dcf9a4` | pe_control_hardneg_fpr_target | ok | 0.9985 | 0.9985 | 0.0000 | 271 | [log](out/autocollie/runs/2026-07-21T07-33-01_20260721T071948-filetypes-pe_pe_control_hardneg_fpr_target.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_fpr_target`** `EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_THRESHOLD_FPR_TARGET=2.5e-07 EXP_THRESHOLD_MODE=max_recall_at_fpr EXP_TRAIN_SAMPLES=30000` — Control feature set with hard-negative sweep and strict FPR threshold targeting to maximize recall@3 FP/M while preserving PR AUC.
+
+</details>
+

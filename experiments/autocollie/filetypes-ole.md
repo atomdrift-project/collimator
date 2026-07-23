@@ -1083,3 +1083,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260723T035844-filetypes-ole` — 2026-07-23T03:58:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8583bbaa51a0ee83` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9990 | 0.9926 | 52 | [log](out/autocollie/runs/2026-07-23T04-06-49_20260723T035844-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `7485afeeaf2bc476` | ole_ctrl_extra_trees_leaves128 | ok | 0.9965 | 0.9901 | 0.9697 | 39 | [log](out/autocollie/runs/2026-07-23T04-07-49_20260723T035844-filetypes-ole_ole_ctrl_extra_trees_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_extra_trees_leaves128`** `EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; tests extra_trees and higher leaves to improve tail recall@3FPM while preserving PR_AUC via matrix cache hit.
+
+</details>
+

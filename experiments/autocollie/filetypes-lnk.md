@@ -916,3 +916,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260723T062103-filetypes-lnk` — 2026-07-23T06:21:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `332ecaf281f4ac17` | inherit_from_filetypes_plist_8b54303f | ok | 0.9930 | 0.8633 | 0.9864 | 8 | [log](out/autocollie/runs/2026-07-23T06-29-28_20260723T062103-filetypes-lnk_inherit_from_filetypes_plist_8b54303f.log) |
+| `275483a6614cece6` | lnk_feat_textenc_kv8k_hardneg | ok | 0.9975 | 0.9884 | 0.9300 | 7 | [log](out/autocollie/runs/2026-07-23T06-29-40_20260723T062103-filetypes-lnk_lnk_feat_textenc_kv8k_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_feat_textenc_kv8k_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable text_metrics_full and text_encoding to capture LNK path/description patterns, paired with kv_vocab_max 8000 and hard negatives to improve PR_AUC by reducing benign path false positives.
+
+</details>
+

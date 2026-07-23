@@ -1783,3 +1783,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260723T050540-filetypes-javascript` — 2026-07-23T05:05:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `85492ccb8e5166ae` | inherit_from_filetypes_plist_8b54303f | ok | 0.9944 | 0.9929 | 0.9653 | 296 | [log](out/autocollie/runs/2026-07-23T05-16-11_20260723T050540-filetypes-javascript_inherit_from_filetypes_plist_8b54303f.log) |
+| `5376595e2760ca90` | js_kv_textenc_metrics_bigram50 | ok | 0.9788 | 0.9692 | 0.9367 | 295 | [log](out/autocollie/runs/2026-07-23T05-25-35_20260723T050540-filetypes-javascript_js_kv_textenc_metrics_bigram50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_kv_textenc_metrics_bigram50`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab and text_metrics_full with lower bigram_min_freq to capture rarer JS patterns, aiming to improve PR_AUC and recall@3FPM by adding high-signal lexical and structural features.
+
+</details>
+

@@ -778,3 +778,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260723T022036-filetypes-rtf` — 2026-07-23T02:20:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bc44f2b1168c705f` | inherit_from_filetypes_plist_8b54303f | ok | 0.0000 | 0.0000 | 1.0000 | 18 | [log](out/autocollie/runs/2026-07-23T02-29-27_20260723T022036-filetypes-rtf_inherit_from_filetypes_plist_8b54303f.log) |
+| `d3970b1e564dfe6c` | rtf_feat_kv_vocab_textmetrics | ok | 0.9993 | 0.9962 | 0.9861 | 16 | [log](out/autocollie/runs/2026-07-23T02-29-55_20260723T022036-filetypes-rtf_rtf_feat_kv_vocab_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_feat_kv_vocab_textmetrics`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TEXT_METRICS_FULL=1 …` — Enable kv_vocab to capture structured RTF control-word parameters, aiming to improve PR_AUC by isolating malicious metadata patterns while keeping ROC_AUC flat.
+
+</details>
+

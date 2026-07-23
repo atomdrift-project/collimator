@@ -1678,3 +1678,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260721T071936-filetypes-shell` — 2026-07-21T07:19:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c2c1f5cd54115e30` | inherit_from_filetypes_plist_8b54303f | ok | 0.9916 | 0.9951 | 0.9576 | 89 | [log](out/autocollie/runs/2026-07-21T07-25-26_20260721T071936-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `11f0883129ff8c66` | shell_kv_textmetrics_bigram | ok | 0.9528 | 0.9708 | 0.8695 | 75 | [log](out/autocollie/runs/2026-07-21T07-27-58_20260721T071936-filetypes-shell_shell_kv_textmetrics_bigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_kv_textmetrics_bigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and text_metrics_full to capture shell-specific structural and key-value signals, paired with lower bigram_min_freq to retain rare but informative patterns, targeting higher recall@3FPM while preserving ROC_AUC.
+
+</details>
+

@@ -1730,3 +1730,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260721T071936-filetypes-elf` — 2026-07-21T07:19:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5fd38a915882aebd` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9997 | 0.9958 | 78 | [log](out/autocollie/runs/2026-07-21T07-25-42_20260721T071936-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `eb604bdea8e28c3a` | elf_symbol_vocab_bigrams_recall | ok | 0.9995 | 0.9995 | 0.9944 | 93 | [log](out/autocollie/runs/2026-07-21T07-28-18_20260721T071936-filetypes-elf_elf_symbol_vocab_bigrams_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_symbol_vocab_bigrams_recall`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=10000 EXP_SYMBOL_MIN_FREQ=5 …` — Aims to improve recall@3FPM by capturing ELF import co-occurrence patterns via symbol bigrams, helping the model rank subtle malicious binaries higher at the strict-FP tail.
+
+</details>
+
+## Cycle `20260723T102504-filetypes-elf` — 2026-07-23T10:25:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `77672c235562c10b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9998 | 0.9946 | 66 | [log](out/autocollie/runs/2026-07-23T10-31-31_20260723T102504-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `b287720f545dbe99` | elf_symbol_vocab_bigrams_v2 | ok | 0.9995 | 0.9994 | 0.9943 | 68 | [log](out/autocollie/runs/2026-07-23T10-33-00_20260723T102504-filetypes-elf_elf_symbol_vocab_bigrams_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_symbol_vocab_bigrams_v2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab and symbol_bigrams to capture import co-occurrence patterns, aiming to improve PR_AUC by adding structural signal for ELF binaries.
+
+</details>
+

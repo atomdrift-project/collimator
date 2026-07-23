@@ -312,3 +312,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260721T071935-filetypes-crx` — 2026-07-21T07:19:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3799502a093bf362` | inherit_from_filetypes_plist_8b54303f | ok | 0.8840 | 0.8891 | 0.7758 | 33 | [log](out/autocollie/runs/2026-07-21T07-25-48_20260721T071935-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `31d3fbdc61d9987b` | crx_kv_textmetrics_bigram50 | ok | 0.8027 | 0.8032 | 0.7176 | 38 | [log](out/autocollie/runs/2026-07-21T07-26-37_20260721T071935-filetypes-crx_crx_kv_textmetrics_bigram50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_kv_textmetrics_bigram50`** `EXP_BIGRAM_MIN_FREQ=50 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture manifest key-value patterns and internal script/document obfuscation signals, aiming to improve PR_AUC by adding discriminative rank signal for packed extensions.
+
+</details>
+
+## Cycle `20260723T022036-filetypes-crx` — 2026-07-23T02:20:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7f0ebe3d72a3fff9` | inherit_from_filetypes_plist_8b54303f | ok | 0.8855 | 0.8960 | 0.7987 | 69 | [log](out/autocollie/runs/2026-07-23T02-29-06_20260723T022036-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `76400b362e2df198` | crx_control_training_tweak | ok | 0.8194 | 0.8135 | 0.6919 | 89 | [log](out/autocollie/runs/2026-07-23T02-30-41_20260723T022036-filetypes-crx_crx_control_training_tweak.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_control_training_tweak`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Replicate best plist-inherited feature set and adjust tree complexity/regularization to improve PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

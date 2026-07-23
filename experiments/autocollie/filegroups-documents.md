@@ -2432,3 +2432,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260723T022037-filegroups-documents` — 2026-07-23T02:20:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `64dcbeb2387eaabf` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9991 | 0.9931 | 118 | [log](out/autocollie/runs/2026-07-23T02-31-08_20260723T022037-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `0319e2884d8fd520` | docs_text_metrics_full_recall | ok | 0.9199 | 0.8849 | 0.8408 | 166 | [log](out/autocollie/runs/2026-07-23T02-34-09_20260723T022037-filegroups-documents_docs_text_metrics_full_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_text_metrics_full_recall`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full to capture document obfuscation signals and improve recall@3 FP/M while maintaining saturated PR_AUC.
+
+</details>
+
