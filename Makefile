@@ -2340,37 +2340,58 @@ autocollie: venv check-db autocollie-build
 autocollie-loop: PASSES=0
 autocollie-loop: autocollie
 
-.PHONY: nightly install-nightly uninstall-nightly nightly-logs nightly-status
+.PHONY: nightly nightly-sweep install-nightly uninstall-nightly nightly-logs nightly-sweep-logs nightly-status
 
-# nightly: run the full unattended pipeline once (scripts/nightly.sh):
-#   repin -> azoth-publish-train (trains + regression-gates + OOF-deploys into
-#   ../azoth) -> commit & push the azoth bundle -> autocollie sweep over every
-#   known route (general + all filegroups + all filetypes), 1 experiment each
-#   (NIGHTLY_EXPERIMENTS). Safe to run by hand; an flock guard prevents it from
+# The unattended pipeline is two preemptible jobs (scripts/nightly.sh). A
+# publish-train runs 8-34h, so a single daily unit kept overrunning its own next
+# firing and flock'ing whole nights away; splitting lets the sweep use the hours
+# the train doesn't. They never overlap — the train stops the sweep unit on the
+# way in and starts it again on the way out (a full train peaks near 38G; an
+# autocollie experiment alongside it is what drove the 2026-07-06/07/08 OOMs).
+#
+# nightly: the train — repin -> azoth-publish-train (trains + regression-gates +
+#   OOF-deploys into ../azoth) -> commit & push the azoth bundle -> hand the box
+#   back to the sweep. Safe to run by hand; an flock guard prevents it from
 #   colliding with the scheduled run. Output is tee'd to out/nightly/ and (when
 #   run under the timer) captured in journald.
 nightly:
-	scripts/nightly.sh
+	scripts/nightly.sh train
 
-# install-nightly: install a systemd --user timer that runs `make nightly` daily
-# at 23:00. Override the schedule with NIGHTLY_ONCALENDAR (systemd OnCalendar
-# syntax), e.g.  make install-nightly NIGHTLY_ONCALENDAR='*-*-* 03:00:00'
+# nightly-sweep: the sweep — an indefinite shuffled autocollie walk over every
+#   known route (general + all filegroups + all filetypes), NIGHTLY_EXPERIMENTS
+#   (default 1) experiment each, looping until the next train preempts it
+#   (NIGHTLY_PASSES=1 for a single pass). Normally started by the train, not by
+#   hand — run `systemctl --user start azoth-autocollie` if you want it under
+#   the unit (and so preemptible) rather than tied to your shell.
+nightly-sweep:
+	scripts/nightly.sh autocollie
+
+# install-nightly: install the systemd --user units — a daily 23:00 timer for the
+# train plus the timer-less sweep unit it drives. Override the schedule with
+# NIGHTLY_ONCALENDAR (systemd OnCalendar syntax), e.g.
+#   make install-nightly NIGHTLY_ONCALENDAR='*-*-* 03:00:00'
 install-nightly:
 	NIGHTLY_ONCALENDAR="$(NIGHTLY_ONCALENDAR)" scripts/install_nightly.sh
 
 uninstall-nightly:
 	scripts/install_nightly.sh --remove
 
-# nightly-logs: follow the running / most recent nightly run. The file is the
-# durable source (journald rotates too fast on this box — see nightly.sh).
+# nightly-logs / nightly-sweep-logs: follow the running / most recent train or
+# sweep. The files are the durable source (journald rotates too fast on this
+# box — see nightly.sh).
 nightly-logs:
 	tail -n 100 -F out/nightly/latest.log
 
-# nightly-status: show the timer schedule and the last run's result.
+nightly-sweep-logs:
+	tail -n 100 -F out/nightly/latest-sweep.log
+
+# nightly-status: show the timer schedule and both jobs' current state.
 nightly-status:
 	@systemctl --user list-timers azoth-nightly.timer --no-pager 2>/dev/null || true
 	@echo
 	@systemctl --user status azoth-nightly.service --no-pager 2>/dev/null || true
+	@echo
+	@systemctl --user status azoth-autocollie.service --no-pager 2>/dev/null || true
 
 clean:
 	rm -rf $(OUT_DIR)
