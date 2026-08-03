@@ -1692,3 +1692,59 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260727T024457-filetypes-shell` — 2026-07-27T02:44:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `12535324653e7859` | inherit_from_filetypes_plist_8b54303f | ok | 0.9914 | 0.9948 | 0.9572 | 150 | [log](out/autocollie/runs/2026-07-27T02-52-42_20260727T024457-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `d4a906cf4ed427d9` | shell_textmetrics_kv_vocab | ok | 0.9526 | 0.9713 | 0.8846 | 79 | [log](out/autocollie/runs/2026-07-27T02-56-46_20260727T024457-filetypes-shell_shell_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_textmetrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture structural text patterns and key-value pairs in shell scripts, aiming to improve PR_AUC and recall@3FPM by adding high-signal features for script-based malware.
+
+</details>
+
+## Cycle `20260731T130707-filetypes-shell` — 2026-07-31T13:07:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T17-13-28_20260731T130707-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | shell_textmetrics_kv_vocab_bigram25 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T18-43-28_20260731T130707-filetypes-shell_shell_textmetrics_kv_vocab_bigram25.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_textmetrics_kv_vocab_bigram25`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Aims to improve PR_AUC and recall@3FPM by enabling text_metrics_full and kv_vocab to capture script-specific structural and key-value signals, while lowering bigram_min_freq to 25 to retain rare but malicious shell patterns.
+
+</details>
+
+## Cycle `20260801T192042-filetypes-shell` — 2026-08-01T19:20:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T23-28-25_20260801T192042-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | shell_kv_textmetrics_leaves128 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T00-58-25_20260801T192042-filetypes-shell_shell_kv_textmetrics_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_kv_textmetrics_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture shell script structure and obfuscation patterns, aiming to improve PR_AUC by adding discriminative signal for malicious payloads while keeping ROC_AUC stable.
+
+</details>
+
+## Cycle `20260802T050719-filetypes-shell` — 2026-08-02T05:07:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T09-17-39_20260802T050719-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | shell_kv_textmetrics_bigram50 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T10-47-39_20260802T050719-filetypes-shell_shell_kv_textmetrics_bigram50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_kv_textmetrics_bigram50`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full while lowering bigram_min_freq to 50 to capture shell-specific KV patterns and text obfuscation, aiming to boost PR_AUC and recall@3FPM.
+
+</details>
+

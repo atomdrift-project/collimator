@@ -286,3 +286,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260801T192002-filetypes-objc` — 2026-08-01T19:20:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T23-28-23_20260801T192002-filetypes-objc_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | objc_kv_symbol_vocab_baseline | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T00-58-23_20260801T192002-filetypes-objc_objc_kv_symbol_vocab_baseline.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`objc_kv_symbol_vocab_baseline`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_SYMBOL_VOCAB=1 …` — Enables kv_vocab and symbol_vocab to capture structural and import signal for ObjC files, aiming to improve PR_AUC and recall@3FPM by providing richer feature coverage on the small corpus.
+
+</details>
+

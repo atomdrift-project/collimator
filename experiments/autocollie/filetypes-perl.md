@@ -314,3 +314,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260731T060105-filetypes-perl` — 2026-07-31T06:01:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T10-07-11_20260731T060105-filetypes-perl_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | perl_kv_vocab_seed7 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T11-37-11_20260731T060105-filetypes-perl_perl_kv_vocab_seed7.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`perl_kv_vocab_seed7`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value signals in perl scripts, targeting PR_AUC and recall@3FPM gains by adding discriminative features currently disabled in the baseline.
+
+</details>
+
+## Cycle `20260801T192007-filetypes-perl` — 2026-08-01T19:20:07Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T23-28-52_20260801T192007-filetypes-perl_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | perl_kv_vocab_enable | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T00-58-52_20260801T192007-filetypes-perl_perl_kv_vocab_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`perl_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value pair signals in Perl scripts, aiming to improve PR_AUC by adding discriminative feature surface while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260802T050719-filetypes-perl` — 2026-08-02T05:07:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T09-16-55_20260802T050719-filetypes-perl_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | perl_text_metrics_kv_vocab | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T10-46-55_20260802T050719-filetypes-perl_perl_text_metrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`perl_text_metrics_kv_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and kv_vocab to capture script obfuscation and key-value patterns, aiming to improve PR_AUC by adding discriminative signal for malicious Perl scripts while keeping ROC_AUC flat.
+
+</details>
+

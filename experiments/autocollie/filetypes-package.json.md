@@ -1202,3 +1202,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260801T050527-filetypes-package.json` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-13-34_20260801T050527-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | pkg_json_kv_vocab_split_v1 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-43-34_20260801T050527-filetypes-package.json_pkg_json_kv_vocab_split_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_kv_vocab_split_v1`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and kv_value_split to better capture dependency and script field structures in package.json, aiming to improve PR_AUC by isolating malicious dependency patterns.
+
+</details>
+
+## Cycle `20260802T050719-filetypes-package.json` — 2026-08-02T05:07:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T09-17-02_20260802T050719-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | pkg_json_kv_vocab_enable_v1 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T10-47-02_20260802T050719-filetypes-package.json_pkg_json_kv_vocab_enable_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_kv_vocab_enable_v1`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture structured metadata in package.json, aiming to improve PR_AUC by adding high-signal key-value features while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260803T204802-filetypes-package.json` — 2026-08-03T20:48:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `08e98d2b0f7cdf75` | inherit_from_filetypes_plist_8b54303f | ok | 0.9929 | 0.9954 | 0.9794 | 41 | [log](out/autocollie/runs/2026-08-03T20-57-40_20260803T204802-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `85a64fbf774420c5` | pkg_json_kv_textmetrics_v2 | ok | 0.9837 | 0.9848 | 0.9690 | 81 | [log](out/autocollie/runs/2026-08-03T20-59-00_20260803T204802-filetypes-package.json_pkg_json_kv_textmetrics_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_kv_textmetrics_v2`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture JSON key-value structure and text patterns, targeting PR_AUC and recall@3FPM gains.
+
+</details>
+

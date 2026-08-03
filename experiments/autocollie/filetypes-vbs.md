@@ -1148,3 +1148,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260731T060105-filetypes-vbs` — 2026-07-31T06:01:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T10-06-54_20260731T060105-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | vbs_text_metrics_kv_vocab_bigram500 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T11-36-54_20260731T060105-filetypes-vbs_vbs_text_metrics_kv_vocab_bigram500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_text_metrics_kv_vocab_bigram500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and kv_vocab to capture script-specific structural and key-value signals, aiming to improve PR_AUC while maintaining ROC_AUC.
+
+</details>
+
+## Cycle `20260803T204802-filetypes-vbs` — 2026-08-03T20:48:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c836390b0ae12a70` | inherit_from_filetypes_plist_8b54303f | ok | 0.9987 | 0.9952 | 0.9744 | 52 | [log](out/autocollie/runs/2026-08-03T20-58-53_20260803T204802-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `a67f38640eeeae7b` | vbs_text_metrics_kv_vocab_lr003 | ok | 0.9965 | 0.9882 | 0.9580 | 34 | [log](out/autocollie/runs/2026-08-03T21-00-02_20260803T204802-filetypes-vbs_vbs_text_metrics_kv_vocab_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_text_metrics_kv_vocab_lr003`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enable text_metrics_full and kv_vocab to capture VBS script obfuscation and configuration patterns, aiming to improve PR_AUC and recall@3 FP/M by adding high-signal features that distinguish malicious scripts from benign ones.
+
+</details>
+

@@ -1094,3 +1094,45 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260727T024503-filegroups-media` — 2026-07-27T02:45:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `705a4ed755dba02f` | inherit_from_filetypes_plist_8b54303f | ok | 0.9852 | 0.9755 | 0.9444 | 102 | [log](out/autocollie/runs/2026-07-27T02-53-27_20260727T024503-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `3b6d332cb9c7176c` | media_scale_pos_075_leaves128 | ok | 0.3423 | 0.6630 | 0.1562 | 62 | [log](out/autocollie/runs/2026-07-27T02-57-13_20260727T024503-filegroups-media_media_scale_pos_075_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_scale_pos_075_leaves128`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by down-weighting benigns to reduce FP noise at the tail, while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260731T201341-filegroups-media` — 2026-07-31T20:13:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T22-18-45_20260731T201341-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | media_best_feat_training_tweak | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T23-48-45_20260731T201341-filegroups-media_media_best_feat_training_tweak.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_best_feat_training_tweak`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Exploit best feature set with increased estimators and hard negatives to improve recall@3 FP/M while preserving PR_AUC.
+
+</details>
+
+## Cycle `20260801T192015-filegroups-media` — 2026-08-01T19:20:15Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T21-29-20_20260801T192015-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | media_textmetrics_training_tweak | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T22-59-20_20260801T192015-filegroups-media_media_textmetrics_training_tweak.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_textmetrics_training_tweak`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full to capture document obfuscation signals for media files, paired with scale_pos_weight_mult=0.75 to tighten the tail and boost recall@3 FP/M while preserving PR_AUC.
+
+</details>
+

@@ -1097,3 +1097,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260727T024457-filetypes-ole` — 2026-07-27T02:44:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dc97b7da000d1a24` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9990 | 0.9959 | 45 | [log](out/autocollie/runs/2026-07-27T02-52-34_20260727T024457-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `8ac8915eb899775a` | ole_feat_textmetrics_kv_vocab_safe | ok | 0.9956 | 0.9874 | 0.9669 | 68 | [log](out/autocollie/runs/2026-07-27T02-53-29_20260727T024457-filetypes-ole_ole_feat_textmetrics_kv_vocab_safe.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_feat_textmetrics_kv_vocab_safe`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document obfuscation and metadata patterns in OLE files, aiming to improve PR_AUC and recall@3 FP/M while avoiding the OOM crash by capping kv_vocab_max at 5000.
+
+</details>
+
+## Cycle `20260801T050527-filetypes-ole` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-13-32_20260801T050527-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | ole_feat_textmetrics_kv_safe | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-43-32_20260801T050527-filetypes-ole_ole_feat_textmetrics_kv_safe.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_feat_textmetrics_kv_safe`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to improve PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

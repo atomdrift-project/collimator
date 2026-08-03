@@ -1454,3 +1454,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260731T130636-filetypes-c` — 2026-07-31T13:06:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T17-13-10_20260731T130636-filetypes-c_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | c_feat_kv_textmetrics_bigmfreq100 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T18-43-10_20260731T130636-filetypes-c_c_feat_kv_textmetrics_bigmfreq100.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_feat_kv_textmetrics_bigmfreq100`** `EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable kv_vocab and text_metrics_full to capture structural and obfuscation signals in C source, while lowering bigram_min_freq to 100 to improve PR_AUC by capturing rarer malicious patterns.
+
+</details>
+

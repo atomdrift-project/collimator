@@ -466,8 +466,12 @@ def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str,
 # Public API
 # ---------------------------------------------------------------------------
 
-# Minimum hopper score for a sample to be considered trainable / evaluable.
-# Controls the SQL-level filter applied to _TRAINABLE_QUERY and _METADATA_QUERY.
+# Minimum hopper score for a sample to be considered trainable.
+# Controls the SQL-level filter in _TRAINABLE_QUERY and the default floor of
+# stream_partitioned_metadata_grouped (screens stream with min_score=None and
+# apply this floor to TRAIN rows only — see experiment.sample_partitioned_reports:
+# an eval-side floor changes the benign denominator and can flip the 25k
+# operating-point regime, which is a measurement artifact, not a model change).
 # Override via COLLIMATOR_MIN_SAMPLE_SCORE env var for experiments.
 # v15 used >= 8; v16 >= 3; v17 >= 1; briefly back to >= 3, now 0 (no benign
 # filter). This filter applies UNIFORMLY to good and bad, so it is the BENIGN
@@ -526,13 +530,11 @@ _TRAINABLE_QUERY = (
     " ORDER BY id"
 )
 
-_METADATA_QUERY = (
-    "SELECT id, sha256, label, canonical_sha256, score"
-    " FROM samples"
-    f" WHERE {LABELED_WHERE}"
-    f" AND score >= {MIN_SAMPLE_SCORE}"
-    " ORDER BY id"
-)
+# Sentinel for stream_partitioned_metadata_grouped: "apply the module-level
+# MIN_SAMPLE_SCORE floor" (legacy behavior). Pass min_score=None to stream
+# the full labeled population — the eval-side contract (screens measure the
+# same benign universe deploy calibrates on).
+_SCORE_FILTER_DEFAULT: Any = object()
 
 
 def stream_samples(
@@ -855,6 +857,7 @@ def stream_partitioned_metadata_grouped(
     limit: int = 0,
     max_id: int = 0,
     file_types: tuple[str, ...] | None = None,
+    min_score: int | None | object = _SCORE_FILTER_DEFAULT,
 ) -> Iterator[tuple[int, int, str, str, int]]:
     """Yield (row_id, label, partition, canonical_sha256, score) without loading raw JSON.
 
@@ -862,8 +865,23 @@ def stream_partitioned_metadata_grouped(
     rows with ``id <= max_id`` are returned. Use this with a value from
     ``snapshot_max_id`` to pin the dataset for a single run, so that
     concurrent inserts don't cause drift.
+
+    ``min_score`` — omitted: apply the module-level ``MIN_SAMPLE_SCORE``
+    floor (legacy). ``None``: no score floor, the full labeled population.
+    Callers that separate train from eval should stream with ``None`` and
+    apply the floor to TRAIN rows only: a floor on the eval side changes the
+    benign denominator (and can flip the 25k operating-point regime) for
+    reasons unrelated to the model.
     """
-    query = _METADATA_QUERY
+    effective_min = MIN_SAMPLE_SCORE if min_score is _SCORE_FILTER_DEFAULT else min_score
+    query = (
+        "SELECT id, sha256, label, canonical_sha256, score"
+        " FROM samples"
+        f" WHERE {LABELED_WHERE}"
+    )
+    if effective_min is not None and int(effective_min) > 0:
+        query += f" AND score >= {int(effective_min)}"
+    query += " ORDER BY id"
     params: list[Any] = []
     filters: list[str] = []
     if max_id > 0:
@@ -885,7 +903,7 @@ def stream_partitioned_metadata_grouped(
                 filters.append(f"file_type IN ({placeholders})")
                 params.extend(normalized)
     if filters:
-        # Inject extra filters before ORDER BY. _METADATA_QUERY ends with ORDER BY id.
+        # Inject extra filters before ORDER BY (the query ends with ORDER BY id).
         query = query.replace(" ORDER BY id", f" AND {' AND '.join(filters)} ORDER BY id")
     if limit > 0:
         query += f" LIMIT {limit}"

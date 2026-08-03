@@ -2446,3 +2446,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260727T024457-filegroups-documents` — 2026-07-27T02:44:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d55d61f82909ddda` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9993 | 0.9941 | 30 | [log](out/autocollie/runs/2026-07-27T02-52-56_20260727T024457-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `9c6cebb5b6f8172a` | docs_kv_obfuscation_bigram500 | ok | 0.9142 | 0.8789 | 0.8404 | 80 | [log](out/autocollie/runs/2026-07-27T02-54-14_20260727T024457-filegroups-documents_docs_kv_obfuscation_bigram500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_kv_obfuscation_bigram500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and document_obfuscation_features to capture document-specific structural signals, aiming to improve recall@3FPM by better ranking obfuscated documents while maintaining saturated PR_AUC.
+
+</details>
+

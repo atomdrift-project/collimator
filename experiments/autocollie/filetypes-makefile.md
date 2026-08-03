@@ -798,3 +798,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260731T130630-filetypes-makefile` — 2026-07-31T13:06:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T17-12-59_20260731T130630-filetypes-makefile_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | makefile_kv_textmetrics_full | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T18-42-59_20260731T130630-filetypes-makefile_makefile_kv_textmetrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_kv_textmetrics_full`** `EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by capturing makefile-specific key-value structures and text metrics.
+
+</details>
+
+## Cycle `20260801T050527-filetypes-makefile` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-13-44_20260801T050527-filetypes-makefile_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | makefile_ctrl_leaves128_reg2 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-43-44_20260801T050527-filetypes-makefile_makefile_ctrl_leaves128_reg2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_ctrl_leaves128_reg2`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control run replicating best feature set; increasing num_leaves to 128 and reg_lambda to 2.0 to reduce overfitting and improve PR_AUC while maintaining ROC_AUC.
+
+</details>
+
+## Cycle `20260803T204824-filetypes-makefile` — 2026-08-03T20:48:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `367af0b246a71d00` | inherit_from_filetypes_plist_8b54303f | ok | 0.0489 | 0.5741 | 0.0545 | 16 | [log](out/autocollie/runs/2026-08-03T20-56-29_20260803T204824-filetypes-makefile_inherit_from_filetypes_plist_8b54303f.log) |
+| `c4185f03d1859b38` | makefile_kv_vocab_bigram200 | ok | 0.0222 | 0.5009 | 0.0811 | 7 | [log](out/autocollie/runs/2026-08-03T20-56-50_20260803T204824-filetypes-makefile_makefile_kv_vocab_bigram200.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_kv_vocab_bigram200`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and lowers bigram_min_freq to 200 to capture rarer makefile syntax and key-value patterns, targeting PR_AUC improvement by adding discriminative signal for malicious build scripts.
+
+</details>
+

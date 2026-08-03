@@ -1192,3 +1192,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260801T050527-filetypes-plist` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_gem_06bdacaa | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-13-35_20260801T050527-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `` | plist_feat_kv_textmetrics_full | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-43-35_20260801T050527-filetypes-plist_plist_feat_kv_textmetrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_feat_kv_textmetrics_full`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=64 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and text_metrics_full to capture structured key-value patterns and text-level signals, aiming to improve PR_AUC and recall@3FPM by adding discriminative features for plist malware.
+
+</details>
+

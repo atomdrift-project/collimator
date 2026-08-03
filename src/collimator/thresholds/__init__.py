@@ -213,6 +213,70 @@ DEFAULT_FP_RATE_RECOMMENDATIONS = [
     ("hostile", DEFAULT_SEVERITY_TARGET["hostile_per_million"] / 1_000_000),
 ]
 
+
+def operating_point(
+    y_true: "np.ndarray",
+    y_prob: "np.ndarray",
+    target_per_million: float,
+) -> dict[str, float | int | None]:
+    """Recall/precision/confusion at the SHARED operating-point threshold for
+    this target FP/M — ``quantile_severity_threshold`` (L0 -> 0 FP, L1+ ->
+    interpolated benign quantile, low-volume absolute-FP regime below the
+    cutoff). Below the method's 50-benign floor it falls back to the honest
+    0-FP ceiling (just above max benign) so a perfectly-separable tiny slice
+    still reads recall 1.0 rather than NaN.
+
+    THE canonical emitter for per-level route tables. Every script that
+    writes a ``levels`` array (specialist benchmark, elf benchmark, ad-hoc
+    model evals) must use this + ``level_table`` rather than a local copy —
+    a hand-rolled twin in azoth_specialist_suite once emitted array INDICES
+    as level labels with 100x-loose targets (fixed 2026-08-03).
+    """
+    n_benign = int(np.sum(y_true == 0))
+    n_malware = int(np.sum(y_true == 1))
+    if n_benign == 0 or n_malware == 0:
+        return {
+            "target_per_100M": float(target_per_million) * 100.0,
+            "budget": None, "threshold": None, "recall": None, "precision": None,
+            "fp": None, "tp": None, "fn": None, "tn": None, "fp_per_100M": None,
+        }
+    benign_probs = y_prob[y_true == 0].astype(np.float64)
+    malware_probs = y_prob[y_true == 1].astype(np.float64)
+    threshold, _method = quantile_severity_threshold(benign_probs, target_per_million)
+    if threshold is None:
+        threshold = float(np.nextafter(float(np.max(benign_probs)), np.inf))
+    fp = int(np.sum(benign_probs >= threshold))
+    tp = int(np.sum(malware_probs >= threshold))
+    return {
+        "target_per_100M": float(target_per_million) * 100.0,
+        "budget": fp,
+        "threshold": float(threshold),
+        "recall": float(tp / n_malware),
+        "precision": float(tp / max(tp + fp, 1)),
+        "fp": fp,
+        "tp": tp,
+        "fn": n_malware - tp,
+        "tn": n_benign - fp,
+        "fp_per_100M": float(fp * 100_000_000.0 / n_benign),
+    }
+
+
+def level_table(y_true: "np.ndarray", y_prob: "np.ndarray") -> list[dict[str, Any]]:
+    """One row per SEVERITY_LEVEL_TARGETS entry, labeled by the grid's level
+    VALUE (0,1,...,5,10,...,25000) — never by array position. The grid is not
+    positionally aligned with any legacy index space; see the level-vs-index
+    warning on compute_routed_metrics' policy lookup.
+    """
+    return [
+        {
+            "level": int(target["level"]),
+            "hostile": operating_point(
+                y_true, y_prob, float(target["hostile_per_million"]),
+            ),
+        }
+        for target in SEVERITY_LEVEL_TARGETS
+    ]
+
 # Minimum expected FP count needed before we trust an FPR-based threshold —
 # small benign pools produce noisy FPR estimates that pick thresholds the
 # data can't actually support.

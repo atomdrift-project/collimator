@@ -192,77 +192,13 @@ def _precision_recall_curve(
     return precision, recall, thresholds
 
 
-def _fp_budget(n_benign: int, target_per_million: float) -> int:
-    if target_per_million <= 0:
-        return 0
-    return min(n_benign, max(1, int(math.floor((n_benign * target_per_million) / 1_000_000.0))))
-
-
-def _operating_point(
-    y_true: np.ndarray,
-    y_prob: np.ndarray,
-    target_per_million: float,
-) -> dict[str, float | int | None]:
-    benign = y_true == 0
-    malware = y_true == 1
-    n_benign = int(np.sum(benign))
-    n_malware = int(np.sum(malware))
-    budget = _fp_budget(n_benign, target_per_million)
-    order = np.argsort(-y_prob, kind="mergesort")
-    sorted_y = y_true[order]
-    sorted_p = y_prob[order]
-    tp_cum = np.cumsum(sorted_y == 1)
-    fp_cum = np.cumsum(sorted_y == 0)
-
-    best: dict[str, float | int | None] | None = None
-    idx = 0
-    while idx < len(sorted_p):
-        threshold = sorted_p[idx]
-        end = idx
-        while end + 1 < len(sorted_p) and sorted_p[end + 1] == threshold:
-            end += 1
-        fp = int(fp_cum[end])
-        if fp <= budget:
-            tp = int(tp_cum[end])
-            best = {
-                "threshold": float(threshold),
-                "recall": float(tp / n_malware) if n_malware else math.nan,
-                "precision": float(tp / max(tp + fp, 1)),
-                "fp": fp,
-                "tp": tp,
-                "fn": n_malware - tp,
-                "tn": n_benign - fp,
-                "fp_per_100M": float(fp * 100_000_000.0 / n_benign) if n_benign else math.nan,
-            }
-        else:
-            break
-        idx = end + 1
-
-    if best is None:
-        return {
-            "target_per_100M": float(target_per_million) * 100.0,
-            "budget": budget,
-            "threshold": None,
-            "recall": None,
-            "precision": None,
-            "fp": None,
-            "tp": None,
-            "fn": None,
-            "tn": None,
-            "fp_per_100M": None,
-        }
-    best["target_per_100M"] = float(target_per_million) * 100.0
-    best["budget"] = budget
-    return best
-
-
-def _level_table(y_true: np.ndarray, y_prob: np.ndarray) -> list[dict[str, Any]]:
-    levels: list[dict[str, Any]] = []
-    for target in thresholds.SEVERITY_LEVEL_TARGETS:
-        level = int(target["level"])
-        hostile = _operating_point(y_true, y_prob, float(target["hostile_per_million"]))
-        levels.append({"level": level, "hostile": hostile})
-    return levels
+# Shared canonical emitters (collimator.thresholds). The local versions this
+# replaced used the legacy max-FP-count-under-budget walk (`_fp_budget` +
+# cumulative scan) rather than the interpolated-quantile estimator every other
+# consumer ships with — superseded so this benchmark's `levels` rows are
+# comparable with specialists.json / config.json tables.
+_operating_point = thresholds.operating_point
+_level_table = thresholds.level_table
 
 
 def _score_model(

@@ -551,56 +551,15 @@ def _classification_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str,
     return out
 
 
-def _operating_point(
-    y_true: np.ndarray,
-    y_prob: np.ndarray,
-    target_per_million: float,
-) -> dict[str, float | int | None]:
-    """Recall/precision at the SHARED operating-point threshold for this target
-    FP/M, so the per-route benchmark uses the EXACT same level algorithm as the
-    deploy policy, the screen experiment, and compute_routed_metrics —
-    ``collimator.thresholds.quantile_severity_threshold`` (ceil rule: L0 -> 0 FP,
-    L1+ -> >= 1 FP). Below the method's 50-benign floor it falls back to the
-    honest 0-FP ceiling (max benign), so a perfectly-separable tiny route still
-    reads recall 1.0 rather than NaN.
-    """
-    n_benign = int(np.sum(y_true == 0))
-    n_malware = int(np.sum(y_true == 1))
-    if n_benign == 0 or n_malware == 0:
-        return {
-            "target_per_100M": float(target_per_million) * 100.0,
-            "budget": None, "threshold": None, "recall": None, "precision": None,
-            "fp": None, "tp": None, "fn": None, "tn": None, "fp_per_100M": None,
-        }
-    benign_probs = y_prob[y_true == 0].astype(np.float64)
-    malware_probs = y_prob[y_true == 1].astype(np.float64)
-    threshold, _method = thresholds.quantile_severity_threshold(benign_probs, target_per_million)
-    if threshold is None:
-        threshold = float(np.nextafter(float(np.max(benign_probs)), np.inf))
-    fp = int(np.sum(benign_probs >= threshold))
-    tp = int(np.sum(malware_probs >= threshold))
-    return {
-        "target_per_100M": float(target_per_million) * 100.0,
-        "budget": fp,
-        "threshold": float(threshold),
-        "recall": float(tp / n_malware),
-        "precision": float(tp / max(tp + fp, 1)),
-        "fp": fp,
-        "tp": tp,
-        "fn": n_malware - tp,
-        "tn": n_benign - fp,
-        "fp_per_100M": float(fp * 100_000_000.0 / n_benign),
-    }
-
-
-def _level_table(y_true: np.ndarray, y_prob: np.ndarray) -> list[dict[str, Any]]:
-    return [
-        {
-            "level": level,
-            "hostile": _operating_point(y_true, y_prob, float(level)),
-        }
-        for level in range(len(thresholds.SEVERITY_LEVEL_TARGETS))
-    ]
+# Canonical per-level emitters live in collimator.thresholds — one shared
+# implementation for every script that writes a `levels` array. The local
+# twins this replaced had two bugs (array INDEX emitted as the level label,
+# and `float(level)` passed as target_per_million = 100x-loose targets), so
+# every specialists.json/benchmark.json `levels` table written before
+# 2026-08-03 has mislabeled rows: entry "level: 25" was really L750 scored
+# at 2500 FP/100M. Regenerate benchmarks before comparing against history.
+_operating_point = thresholds.operating_point
+_level_table = thresholds.level_table
 
 
 def _parse_mask_specs(values: list[str]) -> dict[str, Path]:
@@ -988,6 +947,27 @@ def _route_train_config(
         return base_config
     LOG.info("%s: using route train overrides %s", target["name"], dict(sorted(overrides.items())))
     return replace(base_config, **overrides)
+
+
+def _route_feature_env(
+    target: dict[str, Any],
+    feature_envs: dict[str, dict[str, str]],
+) -> dict[str, str]:
+    """Resolve a target's feature env, honoring BOTH key forms exactly like
+    ``_route_train_config`` does for train overrides (bare name from CLI,
+    canonical ``filetypes/X`` / ``filegroups/X`` from autocollie-best and the
+    small-route defaults; prefixed wins on collision).
+
+    The job builder used to look up only the bare name — so every env that
+    ``_load_autocollie_best_per_route`` discovered (keyed by canonical route)
+    was silently dropped and 42 promoted routes trained on the shared general
+    spec with ``feature_spec_policy: general_shared``. Only ``native``, whose
+    env arrived via CLI under its bare name, ever went route-specific.
+    """
+    env: dict[str, str] = {}
+    for key in _target_override_keys(target):
+        env.update(feature_envs.get(key, {}))
+    return env
 
 
 @contextlib.contextmanager
@@ -1702,7 +1682,10 @@ def main() -> int:
         if target.get("kind") not in ("filetype",):
             continue  # filegroups/general always have abundant pools
         route = _route_key_for_target(target)
-        existing_env = feature_envs.get(route, {})
+        # Check both key forms — an operator CLI env under the bare name
+        # counts as "explicit" just like a promoted-baseline env under the
+        # canonical route key.
+        existing_env = _route_feature_env(target, feature_envs)
         if "COLLIMATOR_MIN_SAMPLE_SCORE" in existing_env:
             continue
         n_mal = int(target.get("bad", 0))
@@ -1864,7 +1847,7 @@ def main() -> int:
                 "output_dir": output_dir,
                 "general_spec_path": general_spec_path,
                 "mask_spec_path": mask_specs.get(str(target["name"])),
-                "feature_env": feature_envs.get(str(target["name"]), {}),
+                "feature_env": _route_feature_env(target, feature_envs),
                 "route_config": _route_train_config(config, target, train_overrides),
                 "workers": extract_workers,
                 "max_id": args.max_id,

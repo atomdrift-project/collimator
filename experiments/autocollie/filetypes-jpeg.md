@@ -1348,3 +1348,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260731T130655-filetypes-jpeg` — 2026-07-31T13:06:55Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T17-13-28_20260731T130655-filetypes-jpeg_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | jpeg_kv_overlay_vocab_tune | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T18-43-28_20260731T130655-filetypes-jpeg_jpeg_kv_overlay_vocab_tune.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_kv_overlay_vocab_tune`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_OVERLAY_SIGNAL=1 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and overlay_signal to capture metadata and dropper overlay patterns in JPEGs, aiming to improve PR_AUC by adding structural rank signal.
+
+</details>
+
+## Cycle `20260801T050527-filetypes-jpeg` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-13-37_20260801T050527-filetypes-jpeg_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | jpeg_control_leaves128_est300 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-43-37_20260801T050527-filetypes-jpeg_jpeg_control_leaves128_est300.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_leaves128_est300`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; increasing num_leaves to 128 and reducing estimators to 300 to reduce overfitting and improve PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

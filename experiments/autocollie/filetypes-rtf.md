@@ -792,3 +792,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260727T024457-filetypes-rtf` — 2026-07-27T02:44:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d7d3d60a91cf587b` | inherit_from_filetypes_plist_8b54303f | ok | 0.0000 | 0.0000 | 1.0000 | 8 | [log](out/autocollie/runs/2026-07-27T02-51-53_20260727T024457-filetypes-rtf_inherit_from_filetypes_plist_8b54303f.log) |
+| `e025ec4a597851fa` | rtf_feat_textmetrics_full_docob | ok | 0.9993 | 0.9962 | 0.9861 | 7 | [log](out/autocollie/runs/2026-07-27T02-52-05_20260727T024457-filetypes-rtf_rtf_feat_textmetrics_full_docob.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_feat_textmetrics_full_docob`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and document_obfuscation_features to capture RTF-specific obfuscation patterns, aiming to improve PR_AUC by adding high-signal structural features for document malware.
+
+</details>
+
+## Cycle `20260801T050527-filetypes-rtf` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-14-03_20260801T050527-filetypes-rtf_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | rtf_feat_textmetrics_kv_vocab_train | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-44-03_20260801T050527-filetypes-rtf_rtf_feat_textmetrics_kv_vocab_train.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_feat_textmetrics_kv_vocab_train`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables text_metrics_full and kv_vocab to capture document obfuscation and key-value patterns, aiming to improve PR_AUC by adding rank signal for RTF payloads.
+
+</details>
+
+## Cycle `20260803T204802-filetypes-rtf` — 2026-08-03T20:48:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `60a4c4f1bcba5dc4` | inherit_from_filetypes_plist_8b54303f | ok | 0.8755 | 0.5000 | 0.9336 | 15 | [log](out/autocollie/runs/2026-08-03T20-58-14_20260803T204802-filetypes-rtf_inherit_from_filetypes_plist_8b54303f.log) |
+| `646813e3f16f57ef` | rtf_feat_textmetrics_kv_vocab_hardneg | ok | 0.9994 | 0.9974 | 0.9861 | 16 | [log](out/autocollie/runs/2026-08-03T20-58-39_20260803T204802-filetypes-rtf_rtf_feat_textmetrics_kv_vocab_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_feat_textmetrics_kv_vocab_hardneg`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Aims to boost PR_AUC and recall@3FPM by combining text_metrics_full and kv_vocab for richer document structure signal, paired with hard-negative training to sharpen the decision boundary at low FPR.
+
+</details>
+

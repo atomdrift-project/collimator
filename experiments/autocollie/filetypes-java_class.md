@@ -1064,3 +1064,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260731T181159-filetypes-java_class` — 2026-07-31T18:11:59Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T22-17-03_20260731T181159-filetypes-java_class_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | java_class_kv_vocab_5k_leaves128 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T23-47-03_20260731T181159-filetypes-java_class_java_class_kv_vocab_5k_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_kv_vocab_5k_leaves128`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture discriminative metadata patterns in Java class files, aiming to improve PR_AUC by adding structured signal while tuning num_leaves for better tail ranking.
+
+</details>
+
+## Cycle `20260801T121342-filetypes-java_class` — 2026-08-01T12:13:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T16-20-22_20260801T121342-filetypes-java_class_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | java_class_kv_symbol_vocab | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T17-50-22_20260801T121342-filetypes-java_class_java_class_kv_symbol_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_kv_symbol_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables kv and symbol vocabs to capture Java string constants and method names, aiming to improve PR_AUC by adding discriminative lexical signal while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260802T050719-filetypes-java_class` — 2026-08-02T05:07:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T09-17-26_20260802T050719-filetypes-java_class_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | java_class_symbol_vocab_5k | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T10-47-26_20260802T050719-filetypes-java_class_java_class_symbol_vocab_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_symbol_vocab_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enables symbol_vocab to capture Java class/method name patterns, aiming to improve PR_AUC by adding discriminative lexical signal while keeping ROC_AUC flat.
+
+</details>
+

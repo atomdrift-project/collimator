@@ -1086,3 +1086,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260731T130711-filegroups-source` — 2026-07-31T13:07:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T15-11-59_20260731T130711-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | source_train_hardneg_01_10 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T16-41-59_20260731T130711-filegroups-source_source_train_hardneg_01_10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_train_hardneg_01_10`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by upweighting hard negatives to better separate difficult benigns from malware, while keeping PR_AUC flat via matrix cache reuse.
+
+</details>
+
+## Cycle `20260801T121403-filegroups-source` — 2026-08-01T12:14:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T14-19-58_20260801T121403-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | source_kv_vocab_enable | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T15-49-58_20260801T121403-filegroups-source_source_kv_vocab_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value patterns in source/config files, aiming to improve PR_AUC by adding discriminative signal for malicious configurations while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260802T050719-filegroups-source` — 2026-08-02T05:07:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T07-14-02_20260802T050719-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | source_kv_textenc_enable | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T08-44-02_20260802T050719-filegroups-source_source_kv_textenc_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_kv_textenc_enable`** `EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=400 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 …` — Enables kv_vocab and text_encoding research families to capture source code structure and encoding patterns, aiming to improve PR_AUC and recall@3FPM by adding missing signal currently disabled in the baseline.
+
+</details>
+

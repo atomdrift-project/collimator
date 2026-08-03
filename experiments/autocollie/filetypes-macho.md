@@ -1338,3 +1338,45 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260801T192022-filetypes-macho` — 2026-08-01T19:20:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T23-29-09_20260801T192022-filetypes-macho_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | macho_kv_vocab_12k_symbol_15k | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T00-59-09_20260801T192022-filetypes-macho_macho_kv_vocab_12k_symbol_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_kv_vocab_12k_symbol_15k`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and expands symbol_vocab to capture Mach-O metadata and import patterns, aiming to improve PR_AUC by adding high-signal structural features.
+
+</details>
+
+## Cycle `20260802T050719-filetypes-macho` — 2026-08-02T05:07:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T09-17-02_20260802T050719-filetypes-macho_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | macho_sym_kv_vocab_15k_12k | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T10-47-02_20260802T050719-filetypes-macho_macho_sym_kv_vocab_15k_12k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_sym_kv_vocab_15k_12k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 …` — Enables symbol and KV vocabularies to capture Mach-O import/key-value patterns, aiming to improve PR_AUC by adding discriminative rank signal for malicious binaries.
+
+</details>
+
+## Cycle `20260803T204802-filetypes-macho` — 2026-08-03T20:48:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7ceeed1d31aece1a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9811 | 0.9965 | 0.9366 | 124 | [log](out/autocollie/runs/2026-08-03T20-58-20_20260803T204802-filetypes-macho_inherit_from_filetypes_plist_8b54303f.log) |
+| `1be30b77c5f1ced8` | macho_sym_vocab_bigrams_15k | ok | 0.9814 | 0.9941 | 0.9275 | 98 | [log](out/autocollie/runs/2026-08-03T21-00-49_20260803T204802-filetypes-macho_macho_sym_vocab_bigrams_15k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_sym_vocab_bigrams_15k`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=15000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=15000 EXP_TRAIN_SAMPLES=30000` — Enables symbol vocab and bigrams to capture Mach-O import co-occurrence patterns, aiming to improve PR_AUC and recall@3FPM by adding binary-specific structural signal.
+
+</details>
+

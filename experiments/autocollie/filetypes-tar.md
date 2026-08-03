@@ -1018,3 +1018,45 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260727T024457-filetypes-tar` — 2026-07-27T02:44:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6edba13cc391b7d9` | inherit_from_filetypes_plist_8b54303f | ok | 0.9639 | 0.9743 | 0.8547 | 41 | [log](out/autocollie/runs/2026-07-27T02-51-59_20260727T024457-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `ab74828f68622f97` | tar_hardneg_sweep_015_16 | ok | 0.9293 | 0.9599 | 0.8054 | 54 | [log](out/autocollie/runs/2026-07-27T02-52-49_20260727T024457-filetypes-tar_tar_hardneg_sweep_015_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_hardneg_sweep_015_16`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Targets recall@3 FP/M by upweighting hard negatives to lift the tail, addressing the or_loses diagnostic where ranking is saturated but thresholding limits recall.
+
+</details>
+
+## Cycle `20260801T050527-filetypes-tar` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-14-13_20260801T050527-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | tar_kv_hardneg_015_16 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-44-13_20260801T050527-filetypes-tar_tar_kv_hardneg_015_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_kv_hardneg_015_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value signal in tar archives while sweeping hard negatives to improve recall@3 FP/M by better separating hard benigns from malware, aiming to keep PR_AUC flat.
+
+</details>
+
+## Cycle `20260803T204802-filetypes-tar` — 2026-08-03T20:48:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9f5c22608e7033a3` | inherit_from_filetypes_plist_8b54303f | ok | 0.9450 | 0.9731 | 0.7982 | 95 | [log](out/autocollie/runs/2026-08-03T20-58-27_20260803T204802-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `342bbd85b3b7b7cf` | tar_kv_textmetrics_hardneg_015_16 | ok | 0.9316 | 0.9641 | 0.8313 | 113 | [log](out/autocollie/runs/2026-08-03T21-00-24_20260803T204802-filetypes-tar_tar_kv_textmetrics_hardneg_015_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_kv_textmetrics_hardneg_015_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 …` — Enables kv_vocab and text_metrics_full to capture archive content structure and text obfuscation signals, paired with hard-negative tuning to lift recall@3 FP/M without degrading PR_AUC.
+
+</details>
+

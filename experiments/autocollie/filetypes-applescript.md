@@ -348,3 +348,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260802T050719-filetypes-applescript` — 2026-08-02T05:07:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T09-17-32_20260802T050719-filetypes-applescript_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | control_tiny_corpus_reg | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T10-47-32_20260802T050719-filetypes-applescript_control_tiny_corpus_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_tiny_corpus_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Replicates best recent feature_env to hit matrix cache, while tightening regularization (num_leaves=16, min_child_samples=50, reg_lambda=1.0) to prevent overfitting on the 50-sample training set and improve PR_AUC.
+
+</details>
+

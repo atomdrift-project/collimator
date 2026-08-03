@@ -2024,3 +2024,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260801T171958-filetypes-python` — 2026-08-01T17:19:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T21-28-05_20260801T171958-filetypes-python_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | python_kv_vocab_hardneg_leaves128 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T22-58-05_20260801T171958-filetypes-python_python_kv_vocab_hardneg_leaves128.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_kv_vocab_hardneg_leaves128`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Aims to improve PR_AUC and recall@3 FP/M by introducing KV vocabulary features to capture key-value patterns in Python scripts, combined with hard-negative weighting to sharpen ranking at the tail.
+
+</details>
+
+## Cycle `20260802T050719-filetypes-python` — 2026-08-02T05:07:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T09-17-06_20260802T050719-filetypes-python_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | python_textmetrics_kv_lowfreq | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-02T10-47-06_20260802T050719-filetypes-python_python_textmetrics_kv_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_textmetrics_kv_lowfreq`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full and kv_vocab to capture script-specific structural and key-value signals, aiming to improve PR_AUC by adding discriminative features for Python malware while keeping ROC_AUC flat.
+
+</details>
+

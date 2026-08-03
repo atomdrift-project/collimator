@@ -700,3 +700,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260801T121346-filetypes-java` — 2026-08-01T12:13:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T16-20-42_20260801T121346-filetypes-java_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | java_control_train_tweak_v1 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T17-50-42_20260801T121346-filetypes-java_java_control_train_tweak_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_train_tweak_v1`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC and recall@3FPM by increasing model capacity (num_leaves=128, estimators=300) while adding L2 regularization (reg_lambda=1.0) to prevent overfitting on the small Java corpus.
+
+</details>
+
+## Cycle `20260803T204802-filetypes-java` — 2026-08-03T20:48:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `72384cb5c92d6afb` | inherit_from_filetypes_plist_8b54303f | ok | 0.8118 | 0.9808 | 0.5080 | 34 | [log](out/autocollie/runs/2026-08-03T20-56-29_20260803T204802-filetypes-java_inherit_from_filetypes_plist_8b54303f.log) |
+| `23a43b8cc414ae84` | java_kv_vocab_enable_v1 | ok | 0.4789 | 0.9386 | 0.1571 | 11 | [log](out/autocollie/runs/2026-08-03T20-57-11_20260803T204802-filetypes-java_java_kv_vocab_enable_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_kv_vocab_enable_v1`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=400 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1 …` — Enable kv_vocab to capture key-value pair signals in Java files, aiming to improve PR_AUC by adding discriminative feature surface while keeping ROC_AUC flat.
+
+</details>
+

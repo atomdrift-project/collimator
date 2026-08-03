@@ -1252,3 +1252,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260727T024457-filetypes-text` — 2026-07-27T02:44:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4857b49442abf7f5` | inherit_from_filetypes_plist_8b54303f | ok | 0.8378 | 0.8997 | 0.7317 | 66 | [log](out/autocollie/runs/2026-07-27T02-52-46_20260727T024457-filetypes-text_inherit_from_filetypes_plist_8b54303f.log) |
+| `513046d99f74bb3f` | text_feat_textmetrics_kv_v2 | ok | 0.1106 | 0.5449 | 0.0975 | 121 | [log](out/autocollie/runs/2026-07-27T02-55-03_20260727T024457-filetypes-text_text_feat_textmetrics_kv_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_feat_textmetrics_kv_v2`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and kv_vocab to capture document obfuscation and key-value signal, aiming to improve PR_AUC and recall@3FPM by adding high-signal features for text-based malware.
+
+</details>
+
+## Cycle `20260801T050527-filetypes-text` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-13-53_20260801T050527-filetypes-text_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | text_feat_textmetrics_kv_v3 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-43-53_20260801T050527-filetypes-text_text_feat_textmetrics_kv_v3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_feat_textmetrics_kv_v3`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enable text_metrics_full and kv_vocab to capture structural and key-value signals in text files, aiming to improve PR_AUC by adding discriminative features for obfuscated or structured text malware.
+
+</details>
+

@@ -1797,3 +1797,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260731T060105-filetypes-javascript` — 2026-07-31T06:01:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T10-07-25_20260731T060105-filetypes-javascript_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | js_textenc_metrics_full_bigram50 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T11-37-25_20260731T060105-filetypes-javascript_js_textenc_metrics_full_bigram50.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_textenc_metrics_full_bigram50`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 …` — Enable text_encoding and text_metrics_full to capture obfuscation and structural signals in JS, aiming to improve PR_AUC by better ranking malicious scripts against benign ones.
+
+</details>
+

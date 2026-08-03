@@ -1178,3 +1178,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260727T024634-filegroups-portable` — 2026-07-27T02:46:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4269f15f5f391d07` | inherit_from_filetypes_plist_8b54303f | ok | 0.9919 | 0.9969 | 0.9666 | 97 | [log](out/autocollie/runs/2026-07-27T02-53-28_20260727T024634-filegroups-portable_inherit_from_filetypes_plist_8b54303f.log) |
+| `84e52491c9b9726e` | portable_kv_textenc_enable | ok | 0.8402 | 0.9149 | 0.8261 | 86 | [log](out/autocollie/runs/2026-07-27T02-56-50_20260727T024634-filegroups-portable_portable_kv_textenc_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_kv_textenc_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 …` — Enables kv_vocab and text_encoding to capture structural and encoding signals, aiming to improve PR_AUC and recall@3 FP/M while keeping ROC_AUC flat.
+
+</details>
+

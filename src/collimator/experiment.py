@@ -123,6 +123,10 @@ def _corpus_cache_key(
         "total_limit": total_limit,
         "test_natural_prevalence": bool(test_natural_prevalence),
         "oof_fold_exclude": oof_fold_exclude,
+        # v2: eval slice streams unfiltered (MIN_SAMPLE_SCORE is train-only).
+        # Distinct key space from pre-2026-08-03 caches, whose eval rows were
+        # score-filtered — those corpora must not be reused.
+        "eval_unfiltered": True,
     }, sort_keys=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
@@ -465,11 +469,18 @@ def sample_partitioned_reports(
             else:
                 log.warning("ignoring EXP_OOF_FOLD_EXCLUDE=%d (need 0 or 1)", value)
 
+    # min_score=None: stream the FULL labeled population. MIN_SAMPLE_SCORE is
+    # a train-side hygiene floor, applied below to train rows only — baked
+    # into the stream it also shrank the EVAL benign pool, which changes the
+    # FP denominator and can flip the 25k operating-point regime (PE: 24,776
+    # vs 25,376 benign = ~10pp of reported L25 recall, pure measurement).
+    # Screens must measure the same benign universe deploy calibrates on.
     for row_id, label, partition, group_id, score in data.stream_partitioned_metadata_grouped(
         db_path,
         limit=total_limit,
         max_id=max_id,
         file_types=route_file_types or None,
+        min_score=None,
     ):
         # Locked test partition is reserved for final headline evaluation
         # (azoth-deploy / calibration). Screen experiments operate on
@@ -484,7 +495,12 @@ def sample_partitioned_reports(
         key = (is_test, label)
 
         if not is_test:
-            # Heuristic pruning: skip malware with very low scores during training.
+            # Train-side floors ONLY (the stream is unfiltered so the eval
+            # slice keeps the deploy benign population):
+            # MIN_SAMPLE_SCORE prunes low-signal rows from training...
+            if score < data.MIN_SAMPLE_SCORE:
+                continue
+            # ...and the malware floor prunes weakly-corroborated positives.
             if label == 1 and score < min_malware_training_score:
                 continue
 

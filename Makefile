@@ -262,7 +262,7 @@ AZOTH_SPECIALIST_MIN_GOOD ?= 50
 # OOF + recall-monotone floor + learned_blend in the pipeline. Bump back to
 # K=2 if you measure a real regression on test partition; the infrastructure
 # is in place to A/B this cleanly.
-AZOTH_SPECIALIST_N_SEED_EXTRAS ?= 0
+AZOTH_SPECIALIST_N_SEED_EXTRAS ?= 2
 # OOF specialist training (fold-A / fold-B / route-score merge) doesn't ship
 # the resulting bundles to deploy — only their OOF predictions get merged.
 # Variance reduction from multi-seed averaging doesn't compound through the
@@ -270,7 +270,7 @@ AZOTH_SPECIALIST_N_SEED_EXTRAS ?= 0
 # model), so the extra seeds add training cost for no calibration benefit.
 # Default to 0 extras (single seed) for OOF runs; override to 2 if you want
 # parity with production training for an apples-to-apples comparison.
-AZOTH_OOF_SEED_EXTRAS ?= 0
+AZOTH_OOF_SEED_EXTRAS ?= 2
 # Companion knob for the fold GENERAL trainings: the standard
 # azoth_train_best.py invocation sets EXP_SEED_SEARCH_K=3 (train 3 seeds,
 # ship the best). Fold bundles aren't shipped — only their OOF predictions

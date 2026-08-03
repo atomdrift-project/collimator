@@ -340,3 +340,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260731T060105-filetypes-crx` — 2026-07-31T06:01:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T10-06-29_20260731T060105-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | crx_training_capacity_boost | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T11-36-29_20260731T060105-filetypes-crx_crx_training_capacity_boost.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_training_capacity_boost`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control spec using best feature set; increases estimators to 300 and num_leaves to 128 to improve PR_AUC and recall@3FPM via better model capacity.
+
+</details>
+
+## Cycle `20260801T121322-filetypes-crx` — 2026-08-01T12:13:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T16-20-43_20260801T121322-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | crx_kv_textmetrics_enable | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T17-50-43_20260801T121322-filetypes-crx_crx_kv_textmetrics_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_kv_textmetrics_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 …` — Enable kv_vocab and text_metrics_full to capture manifest.json and script structure signals, aiming to improve PR_AUC by better separating malicious extension metadata from benign ones.
+
+</details>
+

@@ -2104,3 +2104,45 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260727T024457-filetypes-go` — 2026-07-27T02:44:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `287ce9f7e04854cc` | inherit_from_filetypes_plist_8b54303f | ok | 0.9577 | 0.9804 | 0.8953 | 92 | [log](out/autocollie/runs/2026-07-27T02-53-38_20260727T024457-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `26c054f6d85a29be` | go_control_train_leaves128_est300 | ok | 0.3971 | 0.6640 | 0.2600 | 76 | [log](out/autocollie/runs/2026-07-27T02-56-45_20260727T024457-filetypes-go_go_control_train_leaves128_est300.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_train_leaves128_est300`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; increases tree capacity and estimators to improve recall@3 FP/M while preserving PR AUC.
+
+</details>
+
+## Cycle `20260731T130654-filetypes-go` — 2026-07-31T13:06:54Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T17-12-57_20260731T130654-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | go_control_train_leaves128_est300 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T18-42-57_20260731T130654-filetypes-go_go_control_train_leaves128_est300.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_train_leaves128_est300`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env while increasing tree capacity to improve recall@3FPM by capturing finer-grained decision boundaries, aiming to preserve PR_AUC.
+
+</details>
+
+## Cycle `20260801T050527-filetypes-go` — 2026-08-01T05:05:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T09-13-22_20260801T050527-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | go_kv_vocab_enable | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T10-43-22_20260801T050527-filetypes-go_go_kv_vocab_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab to capture key-value patterns in Go configs and imports, aiming to improve PR_AUC by adding discriminative signal for malicious vs benign Go files.
+
+</details>
+

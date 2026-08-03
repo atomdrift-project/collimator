@@ -1130,3 +1130,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260731T130703-filetypes-php` — 2026-07-31T13:07:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T17-13-58_20260731T130703-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | php_textmetrics_kv_vocab | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T18-43-58_20260731T130703-filetypes-php_php_textmetrics_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_textmetrics_kv_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables text_metrics_full and kv_vocab to capture structural and key-value signal in PHP scripts, aiming to improve PR_AUC by adding discriminative features while controlling noise via moderate bigram_min_freq.
+
+</details>
+

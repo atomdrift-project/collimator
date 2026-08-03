@@ -1144,3 +1144,45 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260727T024503-filetypes-png` — 2026-07-27T02:45:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `497ef0bbddc4375c` | inherit_from_filetypes_plist_8b54303f | ok | 0.9725 | 0.9408 | 0.9606 | 33 | [log](out/autocollie/runs/2026-07-27T02-52-59_20260727T024503-filetypes-png_inherit_from_filetypes_plist_8b54303f.log) |
+| `d12dc47901dabe04` | png_feat_kv_textenc_vocab | ok | 0.1499 | 0.5301 | 0.1137 | 121 | [log](out/autocollie/runs/2026-07-27T02-54-46_20260727T024503-filetypes-png_png_feat_kv_textenc_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_feat_kv_textenc_vocab`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture PNG metadata and text chunk patterns, aiming to improve PR_AUC by adding discriminative signal for malicious PNGs.
+
+</details>
+
+## Cycle `20260731T130708-filetypes-png` — 2026-07-31T13:07:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T17-13-08_20260731T130708-filetypes-png_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | png_feat_kv_textenc_metrics | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-07-31T18-43-08_20260731T130708-filetypes-png_png_feat_kv_textenc_metrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_feat_kv_textenc_metrics`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab, text_encoding, and text_metrics_full to extract PNG metadata and embedded string signals, targeting PR_AUC and recall@3FPM gains from richer feature surface.
+
+</details>
+
+## Cycle `20260801T121403-filetypes-png` — 2026-08-01T12:14:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T16-19-33_20260801T121403-filetypes-png_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | png_kv_textenc_vocab_enable | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T17-49-33_20260801T121403-filetypes-png_png_kv_textenc_vocab_enable.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_kv_textenc_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture PNG metadata and embedded text signals, aiming to improve PR_AUC by adding discriminative features currently disabled in the baseline.
+
+</details>
+

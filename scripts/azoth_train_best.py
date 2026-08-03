@@ -383,6 +383,58 @@ def _resolve_env(run: dict[str, Any], extra: dict[str, str]) -> dict[str, str]:
     return env
 
 
+_MAKEFILE_PATH = Path(__file__).resolve().parent.parent / "Makefile"
+
+
+def _collimator_to_exp_map(makefile: Path = _MAKEFILE_PATH) -> dict[str, str]:
+    """COLLIMATOR_* -> EXP_* pairs parsed from the `experiment` recipe lines
+    (``\\tCOLLIMATOR_X=$(EXP_Y) \\``).
+
+    The recipe re-derives every listed COLLIMATOR_* from its EXP_* twin, so a
+    COLLIMATOR_* value handed to ``make experiment`` (env or command line) is
+    silently clobbered unless delivered under the EXP_* name. autocollie's Go
+    side does this rewrite via its KnobSet; this is the Python mirror.
+    Parsing the recipe (rather than hard-coding a table) keeps the map from
+    drifting when knobs are added — and covers the non-suffix pairs
+    (COLLIMATOR_NUM_THREADS -> EXP_LGBM_THREADS, _EXPERIMENT_TAG -> EXP_TAG).
+    """
+    pairs: dict[str, str] = {}
+    try:
+        text = makefile.read_text()
+    except OSError:
+        LOG.warning("cannot read %s; COLLIMATOR->EXP translation disabled", makefile)
+        return pairs
+    import re  # noqa: PLC0415
+
+    for m in re.finditer(r"^\t(COLLIMATOR_[A-Z0-9_]+)=\$\((EXP_[A-Z0-9_]+)\)", text, re.M):
+        pairs[m.group(1)] = m.group(2)
+    return pairs
+
+
+def _translate_env_for_make(env: dict[str, str]) -> dict[str, str]:
+    """Rewrite mapped COLLIMATOR_* keys to their EXP_* twins for `make
+    experiment`. Explicit EXP_* entries win over translated ones; unmapped
+    COLLIMATOR_* keys (not re-derived by the recipe) pass through unchanged,
+    reaching the recipe shell via make's command-line-variable export.
+    Only the make path uses this — ``--exec`` children read COLLIMATOR_*
+    directly and get the untranslated env.
+    """
+    mapping = _collimator_to_exp_map()
+    out = {k: v for k, v in env.items() if k not in mapping}
+    dropped: list[str] = []
+    for k, v in env.items():
+        exp = mapping.get(k)
+        if exp is None:
+            continue
+        if exp in out and out[exp] != v:
+            dropped.append(f"{k}={v} (explicit {exp}={out[exp]} wins)")
+        else:
+            out[exp] = v
+    if dropped:
+        LOG.info("env translation collisions: %s", "; ".join(sorted(dropped)))
+    return out
+
+
 def _parse_extra(values: list[str]) -> dict[str, str]:
     out: dict[str, str] = {}
     for value in values:
@@ -502,8 +554,11 @@ def main() -> int:
     env = _resolve_env(run, extra) if run is not None else dict(extra)
 
     if args.print_env:
-        for k in sorted(env):
-            print(f"{k}={env[k]}")
+        # Printed in make-experiment form (the documented use is piping into
+        # `env -i ... make experiment`): mapped COLLIMATOR_* appear as EXP_*.
+        printable = _translate_env_for_make(env)
+        for k in sorted(printable):
+            print(f"{k}={printable[k]}")
         return 0
 
     if args.exec:
@@ -518,7 +573,8 @@ def main() -> int:
             return 0
         return subprocess.run(args.exec, env=child_env, check=False).returncode
 
-    cmd = ["make", "experiment"] + [f"{k}={v}" for k, v in sorted(env.items())]
+    make_env = _translate_env_for_make(env)
+    cmd = ["make", "experiment"] + [f"{k}={v}" for k, v in sorted(make_env.items())]
     LOG.info("invoking: %s", " ".join(shlex.quote(p) for p in cmd))
     if args.dry_run:
         return 0

@@ -1026,3 +1026,33 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260801T121413-filetypes-jar` — 2026-08-01T12:14:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T16-25-07_20260801T121413-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+
+Rejected before run:
+
+- `jar_kv_vocab_training_tweak` — features.min_sample_score: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20260803T204802-filetypes-jar` — 2026-08-03T20:48:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `403b3d7c80635af8` | inherit_from_filetypes_plist_8b54303f | ok | 0.9516 | 0.9781 | 0.8929 | 72 | [log](out/autocollie/runs/2026-08-03T20-56-31_20260803T204802-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+| `63c90b6b0b430e73` | jar_kv_vocab_split_research | ok | 0.8986 | 0.9619 | 0.8240 | 78 | [log](out/autocollie/runs/2026-08-03T20-57-57_20260803T204802-filetypes-jar_jar_kv_vocab_split_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_kv_vocab_split_research`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture structured manifest/metadata signals in JAR archives, aiming to improve PR_AUC by adding discriminative key-value features.
+
+</details>
+

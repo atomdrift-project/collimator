@@ -99,9 +99,21 @@ def _short_hash(value: Any) -> str:
 def _render_recall_svg(
     curves: dict[str, list[tuple[int, float]]],
     title: str = "",
+    levels: "tuple[int, ...] | None" = None,
+    colors: "dict[str, str] | None" = None,
+    dashed: "set[str] | None" = None,
+    markers: "dict[int, str] | None" = None,
 ) -> str:
     """Render a self-contained SVG plotting one or more per-level recall
     curves over the deploy grid (L0..L1000).
+
+    ``levels`` overrides the x-axis grid (default: the full deploy grid), so
+    the same renderer can zoom into a sub-range such as L0-L50. ``colors``
+    overrides the per-series palette and ``dashed`` names series drawn as
+    dashed reference lines — both default to the README styling. ``markers``
+    adds extra labelled vertical rules (e.g. the route's honest resolution
+    floor, so a reader can see where measurement stops and extrapolation
+    starts) alongside the standing deploy marker.
 
     ``curves`` maps name → ``[(level, recall), ...]`` tuples. Points whose
     recall is NaN are skipped (line breaks across the gap). A curve whose
@@ -143,8 +155,10 @@ def _render_recall_svg(
     plot_w = width - margin_left - margin_right
     plot_h = height - margin_top - margin_bottom
 
-    levels = list(RECALL_CURVE_LEVELS)
+    levels = list(levels if levels is not None else RECALL_CURVE_LEVELS)
     n_levels = len(levels)
+    palette = {**_CURVE_COLORS, **(colors or {})}
+    dashed = dashed or set()
     # Equal positional spacing: each level sits at index i / (n-1) of the
     # plot width. Avoid zero-division for a single-level grid.
     def x_of(level: int) -> float:
@@ -220,6 +234,18 @@ def _render_recall_svg(
             f'<text class="deploy-label" x="{x_def + 4:.1f}" y="{margin_top + 12}" '
             f'text-anchor="start">deploy L{DEFAULT_RECALL_LEVEL}</text>'
         )
+    for mark_level, mark_label in (markers or {}).items():
+        if mark_level not in levels:
+            continue
+        x_mark = x_of(mark_level)
+        parts.append(
+            f'<line class="deploy-marker" x1="{x_mark:.1f}" y1="{margin_top}" '
+            f'x2="{x_mark:.1f}" y2="{margin_top + plot_h}"/>'
+        )
+        parts.append(
+            f'<text class="deploy-label" x="{x_mark - 4:.1f}" y="{margin_top + 12}" '
+            f'text-anchor="end">{_svg_escape(mark_label)}</text>'
+        )
     # X-axis labels (every level). Tick marks below the axis baseline.
     for lvl in levels:
         x = x_of(lvl)
@@ -239,7 +265,8 @@ def _render_recall_svg(
     )
     # Curves.
     for name, points in plotted.items():
-        color = _CURVE_COLORS.get(name, "#444")
+        color = palette.get(name, "#444")
+        dash = ' stroke-dasharray="6,4"' if name in dashed else ""
         # Path: connect consecutive samples; NaNs already filtered.
         if len(points) > 1:
             d_parts: list[str] = []
@@ -247,7 +274,7 @@ def _render_recall_svg(
                 cmd = "M" if i == 0 else "L"
                 d_parts.append(f"{cmd}{x_of(lvl):.1f},{y_of(r):.1f}")
             parts.append(
-                f'<path class="curve" d="{" ".join(d_parts)}" stroke="{color}"/>'
+                f'<path class="curve" d="{" ".join(d_parts)}" stroke="{color}"{dash}/>'
             )
         # Markers — slightly larger with a thin white outline so they pop
         # against the line and against each other when curves cross.
@@ -265,7 +292,7 @@ def _render_recall_svg(
     legend_items = list(plotted.keys())
     for name in reversed(legend_items):
         label = _svg_escape(name)
-        color = _CURVE_COLORS.get(name, "#444")
+        color = palette.get(name, "#444")
         approx_w = 7 * len(name) + 28  # swatch line + circle + gap + text
         legend_x -= approx_w
         # Swatch: short line + filled circle to match the curve style.

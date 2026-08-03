@@ -1640,3 +1640,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260801T192017-filegroups-config` — 2026-08-01T19:20:17Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | inherit_from_filetypes_plist_8b54303f | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T21-27-31_20260801T192017-filegroups-config_inherit_from_filetypes_plist_8b54303f.log) |
+| `` | config_train_leaves128_est300 | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-08-01T22-57-31_20260801T192017-filegroups-config_config_train_leaves128_est300.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_train_leaves128_est300`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control/exploit: replicate best feature_env and increase capacity (num_leaves=128, estimators=300) to improve recall@3 FP/M while preserving PR_AUC and ROC_AUC guardrails.
+
+</details>
+
