@@ -326,10 +326,11 @@ The level → threshold map has to satisfy four properties at once, and the
 interpolated quantile is the simplest estimator that gets all four — accurately,
 at any sample size:
 
-- **L0 = 0 FP, always distinct from L1.** L0 returns just above the max benign
-  (the only level that fires on zero benigns); every Lk > 0 returns a quantile
-  ≤ max benign, so it always admits at least the top benign (**≥ 1 FP**). L0 is
-  therefore strictly stricter than L1 by construction.
+- **L0 = 0 FP, always distinct from L1.** (Superseded 2026-08-03 — see
+  `LEVELS.md`. Levels are now resolution-adjusted so that L1 IS each route's
+  first false positive; L0 is one step stricter along the same curve rather
+  than a jump to "above the max benign". The ≥ 1 FP guarantee above L0 is
+  unchanged and now holds on every route regardless of corpus size.)
 - **Distinct per level, even when the difference is subtle.** Below the
   resolution floor (qk × N_benign / 10⁸ < 1) the empirical FP *count* can only be
   an integer, so any count-budget rule (floor / ceil / max-1) collapses every
@@ -430,15 +431,14 @@ These belong in any paper's Limitations section, not hidden:
   packing time, not corpus ingest time. Once hopper logs ingest
   timestamps and the corpus has enough time depth, time-blocked
   evaluation should be reported alongside random-split metrics.
-- **Strict-tier severity thresholds (L0..L50) are GPD-extrapolated, not
-  empirical, on a single dev partition.** The per-route empirical
-  floor is ~640 FP/100M (≈ 6.4 FP/M, i.e. 1 benign per 150k); below
-  that, the deployed L thresholds come from a generalized-Pareto fit
-  to each route's benign-score upper tail. The fit is honest as a
-  *description* of the score's strictness — not a confidence claim
-  about deployment FP rate. The k=2 OOF run drops the empirical floor
-  to ~40 FP/100M (≈ 0.4 FP/M) and makes L0..L20 directly empirical
-  when needed.
+- **Strict-tier severity thresholds.** (Corrected 2026-08-03. This entry
+  previously said L0..L50 were GPD-extrapolated; that had been untrue since
+  the GPD code was deleted on 2026-06-06, and the shipped estimator was the
+  interpolated quantile.) Levels are now resolution-adjusted (`LEVELS.md`):
+  every level from L1 up is interpolation between observed order statistics,
+  and only L0 is extrapolated — by one unit along the measured FP1→FP2 line.
+  What a level cannot tell you is a *confidence* claim about the deployment
+  FP rate; `cp_floor_per_100M` on each emitted row carries that separately.
 - **Inter-route FP correlation is not separately measured.** The
   routed FP budget is owned by the OR over routes; correlated FPs
   across routes inflate the budget conservatively (worst case) but

@@ -132,34 +132,59 @@ def _severity_target(level: int) -> dict[str, int | float]:
 DEFAULT_SEVERITY_TARGET = _severity_target(DEFAULT_SEVERITY_LEVEL)
 
 
-# Below this many benigns a route cannot resolve the per-100M rate (L50 = 0.5
-# FP/M needs ~2M benigns to see a single FP), so the rate-quantile collapses to
-# the ~1-FP point and recall@level goes flat. For these LOW-VOLUME routes we
-# reinterpret the level as an ABSOLUTE false-positive count instead — see
-# `_resolution_aware_fp`. Resolvable OR common (>= cutoff) routes keep the
-# strict per-100M rate, so a common type that merely lacks 2M benigns (e.g. pe)
-# is NOT loosened — its flat curve is a model-saturation problem, not an
-# operating-point one.
-_LOW_VOLUME_BENIGN_CUTOFF = 25_000
-# Absolute-FP level mapping for low-volume routes: every `_ABS_FP_LEVELS_PER_FP`
-# levels grant one more FP, so L1-5 = 1 FP, L6-10 = 2 FP, ... L50 = 10 FP. The
-# anchor: L50 = 10 FP = 5% of a 200-benign route. Capped at `_ABS_FP_BENIGN_CAP`
-# of benigns so the tiniest routes don't over-flag.
-_ABS_FP_LEVELS_PER_FP = 5
-_ABS_FP_BENIGN_CAP = 0.05
+# --- FP-anchored curve construction (see LEVELS.md, FP_CURVE_RESULTS.md) -----
+#
+# ONE rule for every route — specialist, filegroup and general alike. The old
+# `_LOW_VOLUME_BENIGN_CUTOFF = 25_000` switch into an absolute-FP regime was
+# deleted 2026-08-03: it was a second, looser rule for small routes, and it is
+# what made npm report 73.8% recall at "L500" while realizing L1,614,205. It
+# also produced a genuine discontinuity — fitting at n=24,776 vs n=25,376 moved
+# the threshold by up to 11 logits (median cliff z 8.7-19.3), where the
+# replacement sits at sampling noise.
+#
+# The construction: the k-th largest benign score IS the threshold admitting
+# exactly k false positives, at level k*1e8/n. Those anchors are measurements.
+# Between them, shape-preserving monotone interpolation. Below the 1-FP anchor,
+# one line whose slope is measured over the deepest decade of anchors (1..10
+# FP) — NOT over the body, which extrapolates 35-94x too strict because benign
+# tails flatten faster than their bodies imply.
+#
+# Chosen on measured accuracy at L1 and L25 across 15 non-saturated routes:
+# median error 0.62 decades vs the incumbent's 1.88, best worst-case of any
+# candidate, and the only one centred rather than biased loose.
+#
+# NOTE — deliberate change of invariant: below the 1-FP anchor this CAN return
+# a threshold above the max observed benign. The previous estimator never did,
+# on the grounds that a heavier live tail would then admit more FP than
+# claimed. That risk is real and no backtest on this corpus can rule it out;
+# it is accepted knowingly in exchange for a usable strict-end dial, and every
+# such row is flagged (see `severity_curve`).
+_ANCHOR_SLOPE_DECADE_FP = 10  # deepest-decade window for the extrapolation slope
+_MIN_SLOPE_LOGITS = 1e-3
 
 
-def _resolution_aware_fp(level_per_100M: float, n_benign: int) -> int:
-    """Absolute FP budget for a low-volume route at a per-100M `level`.
+def _fp_anchor_curve(sorted_benign_logit: "np.ndarray") -> tuple["np.ndarray", "np.ndarray", float]:
+    """(anchor levels, anchor thresholds, logits-per-decade slope at the extreme).
 
-    L_k -> ceil(k / 5) FP (L50 = 10 FP, the "5% of 200 benigns" anchor), clamped
-    to [1, 5% of benigns, n]. A rare route's absolute FP volume is bounded by its
-    rarity, so this converts good-but-starved models from their ~1-FP recall
-    (often ~1%) to their real recall at a handful of false positives.
+    Anchors are dense at the extreme (every FP count 1..10) and geometric out
+    to 5% of the pool, so the strict end — where the whole dial lives — is
+    carried by measurements rather than by interpolation across a wide gap.
     """
-    abs_fp = int(np.ceil(level_per_100M / _ABS_FP_LEVELS_PER_FP))
-    cap = max(1, int(round(_ABS_FP_BENIGN_CAP * n_benign)))
-    return min(max(1, abs_fp), cap, n_benign)
+    n = sorted_benign_logit.size
+    top = max(int(0.05 * n), 12)
+    counts = np.unique(np.concatenate([
+        np.arange(1, 11), np.geomspace(10, top, 28).astype(int),
+    ]))
+    counts = counts[(counts >= 1) & (counts < n)]
+    levels = counts / n * 1e8
+    thresholds = np.minimum.accumulate(sorted_benign_logit[n - counts])
+    k = min(_ANCHOR_SLOPE_DECADE_FP, counts.size)
+    if k >= 2:
+        x = np.log10(levels[:k])
+        slope = float(max(-np.polyfit(x, thresholds[:k], 1)[0], _MIN_SLOPE_LOGITS))
+    else:
+        slope = 1.0
+    return levels, thresholds, slope
 
 
 def quantile_severity_threshold(
@@ -174,36 +199,57 @@ def quantile_severity_threshold(
     level from this function, so a candidate is screened at the exact operating
     point it will ship at.
 
-    Two regimes, chosen per route by whether the level is *resolvable*:
+    ONE rule for every route (see LEVELS.md). The k-th largest benign score is
+    the threshold admitting exactly k false positives, at level ``k*1e8/n``;
+    those anchors are measurements. Between them the curve interpolates; below
+    the 1-FP anchor it continues on a line whose slope is measured over the
+    deepest decade of anchors. There is no low-volume regime and no 25k switch.
 
-      - **Resolvable or common** (``n*p >= 1`` FP, or ``n_benign >= cutoff``):
-        the ``(1 - p)``-quantile of benign scores (numpy Type-7 interpolation).
-        L0 (``target<=0``) returns just above max benign (0 FP); L1+ returns a
-        quantile ``<= max benign`` (>= 1 FP), never above the observed data.
-      - **Low-volume + unresolvable** (``n_benign < cutoff`` and ``n*p < 1``):
-        the level is reinterpreted as an ABSOLUTE FP count (`_resolution_aware_fp`),
-        so the level -> threshold curve is *resolvable* (L1=1 FP, ... L50=10 FP)
-        instead of pinning at ~1 FP for every level. This is what lets rare
-        good-ranking routes (batch, vbs, ole, doc, ...) operate at real recall.
-
-    Returns ``(threshold, method)`` where method is ``"empirical"`` (rate
-    quantile), ``"absolute_fp"`` (low-volume FP-count regime), or ``"none"``
-    (< 50 benigns).
+    Returns ``(threshold, method)`` where method is ``"measured"`` (at or above
+    the sample's 1-FP floor — interpolation between observed order statistics),
+    ``"extrapolated"`` (below it — a model claim; may exceed the max observed
+    benign, see the invariant note above), or ``"none"`` (< 50 benigns).
     """
     if len(benign_probs) < 50:
         return None, "none"
     n = len(benign_probs)
     arr = np.sort(np.asarray(benign_probs, dtype=np.float64))
-    if target_per_million <= 0:
-        return float(np.nextafter(float(arr[-1]), np.inf)), "empirical"  # L0: 0 FP
-    rate_budget = n * target_per_million / 1_000_000.0  # expected FP at this rate
-    if n < _LOW_VOLUME_BENIGN_CUTOFF and rate_budget < 1.0:
-        fp = _resolution_aware_fp(target_per_million * 100.0, n)
-        return float(arr[n - fp]), "absolute_fp"  # fp-th largest benign
-    q = 1.0 - target_per_million / 1_000_000.0  # benign-score quantile position
-    if q <= 0.0:  # target >= 100% FP: everything fires
-        return float(arr[0]), "empirical"
-    return float(np.quantile(arr, q)), "empirical"  # Type-7 linear interpolation
+    if target_per_million >= 1_000_000.0:  # everything fires
+        return float(arr[0]), "measured"
+    logit = np.log(np.clip(arr, 1e-7, 1 - 1e-7)) - np.log1p(-np.clip(arr, 1e-7, 1 - 1e-7))
+    levels, thresholds, slope = _fp_anchor_curve(logit)
+    floor_level = float(levels[0])
+    # RESOLUTION-ADJUSTED LEVEL SCALE (LEVELS.md). The requested level is
+    # shifted so that L1 lands on this route's first false positive:
+    #
+    #     true_rate = requested + floor_level - 1
+    #
+    # so L1 is exactly 1 FP, the k-th FP sits at L(1 + (k-1)*floor_level), and
+    # L0 is one unit past L1 along the same line. A route with 100M benigns has
+    # floor_level = 1 and the mapping becomes the identity — this is the true
+    # per-100M rate scale, quantised to the resolution a route actually has,
+    # not a different unit.
+    #
+    # The consequence, stated plainly: the same displayed level is a different
+    # true rate on different routes (L25 is 31.7/100M on general, 39,394/100M
+    # on gem). Comparability moves from the label to the false-positive count.
+    # That is deliberate — the alternative is claiming a rate a route cannot
+    # deliver, which is what the pre-2026-08-03 rule did by a median factor of
+    # ~945x.
+    requested = target_per_million * 100.0 if target_per_million > 0 else 0.0
+    level = max(requested + floor_level - 1.0, 1e-9)
+    if level >= floor_level:
+        value = float(np.interp(np.log10(level), np.log10(levels), thresholds))
+        # The measured branch interpolates BETWEEN observed order statistics, so
+        # by construction it cannot exceed the largest one. Clamping in
+        # probability space makes that exact rather than exact-to-one-ulp: the
+        # logit round trip alone leaves L1 a single ulp above the max benign,
+        # which would break the ">= 1 FP at every level above L0" guarantee.
+        return float(min(1.0 / (1.0 + np.exp(-value)), float(arr[-1]))), "measured"
+    # Below the 1-FP anchor: L0 only, one step along the FP1->FP2 line. This is
+    # the one level allowed above the observed data.
+    value = float(thresholds[0] + slope * (np.log10(floor_level) - np.log10(level)))
+    return float(1.0 / (1.0 + np.exp(-value))), "extrapolated"
 
 # (label, FP-rate) pair used by ``fp_budget_tables`` and downstream callers
 # to derive the default budget at the configured severity level. Only one

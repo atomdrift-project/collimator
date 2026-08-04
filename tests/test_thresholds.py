@@ -23,10 +23,19 @@ from collimator.thresholds import (
 
 
 def test_quantile_severity_threshold_curve_properties_on_small_sample() -> None:
-    """The shared operating-point estimator must hold these on a TINY sample:
-      - L0 != L1 (L0 is the only level above max benign -> 0 FP);
-      - every non-zero level admits >= 1 FP and never sits above max benign;
-      - L5 != L50 (distinct thresholds, even if subtle);
+    """The shared operating-point estimator must hold these on a TINY sample.
+
+    Levels are resolution-adjusted (LEVELS.md): the requested level is shifted
+    by the route's own 1-FP floor, so L1 IS the first false positive on every
+    route regardless of corpus size. That makes the contract simple and the
+    same everywhere:
+
+      - L0 admits ZERO false positives and is the only extrapolated level;
+      - every level >= L1 admits at least 1 FP, sits at or below the max
+        observed benign, and is "measured" (interpolation between observed
+        order statistics);
+      - L0 is strictly stricter than L1, but one step along the same curve
+        rather than a jump to "above everything";
       - the level -> threshold map is monotone non-increasing.
     """
     rng = np.random.default_rng(0)
@@ -39,11 +48,16 @@ def test_quantile_severity_threshold_curve_properties_on_small_sample() -> None:
     levels = [0, 1, 5, 50, 100, 500, 1000, 10000]
     thr = {L: quantile_severity_threshold(benign, L / 100.0)[0] for L in levels}
 
-    # L0 is the only level strictly above the max benign (0 FP); all else <= max.
-    assert thr[0] > mx
+    # L0: zero FP, the only extrapolated level, strictly stricter than L1.
+    assert int(np.sum(benign >= thr[0])) == 0
+    assert quantile_severity_threshold(benign, 0.0)[1] == "extrapolated"
+    assert thr[0] > thr[1]
+
+    # Every level from L1 up: at least 1 FP, never above the observed data.
     for L in levels[1:]:
         assert thr[L] <= mx
-        assert int(np.sum(benign >= thr[L])) >= 1  # >= 1 FP
+        assert int(np.sum(benign >= thr[L])) >= 1
+        assert quantile_severity_threshold(benign, L / 100.0)[1] == "measured"
 
     # Distinct adjacent levels, even when subtle.
     assert thr[0] != thr[1]
@@ -57,10 +71,13 @@ def test_quantile_severity_threshold_curve_properties_on_small_sample() -> None:
 
 def test_quantile_severity_threshold_returns_none_below_floor() -> None:
     assert quantile_severity_threshold(np.linspace(0, 1, 49), 0.5) == (None, "none")
-    # 50 benigns at L50 can't resolve the per-100M rate, so it uses the
-    # low-volume absolute-FP regime; either way it returns a valid threshold.
-    thr, method = quantile_severity_threshold(np.linspace(0, 1, 50), 0.5)
-    assert method in ("empirical", "absolute_fp") and 0.0 <= thr <= 1.0
+    # 50 benigns cannot resolve a raw 50/100M rate, but the resolution-adjusted
+    # scale puts L50 just past this sample's own 1-FP floor, so it is measured
+    # and admits at least one false positive.
+    benign = np.linspace(0, 1, 50)
+    thr, method = quantile_severity_threshold(benign, 0.5)
+    assert method == "measured" and 0.0 <= thr <= 1.0
+    assert int(np.sum(benign >= thr)) >= 1
 
 
 def test_evaluate_policies_returns_named_candidates() -> None:

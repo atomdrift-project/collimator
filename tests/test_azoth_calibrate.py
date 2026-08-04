@@ -142,20 +142,21 @@ def test_quantile_severity_threshold_empirical_when_resolvable() -> None:
     threshold, method = _mod._quantile_severity_threshold(  # type: ignore[attr-defined]
         benign_probs, target_per_million=50_000.0,
     )
-    assert method == "empirical"
+    assert method == "measured"
     assert threshold is not None
     # Should be very close to the 95th percentile of a uniform[0,1] sample.
     assert 0.93 < threshold < 0.97
 
 
-def test_quantile_severity_threshold_below_floor_uses_absolute_fp() -> None:
-    """A low-volume route that can't resolve the per-100M rate switches to the
-    absolute-FP regime — a real threshold <= max benign admitting a bounded FP
-    count, never an above-max value that could overshoot on live traffic.
+def test_quantile_severity_threshold_small_route_still_fires() -> None:
+    """A small route stays usable instead of switching to a looser rule (the
+    deleted `_LOW_VOLUME_BENIGN_CUTOFF` regime) or collapsing to a no-fire
+    threshold.
 
-    A 2k-row benign sample can't resolve q=100 FP/M (n × p = 2000 × 1e-4 = 0.2
-    expected FP, below 1), and 2k < the 25k low-volume cutoff, so the level is
-    read as an absolute FP count capped at 5% of benigns (here 100 FP).
+    A 2k-row benign sample cannot resolve a raw 100 FP/M rate (n × p = 0.2
+    expected FP), but the resolution-adjusted scale anchors L1 on its own first
+    false positive, so every level >= L1 admits at least one FP and the route
+    keeps a real operating point. See LEVELS.md.
     """
     rng = np.random.default_rng(11)
     benign_probs = np.clip(rng.beta(0.5, 5.0, size=2000) + 0.3, 0.0, 1.0).astype(np.float64)
@@ -163,10 +164,15 @@ def test_quantile_severity_threshold_below_floor_uses_absolute_fp() -> None:
         benign_probs, target_per_million=100.0,
     )
     assert threshold is not None
-    assert method == "absolute_fp"
+    assert method == "measured"
     assert 0.0 <= threshold <= float(benign_probs.max())
-    fp = int((benign_probs >= threshold).sum())
-    assert 1 <= fp <= max(1, round(0.05 * 2000))  # bounded by the 5% cap
+    assert int((benign_probs >= threshold).sum()) >= 1  # >= 1 FP
+    # Monotone against a looser level on the same curve.
+    loose, loose_method = _mod._quantile_severity_threshold(  # type: ignore[attr-defined]
+        benign_probs, target_per_million=50_000.0,
+    )
+    assert loose_method == "measured"
+    assert threshold > loose
 
 
 def test_quantile_severity_threshold_returns_none_for_too_few_benigns() -> None:
