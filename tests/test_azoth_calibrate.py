@@ -214,10 +214,13 @@ def test_calibrate_one_per_route_quantile_no_search() -> None:
     result = _mod._calibrate_one(  # type: ignore[attr-defined]
         labels, route_scores, target_per_million=10_000.0,
     )
-    # Every route ended up with a threshold (synthetic separation is strong).
-    assert set(result["thresholds"].keys()) == {"general", "filetypes/x"}
-    # Each route's threshold matches the (1 − q×10⁻⁶) quantile of its
-    # benign scores within a small numerical tolerance.
+    # Every route produced a candidate threshold, matching the (1 − q×10⁻⁶)
+    # quantile of its own benign scores within a small numerical tolerance.
+    # Read these off `diagnostics`, not `thresholds`: deriving a threshold and
+    # being admitted are now separate steps, and `filetypes/x` here is the
+    # redundant-specialist case the admission gate exists to drop (general
+    # separates the same rows better, so the specialist adds FP without
+    # adding TP). Admission itself is covered by the gate tests below.
     p_target = 10_000.0 / 1_000_000.0
     benign_a = probs_a[labels == 0]
     benign_b = probs_b[labels == 0]
@@ -225,8 +228,12 @@ def test_calibrate_one_per_route_quantile_no_search() -> None:
     sorted_b = np.sort(benign_b.astype(np.float64))
     expected_a = float(sorted_a[int(len(benign_a) * (1 - p_target)) - 1])
     expected_b = float(sorted_b[int(len(benign_b) * (1 - p_target)) - 1])
-    assert abs(result["thresholds"]["general"] - expected_a) < 1e-3
-    assert abs(result["thresholds"]["filetypes/x"] - expected_b) < 1e-3
+    got_a = result["diagnostics"]["general"]["standalone"]["threshold"]
+    got_b = result["diagnostics"]["filetypes/x"]["standalone"]["threshold"]
+    assert abs(got_a - expected_a) < 1e-3
+    assert abs(got_b - expected_b) < 1e-3
+    # general is a backstop — it is never gated out.
+    assert "general" in result["thresholds"]
     # OR rule: total tp >= each per-route standalone tp.
     standalone_tp = max(
         result["diagnostics"]["general"]["standalone"]["tp"],
@@ -239,6 +246,127 @@ def test_calibrate_one_per_route_quantile_no_search() -> None:
     expected_fp = n_benign_route * p_target  # roughly 250 per route
     for diag in result["diagnostics"].values():
         assert abs(diag["standalone"]["fp"] - expected_fp) <= max(50.0, 0.3 * expected_fp)
+
+
+def _gate_fixture(specialist_probs, *, seed: int = 5):
+    """general over 40k rows plus a specialist over the last 10k of them.
+
+    The specialist's slice is 95% benign, as a real filetype corpus is — the
+    benign:malware ratio is what decides whether a route that fires broadly
+    costs more than it catches, so a 50/50 slice would not exercise the gate.
+    general is deliberately mediocre there, leaving room for a genuinely useful
+    specialist to contribute something marginal.
+    """
+    rng = np.random.default_rng(seed)
+    n, n_spec = 40_000, 10_000
+    labels = rng.integers(0, 2, size=n).astype(np.int8)
+    spec_idx = np.arange(n - n_spec, n, dtype=np.int64)
+    labels[spec_idx] = (rng.random(n_spec) < 0.05).astype(np.int8)
+    probs_g = np.clip(
+        0.30 + 0.35 * labels + rng.normal(0, 0.12, size=n), 0.0, 1.0,
+    ).astype(np.float32)
+    return labels, [
+        {"name": "general", "kind": "general",
+         "indices": np.arange(n, dtype=np.int64), "probs": probs_g},
+        {"name": "filetypes/x", "kind": "filetype",
+         "indices": spec_idx, "probs": specialist_probs(labels[spec_idx], rng)},
+    ]
+
+
+def test_admission_gate_drops_a_broken_specialist() -> None:
+    """The svg case: a near-constant predictor, so every threshold fires broadly.
+
+    svg emitted ~2.79e-05 for essentially all of its benigns, so even the 1-FP
+    anchor sat inside that atom: at L1000 it fired on 353,179 benign files to
+    catch 59 malicious ones. No threshold helps — the route cannot separate —
+    so it must not ship. Dropping it is safe because general scores every file.
+    """
+    def near_constant(spec_labels, rng):  # noqa: ARG001
+        return np.full(len(spec_labels), 2.79e-05, dtype=np.float32)
+
+    labels, route_scores = _gate_fixture(near_constant)
+    result = _mod._calibrate_one(  # type: ignore[attr-defined]
+        labels, route_scores, target_per_million=0.25,  # the deploy point, L25
+    )
+    diag = result["diagnostics"]["filetypes/x"]
+    assert diag["selected"] is False, diag
+    assert "not beneficial" in diag["reason"]
+    assert "filetypes/x" not in result["thresholds"]
+    # It really was costing far more than it caught.
+    assert diag["marginal"]["fp"] > 10 * diag["marginal"]["tp"]
+
+
+def test_admission_gate_keeps_a_saturated_but_useful_specialist() -> None:
+    """Saturation alone must NOT disqualify a route.
+
+    png scored benigns at the p=1.0 ceiling yet still caught 494 malicious
+    files for 171 false positives. The gate judges marginal contribution, not
+    saturation, precisely so detectors like that survive.
+    """
+    def saturated_but_good(spec_labels, rng):
+        probs = np.where(
+            spec_labels == 1,
+            1.0,  # every malicious file pinned at the ceiling
+            np.clip(rng.normal(0.10, 0.05, size=len(spec_labels)), 0.0, 1.0),
+        )
+        probs[:40] = 1.0  # a real saturated benign mass, as on png
+        return probs.astype(np.float32)
+
+    labels, route_scores = _gate_fixture(saturated_but_good)
+    result = _mod._calibrate_one(  # type: ignore[attr-defined]
+        labels, route_scores, target_per_million=0.25,
+    )
+    diag = result["diagnostics"]["filetypes/x"]
+    assert diag["selected"] is True, diag.get("reason")
+    assert result["thresholds"]["filetypes/x"] == diag["selected_threshold"]
+    assert diag["marginal"]["tp"] >= diag["marginal"]["fp"]
+    assert diag["marginal"]["tp"] > 0  # it is genuinely adding detections
+
+
+def test_admission_gate_never_drops_general() -> None:
+    """general must survive even when it looks unhelpful — it is the only route
+    that scores every file, so gating it leaves files with nothing at all."""
+    rng = np.random.default_rng(3)
+    n = 20_000
+    labels = rng.integers(0, 2, size=n).astype(np.int8)
+    idx = np.arange(n, dtype=np.int64)
+    noise = rng.uniform(0.4, 0.6, size=n).astype(np.float32)  # no signal
+    route_scores = [
+        {"name": "general", "kind": "general", "indices": idx, "probs": noise},
+    ]
+    result = _mod._calibrate_one(  # type: ignore[attr-defined]
+        labels, route_scores, target_per_million=1000.0,
+    )
+    assert set(result["thresholds"]) == {"general"}
+    assert result["diagnostics"]["general"]["marginal"] == {"tp": None, "fp": None}
+
+
+def test_admission_gate_judges_filegroups_too() -> None:
+    """A filegroup is NOT exempt from the marginal test.
+
+    Regression, 2026-08-04. Filegroups were exempted on the reasoning that they
+    are "the fallback for their filetypes" — but general sits behind them, so
+    they are never the last line of defence. Exempting them meant nothing
+    checked them: the conversion-time weakness gate
+    (`route_prune.weak_filetype_specialists`) walks filetypes exclusively. That
+    day filegroups/media trained at 0.4627 ROC-AUC and 0.0850 average
+    precision — at or below a coin flip — and would have shipped unexamined.
+    """
+    def coin_flip(spec_labels, rng):  # noqa: ARG001
+        # No relationship between score and label: the media case.
+        return rng.uniform(0.90, 1.0, size=len(spec_labels)).astype(np.float32)
+
+    labels, route_scores = _gate_fixture(coin_flip)
+    route_scores[1]["name"] = "filegroups/media"
+    route_scores[1]["kind"] = "filegroup"
+    result = _mod._calibrate_one(  # type: ignore[attr-defined]
+        labels, route_scores, target_per_million=1000.0,
+    )
+    diag = result["diagnostics"]["filegroups/media"]
+    assert diag["marginal"] != {"tp": None, "fp": None}, "filegroup must be judged, not exempted"
+    assert diag["marginal"]["fp"] > diag["marginal"]["tp"]
+    assert diag["selected"] is False
+    assert "filegroups/media" not in result["thresholds"]
 
 
 def test_calibrate_one_skips_route_with_too_few_benigns() -> None:

@@ -69,6 +69,40 @@ def test_quantile_severity_threshold_curve_properties_on_small_sample() -> None:
     assert all(a >= b for a, b in zip(ordered, ordered[1:]))
 
 
+def test_l0_admits_zero_fp_on_a_saturated_route() -> None:
+    """L0 must admit zero FP even when the model scores benigns at p=1.0.
+
+    Regression, 2026-08-03 -> 2026-08-04. Benign scores are clipped to 1-1e-7
+    before the logit, so the L0 line came back at ~0.9999999 — below the p=1.0
+    benigns it was supposed to exclude. L0 lost its zero-FP guarantee on every
+    saturated route (2,016 benigns fired across nine of them, where the rule it
+    replaced had exactly 0). The threshold is now floored at the first float32
+    step past the largest observed benign, which on such a route is above 1.0.
+
+    float32 is the operative width: thresholds ship through config.json into
+    litmus/ONNX as f32, so a float64 value that merely rounds to the same f32
+    as the max benign would stop excluding it once deployed.
+    """
+    rng = np.random.default_rng(11)
+    benign = np.clip(rng.beta(2.0, 5.0, 20_000), 0.0, 1.0)
+    benign[:600] = 1.0  # the rust / java_class / text / makefile shape
+
+    thr0, method = quantile_severity_threshold(benign, 0.0)
+    assert method == "extrapolated"
+    assert thr0 > 1.0, "a saturated route needs an unreachable L0 threshold"
+    assert int(np.sum(benign >= thr0)) == 0
+    # Survives the width it actually ships at.
+    assert int(np.sum(benign.astype(np.float32) >= np.float32(thr0))) == 0
+
+    # L1 still admits the ceiling mass, and L0 is strictly stricter. On a
+    # saturated route the 0 -> 600 jump is unavoidable: the route cannot
+    # produce a small nonzero FP count, so "some fire" and "none fire" are the
+    # only two thresholds it has.
+    thr1, _ = quantile_severity_threshold(benign, 0.01)
+    assert thr0 > thr1
+    assert int(np.sum(benign >= thr1)) == 600
+
+
 def test_quantile_severity_threshold_returns_none_below_floor() -> None:
     assert quantile_severity_threshold(np.linspace(0, 1, 49), 0.5) == (None, "none")
     # 50 benigns cannot resolve a raw 50/100M rate, but the resolution-adjusted

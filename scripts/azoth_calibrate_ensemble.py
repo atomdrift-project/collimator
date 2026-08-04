@@ -588,6 +588,52 @@ def _candidate_thresholds(
 # import _quantile_severity_threshold`.
 _quantile_severity_threshold = thresholds.quantile_severity_threshold
 
+# --- Route admission --------------------------------------------------------
+#
+# A route ships only where it is beneficial. Same spirit as the 50-benign
+# cutoff below it: don't emit a model we can't justify. This is the ONLY gate
+# that sees filegroups — the conversion-time weakness gate
+# (`route_prune.weak_filetype_specialists`) walks filetypes exclusively.
+#
+# The motivating case is a SATURATED route — one that scores benign files at
+# the p=1.0 ceiling. Such a route has no dial: no threshold separates its top
+# benigns from malware, so it is either off or spending its entire ceiling mass
+# at once. On 2026-08-04 nine of them together put a floor of 2,016 false
+# positives under the whole fleet, which is why L0 through L70 all realized the
+# same FP count — three decades of dial that moved 227 FP on top of an
+# immovable 2,016. filetypes/svg was the extreme: 353,179 benign files fired to
+# catch 59 malicious ones.
+#
+# Deliberately NOT a saturation test. Saturation is a symptom; "does this route
+# earn its keep" is the question, and some saturated routes are real detectors
+# (png caught 494 with 171 FP). Judging them on marginal contribution keeps
+# those and drops the rest, and it does so per level — a route too expensive at
+# L25 can still be admitted at L5000, where the budget affords it.
+#
+# The comparison is against what would cover the file anyway. `general` scores
+# every row and the filegroups cover most of the rest, so dropping a specialist
+# degrades to them rather than to nothing.
+_SPECIALIST_MIN_MARGINAL_TP_PER_FP = 1.0
+
+
+def _is_backstop_route(name: str, kind: str | None) -> bool:
+    """True for the one route that must never be gated out.
+
+    `general` scores every row in the corpus, so gating it would leave files
+    with nothing scoring them at all — a different and worse failure than an
+    unhelpful specialist.
+
+    Filegroups are NOT exempt, though they were until 2026-08-04. The original
+    reasoning — "the filegroups are the fallback for their filetypes" — is
+    wrong: general is already behind them, so a filegroup is never the last
+    line of defence. Exempting them meant nothing checked them at all, because
+    the conversion-time weakness gate (`route_prune.weak_filetype_specialists`)
+    only walks `per_filetype_metrics["filetypes"]`. filegroups/media, trained
+    that day at 0.4627 ROC-AUC and 0.0850 average precision — at or below a
+    coin flip, i.e. actively misleading — would have shipped unexamined.
+    """
+    return name == "general"
+
 
 def _clopper_pearson_fp_per_million_upper(
     x: int, n: int, *, alpha: float = 0.05,
@@ -758,6 +804,10 @@ def _calibrate_one(
     diagnostics: dict[str, Any] = {}
     union_hit = np.zeros(n_rows, dtype=bool)
 
+    # PASS 1 — every route's candidate threshold and the rows it would fire on.
+    # Admission is decided afterwards, because whether a specialist is worth
+    # having depends on what the rest of the ensemble already covers.
+    candidates: list[dict[str, Any]] = []
     for route in route_scores:
         name = route["name"]
         indices = np.asarray(route["indices"], dtype=np.int64)
@@ -799,23 +849,66 @@ def _calibrate_one(
                 "standalone": {"threshold": None, "tp": 0, "fp": 0},
             }
             continue
-        selected[name] = float(threshold)
         hit_local = (probs >= threshold) & valid
-        union_hit[indices[hit_local]] = True
-        per_route_tp = int(np.sum(hit_local & malware_mask))
-        per_route_fp = int(np.sum(hit_local & benign_mask))
-        diagnostics[name] = {
+        candidates.append({
+            "name": name,
             "kind": route.get("kind"),
             "rows": n_route,
-            "selected": True,
-            "selected_threshold": float(threshold),
+            "threshold": float(threshold),
             "method": method,
+            "hit_rows": indices[hit_local],
+            "tp": int(np.sum(hit_local & malware_mask)),
+            "fp": int(np.sum(hit_local & benign_mask)),
+        })
+
+    # PASS 2 — the fallback: what still covers a file if its route is dropped.
+    # `general` carries every row, so it alone is the real counterfactual — not
+    # an approximation of one. It is also the only route never gated.
+    fallback_hit = np.zeros(n_rows, dtype=bool)
+    for cand in candidates:
+        if _is_backstop_route(cand["name"], cand["kind"]):
+            fallback_hit[cand["hit_rows"]] = True
+
+    # PASS 3 — admit. A route earns its place at this level only if it finds
+    # malware general misses, at least as often as it raises false alarms
+    # general would not have raised. Filegroups face this too; see
+    # `_is_backstop_route` for why they are not exempt.
+    for cand in candidates:
+        name = cand["name"]
+        row = {
+            "kind": cand["kind"],
+            "rows": cand["rows"],
+            "method": cand["method"],
             "standalone": {
-                "threshold": float(threshold),
-                "tp": per_route_tp,
-                "fp": per_route_fp,
+                "threshold": cand["threshold"],
+                "tp": cand["tp"],
+                "fp": cand["fp"],
             },
         }
+        if _is_backstop_route(name, cand["kind"]):
+            marginal_tp = marginal_fp = None
+            admit = True
+        else:
+            fresh = cand["hit_rows"][~fallback_hit[cand["hit_rows"]]]
+            fresh_labels = labels[fresh]
+            marginal_tp = int(np.sum(fresh_labels == 1))
+            marginal_fp = int(np.sum(fresh_labels == 0))
+            admit = marginal_tp >= _SPECIALIST_MIN_MARGINAL_TP_PER_FP * marginal_fp
+        row["marginal"] = {"tp": marginal_tp, "fp": marginal_fp}
+        if not admit:
+            row["selected"] = False
+            row["selected_threshold"] = None
+            row["reason"] = (
+                f"not beneficial: {marginal_tp} new TP vs {marginal_fp} new FP "
+                f"over the general/filegroup fallback"
+            )
+            diagnostics[name] = row
+            continue
+        selected[name] = cand["threshold"]
+        union_hit[cand["hit_rows"]] = True
+        row["selected"] = True
+        row["selected_threshold"] = cand["threshold"]
+        diagnostics[name] = row
 
     tp = int(np.sum(union_hit & malware))
     fp = int(np.sum(union_hit & benign))

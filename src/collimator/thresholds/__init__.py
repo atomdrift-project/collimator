@@ -163,6 +163,24 @@ _ANCHOR_SLOPE_DECADE_FP = 10  # deepest-decade window for the extrapolation slop
 _MIN_SLOPE_LOGITS = 1e-3
 
 
+def _strictly_above_in_float32(value: float) -> float:
+    """Smallest score strictly greater than ``value`` *after* a float32 trip.
+
+    Thresholds ship as float32 (config.json -> litmus/ONNX), so a float64
+    threshold that sits above the maximum benign but rounds to the same
+    float32 stops excluding it the moment it is deployed. Stepping in float32
+    makes the exclusion survive the round trip.
+
+    On a saturated route — one that scores benign files at the p=1.0 ceiling —
+    this returns a value ABOVE 1.0, which no score can reach. That is
+    deliberate and it is the only honest reading of "zero false positives" for
+    such a route: it cannot produce a small nonzero FP count, so the only
+    thresholds available to it are "everything in the ceiling mass fires" and
+    "nothing fires". L0 is the second one.
+    """
+    return float(np.nextafter(np.float32(value), np.float32(np.inf)))
+
+
 def _fp_anchor_curve(sorted_benign_logit: "np.ndarray") -> tuple["np.ndarray", "np.ndarray", float]:
     """(anchor levels, anchor thresholds, logits-per-decade slope at the extreme).
 
@@ -205,10 +223,16 @@ def quantile_severity_threshold(
     the 1-FP anchor it continues on a line whose slope is measured over the
     deepest decade of anchors. There is no low-volume regime and no 25k switch.
 
+    L0 is the sole level below the 1-FP anchor and it admits zero false
+    positives: its threshold is floored at the first float32 step past the
+    largest observed benign, so on a saturated route it lands above 1.0 and
+    nothing fires. Every level from L1 up admits at least one.
+
     Returns ``(threshold, method)`` where method is ``"measured"`` (at or above
     the sample's 1-FP floor — interpolation between observed order statistics),
-    ``"extrapolated"`` (below it — a model claim; may exceed the max observed
-    benign, see the invariant note above), or ``"none"`` (< 50 benigns).
+    ``"extrapolated"`` (below it — a model claim; always strictly above the max
+    observed benign, see the invariant note above), or ``"none"`` (< 50
+    benigns).
     """
     if len(benign_probs) < 50:
         return None, "none"
@@ -249,7 +273,23 @@ def quantile_severity_threshold(
     # Below the 1-FP anchor: L0 only, one step along the FP1->FP2 line. This is
     # the one level allowed above the observed data.
     value = float(thresholds[0] + slope * (np.log10(floor_level) - np.log10(level)))
-    return float(1.0 / (1.0 + np.exp(-value))), "extrapolated"
+    threshold = 1.0 / (1.0 + np.exp(-value))
+    # L0 ADMITS ZERO FALSE POSITIVES — enforced, not merely intended.
+    #
+    # The line above cannot deliver that on its own. Benign scores are clipped
+    # to 1-1e-7 before the logit (logit 16.118), so a route that scores benigns
+    # at exactly p=1.0 gets an L0 threshold of ~0.9999999 — BELOW the very
+    # files it has to exclude. Shipped 2026-08-03, that cost L0 its zero-FP
+    # guarantee: 2,016 benigns fired at L0 across nine saturated routes (rust
+    # 464, java_class 422, text 333, makefile 294, json 293, png 171, c 26,
+    # swift 10, svg 3) where the previous rule had exactly 0. See LEVELS.md
+    # "Why L0 is clamped above the data".
+    #
+    # Floor it at the first float32 step past the largest observed benign. On a
+    # normal route the line is already above that and nothing changes; on a
+    # saturated route this lands above 1.0 and nothing fires, which is what L0
+    # means. Float32 because that is the width the threshold ships at.
+    return float(max(threshold, _strictly_above_in_float32(float(arr[-1])))), "extrapolated"
 
 # (label, FP-rate) pair used by ``fp_budget_tables`` and downstream callers
 # to derive the default budget at the configured severity level. Only one
@@ -267,10 +307,10 @@ def operating_point(
 ) -> dict[str, float | int | None]:
     """Recall/precision/confusion at the SHARED operating-point threshold for
     this target FP/M — ``quantile_severity_threshold`` (L0 -> 0 FP, L1+ ->
-    interpolated benign quantile, low-volume absolute-FP regime below the
-    cutoff). Below the method's 50-benign floor it falls back to the honest
-    0-FP ceiling (just above max benign) so a perfectly-separable tiny slice
-    still reads recall 1.0 rather than NaN.
+    interpolated benign quantile). There is no low-volume regime; one rule
+    covers every route. Below the method's 50-benign floor it falls back to the
+    same 0-FP ceiling L0 uses, so a perfectly-separable tiny slice still reads
+    recall 1.0 rather than NaN.
 
     THE canonical emitter for per-level route tables. Every script that
     writes a ``levels`` array (specialist benchmark, elf benchmark, ad-hoc
@@ -290,7 +330,7 @@ def operating_point(
     malware_probs = y_prob[y_true == 1].astype(np.float64)
     threshold, _method = quantile_severity_threshold(benign_probs, target_per_million)
     if threshold is None:
-        threshold = float(np.nextafter(float(np.max(benign_probs)), np.inf))
+        threshold = _strictly_above_in_float32(float(np.max(benign_probs)))
     fp = int(np.sum(benign_probs >= threshold))
     tp = int(np.sum(malware_probs >= threshold))
     return {

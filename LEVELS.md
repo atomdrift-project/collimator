@@ -17,7 +17,7 @@ positive. Three consequences define the contract:
 
 * **L1 is the first false positive, on every route.** Not "1 per 100M" — one
   actual observed FP. L0 is one step stricter along the same curve and admits
-  zero.
+  zero — enforced, see "Why L0 is clamped above the data" below.
 * **The k-th false positive sits at `L(1 + (k-1) * floor_level)`.** On ELF
   (floor 160) FP2 is at L161; on general (floor 8) FP2 is at L9.
 * **At 100M benigns the floor is 1 and the mapping is the identity.** This is
@@ -77,6 +77,55 @@ The resolution-adjusted scale gets the same guarantee without the clamp: L1
 positive by construction on every route, at or below the observed maximum.
 Only L0 sits above the data, by one step, and it admits zero. Verified across
 all 74 routes: 0 invariant violations.
+
+## Why L0 is clamped above the data
+
+L0's threshold is floored at **the first float32 step past the largest
+observed benign score**. Both halves of that sentence are load-bearing, and
+both were learned by shipping it wrong.
+
+The curve alone does not deliver zero FP. Benign scores are clipped to
+`1 - 1e-7` before the logit transform (logit 16.118), so a route that scores
+benign files at exactly `p = 1.0` gets an L0 threshold of `~0.9999999` — below
+the very files it exists to exclude. The first version of this estimator
+(2026-08-03) did exactly that, and L0 quietly stopped meaning zero:
+
+| route | benigns firing at L0 | previous rule |
+|---|---|---|
+| filetypes/rust | 464 | 0 |
+| filetypes/java_class | 422 | 0 |
+| filetypes/text | 333 | 0 |
+| filetypes/makefile | 294 | 0 |
+| filetypes/json | 293 | 0 |
+| filetypes/png | 171 | 0 |
+| filetypes/c | 26 | 0 |
+| filetypes/swift | 10 | 0 |
+| filetypes/svg | 3 | 0 |
+| **fleet total** | **2,016** | **0** |
+
+Worse, it was a strict regression: fleet L0 went from 0 FP at 38.86% recall to
+2,016 FP at 32.12%. Both axes moved the wrong way, because thresholds moved in
+*opposite directions* on different routes — looser on saturated routes (which
+let the ceiling mass in) while tighter everywhere else (which gave up recall).
+The rule it replaced achieved zero by clamping saturated routes to exactly
+1.0, an unreachable threshold. That clamp was doing real work, and deleting it
+was a mistake.
+
+**float32, not float64.** Thresholds ship through `config.json` into
+litmus/ONNX as float32. A float64 threshold that sits above the max benign but
+rounds to the *same float32* stops excluding it the moment it deploys. The
+step is taken in float32 so the exclusion survives the round trip — the same
+class of bug as the ONNX parity flake of 2026-07-13.
+
+**On a saturated route this lands above 1.0, and that is correct.** Such a
+route has only two thresholds available to it: one where the whole p=1.0 mass
+fires, and one where nothing does. There is no intermediate, so L0 → L1 is a
+genuine 0 → N cliff rather than a smooth step. That is honest — the route
+cannot resolve anything finer — and it is confined to L0. Everywhere else the
+curve stays continuous, which was the point of the redesign.
+
+The invariant to test, and the one that failed: **L0 admits zero false
+positives, in float32, on every route including saturated ones.**
 
 ## How a curve is built (EXP-8b)
 
