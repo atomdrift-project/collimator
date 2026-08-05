@@ -1,113 +1,107 @@
 # collimator
 
-A routed-ensemble malware classifier with autonomous experiment search. Reads
-labeled samples from [hopper](https://github.com/atomdrift-project/hopper), trains a
-general model plus per-filegroup and per-filetype specialists, calibrates each
-route's score distribution with isotonic regression, computes per-FP/100M
-operating points, and ships a deployable bundle that
-[litmus](https://github.com/atomdrift-project/litmus) loads at scan time.
+[![License](https://img.shields.io/github/license/atomdrift-project/collimator)](LICENSE)
 
-Part of the toolchain: `cleave → hopper → collimator → litmus`
+collimator trains and evaluates the routed malware-detection models published as
+[Azoth](https://github.com/atomdrift-project/azoth) and consumed by
+[Atomdrift Scan](https://github.com/atomdrift-project/scan). It reads labeled
+cleave reports from [hopper](https://github.com/atomdrift-project/hopper), trains
+a general model plus format specialists, selects routing policies, and stages a
+validated ONNX bundle.
 
-## What's in the box
+This repository is for model developers and operators. To scan files, install
+Atomdrift Scan instead.
 
-- **Routed ensemble.** A general LightGBM model plus filegroup/filetype
-  specialists. The router picks per-file based on cleave's format detection;
-  the deployed combiner averages member scores or stacks them, whichever wins
-  per filetype on the test bucket.
-- **Multi-seed averaging.** Each route ships K=3 trained seeds against the
-  same matrix; predictions get averaged, reducing seed-driven variance by ~K
-  while leaving bias unchanged. ([Why?](experiments/EXPERIMENTS.md))
-- **Per-route isotonic calibration.** The deployed `calibrator.json` maps
-  each route's raw probability to its empirically-observed malware rate, so
-  scores reported at scan time mean what the [0,1] interval should mean.
-- **Per-FP/100M operating points.** A 15-rung severity grid (L0, L1, L2,
-  L3, L5, L10, L20, L30, L40, L50, L60, L70, L80, L90, L100 — each Lk =
-  k FP per 100M benigns), each a globally-jointly-optimized set of
-  per-route thresholds that fits inside a target FP/100M budget. The
-  deployed bundle ships every level; the default operating point is L50
-  (= 50 FP/100M ≡ 0.5 FP/M).
-- **Autonomous search.** [`autocollie`](https://github.com/atomdrift-project/autocollie)
-  drives a screen → confirm → promote ladder against `make experiment`,
-  proposes config changes via an LLM-guided agent, and produces validated
-  candidate bundles ready to deploy. Wins flow back into `make azoth-full-train`
-  / `make azoth-fast-train` by default — there's no separate "consume
-  autocollie's wins" step.
+## What it provides
 
-## The five commands you'd actually run
+- General, file-group, and file-type LightGBM models
+- Three-seed ensembles for routes where averaging improves stability
+- A 42-point false-positive grid from L0 through L25000
+- A canonical deployment default of L25, or 0.25 expected false positives per
+  million benign files
+- Deterministic train/test partitioning and per-route evaluation reports
+- ONNX export, bundle validation, and regression gates before publication
+- Autonomous experiment search through
+  [autocollie](https://github.com/atomdrift-project/autocollie)
 
-```fish
-# 1. Train + deploy. Two fidelities:
-#
-#    azoth-full-train: full labeled corpus (~2M rows), ~7-8h end-to-end at K=3
-#    seeds. Use for deploy-bound retrains; preserves the benign tail that
-#    determines L50 (default operating point) threshold quality.
-#
-#    azoth-fast-train: 600k 50/50-balanced sample, ~5h. Same fidelity
-#    autocollie's auto-promote uses. Use for fast iteration.
+The deployed runtime uses raw model probabilities and calibrated operating
+thresholds. Training may fit calibrators for evaluation, but current Azoth
+bundles intentionally do not ship `calibrator.json` files.
+
+## Requirements
+
+- Python 3.11 or newer
+- Make and a C/C++ build toolchain
+- A PostgreSQL hopper database containing labeled cleave reports
+- Substantial CPU, memory, disk, and time for full-corpus training
+
+The Makefile creates `.venv/` and installs the pinned Python dependencies.
+
+## Quick start
+
+```bash
+# Show the maintained targets and required parameters.
+make help
+
+# Train the deploy-bound ensemble on the full labeled corpus.
 make azoth-full-train DB=postgres://hopper@localhost:5432/hopper
-# or
+
+# Use the smaller balanced corpus for iteration.
 make azoth-fast-train DB=postgres://hopper@localhost:5432/hopper
-
-# 2. Run one experiment: ad-hoc training with explicit knobs. Same path
-#    autocollie uses; results land in out/experiments/azoth/runs/<key>.json.
-make experiment EXP_ROUTE=filetypes/python EXP_IDEA=adhoc \
-                EXP_FORMAT_HINTS=1 EXP_NUM_LEAVES=128 \
-                DB=postgres://hopper@localhost:5432/hopper
-
-# 3. Autonomous search: spawn an LLM-driven loop that proposes specs,
-#    screens them, confirms winners, and produces deploy-ready candidates.
-make autocollie-loop SHUFFLE_ROUTES=1 EXPERIMENTS=10 \
-                     AUTOCOLLIE_DB=postgres://hopper@localhost:5432/hopper
-
-# 4. Deploy a candidate explicitly (autocollie produces these but does not
-#    auto-deploy by default — operator inspects the candidate first).
-make azoth-deploy AZOTH_ROOT=out/models/azoth-candidate-<route>-<key>
-
-# 5. Scan a file with the deployed bundle (this is litmus's job, not
-#    collimator's, but it's the end of the pipeline).
-litmus scan path/to/file
 ```
 
-## Key paths
+Successful training builds in an isolated run directory and publishes the
+validated bundle under `out/models/azoth/` only after every gate passes.
 
-| Path | What's there |
-|------|-------------|
-| `src/collimator/` | Core pipeline (data, features, train, model, calibration). |
-| `src/collimator/bundle.py` | Single source of truth for bundle layout (single-model vs multi-seed). |
-| `scripts/azoth_train_best.py` | Replays the highest-F1 historical run for any route, with multi-seed on. |
-| `scripts/azoth_specialist_suite.py` | Trains every filegroup/filetype specialist; auto-loads autocollie's per-route best. |
-| `scripts/azoth_calibrate_ensemble.py` | Per-route isotonic calibration + L0–L100 (per-100M) operating-point search. |
-| `out/experiments/azoth/runs/` | Every experiment's run JSON, keyed by `experiment_key`. |
-| `out/models/azoth/` | Source bundle (general + filegroups + filetypes). |
-| `out/models/azoth-candidate-*/` | Validated candidate bundles awaiting deploy. |
-| `experiments/` | Historical experiment writeups (paper trail). |
+## Run an experiment
 
-## Documentation
+```bash
+make experiment \
+  EXP_ROUTE=filetypes/python \
+  EXP_IDEA=larger-leaves \
+  EXP_NUM_LEAVES=128 \
+  DB=postgres://hopper@localhost:5432/hopper
+```
 
-- **[experiments/EXPERIMENTS.md](experiments/EXPERIMENTS.md)** — overview of
-  experiment methodology, what each tranche tested, and what survived.
-- **`out/models/azoth/MODEL.md`** (regenerated by `make azoth-deploy`) —
-  per-deploy model card with global recall, F1, AUC, and per-filetype tables.
-- **`out/models/azoth/ENSEMBLE_MODEL.md`** — routing-policy detail card.
-- **`CONTRIBUTING.md`** — how to set up a development environment, run tests,
-  and propose a feature experiment.
+Experiment records land in `out/experiments/azoth/runs/`. Use a descriptive
+`EXP_IDEA`; the JSON record is the durable comparison and audit trail.
 
-## Scientific contract
+To search repeatedly with a local OpenAI-compatible model:
 
-- The SHA256-deterministic 12.5% test bucket is held out from every training
-  call, including autocollie's screens.
-- Reported metrics on each run come from the test bucket. Calibration of
-  operating-point thresholds uses the test bucket; the calibrator itself is
-  fit on the same data (no held-out calibration set yet — see
-  [experiments/EXPERIMENTS.md](experiments/EXPERIMENTS.md) for the
-  honest-vs-deployed gap).
-- Multi-seed bundles report metrics from the *averaged ensemble*, matching
-  what litmus emits for the same files at scan time.
-- Confirm-gate verdicts compare averaged-ensemble F1 against the prior
-  deployed F1 within tolerance; per-seed regressions are noted but don't
-  fail the candidate.
+```bash
+make autocollie-loop \
+  ROUTES=filetypes/python,filetypes/javascript \
+  EXPERIMENTS=10 \
+  AUTOCOLLIE_DB=postgres://hopper@localhost:5432/hopper
+```
+
+Autocollie produces candidates; it does not silently replace the deployed
+bundle. Inspect a candidate before staging it:
+
+```bash
+make azoth-deploy AZOTH_ROOT=out/models/azoth-candidate-<route>-<key>
+```
+
+## Test the resulting bundle
+
+```bash
+atomscan --model-dir out/models/azoth suspect.bin
+```
+
+## Important paths
+
+| Path | Purpose |
+| --- | --- |
+| `src/collimator/` | Data access, feature construction, training, thresholds, and export |
+| `scripts/` | Routed evaluation, deployment, diagnostics, and regression gates |
+| `experiments/` | Human-readable experiment history and methodology |
+| `out/experiments/azoth/runs/` | Machine-readable experiment records |
+| `out/models/azoth/` | Current validated source bundle |
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before changing features, partitions, or
+deployment gates. Model changes should include the resulting run record and a
+clear comparison against the current route.
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+collimator is available under the [Apache License 2.0](LICENSE).
