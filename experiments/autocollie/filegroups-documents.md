@@ -2460,3 +2460,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260804T195639-filegroups-documents` — 2026-08-04T19:56:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `29b617ab57566236` | inherit_from_filetypes_plist_8b54303f | ok | 0.9746 | 0.9662 | 0.8342 | 106 | [log](out/autocollie/runs/2026-08-04T20-08-27_20260804T195639-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `1e1a8de14254ccc6` | docs_control_hardneg_tail | ok | 0.9413 | 0.9135 | 0.8417 | 222 | [log](out/autocollie/runs/2026-08-04T20-12-07_20260804T195639-filegroups-documents_docs_control_hardneg_tail.log) |
+| `a1a407ad74e217f6` | docs_text_metrics_encoding | ok | 0.9539 | 0.9415 | 0.8419 | 63 | [log](out/autocollie/runs/2026-08-04T20-16-02_20260804T195639-filegroups-documents_docs_text_metrics_encoding.log) |
+| `6956da4a29450f08` | docs_kv_obfuscation_vocab | ok | 0.9508 | 0.9374 | 0.8420 | 68 | [log](out/autocollie/runs/2026-08-04T20-17-15_20260804T195639-filegroups-documents_docs_kv_obfuscation_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_hardneg_tail`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control spec replicating the best feature_env; tunes hard_negative_fraction and hard_negative_weight to improve recall@3FPM by forcing the model to focus on difficult benign/malware boundaries without rebuilding the feature matrix.
+- **`docs_text_metrics_encoding`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and text_encoding to capture document-specific structural and encoding anomalies, aiming to boost PR_AUC and recall@3FPM by adding high-signal features for obfuscated PDFs and DOCXs.
+- **`docs_kv_obfuscation_vocab`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Activates kv_vocab and document_obfuscation_features to extract key-value pair patterns and targeted obfuscation counts, aiming to improve recall@3FPM by surfacing signals that are diluted in general taxonomy features.
+
+</details>
+
+## Cycle `20260805T115041-filegroups-documents` — 2026-08-05T11:50:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5499edf8bcc88e59` | inherit_from_filetypes_plist_8b54303f | ok | 0.9774 | 0.9713 | 0.8369 | 138 | [log](out/autocollie/runs/2026-08-05T12-02-05_20260805T115041-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `d8a2fa6d6c2eb6d4` | docs_control_training_tune | ok | 0.9453 | 0.9284 | 0.8419 | 162 | [log](out/autocollie/runs/2026-08-05T12-05-19_20260805T115041-filegroups-documents_docs_control_training_tune.log) |
+| `3dcdd88e70bef6fd` | docs_text_metrics_full_vocab | ok | 0.9475 | 0.9318 | 0.8419 | 51 | [log](out/autocollie/runs/2026-08-05T12-08-16_20260805T115041-filegroups-documents_docs_text_metrics_full_vocab.log) |
+| `6480bf4111951ca9` | docs_kv_vocab_lower_freq | ok | 0.9418 | 0.9229 | 0.8418 | 38 | [log](out/autocollie/runs/2026-08-05T12-09-11_20260805T115041-filegroups-documents_docs_kv_vocab_lower_freq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_control_training_tune`** `EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 EXP_TRAIN_SAMPLES=30000` — Replicates best recent feature_env to hit matrix cache; tunes num_leaves and reg_lambda to improve PR_AUC by reducing overfit on rare benign patterns.
+- **`docs_text_metrics_full_vocab`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to capture document obfuscation signals (line lengths, escape density) aiming to boost PR_AUC by separating obfuscated malware from benign docs.
+- **`docs_kv_vocab_lower_freq`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and lowers kv_min_freq to 5 to capture rare key-value patterns in documents, targeting recall@3FPM by surfacing subtle malicious metadata.
+
+</details>
+

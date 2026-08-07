@@ -834,3 +834,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260804T195733-filetypes-rtf` — 2026-08-04T19:57:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e5593a301ec80dc8` | inherit_from_filetypes_plist_8b54303f | ok | 0.8746 | 0.5000 | 0.9331 | 21 | [log](out/autocollie/runs/2026-08-04T20-08-32_20260804T195733-filetypes-rtf_inherit_from_filetypes_plist_8b54303f.log) |
+| `6c6512a05d5dac6c` | rtf_control_train_reg_lambda | ok | 0.9993 | 0.9955 | 0.9855 | 19 | [log](out/autocollie/runs/2026-08-04T20-09-12_20260804T195733-filetypes-rtf_rtf_control_train_reg_lambda.log) |
+| `1d2b39b0fe0f08a8` | rtf_feat_kv_vocab_textenc | ok | 0.9993 | 0.9965 | 0.9855 | 20 | [log](out/autocollie/runs/2026-08-04T20-09-34_20260804T195733-filetypes-rtf_rtf_feat_kv_vocab_textenc.log) |
+| `4c8210308f069704` | rtf_feat_severity_fractions_lowbigram | ok | 0.9993 | 0.9964 | 0.9848 | 20 | [log](out/autocollie/runs/2026-08-04T20-10-00_20260804T195733-filetypes-rtf_rtf_feat_severity_fractions_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_control_train_reg_lambda`** `EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing L2 regularization to reduce overfitting on the dense RTF feature space, while keeping the proven text_metrics_full and document_obfuscation_features surface.
+- **`rtf_feat_kv_vocab_textenc`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost recall@3FPM by enabling kv_vocab and text_encoding to capture RTF macro/control word patterns and encoding anomalies that text_metrics_full misses.
+- **`rtf_feat_severity_fractions_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve ROC_AUC and PR_AUC by lowering bigram_min_freq to 50 to catch rare malicious RTF control sequences, while severity_fractions normalizes finding density across varying RTF sizes.
+
+</details>
+

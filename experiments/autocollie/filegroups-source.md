@@ -1128,3 +1128,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260804T195628-filegroups-source` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ee9d8950d4c567e9` | inherit_from_filetypes_plist_8b54303f | ok | 0.9337 | 0.9210 | 0.7297 | 407 | [log](out/autocollie/runs/2026-08-04T20-13-29_20260804T195628-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `7cd55bb3b038ba57` | source_control_train_tweaks | ok | 0.8446 | 0.8046 | 0.5173 | 192 | [log](out/autocollie/runs/2026-08-04T20-23-02_20260804T195628-filegroups-source_source_control_train_tweaks.log) |
+| `799cf182ebffdb48` | source_kv_textenc_vocab | ok | 0.8395 | 0.7932 | 0.5174 | 39 | [log](out/autocollie/runs/2026-08-04T20-26-20_20260804T195628-filegroups-source_source_kv_textenc_vocab.log) |
+| `ff221ddb8ca17292` | source_textmetrics_lowbigram | ok | 0.7779 | 0.7644 | 0.5171 | 22 | [log](out/autocollie/runs/2026-08-04T20-27-00_20260804T195628-filegroups-source_source_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_train_tweaks`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Replicate best feature_env to hit matrix cache, tweak num_leaves and reg_lambda to improve PR_AUC by reducing overfitting on rare patterns.
+- **`source_kv_textenc_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols …` — Enable kv_vocab and text_encoding to capture structural and encoding signals in source files, aiming to boost recall@3FPM by identifying obfuscated or suspicious metadata patterns.
+- **`source_textmetrics_lowbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Enable text_metrics_full and lower bigram_min_freq to 250 to capture finer-grained text structure and rarer code patterns, targeting PR_AUC improvement by reducing false negatives on subtle source malware.
+
+</details>
+

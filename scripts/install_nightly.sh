@@ -29,7 +29,7 @@ UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 SERVICE="azoth-nightly.service"
 SWEEP="azoth-autocollie.service"
 TIMER="azoth-nightly.timer"
-ONCALENDAR="${NIGHTLY_ONCALENDAR:-*-*-* 23:00:00}"
+ONCALENDAR="${NIGHTLY_ONCALENDAR:-*-*-* 22:15:00}"
 
 if [ "${1:-}" = "--remove" ] || [ "${1:-}" = "uninstall" ]; then
   systemctl --user disable --now "$TIMER" 2>/dev/null || true
@@ -83,7 +83,13 @@ Description=Run the Azoth nightly pipeline daily
 
 [Timer]
 OnCalendar=$ONCALENDAR
-Persistent=true
+# Deliberately NOT persistent. A catch-up fire replays a missed window the
+# instant the user manager comes back, which on 2026-08-06 started an 8-34h
+# publish-train at 06:42 and put it in cyclotron's way for the whole working
+# day. Linger is enabled, so the manager runs 24/7 and the calendar fires
+# normally; a genuinely missed window means the box was down, and skipping to
+# the next night is what we want.
+Persistent=false
 AccuracySec=1min
 
 [Install]

@@ -1748,3 +1748,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260805T020910-filetypes-shell` — 2026-08-05T02:09:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2a0e855f4e824a03` | inherit_from_filetypes_plist_8b54303f | ok | 0.9728 | 0.9856 | 0.9367 | 52 | [log](out/autocollie/runs/2026-08-05T02-17-45_20260805T020910-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `d768a2b5d20029db` | shell_control_deeper_trees | ok | 0.9513 | 0.9698 | 0.8763 | 26 | [log](out/autocollie/runs/2026-08-05T02-18-50_20260805T020910-filetypes-shell_shell_control_deeper_trees.log) |
+| `5e2d5476ce4f2a3a` | shell_kv_textmetrics_full | ok | 0.9517 | 0.9700 | 0.8976 | 24 | [log](out/autocollie/runs/2026-08-05T02-19-19_20260805T020910-filetypes-shell_shell_kv_textmetrics_full.log) |
+| `2a77ce29ab906277` | shell_textenc_lowbigram | ok | 0.9516 | 0.9695 | 0.8803 | 29 | [log](out/autocollie/runs/2026-08-05T02-19-44_20260805T020910-filetypes-shell_shell_textenc_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_deeper_trees`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature_env; increases num_leaves to 128 and reg_lambda to 2.0 to improve PR_AUC by capturing complex shell patterns while regularizing against overfit.
+- **`shell_kv_textmetrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to improve PR_AUC by capturing key-value command structures and text obfuscation metrics prevalent in shell malware.
+- **`shell_textenc_lowbigram`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and lowers bigram_min_freq to 50 to boost recall@3FPM by detecting rare encoding anomalies and low-frequency malicious bigrams in shell scripts.
+
+</details>
+
+## Cycle `20260805T114901-filetypes-shell` — 2026-08-05T11:49:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d786854c0fb0666` | inherit_from_filetypes_plist_8b54303f | ok | 0.9710 | 0.9846 | 0.9423 | 180 | [log](out/autocollie/runs/2026-08-05T12-01-26_20260805T114901-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `1d04df0ce1b84a8c` | shell_control_scalepos075 | ok | 0.9524 | 0.9703 | 0.8956 | 113 | [log](out/autocollie/runs/2026-08-05T12-04-47_20260805T114901-filetypes-shell_shell_control_scalepos075.log) |
+| `3061ccba1b90fdbd` | shell_textenc_textmetrics | ok | 0.9531 | 0.9719 | 0.8868 | 100 | [log](out/autocollie/runs/2026-08-05T12-06-53_20260805T114901-filetypes-shell_shell_textenc_textmetrics.log) |
+| `85d525ce561a5dd0` | shell_kv_vocab_split | ok | 0.9533 | 0.9723 | 0.8765 | 59 | [log](out/autocollie/runs/2026-08-05T12-08-36_20260805T114901-filetypes-shell_shell_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_scalepos075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control feature set with scale_pos_weight_mult=0.75 to down-weight positives, aiming to improve recall@3FPM by reducing false positives at the strict-FP tail while keeping PR_AUC flat.
+- **`shell_textenc_textmetrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture script obfuscation and structural text patterns, aiming to boost PR_AUC and recall@3FPM by adding high-signal text features for shell scripts.
+- **`shell_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to extract and tokenize key-value pairs common in shell configs and env vars, aiming to improve PR_AUC by adding structured semantic signal.
+
+</details>
+

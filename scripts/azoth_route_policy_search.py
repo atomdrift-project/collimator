@@ -227,6 +227,18 @@ def _calibrate_policy(
 # Constant-predictor routes are already dropped upstream at calibrate.
 _SPECIALIST_MIN_MALWARE = 50
 
+# Selection between candidates is recall-first, and recall on a slice holding
+# k malware has resolution 1/k — with k=1 every candidate scores 0.0 or 1.0
+# and the winner is decided by which single file it happens to catch. The
+# shipped bundle fit per-filetype policies on slices as thin as
+# gemfile.lock (1 malware / 92 benign) and pickle (1 / 661).
+#
+# Below this floor the slice gets no vote: the candidate set collapses to
+# no_policy plus calibrate_inherited, i.e. the wider-scope decision calibrate
+# already made. Same threshold as _SPECIALIST_MIN_MALWARE and for the same
+# reason — below it there is no split to learn, only noise to memorise.
+_MIN_SLICE_MALWARE = 50
+
 
 def _specialist_earns_keep(
     route_probs: dict[str, np.ndarray],
@@ -1147,7 +1159,51 @@ def _is_over_target(item: dict[str, Any]) -> bool:
     return realized_fpm > target * _CHOOSE_BEST_FPR_OVER_TARGET_MULTIPLIER
 
 
-def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
+# A slice's own benign sample must justify any threshold derived from it.
+# At L0 it never can: the level's target is 0 FP/M, so the rate test in
+# _is_over_target degenerates to "zero FP on the fitting sample" — which a
+# threshold placed just above the slice's largest observed benign satisfies
+# BY CONSTRUCTION, no matter how few benigns that slice holds. It is exactly
+# the test that cannot see overfitting, at exactly the level where a
+# degenerate threshold does the most damage (litmus grades fired_level <=
+# deploy_level as hostile, so a policy that fires at L0 is hostile at every
+# deploy level).
+#
+# Shipped 2026-08-04, that gave filetypes/odf an L0 general threshold of
+# 8.07e-06 — fitted on 370 benign ODFs, perfect on the slice, and firing on
+# essentially every real-world ODF. Three benign fixtures graded hostile and
+# crash-looped the analyzer for 12h. The identical candidate was correctly
+# REJECTED at L1, where the rate test has a non-zero target to compare
+# against (realized 1,081,081 FP/100M vs a 1 FP/100M budget).
+#
+# So at L0 the rate test is replaced by a comparison against the wider scope:
+# calibrate already derived a threshold for each route from the filegroup /
+# general benign population, which is orders of magnitude larger than any
+# filetype slice. A per-filetype L0 may TIGHTEN that anchor — the slice can
+# always prove it needs less reach — but it may not LOOSEN it, because
+# loosening is a claim about benign files the slice never observed.
+def _looser_than_anchor(item: dict[str, Any], anchor: dict[str, float]) -> bool:
+    """True when ``item`` fires more easily than the calibrate-derived anchor
+    on any route. A candidate naming no thresholds fires on nothing and is
+    trivially no looser."""
+    thresholds = item.get("thresholds") or {}
+    if not thresholds:
+        return False
+    if not anchor:
+        # No wider-scope threshold to lean on: the slice is the only evidence
+        # there is, and at L0 it is never enough.
+        return True
+    return any(
+        anchor.get(route) is None or float(t) < float(anchor[route]) - 1e-12
+        for route, t in thresholds.items()
+    )
+
+
+def _choose_best(
+    candidates: list[dict[str, Any]],
+    *,
+    anchor: dict[str, float] | None = None,
+) -> dict[str, Any]:
     """Pick the per-filetype policy strategy that gives the best
     detection-vs-FP balance at this level's per-route 3 FP/M target.
 
@@ -1167,6 +1223,11 @@ def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
     Filters (applied before the max):
       * ``dominated_by_specialist=True`` — spending more FP than the
         specialist alone needs for the same recall.
+      * at L0 only, looser than the calibrate-derived anchor. See
+        ``_looser_than_anchor``: L0's target is 0 FP/M, which makes the
+        rate filter below vacuous, so the anchor comparison stands in
+        for it. Every level from L1 up keeps the rate filter and is
+        untouched by this.
       * realized FPR > 10× target. See ``_is_over_target``. Filters
         two distinct pathologies in one rule:
         (a) candidates labeled with the level target but actually
@@ -1183,9 +1244,14 @@ def _choose_best(candidates: list[dict[str, Any]]) -> dict[str, Any]:
     36% malware split, accuracy is dominated by the benign class and
     tracks recall most of the way at strict FP budgets.
     """
+    at_zero_target = any(
+        float(c.get("target_per_million") or 0.0) <= 0.0 for c in candidates
+    )
     eligible = [
         c for c in candidates
-        if not c.get("dominated_by_specialist") and not _is_over_target(c)
+        if not c.get("dominated_by_specialist")
+        and not _is_over_target(c)
+        and not (at_zero_target and _looser_than_anchor(c, anchor or {}))
     ]
     if not eligible:
         # Fall back to the no-policy candidate (fp=0, tp=0) if every
@@ -1320,6 +1386,106 @@ def _apply_global_budget_selection(payload: dict[str, Any], config: dict[str, An
                 route = payload["routes"][route_name]
                 level = next(item for item in route["levels"] if int(item["level"]) == level_no)
                 level[severity]["best"] = candidate_lists[route_names.index(route_name)][choice_idx]
+
+
+def _enforce_level_dominance(payload: dict[str, Any]) -> int:
+    """Make each route's level grid monotone in the DECISION, not just in the
+    thresholds. Returns the number of levels that adopted a stricter level's
+    policy.
+
+    Levels are fitted independently, so nothing stops level L from selecting a
+    policy that fires on LESS of the slice than level L-1 — a strictly tighter
+    FP budget catching strictly more malware, which is incoherent on its face
+    and, downstream, means a file can fire at a strict level and not at a loose
+    one (litmus reports the minimum firing level, so that file is hostile at
+    every deploy level).
+
+    It happens whenever a level's own candidates all fail the rate filter and
+    it collapses to ``no_policy``: filetypes/pdf shipped L0 catching 26,819
+    malware at zero FP and L1 catching nothing at all, because at L1 every
+    candidate with a single slice FP realises ~3,425 FP/100M against a 1
+    FP/100M budget and gets dropped.
+
+    The repair runs strictest -> loosest and is free in both directions:
+
+      * SAFE — a stricter level's policy has already met a tighter FP budget,
+        so it is inside the looser level's budget by construction. Adopting it
+        can never overspend.
+      * FREE — it only ever replaces a policy that catches less, so recall at
+        the looser level can only go up.
+
+    In effect a level keeps its own winner only when that winner beats the
+    stricter level's; otherwise it inherits. Per-level policy freedom is
+    retained exactly where it earns something and removed where it doesn't.
+    """
+    adopted_count = 0
+    for entry in payload.get("routes", {}).values():
+        levels = sorted(entry.get("levels") or [], key=lambda item: int(item["level"]))
+        for severity in ("hostile",):
+            carried: dict[str, Any] | None = None
+            carried_origin: int | None = None
+            for level_item in levels:
+                block = level_item.get(severity)
+                if not block or "best" not in block:
+                    continue
+                best = block["best"]
+                if carried is not None and (
+                    int(best["tp"]) < int(carried["tp"])
+                    or int(best["fp"]) < int(carried["fp"])
+                ):
+                    # tp/fp are properties of the thresholds and the slice, not
+                    # of the level, so the only field that has to be re-stamped
+                    # is the level's own target. Everything derived from counts
+                    # (fpr, fp_per_100M, global_fp_per_million) is unchanged.
+                    adopted = {
+                        **carried,
+                        "thresholds": dict(carried.get("thresholds") or {}),
+                        "target_per_million": float(block["target_per_million"]),
+                        "inherited_from_level": carried_origin,
+                    }
+                    block["best"] = adopted
+                    best = adopted
+                    adopted_count += 1
+                else:
+                    carried_origin = int(level_item["level"])
+                carried = best
+    return adopted_count
+
+
+def _level_monotonicity_errors(payload: dict[str, Any]) -> list[str]:
+    """Every route's grid must fire on no more at a strict level than at a
+    looser one. Checked on the realised counts: ``hit(strict)`` is a subset of
+    ``hit(loose)`` iff neither its malware half nor its benign half grows as
+    the budget tightens.
+
+    This is the invariant litmus depends on when it reports the minimum firing
+    level, and a violation is what took the analyzer down on 2026-08-04. It is
+    enforced by construction in ``_enforce_level_dominance``; this is the
+    assertion that the construction held.
+    """
+    errors: list[str] = []
+    for route_key, entry in payload.get("routes", {}).items():
+        levels = sorted(entry.get("levels") or [], key=lambda item: int(item["level"]))
+        for severity in ("hostile",):
+            prev = None
+            prev_level = None
+            for level_item in levels:
+                block = level_item.get(severity)
+                if not block or "best" not in block:
+                    continue
+                best = block["best"]
+                level_no = int(level_item["level"])
+                if prev is not None:
+                    for field, label in (("tp", "malware"), ("fp", "benign")):
+                        if int(prev[field]) > int(best[field]):
+                            errors.append(
+                                f"{route_key} {severity}: L{prev_level} fires on more "
+                                f"{label} than L{level_no} "
+                                f"({field} {prev[field]} > {best[field]}); "
+                                f"policies {prev['policy']} -> {best['policy']}",
+                            )
+                prev, prev_level = best, level_no
+    return errors
 
 
 def _csv_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1646,7 +1812,7 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
                     total_benign=total_benign,
                 )
             ]
-            if malware:
+            if malware >= _MIN_SLICE_MALWARE:
                 candidates.extend(
                     _calibrate_policy(
                         scoped_labels,
@@ -1695,20 +1861,25 @@ def _process_filetype(file_type: str) -> tuple[str, dict[str, Any]]:
             # to the suspicious thresholds. With suspicious removed from
             # collimator's output, there's no fallback source — the candidate
             # set just relies on the no-hit + policy + max-rule candidates.)
-            _mark_dominated_by_specialist(
-                candidates,
-                route_probs,
-                scoped_labels,
-                specialist_route=type_route,
-                target_per_million=target_per_million,
-                total_benign=total_benign,
-                pareto=pareto,
-                blend_fit=blend_fit,
-            )
+            if malware >= _MIN_SLICE_MALWARE:
+                # Injects slice-tuned operating points (specialist / joint-OR /
+                # learned-blend at fixed FP counts), so it sits behind the same
+                # floor as the policy candidates above — otherwise a 1-malware
+                # slice still gets a threshold fitted to its single positive.
+                _mark_dominated_by_specialist(
+                    candidates,
+                    route_probs,
+                    scoped_labels,
+                    specialist_route=type_route,
+                    target_per_million=target_per_million,
+                    total_benign=total_benign,
+                    pareto=pareto,
+                    blend_fit=blend_fit,
+                )
             level_item[severity] = {
                 "target_per_million": target_per_million,
                 "budget": _budget(benign, target_per_million),
-                "best": _choose_best(candidates),
+                "best": _choose_best(candidates, anchor=calibrated_thresholds),
                 "candidates": candidates,
             }
         levels.append(level_item)
@@ -1943,6 +2114,23 @@ def main() -> int:
         # at_fp_0 candidates regardless of their slice's own 3 FP/M
         # threshold.
         _apply_global_budget_selection(payload, config)
+    # After every path that can set a level's winner — including the global
+    # knapsack above, which replaces them wholesale.
+    adopted = _enforce_level_dominance(payload)
+    if adopted:
+        print(
+            f"policy_search: {adopted} level(s) inherited a stricter level's "
+            f"policy (their own caught less at a looser budget)",
+        )
+    if errors := _level_monotonicity_errors(payload):
+        for message in errors[:20]:
+            print(f"policy_search: NON-MONOTONE GRID: {message}", file=sys.stderr)
+        print(
+            f"policy_search: {len(errors)} level-monotonicity violation(s); "
+            f"refusing to write a grid litmus cannot interpret",
+            file=sys.stderr,
+        )
+        return 1
     payload = _json_clean(payload)
     # route_policies.json is loaded by litmus; a partial write would crash
     # bundle load. Atomic temp+rename guards against process kill.

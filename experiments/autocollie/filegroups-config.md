@@ -1654,3 +1654,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260804T195628-filegroups-config` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7fa5b797897e166e` | inherit_from_filetypes_plist_8b54303f | ok | 0.8934 | 0.9167 | 0.8809 | 256 | [log](out/autocollie/runs/2026-08-04T20-14-57_20260804T195628-filegroups-config_inherit_from_filetypes_plist_8b54303f.log) |
+
+Rejected before run:
+
+- `config_control_train_opt` — features.repetition_penalty_features: unknown knob (not in allowlist)
+- `config_kv_vocab_split_severity` — features.repetition_penalty_features: unknown knob (not in allowlist)
+- `config_text_metrics_full_severity_frac` — features.repetition_penalty_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

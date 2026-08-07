@@ -118,6 +118,45 @@ def _blend_errors(policy: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _level_monotonicity_errors(policy: dict[str, Any]) -> list[str]:
+    """A route's grid must not fire on more of its slice at a strict level than
+    at a looser one.
+
+    litmus reports the LOWEST level at which a file fires and grades
+    ``fired_level <= deploy_level`` as hostile, so a policy that fires at a
+    strict level is hostile at every deploy level. A grid where the strict
+    level reaches further than the loose one therefore inverts the meaning of
+    the whole scale. The 2026-08-04 bundle shipped filetypes/odf an L0 general
+    threshold of 8.07e-06 and graded benign OpenDocument files hostile.
+
+    ``azoth_route_policy_search`` enforces this by construction
+    (``_enforce_level_dominance``); this is the deploy-time gate that the
+    bundle on disk actually holds it — including bundles carried forward from
+    an earlier run.
+    """
+    errors: list[str] = []
+    for route_key, entry in (policy.get("routes") or {}).items():
+        levels = sorted(entry.get("levels") or [], key=lambda item: int(item["level"]))
+        for severity in ("hostile",):
+            prev = None
+            prev_level = None
+            for level_item in levels:
+                best = (level_item.get(severity) or {}).get("best")
+                if not best:
+                    continue
+                level_no = int(level_item["level"])
+                if prev is not None:
+                    for field, label in (("tp", "malware"), ("fp", "benign")):
+                        if int(prev[field] or 0) > int(best[field] or 0):
+                            errors.append(
+                                f"{route_key} {severity}: L{prev_level} fires on more "
+                                f"{label} than L{level_no} "
+                                f"({field} {prev[field]} > {best[field]})",
+                            )
+                prev, prev_level = best, level_no
+    return errors
+
+
 def validate(root: Path) -> list[str]:
     config_path = root / "config.json"
     policy_path = root / "route_policies.json"
@@ -172,6 +211,7 @@ def validate(root: Path) -> list[str]:
                 )
 
     errors.extend(_blend_errors(policy))
+    errors.extend(_level_monotonicity_errors(policy))
 
     return errors
 

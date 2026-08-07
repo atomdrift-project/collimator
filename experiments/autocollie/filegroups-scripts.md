@@ -1014,3 +1014,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260804T195633-filegroups-scripts` — 2026-08-04T19:56:33Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ef3a699babcc85d4` | inherit_from_filetypes_plist_8b54303f | ok | 0.9876 | 0.9855 | 0.7042 | 498 | [log](out/autocollie/runs/2026-08-04T20-12-30_20260804T195633-filegroups-scripts_inherit_from_filetypes_plist_8b54303f.log) |
+| `9710ada3e2e4b514` | scripts_control_hardneg_scalepos | ok | 0.9184 | 0.9150 | 0.7015 | 207 | [log](out/autocollie/runs/2026-08-04T20-23-33_20260804T195633-filegroups-scripts_scripts_control_hardneg_scalepos.log) |
+| `be8709ec477da6da` | scripts_kv_textenc_vocab | ok | 0.8780 | 0.8520 | 0.7039 | 38 | [log](out/autocollie/runs/2026-08-04T20-27-09_20260804T195633-filegroups-scripts_scripts_kv_textenc_vocab.log) |
+| `08b3747b679f24b5` | scripts_textmetrics_lowbigram | ok | 0.9261 | 0.9225 | 0.7045 | 51 | [log](out/autocollie/runs/2026-08-04T20-27-49_20260804T195633-filegroups-scripts_scripts_textmetrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_hardneg_scalepos`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_WEIGHT=8 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by increasing hard_negative_weight to 8.0 and lowering scale_pos_weight_mult to 0.75 to tighten the score distribution at the strict-FP tail while keeping PR_AUC flat.
+- **`scripts_kv_textenc_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and text_encoding to capture script-specific key-value patterns and encoding anomalies currently masked by disable_groups.
+- **`scripts_textmetrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling text_metrics_full for obfuscation signals and lowering bigram_min_freq to 100 to capture rare malicious script constructs.
+
+</details>
+

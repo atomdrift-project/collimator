@@ -1094,3 +1094,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260805T003620-filetypes-pkg-info` — 2026-08-05T00:36:20Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1cc25b5d61516f4e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9852 | 0.9800 | 0.7007 | 38 | [log](out/autocollie/runs/2026-08-05T00-44-09_20260805T003620-filetypes-pkg-info_inherit_from_filetypes_plist_8b54303f.log) |
+| `1f249af7436b183f` | pkginfo_control_train_tune | ok | 0.9925 | 0.9923 | 0.9818 | 11 | [log](out/autocollie/runs/2026-08-05T00-44-53_20260805T003620-filetypes-pkg-info_pkginfo_control_train_tune.log) |
+| `94ab5e98ac0016a3` | pkginfo_kv_vocab_enable | ok | 0.9930 | 0.9928 | 0.9825 | 11 | [log](out/autocollie/runs/2026-08-05T00-45-21_20260805T003620-filetypes-pkg-info_pkginfo_kv_vocab_enable.log) |
+| `84352e236a35a707` | pkginfo_textenc_metrics_lowbigram | ok | 0.9895 | 0.9881 | 0.9825 | 12 | [log](out/autocollie/runs/2026-08-05T00-45-42_20260805T003620-filetypes-pkg-info_pkginfo_textenc_metrics_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control replicating best feature surface; adjusts num_leaves and learning_rate to refine tree splits and improve PR_AUC by reducing overfit on rare benign patterns.
+- **`pkginfo_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enables KV vocab to extract package metadata signals, targeting higher recall@3FPM by better separating malicious dependency trees from benign ones.
+- **`pkginfo_textenc_metrics_lowbigram`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text encoding and full text metrics with lower bigram freq to capture obfuscation patterns, aiming to lift PR_AUC by improving separation of encoded malicious scripts.
+
+</details>
+
+## Cycle `20260805T145528-filetypes-pkg-info` — 2026-08-05T14:55:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d8377bf138aa2b06` | inherit_from_filetypes_plist_8b54303f | ok | 0.9850 | 0.9799 | 0.9802 | 32 | [log](out/autocollie/runs/2026-08-05T15-04-35_20260805T145528-filetypes-pkg-info_inherit_from_filetypes_plist_8b54303f.log) |
+| `9b396eb39f0aedc2` | pkginfo_control_train_tune_v2 | ok | 0.9860 | 0.9829 | 0.9818 | 15 | [log](out/autocollie/runs/2026-08-05T15-05-38_20260805T145528-filetypes-pkg-info_pkginfo_control_train_tune_v2.log) |
+| `9b635ed3369235b0` | pkginfo_kv_textenc_vocab | ok | 0.9926 | 0.9923 | 0.9825 | 7 | [log](out/autocollie/runs/2026-08-05T15-06-01_20260805T145528-filetypes-pkg-info_pkginfo_kv_textenc_vocab.log) |
+| `af4e56751136d0b0` | pkginfo_textmetrics_severity_frac | ok | 0.9873 | 0.9836 | 0.9818 | 9 | [log](out/autocollie/runs/2026-08-05T15-06-14_20260805T145528-filetypes-pkg-info_pkginfo_textmetrics_severity_frac.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_control_train_tune_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature_env to hit matrix cache; increase num_leaves and reg_lambda to improve PR_AUC by reducing overfit on rare benign patterns.
+- **`pkginfo_kv_textenc_vocab`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 …` — Enable kv_vocab and text_encoding to capture package metadata key-value pairs and encoding anomalies, aiming to boost recall@3FPM and PR_AUC by surfacing subtle malicious manifest patterns.
+- **`pkginfo_textmetrics_severity_frac`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and severity_fractions to capture structural text anomalies and severity distribution shifts in package files, targeting PR_AUC improvement by better separating benign configs from malicious droppers.
+
+</details>
+

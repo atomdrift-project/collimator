@@ -1192,3 +1192,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260804T195628-filegroups-portable` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0b784ab9ed7c2000` | inherit_from_filetypes_plist_8b54303f | ok | 0.8725 | 0.9168 | 0.8269 | 240 | [log](out/autocollie/runs/2026-08-04T20-10-52_20260804T195628-filegroups-portable_inherit_from_filetypes_plist_8b54303f.log) |
+| `43f1a5fe12921da5` | control_best_feat_train_tweak | ok | 0.8384 | 0.9252 | 0.8299 | 104 | [log](out/autocollie/runs/2026-08-04T20-18-05_20260804T195628-filegroups-portable_control_best_feat_train_tweak.log) |
+| `e1377c4161baea39` | feat_kv_textenc_enable | ok | 0.8392 | 0.9317 | 0.8312 | 27 | [log](out/autocollie/runs/2026-08-04T20-19-59_20260804T195628-filegroups-portable_feat_kv_textenc_enable.log) |
+| `07a7cdbdff386911` | feat_textmetrics_full_bigram500 | ok | 0.8346 | 0.9290 | 0.8305 | 27 | [log](out/autocollie/runs/2026-08-04T20-20-31_20260804T195628-filegroups-portable_feat_textmetrics_full_bigram500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_best_feat_train_tweak`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_BIGRAM_MAX=5000 EXP_TIERED_BIGRAM_MIN_CRIT=3 …` — Replicates best feature_env for cache hit; increases num_leaves and hard_negative_weight to refine ranking at the tail, targeting PR_AUC improvement.
+- **`feat_kv_textenc_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=400 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_encoding to capture key-value and encoding signals, aiming to improve PR_AUC by adding discriminative features for portable files.
+- **`feat_textmetrics_full_bigram500`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=400 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Activates text_metrics_full to extract detailed text statistics, targeting recall@3 FP/M gains on obfuscated portable payloads while keeping PR_AUC stable.
+
+</details>
+

@@ -2052,3 +2052,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260804T195628-filetypes-python` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3a55afa6f384e3ba` | inherit_from_filetypes_plist_8b54303f | ok | 0.9495 | 0.9722 | 0.8780 | 464 | [log](out/autocollie/runs/2026-08-04T20-08-06_20260804T195628-filetypes-python_inherit_from_filetypes_plist_8b54303f.log) |
+| `930a668fee6a1108` | python_control_scalepos_075 | ok | 0.8974 | 0.9304 | 0.8277 | 165 | [log](out/autocollie/runs/2026-08-04T20-18-56_20260804T195628-filetypes-python_python_control_scalepos_075.log) |
+| `c7fce3f8aa863e91` | python_kv_textmetrics_vocab | ok | 0.8997 | 0.9320 | 0.8285 | 88 | [log](out/autocollie/runs/2026-08-04T20-21-50_20260804T195628-filetypes-python_python_kv_textmetrics_vocab.log) |
+| `b6b0c61a5e517ffe` | python_tiered_trigrams_lowbigram | ok | 0.9002 | 0.9340 | 0.8469 | 95 | [log](out/autocollie/runs/2026-08-04T20-23-20_20260804T195628-filetypes-python_python_tiered_trigrams_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_control_scalepos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by down-weighting positives (scale_pos_weight_mult=0.75) to reduce FPs at the strict operating point, while keeping PR_AUC flat using the best recent feature set.
+- **`python_kv_textmetrics_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by enabling kv_vocab and text_metrics_full to capture Python config key-value patterns and structural text obfuscation signals.
+- **`python_tiered_trigrams_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by lowering bigram_min_freq to 100 and enabling tiered_crit_trigrams to capture rare but high-signal Python code sequences and severity-prefixed patterns.
+
+</details>
+
+## Cycle `20260805T114901-filetypes-python` — 2026-08-05T11:49:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `92944b3b80b6d84e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9541 | 0.9752 | 0.8695 | 267 | [log](out/autocollie/runs/2026-08-05T12-00-45_20260805T114901-filetypes-python_inherit_from_filetypes_plist_8b54303f.log) |
+| `f81c4f629193bad3` | python_control_scalepos075 | ok | 0.8930 | 0.9242 | 0.8294 | 194 | [log](out/autocollie/runs/2026-08-05T12-05-25_20260805T114901-filetypes-python_python_control_scalepos075.log) |
+| `f892dd0ddf9a2830` | python_kv_textmetrics_vocab | ok | 0.8967 | 0.9278 | 0.7983 | 72 | [log](out/autocollie/runs/2026-08-05T12-08-55_20260805T114901-filetypes-python_python_kv_textmetrics_vocab.log) |
+| `9d97563d3a37b74f` | python_tiered_trigrams_lowbigram | ok | 0.8911 | 0.9217 | 0.8186 | 106 | [log](out/autocollie/runs/2026-08-05T12-10-11_20260805T114901-filetypes-python_python_tiered_trigrams_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_control_scalepos075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Control baseline varying only training knobs; scale_pos_weight_mult=0.75 down-weights positives to reduce FPR and improve recall@3 FP/M while keeping PR_AUC flat.
+- **`python_kv_textmetrics_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture key-value patterns and text obfuscation metrics, aiming to boost PR_AUC by adding high-signal features for Python scripts.
+- **`python_tiered_trigrams_lowbigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 100 and enables tiered_crit_trigrams to capture rarer malicious co-occurrences, targeting recall@3 FP/M gains while preserving PR_AUC.
+
+</details>
+

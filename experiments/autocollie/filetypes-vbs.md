@@ -1176,3 +1176,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260804T195628-filetypes-vbs` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2379fa869c87b2dc` | inherit_from_filetypes_plist_8b54303f | ok | 0.9980 | 0.9924 | 0.9723 | 78 | [log](out/autocollie/runs/2026-08-04T20-08-55_20260804T195628-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `81a9d9cf67ff7d60` | vbs_control_plist_inherit_lr003 | ok | 0.9963 | 0.9874 | 0.9571 | 66 | [log](out/autocollie/runs/2026-08-04T20-10-37_20260804T195628-filetypes-vbs_vbs_control_plist_inherit_lr003.log) |
+| `49a9977bbf3c19da` | vbs_kv_textmetrics_vocab_expand | ok | 0.9959 | 0.9859 | 0.9570 | 48 | [log](out/autocollie/runs/2026-08-04T20-12-02_20260804T195628-filetypes-vbs_vbs_kv_textmetrics_vocab_expand.log) |
+| `eeda8eef8f84a7f6` | vbs_lowbigram_tiered_trigrams | ok | 0.9958 | 0.9855 | 0.9570 | 52 | [log](out/autocollie/runs/2026-08-04T20-13-00_20260804T195628-filetypes-vbs_vbs_lowbigram_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_plist_inherit_lr003`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates the top PR_AUC feature set while lowering learning_rate to 0.03 and increasing num_leaves to 128 to refine ranking at the tail, aiming to boost recall@3 FP/M without hurting PR_AUC.
+- **`vbs_kv_textmetrics_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture VBS-specific obfuscation and key-value patterns, aiming to increase PR_AUC by adding high-signal features for script-based malware.
+- **`vbs_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 and enables tiered_crit_trigrams to capture rarer script n-grams and severity-prefixed patterns, aiming to improve PR_AUC by reducing false negatives on obfuscated VBS payloads.
+
+</details>
+
+## Cycle `20260805T114901-filetypes-vbs` — 2026-08-05T11:49:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `27e28a22ce0c06d4` | inherit_from_filetypes_plist_8b54303f | ok | 0.9979 | 0.9921 | 0.9666 | 65 | [log](out/autocollie/runs/2026-08-05T12-00-57_20260805T114901-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `25a950d293c9c21e` | vbs_control_plist_baseline_lr003 | ok | 0.9965 | 0.9883 | 0.9569 | 40 | [log](out/autocollie/runs/2026-08-05T12-02-23_20260805T114901-filetypes-vbs_vbs_control_plist_baseline_lr003.log) |
+| `bff2c5526eaed85a` | vbs_textmetrics_kv_vocab_expand | ok | 0.9963 | 0.9873 | 0.9577 | 33 | [log](out/autocollie/runs/2026-08-05T12-03-07_20260805T114901-filetypes-vbs_vbs_textmetrics_kv_vocab_expand.log) |
+| `1ea19c555d4dd187` | vbs_lowbigram_tiered_trigrams | ok | 0.9963 | 0.9872 | 0.9577 | 44 | [log](out/autocollie/runs/2026-08-05T12-03-44_20260805T114901-filetypes-vbs_vbs_lowbigram_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_plist_baseline_lr003`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=5 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Replicates the best recent feature_env to establish a stable baseline while tuning learning_rate to 0.03 to improve PR_AUC by reducing overfitting on dominant benign patterns.
+- **`vbs_textmetrics_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture script obfuscation and configuration patterns, aiming to boost PR_AUC by adding high-signal features specific to VBS malware.
+- **`vbs_lowbigram_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Lowers bigram_min_freq to 50 and enables tiered_crit_trigrams to capture rarer malicious sequences, targeting recall@3FPM improvements by surfacing subtle attack indicators.
+
+</details>
+

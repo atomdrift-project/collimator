@@ -861,3 +861,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260805T114901-filetypes-xlsx` — 2026-08-05T11:49:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4c810d8399f64245` | inherit_from_filetypes_plist_8b54303f | ok | 0.9569 | 0.5000 | 0.9780 | 35 | [log](out/autocollie/runs/2026-08-05T12-00-41_20260805T114901-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `f303531147c69cde` | xlsx_plist_inherit_training_tune | ok | 0.9859 | 0.8073 | 0.5211 | 36 | [log](out/autocollie/runs/2026-08-05T12-01-33_20260805T114901-filetypes-xlsx_xlsx_plist_inherit_training_tune.log) |
+| `b58c34a2aa9a5087` | xlsx_text_metrics_kv_vocab_expand | ok | 0.9859 | 0.8196 | 0.5211 | 24 | [log](out/autocollie/runs/2026-08-05T12-02-31_20260805T114901-filetypes-xlsx_xlsx_text_metrics_kv_vocab_expand.log) |
+| `d1657a026b309e3d` | xlsx_transfer_xml_kv_bigram | ok | 0.9860 | 0.8197 | 0.5210 | 24 | [log](out/autocollie/runs/2026-08-05T12-03-43_20260805T114901-filetypes-xlsx_xlsx_transfer_xml_kv_bigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_plist_inherit_training_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Replicates best PR_AUC feature set to isolate training effects; aims to improve ROC_AUC and recall@3FPM by increasing regularization and tree depth to reduce overfitting on the skewed benign/malware split.
+- **`xlsx_text_metrics_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full and kv_vocab to capture document structure and macro metadata; aims to improve PR_AUC and recall@3FPM by adding high-signal features specific to XLSX obfuscation and embedded scripts.
+- **`xlsx_transfer_xml_kv_bigram`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1.5 …` — Transfers strong XML/GZ config by lowering bigram_min_freq and expanding kv_vocab; aims to improve PR_AUC by capturing rarer malicious bigrams and cross-route KV patterns while keeping ROC_AUC stable.
+
+</details>
+

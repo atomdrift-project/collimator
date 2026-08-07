@@ -1192,3 +1192,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260804T195834-filetypes-kotlin` — 2026-08-04T19:58:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a723832d2fe80039` | inherit_from_filetypes_plist_8b54303f | ok | 0.9764 | 0.9836 | 0.9059 | 154 | [log](out/autocollie/runs/2026-08-04T20-09-16_20260804T195834-filetypes-kotlin_inherit_from_filetypes_plist_8b54303f.log) |
+| `0bb9e5eb8715d2ed` | kotlin_control_train_tune | ok | 0.9680 | 0.9820 | 0.7438 | 107 | [log](out/autocollie/runs/2026-08-04T20-13-15_20260804T195834-filetypes-kotlin_kotlin_control_train_tune.log) |
+| `a82358f1c7bdb3dc` | kotlin_kv_textmetrics_vocab | ok | 0.9735 | 0.9841 | 0.7441 | 73 | [log](out/autocollie/runs/2026-08-04T20-15-12_20260804T195834-filetypes-kotlin_kotlin_kv_textmetrics_vocab.log) |
+| `8ca74b95f8458d87` | kotlin_tiered_trigrams_lowfreq | ok | 0.9747 | 0.9845 | 0.7441 | 97 | [log](out/autocollie/runs/2026-08-04T20-16-30_20260804T195834-filetypes-kotlin_kotlin_tiered_trigrams_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_train_tune`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_BIGRAM_MIN_FREQ=5 EXP_TIERED_CRIT_BIGRAMS=1 …` — Control replicating best feature_env; adjusts num_leaves and learning_rate to stabilize PR_AUC while probing for recall@3FPM improvements via cheap matrix cache hits.
+- **`kotlin_kv_textmetrics_vocab`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full to capture key-value and textual obfuscation signals in Kotlin, aiming to lift PR_AUC and recall@3FPM by adding discriminative rank signal.
+- **`kotlin_tiered_trigrams_lowfreq`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MIN_FREQ=3 …` — Lowers bigram/trigram frequency floors and enables tiered_crit_trigrams to capture rarer malicious Kotlin patterns, targeting recall@3FPM gains without harming ROC_AUC.
+
+</details>
+

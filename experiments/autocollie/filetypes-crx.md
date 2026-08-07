@@ -368,3 +368,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260805T003925-filetypes-crx` — 2026-08-05T00:39:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ac002bb792f2baac` | inherit_from_filetypes_plist_8b54303f | ok | 0.7907 | 0.8567 | 0.6796 | 81 | [log](out/autocollie/runs/2026-08-05T00-47-40_20260805T003925-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `f3ee340ca27dd821` | crx_control_training_tweak | ok | 0.7580 | 0.8013 | 0.6870 | 95 | [log](out/autocollie/runs/2026-08-05T00-49-08_20260805T003925-filetypes-crx_crx_control_training_tweak.log) |
+| `9aa9d9c735a09e81` | crx_kv_textmetrics_enable | ok | 0.7495 | 0.7988 | 0.5859 | 28 | [log](out/autocollie/runs/2026-08-05T00-50-47_20260805T003925-filetypes-crx_crx_kv_textmetrics_enable.log) |
+| `2e63a3b2d3a9addd` | crx_symbol_vocab_bigrams | ok | 0.7495 | 0.7988 | 0.5859 | 37 | [log](out/autocollie/runs/2026-08-05T00-51-17_20260805T003925-filetypes-crx_crx_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_control_training_tweak`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates best feature_env to hit matrix cache while testing higher num_leaves and lower learning_rate to improve PR_AUC ranking.
+- **`crx_kv_textmetrics_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab and text_metrics_full to capture key-value patterns and document obfuscation signals, aiming to boost recall@3FPM and PR_AUC.
+- **`crx_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Enables symbol_vocab and symbol_bigrams to capture import co-occurrence patterns, targeting PR_AUC improvement via structural signal.
+
+</details>
+
+## Cycle `20260805T114901-filetypes-crx` — 2026-08-05T11:49:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `27ff36d24dc07409` | inherit_from_filetypes_plist_8b54303f | ok | 0.7763 | 0.8497 | 0.7030 | 115 | [log](out/autocollie/runs/2026-08-05T12-00-07_20260805T114901-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `3a3683e18f4ed45e` | crx_control_training_tweak | ok | 0.7507 | 0.7997 | 0.6075 | 117 | [log](out/autocollie/runs/2026-08-05T12-02-24_20260805T114901-filetypes-crx_crx_control_training_tweak.log) |
+| `626f2976f57d4299` | crx_textenc_kv_vocab_expand | ok | 0.7507 | 0.7997 | 0.6075 | 84 | [log](out/autocollie/runs/2026-08-05T12-04-28_20260805T114901-filetypes-crx_crx_textenc_kv_vocab_expand.log) |
+| `cba60583947d78db` | crx_symbol_bigrams_expanded | ok | 0.7507 | 0.7997 | 0.6075 | 109 | [log](out/autocollie/runs/2026-08-05T12-05-59_20260805T114901-filetypes-crx_crx_symbol_bigrams_expanded.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_control_training_tweak`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control run replicating the best recent feature set to establish a baseline PR_AUC, while testing deeper trees (num_leaves=128) and more estimators (300) to improve ranking stability.
+- **`crx_textenc_kv_vocab_expand`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and expands kv_vocab_max to 10000 to capture finer-grained extension metadata, targeting PR_AUC improvement by reducing false negatives on obfuscated manifests.
+- **`crx_symbol_bigrams_expanded`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 …` — Activates symbol_vocab and symbol_bigrams to model API call sequences in CRX manifests, aiming to boost recall@3FPM and PR_AUC by isolating malicious permission patterns.
+
+</details>
+

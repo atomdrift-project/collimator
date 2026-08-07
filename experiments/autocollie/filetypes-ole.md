@@ -1125,3 +1125,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260804T230623-filetypes-ole` — 2026-08-04T23:06:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d00d55882eeb1d0a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9977 | 0.9932 | 0.9743 | 25 | [log](out/autocollie/runs/2026-08-04T23-15-44_20260804T230623-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `dc14f40ccdbbacf9` | ole_ctrl_plist_inherit_leaves128 | ok | 0.9967 | 0.9909 | 0.9677 | 18 | [log](out/autocollie/runs/2026-08-04T23-16-15_20260804T230623-filetypes-ole_ole_ctrl_plist_inherit_leaves128.log) |
+| `3f54683758d87cf2` | ole_feat_textmetrics_encoding | ok | 0.9964 | 0.9900 | 0.9675 | 16 | [log](out/autocollie/runs/2026-08-04T23-16-39_20260804T230623-filetypes-ole_ole_feat_textmetrics_encoding.log) |
+| `dba449b9667dffd5` | ole_feat_kv_vocab_split | ok | 0.9964 | 0.9900 | 0.9675 | 20 | [log](out/autocollie/runs/2026-08-04T23-16-57_20260804T230623-filetypes-ole_ole_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_ctrl_plist_inherit_leaves128`** `EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=400 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_FILE_SEVERITY_DISTRIBUTION=1 …` — Control run replicating the best plist-inherited feature set while increasing num_leaves to 128 and reg_lambda to 2.0 to tighten tree splits and improve PR_AUC without altering the feature matrix.
+- **`ole_feat_textmetrics_encoding`** `EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=400 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_FILE_SEVERITY_DISTRIBUTION=1 …` — Enables text_metrics_full and text_encoding while removing textenc from disable_groups to capture document obfuscation and encoding patterns, aiming to boost PR_AUC by adding high-signal lexical features for OLE streams.
+- **`ole_feat_kv_vocab_split`** `EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=400 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_FILE_SEVERITY_DISTRIBUTION=1 …` — Enables kv_vocab and kv_value_split while removing kv from disable_groups to extract structured key-value signals from OLE streams, targeting recall@3FPM gains by surfacing hidden malicious configuration patterns.
+
+</details>
+

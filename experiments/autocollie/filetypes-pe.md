@@ -2152,3 +2152,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260805T114913-filetypes-pe` — 2026-08-05T11:49:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e1f5b22e01cd6543` | inherit_from_filetypes_plist_8b54303f | ok | 0.9990 | 0.9990 | 0.9874 | 561 | [log](out/autocollie/runs/2026-08-05T12-00-51_20260805T114913-filetypes-pe_inherit_from_filetypes_plist_8b54303f.log) |
+| `6ab0877c3a541311` | pe_control_hardneg_fpr_target | ok | 0.9984 | 0.9984 | 0.0000 | 280 | [log](out/autocollie/runs/2026-08-05T12-14-51_20260805T114913-filetypes-pe_pe_control_hardneg_fpr_target.log) |
+| `4796ea8b40002dcd` | pe_symbol_vocab_bigrams | ok | 0.9984 | 0.9983 | 0.9836 | 190 | [log](out/autocollie/runs/2026-08-05T12-20-00_20260805T114913-filetypes-pe_pe_symbol_vocab_bigrams.log) |
+| `0aa1b26c021d1328` | pe_kv_vocab_value_split | ok | 0.9984 | 0.9983 | 0.9822 | 173 | [log](out/autocollie/runs/2026-08-05T12-23-13_20260805T114913-filetypes-pe_pe_kv_vocab_value_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg_fpr_target`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 …` — Control feature set with hard-negative sweep and max_recall_at_fpr threshold to directly optimize recall@3FPM at the deployed operating point.
+- **`pe_symbol_vocab_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 …` — Enables symbol_vocab and symbol_bigrams to capture API co-occurrence patterns, aiming to improve PR_AUC by adding structural signal for PE binaries.
+- **`pe_kv_vocab_value_split`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 …` — Enables kv_vocab and kv_value_split to parse structured PE metadata into discrete tokens, targeting PR_AUC gains on packed or obfuscated binaries.
+
+</details>
+

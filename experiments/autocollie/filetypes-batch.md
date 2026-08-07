@@ -1330,3 +1330,39 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260804T195628-filetypes-batch` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0b8acdcee97d806b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9982 | 0.9868 | 0.9938 | 44 | [log](out/autocollie/runs/2026-08-04T20-07-45_20260804T195628-filetypes-batch_inherit_from_filetypes_plist_8b54303f.log) |
+| `26fa50916a9b9949` | batch_control_hardneg_01_12 | ok | 0.9885 | 0.9299 | 0.2957 | 50 | [log](out/autocollie/runs/2026-08-04T20-08-50_20260804T195628-filetypes-batch_batch_control_hardneg_01_12.log) |
+| `ac2fa801f3ba1c1a` | batch_kv_vocab_hardneg_015_16 | ok | 0.9870 | 0.9247 | 0.2958 | 51 | [log](out/autocollie/runs/2026-08-04T20-09-56_20260804T195628-filetypes-batch_batch_kv_vocab_hardneg_015_16.log) |
+| `c8e74f91b6504896` | batch_textmetrics_hardneg_02_18 | ok | 0.9894 | 0.9376 | 0.2958 | 59 | [log](out/autocollie/runs/2026-08-04T20-10-51_20260804T195628-filetypes-batch_batch_textmetrics_hardneg_02_18.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Control spec replicating best feature surface to hit matrix cache; sweeps hard-negative fraction/weight to improve recall@3FPM by upweighting difficult benigns without degrading PR_AUC.
+- **`batch_kv_vocab_hardneg_015_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab research family to capture key-value pair signals in batch scripts; pairs with hard-negative sweep to boost recall@3FPM while keeping PR_AUC flat.
+- **`batch_textmetrics_hardneg_02_18`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_metrics_full to extract structural text features from batch files; combined with aggressive hard-negative weighting to lift tail recall@3FPM without hurting ROC_AUC.
+
+</details>
+
+## Cycle `20260805T114901-filetypes-batch` — 2026-08-05T11:49:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7a70f0c368c9a0ea` | inherit_from_filetypes_plist_8b54303f | ok | 0.9990 | 0.9928 | 0.2983 | 45 | [log](out/autocollie/runs/2026-08-05T12-01-36_20260805T114901-filetypes-batch_inherit_from_filetypes_plist_8b54303f.log) |
+| `e867c569b208b1ab` | batch_control_hardneg_01_12 | ok | 0.9888 | 0.9291 | 0.2958 | 49 | [log](out/autocollie/runs/2026-08-05T12-02-29_20260805T114901-filetypes-batch_batch_control_hardneg_01_12.log) |
+| `3b9f07ababe6556b` | batch_kv_vocab_hardneg_015_16 | ok | 0.9878 | 0.9276 | 0.2958 | 30 | [log](out/autocollie/runs/2026-08-05T12-03-22_20260805T114901-filetypes-batch_batch_kv_vocab_hardneg_015_16.log) |
+| `aef9facd9d2bcddd` | batch_textmetrics_hardneg_02_18 | ok | 0.9889 | 0.9308 | 0.2958 | 41 | [log](out/autocollie/runs/2026-08-05T12-03-57_20260805T114901-filetypes-batch_batch_textmetrics_hardneg_02_18.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_hardneg_01_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Aims to improve recall@3 FP/M by upweighting hard negatives to push borderline benigns lower, addressing the or_loses threshold issue while keeping PR_AUC flat.
+- **`batch_kv_vocab_hardneg_015_16`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Aims to boost PR_AUC and recall@3 FP/M by adding key-value vocabulary signal to capture structured batch metadata, paired with hard-negative tuning to sharpen the decision boundary.
+- **`batch_textmetrics_hardneg_02_18`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Aims to increase recall@3 FP/M by leveraging full text metrics and encoding features to detect obfuscation patterns in batch scripts, while hard-negative weighting suppresses false positives on benign text-heavy files.
+
+</details>
+

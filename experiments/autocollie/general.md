@@ -1204,3 +1204,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260805T003350-general` — 2026-08-05T00:33:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3fc018259d400899` | inherit_from_filetypes_plist_8b54303f | ok | 0.9878 | 0.9838 | 0.9092 | 256 | [log](out/autocollie/runs/2026-08-05T00-44-03_20260805T003350-general_inherit_from_filetypes_plist_8b54303f.log) |
+| `e5079792db12c73a` | control_train_opt_v1 | ok | 0.9750 | 0.9694 | 0.9057 | 232 | [log](out/autocollie/runs/2026-08-05T00-48-19_20260805T003350-general_control_train_opt_v1.log) |
+| `505ee3c51f0f7b3f` | feat_kv_textmetrics_v1 | ok | 0.9755 | 0.9691 | 0.9048 | 91 | [log](out/autocollie/runs/2026-08-05T00-52-11_20260805T003350-general_feat_kv_textmetrics_v1.log) |
+| `008361274feb9fe9` | feat_symbol_vocab_trigrams_v1 | ok | 0.9766 | 0.9703 | 0.9038 | 96 | [log](out/autocollie/runs/2026-08-05T00-53-41_20260805T003350-general_feat_symbol_vocab_trigrams_v1.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`control_train_opt_v1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Replicates best recent feature_env to establish baseline; increases estimators and adjusts learning rate to improve PR_AUC via better convergence.
+- **`feat_kv_textmetrics_v1`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_TEXT_METRICS_FULL=1 …` — Enables kv_vocab and text_metrics_full to capture key-value patterns and document obfuscation signals, aiming to boost recall@3FPM and PR_AUC.
+- **`feat_symbol_vocab_trigrams_v1`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Enables symbol_vocab and tiered_crit_trigrams to capture import co-occurrence and severity-prefixed trigram patterns, targeting PR_AUC improvement.
+
+</details>
+

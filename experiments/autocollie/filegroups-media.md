@@ -1136,3 +1136,21 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260805T120232-filegroups-media` — 2026-08-05T12:02:32Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `29abc65fd88dd24e` | inherit_from_filetypes_plist_8b54303f | ok | 0.4227 | 0.7685 | 0.4768 | 37 | [log](out/autocollie/runs/2026-08-05T12-17-21_20260805T120232-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `74a9f586d404ef7c` | media_control_training_tweak | ok | 0.3254 | 0.7739 | 0.1565 | 51 | [log](out/autocollie/runs/2026-08-05T12-19-49_20260805T120232-filegroups-media_media_control_training_tweak.log) |
+| `88d8e0a27da27af3` | media_kv_vocab_textmetrics | ok | 0.3848 | 0.7118 | 0.1554 | 5 | [log](out/autocollie/runs/2026-08-05T12-20-45_20260805T120232-filegroups-media_media_kv_vocab_textmetrics.log) |
+| `e2c44629edd6eb25` | media_symbol_vocab_hardneg | ok | 0.3341 | 0.5928 | 0.1580 | 9 | [log](out/autocollie/runs/2026-08-05T12-20-52_20260805T120232-filegroups-media_media_symbol_vocab_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_control_training_tweak`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_EXTREME_FEATURES=1 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 …` — Control run replicating the best feature_env to hit the matrix cache; tweaks num_leaves and learning_rate to improve PR_AUC by reducing overfitting on rare patterns while keeping ROC_AUC flat.
+- **`media_kv_vocab_textmetrics`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables kv_vocab and text_metrics_full to capture key-value structures and text obfuscation in media files, aiming to boost PR_AUC by adding high-signal features for malicious payloads.
+- **`media_symbol_vocab_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 …` — Enables symbol_vocab and symbol_bigrams to capture import co-occurrence patterns, paired with hard negatives to sharpen ranking at the tail, targeting recall@3 FP/M and PR_AUC gains.
+
+</details>
+

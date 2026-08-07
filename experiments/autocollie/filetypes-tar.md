@@ -1060,3 +1060,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260805T003350-filetypes-tar` — 2026-08-05T00:33:50Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7fd858007327550c` | inherit_from_filetypes_plist_8b54303f | ok | 0.9422 | 0.9712 | 0.7982 | 25 | [log](out/autocollie/runs/2026-08-05T00-41-35_20260805T003350-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `21d16b92eeb78d65` | tar_ctrl_hardneg_015_16 | ok | 0.9298 | 0.9586 | 0.8571 | 29 | [log](out/autocollie/runs/2026-08-05T00-42-15_20260805T003350-filetypes-tar_tar_ctrl_hardneg_015_16.log) |
+| `dccf2318a58fcd6f` | tar_kv_textmetrics_vocab | ok | 0.9311 | 0.9594 | 0.8529 | 32 | [log](out/autocollie/runs/2026-08-05T00-42-46_20260805T003350-filetypes-tar_tar_kv_textmetrics_vocab.log) |
+| `40dc3f61781024eb` | tar_textenc_hardneg_02_12 | ok | 0.9266 | 0.9587 | 0.8193 | 34 | [log](out/autocollie/runs/2026-08-05T00-43-20_20260805T003350-filetypes-tar_tar_textenc_hardneg_02_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_015_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3 FP/M by upweighting hard negatives to push borderline malware higher in ranking, addressing the or_loses threshold gap while keeping PR AUC flat via matrix cache reuse.
+- **`tar_kv_textmetrics_vocab`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR AUC by capturing key-value patterns and text obfuscation metrics specific to tar archives, which often package scripts and configs that benefit from KV and text metric signals.
+- **`tar_textenc_hardneg_02_12`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Aims to boost recall@3 FP/M by combining text encoding signals with lower bigram frequency floors and aggressive hard-negative weighting to separate malicious tar payloads from benign archives.
+
+</details>
+
+## Cycle `20260805T114901-filetypes-tar` — 2026-08-05T11:49:01Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `361e90f43dead82c` | inherit_from_filetypes_plist_8b54303f | ok | 0.9368 | 0.9630 | 0.8689 | 86 | [log](out/autocollie/runs/2026-08-05T11-59-54_20260805T114901-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `054275c39fad748a` | tar_ctrl_hardneg_01_12 | ok | 0.9380 | 0.9655 | 0.8647 | 105 | [log](out/autocollie/runs/2026-08-05T12-01-48_20260805T114901-filetypes-tar_tar_ctrl_hardneg_01_12.log) |
+| `90cc7187c5b0b586` | tar_textenc_kv_vocab12k | ok | 0.9310 | 0.9617 | 0.8387 | 109 | [log](out/autocollie/runs/2026-08-05T12-03-45_20260805T114901-filetypes-tar_tar_textenc_kv_vocab12k.log) |
+| `35cf1ac028a51146` | tar_noclusters_lowbigram | ok | 0.9327 | 0.9631 | 0.8417 | 107 | [log](out/autocollie/runs/2026-08-05T12-05-45_20260805T114901-filetypes-tar_tar_noclusters_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_ctrl_hardneg_01_12`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Control replicating best recent feature_env; tests hard-negative sweep to improve recall@3FPM at strict-FP tail while keeping PR_AUC flat.
+- **`tar_textenc_kv_vocab12k`** `EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enables text_encoding and expands kv_vocab_max to 12000 to capture finer-grained string patterns, targeting PR_AUC and recall@3FPM gains.
+- **`tar_noclusters_lowbigram`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_VOCAB=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disables noisy clusters group and lowers bigram_min_freq to 500 to capture rarer patterns, aiming to boost PR_AUC without hurting ROC_AUC.
+
+</details>
+

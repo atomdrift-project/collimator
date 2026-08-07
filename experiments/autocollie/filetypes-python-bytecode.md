@@ -1030,3 +1030,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260804T195628-filetypes-python-bytecode` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ac30fce4c7382951` | inherit_from_filetypes_plist_8b54303f | ok | 0.8147 | 0.9276 | 0.8026 | 133 | [log](out/autocollie/runs/2026-08-04T20-08-58_20260804T195628-filetypes-python-bytecode_inherit_from_filetypes_plist_8b54303f.log) |
+| `96856b313b169fda` | pybc_control_hardneg_lr | ok | 0.7625 | 0.9057 | 0.7890 | 141 | [log](out/autocollie/runs/2026-08-04T20-12-52_20260804T195628-filetypes-python-bytecode_pybc_control_hardneg_lr.log) |
+| `6307db41c961b174` | pybc_kv_vocab_enable | ok | 0.7650 | 0.8897 | 0.7700 | 31 | [log](out/autocollie/runs/2026-08-04T20-18-13_20260804T195628-filetypes-python-bytecode_pybc_kv_vocab_enable.log) |
+| `9042d822dcaee2e3` | pybc_textmetrics_tiered_trigrams | ok | 0.7561 | 0.8995 | 0.7617 | 30 | [log](out/autocollie/runs/2026-08-04T20-19-56_20260804T195628-filetypes-python-bytecode_pybc_textmetrics_tiered_trigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_control_hardneg_lr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc …` — Replicate best feature_env to hit matrix cache; tune hard_negative_weight and learning_rate to stabilize ranking and improve PR_AUC.
+- **`pybc_kv_vocab_enable`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc …` — Enable kv_vocab to capture key-value metadata signals in bytecode, aiming to boost PR_AUC by distinguishing malicious configuration patterns from benign scripts.
+- **`pybc_textmetrics_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols …` — Enable text_metrics_full and tiered_crit_trigrams to capture structural obfuscation and critical path co-occurrences, targeting recall@3FPM improvement by surfacing subtle malicious patterns.
+
+</details>
+

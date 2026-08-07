@@ -177,3 +177,130 @@ def test_blend_keeps_all_positive_weight_routes():
     assert fit is not None
     assert set(fit["present_routes"]) == set(routes)
     assert all(w >= -_mod._BLEND_MIN_WEIGHT for w in fit["weights"])
+
+
+# --- L0 anchor, malware floor, and level-grid monotonicity -------------------
+#
+# Regression cover for the 2026-08-04 bundle, which shipped filetypes/odf an L0
+# general threshold of 8.07e-06 fitted on 370 benign ODFs. It was perfect on
+# the slice, fired on essentially every real ODF, and graded three benign
+# fixtures hostile at every deploy level.
+
+
+def _cand(policy, thresholds, *, tpm, tp, fp, recall, f1=None, fp_per_100M=0.0):
+    return {
+        "policy": policy,
+        "primary": None,
+        "allowed_routes": list(thresholds),
+        "target_per_million": tpm,
+        "thresholds": dict(thresholds),
+        "tp": tp,
+        "fp": fp,
+        "recall": recall,
+        "f1": recall if f1 is None else f1,
+        "fp_per_100M": fp_per_100M,
+    }
+
+
+_ANCHOR = {"general": 0.9995415806770325}
+
+
+def test_l0_rejects_threshold_looser_than_the_calibrate_anchor():
+    """The odf case: slice-perfect, zero slice FP, five orders of magnitude
+    below the wider-scope threshold. Recall-first ranking would take it."""
+    degenerate = _cand(
+        "or_general_primary", {"general": 8.072087394214536e-06},
+        tpm=0.0, tp=5, fp=0, recall=1.0,
+    )
+    inherited = _cand(
+        "calibrate_inherited", _ANCHOR, tpm=0.0, tp=0, fp=0, recall=0.0,
+    )
+    no_policy = _cand("no_policy", {}, tpm=0.0, tp=0, fp=0, recall=0.0)
+    best = _mod._choose_best([no_policy, degenerate, inherited], anchor=_ANCHOR)
+    assert best["policy"] != "or_general_primary", (
+        "a threshold the slice cannot justify must not win at L0"
+    )
+    assert best["thresholds"].get("general", 0.0) >= _ANCHOR["general"]
+
+
+def test_l0_keeps_a_threshold_stricter_than_the_anchor():
+    """Tightening is always defensible — the slice can prove it needs less
+    reach, it just can't prove it needs more."""
+    stricter = _cand(
+        "or_general_primary", {"general": 0.99999},
+        tpm=0.0, tp=7, fp=0, recall=0.7,
+    )
+    inherited = _cand(
+        "calibrate_inherited", _ANCHOR, tpm=0.0, tp=3, fp=0, recall=0.3,
+    )
+    best = _mod._choose_best([stricter, inherited], anchor=_ANCHOR)
+    assert best["policy"] == "or_general_primary"
+
+
+def test_anchor_rule_does_not_apply_above_l0():
+    """Every level from L1 up has a non-zero target, so the rate filter can do
+    its job and slice-local thresholds stay free to loosen."""
+    looser = _cand(
+        "or_general_primary", {"general": 0.5},
+        tpm=0.01, tp=9, fp=0, recall=0.9, fp_per_100M=0.0,
+    )
+    inherited = _cand(
+        "calibrate_inherited", _ANCHOR, tpm=0.01, tp=1, fp=0, recall=0.1,
+    )
+    best = _mod._choose_best([looser, inherited], anchor=_ANCHOR)
+    assert best["policy"] == "or_general_primary"
+
+
+def test_min_slice_malware_floor_matches_the_specialist_floor():
+    assert _mod._MIN_SLICE_MALWARE >= _mod._SPECIALIST_MIN_MALWARE
+
+
+def _payload(levels):
+    return {
+        "routes": {
+            "filetypes/x": {
+                "levels": [
+                    {"level": lvl, "hostile": {"target_per_million": tpm, "best": best}}
+                    for lvl, tpm, best in levels
+                ],
+            },
+        },
+    }
+
+
+def test_looser_level_inherits_a_stricter_policy_that_catches_more():
+    """filetypes/pdf shipped L0 catching 26,819 at zero FP and L1 catching
+    nothing, because every L1 candidate failed the rate filter."""
+    strict = _cand("or_general_primary", {"general": 0.99}, tpm=0.0,
+                   tp=26819, fp=0, recall=0.15)
+    collapsed = _cand("no_policy", {}, tpm=0.01, tp=0, fp=0, recall=0.0)
+    payload = _payload([(0, 0.0, strict), (1, 0.01, collapsed)])
+    assert _mod._enforce_level_dominance(payload) == 1
+    adopted = payload["routes"]["filetypes/x"]["levels"][1]["hostile"]["best"]
+    assert adopted["tp"] == 26819
+    assert adopted["thresholds"] == {"general": 0.99}
+    assert adopted["inherited_from_level"] == 0
+    # The level's own budget is re-stamped; the counts come from the policy.
+    assert adopted["target_per_million"] == 0.01
+    assert not _mod._level_monotonicity_errors(payload)
+
+
+def test_a_level_keeps_its_own_policy_when_it_beats_the_stricter_one():
+    strict = _cand("or_general_primary", {"general": 0.99}, tpm=0.0,
+                   tp=100, fp=0, recall=0.1)
+    better = _cand("joint_or", {"general": 0.9}, tpm=0.01,
+                   tp=400, fp=2, recall=0.4)
+    payload = _payload([(0, 0.0, strict), (1, 0.01, better)])
+    assert _mod._enforce_level_dominance(payload) == 0
+    assert payload["routes"]["filetypes/x"]["levels"][1]["hostile"]["best"] is better
+
+
+def test_monotonicity_check_flags_a_strict_level_that_fires_more():
+    strict = _cand("or_general_primary", {"general": 0.1}, tpm=0.0,
+                   tp=500, fp=0, recall=0.5)
+    loose = _cand("no_policy", {}, tpm=0.01, tp=0, fp=0, recall=0.0)
+    errors = _mod._level_monotonicity_errors(
+        _payload([(0, 0.0, strict), (1, 0.01, loose)]),
+    )
+    assert len(errors) == 1
+    assert "L0 fires on more malware than L1" in errors[0]

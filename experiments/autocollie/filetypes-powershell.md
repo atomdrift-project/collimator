@@ -1207,3 +1207,21 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260804T195628-filetypes-powershell` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f4c390dd9d1450cd` | inherit_from_filetypes_plist_8b54303f | ok | 0.9936 | 0.9903 | 0.9481 | 90 | [log](out/autocollie/runs/2026-08-04T20-07-29_20260804T195628-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `29794b5fd3a72832` | ps_control_train_tune | ok | 0.9845 | 0.9748 | 0.9505 | 92 | [log](out/autocollie/runs/2026-08-04T20-09-25_20260804T195628-filetypes-powershell_ps_control_train_tune.log) |
+| `5b70e59b7d915b58` | ps_feat_textenc_metrics_full | ok | 0.9839 | 0.9739 | 0.9500 | 64 | [log](out/autocollie/runs/2026-08-04T20-11-01_20260804T195628-filetypes-powershell_ps_feat_textenc_metrics_full.log) |
+| `4f3d5c8e9b08a80e` | ps_feat_kv_vocab_split | ok | 0.9849 | 0.9755 | 0.9481 | 71 | [log](out/autocollie/runs/2026-08-04T20-12-09_20260804T195628-filetypes-powershell_ps_feat_kv_vocab_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_control_train_tune`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve PR_AUC by increasing model capacity with higher num_leaves and lower learning_rate while reusing the cached feature matrix from the best recent run.
+- **`ps_feat_textenc_metrics_full`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to boost PR_AUC by enabling text_encoding and text_metrics_full to capture obfuscation and structural text patterns specific to PowerShell scripts, which are often missed by n-grams alone.
+- **`ps_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Aims to improve recall@3FPM by enabling kv_vocab and kv_value_split to extract fine-grained key-value signals from PowerShell configuration and command structures, helping rank subtle malware higher.
+
+</details>
+

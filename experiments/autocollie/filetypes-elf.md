@@ -1758,3 +1758,39 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260804T195628-filetypes-elf` — 2026-08-04T19:56:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0420485dc4abe96a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9998 | 0.9961 | 309 | [log](out/autocollie/runs/2026-08-04T20-06-52_20260804T195628-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `c733be3eeacca2a5` | elf_control_training_tweak | ok | 0.9993 | 0.9992 | 0.9924 | 265 | [log](out/autocollie/runs/2026-08-04T20-13-51_20260804T195628-filetypes-elf_elf_control_training_tweak.log) |
+| `b09d565c3c86a9b6` | elf_symbol_vocab_bigrams | ok | 0.9993 | 0.9992 | 0.9923 | 105 | [log](out/autocollie/runs/2026-08-04T20-18-34_20260804T195628-filetypes-elf_elf_symbol_vocab_bigrams.log) |
+| `214a9c4020f2bbca` | elf_kv_vocab_overlay | ok | 0.9996 | 0.9996 | 0.9943 | 153 | [log](out/autocollie/runs/2026-08-04T20-20-27_20260804T195628-filetypes-elf_elf_kv_vocab_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_training_tweak`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicates baseline feature surface to establish control, tweaking num_leaves and estimators to improve PR_AUC via better tree capacity without overfitting.
+- **`elf_symbol_vocab_bigrams`** `EXP_ESTIMATORS=250 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_SYMBOL_VOCAB=1 …` — Enables symbol_vocab and symbol_bigrams to capture ELF import co-occurrence patterns, aiming to boost PR_AUC by distinguishing malicious library combinations from benign ones.
+- **`elf_kv_vocab_overlay`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables kv_vocab and overlay_signal to extract key-value metadata and packer overlay metrics, targeting recall@3FPM by surfacing subtle dropper signatures missed by n-grams alone.
+
+</details>
+
+## Cycle `20260805T114925-filetypes-elf` — 2026-08-05T11:49:25Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7dffa149ec88771c` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9999 | 0.9970 | 200 | [log](out/autocollie/runs/2026-08-05T12-01-37_20260805T114925-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `9cda19e8ee9a41ec` | elf_control_training_tweak | ok | 0.9993 | 0.9992 | 0.9945 | 190 | [log](out/autocollie/runs/2026-08-05T12-05-21_20260805T114925-filetypes-elf_elf_control_training_tweak.log) |
+| `8ed1c3d5735191dc` | elf_kv_vocab_bigram_freq | ok | 0.9992 | 0.9991 | 0.9947 | 117 | [log](out/autocollie/runs/2026-08-05T12-08-44_20260805T114925-filetypes-elf_elf_kv_vocab_bigram_freq.log) |
+| `5fb8536fa463a14c` | elf_symbol_vocab_hardneg | ok | 0.9997 | 0.9996 | 0.9948 | 169 | [log](out/autocollie/runs/2026-08-05T12-10-44_20260805T114925-filetypes-elf_elf_symbol_vocab_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_training_tweak`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Control spec replicating best feature_env; increases num_leaves and estimators to improve PR_AUC by allowing deeper trees and more boosting rounds while keeping matrix cache hits.
+- **`elf_kv_vocab_bigram_freq`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables kv_vocab and lowers bigram_min_freq to capture rarer key-value patterns, aiming to boost recall@3FPM by identifying subtle malicious configurations in ELF binaries that standard features miss.
+- **`elf_symbol_vocab_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Enables symbol_vocab and symbol_bigrams to capture import co-occurrence patterns; pairs with hard_negative_weight to improve PR_AUC by sharpening the decision boundary around malicious symbol usage versus benign libraries.
+
+</details>
+
