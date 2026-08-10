@@ -1,52 +1,105 @@
 #!/usr/bin/env bash
 #
-# End-to-end honest-OOF pipeline. Replaces the multi-day
-# ``azoth-publish-train`` plus follow-on specialist OOF + recalibrate
-# with a single resumable script.
+# End-to-end honest-OOF publish pipeline — trains, OOF-scores, calibrates,
+# gates and deploys the Azoth bundle. This is what `make azoth-publish-train`
+# (and therefore `make nightly`) runs.
 #
-# Stages (rough wall-clock estimates assume AZOTH_SPECIALIST_PARALLELISM=2):
+# ---------------------------------------------------------------- scheduling
 #
-#   0. azoth-general (prod)       ~1h    train prod general (no fold exclusion).
-#                                        → out/models/azoth/
-#                                        Needed by stage 6 (test-row scoring)
-#                                        and stage 7 (calibrate). Skipped when
-#                                        a fresh prod model already exists.
-#   1. azoth-general-fold-a       ~1h    train general with fold 0 excluded
-#                                        → out/models/azoth.oof-fold-a/
-#   2. azoth-general-fold-b       ~1h    train general with fold 1 excluded
-#                                        → out/models/azoth.oof-fold-b/
-#   3. azoth-oof-merge-general    ~few h merge fold predictions →
-#                                        out/models/azoth/general/threshold_scores.npz
-#                                        (honest OOF general probabilities)
-#   4. azoth-specialists-fold-a   ~27h   train specialists with fold 0 excluded
-#                                        → out/models/azoth.oof-fold-a/{filegroups,filetypes}/
-#   5. azoth-specialists-fold-b   ~27h   same with fold 1 excluded
-#   6. azoth-oof-route-scores     ~few h merge per-route fold predictions →
-#                                        out/models/azoth/oof_route_scores/
-#                                        (honest OOF specialist probabilities;
-#                                         test rows scored with production bundle)
-#   7. azoth-calibrate            ~2h    recalibrate with OOF probs (sets
-#                                        AZOTH_USE_OOF_ROUTE_SCORES=1)
-#   8. azoth_route_policy_search  min    re-fit the ensemble policy on
-#                                        unbiased data; recall-monotone floor
-#                                        and joint-OR run honest now.
-#   9. azoth_route_policy_eval    min    test-partition headline numbers.
+# The work is six trainings plus three scoring/deploy stages. Run strictly
+# back-to-back (what the old inlined publish-train recipe did) that measured
+# ~11h on galadriel, 7h29m of which was the six trainings idling 126 of 128
+# cores between LightGBM phases:
 #
-# Total: roughly the same as the previous multi-day publish-train, but with
-# clean checkpoints between every stage and ~2 days saved by NOT retraining
-# specialists three times (the bug the Makefile split removed).
+#   fold-A general 61m -> fold-A spec 52m -> fold-B general 56m ->
+#   fold-B spec 54m -> prod general 138m -> prod spec 103m ->
+#   oof-merge-general 43m -> oof-route-scores 84m -> deploy ~90m
+#
+# Instead we run TWO DEPENDENCY CHAINS concurrently. The chains are the natural
+# fault lines: fold specialists need only their own fold's general, and the
+# prod bundle needs only itself, so nothing in one chain waits on the other.
+#
+#   chain prod:  prod general (138m) ------------> prod specialists (103m)
+#   chain fold:  fold-A gen (61m) -> fold-B gen (56m) -> fold-A spec (52m)
+#                                                     -> fold-B spec (54m)
+#
+# Critical path becomes max(241m, 223m) = ~4h instead of 7h29m. The two chains
+# are also deliberately BALANCED (241 vs 223) — that is why the folds are
+# serialised against each other rather than fanned out three ways. A 3-way fan
+# would not finish sooner (chain prod still gates at 241m) but would put three
+# concurrent trainings on the box, and memory, not CPU, is the binding
+# constraint here. **Never more than two heavy trainings are resident.**
+#
+# Then the two scoring stages, which are independent of each other (the general
+# merge needs only the fold generals; the route merge needs the specialists),
+# run as a pair: max(84m, 43m) = 84m instead of 127m. Total ~7h.
+#
+# The azoth-prefill-specialist-features stage is NOT part of this flow. It was
+# meant to extract the train+dev union once and seed both folds' matrices, but
+# its cache key is the sha256 of the general feature_spec.json it is pointed at
+# (--general-dir, the PROD general by Makefile default), while a fresh fold
+# specialist training looks up with its OWN fold general's spec — two different
+# files, so the prefilled entries could never be hit. It was serial work on the
+# critical path producing unusable entries. The make target still exists; making
+# it actually pay would mean teaching it to write per-fold spec keys.
+#
+# ------------------------------------------------------------------- memory
+#
+# Concurrency here is bounded by RAM, not cores, and every OOM this pipeline
+# has had came from processes that each measured the whole box and assumed it
+# was theirs. Both admission clamps read /proc/meminfo MemAvailable at start:
+#
+#   * collimator's DB-fetch worker clamp (features.clamp_workers_to_available_ram)
+#   * the specialist suite's parallelism clamp (azoth_specialist_suite.py)
+#
+# Two concurrent chains would each see the full free RAM and each admit a full
+# budget — a 2x over-commit of the same bytes. So the parallel section exports
+# COLLIMATOR_MEM_SHARES / AZOTH_CONCURRENT_SUITES = the number of concurrent
+# consumers, and both clamps divide their headroom by it. The concurrent
+# admissions then sum to what one sequential run would have taken, which is the
+# operating point those per-fit estimates were calibrated against.
+#
+# MEM_LOG records MemAvailable every 60s for the whole run; the low-water mark
+# is printed at the end. That is the number to look at before raising any
+# parallelism knob — we have been tuning these blind.
+#
+# ------------------------------------------------------------------- stages
+#
+#   0. prod general      -> out/models/azoth/
+#   1. fold-A general    -> out/models/azoth.oof-fold-a/
+#   2. fold-B general    -> out/models/azoth.oof-fold-b/
+#   3. azoth-oof-merge-general   43m  honest OOF general probs ->
+#                                     out/models/azoth/general/threshold_scores.npz
+#   4. fold-A specialists, and the prod specialists (the prod chain's
+#      specialist step is gated here, not at stage 0, so STOP_STAGE=2 means
+#      "generals only" in both chains)
+#   5. fold-B specialists
+#   6. azoth-oof-route-scores    84m  honest OOF specialist probs ->
+#                                     out/models/azoth/oof_route_scores/
+#   7. azoth-deploy              ~90m calibrate (--partition all, OOF route
+#                                     scores) + diagnostics + policy search +
+#                                     routed metrics + regression gate + litmus
+#                                     validate + mirror into the deploy dir
+#   8. azoth-shap                ~min per-route SHAP against the deployed
+#                                     boosters (ascan --extra refuses stale)
+#   9. headline numbers          reads the eval JSON stage 7 already wrote
+#
+# Stages 0-2 and 4-5 are scheduled by the chains above, not in numeric order;
+# the numbers are resume points, not an execution order. START_STAGE/STOP_STAGE
+# still gate each step individually.
 #
 # Usage:
 #   scripts/azoth_oof_pipeline.sh
 #   START_STAGE=4 scripts/azoth_oof_pipeline.sh   # resume after general OOF
 #   START_STAGE=7 scripts/azoth_oof_pipeline.sh   # everything's trained,
-#                                                 # just re-calibrate + eval
+#                                                 # just calibrate + deploy
 #   STOP_STAGE=6 scripts/azoth_oof_pipeline.sh    # build OOF assets but
-#                                                 # don't touch calibration
+#                                                 # don't touch the deploy
+#   PARALLEL_CHAINS=0 scripts/azoth_oof_pipeline.sh   # old sequential order
 #
 # If a stage fails the script exits; relaunch with START_STAGE=N to resume.
 
-set -euo pipefail
+set -uo pipefail
 
 cd "$(dirname "$0")/.."
 
@@ -62,7 +115,9 @@ OOF_ROUTE_SCORES_DIR=${AZOTH_ROOT}/oof_route_scores
 EVAL_OUT_MD=${AZOTH_ROOT}/route_policy_eval_oof.md
 EVAL_OUT_JSON=${AZOTH_ROOT}/route_policy_eval_oof.json
 
-NUM_STAGES=10  # stages 0..9; stage 0 (prod general) often a no-op skip
+NUM_STAGES=10  # stages 0..9
+
+MEM_LOG=${MEM_LOG:-out/pipeline-mem.log}
 
 stage_active() {
     local n=$1
@@ -99,284 +154,357 @@ require_file() {
     fi
 }
 
-# Default PARALLEL_FOLDS=1 on hosts with enough cores to absorb 2×
-# concurrent fold trainings (≥32 cores). Smaller boxes default to
-# sequential — at parallelism=4 they'd already have only ~2 threads per
-# LightGBM, and halving that under parallel folds tanks per-job
-# throughput. GPU users should set PARALLEL_FOLDS=0 explicitly: device
-# memory is the binding constraint, not CPU.
-if [[ -z "${PARALLEL_FOLDS:-}" ]]; then
-    if (( $(nproc) >= 32 )); then
-        PARALLEL_FOLDS=1
-        echo "[pipeline] PARALLEL_FOLDS=1 (auto, $(nproc) cores)"
-    else
-        PARALLEL_FOLDS=0
-        echo "[pipeline] PARALLEL_FOLDS=0 (auto, $(nproc) cores — below 32-core threshold)"
-    fi
-fi
-
-# When running parallel folds, tell each suite about the other so the
-# auto thread-cap inside azoth_specialist_suite halves correctly.
-# Without this the two suites would each claim nproc/parallelism threads
-# per LightGBM job, doubling load and erasing the win.
-if [[ "$PARALLEL_FOLDS" = "1" ]]; then
-    export AZOTH_CONCURRENT_SUITES=2
-fi
-
-# Per-LightGBM thread cap for the GENERAL trainings. Stage 0 runs up to
-# three generals concurrently (prod + fold-A + fold-B); without a cap
-# each LightGBM uses n_jobs=-1 = nproc, so total LightGBM threads is
-# 3 × nproc and the box ends up at 3× oversubscription during the
-# LightGBM training phase. TrainConfig.__post_init__ reads
-# COLLIMATOR_NUM_THREADS when num_threads is unset, so exporting it here
-# caps every concurrent general training.
-NPROC=$(nproc)
-if [[ "$PARALLEL_FOLDS" = "1" ]]; then
-    # Up to three concurrent generals (prod possibly skipped when fresh,
-    # but cap for the worst case — under-utilization during fold-only
-    # phases is fine; we never want oversubscription during overlap).
-    export COLLIMATOR_NUM_THREADS=$(( NPROC / 3 ))
-    echo "[pipeline] COLLIMATOR_NUM_THREADS=${COLLIMATOR_NUM_THREADS} (nproc=${NPROC} / 3 concurrent generals)"
-fi
-
-# Stage 0: train the prod general if it isn't already on disk. Needed
-# by stage 6 (which scores test rows with the production model) and
-# stage 7 (calibrate, which reads the prod specialists summary). The
-# prod build uses its OWN EXP_OUT_DIR (out/experiments/azoth) — fold
-# trainings get their own fold-specific workspaces, so all three can
-# run truly in parallel with no clobbering. Skipped if a fresh prod
-# model is already on disk (lets repeat runs / resumes avoid the
-# re-train).
-prod_general_ready() {
-    [[ -f "${AZOTH_ROOT}/general/model.txt" ]] \
-        || ls "${AZOTH_ROOT}/general/models/"seed_*.txt >/dev/null 2>&1
+mem_avail_gb() {
+    awk '/^MemAvailable:/ { printf "%.0f", $2/1024/1024 }' /proc/meminfo 2>/dev/null
 }
-PROD_TRAIN_NEEDED=0
-if stage_active 0; then
-    if prod_general_ready; then
-        echo "[pipeline] prod general already present at ${AZOTH_ROOT}/general/ — skipping stage 0"
+
+# Sample MemAvailable for the life of the run. We have repeatedly guessed at
+# per-fit memory (28 GB/fit, 2 GB/worker) without ever recording what the box
+# actually did, so every parallelism change has been a leap. This costs one awk
+# per minute; the low-water mark it yields is the evidence for the next tuning
+# decision. Killed via the EXIT trap.
+MEM_WATCH_PID=""
+start_mem_watch() {
+    [[ -r /proc/meminfo ]] || return 0
+    mkdir -p "$(dirname "$MEM_LOG")"
+    echo "# $(date +%F' '%T) pipeline start (MemTotal $(awk '/^MemTotal:/ {printf "%.0f", $2/1024/1024}' /proc/meminfo) GB)" >> "$MEM_LOG"
+    (
+        while true; do
+            echo "$(date +%F' '%T) mem_available_gb=$(mem_avail_gb) swap_free_gb=$(awk '/^SwapFree:/ {printf "%.0f", $2/1024/1024}' /proc/meminfo)"
+            sleep 60
+        done
+    ) >> "$MEM_LOG" 2>/dev/null &
+    MEM_WATCH_PID=$!
+}
+report_mem_watch() {
+    [[ -n "$MEM_WATCH_PID" ]] || return 0
+    kill "$MEM_WATCH_PID" 2>/dev/null
+    wait "$MEM_WATCH_PID" 2>/dev/null
+    MEM_WATCH_PID=""
+    local low
+    low=$(awk -F'mem_available_gb=' '/mem_available_gb=/ { split($2, a, " "); if (min == "" || a[1] < min) min = a[1] } END { print min }' "$MEM_LOG")
+    [[ -n "$low" ]] && echo "[pipeline] MemAvailable low-water mark this run: ${low} GB (full trace: $MEM_LOG)"
+}
+
+# Chains run as background jobs; a failure in either must not leave the other
+# orphaned to keep training for hours against a run that is already dead.
+CHAIN_PIDS=()
+cleanup() {
+    local pid
+    for pid in "${CHAIN_PIDS[@]:-}"; do
+        [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
+    done
+    [[ -n "$MEM_WATCH_PID" ]] && kill "$MEM_WATCH_PID" 2>/dev/null
+    return 0
+}
+trap cleanup EXIT INT TERM
+
+# Default the parallel chains on hosts with enough cores to absorb two
+# concurrent trainings (>=32). Smaller boxes stay sequential: at 16 cores the
+# per-LightGBM thread budget is already thin and halving it costs more than the
+# overlap wins. GPU users should set PARALLEL_CHAINS=0 explicitly — device
+# memory, not host RAM, is the binding constraint there and it is not shared out
+# by the clamps below. PARALLEL_FOLDS is the pre-2026-08 name; still honoured.
+if [[ -z "${PARALLEL_CHAINS:-}" ]]; then
+    if [[ -n "${PARALLEL_FOLDS:-}" ]]; then
+        PARALLEL_CHAINS=$PARALLEL_FOLDS
+        echo "[pipeline] PARALLEL_CHAINS=$PARALLEL_CHAINS (from legacy PARALLEL_FOLDS)"
+    elif (( $(nproc) >= 32 )); then
+        PARALLEL_CHAINS=1
+        echo "[pipeline] PARALLEL_CHAINS=1 (auto, $(nproc) cores)"
     else
-        PROD_TRAIN_NEEDED=1
+        PARALLEL_CHAINS=0
+        echo "[pipeline] PARALLEL_CHAINS=0 (auto, $(nproc) cores — below 32-core threshold)"
     fi
 fi
 
-# Stages 0, 1, 2 are independent — each touches a distinct bundle root
-# and experiment workspace (out/models/azoth, out/models/azoth.oof-fold-a,
-# out/models/azoth.oof-fold-b respectively) and the experiment cache
-# key includes oof_fold_exclude so the corpus + matrix caches don't
-# collide either. With PARALLEL_FOLDS=1 we run all three concurrently.
-# GPU users should override PARALLEL_FOLDS=0 because device memory is
-# the binding constraint, not CPU.
-if stage_active 1 && stage_active 2 && [[ "$PARALLEL_FOLDS" = "1" ]]; then
-    if (( PROD_TRAIN_NEEDED )); then
-        banner 0 "Train PROD AND fold-A AND fold-B GENERAL in parallel (PARALLEL_FOLDS=1)"
+NPROC=$(nproc)
+CONCURRENCY=1
+PAR_ARGS=()
+
+# Training fidelity for the three generals. A publish run is full-corpus by
+# definition — the whole point of k=2 OOF is the benign tail that sampling
+# discards — so make azoth-publish-train hands the _FULL values down here and
+# they are passed on each general's command line, out-ranking any
+# DEPLOY_TRAIN_SAMPLES a caller left in the environment. Run standalone these
+# are unset and the Makefile's own defaults (which already resolve to _FULL)
+# apply.
+FIDELITY_ARGS=()
+[[ -n "${PUBLISH_TRAIN_SAMPLES:-}" ]] && FIDELITY_ARGS+=("DEPLOY_TRAIN_SAMPLES=$PUBLISH_TRAIN_SAMPLES")
+[[ -n "${PUBLISH_MAX_TEST_SAMPLES:-}" ]] && FIDELITY_ARGS+=("DEPLOY_MAX_TEST_SAMPLES=$PUBLISH_MAX_TEST_SAMPLES")
+
+# Split the box between the two chains for the whole parallel section.
+#
+#   COLLIMATOR_MEM_SHARES   halves the DB-fetch worker headroom (features.py)
+#   AZOTH_CONCURRENT_SUITES halves the specialist parallelism headroom AND its
+#                           per-fit thread/extract-worker budgets (the suite
+#                           already read this for threads; it now also divides
+#                           the memory admission, which is what was
+#                           double-booked before)
+#   COLLIMATOR_NUM_THREADS  caps each concurrent general's LightGBM at half the
+#                           cores; without it TrainConfig asks for n_jobs=-1 =
+#                           nproc per training and two of them put the box at
+#                           2x oversubscription during the fit phase
+#   WORKERS                 halves the REQUESTED DB-fetch parallelism, not just
+#                           its ceiling. The clamps above only bind when the
+#                           request exceeds them, so two chains asking for the
+#                           nightly's WORKERS=24 would have run 48 concurrent
+#                           postgres backends — more than the sequential run
+#                           this is replacing, on a box whose OOM history is
+#                           all fetch-worker memory. Halving keeps host-wide
+#                           fetch concurrency identical to the proven-safe
+#                           operating point; the wall-clock win comes from
+#                           overlapping a fit-bound chain with an extract-bound
+#                           one, not from more fetchers.
+#
+# Passed as make command-line assignments (not env) so they beat both the
+# Makefile's `?=` defaults and anything inherited via MAKEFLAGS.
+#
+# Two, not three: the chain layout above never runs more than two heavy
+# trainings at once, so a /3 split would leave a third of the RAM unused for
+# the entire run.
+if [[ "$PARALLEL_CHAINS" = "1" ]]; then
+    CONCURRENCY=2
+    export COLLIMATOR_MEM_SHARES=$CONCURRENCY
+    export AZOTH_CONCURRENT_SUITES=$CONCURRENCY
+    export COLLIMATOR_NUM_THREADS=$(( NPROC / CONCURRENCY ))
+    CHAIN_WORKERS=$(( ${WORKERS:-$NPROC} / CONCURRENCY ))
+    (( CHAIN_WORKERS < 1 )) && CHAIN_WORKERS=1
+    PAR_ARGS=("WORKERS=$CHAIN_WORKERS")
+    echo "[pipeline] 2 concurrent chains: COLLIMATOR_MEM_SHARES=2, AZOTH_CONCURRENT_SUITES=2," \
+         "COLLIMATOR_NUM_THREADS=${COLLIMATOR_NUM_THREADS}, WORKERS=${CHAIN_WORKERS}/chain" \
+         "(nproc=${NPROC}, requested WORKERS=${WORKERS:-$NPROC})"
+    echo "[pipeline] MemAvailable at start: $(mem_avail_gb) GB"
+fi
+
+# Undo the split for stages that run alone — they should have the whole box.
+unsplit_resources() {
+    export COLLIMATOR_MEM_SHARES=1
+    export AZOTH_CONCURRENT_SUITES=1
+    unset COLLIMATOR_NUM_THREADS
+    PAR_ARGS=()
+}
+
+start_mem_watch
+
+# Resume is expressed by START_STAGE, NEVER by what happens to be on disk. An
+# earlier version of this script skipped the prod general whenever a model file
+# existed, to save time on repeat runs. That is wrong for a publish: the fold
+# generals retrain unconditionally, so a stale prod general would be paired with
+# folds trained on a newer corpus and the bundle shipped would be internally
+# inconsistent — with nothing in the log saying so. If you want to keep a
+# trained stage, skip it explicitly (START_STAGE=N).
+#
+# The one disk check that remains is a resume guard: stage 6 NEEDS the prod
+# specialists summary (azoth_oof_score_routes.py reads the route -> file_type
+# map from it and scores test rows with the prod models), so a resume that
+# jumped past the training stages has to train them rather than die on a
+# missing-file traceback after hours of stages 1-5.
+prod_specialists_ready() {
+    [[ -f "${AZOTH_ROOT}/specialists.json" ]]
+}
+
+# ------------------------------------------------------------------ chain prod
+# prod general -> prod specialists. The long pole (241m), so it starts first and
+# everything else is sized to finish inside it.
+chain_prod() {
+    if stage_active 0; then
+        banner 0 "Train PROD GENERAL (no fold exclusion -> ${AZOTH_ROOT})"
+        time make azoth-general AZOTH_GENERAL_SKIP_RESCORE=1 "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
     else
-        banner 1 "Train fold-A AND fold-B GENERAL in parallel (PARALLEL_FOLDS=1)"
+        skipped 0 "prod general training"
     fi
-    PID_PROD=""
-    if (( PROD_TRAIN_NEEDED )); then
-        (time make azoth-general AZOTH_GENERAL_SKIP_RESCORE=1) > >(sed 's/^/[prod]   /') 2>&1 &
+
+    # The prod chain's specialist step is the third specialist training, so it is
+    # gated with stages 4/5 rather than with stage 0 — STOP_STAGE=2 means "just
+    # the generals" and must not train specialists in either chain.
+    #
+    # The second clause is a resume guard: stage 6 NEEDS the prod specialists
+    # summary (azoth_oof_score_routes.py reads the route -> file_type map from it
+    # and scores test rows with the prod models), so a resume that jumped past
+    # the training stages trains them now rather than dying on a missing-file
+    # traceback after hours of stages 1-5.
+    #
+    # SKIP_EXISTING=0 forces a real retrain: a publish must not ship specialists
+    # left over from a previous run's general.
+    if stage_active 4 || stage_active 5 || { stage_active 6 && ! prod_specialists_ready; }; then
+        banner 4 "Train PROD SPECIALISTS (-> ${AZOTH_ROOT}/{filegroups,filetypes}/)"
+        require_dir "prod general bundle" "${AZOTH_ROOT}/general" 0
+        time make azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0 "${PAR_ARGS[@]}" || return 1
+    else
+        skipped 4 "prod specialist training"
+    fi
+    return 0
+}
+
+# ------------------------------------------------------------------ chain fold
+# fold-A general -> fold-B general -> fold-A spec -> fold-B spec (223m). The two
+# folds are serialised against each other on purpose; see the header.
+chain_fold() {
+    if stage_active 1; then
+        banner 1 "Train fold-A GENERAL (EXP_OOF_FOLD_EXCLUDE=0 -> ${FOLD_A_ROOT})"
+        time make azoth-general-fold-a "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
+    else
+        skipped 1 "fold-A general training"
+    fi
+
+    if stage_active 2; then
+        banner 2 "Train fold-B GENERAL (EXP_OOF_FOLD_EXCLUDE=1 -> ${FOLD_B_ROOT})"
+        time make azoth-general-fold-b "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
+    else
+        skipped 2 "fold-B general training"
+    fi
+
+    if stage_active 4; then
+        banner 4 "Train fold-A specialists (-> ${FOLD_A_ROOT}/{filegroups,filetypes}/)"
+        require_dir "fold-A general bundle" "${FOLD_A_ROOT}/general" 1
+        time make azoth-specialists-fold-a "${PAR_ARGS[@]}" || return 1
+    else
+        skipped 4 "fold-A specialist training"
+    fi
+
+    if stage_active 5; then
+        banner 5 "Train fold-B specialists (-> ${FOLD_B_ROOT}/{filegroups,filetypes}/)"
+        require_dir "fold-B general bundle" "${FOLD_B_ROOT}/general" 2
+        time make azoth-specialists-fold-b "${PAR_ARGS[@]}" || return 1
+    else
+        skipped 5 "fold-B specialist training"
+    fi
+    return 0
+}
+
+# ------------------------------------------------------------- run the chains
+if stage_active 0 || stage_active 1 || stage_active 2 || stage_active 4 || stage_active 5; then
+    if [[ "$PARALLEL_CHAINS" = "1" ]]; then
+        echo
+        echo "================================================================"
+        echo "TRAINING: chain prod (general -> specialists) || chain fold"
+        echo "          (fold-A gen -> fold-B gen -> fold-A spec -> fold-B spec)"
+        echo "          2 concurrent trainings, RAM split 2 ways"
+        echo "================================================================"
+        chain_prod > >(sed 's/^/[prod] /') 2>&1 &
         PID_PROD=$!
+        chain_fold > >(sed 's/^/[fold] /') 2>&1 &
+        PID_FOLD=$!
+        CHAIN_PIDS=("$PID_PROD" "$PID_FOLD")
+        CHAIN_FAIL=0
+        # Both chains are waited on even after one fails, deliberately. Every
+        # training checkpoints to its own bundle dir, so letting the survivor
+        # finish means the resume (START_STAGE=N) skips its stages outright
+        # instead of repeating hours of work that had already succeeded.
+        wait "$PID_PROD" || CHAIN_FAIL=1
+        wait "$PID_FOLD" || CHAIN_FAIL=1
+        CHAIN_PIDS=()
+        if (( CHAIN_FAIL )); then
+            echo "ERROR: a training chain failed (see the [prod] / [fold] lines above)."
+            report_mem_watch
+            exit 1
+        fi
+    else
+        chain_prod || { report_mem_watch; exit 1; }
+        chain_fold || { report_mem_watch; exit 1; }
     fi
-    (time make azoth-general-fold-a) > >(sed 's/^/[fold-A] /') 2>&1 &
-    PID_A=$!
-    (time make azoth-general-fold-b) > >(sed 's/^/[fold-B] /') 2>&1 &
-    PID_B=$!
-    if [[ -n "$PID_PROD" ]]; then wait "$PID_PROD"; fi
-    wait "$PID_A" && wait "$PID_B"
-elif stage_active 1; then
-    if (( PROD_TRAIN_NEEDED )); then
-        banner 0 "Train PROD GENERAL (no fold exclusion → ${AZOTH_ROOT})"
-        time make azoth-general AZOTH_GENERAL_SKIP_RESCORE=1
-    fi
-    banner 1 "Train fold-A GENERAL (EXP_OOF_FOLD_EXCLUDE=0 → ${FOLD_A_ROOT})"
-    time make azoth-general-fold-a
-else
-    skipped 1 "fold-A general training"
+    echo "[pipeline] trainings complete; MemAvailable now $(mem_avail_gb) GB"
 fi
 
-if stage_active 2 && [[ "$PARALLEL_FOLDS" != "1" ]]; then
-    banner 2 "Train fold-B GENERAL (EXP_OOF_FOLD_EXCLUDE=1 → ${FOLD_B_ROOT})"
-    time make azoth-general-fold-b
-elif [[ "$PARALLEL_FOLDS" = "1" ]] && stage_active 1; then
-    # Already trained in parallel above.
-    :
-elif stage_active 2; then
-    banner 2 "Train fold-B GENERAL (EXP_OOF_FOLD_EXCLUDE=1 → ${FOLD_B_ROOT})"
-    time make azoth-general-fold-b
-else
-    skipped 2 "fold-B general training"
-fi
-
-# Stage 3 (OOF general merge) only needs the fold general bundles. Stage 4
-# (fold-A specialist training) only needs the fold-A general FEATURE SPEC,
-# not its OOF probs. They can run concurrently — and they SHOULD, because
-# stage 3 is DB/extract-bound (idle CPU) and stage 4 is CPU-bound (idle DB).
-# Overlapping recovers ~1-3 hours from the OOF pipeline. We background
-# stage 3 here and reap it before stage 6 (the route-score merge), which
-# is the first stage that actually depends on stage 3's output via the
-# downstream calibrate consumer.
+# ------------------------------------------------------------- scoring stages
+# Stage 3 (general merge, 43m) and stage 6 (route merge, 84m) have no dependency
+# on each other: 3 reads the two fold GENERALS, 6 reads the fold and prod
+# SPECIALISTS. Both are extraction/DB-bound rather than fit-bound, so running
+# the pair costs one 84m window instead of 127m sequential. Still only two
+# concurrent consumers, so the same 2-way RAM split applies.
+#
+# PARALLEL_CHAINS=0 runs them back-to-back instead. That mode exists to be the
+# low-memory fallback, and pairing them there would overlap two full-worker
+# extractions with no split to pay for it — the opposite of what the setting
+# asks for.
 STAGE3_PID=""
 STAGE3_LOG=""
 if stage_active 3; then
-    banner 3 "Merge OOF general predictions → ${AZOTH_ROOT}/general/threshold_scores.npz  (concurrent with stages 4-5)"
+    banner 3 "Merge OOF general predictions -> ${AZOTH_ROOT}/general/threshold_scores.npz"
     require_dir "fold-A general bundle" "${FOLD_A_ROOT}/general" 1
     require_dir "fold-B general bundle" "${FOLD_B_ROOT}/general" 2
-    # Send stage 3 output to a log file (interleaving with stages 4-5
-    # would be hard to read at this level of concurrency).
-    STAGE3_LOG=$(mktemp -t azoth-oof-merge-general.XXXXXX.log)
-    echo "[3] streaming to ${STAGE3_LOG}; will reap before stage 6"
-    (time make azoth-oof-merge-general) > "$STAGE3_LOG" 2>&1 &
-    STAGE3_PID=$!
+    if [[ "$PARALLEL_CHAINS" = "1" ]]; then
+        # Logged to a file rather than interleaved: two concurrent scoring
+        # stages both emit per-batch progress and the mix is unreadable.
+        STAGE3_LOG=$(mktemp -t azoth-oof-merge-general.XXXXXX.log)
+        echo "[3] running concurrently with stage 6; streaming to ${STAGE3_LOG}, reaped before stage 7"
+        (time make azoth-oof-merge-general "${PAR_ARGS[@]}") > "$STAGE3_LOG" 2>&1 &
+        STAGE3_PID=$!
+    else
+        time make azoth-oof-merge-general "${PAR_ARGS[@]}" || { report_mem_watch; exit 1; }
+    fi
 else
     skipped 3 "OOF general merge"
 fi
 
-if stage_active 4; then
-    # Pre-build the cross-fold feature cache so stages 4-5 don't each pay
-    # the per-fold extract. Runs ahead of (and serializes) the specialist
-    # trainings — wall-clock saved exceeds this stage's cost because it
-    # extracts the train+dev union ONCE instead of twice (and twice
-    # concurrently, when PARALLEL_FOLDS=1, fighting for DB/workers).
-    # Skipping when disabled via SKIP_PREFILL=1 (e.g. running only
-    # stage 4-5 against an already-populated cache).
-    if [[ "${SKIP_PREFILL:-0}" != "1" ]]; then
-        banner_substage="[stage-4-prefill]"
-        echo
-        echo "================================================================"
-        echo "$banner_substage Pre-fill route feature cache (shared across fold-A/-B)"
-        echo "================================================================"
-        time make azoth-prefill-specialist-features
-    else
-        echo "[stage-4-prefill] SKIP (SKIP_PREFILL=1)"
-    fi
-fi
-
-if stage_active 4 && stage_active 5 && [[ "$PARALLEL_FOLDS" = "1" ]]; then
-    banner 4 "Train fold-A AND fold-B specialists in parallel (PARALLEL_FOLDS=1)"
-    require_dir "fold-A general bundle" "${FOLD_A_ROOT}/general" 1
-    require_dir "fold-B general bundle" "${FOLD_B_ROOT}/general" 2
-    # The specialist suite already parallelizes ACROSS routes via
-    # AZOTH_SPECIALIST_PARALLELISM; running two fold trainings concurrently
-    # adds a SECOND axis of parallelism. Halve AZOTH_SPECIALIST_PARALLELISM
-    # via env when PARALLEL_FOLDS=1 if you're CPU/GPU constrained, e.g.:
-    #   AZOTH_SPECIALIST_PARALLELISM=1 PARALLEL_FOLDS=1 scripts/azoth_oof_pipeline.sh
-    (time make azoth-specialists-fold-a) > >(sed 's/^/[fold-A spec] /') 2>&1 &
-    PID_A=$!
-    (time make azoth-specialists-fold-b) > >(sed 's/^/[fold-B spec] /') 2>&1 &
-    PID_B=$!
-    SPEC_FAIL=0
-    wait "$PID_A" || SPEC_FAIL=1
-    wait "$PID_B" || SPEC_FAIL=1
-    if [[ $SPEC_FAIL -ne 0 ]]; then
-        echo "ERROR: at least one fold specialist training failed (see [fold-A spec] / [fold-B spec] lines above)"
-        # Don't leave stage 3 hanging if we're about to bail.
-        [[ -n "$STAGE3_PID" ]] && kill "$STAGE3_PID" 2>/dev/null
-        exit 1
-    fi
-elif stage_active 4; then
-    banner 4 "Train fold-A specialists (EXP_OOF_FOLD_EXCLUDE=0 → ${FOLD_A_ROOT}/{filegroups,filetypes}/)"
-    require_dir "fold-A general bundle" "${FOLD_A_ROOT}/general" 1
-    time make azoth-specialists-fold-a
-else
-    skipped 4 "fold-A specialist training"
-fi
-
-if stage_active 5 && [[ "$PARALLEL_FOLDS" = "1" ]] && stage_active 4; then
-    # Already trained in parallel above.
-    :
-elif stage_active 5; then
-    banner 5 "Train fold-B specialists (EXP_OOF_FOLD_EXCLUDE=1 → ${FOLD_B_ROOT}/{filegroups,filetypes}/)"
-    require_dir "fold-B general bundle" "${FOLD_B_ROOT}/general" 2
-    time make azoth-specialists-fold-b
-else
-    skipped 5 "fold-B specialist training"
-fi
-
-# Stage 3 was kicked off in the background after stages 1-2. Stage 6
-# depends on its output (general/threshold_scores.npz feeds calibration
-# downstream, but stage 6's OOF route merge doesn't strictly need it).
-# Reap stage 3 here so a failure in the merge surfaces before stage 7.
-if [[ -n "$STAGE3_PID" ]]; then
-    echo
-    echo "Reaping backgrounded stage 3 (OOF general merge) before stage 6..."
-    if wait "$STAGE3_PID"; then
-        echo "[3] OOF general merge succeeded; log:"
-    else
-        echo "ERROR: backgrounded stage 3 (OOF general merge) failed; log:"
-        cat "$STAGE3_LOG"
-        rm -f "$STAGE3_LOG"
-        exit 1
-    fi
-    # Show the tail in success path so timing/progress is visible.
-    tail -20 "$STAGE3_LOG"
-    rm -f "$STAGE3_LOG"
-fi
-
-# Stage 6 also needs the PROD specialists summary at
-# ${AZOTH_ROOT}/specialists.json — azoth_oof_score_routes.py loads the
-# route → file_type mapping from it and scores test rows with the prod
-# specialist models. Stage 0 trained the prod general but not the prod
-# specialists; without this guard, the pipeline died right here on a
-# missing-file traceback after spending hours on stages 1-5. Train it
-# now if absent. Trains serially (no resource contention with stage 4-5
-# which has already finished by this point).
-prod_specialists_ready() {
-    [[ -f "${AZOTH_ROOT}/specialists.json" ]]
-}
-if stage_active 6 && ! prod_specialists_ready; then
-    banner 5b "Train PROD specialists (needed for stage 6 test-row scoring)"
-    require_dir "prod general bundle" "${AZOTH_ROOT}/general" 0
-    time make azoth-specialists
-fi
-
 if stage_active 6; then
-    banner 6 "Merge OOF route scores → ${OOF_ROUTE_SCORES_DIR}"
+    banner 6 "Merge OOF route scores -> ${OOF_ROUTE_SCORES_DIR}"
     require_file "fold-A specialists summary" "${FOLD_A_ROOT}/specialists.json" 4
     require_file "fold-B specialists summary" "${FOLD_B_ROOT}/specialists.json" 5
-    require_file "prod specialists summary" "${AZOTH_ROOT}/specialists.json" "5b (auto)"
-    time make azoth-oof-route-scores
+    require_file "prod specialists summary" "${AZOTH_ROOT}/specialists.json" 0
+    time make azoth-oof-route-scores "${PAR_ARGS[@]}" || { report_mem_watch; exit 1; }
 else
     skipped 6 "OOF route-score merge"
 fi
 
+if [[ -n "$STAGE3_PID" ]]; then
+    echo
+    echo "Reaping backgrounded stage 3 (OOF general merge)..."
+    if wait "$STAGE3_PID"; then
+        echo "[3] OOF general merge succeeded; log tail:"
+        tail -20 "$STAGE3_LOG"
+    else
+        echo "ERROR: backgrounded stage 3 (OOF general merge) failed; log:"
+        cat "$STAGE3_LOG"
+        rm -f "$STAGE3_LOG"
+        report_mem_watch
+        exit 1
+    fi
+    rm -f "$STAGE3_LOG"
+fi
+
+# ------------------------------------------------------------- deploy stages
+# Everything below this point runs alone, so hand the whole box back: the split
+# above would otherwise leave half the RAM and half the cores idle through the
+# longest single stage in the run (calibrate re-extracts every route).
+unsplit_resources
+
+# azoth-deploy is the whole publish tail: calibrate (--partition all over the
+# full OOF coverage, AZOTH_USE_OOF_ROUTE_SCORES=1 swapping each specialist's
+# in-fold scores for its honest OOF scores) -> diagnostics -> route policy
+# search -> global policy metrics -> routed metrics -> test-partition eval ->
+# READMEs -> azoth-deploy-final (ONNX convert + validate + regression gate +
+# litmus validate + mirror into the deploy dir). AZOTH_REFRESH_SCORES=1 forces
+# a rescore so cached in-sample probs from a prior run cannot leak through: the
+# OOF override fires inside _score_route, but the legacy calibration_scores.npz
+# cache check happens FIRST.
 if stage_active 7; then
-    banner 7 "Re-calibrate with honest OOF probs (AZOTH_USE_OOF_ROUTE_SCORES=1)"
+    banner 7 "Calibrate + gate + deploy (azoth-deploy, honest OOF probs)"
     require_dir "OOF route scores" "${OOF_ROUTE_SCORES_DIR}" 6
-    # Force a rescore so cached in-sample probs from the prior run don't
-    # leak through. The OOF override fires inside _score_route, but the
-    # legacy calibration_scores.npz cache check happens FIRST — refreshing
-    # bypasses it so we KNOW the score table carries honest probs.
-    time make azoth-calibrate \
+    time make azoth-deploy \
+        AZOTH_CALIBRATE_PARTITION=all \
         AZOTH_USE_OOF_ROUTE_SCORES=1 \
-        AZOTH_REFRESH_SCORES=${AZOTH_REFRESH_SCORES:-1}
+        AZOTH_REFRESH_SCORES=${AZOTH_REFRESH_SCORES:-1} || { report_mem_watch; exit 1; }
 else
-    skipped 7 "azoth-calibrate"
+    skipped 7 "azoth-deploy"
 fi
 
+# Per-route SHAP against the freshly deployed boosters. Pure inference
+# (~seconds/route) but not optional: ascan --extra refuses a bundle whose SHAP
+# feature-space digest doesn't match its models, so skipping it ships a bundle
+# with stale SHAP. Runs after stage 7 because the deploy's weakness prune
+# decides which routes actually survive.
 if stage_active 8; then
-    banner 8 "Re-run route policy search on honest score table"
-    require_file "score table" "${AZOTH_ROOT}/score_table.npz" 7
-    time .venv/bin/python scripts/azoth_route_policy_search.py
+    banner 8 "Regenerate per-route SHAP (azoth-shap)"
+    time make azoth-shap || { report_mem_watch; exit 1; }
 else
-    skipped 8 "route policy search"
+    skipped 8 "azoth-shap"
 fi
 
-if stage_active 9; then
-    banner 9 "Re-run test-partition eval → ${EVAL_OUT_MD}"
-    require_file "route policies" "${AZOTH_ROOT}/route_policies.json" 8
-    time .venv/bin/python scripts/azoth_route_policy_eval.py \
-        --score-table "${AZOTH_ROOT}/score_table.npz" \
-        --general-scores "${AZOTH_ROOT}/general/threshold_scores.npz" \
-        --route-policies "${AZOTH_ROOT}/route_policies.json" \
-        --partition test \
-        --output-md "$EVAL_OUT_MD" \
-        --output-json "$EVAL_OUT_JSON"
-
-    if [[ -f "$EVAL_OUT_JSON" ]]; then
-        echo
-        echo "Headline numbers:"
-        .venv/bin/python -c "
+if stage_active 9 && [[ -f "$EVAL_OUT_JSON" ]]; then
+    banner 9 "Headline numbers (from the eval stage 7 wrote)"
+    .venv/bin/python -c "
 import json, math
 d = json.load(open('$EVAL_OUT_JSON'))
 total_mal = caught = total_fp = 0
@@ -393,12 +521,10 @@ if total_mal:
     print(f'  L9 hostile (default summary): {caught}/{total_mal} = {100*caught/total_mal:.2f}%  test_fp={total_fp}')
 print(f'  Full eval report: $EVAL_OUT_MD')
 "
-    fi
-else
-    skipped 9 "policy eval"
 fi
 
+report_mem_watch
 echo
 echo "================================================================"
-echo "Done. Bring the L0/L3/L9 test recall numbers back for PR 3."
+echo "Done."
 echo "================================================================"

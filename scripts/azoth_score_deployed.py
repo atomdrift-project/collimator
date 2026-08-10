@@ -54,6 +54,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from collimator import bundle, data as collimator_data, features  # noqa: E402
+from collimator.experiment import recall_at_per_100M  # noqa: E402
 
 LOG = logging.getLogger("azoth_score_deployed")
 
@@ -511,21 +512,25 @@ def _metrics(
     best = int(np.argmax(f1_vals))
     thr = 1.0 if best >= len(thresholds) else float(thresholds[best])
     out["max_f1"] = float(f1_score(labels, (probs >= thr).astype(int), zero_division=0))
-    # recall_at_X_per_100M — sweep predictions to find tightest threshold
-    # catching <= X benigns-per-100M in the slice. Per-100M is the deployed
-    # scale; 50 maps to the L50 default operating point.
-    order = np.argsort(-probs, kind="mergesort")
-    sorted_y = labels[order]
-    fp_cum = np.cumsum(sorted_y == 0)
-    tp_cum = np.cumsum(sorted_y == 1)
-    for fp100m in (0, 50, 100, 300, 500, 900):
-        budget = max(1, int(np.floor(n_ben * fp100m / 100_000_000.0))) if fp100m > 0 else 0
-        best_rec: float | None = None
-        for i in range(len(sorted_y)):
-            if fp_cum[i] > budget:
-                break
-            best_rec = float(tp_cum[i] / n_mal)
-        out[f"recall_at_{fp100m}_per_100M"] = best_rec if best_rec is not None else math.nan
+    # recall_at_X_per_100M — delegated to the SHARED estimator the candidate
+    # uses (collimator.experiment.recall_at_per_100M -> thresholds.
+    # quantile_severity_threshold), so autocollie's "deployed vs screen" delta
+    # compares two models rather than two methods.
+    #
+    # This used to be a local sweep with `budget = max(1, floor(n_ben*k/1e8))`.
+    # On a 10k-benign screen holdout that clamp collapsed every level from
+    # 1..900/100M onto the SAME point, and that point was the *dominating* 1-FP
+    # threshold (loosest threshold still admitting one benign) rather than the
+    # conservative ships-at threshold the candidate is scored with — so the
+    # baseline read ~0.9pp better than like-for-like on filetypes/pe
+    # (0.6618 vs 0.6527, 2026-08-08). The tell-tale was a deployed block whose
+    # 50/100/300/500/900 values were all identical.
+    #
+    # Emitting the full shared grid also fixes the silent fallback in
+    # autocollie's prediction block: it looks up recall_at_<DEFAULT_LEVEL>_
+    # per_100M first and only fell back to the legacy L50 field because the
+    # legacy k-set here never contained the deploy level.
+    out.update(recall_at_per_100M(labels, probs))
     return out
 
 
@@ -719,9 +724,10 @@ def main() -> int:
     # Strip non-finite floats (NaN, ±inf) before serializing — Python's
     # json.dumps emits them as literal NaN/Infinity tokens which aren't
     # valid JSON and break Go's strict parser on the autocollie side.
-    # The script emits math.nan from _metrics() for recall_at_X_per_100M
-    # when there are no eligible scores; replace those with None (=> JSON
-    # null) so the consumer can detect-and-skip without parse failures.
+    # _metrics() can emit None for min_observable_per_100M (n_benign == 0,
+    # where the floor is mathematically infinite); replace any non-finite
+    # with None (=> JSON null) so the consumer can detect-and-skip without
+    # parse failures.
     # Also pass allow_nan=False so any non-finite we missed crashes here
     # loudly rather than producing invalid JSON.
     args.output.write_text(

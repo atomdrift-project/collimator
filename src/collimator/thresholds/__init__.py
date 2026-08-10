@@ -300,6 +300,52 @@ DEFAULT_FP_RATE_RECOMMENDATIONS = [
 ]
 
 
+def recall_at_fp_budget(
+    y_true: "np.ndarray",
+    y_prob: "np.ndarray",
+    fp_budget: int,
+) -> tuple[float, float | None, int]:
+    """Recall at the loosest threshold whose realized FP count is <= ``fp_budget``.
+
+    THE canonical FP-count operating point — the efficient-frontier reading of
+    "recall at k false positives". Returns ``(recall, threshold_or_None, fp)``;
+    threshold is None when no row passes (budget 0 and the top benign outranks
+    every malware). Ties are resolved benigns-BEFORE-malware, the worst case for
+    recall and what an attacker can force.
+
+    NOT the same thing as ``quantile_severity_threshold``, and the difference is
+    deliberate. The k-th largest benign score also admits exactly k FPs, but so
+    does any threshold down to just above the (k+1)-th, which captures strictly
+    more malware for the same FP count — that dominating point is what this
+    reports. `quantile_severity_threshold` picks the conservative end (at the
+    k-th benign) because it selects a threshold to SHIP against unseen data,
+    where the gap between the two is unmeasured. So expect this to read a little
+    higher than recall at the equivalent per-100M level; on filetypes/pe's 10k
+    screen holdout the gap was 0.9pp (0.6618 vs 0.6527) for the same 1 FP.
+
+    Use this for measured anchors and any "how much can this model catch at k
+    FPs" question. Use `quantile_severity_threshold` for the threshold to ship.
+    """
+    valid = ~np.isnan(y_prob)
+    if not np.any(valid):
+        return (float("nan"), None, 0)
+    p = np.asarray(y_prob)[valid]
+    y = np.asarray(y_true)[valid].astype(np.int8)
+    n_mal = int(np.sum(y == 1))
+    if n_mal == 0:
+        return (float("nan"), None, 0)
+    order = np.lexsort((y, -p))
+    p_sorted = p[order]
+    y_sorted = y[order]
+    fp_cum = np.cumsum(y_sorted == 0)
+    tp_cum = np.cumsum(y_sorted == 1)
+    eligible = np.flatnonzero(fp_cum <= fp_budget)
+    if len(eligible) == 0:
+        return (0.0, None, 0)
+    end = int(eligible[-1])
+    return (float(tp_cum[end]) / n_mal, float(p_sorted[end]), int(fp_cum[end]))
+
+
 def operating_point(
     y_true: "np.ndarray",
     y_prob: "np.ndarray",

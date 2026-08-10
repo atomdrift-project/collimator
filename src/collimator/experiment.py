@@ -26,7 +26,7 @@ from sklearn.metrics import (
 )
 
 from . import bundle, data, export, features, train
-from . import thresholds as _severity  # aliased: a local `thresholds` var shadows the name in _recall_at_per_100M
+from . import thresholds as _severity  # aliased: a local `thresholds` var shadows the name in recall_at_per_100M
 from .model import predict_proba
 
 
@@ -576,7 +576,7 @@ def _print_test_metrics(
         print(f"  ROC AUC:   {roc_auc_score(y_true, y_prob):.4f}")
         print(f"  Avg Prec:  {average_precision_score(y_true, y_prob):.4f}")
         print(f"  Brier:     {brier_score_loss(y_true, y_prob):.4f}")
-        rec_fp = _recall_at_per_100M(y_true, y_prob)
+        rec_fp = recall_at_per_100M(y_true, y_prob)
         _L = _severity.DEFAULT_SEVERITY_LEVEL
         print(
             f"  Recall@FP/100M: L{_L}(deploy)={rec_fp[f'recall_at_{_L}_per_100M']:.4f} "
@@ -592,14 +592,14 @@ def _print_test_metrics(
 def _format_min_observable(value: float | None) -> str:
     """Format the min_observable_per_100M metric for the human-readable summary
     log line. Handles the `None` (n_benign=0, FP/100M unmeasurable) case
-    explicitly — see _recall_at_per_100M for context.
+    explicitly — see recall_at_per_100M for context.
     """
     if value is None:
         return "unmeasurable (n_ben=0)"
     return f"{value:.1f}/100M"
 
 
-# k values reported by `_recall_at_per_100M` on the canonical per-100M scale.
+# k values reported by `recall_at_per_100M` on the canonical per-100M scale.
 # As the benign corpus grows toward 100M, FP/M loses resolution in the strict
 # region; per-100M lets us express finer-grained operating points. The new
 # shared severity grid is L0..L100 (0, 1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70,
@@ -630,7 +630,7 @@ if _severity.DEFAULT_SEVERITY_LEVEL not in RECALL_AT_PER_100M_KS:
     )
 
 
-def _recall_at_per_100M(
+def recall_at_per_100M(
     y_true: np.ndarray, y_prob: np.ndarray,
 ) -> dict[str, float | int]:
     """Recall on malware at thresholds where benign FP rate equals k per 100M.
@@ -688,6 +688,18 @@ def _recall_at_per_100M(
     # reads 1.0.
     zero_fp_threshold = float(np.nextafter(float(np.max(benign_probs)), np.inf))
     recall_at_0fp = float(np.mean(malware_probs >= zero_fp_threshold))
+    # MEASURED anchors, in FP COUNTS rather than rates. Every per-100M level
+    # below `min_observable_per_100M` prices a rate the holdout cannot resolve,
+    # so on a small screen holdout these are the strictest points that are
+    # actually observed — the like-for-like comparison to make between two
+    # models there. Same key names, same convention, and now the same function
+    # as the deploy-scale `route_policy_eval_oof.json` slice metrics, so a
+    # screen anchor and a deploy anchor mean the same thing.
+    for budget in (0, 1, 3):
+        rec, thr, fp = _severity.recall_at_fp_budget(y_true, y_prob, budget)
+        out[f"recall_at_{budget}fp"] = rec
+        out[f"threshold_at_{budget}fp"] = thr
+        out[f"fp_at_{budget}fp"] = fp
     for k in RECALL_AT_PER_100M_KS:
         suffix = f"{int(k)}_per_100M"
         thr, _method = _severity.quantile_severity_threshold(
@@ -1141,7 +1153,7 @@ def run_experiment(
                 ),
                 "brier": float(brier_score_loss(y_test, attempt_probs)) if len(np.unique(y_test)) > 1 else 0.0,
             }
-            attempt_metrics.update(_recall_at_per_100M(y_test, attempt_probs))
+            attempt_metrics.update(recall_at_per_100M(y_test, attempt_probs))
         elif k_idx == 0:
             print("\nNo external test rows available.")
         all_attempt_models.append(attempt_result.model)
@@ -1232,7 +1244,7 @@ def run_experiment(
             "avg_precision": float(average_precision_score(y_test, ensemble_probs)) if multi_class else 0.0,
             "brier": float(brier_score_loss(y_test, ensemble_probs)) if multi_class else 0.0,
             "threshold": averaged_threshold,
-            **_recall_at_per_100M(y_test, ensemble_probs),
+            **recall_at_per_100M(y_test, ensemble_probs),
         }
         log.info(
             "seed-search averaged ensemble (K=%d): "

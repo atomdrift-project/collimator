@@ -592,9 +592,11 @@ DEPLOY_MAX_TEST_SAMPLES_FULL    ?= 0
 DEPLOY_TRAIN_SAMPLES_FAST       ?= 600000
 DEPLOY_MAX_TEST_SAMPLES_FAST    ?= 80000
 # Default the fidelity for any standalone azoth-general / azoth-general-fold-*
-# invocation to the FULL settings. azoth-publish-train and azoth-full-train
-# still pass the _FULL values explicitly so this just covers the case where
-# someone calls a sub-target directly (or via scripts/azoth_oof_pipeline.sh).
+# invocation to the FULL settings. azoth-full-train passes the _FULL values
+# explicitly, and azoth-publish-train hands them to the pipeline script as
+# PUBLISH_TRAIN_SAMPLES / PUBLISH_MAX_TEST_SAMPLES (which re-applies them on
+# each general's command line), so this default just covers a sub-target called
+# directly or scripts/azoth_oof_pipeline.sh run standalone.
 # Setting them empty (the prior behavior) would propagate "--train-samples ''"
 # through to the experiment CLI and abort it with an empty-arg error.
 DEPLOY_TRAIN_SAMPLES            ?= $(DEPLOY_TRAIN_SAMPLES_FULL)
@@ -669,42 +671,33 @@ azoth-fast-train: venv check-db
 # benigns — poisoning the deployed dial. OOF-calibrating the specialists is
 # corrective, not optional. Set THRESHOLD_MAX_ID / AZOTH_SPECIALIST_PARALLELISM
 # as usual; they propagate to the sub-makes.
+#
+# The recipe used to inline all nine steps in sequence, which idled 126 of 128
+# cores between LightGBM phases for 7h29m of trainings. It now delegates to
+# scripts/azoth_oof_pipeline.sh, which runs the same steps as two concurrent
+# dependency chains (prod general->specialists || fold-A gen->fold-B gen->
+# fold-A spec->fold-B spec) and pairs the two independent scoring stages. Same
+# work, same models, ~11h -> ~7h. The scheduling and the RAM-splitting that
+# makes it safe are documented in that script's header. PARALLEL_CHAINS=0
+# restores the old strictly-sequential order.
+#
+# MAKEFLAGS is deliberately NOT cleared: it is how a command-line override
+# (`make azoth-publish-train THRESHOLD_MAX_ID=... AZOTH_SPECIALIST_PARALLELISM=...`)
+# reaches the script's sub-makes. The per-chain resource split still wins over
+# it, because the script passes those on each sub-make's own command line and an
+# explicit assignment outranks an inherited one.
+#
+# WORKERS is additionally handed over through the environment: the script halves
+# it per chain, and $(WORKERS) here is the resolved value whether it came from
+# the environment, the command line, or the nproc default — none of which the
+# script could see on its own when the setting arrived via MAKEFLAGS.
 azoth-publish-train: venv check-db
 	@echo "azoth-publish-train: starting full k=2 OOF run (general + specialists)."
-	@echo "  3x general + 3x specialists (folds skip benchmark) + OOF merge/route-scores + calibrate."
-	@# Fold A: general (exclude OOF fold 0), then specialists trained on the fold-A general.
-	@echo "azoth-publish-train: fold A — general + specialists (excluding OOF fold 0)"
-	$(MAKE) azoth-general-fold-a \
-		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
-		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	$(MAKE) azoth-specialists-fold-a
-	@# Fold B: general (exclude OOF fold 1), then specialists trained on the fold-B general.
-	@echo "azoth-publish-train: fold B — general + specialists (excluding OOF fold 1)"
-	$(MAKE) azoth-general-fold-b \
-		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
-		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	$(MAKE) azoth-specialists-fold-b
-	@# Final production general + specialists (no fold exclusion) — these are the
-	@# deployed models. Rescore is skipped: the OOF merge/route-scores below write
-	@# honest OOF probabilities over these models, so an in-sample rescore is wasted.
-	@echo "azoth-publish-train: final production general + specialists"
-	$(MAKE) azoth-general \
-		AZOTH_GENERAL_SKIP_RESCORE=1 \
-		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
-		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
-	$(MAKE) azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0
-	@# Honest OOF scores: general (fold-A-on-0 + fold-B-on-1 + prod-on-test) and
-	@# per-route specialists (the same triplet per route).
-	$(MAKE) azoth-oof-merge-general
-	$(MAKE) azoth-oof-route-scores
-	@# Deploy. --partition=all uses the full OOF coverage; AZOTH_USE_OOF_ROUTE_SCORES=1
-	@# swaps each specialist's in-fold scores for its honest OOF scores at calibration.
-	$(MAKE) azoth-deploy AZOTH_CALIBRATE_PARTITION=all AZOTH_USE_OOF_ROUTE_SCORES=1
-	@# Regenerate per-route SHAP against the freshly deployed boosters. _azoth-train
-	@# does this after its azoth-deploy; the inlined publish recipe must too, or the
-	@# bundle ships with stale SHAP that ascan --extra refuses (feature-space digest
-	@# mismatch). Pure inference, ~seconds/route.
-	$(MAKE) azoth-shap
+	@echo "  3x general + 3x specialists (folds skip benchmark) + OOF merge/route-scores + calibrate + deploy."
+	WORKERS=$(WORKERS) \
+	PUBLISH_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
+	PUBLISH_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL) \
+	scripts/azoth_oof_pipeline.sh
 	@echo "azoth-publish-train: complete; full-OOF bundle deployed."
 	@echo "azoth-publish-train: archived fold bundles at out/models/azoth.oof-fold-{a,b}/"
 
@@ -804,7 +797,7 @@ azoth-general: venv check-db azoth-clean-bundle
 # the second one overwriting the first's bundle slot.
 azoth-general-fold-a: venv check-db
 	@# Run training in a fold-specific workspace and deploy slot so that
-	@# parallel folds (PARALLEL_FOLDS=1) don't race over EXP_OUT_DIR /
+	@# concurrent chains (PARALLEL_CHAINS=1) don't race over EXP_OUT_DIR /
 	@# AZOTH_ROOT. The EXP_CACHE_DIR is intentionally NOT fold-suffixed —
 	@# corpus + matrix caches are content-hashed (oof_fold_exclude is in
 	@# the key), so both folds can share that directory and benefit from
@@ -1564,6 +1557,39 @@ azoth-deploy: azoth-calibrate
 # in vocab order — the failure mode an out-of-sync allowlist prune produces —
 # whereas validate's ExtractContext::validate_layout() rejects it, so a bundle
 # that would run silently degraded never reaches $(AZOTH_DEPLOY_DIR).
+#
+# --checksum is a FIX, not a tuning knob (added 2026-08-07). Plain `rsync -a`
+# decides what to copy from size and mtime alone, so a file whose content
+# changed while its size and mtime happened to match is skipped silently — no
+# error, no output, exit 0. Demonstrated directly: two 8-byte files with
+# differing content and identical mtimes, `rsync -a` leaves the destination
+# stale and reports nothing; add --checksum and it transfers (`>fc........`).
+# That is the exact signature of the two silent no-ops below, and while the
+# staged tree is deleted by the EXIT trap before it can be examined (so this
+# cannot be proven retroactively), the mechanism fits. Cost is negligible and
+# the failure mode it removes is not: the bundle is 206 MB and hashes in
+# ~0.6 s, against a 9-hour publish. It can only ever copy MORE files, never
+# fewer, so it cannot introduce a partial deploy.
+#
+# Mirror instrumentation (added 2026-08-07). This rsync has twice reported
+# success while transferring almost nothing — 2026-07-21 and again 2026-08-07,
+# where a full 9-hour publish passed every gate and left the deploy dir on a
+# 3-day-old bundle. Both investigations stalled for want of evidence: the recipe
+# printed the same "Deployed ..." line whether it moved 210 files or one. Three
+# additions make the next occurrence self-diagnosing rather than forensic:
+#
+#   * the staged-bundle line reports which run dir was staged (AZOTH_ROOT is a
+#     symlink into $(AZOTH_RUNS_ROOT), so "which build shipped" is not obvious)
+#     plus its file count and size — that alone separates "staging produced an
+#     incomplete tree" from "the mirror dropped it";
+#   * rsync --itemize-changes names every file transferred, and --stats gives
+#     the totals;
+#   * the config.json md5 is captured either side of the rsync. That is the
+#     actual tripwire: rsync exiting 0 has never been evidence that anything
+#     shipped, and an unchanged config.json after a retrain is the signature of
+#     the silent no-op. It WARNS rather than fails, because re-running
+#     deploy-final against an already-deployed bundle is a legitimate no-op and
+#     erroring there would block the very re-run used to recover.
 azoth-deploy-final: venv
 	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
@@ -1602,6 +1628,7 @@ azoth-deploy-final: venv
 	  trap 'rm -rf "$$_STAGE"' EXIT INT TERM && \
 	  export MAKEFLAGS= MFLAGS= CARGO_MAKEFLAGS= && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
+	  echo "staged from $$(readlink -f $(AZOTH_ROOT)): $$(find "$$_STAGE" -type f | wc -l) files, $$(du -sh "$$_STAGE" | cut -f1)" && \
 	  cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
 	  cp "$(AZOTH_SLICE_METRICS)" "$$_STAGE/slice_metrics.md" && \
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
@@ -1622,12 +1649,19 @@ azoth-deploy-final: venv
 	  echo "Checking deploy tuning goal agreement (collimator / bundle / litmus)..." && \
 	  $(PYTHON) scripts/check_severity_level_sync.py --staged "$$_STAGE" --litmus-dir $(LITMUS_DIR) && \
 	  mkdir -p "$(AZOTH_DEPLOY_DIR)" && \
-	  flock "$$_LOCK" rsync -a --delete-before \
+	  _PRE=$$(md5sum "$(AZOTH_DEPLOY_DIR)/config.json" 2>/dev/null | cut -d' ' -f1) && \
+	  flock "$$_LOCK" rsync -a --checksum --delete-before --itemize-changes --stats \
 	    --filter='protect /.git/***' \
 	    --filter='protect /.gitignore' \
 	    --filter='protect /LICENSE' \
 	    --filter='protect /TRAINING.md' \
 	    "$$_STAGE/" "$(AZOTH_DEPLOY_DIR)/" && \
+	  _POST=$$(md5sum "$(AZOTH_DEPLOY_DIR)/config.json" 2>/dev/null | cut -d' ' -f1) && \
+	  if [ "$$_PRE" = "$$_POST" ]; then \
+	    echo "WARNING: deployed config.json md5 UNCHANGED ($$_POST) — mirror may have been a no-op; check the rsync itemization above"; \
+	  else \
+	    echo "deployed config.json md5: $${_PRE:-<absent>} -> $$_POST"; \
+	  fi && \
 	  echo "Running litmus default deployed-model check..." && \
 	  ( cd $(LITMUS_DIR) && cargo run --release -- --extra --show all scan /bin/ls ) && \
 	  echo "Deployed azoth ensemble bundle to $(AZOTH_DEPLOY_DIR)"

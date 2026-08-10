@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import numpy as np
 
 from collimator.demo import create_demo_db
-from collimator import features
+from collimator import features, thresholds as _severity
 from collimator.experiment import (
     RECALL_AT_PER_100M_KS,
     _allowlist_content_hash,
     _matrix_cache_key,
-    _recall_at_per_100M,
+    recall_at_per_100M,
     sample_partitioned_reports,
 )
 
@@ -47,7 +50,7 @@ def test_recall_at_per_100M_perfect_separation() -> None:
     # 4 benigns scored low, 4 malware scored high — perfectly separable.
     y = np.array([0, 0, 0, 0, 1, 1, 1, 1])
     p = np.array([0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9])
-    out = _recall_at_per_100M(y, p)
+    out = recall_at_per_100M(y, p)
     for k in RECALL_AT_PER_100M_KS:
         assert out[f"recall_at_{int(k)}_per_100M"] == 1.0
     assert out["n_benign_holdout"] == 4
@@ -59,10 +62,10 @@ def test_recall_at_per_100M_perfect_separation() -> None:
 def test_recall_at_per_100M_min_observable_none_when_no_benigns() -> None:
     y = np.array([1, 1, 1])
     p = np.array([0.7, 0.8, 0.9])
-    out = _recall_at_per_100M(y, p)
+    out = recall_at_per_100M(y, p)
     assert out["n_benign_holdout"] == 0
     # Emit None (=> JSON null) rather than +inf; the literal Infinity token
-    # crashes strict downstream parsers. See _recall_at_per_100M for context.
+    # crashes strict downstream parsers. See recall_at_per_100M for context.
     assert out["min_observable_per_100M"] is None
 
 
@@ -70,7 +73,7 @@ def test_recall_at_per_100M_degenerate_inputs() -> None:
     # No malware: all metrics report 0 cleanly without divide-by-zero.
     y_benign_only = np.array([0, 0, 0, 0])
     p_benign_only = np.array([0.1, 0.2, 0.3, 0.4])
-    out = _recall_at_per_100M(y_benign_only, p_benign_only)
+    out = recall_at_per_100M(y_benign_only, p_benign_only)
     assert out["n_malware_holdout"] == 0
     for k in RECALL_AT_PER_100M_KS:
         assert out[f"recall_at_{int(k)}_per_100M"] == 0.0
@@ -85,7 +88,7 @@ def test_recall_at_per_100M_widening_budget_is_monotone() -> None:
     mal_buried = rng.uniform(0.1, 0.45, 30)
     p = np.concatenate([ben, mal_clean, mal_buried])
     y = np.concatenate([np.zeros(n_benign), np.ones(100)]).astype(int)
-    out = _recall_at_per_100M(y, p)
+    out = recall_at_per_100M(y, p)
     last = -1.0
     for k in RECALL_AT_PER_100M_KS:
         v = out[f"recall_at_{int(k)}_per_100M"]
@@ -119,3 +122,49 @@ def test_sample_partitioned_reports_full_test_keeps_all_test_rows(tmp_path) -> N
     assert all(not s.is_test for s in sampled.train_samples)
     assert all(s.is_test for s in sampled.test_samples)
     assert len(sampled.test_samples) > 1
+
+
+def test_measured_fp_anchors_are_emitted_and_monotone() -> None:
+    # The strict-end anchors a small screen holdout can actually observe.
+    rng = np.random.RandomState(3)
+    ben = rng.beta(2, 6, 5_000)
+    mal = rng.beta(3, 3, 5_000)
+    y = np.concatenate([np.zeros(ben.size), np.ones(mal.size)]).astype(int)
+    out = recall_at_per_100M(y, np.concatenate([ben, mal]))
+    for budget in (0, 1, 3):
+        assert f"recall_at_{budget}fp" in out
+        assert out[f"fp_at_{budget}fp"] <= budget
+    assert out["recall_at_0fp"] <= out["recall_at_1fp"] <= out["recall_at_3fp"]
+
+
+def test_measured_1fp_anchor_is_at_least_the_shipped_level_recall() -> None:
+    # The two conventions are deliberately different and must not be conflated:
+    # recall_at_1fp is the dominating point (loosest threshold still admitting
+    # one benign), while recall_at_<level>_per_100M uses the conservative
+    # ships-at threshold from quantile_severity_threshold. Below the holdout's
+    # resolution both realize ~1 FP, and the anchor can only read >= the level.
+    # Comparing one against the other across two models is what made a screen
+    # baseline look 0.9pp better than like-for-like (2026-08-08).
+    rng = np.random.RandomState(5)
+    ben = rng.beta(2, 6, 10_000)
+    mal = rng.beta(3, 3, 10_000)
+    y = np.concatenate([np.zeros(ben.size), np.ones(mal.size)]).astype(int)
+    out = recall_at_per_100M(y, np.concatenate([ben, mal]))
+    assert out["min_observable_per_100M"] == 10_000.0
+    level = _severity.DEFAULT_SEVERITY_LEVEL
+    assert out["recall_at_1fp"] >= out[f"recall_at_{level}_per_100M"] - 1e-12
+
+
+def test_route_policy_eval_shares_the_anchor_implementation() -> None:
+    # scripts/azoth_route_policy_eval.py delegates to the same function, so a
+    # screen anchor and a deploy-scale slice anchor cannot drift apart.
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    import azoth_route_policy_eval as rpe
+
+    rng = np.random.RandomState(11)
+    p = np.concatenate([rng.beta(2, 6, 2_000), rng.beta(3, 3, 2_000)])
+    y = np.concatenate([np.zeros(2_000), np.ones(2_000)]).astype(int)
+    for budget in (0, 1, 3):
+        assert rpe._recall_pr_at_fp(p, y, budget) == _severity.recall_at_fp_budget(
+            y, p, budget,
+        )

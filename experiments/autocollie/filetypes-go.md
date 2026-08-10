@@ -2146,3 +2146,425 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260808T102024-filetypes-go` — 2026-08-08T10:20:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | ok | 0.4782 | 0.7431 | 0.3560 | 52 | [log](out/autocollie/runs/2026-08-08T10-31-37_20260808T102024-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `a9fa229838ad9def` | go_control_baseline_train | ok | 0.4101 | 0.6861 | 0.2640 | 30 | [log](out/autocollie/runs/2026-08-08T10-33-08_20260808T102024-filetypes-go_go_control_baseline_train.log) |
+| `9561560404f0bad8` | go_exploit_dart_boosting | ok | 0.3589 | 0.6062 | 0.2569 | 2 | [log](out/autocollie/runs/2026-08-08T10-33-40_20260808T102024-filetypes-go_go_exploit_dart_boosting.log) |
+| `5680a66053c40681` | go_exploit_hardneg_tuned | ok | 0.4000 | 0.6630 | 0.2641 | 5 | [log](out/autocollie/runs/2026-08-08T10-33-43_20260808T102024-filetypes-go_go_exploit_hardneg_tuned.log) |
+| `ee3088d253e34f9d` | go_feat_kv_vocab_enable | ok | 0.4101 | 0.6861 | 0.2640 | 11 | [log](out/autocollie/runs/2026-08-08T10-33-50_20260808T102024-filetypes-go_go_feat_kv_vocab_enable.log) |
+| `0ae042766974480d` | go_feat_symbol_vocab_enable | ok | 0.4101 | 0.6861 | 0.2640 | 11 | [log](out/autocollie/runs/2026-08-08T10-34-02_20260808T102024-filetypes-go_go_feat_symbol_vocab_enable.log) |
+| `31f5966bcc9b1b1d` | go_feat_text_metrics_enable | ok | 0.4033 | 0.6712 | 0.2632 | 10 | [log](out/autocollie/runs/2026-08-08T10-34-15_20260808T102024-filetypes-go_go_feat_text_metrics_enable.log) |
+| `87561ce9cf8179cc` | go_feat_low_bigram_freq | ok | 0.4101 | 0.6861 | 0.2640 | 13 | [log](out/autocollie/runs/2026-08-08T10-34-26_20260808T102024-filetypes-go_go_feat_low_bigram_freq.log) |
+| `c1ed2434699a00bd` | go_abl_extreme_extended_off | ok | 0.3804 | 0.6382 | 0.2624 | 10 | [log](out/autocollie/runs/2026-08-08T10-34-42_20260808T102024-filetypes-go_go_abl_extreme_extended_off.log) |
+| `2ea9473f904f2303` | go_transfer_xml_tiered_trigrams | ok | 0.4101 | 0.6861 | 0.2640 | 12 | [log](out/autocollie/runs/2026-08-08T10-34-53_20260808T102024-filetypes-go_go_transfer_xml_tiered_trigrams.log) |
+| `64832fa38f41d893` | go_transfer_rust_capacity | ok | 0.4002 | 0.6596 | 0.2637 | 13 | [log](out/autocollie/runs/2026-08-08T10-35-06_20260808T102024-filetypes-go_go_transfer_rust_capacity.log) |
+| `09e0c20ab516c5c8` | go_gen_seed_search_3 | ok | 0.4134 | 0.6914 | 0.3247 | 13 | [log](out/autocollie/runs/2026-08-08T10-35-20_20260808T102024-filetypes-go_go_gen_seed_search_3.log) |
+| `3b3339b468a878ef` | go_retry_leaves128_est300 | ok | 0.4134 | 0.6803 | 0.2633 | 11 | [log](out/autocollie/runs/2026-08-08T10-35-35_20260808T102024-filetypes-go_go_retry_leaves128_est300.log) |
+| `cfbe2f3d1295a90a` | go_retry_mbc_symbol_bigrams | ok | 0.4101 | 0.6861 | 0.2640 | 13 | [log](out/autocollie/runs/2026-08-08T10-35-48_20260808T102024-filetypes-go_go_retry_mbc_symbol_bigrams.log) |
+| `a3c3734587e531b9` | go_wildcard_severity_confidence | ok | 0.4101 | 0.6861 | 0.2640 | 11 | [log](out/autocollie/runs/2026-08-08T10-36-02_20260808T102024-filetypes-go_go_wildcard_severity_confidence.log) |
+
+Rejected before run:
+
+- `go_gen_alt_seed_123` — features.repetition_penalty_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_baseline_train`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best feature_env with slight training capacity increase to establish matrix-cache baseline for PR_AUC.
+- **`go_exploit_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=400 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Switch to dart boosting to add dropout regularization, targeting improved recall@3FPM while preserving PR_AUC.
+- **`go_exploit_hardneg_tuned`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.3 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Increase hard negative fraction and weight to sharpen decision boundary at low FPR, aiming for higher recall@3FPM.
+- **`go_feat_kv_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture Go module/dependency key-value signals, targeting PR_AUC gain.
+- **`go_feat_symbol_vocab_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab to extract Go binary symbol table patterns, aiming to improve PR_AUC and recall@3FPM.
+- **`go_feat_text_metrics_enable`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to detect obfuscation in Go scripts/sources, targeting PR_AUC.
+- **`go_feat_low_bigram_freq`** `EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=20 EXP_TRAIN_SAMPLES=30000` — Lower bigram and tiered_bigram min_freq to capture rarer Go-specific patterns, targeting PR_AUC improvement.
+- **`go_abl_extreme_extended_off`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_EXTENDED_METRICS=0 EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features and extended_metrics to reduce noise/overfit, testing if PR_AUC remains flat or improves.
+- **`go_transfer_xml_tiered_trigrams`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Port XML route's low bigram freq and tiered trigrams to capture finer Go trait co-occurrences, targeting PR_AUC.
+- **`go_transfer_rust_capacity`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=500 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_NUM_LEAVES=160 EXP_TRAIN_SAMPLES=30000` — Port Rust route's higher capacity training config with metric_ratio_features to better fit Go's complex feature space, targeting recall@3FPM.
+- **`go_gen_seed_search_3`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_SOFT_PRESENCE=0 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with ensemble averaging and soft_presence off to reduce seed variance and stabilize recall@3FPM.
+- **`go_retry_leaves128_est300`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_FILE_SEVERITY_DISTRIBUTION=0 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Retry prior leaves128/est300 config with file_severity_distribution off on fresh corpus to check for data-drift induced recall@3FPM gains.
+- **`go_retry_mbc_symbol_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Retry mbc_id_vocab and symbol_bigrams from historical top performer to assess current corpus signal for PR_AUC.
+- **`go_wildcard_severity_confidence`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_CONFIDENCE_MOMENTS=1` — Enable severity_fractions and trait_confidence_moments to better rank borderline Go malware, targeting PR_AUC.
+
+</details>
+
+## Cycle `20260808T132143-filetypes-go` — 2026-08-08T13:21:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 1 | [log](out/autocollie/runs/2026-08-08T13-33-18_20260808T132143-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `b09463e8e96a4ec1` | go_ctrl_leaves128_est350_lr004 | ok | 0.4023 | 0.6648 | 0.2638 | 11 | [log](out/autocollie/runs/2026-08-08T13-33-22_20260808T132143-filetypes-go_go_ctrl_leaves128_est350_lr004.log) |
+| `a004fd145af18ff1` | go_ctrl_hardneg_01_12 | ok | 0.4181 | 0.6870 | 0.2644 | 3 | [log](out/autocollie/runs/2026-08-08T13-33-34_20260808T132143-filetypes-go_go_ctrl_hardneg_01_12.log) |
+| `01799d7b41b81d85` | go_train_dart_extratrees | ok | 0.3531 | 0.5984 | 0.2641 | 3 | [log](out/autocollie/runs/2026-08-08T13-33-38_20260808T132143-filetypes-go_go_train_dart_extratrees.log) |
+| `e7ffd5bec9b2e632` | go_feat_kv_vocab_10k | ok | 0.4013 | 0.6669 | 0.2626 | 11 | [log](out/autocollie/runs/2026-08-08T13-33-41_20260808T132143-filetypes-go_go_feat_kv_vocab_10k.log) |
+| `190c071267865d58` | go_feat_symbol_vocab_10k | ok | 0.4013 | 0.6669 | 0.2626 | 11 | [log](out/autocollie/runs/2026-08-08T13-33-53_20260808T132143-filetypes-go_go_feat_symbol_vocab_10k.log) |
+| `9b6701444f968055` | go_feat_textenc_metrics | ok | 0.4090 | 0.6790 | 0.2645 | 10 | [log](out/autocollie/runs/2026-08-08T13-34-06_20260808T132143-filetypes-go_go_feat_textenc_metrics.log) |
+| `20f214ea901a8238` | go_feat_lowbigram_200_8k | ok | 0.4013 | 0.6669 | 0.2626 | 11 | [log](out/autocollie/runs/2026-08-08T13-34-17_20260808T132143-filetypes-go_go_feat_lowbigram_200_8k.log) |
+| `50d57b47e9bec4fe` | go_feat_tiered_trigrams | ok | 0.4013 | 0.6669 | 0.2626 | 12 | [log](out/autocollie/runs/2026-08-08T13-34-29_20260808T132143-filetypes-go_go_feat_tiered_trigrams.log) |
+| `9959127a527dd549` | go_feat_mbc_vocab_attack_ngrams | ok | 0.4013 | 0.6669 | 0.2626 | 12 | [log](out/autocollie/runs/2026-08-08T13-34-41_20260808T132143-filetypes-go_go_feat_mbc_vocab_attack_ngrams.log) |
+| `574fa550af9ddc9e` | go_feat_severity_fractions_traits | ok | 0.4013 | 0.6669 | 0.2626 | 10 | [log](out/autocollie/runs/2026-08-08T13-34-55_20260808T132143-filetypes-go_go_feat_severity_fractions_traits.log) |
+| `ca72e7e9e884c1f7` | go_transfer_xml_bigrams | ok | 0.4013 | 0.6669 | 0.2626 | 10 | [log](out/autocollie/runs/2026-08-08T13-35-06_20260808T132143-filetypes-go_go_transfer_xml_bigrams.log) |
+| `4082785a7ac322aa` | go_transfer_perl_hardneg_extreme | ok | 0.4267 | 0.7076 | 0.2637 | 2 | [log](out/autocollie/runs/2026-08-08T13-35-18_20260808T132143-filetypes-go_go_transfer_perl_hardneg_extreme.log) |
+| `0e5a91d4b5b9aca7` | go_gen_seed_search_3_avg | ok | 0.4070 | 0.6744 | 0.3096 | 15 | [log](out/autocollie/runs/2026-08-08T13-35-22_20260808T132143-filetypes-go_go_gen_seed_search_3_avg.log) |
+| `599bb39e3e8881df` | go_retry_mbc_symbol_bigrams_v2 | ok | 0.4013 | 0.6669 | 0.2626 | 9 | [log](out/autocollie/runs/2026-08-08T13-35-38_20260808T132143-filetypes-go_go_retry_mbc_symbol_bigrams_v2.log) |
+| `9158b6674cfe632b` | go_abl_clusters_textenc | ok | 0.4013 | 0.6669 | 0.2626 | 12 | [log](out/autocollie/runs/2026-08-08T13-35-49_20260808T132143-filetypes-go_go_abl_clusters_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_leaves128_est350_lr004`** `EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with slightly more estimators and lower LR to stabilize PR_AUC gains from leaves128.
+- **`go_ctrl_hardneg_01_12`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with hard negatives to push recall@3FPM without hurting PR_AUC.
+- **`go_train_dart_extratrees`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Test dart boosting and extra_trees to improve generalization and ROC_AUC at the tail.
+- **`go_feat_kv_vocab_10k`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture key-value patterns in Go configs/bins, targeting PR_AUC improvement.
+- **`go_feat_symbol_vocab_10k`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab to capture import/symbol patterns specific to Go binaries, targeting PR_AUC.
+- **`go_feat_textenc_metrics`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to capture obfuscation signals in Go source/scripts, targeting recall@3FPM.
+- **`go_feat_lowbigram_200_8k`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and increase max to 8000 to capture rarer Go patterns, targeting PR_AUC.
+- **`go_feat_tiered_trigrams`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=5 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams to capture severity-weighted path trigrams, targeting PR_AUC.
+- **`go_feat_mbc_vocab_attack_ngrams`** `EXP_ATTACK_NGRAMS=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable mbc_id_vocab and attack_ngrams to enrich behavioral signal, targeting recall@3FPM.
+- **`go_feat_severity_fractions_traits`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SCORE_WEIGHTED_TRAITS=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable severity_fractions and score_weighted_traits to better rank minimal droppers, targeting PR_AUC.
+- **`go_transfer_xml_bigrams`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfer xml route's low bigram_min_freq (50) and higher max (8000) to capture finer Go syntax patterns, targeting PR_AUC.
+- **`go_transfer_perl_hardneg_extreme`** `EXP_ESTIMATORS=300 EXP_EXTREME_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Transfer perl route's hard negative strategy and extreme features to boost tail recall@3FPM.
+- **`go_gen_seed_search_3_avg`** `EXP_ATTACK_NGRAMS=1 EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds to average out variance and stabilize PR_AUC gains.
+- **`go_retry_mbc_symbol_bigrams_v2`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_NUM_LEAVES=128 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ_BIGRAM=10 EXP_TRAIN_SAMPLES=30000` — Retry prior mbc/symbol bigram idea with updated corpus to check for data-drift recovery of PR_AUC.
+- **`go_abl_clusters_textenc`** `EXP_DISABLE_FEATURE_GROUPS=clusters,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Ablate clusters and textenc groups to reduce noise and potentially improve ROC_AUC and PR_AUC.
+
+</details>
+
+## Cycle `20260808T142930-filetypes-go` — 2026-08-08T14:29:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 2 | [log](out/autocollie/runs/2026-08-08T14-38-57_20260808T142930-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `f65c65dd809cca96` | go_ctrl_best_hardneg | ok | 0.3987 | 0.6557 | 0.2644 | 3 | [log](out/autocollie/runs/2026-08-08T14-39-02_20260808T142930-filetypes-go_go_ctrl_best_hardneg.log) |
+| `379973e11f448247` | go_exploit_hardneg_reg | ok | 0.3915 | 0.6509 | 0.2645 | 4 | [log](out/autocollie/runs/2026-08-08T14-39-07_20260808T142930-filetypes-go_go_exploit_hardneg_reg.log) |
+| `8df35ea6dab25f46` | go_exploit_extra_trees | ok | 0.3761 | 0.6247 | 0.2690 | 3 | [log](out/autocollie/runs/2026-08-08T14-39-12_20260808T142930-filetypes-go_go_exploit_extra_trees.log) |
+| `62c5b3f3dd37d100` | go_feat_kv_vocab | ok | 0.4013 | 0.6669 | 0.2626 | 19 | [log](out/autocollie/runs/2026-08-08T14-39-17_20260808T142930-filetypes-go_go_feat_kv_vocab.log) |
+| `31859a5ce0ccc08a` | go_feat_symbol_bigrams | ok | 0.4013 | 0.6669 | 0.2626 | 11 | [log](out/autocollie/runs/2026-08-08T14-39-37_20260808T142930-filetypes-go_go_feat_symbol_bigrams.log) |
+| `4cffda2b4013598a` | go_feat_text_metrics | ok | 0.4094 | 0.6798 | 0.2645 | 4 | [log](out/autocollie/runs/2026-08-08T14-39-50_20260808T142930-filetypes-go_go_feat_text_metrics.log) |
+| `a40f600573cfb670` | go_feat_low_bigram_freq | ok | 0.4013 | 0.6669 | 0.2626 | 15 | [log](out/autocollie/runs/2026-08-08T14-39-56_20260808T142930-filetypes-go_go_feat_low_bigram_freq.log) |
+| `102d137da7b12f4f` | go_feat_tiered_trigrams | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T14-40-12_20260808T142930-filetypes-go_go_feat_tiered_trigrams.log) |
+| `20cd0bde074d8b5a` | go_abl_extreme_off | ok | 0.4013 | 0.6669 | 0.2626 | 11 | [log](out/autocollie/runs/2026-08-08T14-40-16_20260808T142930-filetypes-go_go_abl_extreme_off.log) |
+| `db34e6536010ec6a` | go_transfer_xml_tiered | ok | 0.4013 | 0.6669 | 0.2626 | 15 | [log](out/autocollie/runs/2026-08-08T14-40-28_20260808T142930-filetypes-go_go_transfer_xml_tiered.log) |
+| `2c1e82e3705bd919` | go_transfer_ruby_scalepos | ok | 0.4014 | 0.6632 | 0.2648 | 12 | [log](out/autocollie/runs/2026-08-08T14-40-44_20260808T142930-filetypes-go_go_transfer_ruby_scalepos.log) |
+| `888bae9805b0e4ae` | go_gen_seed_search | ok | 0.4088 | 0.6734 | 0.3100 | 6 | [log](out/autocollie/runs/2026-08-08T14-40-57_20260808T142930-filetypes-go_go_gen_seed_search.log) |
+| `94e0c8d6973bfe35` | go_gen_alt_seed | ok | 0.3765 | 0.6393 | 0.2605 | 43 | [log](out/autocollie/runs/2026-08-08T14-41-04_20260808T142930-filetypes-go_go_gen_alt_seed.log) |
+| `099181bf6a2fbe0f` | go_retry_hardneg_01_12 | ok | 0.4181 | 0.6870 | 0.2644 | 5 | [log](out/autocollie/runs/2026-08-08T14-41-51_20260808T142930-filetypes-go_go_retry_hardneg_01_12.log) |
+| `8a198b3effac7f60` | go_retry_textenc_v2 | ok | 0.3984 | 0.6558 | 0.2637 | 3 | [log](out/autocollie/runs/2026-08-08T14-41-57_20260808T142930-filetypes-go_go_retry_textenc_v2.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_best_hardneg`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Control baseline with deeper trees and slower learning to improve PR_AUC stability.
+- **`go_exploit_hardneg_reg`** `EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 EXP_TRAIN_SAMPLES=30000` — Increase hard negative weight and regularization to sharpen ranking at low FPR, targeting recall@3FPM.
+- **`go_exploit_extra_trees`** `EXP_COLSAMPLE_BYTREE=0.8 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SUBSAMPLE=0.8 EXP_TRAIN_SAMPLES=30000` — Add ensemble noise via extra trees to reduce overfitting and improve tail recall@3FPM.
+- **`go_feat_kv_vocab`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable KV vocab to capture structured Go config/metadata patterns, aiming to boost PR_AUC.
+- **`go_feat_symbol_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Add symbol bigrams to catch Go import co-occurrence patterns, targeting PR_AUC gain.
+- **`go_feat_text_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Promote text metrics and encoding features to capture obfuscation in Go scripts, aiming to improve ROC_AUC and PR_AUC.
+- **`go_feat_low_bigram_freq`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Lower bigram frequency floor to include rarer Go-specific patterns, targeting PR_AUC improvement.
+- **`go_feat_tiered_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Enable tiered critical trigrams to capture multi-step attack chains in Go, aiming to boost recall@3FPM.
+- **`go_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Remove extreme features to test if they add noise; expects flat or higher PR_AUC with cleaner ranking.
+- **`go_transfer_xml_tiered`** `EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_BIGRAM_MAX=8000 EXP_TIERED_CRIT_BIGRAMS=1 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Port XML route's successful low-freq bigram + tiered trigram config to Go, targeting PR_AUC.
+- **`go_transfer_ruby_scalepos`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Transfer Ruby's class-weight downscaling combined with symbol vocab to reduce benign FPs, targeting recall@3FPM.
+- **`go_gen_seed_search`** `EXP_EXTREME_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Average 3 seeds on strong hard-neg config with extreme features to reduce variance and stabilize PR_AUC.
+- **`go_gen_alt_seed`** `EXP_ATTACK_FEATURES=1 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Test alternative seed on deeper tree config with attack features to verify signal robustness for PR_AUC.
+- **`go_retry_hardneg_01_12`** `EXP_ESTIMATORS=350 EXP_EXTREME_FEATURES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry prior strong hard-neg config with extreme features and more estimators to capture data drift gains in PR_AUC.
+- **`go_retry_textenc_v2`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=112 EXP_REG_LAMBDA=1.5 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry text encoding features with moderate regularization to recover PR_AUC after drift.
+
+</details>
+
+## Cycle `20260808T153058-filetypes-go` — 2026-08-08T15:30:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 2 | [log](out/autocollie/runs/2026-08-08T15-42-17_20260808T153058-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `30017e285ee3d08a` | go_ctrl_hardneg_base | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T15-42-22_20260808T153058-filetypes-go_go_ctrl_hardneg_base.log) |
+| `c7a82a5c83d97938` | go_exploit_hardneg_01_15 | ok | 0.4269 | 0.7059 | 0.2632 | 3 | [log](out/autocollie/runs/2026-08-08T15-42-26_20260808T153058-filetypes-go_go_exploit_hardneg_01_15.log) |
+| `a3eea5fa805c32e7` | go_exploit_scalepos_05 | ok | 0.4066 | 0.6745 | 0.2628 | 3 | [log](out/autocollie/runs/2026-08-08T15-42-29_20260808T153058-filetypes-go_go_exploit_scalepos_05.log) |
+| `ab887075a1a79198` | go_feat_kv_vocab_10k | ok | 0.4013 | 0.6669 | 0.2626 | 2 | [log](out/autocollie/runs/2026-08-08T15-42-33_20260808T153058-filetypes-go_go_feat_kv_vocab_10k.log) |
+| `4cffda2b4013598a` | go_feat_text_metrics_full | dup | 0.4094 | 0.6798 | 0.2645 | 1 | [log](out/autocollie/runs/2026-08-08T15-42-36_20260808T153058-filetypes-go_go_feat_text_metrics_full.log) |
+| `d215534fa69d6e34` | go_feat_low_bigram_freq | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T15-42-38_20260808T153058-filetypes-go_go_feat_low_bigram_freq.log) |
+| `10a51864aee44045` | go_feat_symbol_vocab_5k | ok | 0.4013 | 0.6669 | 0.2626 | 11 | [log](out/autocollie/runs/2026-08-08T15-42-43_20260808T153058-filetypes-go_go_feat_symbol_vocab_5k.log) |
+| `20cd0bde074d8b5a` | go_abl_extreme_off | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T15-42-54_20260808T153058-filetypes-go_go_abl_extreme_off.log) |
+| `102d137da7b12f4f` | go_transfer_tiered_trigrams | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T15-42-56_20260808T153058-filetypes-go_go_transfer_tiered_trigrams.log) |
+| `a74da57b2a9a976d` | go_transfer_metric_ratios | ok | 0.4013 | 0.6669 | 0.2626 | 11 | [log](out/autocollie/runs/2026-08-08T15-42-58_20260808T153058-filetypes-go_go_transfer_metric_ratios.log) |
+| `375e40860981e5e5` | go_gen_seed_search_3 | ok | 0.4070 | 0.6744 | 0.3096 | 13 | [log](out/autocollie/runs/2026-08-08T15-43-10_20260808T153058-filetypes-go_go_gen_seed_search_3.log) |
+| `6e5ecf63b05f8fd7` | go_gen_alt_seed_99 | ok | 0.3994 | 0.6559 | 0.2641 | 47 | [log](out/autocollie/runs/2026-08-08T15-43-24_20260808T153058-filetypes-go_go_gen_alt_seed_99.log) |
+| `019baaf662ee6c48` | go_retry_textenc_v3 | ok | 0.4090 | 0.6790 | 0.2645 | 3 | [log](out/autocollie/runs/2026-08-08T15-44-14_20260808T153058-filetypes-go_go_retry_textenc_v3.log) |
+| `d89db6cbb4144fbc` | go_retry_seed_search_deep | ok | 0.3991 | 0.6710 | 0.2629 | 14 | [log](out/autocollie/runs/2026-08-08T15-44-18_20260808T153058-filetypes-go_go_retry_seed_search_deep.log) |
+| `12b965bc00c9836c` | go_wildcard_severity_fractions | ok | 0.4013 | 0.6669 | 0.2626 | 2 | [log](out/autocollie/runs/2026-08-08T15-44-33_20260808T153058-filetypes-go_go_wildcard_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_ctrl_hardneg_base`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Control run replicating best PR_AUC feature set to establish baseline for training tweaks.
+- **`go_exploit_hardneg_01_15`** `EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Increase hard_negative_weight to 15 to sharpen decision boundary and improve recall@3FPM.
+- **`go_exploit_scalepos_05`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_REG_LAMBDA=1.5 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Down-weight positives with scale_pos_weight_mult=0.5 to reduce FPR and boost recall@3FPM.
+- **`go_feat_kv_vocab_10k`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with max 10000 to capture key-value patterns and improve PR_AUC.
+- **`go_feat_text_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_metrics_full and text_encoding to extract structural text signals for PR_AUC gain.
+- **`go_feat_low_bigram_freq`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and increase bigram_max to 8000 to capture rarer patterns for recall@3FPM.
+- **`go_feat_symbol_vocab_5k`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_MIN_FREQ=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=5000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab with max 5000 to leverage import/symbol co-occurrence for PR_AUC.
+- **`go_abl_extreme_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce noise and stabilize ROC_AUC while preserving PR_AUC.
+- **`go_transfer_tiered_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Port tiered_crit_trigrams from sister routes to improve PR_AUC via severity-prefixed n-grams.
+- **`go_transfer_metric_ratios`** `EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable metric_ratio_features to transfer cross-metric ratio signal for better ranking and PR_AUC.
+- **`go_gen_seed_search_3`** `EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Use seed_search_k=3 with save_all_seeds=true to average out seed variance and verify PR_AUC signal with KV features.
+- **`go_gen_alt_seed_99`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Test seed=99 with hard negatives and text_encoding to check if recall@3FPM gain is seed-dependent.
+- **`go_retry_textenc_v3`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry text encoding features with updated corpus to recover PR_AUC after data drift.
+- **`go_retry_seed_search_deep`** `EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_SEED_SEARCH_K=3 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=3000 EXP_TRAIN_SAMPLES=30000` — Retry seed search with deeper trees and symbol_vocab to capture complex patterns missed previously for PR_AUC.
+- **`go_wildcard_severity_fractions`** `EXP_HOSTILE_WEIGHTED_DENSITY=1 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable severity_fractions to focus on crit-tier distributions and boost recall@3FPM.
+
+</details>
+
+## Cycle `20260808T162100-filetypes-go` — 2026-08-08T16:21:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 1 | [log](out/autocollie/runs/2026-08-08T16-31-30_20260808T162100-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `1318d85abdf40f4c` | go_control_hardneg_12 | ok | 0.4181 | 0.6870 | 0.2644 | 3 | [log](out/autocollie/runs/2026-08-08T16-31-34_20260808T162100-filetypes-go_go_control_hardneg_12.log) |
+| `08c5def1912b1ec1` | go_control_scalepos_075 | ok | 0.4015 | 0.6652 | 0.2624 | 2 | [log](out/autocollie/runs/2026-08-08T16-31-38_20260808T162100-filetypes-go_go_control_scalepos_075.log) |
+| `6d78f9286b99cb8a` | go_control_dart_extra | ok | 0.3531 | 0.5984 | 0.2641 | 2 | [log](out/autocollie/runs/2026-08-08T16-31-41_20260808T162100-filetypes-go_go_control_dart_extra.log) |
+| `1fcdd6827eec058b` | go_feat_kv_vocab_split | ok | 0.4013 | 0.6669 | 0.2626 | 14 | [log](out/autocollie/runs/2026-08-08T16-31-44_20260808T162100-filetypes-go_go_feat_kv_vocab_split.log) |
+| `71356f0ada3779c7` | go_feat_symbol_vocab_bigrams | ok | 0.4013 | 0.6669 | 0.2626 | 14 | [log](out/autocollie/runs/2026-08-08T16-31-59_20260808T162100-filetypes-go_go_feat_symbol_vocab_bigrams.log) |
+| `31f5966bcc9b1b1d` | go_feat_textenc_metrics | dup | 0.4033 | 0.6712 | 0.2632 | 1 | [log](out/autocollie/runs/2026-08-08T16-32-15_20260808T162100-filetypes-go_go_feat_textenc_metrics.log) |
+| `26f431d18b6cdabd` | go_feat_lowbigram_highcap | ok | 0.4013 | 0.6669 | 0.2626 | 13 | [log](out/autocollie/runs/2026-08-08T16-32-17_20260808T162100-filetypes-go_go_feat_lowbigram_highcap.log) |
+| `ea001821b17815cb` | go_abl_blindfold_off | ok | 0.4013 | 0.6669 | 0.2626 | 12 | [log](out/autocollie/runs/2026-08-08T16-32-32_20260808T162100-filetypes-go_go_abl_blindfold_off.log) |
+| `8270864b3a94061f` | go_transfer_tiered_trigrams | ok | 0.4013 | 0.6669 | 0.2626 | 11 | [log](out/autocollie/runs/2026-08-08T16-32-45_20260808T162100-filetypes-go_go_transfer_tiered_trigrams.log) |
+| `bc84943298cdd9bb` | go_transfer_hardneg_01_10 | ok | 0.4267 | 0.7076 | 0.2637 | 3 | [log](out/autocollie/runs/2026-08-08T16-32-57_20260808T162100-filetypes-go_go_transfer_hardneg_01_10.log) |
+| `d757552f9bb760fe` | go_gen_seed_search_3 | ok | 0.4124 | 0.6853 | 0.2638 | 6 | [log](out/autocollie/runs/2026-08-08T16-33-02_20260808T162100-filetypes-go_go_gen_seed_search_3.log) |
+| `dc7ededcd214ab51` | go_gen_alt_seed_77 | ok | 0.4056 | 0.6637 | 0.2617 | 49 | [log](out/autocollie/runs/2026-08-08T16-33-09_20260808T162100-filetypes-go_go_gen_alt_seed_77.log) |
+| `31f5966bcc9b1b1d` | go_retry_textenc_v3_drift | dup | 0.4033 | 0.6712 | 0.2632 | 1 | [log](out/autocollie/runs/2026-08-08T16-34-02_20260808T162100-filetypes-go_go_retry_textenc_v3_drift.log) |
+| `a742c2d97daa865b` | go_retry_severity_fractions | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T16-34-04_20260808T162100-filetypes-go_go_retry_severity_fractions.log) |
+| `f31500474e4310be` | go_wildcard_metric_ratios | ok | 0.4013 | 0.6669 | 0.2626 | 15 | [log](out/autocollie/runs/2026-08-08T16-34-08_20260808T162100-filetypes-go_go_wildcard_metric_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_hardneg_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC feature set, lower hard_negative_weight to 12 to reduce overfitting on hard negatives and improve PR_AUC.
+- **`go_control_scalepos_075`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set, down-weight positives with scale_pos_weight_mult 0.75 to tighten score distribution and boost PR_AUC.
+- **`go_control_dart_extra`** `EXP_BOOSTING_TYPE=dart EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTRA_TREES=1 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best feature set, switch to dart boosting with extra_trees to regularize tail predictions and stabilize ROC_AUC/PR_AUC.
+- **`go_feat_kv_vocab_split`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to capture structured key-value signals in Go configs/bins, targeting PR_AUC gains.
+- **`go_feat_symbol_vocab_bigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and symbol_bigrams to model import co-occurrence patterns common in Go binaries, aiming for PR_AUC improvement.
+- **`go_feat_textenc_metrics`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to extract string/encoding anomalies in Go source/bins, targeting PR_AUC.
+- **`go_feat_lowbigram_highcap`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 200 and raise bigram_max to 10000 to capture rarer but informative n-grams, aiming for PR_AUC lift.
+- **`go_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout features to reduce training noise and test if PR_AUC remains flat or improves with cleaner signal.
+- **`go_transfer_tiered_trigrams`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=5000 EXP_TIERED_TRIGRAM_MIN_FREQ=10 EXP_TRAIN_SAMPLES=30000` — Port tiered_crit_trigrams from xml route to capture severity-prefixed path trigrams, targeting PR_AUC gains on Go.
+- **`go_transfer_hardneg_01_10`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Transfer perl route's hard_negative_fraction 0.1 and weight 10 to focus on hardest benigns, aiming for PR_AUC improvement.
+- **`go_gen_seed_search_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k 3 on hardneg config to average out seed variance and stabilize recall@3FPM/PR_AUC.
+- **`go_gen_alt_seed_77`** `EXP_ATTACK_FEATURES=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test seed 77 on baseline features to check if recent PR_AUC wins are seed-dependent or robust.
+- **`go_retry_textenc_v3_drift`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry textenc v3 idea after corpus drift to see if PR_AUC recovers or improves with fresh data.
+- **`go_retry_severity_fractions`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Retry severity_fractions feature to capture size-invariant crit-tier signals, targeting recall@3FPM gains.
+- **`go_wildcard_metric_ratios`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SIZE_NORMALIZED_METRICS=1 EXP_TRAIN_SAMPLES=30000` — Enable metric_ratio_features and size_normalized_metrics to provide structural density signals, aiming for PR_AUC lift.
+
+</details>
+
+## Cycle `20260808T172338-filetypes-go` — 2026-08-08T17:23:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 2 | [log](out/autocollie/runs/2026-08-08T17-33-27_20260808T172338-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `eb25b6db1c3f97cf` | go_control_hardneg_opt | ok | 0.4269 | 0.7059 | 0.2632 | 4 | [log](out/autocollie/runs/2026-08-08T17-33-35_20260808T172338-filetypes-go_go_control_hardneg_opt.log) |
+| `a34b7fdb474a7acb` | go_control_scalepos_05 | ok | 0.4014 | 0.6632 | 0.2648 | 3 | [log](out/autocollie/runs/2026-08-08T17-33-42_20260808T172338-filetypes-go_go_control_scalepos_05.log) |
+| `3e6a7431899600df` | go_control_dart_boosting | ok | 0.3592 | 0.6118 | 0.2541 | 3 | [log](out/autocollie/runs/2026-08-08T17-33-46_20260808T172338-filetypes-go_go_control_dart_boosting.log) |
+| `b8427709a143ff18` | go_feat_kv_vocab_split | ok | 0.4047 | 0.6679 | 0.2636 | 10 | [log](out/autocollie/runs/2026-08-08T17-33-50_20260808T172338-filetypes-go_go_feat_kv_vocab_split.log) |
+| `31859a5ce0ccc08a` | go_feat_symbol_bigrams | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T17-34-02_20260808T172338-filetypes-go_go_feat_symbol_bigrams.log) |
+| `4cffda2b4013598a` | go_feat_text_encoding_metrics | dup | 0.4094 | 0.6798 | 0.2645 | 1 | [log](out/autocollie/runs/2026-08-08T17-34-04_20260808T172338-filetypes-go_go_feat_text_encoding_metrics.log) |
+| `ba7bf267efce8708` | go_feat_lowbigram_highcap | ok | 0.4047 | 0.6679 | 0.2636 | 11 | [log](out/autocollie/runs/2026-08-08T17-34-06_20260808T172338-filetypes-go_go_feat_lowbigram_highcap.log) |
+| `d9f98446bb4550e6` | go_abl_blindfold_off | ok | 0.4013 | 0.6669 | 0.2626 | 2 | [log](out/autocollie/runs/2026-08-08T17-34-19_20260808T172338-filetypes-go_go_abl_blindfold_off.log) |
+| `b61c2f890b11149d` | go_transfer_hardneg_trigrams | ok | 0.4181 | 0.6870 | 0.2644 | 3 | [log](out/autocollie/runs/2026-08-08T17-34-22_20260808T172338-filetypes-go_go_transfer_hardneg_trigrams.log) |
+| `cdfe6f100906e7e7` | go_transfer_scalepos_ratios | ok | 0.4015 | 0.6652 | 0.2624 | 2 | [log](out/autocollie/runs/2026-08-08T17-34-26_20260808T172338-filetypes-go_go_transfer_scalepos_ratios.log) |
+| `aff2c5aa1e0cb28a` | go_gen_seedsearch_kv | ok | 0.4123 | 0.6865 | 0.3291 | 11 | [log](out/autocollie/runs/2026-08-08T17-34-28_20260808T172338-filetypes-go_go_gen_seedsearch_kv.log) |
+| `f973d793d4aad155` | go_gen_alt_seed_symbols | ok | 0.3875 | 0.6432 | 0.2631 | 11 | [log](out/autocollie/runs/2026-08-08T17-34-40_20260808T172338-filetypes-go_go_gen_alt_seed_symbols.log) |
+| `8df68e084548ba46` | go_retry_hardneg_severity | ok | 0.4267 | 0.7076 | 0.2637 | 3 | [log](out/autocollie/runs/2026-08-08T17-34-52_20260808T172338-filetypes-go_go_retry_hardneg_severity.log) |
+| `b004ca1be5c58acc` | go_retry_seedsearch_text | ok | 0.3993 | 0.6742 | 0.2625 | 14 | [log](out/autocollie/runs/2026-08-08T17-34-56_20260808T172338-filetypes-go_go_retry_seedsearch_text.log) |
+| `762915b81580fc54` | go_wildcard_severity_focus | ok | 0.4201 | 0.6745 | 0.3208 | 55 | [log](out/autocollie/runs/2026-08-08T17-35-12_20260808T172338-filetypes-go_go_wildcard_severity_focus.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_hardneg_opt`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=15 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC feature set and tune hard_negative_weight to 15 to improve PR_AUC by better separating hard benigns.
+- **`go_control_scalepos_05`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SCALE_POS_WEIGHT_MULT=0.5 EXP_TRAIN_SAMPLES=30000` — Use best feature set with scale_pos_weight_mult=0.5 to down-weight positives and boost recall@3FPM at strict FP operating point.
+- **`go_control_dart_boosting`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Apply dart boosting to best feature set to add dropout regularization, targeting PR_AUC and ROC_AUC stability.
+- **`go_feat_kv_vocab_split`** `EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab and kv_value_split to recover per-element signal in Go config/struct blobs, targeting PR_AUC.
+- **`go_feat_symbol_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and symbol_bigrams to capture Go import co-occurrence patterns, targeting PR_AUC.
+- **`go_feat_text_encoding_metrics`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to detect obfuscation in Go scripts/sources, targeting PR_AUC.
+- **`go_feat_lowbigram_highcap`** `EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Lower bigram_min_freq to 250 and raise bigram_max to 10000 to capture rarer Go-specific patterns, targeting PR_AUC.
+- **`go_abl_blindfold_off`** `EXP_BLINDFOLD=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable blindfold dropout features to reduce noise and potentially improve PR_AUC and ROC_AUC.
+- **`go_transfer_hardneg_trigrams`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TRAIN_SAMPLES=30000` — Port hard_negative config from sister routes and enable tiered_crit_trigrams to improve PR_AUC via harder negatives and richer n-grams.
+- **`go_transfer_scalepos_ratios`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Transfer scale_pos_weight_mult=0.75 from ruby route and enable metric_ratio_features to balance classes and boost recall@3FPM.
+- **`go_gen_seedsearch_kv`** `EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Run seed_search_k=3 with kv_vocab enabled to average out seed variance and stabilize PR_AUC gains.
+- **`go_gen_alt_seed_symbols`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Test seed=99 with symbol_vocab enabled to check if recent PR_AUC wins are seed-dependent, targeting PR_AUC stability.
+- **`go_retry_hardneg_severity`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Retry top PR_AUC hardneg config with severity_fractions enabled to verify signal persists after daily corpus drift, targeting PR_AUC.
+- **`go_retry_seedsearch_text`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_SEED_SEARCH_K=3 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Retry seed_search config with text_metrics_full enabled to confirm PR_AUC stability over time.
+- **`go_wildcard_severity_focus`** `EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Enable severity_fractions with min_malware_score=3 to focus model on high-severity malware, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260808T194039-filetypes-go` — 2026-08-08T19:40:39Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 2 | [log](out/autocollie/runs/2026-08-08T19-53-13_20260808T194039-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `a5307facedb562b9` | go_control_hardneg_leaves128 | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T19-53-17_20260808T194039-filetypes-go_go_control_hardneg_leaves128.log) |
+| `2a0badf63612bcea` | go_control_hardneg_reg_lambda | ok | 0.3965 | 0.6628 | 0.2642 | 3 | [log](out/autocollie/runs/2026-08-08T19-53-22_20260808T194039-filetypes-go_go_control_hardneg_reg_lambda.log) |
+| `5e99f07f9701ba84` | go_control_hardneg_dart_boost | ok | 0.3554 | 0.6007 | 0.2655 | 3 | [log](out/autocollie/runs/2026-08-08T19-53-27_20260808T194039-filetypes-go_go_control_hardneg_dart_boost.log) |
+| `0dfe1901b6106a17` | go_feat_kv_vocab_expand | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T19-53-32_20260808T194039-filetypes-go_go_feat_kv_vocab_expand.log) |
+| `e774c70611234839` | go_feat_symbol_vocab_bigrams | ok | 0.4057 | 0.6627 | 0.2639 | 14 | [log](out/autocollie/runs/2026-08-08T19-53-36_20260808T194039-filetypes-go_go_feat_symbol_vocab_bigrams.log) |
+| `019baaf662ee6c48` | go_feat_textenc_metrics_full | dup | 0.4090 | 0.6790 | 0.2645 | 1 | [log](out/autocollie/runs/2026-08-08T19-53-51_20260808T194039-filetypes-go_go_feat_textenc_metrics_full.log) |
+| `24662419dd2aba1a` | go_feat_low_freq_bigrams | ok | 0.4098 | 0.6767 | 0.2636 | 3 | [log](out/autocollie/runs/2026-08-08T19-53-53_20260808T194039-filetypes-go_go_feat_low_freq_bigrams.log) |
+| `ea001821b17815cb` | go_abl_blindfold_off | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T19-53-58_20260808T194039-filetypes-go_go_abl_blindfold_off.log) |
+| `c7624389ec4b372b` | go_transfer_tiered_trigrams | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T19-54-00_20260808T194039-filetypes-go_go_transfer_tiered_trigrams.log) |
+| `bc84943298cdd9bb` | go_transfer_hardneg_tuned | dup | 0.4267 | 0.7076 | 0.2637 | 1 | [log](out/autocollie/runs/2026-08-08T19-54-04_20260808T194039-filetypes-go_go_transfer_hardneg_tuned.log) |
+| `66bd77c68009c069` | go_gen_seedsearch_best | ok | 0.4070 | 0.6744 | 0.3096 | 4 | [log](out/autocollie/runs/2026-08-08T19-54-07_20260808T194039-filetypes-go_go_gen_seedsearch_best.log) |
+| `0d768d3cfc0d61ca` | go_gen_seedsearch_kv | ok | 0.4070 | 0.6744 | 0.3096 | 5 | [log](out/autocollie/runs/2026-08-08T19-54-12_20260808T194039-filetypes-go_go_gen_seedsearch_kv.log) |
+| `a89c9f731fc2278f` | go_retry_severity_focus_v2 | ok | 0.4039 | 0.6666 | 0.2629 | 4 | [log](out/autocollie/runs/2026-08-08T19-54-20_20260808T194039-filetypes-go_go_retry_severity_focus_v2.log) |
+| `5f2f139b5011ad6b` | go_retry_hardneg_severity_v2 | ok | 0.4015 | 0.6652 | 0.2624 | 3 | [log](out/autocollie/runs/2026-08-08T19-54-26_20260808T194039-filetypes-go_go_retry_hardneg_severity_v2.log) |
+| `f31500474e4310be` | go_wildcard_metric_ratios | dup | 0.4013 | 0.6669 | 0.2626 | 2 | [log](out/autocollie/runs/2026-08-08T19-54-31_20260808T194039-filetypes-go_go_wildcard_metric_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_hardneg_leaves128`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Baseline feature set with increased num_leaves to 128 to capture finer decision boundaries, targeting PR_AUC improvement.
+- **`go_control_hardneg_reg_lambda`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Baseline feature set with higher reg_lambda to 3.0 to reduce overfitting on rare patterns, targeting stable ROC_AUC and PR_AUC.
+- **`go_control_hardneg_dart_boost`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Baseline feature set with dart boosting type to add dropout regularization, targeting better tail recall@3FPM.
+- **`go_feat_kv_vocab_expand`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable kv_vocab with higher cap to capture Go-specific key-value patterns, targeting PR_AUC gain from structural signal.
+- **`go_feat_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable symbol_vocab and symbol_bigrams to catch Go import co-occurrences, targeting recall@3FPM improvement.
+- **`go_feat_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text_encoding and text_metrics_full to extract obfuscation signals in Go strings and comments, targeting PR_AUC.
+- **`go_feat_low_freq_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lower bigram_min_freq to 200 and increase max to 10000 to capture rarer Go patterns, targeting recall@3FPM.
+- **`go_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Disable blindfold features to reduce noise and training variance, aiming to keep PR_AUC flat while improving ROC_AUC stability.
+- **`go_transfer_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Port tiered_crit_trigrams from sister routes to capture severity-prefixed patterns, targeting PR_AUC gain.
+- **`go_transfer_hardneg_tuned`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Adopt hard_negative_fraction and weight from perl route to focus on difficult benigns, targeting recall@3FPM.
+- **`go_gen_seedsearch_best`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Run seed_search_k=3 on best feature set to verify signal stability and reduce seed variance, targeting consistent PR_AUC.
+- **`go_gen_seedsearch_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Run seed_search_k=3 on kv_vocab config to ensure new features generalize across seeds, targeting stable recall@3FPM.
+- **`go_retry_severity_focus_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Retry severity_focus idea with updated corpus and higher reg_lambda to recover guardrails, targeting PR_AUC.
+- **`go_retry_hardneg_severity_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Retry hardneg_severity with scale_pos_weight_mult=0.75 to tighten FP tail, targeting recall@3FPM.
+- **`go_wildcard_metric_ratios`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable metric_ratio_features and size_normalized_metrics to improve structural discrimination, targeting ROC_AUC and PR_AUC.
+
+</details>
+
+## Cycle `20260808T203948-filetypes-go` — 2026-08-08T20:39:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 1 | [log](out/autocollie/runs/2026-08-08T20-49-30_20260808T203948-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `a5307facedb562b9` | go_control_baseline_train | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T20-49-34_20260808T203948-filetypes-go_go_control_baseline_train.log) |
+| `bd8cd41988fa5905` | go_exploit_hardneg_tail | ok | 0.4265 | 0.7048 | 0.2637 | 3 | [log](out/autocollie/runs/2026-08-08T20-49-37_20260808T203948-filetypes-go_go_exploit_hardneg_tail.log) |
+| `79acbf9b2422f84d` | go_exploit_reg_depth | ok | 0.3983 | 0.6653 | 0.2649 | 3 | [log](out/autocollie/runs/2026-08-08T20-49-42_20260808T203948-filetypes-go_go_exploit_reg_depth.log) |
+| `92df567eeff282b8` | go_feat_kv_vocab_expand | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T20-49-46_20260808T203948-filetypes-go_go_feat_kv_vocab_expand.log) |
+| `66a79d68e06ab83a` | go_feat_textenc_metrics | ok | 0.4094 | 0.6798 | 0.2645 | 4 | [log](out/autocollie/runs/2026-08-08T20-49-51_20260808T203948-filetypes-go_go_feat_textenc_metrics.log) |
+| `be50983dabd17d8d` | go_feat_tiered_trigrams | ok | 0.4025 | 0.6575 | 0.2633 | 10 | [log](out/autocollie/runs/2026-08-08T20-49-55_20260808T203948-filetypes-go_go_feat_tiered_trigrams.log) |
+| `8dd11ab2e9115b9f` | go_feat_symbol_vocab | ok | 0.4025 | 0.6575 | 0.2633 | 11 | [log](out/autocollie/runs/2026-08-08T20-50-07_20260808T203948-filetypes-go_go_feat_symbol_vocab.log) |
+| `40b538c43d6012f0` | go_abl_blindfold_off | ok | 0.4013 | 0.6669 | 0.2626 | 3 | [log](out/autocollie/runs/2026-08-08T20-50-19_20260808T203948-filetypes-go_go_abl_blindfold_off.log) |
+| `aa4d43d6300bfc06` | go_transfer_kv_seed | ok | 0.4116 | 0.6851 | 0.3290 | 3 | [log](out/autocollie/runs/2026-08-08T20-50-22_20260808T203948-filetypes-go_go_transfer_kv_seed.log) |
+| `ceb0ceaf61649623` | go_transfer_lowfreq_tiered | ok | 0.4025 | 0.6575 | 0.2633 | 10 | [log](out/autocollie/runs/2026-08-08T20-50-27_20260808T203948-filetypes-go_go_transfer_lowfreq_tiered.log) |
+| `795344aa670acb78` | go_gen_seed_var_check | ok | 0.3965 | 0.6480 | 0.2629 | 47 | [log](out/autocollie/runs/2026-08-08T20-50-39_20260808T203948-filetypes-go_go_gen_seed_var_check.log) |
+| `940cd72a9407c5ed` | go_retry_hardneg_sev_v3 | ok | 0.4269 | 0.6896 | 0.3222 | 11 | [log](out/autocollie/runs/2026-08-08T20-51-29_20260808T203948-filetypes-go_go_retry_hardneg_sev_v3.log) |
+| `bc598d71f696a2a9` | go_wildcard_sevfrac_kv | ok | 0.4025 | 0.6575 | 0.2633 | 10 | [log](out/autocollie/runs/2026-08-08T20-51-40_20260808T203948-filetypes-go_go_wildcard_sevfrac_kv.log) |
+| `b4e33e9aa766dea1` | go_wildcard_dart_ratio | ok | 0.3416 | 0.6030 | 0.2542 | 2 | [log](out/autocollie/runs/2026-08-08T20-51-51_20260808T203948-filetypes-go_go_wildcard_dart_ratio.log) |
+| `e077e84a1ab6d92b` | go_wildcard_confng_kv | ok | 0.4025 | 0.6575 | 0.2633 | 10 | [log](out/autocollie/runs/2026-08-08T20-51-54_20260808T203948-filetypes-go_go_wildcard_confng_kv.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_baseline_train`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Replicate best recent feature_env to establish a stable baseline for PR_AUC while varying only training knobs to hit matrix cache.
+- **`go_exploit_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.15 …` — Increase hard_negative_weight and fraction to improve recall@3FPM by forcing the model to better separate borderline benigns from malware.
+- **`go_exploit_reg_depth`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_DEPTH=8 …` — Reduce max_depth and increase reg_lambda to curb overfitting on rare patterns, aiming to stabilize PR_AUC and improve generalization.
+- **`go_feat_kv_vocab_expand`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_KV_MIN_FREQ=5 …` — Enable kv_vocab with higher cap to capture Go-specific package patterns, targeting PR_AUC gains from richer lexical signal.
+- **`go_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Enable text_encoding and text_metrics_full to capture obfuscation patterns in Go source, aiming to boost recall@3FPM.
+- **`go_feat_tiered_trigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Enable tiered_crit_trigrams to capture severity-weighted co-occurrence patterns, targeting PR_AUC improvement by emphasizing high-crit traits.
+- **`go_feat_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Enable symbol_vocab to capture Go-specific function names, aiming to improve recall@3FPM by distinguishing malicious API usage.
+- **`go_abl_blindfold_off`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=0 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Disable blindfold dropout features to reduce training noise and stabilize PR_AUC, testing if deterministic features yield better ranking.
+- **`go_transfer_kv_seed`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_KV_MIN_FREQ=5 …` — Port strong gz KV configuration with seed search to reduce variance and improve recall@3FPM stability across random splits.
+- **`go_transfer_lowfreq_tiered`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_MAX_TEST_SAMPLES=20000 …` — Adapt xml low-frequency bigram and tiered trigram setup to capture rare Go patterns, targeting PR_AUC gains from expanded lexical coverage.
+- **`go_gen_seed_var_check`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Vary seed on the best recent config to distinguish real PR_AUC signal from seed noise, ensuring robustness before promotion.
+- **`go_retry_hardneg_sev_v3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Retry the top historical hard-negative severity config after corpus drift, aiming to recover PR_AUC gains that may have faded.
+- **`go_wildcard_sevfrac_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_KV_VOCAB=1 …` — Combine severity_fractions with kv_vocab to emphasize high-crit findings in sparse Go files, targeting recall@3FPM for minimal droppers.
+- **`go_wildcard_dart_ratio`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Switch to dart boosting and enable metric_ratio_features to improve tail recall@3FPM by reducing overfitting while adding structural ratios.
+- **`go_wildcard_confng_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Enable confidence_weighted_ngrams alongside kv_vocab to weight lexical patterns by trait confidence, targeting PR_AUC by suppressing noisy matches.
+
+</details>
+
+## Cycle `20260808T213306-filetypes-go` — 2026-08-08T21:33:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 2 | [log](out/autocollie/runs/2026-08-08T21-43-59_20260808T213306-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `a5307facedb562b9` | go_control_train_opt1 | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T21-44-04_20260808T213306-filetypes-go_go_control_train_opt1.log) |
+| `5990b4fbbc82e274` | go_control_hardneg_tail | ok | 0.4181 | 0.6870 | 0.2644 | 3 | [log](out/autocollie/runs/2026-08-08T21-44-07_20260808T213306-filetypes-go_go_control_hardneg_tail.log) |
+| `4675395da64b3101` | go_control_dart_reg | ok | 0.3560 | 0.6067 | 0.2645 | 3 | [log](out/autocollie/runs/2026-08-08T21-44-11_20260808T213306-filetypes-go_go_control_dart_reg.log) |
+| `cf9b35354a938aa5` | go_feat_kv_vocab | ok | 0.4068 | 0.6722 | 0.2640 | 2 | [log](out/autocollie/runs/2026-08-08T21-44-15_20260808T213306-filetypes-go_go_feat_kv_vocab.log) |
+| `afac5b2d9b8e170f` | go_feat_symbol_vocab | ok | 0.3979 | 0.6531 | 0.2634 | 12 | [log](out/autocollie/runs/2026-08-08T21-44-19_20260808T213306-filetypes-go_go_feat_symbol_vocab.log) |
+| `9b6701444f968055` | go_feat_textenc_metrics | dup | 0.4090 | 0.6790 | 0.2645 | 1 | [log](out/autocollie/runs/2026-08-08T21-44-32_20260808T213306-filetypes-go_go_feat_textenc_metrics.log) |
+| `20f214ea901a8238` | go_feat_lowfreq_bigrams | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T21-44-34_20260808T213306-filetypes-go_go_feat_lowfreq_bigrams.log) |
+| `a5307facedb562b9` | go_abl_disable_clusters | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T21-44-36_20260808T213306-filetypes-go_go_abl_disable_clusters.log) |
+| `ca72e7e9e884c1f7` | go_transfer_xml_bigram | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T21-44-38_20260808T213306-filetypes-go_go_transfer_xml_bigram.log) |
+| `02246fdee802fd10` | go_transfer_docx_ember | ok | 0.3979 | 0.6531 | 0.2634 | 10 | [log](out/autocollie/runs/2026-08-08T21-44-40_20260808T213306-filetypes-go_go_transfer_docx_ember.log) |
+| `9b3e8b34a40ad592` | go_gen_seed_search_kv | ok | 0.4123 | 0.6865 | 0.3291 | 3 | [log](out/autocollie/runs/2026-08-08T21-44-52_20260808T213306-filetypes-go_go_gen_seed_search_kv.log) |
+| `3c4ba2782a9bc829` | go_gen_alt_seed_baseline | ok | 0.3973 | 0.6493 | 0.2638 | 45 | [log](out/autocollie/runs/2026-08-08T21-44-56_20260808T213306-filetypes-go_go_gen_alt_seed_baseline.log) |
+| `4d5ba7b1fe9e3afa` | go_retry_hardneg_tail_v2 | ok | 0.4170 | 0.6920 | 0.2643 | 3 | [log](out/autocollie/runs/2026-08-08T21-45-44_20260808T213306-filetypes-go_go_retry_hardneg_tail_v2.log) |
+| `5ddb877a9244165f` | go_retry_kv_seed_v2 | ok | 0.3979 | 0.6531 | 0.2634 | 12 | [log](out/autocollie/runs/2026-08-08T21-45-50_20260808T213306-filetypes-go_go_retry_kv_seed_v2.log) |
+| `ff67cc3d7366e096` | go_wildcard_sevfrac_ratios | ok | 0.3979 | 0.6531 | 0.2634 | 11 | [log](out/autocollie/runs/2026-08-08T21-46-03_20260808T213306-filetypes-go_go_wildcard_sevfrac_ratios.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_train_opt1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Baseline features with increased num_leaves and estimators to improve PR_AUC ranking.
+- **`go_control_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=250 …` — Baseline features with hard-negative upweighting to boost recall@3FPM at strict FP operating point.
+- **`go_control_dart_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_BOOSTING_TYPE=dart EXP_CRIT_CATEGORY_NGRAMS=1 …` — Baseline features with DART boosting and extra_trees to reduce overfit and stabilize PR_AUC.
+- **`go_feat_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable kv_vocab to capture key-value config patterns in Go binaries, targeting PR_AUC gain.
+- **`go_feat_symbol_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable symbol_vocab to leverage Go symbol tables for malware classification, aiming for PR_AUC improvement.
+- **`go_feat_textenc_metrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text_encoding and text_metrics_full to capture obfuscation signals in Go scripts/bins, targeting recall@3FPM.
+- **`go_feat_lowfreq_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=200 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Lower bigram_min_freq to 200 and increase max to 8000 to capture rarer attack patterns, aiming for PR_AUC gain.
+- **`go_abl_disable_clusters`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Disable clusters group to reduce noise and potentially improve PR_AUC by focusing on stronger signals.
+- **`go_transfer_xml_bigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Transfer low-freq bigram config from xml route to capture finer-grained patterns, targeting PR_AUC.
+- **`go_transfer_docx_ember`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_EMBER_LITE_FEATURES=1 …` — Transfer ember_lite and extended_metrics from docx route to add structural features, aiming for ROC_AUC stability and PR_AUC lift.
+- **`go_gen_seed_search_kv`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Seed search on kv_vocab config to verify signal robustness and reduce variance, targeting stable PR_AUC.
+- **`go_gen_alt_seed_baseline`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Alternate seed on baseline features to check for seed-driven variance in PR_AUC.
+- **`go_retry_hardneg_tail_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=350 …` — Retry prior high-PR-AUC hard-negative config on fresh corpus to check for data-drift gains.
+- **`go_retry_kv_seed_v2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Retry prior kv_vocab seed config to assess if recent corpus changes improve its PR_AUC.
+- **`go_wildcard_sevfrac_ratios`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable severity_fractions and metric_ratio_features to highlight minimal droppers, targeting recall@3FPM.
+
+</details>
+
+## Cycle `20260808T222903-filetypes-go` — 2026-08-08T22:29:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `58982c397ebc88ff` | inherit_from_filetypes_plist_8b54303f | dup | 0.4782 | 0.7431 | 0.3560 | 1 | [log](out/autocollie/runs/2026-08-08T22-37-01_20260808T222903-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `a5307facedb562b9` | go_control_baseline_train_v1 | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T22-37-05_20260808T222903-filetypes-go_go_control_baseline_train_v1.log) |
+| `5990b4fbbc82e274` | go_exploit_hardneg_weight_v1 | dup | 0.4181 | 0.6870 | 0.2644 | 1 | [log](out/autocollie/runs/2026-08-08T22-37-08_20260808T222903-filetypes-go_go_exploit_hardneg_weight_v1.log) |
+| `16ac4bcba4b212eb` | go_exploit_pos_weight_reg_v1 | ok | 0.4081 | 0.6703 | 0.2638 | 3 | [log](out/autocollie/runs/2026-08-08T22-37-10_20260808T222903-filetypes-go_go_exploit_pos_weight_reg_v1.log) |
+| `62c5b3f3dd37d100` | go_feat_kv_vocab_expanded | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T22-37-15_20260808T222903-filetypes-go_go_feat_kv_vocab_expanded.log) |
+| `e2ce027ebcc78c76` | go_feat_symbol_vocab_bigrams | ok | 0.3980 | 0.6574 | 0.2634 | 13 | [log](out/autocollie/runs/2026-08-08T22-37-17_20260808T222903-filetypes-go_go_feat_symbol_vocab_bigrams.log) |
+| `4cffda2b4013598a` | go_feat_textenc_metrics_full | dup | 0.4094 | 0.6798 | 0.2645 | 2 | [log](out/autocollie/runs/2026-08-08T22-37-33_20260808T222903-filetypes-go_go_feat_textenc_metrics_full.log) |
+| `4868e481ac312de0` | go_feat_tiered_crit_trigrams | ok | 0.3980 | 0.6574 | 0.2634 | 13 | [log](out/autocollie/runs/2026-08-08T22-37-36_20260808T222903-filetypes-go_go_feat_tiered_crit_trigrams.log) |
+| `20cd0bde074d8b5a` | go_abl_extreme_features_off | dup | 0.4013 | 0.6669 | 0.2626 | 1 | [log](out/autocollie/runs/2026-08-08T22-37-50_20260808T222903-filetypes-go_go_abl_extreme_features_off.log) |
+| `e1cdff85445a9231` | go_transfer_xml_lowbigram_tiered | ok | 0.4025 | 0.6575 | 0.2633 | 3 | [log](out/autocollie/runs/2026-08-08T22-37-53_20260808T222903-filetypes-go_go_transfer_xml_lowbigram_tiered.log) |
+| `5f85ea08bd8b00c2` | go_transfer_rust_capacity_feat | ok | 0.3979 | 0.6531 | 0.2634 | 2 | [log](out/autocollie/runs/2026-08-08T22-37-56_20260808T222903-filetypes-go_go_transfer_rust_capacity_feat.log) |
+| `eeee4621c1d40efc` | go_gen_seed_search_kv_hardneg | ok | 0.4179 | 0.6788 | 0.3096 | 4 | [log](out/autocollie/runs/2026-08-08T22-38-00_20260808T222903-filetypes-go_go_gen_seed_search_kv_hardneg.log) |
+| `0a65a1834ffa5e1e` | go_gen_alt_seed_baseline | ok | 0.3937 | 0.6646 | 0.2629 | 46 | [log](out/autocollie/runs/2026-08-08T22-38-05_20260808T222903-filetypes-go_go_gen_alt_seed_baseline.log) |
+| `90055bc9ec83d174` | go_retry_hardneg_sev_v3_drift | ok | 0.4224 | 0.6887 | 0.3143 | 2 | [log](out/autocollie/runs/2026-08-08T22-38-53_20260808T222903-filetypes-go_go_retry_hardneg_sev_v3_drift.log) |
+| `b311f36060132a4e` | go_retry_kv_seed_v2_drift | ok | 0.4044 | 0.6702 | 0.2637 | 10 | [log](out/autocollie/runs/2026-08-08T22-38-57_20260808T222903-filetypes-go_go_retry_kv_seed_v2_drift.log) |
+| `2fdf10dccd46decb` | go_wildcard_trait_moments_lexdist | ok | 0.3980 | 0.6574 | 0.2634 | 11 | [log](out/autocollie/runs/2026-08-08T22-39-09_20260808T222903-filetypes-go_go_wildcard_trait_moments_lexdist.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_baseline_train_v1`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Replicate best PR_AUC feature set while tuning num_leaves and estimators to improve PR_AUC via better tree capacity.
+- **`go_exploit_hardneg_weight_v1`** `EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Increase hard_negative_weight to 12 on baseline features to sharpen decision boundary and boost recall@3FPM.
+- **`go_exploit_pos_weight_reg_v1`** `EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_REG_LAMBDA=1.5 EXP_SCALE_POS_WEIGHT_MULT=0.75 EXP_TRAIN_SAMPLES=30000` — Lower scale_pos_weight_mult to 0.75 and increase reg_lambda to 1.5 to reduce FP tail noise and improve PR_AUC.
+- **`go_feat_kv_vocab_expanded`** `EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab with higher max and lower min_freq to capture Go module/package patterns, targeting PR_AUC gain.
+- **`go_feat_symbol_vocab_bigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_SYMBOL_BIGRAMS=1 EXP_SYMBOL_BIGRAM_MAX=5000 EXP_SYMBOL_MIN_FREQ_BIGRAM=5 EXP_SYMBOL_VOCAB=1 EXP_SYMBOL_VOCAB_MAX=10000 EXP_TRAIN_SAMPLES=30000` — Enable symbol_vocab and symbol_bigrams to capture Go import/symbol co-occurrences, aiming for PR_AUC improvement.
+- **`go_feat_textenc_metrics_full`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Enable text_encoding and text_metrics_full to detect obfuscation in Go source, targeting ROC_AUC and PR_AUC gains.
+- **`go_feat_tiered_crit_trigrams`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=10000 EXP_TIERED_TRIGRAM_MIN_CRIT=3 EXP_TRAIN_SAMPLES=30000` — Enable tiered_crit_trigrams with min_crit=3 to focus on high-severity path patterns, aiming to boost PR_AUC.
+- **`go_abl_extreme_features_off`** `EXP_EXTREME_FEATURES=0 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Disable extreme_features to reduce tail noise and overfitting, aiming for flat PR_AUC with improved ROC_AUC stability.
+- **`go_transfer_xml_lowbigram_tiered`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_MAX_TEST_SAMPLES=20000 EXP_TIERED_CRIT_TRIGRAMS=1 EXP_TIERED_TRIGRAM_MAX=8000 EXP_TRAIN_SAMPLES=30000` — Port xml route's low bigram_min_freq and tiered trigrams to capture rarer Go patterns, targeting PR_AUC gain.
+- **`go_transfer_rust_capacity_feat`** `EXP_MAX_TEST_SAMPLES=20000 EXP_METRIC_RATIO_FEATURES=1 EXP_SEVERITY_FRACTION_FEATURES=1 EXP_TRAIN_SAMPLES=30000` — Adapt rust route's capacity boost with severity_fractions and metric_ratio_features to better rank minimal Go droppers, targeting recall@3FPM.
+- **`go_gen_seed_search_kv_hardneg`** `EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_SAVE_ALL_SEEDS=1 EXP_SEED_SEARCH_K=3 EXP_TRAIN_SAMPLES=30000` — Combine kv_vocab with hard_negative_weight and seed_search_k=3 to stabilize PR_AUC gains across RNG seeds.
+- **`go_gen_alt_seed_baseline`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Test seed=7 on baseline features to verify if recent PR_AUC wins are seed-dependent or robust signal.
+- **`go_retry_hardneg_sev_v3_drift`** `EXP_HARD_NEGATIVE_WEIGHT=10 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_MALWARE_SCORE=3 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Retry top PR_AUC config with min_malware_score=3 to focus training on confident malware, targeting recall@3FPM.
+- **`go_retry_kv_seed_v2_drift`** `EXP_ESTIMATORS=350 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=20000 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Retry prior kv_seed candidate with increased kv_vocab_max and higher estimators to recover PR_AUC after corpus drift.
+- **`go_wildcard_trait_moments_lexdist`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_CONFIDENCE_MOMENTS=1 EXP_TRAIT_ID_LEXICAL_DISTANCE=1` — Enable trait_confidence_moments and trait_id_lexical_distance to capture trait distribution shapes, targeting PR_AUC improvement.
+
+</details>
+

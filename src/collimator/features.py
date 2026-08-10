@@ -4186,6 +4186,13 @@ def clamp_workers_to_available_ram(n_workers: int) -> int:
     growth. Linux-only; on any other platform or a parse failure it returns the
     request unchanged (never raises). Tune via COLLIMATOR_MEM_RESERVE_GB /
     COLLIMATOR_MEM_PER_WORKER_GB, or disable with COLLIMATOR_MEM_AWARE_WORKERS=0.
+
+    MemAvailable is read independently by every process that calls this, so N
+    trainings launched concurrently each see the WHOLE box free and each admit
+    a full worker count — an N-fold over-commit of the same RAM. An orchestrator
+    that fans out (scripts/azoth_oof_pipeline.sh) must therefore export
+    COLLIMATOR_MEM_SHARES=N, which divides the headroom into N equal budgets so
+    the concurrent caps sum to what a single run would have taken.
     """
     resolved = resolve_worker_count(n_workers)
     if os.getenv("COLLIMATOR_MEM_AWARE_WORKERS", "1") == "0" or resolved <= 1:
@@ -4193,6 +4200,7 @@ def clamp_workers_to_available_ram(n_workers: int) -> int:
     try:
         reserve = float(os.getenv("COLLIMATOR_MEM_RESERVE_GB", "48"))
         per_worker = float(os.getenv("COLLIMATOR_MEM_PER_WORKER_GB", "2"))
+        shares = max(1, int(os.getenv("COLLIMATOR_MEM_SHARES", "1")))
         with open("/proc/meminfo") as meminfo:
             avail_kb = next(
                 int(line.split()[1])
@@ -4200,20 +4208,22 @@ def clamp_workers_to_available_ram(n_workers: int) -> int:
                 if line.startswith("MemAvailable:")
             )
         avail_gb = avail_kb / 1024 / 1024
-        cap = max(1, int((avail_gb - reserve) // max(per_worker, 0.1)))
+        budget_gb = (avail_gb - reserve) / shares
+        cap = max(1, int(budget_gb // max(per_worker, 0.1)))
+        share_note = f", shares={shares}" if shares > 1 else ""
         if cap < resolved:
             log.warning(
                 "mem-aware workers: capping %d -> %d (MemAvailable=%.0f GB, "
-                "reserve=%.0f GB, per_worker=%.1f GB); tune via "
+                "reserve=%.0f GB, per_worker=%.1f GB%s); tune via "
                 "COLLIMATOR_MEM_RESERVE_GB / COLLIMATOR_MEM_PER_WORKER_GB or "
                 "disable with COLLIMATOR_MEM_AWARE_WORKERS=0",
-                resolved, cap, avail_gb, reserve, per_worker,
+                resolved, cap, avail_gb, reserve, per_worker, share_note,
             )
             return cap
         log.info(
             "mem-aware workers: %d workers fit (MemAvailable=%.0f GB, "
-            "reserve=%.0f GB, per_worker=%.1f GB)",
-            resolved, avail_gb, reserve, per_worker,
+            "reserve=%.0f GB, per_worker=%.1f GB%s)",
+            resolved, avail_gb, reserve, per_worker, share_note,
         )
         return resolved
     except (OSError, StopIteration, ValueError):

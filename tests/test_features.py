@@ -1809,3 +1809,56 @@ def test_allowlist_couples_offset_family_pairs():
     # Non-offset features filter normally: allowed kept, others dropped.
     assert "agg:max_crit" in kept
     assert "metrics:foo" not in kept
+
+
+def _meminfo_reader(tmp_path, monkeypatch, avail_gb: float) -> None:
+    """Point clamp_workers_to_available_ram's /proc/meminfo read at a fake."""
+    meminfo = tmp_path / "meminfo"
+    meminfo.write_text(
+        f"MemTotal:       264000000 kB\nMemAvailable:   {int(avail_gb * 1024 * 1024)} kB\n",
+    )
+    real_open = open
+
+    def fake_open(file, *args, **kwargs):
+        if file == "/proc/meminfo":
+            return real_open(meminfo, *args, **kwargs)
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", fake_open)
+
+
+def test_clamp_workers_splits_headroom_across_mem_shares(tmp_path, monkeypatch) -> None:
+    from collimator.features import clamp_workers_to_available_ram
+
+    # 148 GB available, 48 GB reserved, 2 GB/worker -> 50 workers for a lone run.
+    _meminfo_reader(tmp_path, monkeypatch, 148)
+    monkeypatch.delenv("COLLIMATOR_MEM_SHARES", raising=False)
+    monkeypatch.delenv("COLLIMATOR_MEM_AWARE_WORKERS", raising=False)
+    assert clamp_workers_to_available_ram(64) == 50
+
+    # Two concurrent trainings each see the same 148 GB, so each must take half
+    # the headroom — otherwise the host runs 2x the fetch workers the estimate
+    # was calibrated for, which is the shape of every OOM we've had here.
+    monkeypatch.setenv("COLLIMATOR_MEM_SHARES", "2")
+    assert clamp_workers_to_available_ram(64) == 25
+
+    # The clamp only ever reduces: a modest request passes through untouched.
+    assert clamp_workers_to_available_ram(8) == 8
+
+
+def test_clamp_workers_shares_never_returns_zero(tmp_path, monkeypatch) -> None:
+    from collimator.features import clamp_workers_to_available_ram
+
+    _meminfo_reader(tmp_path, monkeypatch, 50)
+    monkeypatch.setenv("COLLIMATOR_MEM_SHARES", "4")
+    monkeypatch.delenv("COLLIMATOR_MEM_AWARE_WORKERS", raising=False)
+    assert clamp_workers_to_available_ram(32) == 1
+
+
+def test_clamp_workers_disabled_ignores_shares(tmp_path, monkeypatch) -> None:
+    from collimator.features import clamp_workers_to_available_ram
+
+    _meminfo_reader(tmp_path, monkeypatch, 50)
+    monkeypatch.setenv("COLLIMATOR_MEM_SHARES", "4")
+    monkeypatch.setenv("COLLIMATOR_MEM_AWARE_WORKERS", "0")
+    assert clamp_workers_to_available_ram(32) == 32

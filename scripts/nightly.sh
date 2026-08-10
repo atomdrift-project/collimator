@@ -113,6 +113,13 @@ echo "nightly($mode): logging to $nightly_log"
 # NIGHTLY_WORKERS; unset it (NIGHTLY_WORKERS=) to fall back to the Makefile
 # default of nproc. Applies to the sweep too — `make autocollie` threads
 # WORKERS into its per-experiment --make-args.
+#
+# This is a HOST-WIDE budget, not a per-training one. Since 2026-08-07 the
+# train runs two chains concurrently (scripts/azoth_oof_pipeline.sh) and that
+# script halves this number per chain, so the box still sees ~24 concurrent
+# fetch workers in total — the same operating point the value was tuned at.
+# Raising it therefore raises host-wide fetch memory; check the MemAvailable
+# low-water mark the pipeline now prints (out/pipeline-mem.log) before doing so.
 if [ -n "${NIGHTLY_WORKERS-24}" ]; then
   export WORKERS="${NIGHTLY_WORKERS-24}"
   echo "nightly($mode): capping WORKERS=$WORKERS (DB-fetch parallelism)"

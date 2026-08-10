@@ -1459,6 +1459,55 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
         return {"name": target["name"], "kind": target["kind"], "error": True}
 
 
+def clamp_parallelism_to_ram(parallelism: int) -> int:
+    """Cap concurrent fits to what currently-available RAM can hold.
+
+    Parallelism used to be a pure function of core count, so a host with MORE
+    cores ran more concurrent fits and was MORE likely to OOM — exactly
+    backwards. Each concurrent fit peaks at roughly AZOTH_MEM_PER_FIT_GB on the
+    heaviest route (measured: PE at full corpus ~21 GB once extraction workers
+    are bounded by AZOTH_EXTRACT_WORKERS_MAX; ~83 GB unbounded).
+
+    AZOTH_CONCURRENT_SUITES divides the headroom, for the same reason it divides
+    the thread and extraction-worker budgets: MemAvailable is a per-process
+    snapshot of the WHOLE box, so two suites started together each measured all
+    the free RAM and each admitted a full parallelism — 2x the fits against 1x
+    the memory. Dividing makes the concurrent admissions sum to a single suite's
+    budget, which is the operating point the per-fit estimate is calibrated for.
+    (Until 2026-08-07 the pipeline's parallel-folds path silently double-booked
+    RAM this way; only threads and workers were being split.)
+
+    Linux-only (reads /proc/meminfo); returns the request unchanged on any other
+    platform or a parse failure, and never raises. Tune via AZOTH_MEM_PER_FIT_GB
+    / AZOTH_MEM_RESERVE_GB.
+    """
+    if parallelism <= 1:
+        return parallelism
+    try:
+        mem_per_fit = float(os.environ.get("AZOTH_MEM_PER_FIT_GB", "28"))
+        reserve = float(os.environ.get("AZOTH_MEM_RESERVE_GB", "32"))
+        suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
+        with open("/proc/meminfo") as meminfo:
+            avail_kb = next(
+                int(line.split()[1])
+                for line in meminfo
+                if line.startswith("MemAvailable:")
+            )
+        avail_gb = avail_kb / 1024 / 1024
+        mem_cap = max(1, int(((avail_gb - reserve) / suites) // max(mem_per_fit, 0.1)))
+    except (OSError, StopIteration, ValueError, ZeroDivisionError):
+        return parallelism  # non-Linux or unparseable /proc/meminfo
+    if mem_cap < parallelism:
+        LOG.warning(
+            "capping parallelism %d -> %d to fit RAM (MemAvailable=%.0f GB, "
+            "reserve=%.0f GB, per_fit=%.0f GB, concurrent_suites=%d). Override "
+            "with AZOTH_MEM_PER_FIT_GB / AZOTH_MEM_RESERVE_GB.",
+            parallelism, mem_cap, avail_gb, reserve, mem_per_fit, suites,
+        )
+        return mem_cap
+    return parallelism
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", required=True)
@@ -1710,36 +1759,8 @@ def main() -> int:
         )
 
     # Clamp parallelism to available RAM *before* deriving the per-fit thread
-    # and extraction-worker budgets from it. Parallelism was previously a pure
-    # function of core count, so a host with MORE cores ran more concurrent
-    # fits and was MORE likely to OOM — exactly backwards. Each concurrent fit
-    # peaks at roughly AZOTH_MEM_PER_FIT_GB on the heaviest route (measured: PE
-    # at full corpus ≈ 21 GB once extraction workers are divided by parallelism
-    # per the cap below; ~83 GB undivided). Linux-only (reads /proc/meminfo);
-    # silently skipped elsewhere. Override the estimate / headroom via
-    # AZOTH_MEM_PER_FIT_GB and AZOTH_MEM_RESERVE_GB.
-    if args.parallelism > 1:
-        try:
-            mem_per_fit = float(os.environ.get("AZOTH_MEM_PER_FIT_GB", "28"))
-            reserve = float(os.environ.get("AZOTH_MEM_RESERVE_GB", "32"))
-            with open("/proc/meminfo") as meminfo:
-                avail_kb = next(
-                    int(line.split()[1])
-                    for line in meminfo
-                    if line.startswith("MemAvailable:")
-                )
-            avail_gb = avail_kb / 1024 / 1024
-            mem_cap = max(1, int((avail_gb - reserve) // mem_per_fit))
-            if mem_cap < args.parallelism:
-                LOG.warning(
-                    "capping parallelism %d -> %d to fit RAM (MemAvailable="
-                    "%.0f GB, reserve=%.0f GB, per_fit=%.0f GB). Override with "
-                    "AZOTH_MEM_PER_FIT_GB / AZOTH_MEM_RESERVE_GB.",
-                    args.parallelism, mem_cap, avail_gb, reserve, mem_per_fit,
-                )
-                args.parallelism = mem_cap
-        except (OSError, StopIteration, ValueError):
-            pass  # non-Linux or unparseable /proc/meminfo: leave as requested
+    # and extraction-worker budgets from it.
+    args.parallelism = clamp_parallelism_to_ram(args.parallelism)
 
     # Auto-cap LightGBM threads per training when running multiple
     # specialists concurrently. Without this, every concurrent training

@@ -38,7 +38,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from collimator import data  # noqa: E402
+from collimator import data, thresholds  # noqa: E402
 
 
 def _route_probs_dense(scores: np.ndarray, route_idx: int) -> np.ndarray:
@@ -58,30 +58,11 @@ def _recall_pr_at_fp(
     malware). Ties in probability are handled by the standard
     sort-by-(-prob, label_desc) convention so a tie containing benigns is
     resolved against the malware (worst case for recall).
+
+    Delegates to the shared implementation so the screen experiment's measured
+    anchors and these deploy-scale slice metrics cannot drift apart.
     """
-    valid = ~np.isnan(probs)
-    if not np.any(valid):
-        return (math.nan, None, 0)
-    p = probs[valid]
-    y = labels[valid].astype(np.int8)
-    n_mal = int(np.sum(y == 1))
-    if n_mal == 0:
-        return (math.nan, None, 0)
-    # Sort descending; on ties put benigns BEFORE malware so cumulative FP
-    # leads its row's TP — this matches what an attacker can force.
-    order = np.lexsort((y, -p))
-    p_sorted = p[order]
-    y_sorted = y[order]
-    fp_cum = np.cumsum(y_sorted == 0)
-    tp_cum = np.cumsum(y_sorted == 1)
-    eligible = np.flatnonzero(fp_cum <= fp_budget)
-    if len(eligible) == 0:
-        return (0.0, None, 0)
-    end = int(eligible[-1])
-    threshold = float(p_sorted[end])
-    fp = int(fp_cum[end])
-    recall = float(tp_cum[end]) / n_mal
-    return (recall, threshold, fp)
+    return thresholds.recall_at_fp_budget(labels, probs, fp_budget)
 
 
 def _pr_auc(probs: np.ndarray, labels: np.ndarray) -> float:

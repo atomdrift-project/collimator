@@ -102,7 +102,10 @@ def _score_partition(
         sample_buffer.extend(batch_meta)
     probs = np.concatenate(pred_batches).astype(np.float32) if pred_batches else np.array([], dtype=np.float32)
     labels = np.concatenate(label_batches).astype(np.int8) if label_batches else np.array([], dtype=np.int8)
-    LOG.info("scored %d rows for fold %d", len(probs), oof_fold)
+    # `label`, not oof_fold: the test partition passes oof_fold=None and "%d"
+    # against None raises inside logging's emit, which prints a full traceback
+    # to stderr on every publish run despite the scoring itself succeeding.
+    LOG.info("scored %d rows for %s", len(probs), label)
     # LabeledMetadata is currently a plain tuple type alias (see
     # src/collimator/features.py:107). The 6-tuple shape from
     # stream_labeled_metadata_full is:
