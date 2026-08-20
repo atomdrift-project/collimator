@@ -129,6 +129,10 @@ def _compute_metrics(
     y_prob: np.ndarray,
     threshold: float = 0.5,
 ) -> dict[str, float]:
+    # float32 round-off can leave a probability one ULP past 1.0
+    # (1.0000001192092896), which brier_score_loss rejects outright — that
+    # killed the lua route mid-suite on 2026-08-06.
+    y_prob = np.clip(y_prob, 0.0, 1.0)
     y_pred = (y_prob >= threshold).astype(int)
     return {
         "accuracy": float(accuracy_score(y_true, y_pred)),
