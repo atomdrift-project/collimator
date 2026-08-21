@@ -1376,3 +1376,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260821T123926-filetypes-jpeg` — 2026-08-21T12:39:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6cfd23a8b15b1a7b` | inherit_from_filetypes_plist_8b54303f | ok | 0.2459 | 0.6814 | 0.0969 | 188 | [log](out/autocollie/runs/2026-08-21T12-56-00_20260821T123926-filetypes-jpeg_inherit_from_filetypes_plist_8b54303f.log) |
+| `01a3c1314425e01f` | jpeg_text_metrics_full_base | ok | 0.2675 | 0.6816 | 0.3361 | 90 | [log](out/autocollie/runs/2026-08-21T13-00-45_20260821T123926-filetypes-jpeg_jpeg_text_metrics_full_base.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_text_metrics_full_base`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds text_metrics_full to the inherited plist feature base to capture embedded/polyglot JPEG text structure, aiming to lift PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

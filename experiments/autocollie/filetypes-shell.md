@@ -1784,3 +1784,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260821T123926-filetypes-shell` — 2026-08-21T12:39:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7d4e2766b50addfa` | inherit_from_filetypes_plist_8b54303f | ok | 0.9715 | 0.9853 | 0.9420 | 62 | [log](out/autocollie/runs/2026-08-21T12-48-19_20260821T123926-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `906e5f5c9064476e` | shell_kv_textenc_severity_fractions | ok | 0.9525 | 0.9698 | 0.8828 | 54 | [log](out/autocollie/runs/2026-08-21T12-50-05_20260821T123926-filetypes-shell_shell_kv_textenc_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_kv_textenc_severity_fractions`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Adds severity_fractions to the kv/textenc surface to lift recall@3FPM by making minimal hostile shell droppers rank higher while keeping PR_AUC flat.
+
+</details>
+

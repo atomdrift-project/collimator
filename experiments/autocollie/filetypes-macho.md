@@ -1380,3 +1380,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260821T123926-filetypes-macho` — 2026-08-21T12:39:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c564c53995bab38e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9767 | 0.9945 | 0.9224 | 75 | [log](out/autocollie/runs/2026-08-21T12-54-16_20260821T123926-filetypes-macho_inherit_from_filetypes_plist_8b54303f.log) |
+| `7b4b8c69d50d1200` | macho_best_sym_vocab_hardneg_fpr | ok | 0.9778 | 0.9936 | 0.0000 | 85 | [log](out/autocollie/runs/2026-08-21T12-56-33_20260821T123926-filetypes-macho_macho_best_sym_vocab_hardneg_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_best_sym_vocab_hardneg_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds a conservative Mach-O symbol vocab to the best plist-inherited feature set and retunes hard negatives plus the L25 FPR threshold to lift recall@3FPM while keeping PR_AUC flat.
+
+</details>
+

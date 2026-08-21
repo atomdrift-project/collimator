@@ -357,3 +357,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260821T132746-filetypes-html` — 2026-08-21T13:27:46Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b6d0c29292834061` | inherit_from_filetypes_plist_8b54303f | ok | 0.9754 | 0.9999 | 0.9589 | 68 | [log](out/autocollie/runs/2026-08-21T13-42-46_20260821T132746-filetypes-html_inherit_from_filetypes_plist_8b54303f.log) |
+| `502844e338e76dfe` | html_text_metrics_full_lower_bigram | ok | 0.9387 | 0.9988 | 0.9589 | 68 | [log](out/autocollie/runs/2026-08-21T13-45-28_20260821T132746-filetypes-html_html_text_metrics_full_lower_bigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`html_text_metrics_full_lower_bigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=10000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,score,kv,symbols …` — Aims to lift PR_AUC by adding text_metrics_full document-structure features and lowering bigram_min_freq to 100 so rare HTML obfuscation/script patterns enter the vocab, improving top-rank precision.
+
+</details>
+

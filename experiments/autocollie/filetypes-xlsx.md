@@ -879,3 +879,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260821T133637-filetypes-xlsx` — 2026-08-21T13:36:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `885ec3332510f99d` | inherit_from_filetypes_plist_8b54303f | ok | 0.9564 | 0.5000 | 0.9777 | 50 | [log](out/autocollie/runs/2026-08-21T13-55-35_20260821T133637-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `f4d95d859278a05a` | xlsx_xml_lowbigram_tieredtr_kv_scalepos | ok | 0.9765 | 0.6447 | 0.5212 | 34 | [log](out/autocollie/runs/2026-08-21T13-56-49_20260821T133637-filetypes-xlsx_xlsx_xml_lowbigram_tieredtr_kv_scalepos.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_xml_lowbigram_tieredtr_kv_scalepos`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=50 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Ports xml's lower bigram floor and tiered critical trigrams to the best recent xlsx kv bigram surface, aiming to lift PR_AUC and recall@3FPM from rare malicious XML path co-occurrences while scale_pos_weight_mult 0.75 and L2 keep ROC_AUC flat.
+
+</details>
+

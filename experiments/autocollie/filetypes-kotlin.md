@@ -1210,3 +1210,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260821T123926-filetypes-kotlin` — 2026-08-21T12:39:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0d83a0d8d99643d6` | inherit_from_filetypes_plist_8b54303f | ok | 0.9788 | 0.9848 | 0.9204 | 69 | [log](out/autocollie/runs/2026-08-21T12-55-18_20260821T123926-filetypes-kotlin_inherit_from_filetypes_plist_8b54303f.log) |
+| `bbd9ec3a934b76de` | kotlin_inherit_kv_hardneg_012_12 | ok | 0.9771 | 0.9847 | 0.9211 | 296 | [log](out/autocollie/runs/2026-08-21T12-59-59_20260821T123926-filetypes-kotlin_kotlin_inherit_kv_hardneg_012_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_inherit_kv_hardneg_012_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab on the strong inherit feature base and use hard_negative_fraction=0.012/weight=12 to suppress benign tail FPs, aiming to lift recall@3FPM while keeping PR_AUC flat or higher.
+
+</details>
+

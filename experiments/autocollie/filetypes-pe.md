@@ -2590,3 +2590,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260821T131121-filetypes-pe` — 2026-08-21T13:11:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `61fdd1430506c2bb` | inherit_from_filetypes_plist_8b54303f | ok | 0.9990 | 0.9990 | 0.9876 | 189 | [log](out/autocollie/runs/2026-08-21T13-20-18_20260821T131121-filetypes-pe_inherit_from_filetypes_plist_8b54303f.log) |
+| `ad23cde6965cf0a1` | pe_symbol_vocab_hardneg_fpr | ok | 0.9986 | 0.9986 | 0.0000 | 150 | [log](out/autocollie/runs/2026-08-21T13-25-06_20260821T131121-filetypes-pe_pe_symbol_vocab_hardneg_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_symbol_vocab_hardneg_fpr`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_MIN_FREQ=5 …` — Adds PE symbol unigram rank signal and pairs hard-negative upweighting with max_recall_at_fpr thresholding to lift recall@3FPM and PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

@@ -1144,3 +1144,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260821T124224-filetypes-php` — 2026-08-21T12:42:24Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `6017fba757351ad1` | inherit_from_filetypes_plist_8b54303f | ok | 0.8909 | 0.9606 | 0.8672 | 92 | [log](out/autocollie/runs/2026-08-21T12-57-37_20260821T124224-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `3540fd5e77c3f2a6` | php_textmetrics_full_hardneg_fpr | ok | 0.8649 | 0.9565 | 0.8342 | 101 | [log](out/autocollie/runs/2026-08-21T13-00-47_20260821T124224-filetypes-php_php_textmetrics_full_hardneg_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_textmetrics_full_hardneg_fpr`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=0 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Adds text_metrics_full to the strong PHP baseline to capture obfuscation/encoding artifacts, aiming to lift PR_AUC and tail recall@3FPM by giving trees size-invariant text signals while hard negatives suppress benign FP at the strict-FP operating point.
+
+</details>
+

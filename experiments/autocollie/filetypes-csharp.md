@@ -1190,3 +1190,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260821T123926-filetypes-csharp` — 2026-08-21T12:39:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2daec8ba255976ab` | inherit_from_filetypes_plist_8b54303f | ok | 0.6744 | 0.9326 | 0.5595 | 256 | [log](out/autocollie/runs/2026-08-21T12-58-26_20260821T123926-filetypes-csharp_inherit_from_filetypes_plist_8b54303f.log) |
+| `c3824c85f28d19e2` | csharp_feat_textenc_textmetrics_bigram1000 | ok | 0.4630 | 0.8570 | 0.3739 | 97 | [log](out/autocollie/runs/2026-08-21T13-04-46_20260821T123926-filetypes-csharp_csharp_feat_textenc_textmetrics_bigram1000.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_feat_textenc_textmetrics_bigram1000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds text-encoding and aggregate ms.text obfuscation metrics to the high-frequency bigram base to lift PR_AUC and recall@3FPM on C# droppers without adding noisy kv/symbol vocabs.
+
+</details>
+

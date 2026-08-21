@@ -404,3 +404,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260821T123926-filetypes-crx` — 2026-08-21T12:39:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `41b77aae5e0e810f` | inherit_from_filetypes_plist_8b54303f | ok | 0.7499 | 0.8945 | 0.6821 | 93 | [log](out/autocollie/runs/2026-08-21T12-56-08_20260821T123926-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `f1d3eed087d39390` | crx_kv_textenc_lowbigram_expand | ok | 0.7290 | 0.8321 | 0.0000 | 115 | [log](out/autocollie/runs/2026-08-21T13-01-01_20260821T123926-filetypes-crx_crx_kv_textenc_lowbigram_expand.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_kv_textenc_lowbigram_expand`** `EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 …` — Expand KV vocab and lower bigram floor while enabling text encoding to add rare manifest/objective rank signal, aiming to lift PR_AUC and recall@3FPM without hurting ROC_AUC.
+
+</details>
+

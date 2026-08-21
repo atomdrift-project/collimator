@@ -2568,3 +2568,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260821T125228-filetypes-go` — 2026-08-21T12:52:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `08b062c02f9c5792` | inherit_from_filetypes_plist_8b54303f | ok | 0.5013 | 0.7681 | 0.3822 | 293 | [log](out/autocollie/runs/2026-08-21T13-01-28_20260821T125228-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `1873a8d4ec0743ba` | go_kv_hardneg_sev_v4 | ok | 0.4396 | 0.6918 | 0.3590 | 67 | [log](out/autocollie/runs/2026-08-21T13-07-27_20260821T125228-filetypes-go_go_kv_hardneg_sev_v4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_kv_hardneg_sev_v4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds a conservative KV vocab to the hard-negative severity baseline to lift recall@3FPM and PR_AUC by exposing key-value attack patterns while hard negatives and positive down-weighting suppress benign FP.
+
+</details>
+

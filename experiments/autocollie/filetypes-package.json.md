@@ -1244,3 +1244,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260821T133637-filetypes-package.json` — 2026-08-21T13:36:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `45032f663d4093b7` | inherit_from_filetypes_plist_8b54303f | ok | 0.9887 | 0.9924 | 0.9185 | 95 | [log](out/autocollie/runs/2026-08-21T13-56-29_20260821T133637-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `924a34c0fa53d201` | pkg_json_hardneg_001_12 | ok | 0.9826 | 0.9848 | 0.9800 | 42 | [log](out/autocollie/runs/2026-08-21T13-58-18_20260821T133637-filetypes-package.json_pkg_json_hardneg_001_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_hardneg_001_12`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Tests a small high-weight hard-negative pass on the best plist-inherited feature env to lift recall@3FPM by pushing benign tail scores down while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

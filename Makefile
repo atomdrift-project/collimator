@@ -1399,8 +1399,13 @@ azoth-validate: azoth-calibrate
 	@# the bundle membership can change here. Regenerate READMEs from the final
 	@# (post-prune) bundle so the docs never dangle a link to a dropped route.
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
+	@# SCAN_NO_UPDATE=1: see the note in azoth-deploy-final — the litmus checks
+	@# below hand $$_STAGE to atomscan via SCAN_MODELS_DIR, which also makes it the
+	@# auto-updater's install target. autocollie's promote gate runs THIS target.
 	@_STAGE=$$(mktemp -d) && \
+	  export SCAN_NO_UPDATE=1 && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
+	  _STAGED=$$(md5sum "$$_STAGE/config.json" | cut -d' ' -f1) && \
 	  cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
 	  cp "$(AZOTH_SLICE_METRICS)" "$$_STAGE/slice_metrics.md" && \
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
@@ -1413,6 +1418,12 @@ azoth-validate: azoth-calibrate
 	    echo "Running litmus deployed-ensemble compatibility checks against staged copy..." && \
 	    ( cd $(LITMUS_DIR) && SCAN_MODELS_DIR="$$_STAGE" cargo test --release --test scan_no_deadlock ) && \
 	    $(PYTHON) scripts/verify_azoth_litmus_runtime.py --litmus-dir $(LITMUS_DIR) --models-dir "$$_STAGE" --required-model az/native --required-model az/elf; \
+	  fi && \
+	  _NOW=$$(md5sum "$$_STAGE/config.json" | cut -d' ' -f1) && \
+	  if [ "$$_NOW" != "$$_STAGED" ]; then \
+	    echo "error: staged config.json changed under us ($$_STAGED -> $$_NOW) — the gates"; \
+	    echo "       above validated a bundle that is no longer in $$_STAGE."; \
+	    exit 1; \
 	  fi && \
 	  rm -rf "$$_STAGE" && \
 	  echo "azoth-validate: all gates passed for $(AZOTH_ROOT)" \
@@ -1584,12 +1595,17 @@ azoth-deploy: azoth-calibrate
 #     incomplete tree" from "the mirror dropped it";
 #   * rsync --itemize-changes names every file transferred, and --stats gives
 #     the totals;
-#   * the config.json md5 is captured either side of the rsync. That is the
-#     actual tripwire: rsync exiting 0 has never been evidence that anything
-#     shipped, and an unchanged config.json after a retrain is the signature of
-#     the silent no-op. It WARNS rather than fails, because re-running
-#     deploy-final against an already-deployed bundle is a legitimate no-op and
-#     erroring there would block the very re-run used to recover.
+#   * the staged config.json md5 is captured the moment the stage is built and
+#     asserted twice, because rsync exiting 0 has never been evidence that
+#     anything shipped. Before the mirror: the stage must still hold the bundle
+#     every gate above validated (it does not, if something rewrote $_STAGE
+#     mid-flight). After the mirror: the deploy dir must equal that same md5.
+#     Both are fatal. Note the invariant is deployed == STAGED, not
+#     deployed != PRE — the old pre/post comparison had to warn rather than
+#     fail, because re-running deploy-final against an already-deployed bundle
+#     is a legitimate no-op that it could not tell apart from a mirror that
+#     shipped nothing. Comparing against the staged fingerprint has no such
+#     exception: the legitimate re-run passes, both no-op modes fail.
 azoth-deploy-final: venv
 	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
@@ -1623,12 +1639,23 @@ azoth-deploy-final: venv
 	@# Protect only deploy repo metadata and static root legal/training docs;
 	@# the staged runtime/generated-docs payload is otherwise canonical, so
 	@# stale training artifacts are removed.
+	@# SCAN_NO_UPDATE=1 is load-bearing: atomscan's default-on auto-update
+	@# (auto_update::refresh_if_stale) installs into models_repo::install_target(),
+	@# which honours SCAN_MODELS_DIR — so pointing the compatibility checks at
+	@# $$_STAGE makes the staging dir the updater's install TARGET. Its only guard
+	@# is `dir/.git exists` (that is what spares $(AZOTH_DEPLOY_DIR)), and a mktemp
+	@# dir has none, so the updater silently replaces the freshly staged bundle with
+	@# the published R2 bundle. Every gate after that point then validates the OLD
+	@# models and the mirror ships them straight back (2026-08-21: the whole nightly
+	@# deployed nothing but the updater's .litmus-models.toml sidecar).
 	@_STAGE=$$(mktemp -d) && \
 	  _LOCK=$$(dirname "$(AZOTH_DEPLOY_DIR)")/.azoth-deploy.lock && \
 	  trap 'rm -rf "$$_STAGE"' EXIT INT TERM && \
-	  export MAKEFLAGS= MFLAGS= CARGO_MAKEFLAGS= && \
+	  export MAKEFLAGS= MFLAGS= CARGO_MAKEFLAGS= SCAN_NO_UPDATE=1 && \
 	  $(PYTHON) scripts/stage_azoth_runtime_bundle.py "$(AZOTH_ROOT)" "$$_STAGE" && \
 	  echo "staged from $$(readlink -f $(AZOTH_ROOT)): $$(find "$$_STAGE" -type f | wc -l) files, $$(du -sh "$$_STAGE" | cut -f1)" && \
+	  _STAGED=$$(md5sum "$$_STAGE/config.json" | cut -d' ' -f1) && \
+	  echo "staged config.json md5: $$_STAGED" && \
 	  cp "$(AZOTH_DIAGNOSTICS)" "$$_STAGE/route_diagnostics.md" && \
 	  cp "$(AZOTH_SLICE_METRICS)" "$$_STAGE/slice_metrics.md" && \
 	  cp "$(AZOTH_ROUTE_POLICIES_MD)" "$$_STAGE/route_policies.md" && \
@@ -1648,6 +1675,13 @@ azoth-deploy-final: venv
 	  ( cd $(LITMUS_DIR) && cargo run --release -- --model-dir "$$_STAGE" validate --skip-traits ) && \
 	  echo "Checking deploy tuning goal agreement (collimator / bundle / litmus)..." && \
 	  $(PYTHON) scripts/check_severity_level_sync.py --staged "$$_STAGE" --litmus-dir $(LITMUS_DIR) && \
+	  _NOW=$$(md5sum "$$_STAGE/config.json" | cut -d' ' -f1) && \
+	  if [ "$$_NOW" != "$$_STAGED" ]; then \
+	    echo "error: staged config.json changed under us ($$_STAGED -> $$_NOW)."; \
+	    echo "       Something rewrote $$_STAGE after staging, so the gates above validated"; \
+	    echo "       a bundle that is no longer there. Refusing to mirror it."; \
+	    exit 1; \
+	  fi && \
 	  mkdir -p "$(AZOTH_DEPLOY_DIR)" && \
 	  _PRE=$$(md5sum "$(AZOTH_DEPLOY_DIR)/config.json" 2>/dev/null | cut -d' ' -f1) && \
 	  flock "$$_LOCK" rsync -a --checksum --delete-before --itemize-changes --stats \
@@ -1657,10 +1691,11 @@ azoth-deploy-final: venv
 	    --filter='protect /TRAINING.md' \
 	    "$$_STAGE/" "$(AZOTH_DEPLOY_DIR)/" && \
 	  _POST=$$(md5sum "$(AZOTH_DEPLOY_DIR)/config.json" 2>/dev/null | cut -d' ' -f1) && \
-	  if [ "$$_PRE" = "$$_POST" ]; then \
-	    echo "WARNING: deployed config.json md5 UNCHANGED ($$_POST) — mirror may have been a no-op; check the rsync itemization above"; \
-	  else \
-	    echo "deployed config.json md5: $${_PRE:-<absent>} -> $$_POST"; \
+	  echo "deployed config.json md5: $${_PRE:-<absent>} -> $$_POST" && \
+	  if [ "$$_POST" != "$$_STAGED" ]; then \
+	    echo "error: deployed config.json ($$_POST) does not match the staged bundle ($$_STAGED)."; \
+	    echo "       The mirror did not ship what was staged — check the rsync itemization above."; \
+	    exit 1; \
 	  fi && \
 	  echo "Running litmus default deployed-model check..." && \
 	  ( cd $(LITMUS_DIR) && cargo run --release -- --extra --show all scan /bin/ls ) && \

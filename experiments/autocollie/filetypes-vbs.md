@@ -1212,3 +1212,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260821T131121-filetypes-vbs` — 2026-08-21T13:11:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `51d7e1ed30c0db2e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9988 | 0.9955 | 0.9835 | 48 | [log](out/autocollie/runs/2026-08-21T13-18-58_20260821T131121-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `68d11ca1e3bd6bc1` | vbs_textenc_textmetrics_obfuscation | ok | 0.9964 | 0.9879 | 0.9558 | 49 | [log](out/autocollie/runs/2026-08-21T13-20-37_20260821T131121-filetypes-vbs_vbs_textenc_textmetrics_obfuscation.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_textenc_textmetrics_obfuscation`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.03 EXP_LINE_LENGTH_BUCKETS=1 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 …` — Enables text_encoding and text_metrics_full on the strong plist-derived feature set to lift PR_AUC and recall@3FPM by adding obfuscation/encoding rank signal while keeping bigram frequency conservative.
+
+</details>
+

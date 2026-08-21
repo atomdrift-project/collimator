@@ -1056,3 +1056,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260821T124126-filetypes-jar` — 2026-08-21T12:41:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f55fefe90f6ec064` | inherit_from_filetypes_plist_8b54303f | ok | 0.9412 | 0.9719 | 0.8908 | 290 | [log](out/autocollie/runs/2026-08-21T12-57-56_20260821T124126-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+| `079c0efc65dc468e` | jar_text_metrics_full_bestbase | ok | 0.9651 | 0.9893 | 0.9009 | 102 | [log](out/autocollie/runs/2026-08-21T13-07-20_20260821T124126-filetypes-jar_jar_text_metrics_full_bestbase.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_text_metrics_full_bestbase`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable text_metrics_full on the best inherited feature base to add text anomaly rank signal for JAR text, aiming to lift PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

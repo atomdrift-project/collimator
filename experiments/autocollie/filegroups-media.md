@@ -1154,3 +1154,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260821T134343-filegroups-media` — 2026-08-21T13:43:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `60027eb5b32e469d` | inherit_from_filetypes_plist_8b54303f | ok | 0.3748 | 0.7250 | 0.1457 | 140 | [log](out/autocollie/runs/2026-08-21T13-54-02_20260821T134343-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `aa13a6554ece4ed2` | media_kv_textmetrics_tiered_trigram_recall | ok | 0.2006 | 0.5067 | 0.0000 | 59 | [log](out/autocollie/runs/2026-08-21T13-57-17_20260821T134343-filegroups-media_media_kv_textmetrics_tiered_trigram_recall.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_kv_textmetrics_tiered_trigram_recall`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=3 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 …` — Aims to lift recall@3FPM by adding rare KV/text-metric and tiered trigram signal while down-weighting positives to cut benign FPs.
+
+</details>
+
