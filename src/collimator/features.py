@@ -959,13 +959,81 @@ def file_facts(file_entry: dict[str, Any]) -> dict[str, Any]:
     return facts if isinstance(facts, dict) else {}
 
 
+# cleave metric renames (2026-08-22, Pike-naming pass). Trained models and
+# allowed_features.json carry the OLD feature names; reports carry the NEW
+# metric names. `file_metrics` back-fills the old key from the new one so
+# every existing vocab keeps resolving. Retire entries as models retrain.
+_METRIC_RENAMES: dict[str, str] = {  # old flat name -> new flat name
+    "archive.total_compressed": "archive.compressed_size",
+    "archive.total_uncompressed": "archive.uncompressed_size",
+    "ast.array_literal_max_length": "ast.max_array_len",
+    "ast.numeric_array_max_length": "ast.max_numeric_array",
+    "ast.numeric_sequence_max_length": "ast.max_numeric_seq",
+    "ast.string_concat_chain_max_length": "ast.max_concat_chain",
+    "binary.embedded_archive_count": "binary.embedded_archives",
+    "binary.embedded_binary_count": "binary.embedded_binaries",
+    "binary.embedded_file_count": "binary.embedded_files",
+    "binary.overall_entropy": "file.entropy",
+    "binary.total_basic_blocks": "binary.basic_blocks",
+    "comments.base64_in_comments": "comments.base64",
+    "comments.code_in_comments": "comments.code",
+    "comments.empty_comments": "comments.empty",
+    "comments.high_entropy_comments": "comments.high_entropy",
+    "comments.total": "comments.count",
+    "elf.gnu_stack_section_absent": "elf.no_gnu_stack",
+    "elf.stripped_but_symtab_present": "elf.stripped_with_symtab",
+    "file.size_bytes": "file.size",
+    "functions.code_in_functions_ratio": "functions.code_ratio",
+    "functions.density_per_100_lines": "functions.density",
+    "functions.nested_functions": "functions.nested",
+    "identifiers.total": "identifiers.count",
+    "identifiers.unique_count": "identifiers.unique",
+    "imports.aliased_imports": "imports.aliased",
+    "imports.dynamic_imports": "imports.dynamic",
+    "imports.relative_imports": "imports.relative",
+    "imports.unique_modules": "imports.count",
+    "imports.wildcard_imports": "imports.wildcard",
+    "pe.headers_size_bytes": "pe.headers_size",
+    "strings.hex_strings": "strings.hex",
+    "strings.shell_command_strings": "strings.shell",
+    "strings.sql_strings": "strings.sql",
+    "strings.total": "strings.count",
+    "strings.total_bytes": "strings.bytes",
+    "strings.unicode_heavy_strings": "strings.unicode_heavy",
+    "strings.url_encoded_strings": "strings.url_encoded",
+    "strings.very_long_strings": "strings.very_long",
+    "text.high_byte_ratio": "text.non_ascii_ratio",
+    "text.max_inline_whitespace_run": "text.max_ws_run",
+    "text.most_common_char_codepoint": "text.top_char",
+    "text.most_common_char_is_null": "text.top_char_null",
+    "text.most_common_ratio": "text.top_char_ratio",
+    "text.total_lines": "text.lines",
+}
+
+
+def _backfill_renamed_metrics(metrics: dict[str, Any]) -> dict[str, Any]:
+    """Alias renamed metrics under their old names (see _METRIC_RENAMES)."""
+    for old, new in _METRIC_RENAMES.items():
+        old_group, old_field = old.split(".", 1)
+        new_group, new_field = new.split(".", 1)
+        new_grp = metrics.get(new_group)
+        if not isinstance(new_grp, dict) or new_field not in new_grp:
+            continue
+        old_grp = metrics.setdefault(old_group, {})
+        if isinstance(old_grp, dict) and old_field not in old_grp:
+            old_grp[old_field] = new_grp[new_field]
+    return metrics
+
+
 def file_metrics(file_entry: dict[str, Any]) -> dict[str, Any]:
     """Return per-file metrics from v8 facts.metrics / v7 fact.met / v5 ff.m / v4 ms."""
     facts = file_facts(file_entry)
     metrics = _alias(facts, "metrics", "met", "m") if facts else None
     if not isinstance(metrics, dict):
         metrics = file_entry.get("ms")
-    return metrics if isinstance(metrics, dict) else {}
+    if not isinstance(metrics, dict):
+        return {}
+    return _backfill_renamed_metrics(metrics)
 
 
 def _tuple_string(raw: Any, index: int) -> str:
