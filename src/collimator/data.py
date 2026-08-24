@@ -359,10 +359,15 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
             raise ImportError(
                 "psycopg is required for PostgreSQL: pip install psycopg[binary]",
             ) from exc
+        # libpq `options` is space-separated, so a literal space inside a value
+        # has to be backslash-escaped (hence "repeatable\\ read").
+        opts = [f"-c max_parallel_workers_per_gather={PG_PARALLEL_WORKERS}"]
+        if repeatable_read:
+            opts.append("-c default_transaction_isolation=repeatable\\ read")
         conn = _retry_pg_connect(
             str(dsn),
             autocommit=False,
-            options="-c default_transaction_isolation=repeatable\\ read" if repeatable_read else "",
+            options=" ".join(opts),
         )
         try:
             yield conn
@@ -491,6 +496,30 @@ try:
     MIN_SAMPLE_SCORE = int(os.getenv("COLLIMATOR_MIN_SAMPLE_SCORE", str(_default_min)))
 except ValueError:
     MIN_SAMPLE_SCORE = _default_min
+
+# Parallel workers per Gather for collimator's own connections.
+#
+# hopper's replica pins `max_parallel_workers_per_gather = 0` on the shared
+# `hopper` role (hopper scripts/replica/setup.sh). That cap exists for prism,
+# which runs many small concurrent feed queries whose parallel workers scan with
+# the bulkread ring buffer and starve the single-threaded logical-apply worker
+# for device queue. collimator connects as the same role but has the opposite
+# shape: a couple of long scans of the labeled corpus, not fifteen concurrent
+# page renders. Inheriting prism's cap silently made every full-corpus stream
+# single-threaded, so we opt back in per session rather than by widening the
+# role for everyone.
+#
+# The default is PostgreSQL's own default of 2 — enough to restore what the role
+# cap took away, and bounded so two nightly runs add four backends rather than
+# an unbounded fan-out. Set COLLIMATOR_PG_PARALLEL_WORKERS=0 to inherit the role
+# setting again if the replica is fighting to catch up.
+_default_parallel = 2
+try:
+    PG_PARALLEL_WORKERS = max(
+        0, int(os.getenv("COLLIMATOR_PG_PARALLEL_WORKERS", str(_default_parallel)))
+    )
+except ValueError:
+    PG_PARALLEL_WORKERS = _default_parallel
 
 # Canonical predicate for a usable labeled sample. Every stage that SELECTS the
 # labeled corpus — training, calibration, score-table build, specialist/OOF
