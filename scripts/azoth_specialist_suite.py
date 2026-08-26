@@ -12,6 +12,7 @@ import math
 import os
 import shutil
 import sys
+from collections.abc import Callable
 from dataclasses import asdict, fields, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -102,6 +103,115 @@ RESIDUAL_FILETYPES: frozenset[str] = frozenset({"unknown", "data"})
 # it.
 APPLES_MIN_MALWARE_HOLDOUT: int = 500
 APPLES_MIN_BENIGN_HOLDOUT: int = 200
+
+
+def _seed_health_failure(
+    result: train.TrainResult,
+    *,
+    min_roc_auc: float,
+) -> str | None:
+    """Return why a trained seed is unsafe to ensemble, or ``None``.
+
+    Multi-seed averaging reduces ordinary fit variance, but it also blindly
+    includes catastrophically inverted members. Keep this gate deliberately
+    narrow: it rejects structurally constant models, malformed metrics, and
+    models whose evaluation ranking is worse than the configured random-rank
+    floor. Calibration degeneracy alone is not a rejection because
+    ``train.train`` already falls back to raw scores before computing metrics.
+    """
+    if export.is_constant_predictor(result.model):
+        return "constant predictor (no split learned)"
+
+    checked: dict[str, float] = {}
+    for key in ("roc_auc", "avg_precision", "f1"):
+        raw = result.metrics.get(key)
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            return f"missing or non-numeric {key}={raw!r}"
+        if not math.isfinite(value):
+            return f"non-finite {key}={value!r}"
+        if not 0.0 <= value <= 1.0:
+            return f"out-of-range {key}={value:.6g}"
+        checked[key] = value
+
+    if checked["roc_auc"] < min_roc_auc:
+        return (
+            f"roc_auc={checked['roc_auc']:.4f} below seed-health minimum "
+            f"{min_roc_auc:.4f}"
+        )
+    return None
+
+
+def _train_healthy_seed_ensemble(
+    *,
+    name: str,
+    base_seed: int,
+    target_members: int,
+    retry_budget: int,
+    min_roc_auc: float,
+    fit_seed: Callable[[int], train.TrainResult],
+) -> tuple[list[tuple[int, train.TrainResult]], list[dict[str, Any]]]:
+    """Train until ``target_members`` healthy seeds exist or retries run out.
+
+    Rejections consume the bounded retry budget and are retained in the audit
+    trail. Seeds are monotonically increasing, making a failed unattended run
+    reproducible from its benchmark metadata and logs.
+    """
+    if target_members < 1:
+        raise ValueError("target_members must be at least 1")
+    if retry_budget < 0:
+        raise ValueError("retry_budget must be non-negative")
+    if not 0.0 <= min_roc_auc <= 1.0:
+        raise ValueError("min_roc_auc must be between 0 and 1")
+
+    accepted: list[tuple[int, train.TrainResult]] = []
+    attempts: list[dict[str, Any]] = []
+    max_attempts = target_members + retry_budget
+    for attempt_index in range(max_attempts):
+        attempt_seed = int(base_seed) + attempt_index
+        LOG.info(
+            "%s: training seed candidate %d/%d (seed=%d; accepted=%d/%d)",
+            name,
+            attempt_index + 1,
+            max_attempts,
+            attempt_seed,
+            len(accepted),
+            target_members,
+        )
+        result = fit_seed(attempt_seed)
+        reason = _seed_health_failure(result, min_roc_auc=min_roc_auc)
+        record: dict[str, Any] = {
+            "seed": attempt_seed,
+            "accepted": reason is None,
+            "roc_auc": result.metrics.get("roc_auc"),
+            "avg_precision": result.metrics.get("avg_precision"),
+            "f1": result.metrics.get("f1"),
+        }
+        if reason is None:
+            accepted.append((attempt_seed, result))
+            LOG.info(
+                "%s: accepted seed=%d (AUC=%.4f F1=%.4f; %d/%d members)",
+                name,
+                attempt_seed,
+                float(result.metrics["roc_auc"]),
+                float(result.metrics["f1"]),
+                len(accepted),
+                target_members,
+            )
+        else:
+            record["reason"] = reason
+            LOG.warning(
+                "%s: quarantined seed=%d: %s (attempt slots remaining=%d)",
+                name,
+                attempt_seed,
+                reason,
+                max_attempts - attempt_index - 1,
+            )
+        attempts.append(record)
+        if len(accepted) == target_members:
+            break
+    return accepted, attempts
 
 
 def _op_recall(metrics: dict[str, Any] | None) -> float | None:
@@ -1038,6 +1148,8 @@ def _train_one(
     filegroup_score_filter: bool,
     min_malware_score: int | None = None,
     n_seed_extras: int = 0,
+    seed_health_min_roc_auc: float = 0.5,
+    seed_retry_budget: int = 3,
     skip_benchmark: bool = False,
     feature_cache_dir: Path | None = None,
 ) -> dict[str, Any]:
@@ -1207,36 +1319,52 @@ def _train_one(
             "skip_reason": "no_malware_samples",
         }
 
-    LOG.info("%s: training (seed=%d)", name, config.seed)
-    result = train.train(
-        x_train,
-        y_train,
-        config,
-        feature_names=spec.feature_names,
-        sample_file_types=sample_file_types,
-    )
+    target_seed_members = 1 + max(0, int(n_seed_extras))
 
-    # Refuse to emit a route for a constant predictor. When the optimizer
-    # finds no split worth making (tiny single-class slices), the model
-    # always emits the same score regardless of input — it carries no
-    # signal. Rather than ship a useless route, omit it: litmus routes
-    # those files to the filegroup/general ensemble instead (the loader
-    # treats absent specialists as droppable). Marked with `error` so the
-    # existing summary-skip path (azoth_calibrate_ensemble._load_routes)
-    # drops it from the deployed route list.
-    if export.is_constant_predictor(result.model):
-        LOG.info(
-            "%s: constant predictor (no split learned) — refusing to emit a route; "
-            "litmus will route these files to the filegroup/general ensemble",
+    def _fit_seed(seed: int) -> train.TrainResult:
+        return train.train(
+            x_train,
+            y_train,
+            replace(config, seed=seed),
+            feature_names=spec.feature_names,
+            sample_file_types=sample_file_types,
+        )
+
+    accepted_seed_results, seed_attempts = _train_healthy_seed_ensemble(
+        name=name,
+        base_seed=int(config.seed),
+        target_members=target_seed_members,
+        retry_budget=seed_retry_budget,
+        min_roc_auc=seed_health_min_roc_auc,
+        fit_seed=_fit_seed,
+    )
+    seed_health = {
+        "target_members": target_seed_members,
+        "retry_budget": seed_retry_budget,
+        "min_roc_auc": seed_health_min_roc_auc,
+        "accepted_seeds": [seed for seed, _result in accepted_seed_results],
+        "attempts": seed_attempts,
+    }
+    if len(accepted_seed_results) != target_seed_members:
+        LOG.error(
+            "%s: seed-health gate exhausted after %d attempt(s): got %d/%d "
+            "healthy members; refusing to emit this route",
             name,
+            len(seed_attempts),
+            len(accepted_seed_results),
+            target_seed_members,
         )
         return {
             "name": name,
             "kind": kind,
             "file_types": list(file_types),
             "error": True,
-            "skip_reason": "constant_predictor",
+            "skip_reason": "seed_health_exhausted",
+            "seed_health": seed_health,
         }
+
+    result = accepted_seed_results[0][1]
+    accepted_models = [seed_result.model for _seed, seed_result in accepted_seed_results]
 
     output_dir.mkdir(parents=True, exist_ok=True)
     if feature_env:
@@ -1249,7 +1377,6 @@ def _train_one(
     # using seeds [base+1, base+K]. All K+1 ship under models/seed_<S>.txt and
     # litmus averages their predictions at inference time. Variance reduction
     # by ~(K+1) without the bias trade-offs of within-model bagging.
-    extra_models: list[Any] = []
     if n_seed_extras > 0:
         # Atomic write per seed: train, write to a `.tmp` sibling, then
         # rename in place. A kill mid-loop leaves at most one stray `.tmp`
@@ -1273,20 +1400,23 @@ def _train_one(
             tmp_onnx = final_onnx.with_name(f".{final_onnx.name}.tmp")
             if export.export_lightgbm_onnx(booster, booster.num_feature(), tmp_onnx):
                 os.replace(tmp_onnx, final_onnx)
-        _save_seed_atomic(int(config.seed), result.model)
-        for offset in range(1, n_seed_extras + 1):
-            extra_seed = int(config.seed) + offset
-            LOG.info("%s: training seed extra %d/%d (seed=%d)",
-                     name, offset, n_seed_extras, extra_seed)
-            extra_result = train.train(
-                x_train,
-                y_train,
-                replace(config, seed=extra_seed),
-                feature_names=spec.feature_names,
-                sample_file_types=sample_file_types,
-            )
-            _save_seed_atomic(extra_seed, extra_result.model)
-            extra_models.append(extra_result.model)
+        for accepted_seed, accepted_result in accepted_seed_results:
+            _save_seed_atomic(accepted_seed, accepted_result.model)
+
+        # A retry can shift the accepted seed set (e.g. 42 is quarantined and
+        # 45 replaces it). Remove canonical artifacts from an older run only
+        # after every fresh accepted member is durable, so runtime discovery
+        # cannot silently include a rejected/stale ensemble member.
+        accepted_seeds = {seed for seed, _result in accepted_seed_results}
+        models_dir = output_dir / "models"
+        for pattern in ("seed_*.txt", "seed_*.onnx", "seed_*.json"):
+            for stale in models_dir.glob(pattern):
+                try:
+                    stale_seed = int(stale.stem.removeprefix("seed_"))
+                except ValueError:
+                    continue
+                if stale_seed not in accepted_seeds:
+                    stale.unlink()
         for legacy in (output_dir / "model.txt", output_dir / "model.json"):
             if legacy.is_file():
                 legacy.unlink()
@@ -1299,11 +1429,11 @@ def _train_one(
     # would return an empty array, so we shortcut and leave probs empty.
     if skip_benchmark:
         probs = np.array([], dtype=np.float32)
-    elif extra_models:
-        probs = model.predict_proba(result.model, x_bench).astype(np.float64)
-        for extra in extra_models:
-            probs += model.predict_proba(extra, x_bench).astype(np.float64)
-        probs = (probs / float(1 + len(extra_models))).astype(np.float32)
+    elif len(accepted_models) > 1:
+        probs = model.predict_proba(accepted_models[0], x_bench).astype(np.float64)
+        for accepted_model in accepted_models[1:]:
+            probs += model.predict_proba(accepted_model, x_bench).astype(np.float64)
+        probs = (probs / float(len(accepted_models))).astype(np.float32)
     else:
         probs = model.predict_proba(result.model, x_bench)
     # `model_path` reflects the layout actually written: legacy single-model
@@ -1317,7 +1447,8 @@ def _train_one(
         "file_types": list(file_types),
         "output_dir": str(output_dir),
         "model_path": str(primary_model),
-        "n_seed_models": 1 + len(extra_models),
+        "n_seed_models": len(accepted_models),
+        "seed_health": seed_health,
         "spec_path": str(output_dir / "feature_spec.json"),
         "train_rows": int(len(y_train)),
         "train_malware": int(np.sum(y_train == 1)),
@@ -1451,6 +1582,8 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
             filegroup_score_filter=job["filegroup_score_filter"],
             min_malware_score=job.get("min_malware_score"),
             n_seed_extras=job["n_seed_extras"],
+            seed_health_min_roc_auc=job.get("seed_health_min_roc_auc", 0.5),
+            seed_retry_budget=job.get("seed_retry_budget", 3),
             skip_benchmark=job.get("skip_benchmark", False),
             feature_cache_dir=job.get("feature_cache_dir"),
         )
@@ -1547,6 +1680,26 @@ def main() -> int:
             "layout (one model.txt per route). K>=1 switches to the multi-seed "
             "layout (models/seed_<S>.txt) so litmus averages predictions across "
             "K+1 trained ensembles, reducing seed-driven variance by ~K+1."
+        ),
+    )
+    parser.add_argument(
+        "--seed-health-min-roc-auc",
+        type=float,
+        default=0.5,
+        help=(
+            "Reject and retry seed models whose internal evaluation ROC AUC "
+            "is below this score-direction floor (default: 0.5). Constant "
+            "predictors and malformed metrics are always rejected."
+        ),
+    )
+    parser.add_argument(
+        "--seed-retry-budget",
+        type=int,
+        default=3,
+        help=(
+            "Maximum extra seed attempts per route after unhealthy members "
+            "are quarantined (default: 3). The route is omitted if the "
+            "requested healthy ensemble size cannot be reached."
         ),
     )
     parser.add_argument("--min-bad", type=int, default=50)
@@ -1658,6 +1811,13 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+
+    if args.n_seed_extras < 0:
+        parser.error("--n-seed-extras must be non-negative")
+    if args.seed_retry_budget < 0:
+        parser.error("--seed-retry-budget must be non-negative")
+    if not 0.0 <= args.seed_health_min_roc_auc <= 1.0:
+        parser.error("--seed-health-min-roc-auc must be between 0 and 1")
 
     logging.basicConfig(
         level=getattr(logging, args.log_level.upper()),
@@ -1875,6 +2035,8 @@ def main() -> int:
                 "filegroup_score_filter": filegroup_score_filter,
                 "min_malware_score": args.min_malware_score,
                 "n_seed_extras": args.n_seed_extras,
+                "seed_health_min_roc_auc": args.seed_health_min_roc_auc,
+                "seed_retry_budget": args.seed_retry_budget,
                 "skip_benchmark": args.skip_benchmark,
                 "feature_cache_dir": args.feature_cache_dir,
             },

@@ -4,13 +4,103 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import azoth_specialist_suite as suite  # noqa: E402
+
 from collimator import train  # noqa: E402
+
+
+class _FakeModel:
+    def __init__(self, *, constant: bool = False) -> None:
+        self.constant = constant
+
+
+def _fake_train_result(
+    roc_auc: float,
+    *,
+    avg_precision: float = 0.8,
+    f1: float = 0.7,
+    constant: bool = False,
+):
+    return SimpleNamespace(
+        model=_FakeModel(constant=constant),
+        metrics={
+            "roc_auc": roc_auc,
+            "avg_precision": avg_precision,
+            "f1": f1,
+        },
+    )
+
+
+def test_seed_health_rejects_constant_inverted_and_nonfinite_models(monkeypatch) -> None:
+    monkeypatch.setattr(
+        suite.export,
+        "is_constant_predictor",
+        lambda model: model.constant,
+    )
+
+    assert suite._seed_health_failure(
+        _fake_train_result(0.99), min_roc_auc=0.5,
+    ) is None
+    assert "constant predictor" in suite._seed_health_failure(
+        _fake_train_result(0.99, constant=True), min_roc_auc=0.5,
+    )
+    assert "below seed-health minimum" in suite._seed_health_failure(
+        _fake_train_result(0.0058), min_roc_auc=0.5,
+    )
+    assert "non-finite" in suite._seed_health_failure(
+        _fake_train_result(float("nan")), min_roc_auc=0.5,
+    )
+
+
+def test_seed_ensemble_retries_until_requested_healthy_size(monkeypatch) -> None:
+    monkeypatch.setattr(
+        suite.export,
+        "is_constant_predictor",
+        lambda model: model.constant,
+    )
+    auc_by_seed = {42: 0.0058, 43: 0.984, 44: 0.9992, 45: 0.97}
+
+    accepted, attempts = suite._train_healthy_seed_ensemble(
+        name="c",
+        base_seed=42,
+        target_members=3,
+        retry_budget=3,
+        min_roc_auc=0.5,
+        fit_seed=lambda seed: _fake_train_result(auc_by_seed[seed]),
+    )
+
+    assert [seed for seed, _result in accepted] == [43, 44, 45]
+    assert [attempt["seed"] for attempt in attempts] == [42, 43, 44, 45]
+    assert attempts[0]["accepted"] is False
+    assert "roc_auc=0.0058" in attempts[0]["reason"]
+    assert all(attempt["accepted"] for attempt in attempts[1:])
+
+
+def test_seed_ensemble_stops_after_retry_budget_is_exhausted(monkeypatch) -> None:
+    monkeypatch.setattr(
+        suite.export,
+        "is_constant_predictor",
+        lambda model: model.constant,
+    )
+
+    accepted, attempts = suite._train_healthy_seed_ensemble(
+        name="broken",
+        base_seed=42,
+        target_members=3,
+        retry_budget=2,
+        min_roc_auc=0.5,
+        fit_seed=lambda _seed: _fake_train_result(0.1),
+    )
+
+    assert accepted == []
+    assert len(attempts) == 5
+    assert all(attempt["accepted"] is False for attempt in attempts)
 
 
 def test_parse_train_overrides_coerces_train_config_values() -> None:

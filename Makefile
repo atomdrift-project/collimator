@@ -263,6 +263,12 @@ AZOTH_SPECIALIST_MIN_GOOD ?= 50
 # K=2 if you measure a real regression on test partition; the infrastructure
 # is in place to A/B this cleanly.
 AZOTH_SPECIALIST_N_SEED_EXTRAS ?= 2
+# Reject pathological seed fits before they enter the averaged specialist
+# bundle. A rejected member is replaced with the next deterministic seed, up
+# to this per-route retry budget; exhaustion omits the route so the runtime
+# falls back to its filegroup/general ensemble instead of shipping bad scores.
+AZOTH_SPECIALIST_SEED_HEALTH_MIN_ROC_AUC ?= 0.5
+AZOTH_SPECIALIST_SEED_RETRY_BUDGET ?= 3
 # OOF specialist training (fold-A / fold-B / route-score merge) doesn't ship
 # the resulting bundles to deploy — only their OOF predictions get merged.
 # Variance reduction from multi-seed averaging doesn't compound through the
@@ -1067,6 +1073,8 @@ azoth-specialists: venv check-db
 		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
 		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
 		--n-seed-extras $(AZOTH_SPECIALIST_N_SEED_EXTRAS) \
+		--seed-health-min-roc-auc $(AZOTH_SPECIALIST_SEED_HEALTH_MIN_ROC_AUC) \
+		--seed-retry-budget $(AZOTH_SPECIALIST_SEED_RETRY_BUDGET) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
@@ -1126,6 +1134,8 @@ azoth-specialists-fold-a: venv check-db
 		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
 		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
 		--n-seed-extras $(AZOTH_OOF_SEED_EXTRAS) \
+		--seed-health-min-roc-auc $(AZOTH_SPECIALIST_SEED_HEALTH_MIN_ROC_AUC) \
+		--seed-retry-budget $(AZOTH_SPECIALIST_SEED_RETRY_BUDGET) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
@@ -1161,6 +1171,8 @@ azoth-specialists-fold-b: venv check-db
 		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
 		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
 		--n-seed-extras $(AZOTH_OOF_SEED_EXTRAS) \
+		--seed-health-min-roc-auc $(AZOTH_SPECIALIST_SEED_HEALTH_MIN_ROC_AUC) \
+		--seed-retry-budget $(AZOTH_SPECIALIST_SEED_RETRY_BUDGET) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
