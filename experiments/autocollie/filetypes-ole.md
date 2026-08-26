@@ -1143,3 +1143,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T185802-filetypes-ole` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `85faec95843b11bf` | inherit_from_filetypes_plist_8b54303f | ok | 0.9982 | 0.9945 | 0.9704 | 21 | [log](out/autocollie/runs/2026-08-25T19-12-56_20260825T185802-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `3afaf938ee754d75` | ole_feat_textmetrics_severity_docobf | ok | 0.9997 | 0.9991 | 0.9905 | 29 | [log](out/autocollie/runs/2026-08-25T19-13-28_20260825T185802-filetypes-ole_ole_feat_textmetrics_severity_docobf.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_feat_textmetrics_severity_docobf`** `EXP_BETA=1.25 EXP_BOOSTING_TYPE=gbdt EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_EARLY_STOPPING=25 EXP_ESTIMATORS=400 EXP_EXTRA_TREES=0 …` — Enable text_metrics_full, text_encoding, severity_fractions, document_obfuscation_features, and line_length_buckets on the inherited OLE base to add obfuscation and minimal-malware rank signal for recall@3FPM while keeping PR_AUC flat.
+
+</details>
+

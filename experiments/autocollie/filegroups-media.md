@@ -1168,3 +1168,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T230622-filegroups-media` — 2026-08-25T23:06:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c8e58cf7e838a42f` | inherit_from_filetypes_plist_8b54303f | ok | 0.3890 | 0.7401 | 0.1457 | 8 | [log](out/autocollie/runs/2026-08-25T23-14-58_20260825T230622-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+
+Rejected before run:
+
+- `media_kv_textenc_bigram500` — features.repetition_penalty_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

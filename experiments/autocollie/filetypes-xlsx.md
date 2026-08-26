@@ -893,3 +893,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T160234-filetypes-xlsx` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5041c8d0bb9e3b42` | inherit_from_filetypes_plist_8b54303f | ok | 0.9564 | 0.5000 | 0.9777 | 18 | [log](out/autocollie/runs/2026-08-24T16-16-35_20260824T160234-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `391e52008deb2505` | xlsx_kv_split_textmetrics_strictfpr | ok | 0.9926 | 0.8659 | 0.5087 | 8 | [log](out/autocollie/runs/2026-08-24T16-17-01_20260824T160234-filetypes-xlsx_xlsx_kv_split_textmetrics_strictfpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_kv_split_textmetrics_strictfpr`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_DOCUMENT_OBFUSCATION_FEATURES=0 EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Aims recall@3FPM and PR_AUC by adding kv_value_split and text_metrics_full to the conservative xml-kv bigram surface, disabling noisy clusters/trigrams, and using strict-FP threshold with extra_trees regularization to keep ROC_AUC flat.
+
+</details>
+
+## Cycle `20260825T185802-filetypes-xlsx` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0c1d18e7f5ce87b8` | inherit_from_filetypes_plist_8b54303f | ok | 0.9564 | 0.5000 | 0.9777 | 16 | [log](out/autocollie/runs/2026-08-25T19-08-11_20260825T185802-filetypes-xlsx_inherit_from_filetypes_plist_8b54303f.log) |
+| `70383d155a63bb3e` | xlsx_kv_split_textmetrics_severity_fractions_strictfpr | ok | 0.9874 | 0.7689 | 0.3813 | 8 | [log](out/autocollie/runs/2026-08-25T19-08-44_20260825T185802-filetypes-xlsx_xlsx_kv_split_textmetrics_severity_fractions_strictfpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xlsx_kv_split_textmetrics_severity_fractions_strictfpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Adds severity fractions to the kv-split/text-metrics surface to lift recall@3FPM on minimal malicious xlsx while keeping PR_AUC flat via positive down-weighting at the strict-FP threshold.
+
+</details>
+

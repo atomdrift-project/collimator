@@ -1366,3 +1366,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T160234-filetypes-batch` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2a6ec5421a20c17e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9990 | 0.9929 | 0.2947 | 27 | [log](out/autocollie/runs/2026-08-24T16-26-33_20260824T160234-filetypes-batch_inherit_from_filetypes_plist_8b54303f.log) |
+| `c2f36ecb1e89f581` | batch_kv_vocab_hardneg_01_12_spw075 | ok | 0.9802 | 0.8850 | 0.3012 | 18 | [log](out/autocollie/runs/2026-08-24T16-27-07_20260824T160234-filetypes-batch_batch_kv_vocab_hardneg_01_12_spw075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_kv_vocab_hardneg_01_12_spw075`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab to add batch key-value rank signal and use mild hard-negative upweighting plus 0.75 positive weight to lift recall@3FPM while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

@@ -1224,3 +1224,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260825T185802-filetypes-kotlin` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `49c8126a50555416` | inherit_from_filetypes_plist_8b54303f | ok | 0.9778 | 0.9849 | 0.9092 | 31 | [log](out/autocollie/runs/2026-08-25T19-07-03_20260825T185802-filetypes-kotlin_inherit_from_filetypes_plist_8b54303f.log) |
+| `508a4e41754d8fb7` | kotlin_kv_vocab_bigram100_hardneg_02_8 | ok | 0.9666 | 0.9787 | 0.7439 | 20 | [log](out/autocollie/runs/2026-08-25T19-07-44_20260825T185802-filetypes-kotlin_kotlin_kv_vocab_bigram100_hardneg_02_8.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_kv_vocab_bigram100_hardneg_02_8`** `EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=320 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 …` — Enable kv_vocab and lower bigram_min_freq to add source-level rank signal, while a 0.02/8 hard-negative pass suppresses benign tail FPs to lift recall@3FPM with PR_AUC held flat.
+
+</details>
+

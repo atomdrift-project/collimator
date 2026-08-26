@@ -1258,3 +1258,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260825T000438-filetypes-package.json` — 2026-08-25T00:04:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `25c9e5fb2503ce44` | inherit_from_filetypes_plist_8b54303f | ok | 0.9910 | 0.9945 | 0.9803 | 31 | [log](out/autocollie/runs/2026-08-25T00-17-04_20260825T000438-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `07d49c8af49762ba` | pkg_json_kv_sevfrac_hardneg_015_16 | ok | 0.9832 | 0.9849 | 0.9803 | 29 | [log](out/autocollie/runs/2026-08-25T00-17-49_20260825T000438-filetypes-package.json_pkg_json_kv_sevfrac_hardneg_015_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_kv_sevfrac_hardneg_015_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 …` — Enable kv_vocab and severity_fractions to surface npm dependency/script tokens and minimal-dropper severity concentration, with hard-negative upweighting to cut benign FPs and lift recall@3FPM while keeping PR_AUC flat.
+
+</details>
+

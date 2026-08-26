@@ -1847,3 +1847,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260824T212347-filetypes-javascript` — 2026-08-24T21:23:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `62207698041b1c02` | inherit_from_filetypes_plist_8b54303f | ok | 0.9867 | 0.9814 | 0.9306 | 72 | [log](out/autocollie/runs/2026-08-24T21-29-37_20260824T212347-filetypes-javascript_inherit_from_filetypes_plist_8b54303f.log) |
+| `5038bc43eae35738` | js_kv_vocab_lowfreq_textmetrics | ok | 0.9794 | 0.9715 | 0.9380 | 51 | [log](out/autocollie/runs/2026-08-24T21-31-28_20260824T212347-filetypes-javascript_js_kv_vocab_lowfreq_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_kv_vocab_lowfreq_textmetrics`** `EXP_BIGRAM_MIN_FREQ=25 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 …` — Adds kv_vocab on top of low-frequency bigrams and text metrics to capture npm package metadata/install-hook signal, aiming to lift PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

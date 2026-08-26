@@ -2582,3 +2582,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260825T225145-filetypes-go` — 2026-08-25T22:51:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `53ef342e839039e3` | inherit_from_filetypes_plist_8b54303f | ok | 0.5226 | 0.7705 | 0.4153 | 17 | [log](out/autocollie/runs/2026-08-25T23-00-46_20260825T225145-filetypes-go_inherit_from_filetypes_plist_8b54303f.log) |
+| `5f68f4572b53ed3b` | go_text_metrics_lowbigram_tail | ok | 0.3956 | 0.6661 | 0.0000 | 12 | [log](out/autocollie/runs/2026-08-25T23-01-09_20260825T225145-filetypes-go_go_text_metrics_lowbigram_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_text_metrics_lowbigram_tail`** `EXP_BIGRAM_MAX=12000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=320 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 …` — Add text_metrics_full and lower bigram_min_freq to 100 to capture obfuscated Go source patterns, aiming to lift recall@3FPM by improving malicious tail ranking while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

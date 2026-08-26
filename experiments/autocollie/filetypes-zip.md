@@ -1248,3 +1248,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T000108-filetypes-zip` — 2026-08-25T00:01:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c0498bb42e0ab5dc` | inherit_from_filetypes_plist_8b54303f | ok | 0.9922 | 0.9809 | 0.9500 | 174 | [log](out/autocollie/runs/2026-08-25T00-13-15_20260825T000108-filetypes-zip_inherit_from_filetypes_plist_8b54303f.log) |
+| `dc17c9e8b11bc973` | zip_inherit_kv_vocab_5k | ok | 0.9917 | 0.9799 | 0.9471 | 183 | [log](out/autocollie/runs/2026-08-25T00-17-40_20260825T000108-filetypes-zip_zip_inherit_kv_vocab_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_inherit_kv_vocab_5k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds a 5k kv_vocab to the strong inherit baseline to capture archive key-value metadata, aiming to lift PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260825T185802-filetypes-zip` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0b2b45101b436dae` | inherit_from_filetypes_plist_8b54303f | ok | 0.9919 | 0.9802 | 0.9334 | 201 | [log](out/autocollie/runs/2026-08-25T19-07-40_20260825T185802-filetypes-zip_inherit_from_filetypes_plist_8b54303f.log) |
+| `3b20b1533a3096ad` | zip_kv_value_split_5k | ok | 0.9334 | 0.8269 | 0.7993 | 144 | [log](out/autocollie/runs/2026-08-25T19-11-54_20260825T185802-filetypes-zip_zip_kv_value_split_5k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_kv_value_split_5k`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 …` — Tests whether splitting string-valued KV tokens adds fine-grained malicious library/path signal to lift recall@3FPM while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

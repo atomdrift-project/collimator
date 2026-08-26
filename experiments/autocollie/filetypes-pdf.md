@@ -2660,3 +2660,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T185805-filetypes-pdf` — 2026-08-25T18:58:05Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e8ad08ba7488f9b3` | inherit_from_filetypes_plist_8b54303f | ok | 0.9982 | 0.9949 | 0.8501 | 14 | [log](out/autocollie/runs/2026-08-25T19-24-21_20260825T185805-filetypes-pdf_inherit_from_filetypes_plist_8b54303f.log) |
+| `7d7560046b588dfd` | pdf_best_hardneg_015_w16_textmetrics | ok | 0.9954 | 0.9860 | 0.8518 | 11 | [log](out/autocollie/runs/2026-08-25T19-24-47_20260825T185805-filetypes-pdf_pdf_best_hardneg_015_w16_textmetrics.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_best_hardneg_015_w16_textmetrics`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims to lift recall@3FPM by applying a small high-weight hard-negative sweep (0.015/16) on the strong plist-inherited PDF feature base while adding text_metrics_full, document_obfuscation_features, and line_length_buckets to capture PDF obfuscation tail signal without hurting PR_AUC/ROC_AUC.
+
+</details>
+

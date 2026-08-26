@@ -972,3 +972,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T015440-filetypes-lnk` — 2026-08-25T01:54:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `842f04c727550701` | inherit_from_filetypes_plist_8b54303f | ok | 0.9524 | 0.8694 | 0.9016 | 6 | [log](out/autocollie/runs/2026-08-25T02-05-08_20260825T015440-filetypes-lnk_inherit_from_filetypes_plist_8b54303f.log) |
+| `7d9c3bf40d0f45c7` | lnk_feat_textenc_kv8k_conf_lr003 | ok | 0.9965 | 0.9841 | 0.9311 | 6 | [log](out/autocollie/runs/2026-08-25T02-05-18_20260825T015440-filetypes-lnk_lnk_feat_textenc_kv8k_conf_lr003.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_feat_textenc_kv8k_conf_lr003`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_COLSAMPLE_BYTREE=0.8 EXP_CONFIDENCE_WEIGHTED_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=400 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_KV_MIN_FREQ=5 …` — Adds shortcut KV and text-encoding rank signal plus confidence-weighted n-grams to lift recall@3FPM on rare malicious targets while hard negatives and lower LR keep PR_AUC and ROC_AUC flat.
+
+</details>
+

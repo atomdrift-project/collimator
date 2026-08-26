@@ -1236,3 +1236,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T160234-general` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `be2ace7866391383` | inherit_from_filetypes_plist_8b54303f | ok | 0.9879 | 0.9844 | 0.8915 | 319 | [log](out/autocollie/runs/2026-08-24T16-29-27_20260824T160234-general_inherit_from_filetypes_plist_8b54303f.log) |
+| `80aef4c580ecdd43` | general_kv_vocab_conservative_hardneg | ok | 0.9867 | 0.9841 | 0.8953 | 313 | [log](out/autocollie/runs/2026-08-24T16-34-46_20260824T160234-general_general_kv_vocab_conservative_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`general_kv_vocab_conservative_hardneg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 …` — Enable a conservative kv_vocab on the plist-inherited general feature set to add key-value rank signal and lift recall@3FPM while keeping PR_AUC and ROC_AUC flat via stronger regularization and hard-negative weighting.
+
+</details>
+
+## Cycle `20260825T212056-general` — 2026-08-25T21:20:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `94884d1b229a9950` | inherit_from_filetypes_plist_8b54303f | ok | 0.9901 | 0.9866 | 0.9083 | 150 | [log](out/autocollie/runs/2026-08-25T21-27-26_20260825T212056-general_inherit_from_filetypes_plist_8b54303f.log) |
+| `77d8401c59efe744` | general_kv_vocab12k_hardneg_tail | ok | 0.9778 | 0.9730 | 0.0000 | 145 | [log](out/autocollie/runs/2026-08-25T21-29-55_20260825T212056-general_general_kv_vocab12k_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`general_kv_vocab12k_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_KV_MIN_FREQ=10 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_LEARNING_RATE=0.05 …` — Adds a conservative KV vocab to capture structured malicious metadata, aiming to lift PR_AUC and recall@3FPM while hard negatives and max_recall_at_fpr thresholding keep ROC_AUC flat.
+
+</details>
+

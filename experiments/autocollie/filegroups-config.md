@@ -1672,3 +1672,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T160234-filegroups-config` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb91ad3df4ddea73` | inherit_from_filetypes_plist_8b54303f | ok | 0.8893 | 0.9052 | 0.8771 | 32 | [log](out/autocollie/runs/2026-08-24T16-26-51_20260824T160234-filegroups-config_inherit_from_filetypes_plist_8b54303f.log) |
+| `b54f92a2e06b20cd` | config_kv_vocab_on_cleaned_corpus | ok | 0.8896 | 0.9040 | 0.8737 | 28 | [log](out/autocollie/runs/2026-08-24T16-27-35_20260824T160234-filegroups-config_config_kv_vocab_on_cleaned_corpus.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_kv_vocab_on_cleaned_corpus`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=400 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 …` — Enables kv_vocab on the min_sample_score=3 cleaned corpus (matching the best inherit baseline's profile) to add discriminative key-value signal for tail malware ranking, aiming to improve PR_AUC by capturing config-specific kv patterns the disabled-kv inherit baseline misses without the low-severity noise that hurt prior kv runs on the full corpus.
+
+</details>
+

@@ -1210,3 +1210,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260824T160234-filegroups-portable` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0c14be23a508c6af` | inherit_from_filetypes_plist_8b54303f | ok | 0.8769 | 0.9437 | 0.8198 | 66 | [log](out/autocollie/runs/2026-08-24T16-18-34_20260824T160234-filegroups-portable_inherit_from_filetypes_plist_8b54303f.log) |
+| `8e3589e02370ce85` | portable_kv_value_split_textenc_textmetrics_hardneg | ok | 0.8420 | 0.9374 | 0.8239 | 35 | [log](out/autocollie/runs/2026-08-24T16-19-52_20260824T160234-filegroups-portable_portable_kv_value_split_textenc_textmetrics_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_kv_value_split_textenc_textmetrics_hardneg`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Enable kv_vocab with kv_value_split plus text_encoding/text_metrics_full and lower bigram_min_freq to 500 to add rare key-value and text-obfuscation signal, aiming to lift PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260825T185802-filegroups-portable` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `33ae1bf11394fe2c` | inherit_from_filetypes_plist_8b54303f | ok | 0.8834 | 0.9432 | 0.8336 | 56 | [log](out/autocollie/runs/2026-08-25T19-23-32_20260825T185802-filegroups-portable_inherit_from_filetypes_plist_8b54303f.log) |
+| `bdc5b20809c0f08e` | portable_lowbigram_tieredtrigram_kv_textenc | ok | 0.8455 | 0.9330 | 0.8292 | 26 | [log](out/autocollie/runs/2026-08-25T19-24-44_20260825T185802-filegroups-portable_portable_lowbigram_tieredtrigram_kv_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_lowbigram_tieredtrigram_kv_textenc`** `EXP_BIGRAM_MAX=8000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 …` — Transfers xml's low-frequency bigram and tiered trigram signal while adding KV value-split and full text metrics, aiming to raise PR_AUC and recall@3FPM by surfacing rare obfuscation/metadata patterns without hurting ROC_AUC.
+
+</details>
+

@@ -2604,3 +2604,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260824T160234-filetypes-pe` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4b57d6f856c83a31` | inherit_from_filetypes_plist_8b54303f | ok | 0.9990 | 0.9990 | 0.9827 | 157 | [log](out/autocollie/runs/2026-08-24T16-13-01_20260824T160234-filetypes-pe_inherit_from_filetypes_plist_8b54303f.log) |
+| `669af88f8eaaec01` | pe_symbol_bigram_hardneg_fpr | ok | 0.9986 | 0.9986 | 0.0000 | 139 | [log](out/autocollie/runs/2026-08-24T16-17-05_20260824T160234-filetypes-pe_pe_symbol_bigram_hardneg_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_symbol_bigram_hardneg_fpr`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 …` — Adds import-pair symbol bigrams/vocab and disables noisy clusters to sharpen PE rank signal, with hard negatives and max_recall_at_fpr to lift recall@3FPM while holding PR_AUC.
+
+</details>
+
+## Cycle `20260825T214630-filetypes-pe` — 2026-08-25T21:46:30Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `55269bea0c300e72` | inherit_from_filetypes_plist_8b54303f | ok | 0.9991 | 0.9992 | 0.9824 | 171 | [log](out/autocollie/runs/2026-08-25T21-55-45_20260825T214630-filetypes-pe_inherit_from_filetypes_plist_8b54303f.log) |
+| `0b32f2a1ad2ee13d` | pe_textmetrics_overlay_hardneg_fpr | ok | 0.9987 | 0.9987 | 0.0000 | 106 | [log](out/autocollie/runs/2026-08-25T21-59-49_20260825T214630-filetypes-pe_pe_textmetrics_overlay_hardneg_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_textmetrics_overlay_hardneg_fpr`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NONSTANDARD_SECTION_SIGNAL=1 EXP_NUM_LEAVES=96 EXP_OVERLAY_SIGNAL=1 …` — Adds text-metric and PE overlay/section tail signal, then uses hard-negative upweighting and max_recall_at_fpr to lift recall@3FPM at the L25 tail while keeping PR_AUC flat.
+
+</details>
+

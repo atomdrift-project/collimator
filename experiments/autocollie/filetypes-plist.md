@@ -1242,3 +1242,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T185802-filetypes-plist` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c8cfd1cb2bd4822f` | inherit_from_filetypes_gem_06bdacaa | ok | 0.1506 | 0.7603 | 0.2367 | 6 | [log](out/autocollie/runs/2026-08-25T19-09-10_20260825T185802-filetypes-plist_inherit_from_filetypes_gem_06bdacaa.log) |
+| `ebc024bc1465c9bf` | plist_feat_textenc_textmetrics_ctrl_bigrams | ok | 0.0406 | 0.2669 | 0.0682 | 8 | [log](out/autocollie/runs/2026-08-25T19-09-19_20260825T185802-filetypes-plist_plist_feat_textenc_textmetrics_ctrl_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_gem_06bdacaa`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/gem (key=06bdacaa9d08b7d4, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`plist_feat_textenc_textmetrics_ctrl_bigrams`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_ENCODING_FEATURES=1 EXP_TEXT_METRICS_FULL=1 EXP_THRESHOLD_FPR_TARGET=2.5e-07 …` — Enable text_encoding and text_metrics_full on the control 5000/1000 bigram surface to add plist encoding/obfuscation rank signal and lift PR_AUC while avoiding the low-frequency bigram noise that hurt recent plist feature runs.
+
+</details>
+

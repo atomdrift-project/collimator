@@ -2496,3 +2496,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T000438-filegroups-documents` — 2026-08-25T00:04:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `cbe9c6a264122fd6` | inherit_from_filetypes_plist_8b54303f | ok | 0.9825 | 0.9795 | 0.8548 | 27 | [log](out/autocollie/runs/2026-08-25T00-10-14_20260825T000438-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `2404f468b70c84bf` | docs_textmetrics_lowbigram_floor | ok | 0.9465 | 0.9357 | 0.8366 | 16 | [log](out/autocollie/runs/2026-08-25T00-10-50_20260825T000438-filegroups-documents_docs_textmetrics_lowbigram_floor.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_textmetrics_lowbigram_floor`** `EXP_BIGRAM_MIN_FREQ=250 EXP_MAX_TEST_SAMPLES=20000 EXP_TEXT_METRICS_FULL=1 EXP_TRAIN_SAMPLES=30000` — Aims to lift PR_AUC and recall@3FPM by adding text_metrics_full document obfuscation metrics and lowering bigram_min_freq to 250 so rarer malicious path bigrams enter the vocab.
+
+</details>
+
+## Cycle `20260825T185802-filegroups-documents` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bd9de0197bbd15c5` | inherit_from_filetypes_plist_8b54303f | ok | 0.9822 | 0.9795 | 0.8395 | 21 | [log](out/autocollie/runs/2026-08-25T19-10-40_20260825T185802-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `3be41110dadef1e3` | docs_kv_value_split_conservative | ok | 0.9371 | 0.9165 | 0.8370 | 16 | [log](out/autocollie/runs/2026-08-25T19-11-11_20260825T185802-filegroups-documents_docs_kv_value_split_conservative.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_kv_value_split_conservative`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters …` — Adds conservative KV vocab with value splitting to the strong plist-inherited document surface to lift recall@3FPM and PR_AUC from metadata/malware-library signal, while disabling clusters to protect ROC_AUC.
+
+</details>
+

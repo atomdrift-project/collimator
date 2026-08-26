@@ -1130,3 +1130,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T234645-filetypes-pkg-info` — 2026-08-24T23:46:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `46151bac1133976a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9894 | 0.9886 | 0.9802 | 8 | [log](out/autocollie/runs/2026-08-24T23-57-41_20260824T234645-filetypes-pkg-info_inherit_from_filetypes_plist_8b54303f.log) |
+| `378c209d5ad6bf0e` | pkginfo_kv_value_split_hardneg_tail | ok | 0.9915 | 0.9914 | 0.9829 | 10 | [log](out/autocollie/runs/2026-08-24T23-57-57_20260824T234645-filetypes-pkg-info_pkginfo_kv_value_split_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkginfo_kv_value_split_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 …` — Aims to improve recall@3FPM by exposing split package-info KV tokens and upweighting benign hard negatives to cut FP, while L2 regularization and strict-FP thresholding keep PR_AUC flat.
+
+</details>
+

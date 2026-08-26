@@ -1032,3 +1032,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T160235-filegroups-scripts` — 2026-08-24T16:02:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `48824425225c1c55` | inherit_from_filetypes_plist_8b54303f | ok | 0.9858 | 0.9837 | 0.7017 | 88 | [log](out/autocollie/runs/2026-08-24T16-22-19_20260824T160235-filegroups-scripts_inherit_from_filetypes_plist_8b54303f.log) |
+| `2abc6a0b3e208848` | scripts_textmetrics_full_highbigram | ok | 0.9878 | 0.9856 | 0.7171 | 71 | [log](out/autocollie/runs/2026-08-24T16-25-02_20260824T160235-filegroups-scripts_scripts_textmetrics_full_highbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_textmetrics_full_highbigram`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Add text_metrics_full to the plist-inherited high-frequency bigram control while keeping kv/symbols/textenc off, aiming to lift PR_AUC and recall@3FPM by adding size-invariant script obfuscation metrics without the noisy low-frequency bigram surface that hurt scripts_textmetrics_lowbigram.
+
+</details>
+
+## Cycle `20260825T214619-filegroups-scripts` — 2026-08-25T21:46:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c016aaa41989b9b1` | inherit_from_filetypes_plist_8b54303f | ok | 0.9872 | 0.9851 | 0.7095 | 54 | [log](out/autocollie/runs/2026-08-25T21-54-36_20260825T214619-filegroups-scripts_inherit_from_filetypes_plist_8b54303f.log) |
+| `cd47723cfe4319df` | scripts_textmetrics_bigram100_reg | ok | 0.9361 | 0.9363 | 0.6994 | 46 | [log](out/autocollie/runs/2026-08-25T21-56-09_20260825T214619-filegroups-scripts_scripts_textmetrics_bigram100_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_textmetrics_bigram100_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_EARLY_STOPPING=30 EXP_ESTIMATORS=350 EXP_LEARNING_RATE=0.03 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 …` — Aims PR_AUC by lowering the bigram floor to 100 on the text_metrics_full surface to capture rarer malicious script patterns, with stronger L2/min-child regularization to keep ROC_AUC flat.
+
+</details>
+

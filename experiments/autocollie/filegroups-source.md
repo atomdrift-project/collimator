@@ -1146,3 +1146,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T160234-filegroups-source` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a5e8c3d4eb80b3bd` | inherit_from_filetypes_plist_8b54303f | ok | 0.9379 | 0.9288 | 0.7098 | 65 | [log](out/autocollie/runs/2026-08-24T16-33-54_20260824T160234-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `1e13e3b8feb113d5` | source_best_kv_textenc_metrics_bigram500 | ok | 0.9043 | 0.8919 | 0.5172 | 60 | [log](out/autocollie/runs/2026-08-24T16-35-39_20260824T160234-filegroups-source_source_best_kv_textenc_metrics_bigram500.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_best_kv_textenc_metrics_bigram500`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Enable kv_vocab, text_encoding, and text_metrics_full on the strong inherited source feature set while lowering bigram_min_freq to add rare source-pattern rank signal, aiming to lift recall@3FPM with PR_AUC flat.
+
+</details>
+
+## Cycle `20260825T185802-filegroups-source` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e4e6e2b3c31a073a` | inherit_from_filetypes_plist_8b54303f | ok | 0.9326 | 0.9224 | 0.7191 | 38 | [log](out/autocollie/runs/2026-08-25T19-06-39_20260825T185802-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `edaa0f557aaf25f8` | source_kv_textmetrics_bigram250_reg | ok | 0.8451 | 0.8166 | 0.0000 | 40 | [log](out/autocollie/runs/2026-08-25T19-07-51_20260825T185802-filegroups-source_source_kv_textmetrics_bigram250_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_kv_textmetrics_bigram250_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 …` — Enable KV vocab and full text metrics plus a lower bigram floor to add source-specific rank signal for PR_AUC and recall@3FPM, with stronger regularization and an FPR-target threshold to keep ROC_AUC flat.
+
+</details>
+

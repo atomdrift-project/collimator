@@ -1194,3 +1194,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T185802-filetypes-rust` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `593446045ab2d480` | inherit_from_filetypes_plist_8b54303f | ok | 0.2585 | 0.7836 | 0.0866 | 20 | [log](out/autocollie/runs/2026-08-25T19-13-43_20260825T185802-filetypes-rust_inherit_from_filetypes_plist_8b54303f.log) |
+| `c6ab879f7807e2e7` | rust_kv_vocab_best_env | ok | 0.1574 | 0.7923 | 0.1367 | 11 | [log](out/autocollie/runs/2026-08-25T19-14-11_20260825T185802-filetypes-rust_rust_kv_vocab_best_env.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_kv_vocab_best_env`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable conservative KV vocab on the best recent Rust feature env to add dependency/command rank signal, aiming to lift PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

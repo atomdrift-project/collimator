@@ -1158,3 +1158,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T011521-filetypes-php` — 2026-08-25T01:15:21Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `703670cc34c7941b` | inherit_from_filetypes_plist_8b54303f | ok | 0.8779 | 0.9501 | 0.8564 | 24 | [log](out/autocollie/runs/2026-08-25T01-28-40_20260825T011521-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `b54c2253b694caee` | php_textmetrics_lowfreq_bigram_fpr | ok | 0.8546 | 0.9492 | 0.0000 | 16 | [log](out/autocollie/runs/2026-08-25T01-29-12_20260825T011521-filetypes-php_php_textmetrics_lowfreq_bigram_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_textmetrics_lowfreq_bigram_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims to lift recall@3FPM and keep PR_AUC flat by adding text_metrics_full, lowering bigram_min_freq for rare PHP payload bigrams, and using strict-FP thresholding with positive down-weighting to cut benign FPs.
+
+</details>
+
+## Cycle `20260825T185802-filetypes-php` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5844f6904e367851` | inherit_from_filetypes_plist_8b54303f | ok | 0.8938 | 0.9601 | 0.8724 | 28 | [log](out/autocollie/runs/2026-08-25T19-13-26_20260825T185802-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `0c319b35ae2823e7` | php_textmetrics_tieredtrigram_hardneg_fpr | ok | 0.8652 | 0.9560 | 0.0000 | 21 | [log](out/autocollie/runs/2026-08-25T19-14-04_20260825T185802-filetypes-php_php_textmetrics_tieredtrigram_hardneg_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_textmetrics_tieredtrigram_hardneg_fpr`** `EXP_BIGRAM_MIN_FREQ=1000 EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 …` — Aims to lift recall@3FPM and PR_AUC while keeping ROC_AUC flat by adding text-encoding/text-metrics and critical trigrams to the high-frequency bigram base, with hard-negative upweighting and positive downweighting to suppress benign FPs at the strict tail.
+
+</details>
+

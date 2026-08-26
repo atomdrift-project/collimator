@@ -1110,3 +1110,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260824T160234-filetypes-tar` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8915ff1c83d345e1` | inherit_from_filetypes_plist_8b54303f | ok | 0.9366 | 0.9701 | 0.8571 | 29 | [log](out/autocollie/runs/2026-08-24T16-13-48_20260824T160234-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `70f946f3a1502e7b` | tar_kv12k_hardneg_01_12 | ok | 0.9262 | 0.9610 | 0.8413 | 29 | [log](out/autocollie/runs/2026-08-24T16-14-23_20260824T160234-filetypes-tar_tar_kv12k_hardneg_01_12.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_kv12k_hardneg_01_12`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 …` — Enables KV vocab to add tar member metadata/path rank signal and uses a small hard-negative pass to lift recall@3FPM at the strict-FP tail while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

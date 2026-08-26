@@ -418,3 +418,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T230622-filetypes-crx` — 2026-08-25T23:06:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `ab95c8ab2f5a5b5b` | inherit_from_filetypes_plist_8b54303f | ok | 0.7595 | 0.8993 | 0.6646 | 30 | [log](out/autocollie/runs/2026-08-25T23-26-14_20260825T230622-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `f4731b4de4fe710d` | crx_kv_value_split_fpr_threshold | ok | 0.8464 | 0.9462 | 0.0000 | 31 | [log](out/autocollie/runs/2026-08-25T23-26-52_20260825T230622-filetypes-crx_crx_kv_value_split_fpr_threshold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_kv_value_split_fpr_threshold`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_MIN_FREQ=5 …` — Enable kv_value_split on manifest-style key-value arrays to expose permission/host elements as separate tokens, aiming to lift recall@3FPM by improving strict-FP ranking while keeping PR_AUC flat.
+
+</details>
+

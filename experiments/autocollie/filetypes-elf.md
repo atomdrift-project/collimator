@@ -1808,3 +1808,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260824T234703-filetypes-elf` — 2026-08-24T23:47:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7e55b6138219df38` | inherit_from_filetypes_plist_8b54303f | ok | 0.9999 | 0.9998 | 0.9962 | 101 | [log](out/autocollie/runs/2026-08-24T23-53-42_20260824T234703-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `b0fa9472dc813dc8` | elf_symbol_bigram_mbc_overlay_hardneg | ok | 0.9997 | 0.9997 | 0.0000 | 45 | [log](out/autocollie/runs/2026-08-24T23-55-47_20260824T234703-filetypes-elf_elf_symbol_bigram_mbc_overlay_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_symbol_bigram_mbc_overlay_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=320 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 …` — Adds ELF import/symbol bigram, MBC ID, and overlay rank signal while hard-negative weighting and lower positive weight suppress benign FPs to lift recall@3FPM with flat PR_AUC/ROC_AUC.
+
+</details>
+
+## Cycle `20260825T214648-filetypes-elf` — 2026-08-25T21:46:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c5be388ffd964fa0` | inherit_from_filetypes_plist_8b54303f | ok | 0.9998 | 0.9997 | 0.9958 | 43 | [log](out/autocollie/runs/2026-08-25T21-51-56_20260825T214648-filetypes-elf_inherit_from_filetypes_plist_8b54303f.log) |
+| `e82501d6e2f6c3b6` | elf_symbol_vocab_mbc_overlay_hardneg | ok | 0.9998 | 0.9997 | 0.9948 | 39 | [log](out/autocollie/runs/2026-08-25T21-52-59_20260825T214648-filetypes-elf_elf_symbol_vocab_mbc_overlay_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_symbol_vocab_mbc_overlay_hardneg`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_KV_VOCAB=0 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_MIN_CHILD_SAMPLES=150 …` — Enable ELF symbol vocab plus MBC/overlay/section signal to add import-co-occurrence and packer rank signal, aiming to lift recall@3FPM and PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

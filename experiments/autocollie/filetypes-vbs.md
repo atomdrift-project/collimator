@@ -1226,3 +1226,33 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T000108-filetypes-vbs` — 2026-08-25T00:01:08Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `62c1c7fdb0e6f4c2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9991 | 0.9966 | 0.9785 | 17 | [log](out/autocollie/runs/2026-08-25T00-13-47_20260825T000108-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+
+Rejected before run:
+
+- `vbs_textmetrics_full_reg_minchild20` — features.repetition_penalty_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20260825T230622-filetypes-vbs` — 2026-08-25T23:06:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8cad20d006be0ed2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9993 | 0.9976 | 0.9326 | 13 | [log](out/autocollie/runs/2026-08-25T23-14-09_20260825T230622-filetypes-vbs_inherit_from_filetypes_plist_8b54303f.log) |
+| `213922bc91b70581` | vbs_textenc_textmetrics_reg_spw075 | ok | 0.9968 | 0.9893 | 0.9515 | 12 | [log](out/autocollie/runs/2026-08-25T23-14-27_20260825T230622-filetypes-vbs_vbs_textenc_textmetrics_reg_spw075.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_textenc_textmetrics_reg_spw075`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=350 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 …` — Enable text_encoding and text_metrics_full to add VBS obfuscation/encoding rank signal, aiming to lift recall@3FPM and PR_AUC while reg_lambda, min_child_samples, and scale_pos_weight_mult=0.75 keep ROC_AUC flat and reduce benign FP.
+
+</details>
+

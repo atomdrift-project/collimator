@@ -1158,3 +1158,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260825T000438-filegroups-native` — 2026-08-25T00:04:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0471e5d648868af5` | inherit_from_filetypes_plist_8b54303f | ok | 0.9992 | 0.9993 | 0.9906 | 104 | [log](out/autocollie/runs/2026-08-25T00-13-44_20260825T000438-filegroups-native_inherit_from_filetypes_plist_8b54303f.log) |
+| `c4569b20ace9fc82` | native_symbol_trigrams_hardneg_tail | ok | 0.9989 | 0.9989 | 0.9873 | 138 | [log](out/autocollie/runs/2026-08-25T00-17-34_20260825T000438-filegroups-native_native_symbol_trigrams_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_symbol_trigrams_hardneg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Aims to lift recall@3FPM by adding import/symbol trigram co-occurrence and mild hard-negative upweighting to sharpen benign-tail separation while keeping PR_AUC flat.
+
+</details>
+

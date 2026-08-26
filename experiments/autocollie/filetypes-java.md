@@ -778,3 +778,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260825T185802-filetypes-java` — 2026-08-25T18:58:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `eb3cb9b2669c7be1` | inherit_from_filetypes_plist_8b54303f | ok | 0.8077 | 0.9779 | 0.7497 | 13 | [log](out/autocollie/runs/2026-08-25T19-13-34_20260825T185802-filetypes-java_inherit_from_filetypes_plist_8b54303f.log) |
+| `14e91ecddb3c263d` | java_best_text_metrics_full | ok | 0.4389 | 0.9310 | 0.1602 | 16 | [log](out/autocollie/runs/2026-08-25T19-13-53_20260825T185802-filetypes-java_java_best_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_best_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Add text_metrics_full to the best plist-inherited Java feature surface to capture obfuscation and line-structure rank signal, aiming to improve PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

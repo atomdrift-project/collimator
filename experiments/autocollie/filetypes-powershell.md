@@ -1225,3 +1225,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T160234-filetypes-powershell` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `742d4ae24a13ebeb` | inherit_from_filetypes_plist_8b54303f | ok | 0.9931 | 0.9901 | 0.9532 | 22 | [log](out/autocollie/runs/2026-08-24T16-18-18_20260824T160234-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `bc38a24220df6fc2` | ps_inherit_kv_vocab_tail | ok | 0.9878 | 0.9822 | 0.9512 | 17 | [log](out/autocollie/runs/2026-08-24T16-18-47_20260824T160234-filetypes-powershell_ps_inherit_kv_vocab_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_inherit_kv_vocab_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 …` — Aims to lift recall@3FPM by adding KV string tokens to the strong plist-inherited PowerShell feature set, while keeping PR_AUC/ROC_AUC flat by preserving the proven bigram and hostile-density surface.
+
+</details>
+

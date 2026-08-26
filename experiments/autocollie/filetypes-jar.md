@@ -1070,3 +1070,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260824T160234-filetypes-jar` — 2026-08-24T16:02:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `510acf10d215547b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9226 | 0.9664 | 0.8273 | 45 | [log](out/autocollie/runs/2026-08-24T16-13-17_20260824T160234-filetypes-jar_inherit_from_filetypes_plist_8b54303f.log) |
+| `8bfc1f8bc72f3abf` | jar_textmetrics_tiered_trigram_reg | ok | 0.8916 | 0.9640 | 0.8102 | 35 | [log](out/autocollie/runs/2026-08-24T16-14-11_20260824T160234-filetypes-jar_jar_textmetrics_tiered_trigram_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_textmetrics_tiered_trigram_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Adds severity-tiered critical trigrams to the text_metrics_full base to capture rare malicious path co-occurrence for PR_AUC, with stronger regularization to keep ROC_AUC flat.
+
+</details>
+
