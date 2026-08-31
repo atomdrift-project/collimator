@@ -1106,3 +1106,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260827T094544-filetypes-java_class` — 2026-08-27T09:45:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a9617b9742f58a2c` | inherit_from_filetypes_plist_8b54303f | ok | 0.8654 | 0.9326 | 0.8662 | 18 | [log](out/autocollie/runs/2026-08-27T09-59-27_20260827T094544-filetypes-java_class_inherit_from_filetypes_plist_8b54303f.log) |
+| `3f3c33365f5463c2` | java_class_kv_vocab_2k_minfreq10 | ok | 0.8735 | 0.9461 | 0.8792 | 23 | [log](out/autocollie/runs/2026-08-27T09-59-58_20260827T094544-filetypes-java_class_java_class_kv_vocab_2k_minfreq10.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_kv_vocab_2k_minfreq10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds a conservative class-file KV vocab to capture malicious class/method/attribute tokens, aiming to lift PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

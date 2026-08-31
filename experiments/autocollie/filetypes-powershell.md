@@ -1239,3 +1239,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260827T100131-filetypes-powershell` — 2026-08-27T10:01:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `33876953eeb0b886` | inherit_from_filetypes_plist_8b54303f | ok | 0.9934 | 0.9908 | 0.9589 | 18 | [log](out/autocollie/runs/2026-08-27T10-12-14_20260827T100131-filetypes-powershell_inherit_from_filetypes_plist_8b54303f.log) |
+| `2d86fa52c27b631f` | ps_textenc_metrics_bigram500_tail | ok | 0.9884 | 0.9832 | 0.9337 | 16 | [log](out/autocollie/runs/2026-08-27T10-12-36_20260827T100131-filetypes-powershell_ps_textenc_metrics_bigram500_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ps_textenc_metrics_bigram500_tail`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to lift PR_AUC by adding text-encoding and full text metrics that capture PowerShell encoded/obfuscated command signal, with a lower bigram floor for rare command patterns; max_recall_at_fpr and mild positive downweighting target recall@3FPM at the strict-FP tail.
+
+</details>
+

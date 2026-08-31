@@ -1272,3 +1272,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260826T230051-filetypes-package.json` — 2026-08-26T23:00:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9c71b20ce7fae365` | inherit_from_filetypes_plist_8b54303f | ok | 0.9897 | 0.9934 | 0.9813 | 22 | [log](out/autocollie/runs/2026-08-26T23-25-50_20260826T230051-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `753ace8d46faf259` | pkg_json_kv_vocab_hardneg_015_16_fpr | ok | 0.9834 | 0.9857 | 0.0000 | 24 | [log](out/autocollie/runs/2026-08-26T23-26-19_20260826T230051-filetypes-package.json_pkg_json_kv_vocab_hardneg_015_16_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_kv_vocab_hardneg_015_16_fpr`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.015 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_MIN_FREQ=8 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 …` — Adds kv_vocab for package.json install-hook/dependency signals and uses hard-negative upweighting plus max_recall_at_fpr thresholding to lift recall@3FPM while keeping PR_AUC flat or higher.
+
+</details>
+
+## Cycle `20260827T094544-filetypes-package.json` — 2026-08-27T09:45:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3b5b50f4326fd14e` | inherit_from_filetypes_plist_8b54303f | ok | 0.9900 | 0.9940 | 0.9727 | 20 | [log](out/autocollie/runs/2026-08-27T10-11-32_20260827T094544-filetypes-package.json_inherit_from_filetypes_plist_8b54303f.log) |
+| `d0338d379bf84226` | pkg_json_kv_vocab_hardneg_012_18 | ok | 0.9833 | 0.9861 | 0.0000 | 16 | [log](out/autocollie/runs/2026-08-27T10-11-57_20260827T094544-filetypes-package.json_pkg_json_kv_vocab_hardneg_012_18.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkg_json_kv_vocab_hardneg_012_18`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.012 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_MIN_FREQ=10 EXP_KV_VALUE_SPLIT=0 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 …` — Adds package.json KV vocab for install-hook/dependency signal and a small high-weight hard-negative pass to lift recall@3FPM while keeping PR_AUC flat.
+
+</details>
+

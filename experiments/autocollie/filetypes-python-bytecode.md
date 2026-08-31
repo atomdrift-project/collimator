@@ -1078,3 +1078,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260827T094544-filetypes-python-bytecode` — 2026-08-27T09:45:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9ba28d3f622739ce` | inherit_from_filetypes_plist_8b54303f | ok | 0.8111 | 0.9340 | 0.8042 | 17 | [log](out/autocollie/runs/2026-08-27T10-02-48_20260827T094544-filetypes-python-bytecode_inherit_from_filetypes_plist_8b54303f.log) |
+| `3c0b795cf8f9f115` | pybc_kv5k_scalepos075_hardneg10_seedsearch3 | ok | 0.7794 | 0.9168 | 0.7924 | 20 | [log](out/autocollie/runs/2026-08-27T10-03-14_20260827T094544-filetypes-python-bytecode_pybc_kv5k_scalepos075_hardneg10_seedsearch3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pybc_kv5k_scalepos075_hardneg10_seedsearch3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable conservative kv_vocab on the best plist-inherited feature set and down-weight positives with hard-negative upweighting to improve recall@3FPM while keeping PR_AUC flat.
+
+</details>
+

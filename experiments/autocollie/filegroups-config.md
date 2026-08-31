@@ -1686,3 +1686,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260826T230051-filegroups-config` — 2026-08-26T23:00:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8b138323348c6492` | inherit_from_filetypes_plist_8b54303f | ok | 0.8881 | 0.9058 | 0.8747 | 19 | [log](out/autocollie/runs/2026-08-26T23-18-02_20260826T230051-filegroups-config_inherit_from_filetypes_plist_8b54303f.log) |
+| `831c8c8fa6701072` | config_kv_textmetrics_severity_frac | ok | 0.8846 | 0.9023 | 0.8716 | 19 | [log](out/autocollie/runs/2026-08-26T23-18-28_20260826T230051-filegroups-config_config_kv_textmetrics_severity_frac.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_kv_textmetrics_severity_frac`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Aims to lift PR_AUC and recall@3FPM by adding size-invariant severity fractions and full text metrics to the KV vocab surface, giving trees explicit signal for minimal malicious config hooks while regularization and hard-negative weighting keep ROC_AUC flat.
+
+</details>
+

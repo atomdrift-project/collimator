@@ -1264,3 +1264,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260826T230051-general` — 2026-08-26T23:00:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e2bff56b7e133814` | inherit_from_filetypes_plist_8b54303f | ok | 0.9901 | 0.9867 | 0.9011 | 216 | [log](out/autocollie/runs/2026-08-26T23-20-22_20260826T230051-general_inherit_from_filetypes_plist_8b54303f.log) |
+| `e4499d05a673fd06` | general_textmetrics_tieredtri_lowbigram | ok | 0.9762 | 0.9702 | 0.0000 | 238 | [log](out/autocollie/runs/2026-08-26T23-23-59_20260826T230051-general_general_textmetrics_tieredtri_lowbigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`general_textmetrics_tieredtri_lowbigram`** `EXP_BIGRAM_MIN_FREQ=500 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_ESTIMATORS=300 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=2 EXP_SCALE_POS_WEIGHT_MULT=0.75 …` — Aims to lift recall@3FPM by promoting unused text metrics and tiered critical trigrams, lowering the bigram floor for rare path signal, and tuning the threshold at the deploy FPR while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

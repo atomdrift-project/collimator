@@ -1798,3 +1798,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260826T230053-filetypes-shell` — 2026-08-26T23:00:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `970e8f65fb322815` | inherit_from_filetypes_plist_8b54303f | ok | 0.9710 | 0.9845 | 0.9412 | 48 | [log](out/autocollie/runs/2026-08-26T23-31-10_20260826T230053-filetypes-shell_inherit_from_filetypes_plist_8b54303f.log) |
+| `3d80234ef65fba30` | shell_kv_split_textenc_bigram100_reg | ok | 0.9539 | 0.9711 | 0.9106 | 22 | [log](out/autocollie/runs/2026-08-26T23-32-12_20260826T230053-filetypes-shell_shell_kv_split_textenc_bigram100_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_kv_split_textenc_bigram100_reg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols EXP_ESTIMATORS=350 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 …` — Aims to lift PR_AUC and recall@3FPM by adding KV value-split and text-encoding rank signal plus a 100-frequency bigram floor, with L2 regularization and positive down-weighting to keep ROC_AUC flat.
+
+</details>
+

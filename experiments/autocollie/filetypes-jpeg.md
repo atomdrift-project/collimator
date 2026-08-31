@@ -1404,3 +1404,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260827T094544-filetypes-jpeg` — 2026-08-27T09:45:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1c8a0036e569caf9` | inherit_from_filetypes_plist_8b54303f | ok | 0.2457 | 0.6813 | 0.0968 | 8 | [log](out/autocollie/runs/2026-08-27T10-00-15_20260827T094544-filetypes-jpeg_inherit_from_filetypes_plist_8b54303f.log) |
+| `7aca334ff665df4b` | jpeg_kv_vocab_spw075_min3 | ok | 0.2652 | 0.6821 | 0.3103 | 9 | [log](out/autocollie/runs/2026-08-27T10-00-29_20260827T094544-filetypes-jpeg_jpeg_kv_vocab_spw075_min3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_kv_vocab_spw075_min3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_EXTENDED_METRICS=1 …` — Enable kv_vocab with min_sample_score=3 and scale_pos_weight_mult=0.75 to add EXIF/metadata rank signal and suppress benign FPs, aiming to lift recall@3FPM while keeping PR_AUC flat.
+
+</details>
+

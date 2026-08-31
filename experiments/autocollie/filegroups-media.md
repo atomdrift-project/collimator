@@ -1184,3 +1184,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260826T231211-filegroups-media` — 2026-08-26T23:12:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `12a3288816d2373c` | inherit_from_filetypes_plist_8b54303f | ok | 0.3979 | 0.7413 | 0.1458 | 13 | [log](out/autocollie/runs/2026-08-26T23-24-59_20260826T231211-filegroups-media_inherit_from_filetypes_plist_8b54303f.log) |
+| `40a45d71b7276174` | media_posweight_15_pr_auc | ok | 0.3830 | 0.7260 | 0.1458 | 12 | [log](out/autocollie/runs/2026-08-26T23-25-22_20260826T231211-filegroups-media_media_posweight_15_pr_auc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_posweight_15_pr_auc`** `EXP_BETA=1.25 EXP_COLSAMPLE_BYTREE=0.8 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=400 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 …` — PR_AUC (0.389) lags ROC_AUC (0.740) by 0.35, indicating the model under-weights the positive class; scale_pos_weight_mult=1.5 upweights positives to improve PR_AUC ranking while keeping the proven control feature set for a cheap matrix-cache hit.
+
+</details>
+

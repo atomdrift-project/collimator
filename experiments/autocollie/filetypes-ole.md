@@ -1157,3 +1157,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260827T100131-filetypes-ole` — 2026-08-27T10:01:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c183d51e5fd9d4bb` | inherit_from_filetypes_plist_8b54303f | ok | 0.9982 | 0.9947 | 0.9542 | 23 | [log](out/autocollie/runs/2026-08-27T10-16-12_20260827T100131-filetypes-ole_inherit_from_filetypes_plist_8b54303f.log) |
+| `1312e0df566d4c56` | ole_feat_textenc_textmetrics_docobf | ok | 0.9961 | 0.9888 | 0.9678 | 20 | [log](out/autocollie/runs/2026-08-27T10-16-42_20260827T100131-filetypes-ole_ole_feat_textenc_textmetrics_docobf.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`ole_feat_textenc_textmetrics_docobf`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols EXP_DOCUMENT_OBFUSCATION_FEATURES=1 EXP_ESTIMATORS=300 EXP_KV_VOCAB=0 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 …` — Aims to lift recall@3FPM and PR_AUC by adding text_encoding anomaly features to the recent textmetrics/severity/docobf OLE surface, giving trees a new low-FPR signal for malicious OLE documents while keeping ROC_AUC flat.
+
+</details>
+

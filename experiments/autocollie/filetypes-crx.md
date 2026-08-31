@@ -432,3 +432,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260826T230051-filetypes-crx` — 2026-08-26T23:00:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b953385c38479eb2` | inherit_from_filetypes_plist_8b54303f | ok | 0.7473 | 0.8886 | 0.6765 | 29 | [log](out/autocollie/runs/2026-08-26T23-16-14_20260826T230051-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `49daa310ccfc1e7d` | crx_kv_value_split_severity_fractions_hardneg | ok | 0.7226 | 0.8303 | 0.0000 | 28 | [log](out/autocollie/runs/2026-08-26T23-16-50_20260826T230051-filetypes-crx_crx_kv_value_split_severity_fractions_hardneg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_kv_value_split_severity_fractions_hardneg`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 …` — Aims PR_AUC by adding manifest KV/value-split and size-invariant severity-fraction signal to rank sparse malicious CRX, with mild hard-negative and positive down-weighting to protect recall@3FPM.
+
+</details>
+
+## Cycle `20260827T094544-filetypes-crx` — 2026-08-27T09:45:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9322e24b47bbecc8` | inherit_from_filetypes_plist_8b54303f | ok | 0.7480 | 0.8839 | 0.6750 | 31 | [log](out/autocollie/runs/2026-08-27T10-11-43_20260827T094544-filetypes-crx_inherit_from_filetypes_plist_8b54303f.log) |
+| `0daa437bcbefe4a3` | crx_kv_value_split_textenc_fpr_tail | ok | 0.7320 | 0.8373 | 0.3105 | 32 | [log](out/autocollie/runs/2026-08-27T10-12-21_20260827T094544-filetypes-crx_crx_kv_value_split_textenc_fpr_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_kv_value_split_textenc_fpr_tail`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=8000 EXP_LEARNING_RATE=0.05 …` — Adds text_encoding rank signal to the best kv_value_split/fpr-threshold surface to lift PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+

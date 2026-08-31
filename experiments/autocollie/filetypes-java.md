@@ -792,3 +792,33 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260826T230051-filetypes-java` — 2026-08-26T23:00:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dfd1c301f51cba36` | inherit_from_filetypes_plist_8b54303f | ok | 0.8128 | 0.9802 | 0.7497 | 22 | [log](out/autocollie/runs/2026-08-26T23-18-56_20260826T230051-filetypes-java_inherit_from_filetypes_plist_8b54303f.log) |
+
+Rejected before run:
+
+- `java_kv_vocab_on_best_surface` — features.ember_lite_features: unknown knob (not in allowlist); features.severity_fraction_features: unknown knob (not in allowlist); features.taxonomy_features: unknown knob (not in allowlist); features.text_encoding_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20260827T100131-filetypes-java` — 2026-08-27T10:01:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `222602c02ef9b1f0` | inherit_from_filetypes_plist_8b54303f | ok | 0.8170 | 0.9814 | 0.7530 | 14 | [log](out/autocollie/runs/2026-08-27T10-14-38_20260827T100131-filetypes-java_inherit_from_filetypes_plist_8b54303f.log) |
+| `7d36c156adb3b7bd` | java_kv_vocab_best_surface | ok | 0.9313 | 0.9932 | 0.8671 | 12 | [log](out/autocollie/runs/2026-08-27T10-14-58_20260827T100131-filetypes-java_java_kv_vocab_best_surface.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_kv_vocab_best_surface`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable KV vocab on the inherited plist surface to add key-value rank signal for recall@3FPM while keeping PR_AUC flat.
+
+</details>
+

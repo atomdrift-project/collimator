@@ -2088,3 +2088,17 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260826T230052-filetypes-python` — 2026-08-26T23:00:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb514204028ef827` | inherit_from_filetypes_plist_8b54303f | ok | 0.9600 | 0.9794 | 0.8932 | 68 | [log](out/autocollie/runs/2026-08-26T23-11-59_20260826T230052-filetypes-python_inherit_from_filetypes_plist_8b54303f.log) |
+| `9fb3bf235fe553fb` | python_kv_textenc_tiered_lowfreq | ok | 0.8943 | 0.9292 | 0.8296 | 43 | [log](out/autocollie/runs/2026-08-26T23-13-25_20260826T230052-filetypes-python_python_kv_textenc_tiered_lowfreq.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_kv_textenc_tiered_lowfreq`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 …` — Aims to move PR_AUC and recall@3FPM by adding rare kv/text signal plus lower-frequency tiered trigrams to rank tail malware higher, while reg_lambda and scale_pos_weight_mult limit FP damage to ROC_AUC.
+
+</details>
+

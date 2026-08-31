@@ -1124,3 +1124,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260826T230051-filetypes-tar` — 2026-08-26T23:00:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4ee87e8b96268894` | inherit_from_filetypes_plist_8b54303f | ok | 0.9424 | 0.9727 | 0.8487 | 27 | [log](out/autocollie/runs/2026-08-26T23-10-54_20260826T230051-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `6bbf3dc8bbc46dcf` | tar_kv12k_hardneg_01_18 | ok | 0.9265 | 0.9578 | 0.8455 | 28 | [log](out/autocollie/runs/2026-08-26T23-11-26_20260826T230051-filetypes-tar_tar_kv12k_hardneg_01_18.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_kv12k_hardneg_01_18`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_HARD_NEGATIVE_FRACTION=0.01 EXP_HARD_NEGATIVE_WEIGHT=18 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000` — Enables kv_vocab (research vocab) and raises hard_negative_weight to 18 (vs 12/16 already tried at fraction 0.01) to push recall@3FPM at the strict-FP operating point, targeting the or_loses shape where the combiner threshold leaves tail recall on the floor while keeping PR_AUC flat.
+
+</details>
+
+## Cycle `20260827T095931-filetypes-tar` — 2026-08-27T09:59:31Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `bd0d259eb6240533` | inherit_from_filetypes_plist_8b54303f | ok | 0.9406 | 0.9705 | 0.7778 | 27 | [log](out/autocollie/runs/2026-08-27T10-14-52_20260827T095931-filetypes-tar_inherit_from_filetypes_plist_8b54303f.log) |
+| `fe84e3352fb527df` | tar_kv12k_hardneg_02_16 | ok | 0.9289 | 0.9598 | 0.8661 | 26 | [log](out/autocollie/runs/2026-08-27T10-15-26_20260827T095931-filetypes-tar_tar_kv12k_hardneg_02_16.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_kv12k_hardneg_02_16`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.02 EXP_HARD_NEGATIVE_WEIGHT=16 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 …` — Aims recall@3FPM by upweighting a 2% hard-benign subset at weight 16 to suppress benign tail FPs while kv_vocab adds archive metadata rank signal, with mild L2/min-child regularization to keep PR_AUC and ROC_AUC flat.
+
+</details>
+

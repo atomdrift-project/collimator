@@ -513,12 +513,22 @@ def main() -> int:
         )
 
     route_file_types = _load_route_file_types(args.summary)
+    # A route the prod run refused to emit (seed-health gate exhausted, or no
+    # malware samples) is absent from the prod summary even when both folds
+    # trained it. That refusal is the designed fallthrough — litmus routes
+    # those files to the filegroup/general ensemble — so skip it loudly
+    # rather than failing the whole pipeline.
     missing_summary = [r for r in common if r not in route_file_types]
     if missing_summary:
+        LOG.warning(
+            "routes absent from %s (prod refused to emit them); skipping: %s",
+            args.summary,
+            missing_summary,
+        )
+        common = [r for r in common if r in route_file_types]
+    if not common:
         raise SystemExit(
-            f"routes missing from {args.summary}: {missing_summary} — "
-            "rerun azoth_specialist_suite to refresh the summary, or pass "
-            "--summary pointing at a tree containing all needed routes.",
+            f"no routes left to score: every fold route is absent from {args.summary}",
         )
 
     LOG.info("scoring %d routes", len(common))

@@ -1174,3 +1174,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20260826T230051-filegroups-source` — 2026-08-26T23:00:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2b35352fd06ef7d2` | inherit_from_filetypes_plist_8b54303f | ok | 0.9323 | 0.9210 | 0.7386 | 41 | [log](out/autocollie/runs/2026-08-26T23-32-48_20260826T230051-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `f4b4e0dc68dc4d08` | source_kv_textmetrics_bigram1000_reg | ok | 0.8559 | 0.8327 | 0.5064 | 31 | [log](out/autocollie/runs/2026-08-26T23-33-57_20260826T230051-filegroups-source_source_kv_textmetrics_bigram1000_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_kv_textmetrics_bigram1000_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Enables KV vocab and full text metrics on the source route to add rank signal for PR_AUC and recall@3FPM, while keeping the bigram floor at 1000 and adding L2/hard-negative regularization to keep ROC_AUC flat.
+
+</details>
+
+## Cycle `20260827T094545-filegroups-source` — 2026-08-27T09:45:45Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `936bbee58f1a054c` | inherit_from_filetypes_plist_8b54303f | ok | 0.9362 | 0.9267 | 0.7233 | 41 | [log](out/autocollie/runs/2026-08-27T10-02-42_20260827T094545-filegroups-source_inherit_from_filetypes_plist_8b54303f.log) |
+| `d77ffc6350fc30f4` | source_textmetrics_sevfrac_bigram1000 | ok | 0.8596 | 0.8419 | 0.5266 | 28 | [log](out/autocollie/runs/2026-08-27T10-03-44_20260827T094545-filegroups-source_source_textmetrics_sevfrac_bigram1000.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_textmetrics_sevfrac_bigram1000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_COLSAMPLE_BYTREE=0.8 …` — Add text_metrics_full, severity_fractions, and line_length_buckets to the recent best source feature set to capture obfuscated-source structure and minimal-dropper severity signal, aiming to lift recall@3FPM and PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

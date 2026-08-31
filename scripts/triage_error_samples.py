@@ -35,6 +35,29 @@ from archive_error_samples import _rows, _sample_path
 DEFAULT_HOPPER_URL = "http://hopper-api:8081"
 
 
+def _hopper_token() -> str:
+    """The bearer token for hopper API calls, or "" if there is none.
+
+    Same precedence as every other client in the fleet (hopper/token.go,
+    scan's worker): $HOPPER_TOKEN wins, otherwise the first non-empty line of
+    ~/.tok/hopper — the file the deploy scripts install. The line, not the
+    file: editors and shell redirects leave a trailing newline. An empty
+    result is correct against an unauthenticated master and earns an honest
+    401 against an authenticated one.
+    """
+    env = os.environ.get("HOPPER_TOKEN", "").strip()
+    if env:
+        return env
+    try:
+        with open(Path.home() / ".tok" / "hopper", encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    return line.strip()
+    except OSError:
+        pass
+    return ""
+
+
 def _parse_retry_after(value: str | None) -> float | None:
     """Parse a Retry-After header (hopper sends delta-seconds) into a float.
 
@@ -85,13 +108,17 @@ def _fetch_from_hopper(
     if not sha256:
         return "unservable", "no sha256 in row"
     url = f"{hopper_url.rstrip('/')}/api/file/{sha256}"
+    request = urllib.request.Request(url)
+    token = _hopper_token()
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
     detail = "unknown"
     retries = len(retry_delays)
     for attempt in range(retries + 1):
         retry_after = None  # set only by a 503 → overrides the schedule
         try:
             destination.parent.mkdir(parents=True, exist_ok=True)
-            with urllib.request.urlopen(url, timeout=timeout) as resp:
+            with urllib.request.urlopen(request, timeout=timeout) as resp:
                 if resp.status != 200:
                     body = resp.read(200).decode("utf-8", "replace").strip()
                     return "unservable", f"HTTP {resp.status} {body}".strip()

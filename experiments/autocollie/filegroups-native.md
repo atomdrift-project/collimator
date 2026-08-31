@@ -1172,3 +1172,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260826T230051-filegroups-native` — 2026-08-26T23:00:51Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `72ac463ba5863dec` | inherit_from_filetypes_plist_8b54303f | ok | 0.9995 | 0.9994 | 0.9908 | 119 | [log](out/autocollie/runs/2026-08-26T23-10-15_20260826T230051-filegroups-native_inherit_from_filetypes_plist_8b54303f.log) |
+| `69f65c8999e08b9d` | native_symbol_mbc_overlay_tail | ok | 0.9990 | 0.9989 | 0.9872 | 115 | [log](out/autocollie/runs/2026-08-26T23-14-19_20260826T230051-filegroups-native_native_symbol_mbc_overlay_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_symbol_mbc_overlay_tail`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=10 EXP_LEARNING_RATE=0.04 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_MIN_CHILD_SAMPLES=150 EXP_NONSTANDARD_SECTION_SIGNAL=1 …` — Aims PR_AUC and recall@3FPM by adding symbol bigrams, MBC IDs, and overlay/packer signals while lowering positive weight to cut benign FPs at the strict tail.
+
+</details>
+
+## Cycle `20260827T094544-filegroups-native` — 2026-08-27T09:45:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3280c51b1e1f8a5b` | inherit_from_filetypes_plist_8b54303f | ok | 0.9994 | 0.9995 | 0.9916 | 115 | [log](out/autocollie/runs/2026-08-27T09-56-49_20260827T094544-filegroups-native_inherit_from_filetypes_plist_8b54303f.log) |
+| `df8de91d66a149bc` | native_symbol_trigram_mbc_overlay_hardneg_tail | ok | 0.9989 | 0.9988 | 0.0000 | 111 | [log](out/autocollie/runs/2026-08-27T10-00-34_20260827T094544-filegroups-native_native_symbol_trigram_mbc_overlay_hardneg_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_symbol_trigram_mbc_overlay_hardneg_tail`** `EXP_ESTIMATORS=300 EXP_FOREIGN_BINARY_SIGNAL=1 EXP_HARD_NEGATIVE_FRACTION=0.05 EXP_HARD_NEGATIVE_WEIGHT=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MBC_ID_VOCAB=1 EXP_METRIC_RATIO_FEATURES=1 EXP_MIN_CHILD_SAMPLES=150 …` — Adds symbol-trigram, MBC, and overlay/section signals with hard-negative weighting to lift recall@3FPM by separating rare native API-abuse patterns from benign binaries while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

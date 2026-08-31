@@ -2524,3 +2524,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260826T230052-filegroups-documents` — 2026-08-26T23:00:52Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d194e30c2145fac5` | inherit_from_filetypes_plist_8b54303f | ok | 0.9811 | 0.9767 | 0.8494 | 68 | [log](out/autocollie/runs/2026-08-26T23-13-04_20260826T230052-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `49fd8875005dcceb` | docs_text_metrics_obfuscation_tail | ok | 0.9435 | 0.9243 | 0.8327 | 17 | [log](out/autocollie/runs/2026-08-26T23-14-20_20260826T230052-filegroups-documents_docs_text_metrics_obfuscation_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_text_metrics_obfuscation_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_DOCUMENT_OBFUSCATION_FEATURES=1 …` — Enable text_metrics_full and document_obfuscation_features to add hidden-content and document-taxonomy signals, aiming to lift PR_AUC and recall@3FPM on obfuscated malicious documents while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20260827T100300-filegroups-documents` — 2026-08-27T10:03:00Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b09b3d1f7a19de7f` | inherit_from_filetypes_plist_8b54303f | ok | 0.9870 | 0.9853 | 0.8436 | 19 | [log](out/autocollie/runs/2026-08-27T10-12-50_20260827T100300-filegroups-documents_inherit_from_filetypes_plist_8b54303f.log) |
+| `7df54c872a4b8da5` | docs_kv_vocab_metadata_tail | ok | 0.9486 | 0.9302 | 0.8332 | 17 | [log](out/autocollie/runs/2026-08-27T10-13-22_20260827T100300-filegroups-documents_docs_kv_vocab_metadata_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`docs_kv_vocab_metadata_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=15000 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_REG_LAMBDA=2 …` — Enable conservative KV vocab to add rare document metadata key-value patterns, aiming to lift recall@3FPM at the strict-FP tail while keeping PR_AUC flat by regularizing the new features.
+
+</details>
+

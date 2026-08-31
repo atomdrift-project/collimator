@@ -1408,3 +1408,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260827T094544-filetypes-macho` — 2026-08-27T09:45:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9f1f87406927b5ac` | inherit_from_filetypes_plist_8b54303f | ok | 0.9776 | 0.9950 | 0.9330 | 38 | [log](out/autocollie/runs/2026-08-27T10-02-58_20260827T094544-filetypes-macho_inherit_from_filetypes_plist_8b54303f.log) |
+| `c655fe26d9f8f1e9` | macho_sym_bigram_hardneg12_l25_fpr | ok | 0.9787 | 0.9941 | 0.0000 | 28 | [log](out/autocollie/runs/2026-08-27T10-03-43_20260827T094544-filetypes-macho_macho_sym_bigram_hardneg12_l25_fpr.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_sym_bigram_hardneg12_l25_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims recall@3FPM by upweighting a small hard-benign subset and tuning the threshold to the L25 FPR target, while symbol vocab/bigrams add Mach-O rank signal to keep PR_AUC and ROC_AUC flat.
+
+</details>
+

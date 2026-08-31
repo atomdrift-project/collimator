@@ -1186,3 +1186,17 @@ _No specs ran._
 
 </details>
 
+## Cycle `20260827T094544-filetypes-php` — 2026-08-27T09:45:44Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1ab9b78519edcb91` | inherit_from_filetypes_plist_8b54303f | ok | 0.8913 | 0.9656 | 0.8656 | 24 | [log](out/autocollie/runs/2026-08-27T09-52-57_20260827T094544-filetypes-php_inherit_from_filetypes_plist_8b54303f.log) |
+| `76605f737d635e07` | php_kv_textenc_textmetrics_tieredtrigram | ok | 0.8641 | 0.9552 | 0.8427 | 16 | [log](out/autocollie/runs/2026-08-27T09-53-27_20260827T094544-filetypes-php_php_kv_textenc_textmetrics_tieredtrigram.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_plist_8b54303f`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/plist (key=8b54303f1c4f4c1d, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_kv_textenc_textmetrics_tieredtrigram`** `EXP_BIGRAM_MIN_FREQ=250 EXP_DISABLE_FEATURE_GROUPS=clusters EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_MIN_FREQ=2 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 …` — Adds PHP kv and text-encoding signal to the recent textmetrics/tiered-trigram surface to lift PR_AUC and recall@3FPM by separating malicious PHP payloads from benign scripts.
+
+</details>
+
