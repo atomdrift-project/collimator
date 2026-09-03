@@ -1444,8 +1444,29 @@ def main() -> int:
     prev_metrics_path: Path | None = None
     prev_score_table_path: Path | None = None
     if args.previous_bundle is not None:
-        prev_metrics_path = args.previous_bundle / "per_filetype_metrics.json"
-        prev_score_table_path = args.previous_bundle / "score_table.npz"
+        # A self-comparison (previous-bundle == the bundle being written) is
+        # unsafe: carry-forward keys on route-model-hash identity, and by the
+        # time this script runs, training has already overwritten the models
+        # at --azoth-root in place. Comparing that path to itself always
+        # finds "0 routes changed", so every filetype gets carried forward
+        # from whatever per_filetype_metrics.json already sat there —
+        # freezing n_malware/n_benign/PR-AUC/recall at a stale snapshot
+        # forever, even as the underlying test partition keeps growing.
+        # azoth_route_policy_search.py hit this same failure mode and
+        # guards against it; mirror that guard here.
+        if (args.previous_bundle / "per_filetype_metrics.json").resolve() == (
+            args.azoth_root / "per_filetype_metrics.json"
+        ).resolve():
+            print(
+                "compute_routed_metrics: previous-bundle is the bundle being "
+                "written (self-comparison); disabling carry-forward to "
+                "recompute every filetype from the current score table "
+                "(avoids frozen/stale per-filetype metrics)",
+                file=sys.stderr,
+            )
+        else:
+            prev_metrics_path = args.previous_bundle / "per_filetype_metrics.json"
+            prev_score_table_path = args.previous_bundle / "score_table.npz"
     if args.db:
         # Honest: pick ensemble strategy on dev, report on test.
         metrics = compute_per_filetype_metrics_honest(

@@ -234,6 +234,13 @@ AZOTH_SKIP_LEVEL_CALIBRATION ?= 0
 AZOTH_SKIP_LEVEL_CALIBRATION_ARG := $(if $(filter 1 true yes,$(AZOTH_SKIP_LEVEL_CALIBRATION)),--skip-level-calibration,)
 AZOTH_SKIP_LITMUS_VALIDATE ?= 0
 AZOTH_FEATURE_CACHE_DIR ?= out/cache/azoth-route-features
+# Days of route-feature matrices to retain under $(AZOTH_FEATURE_CACHE_DIR).
+# Entries are keyed route+max_id+spec_hash+rows_hash, and max_id is the live
+# max(id) at run time, so every run mints a generation that can never be hit
+# again unless THRESHOLD_MAX_ID pins that exact value. Only same-day reuse
+# (general -> specialists -> calibrate) matters; older generations are dead
+# weight at ~20G apparent each. Pruned by azoth-prune-feature-cache.
+AZOTH_KEEP_CACHE_DAYS ?= 2
 AZOTH_SPECIALIST_FOLDS ?= 0
 AZOTH_SPECIALIST_ESTIMATORS ?= 400
 AZOTH_SPECIALIST_MAX_DEPTH ?= 12
@@ -624,6 +631,7 @@ azoth-full-train: venv check-db
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
 	$(MAKE) azoth-publish AZOTH_ROOT=$(AZOTH_RUN_DIR)
 	$(MAKE) azoth-prune-runs
+	$(MAKE) azoth-prune-feature-cache
 	@echo "azoth-full-train: published $(OUT_ROOT)/azoth -> $(AZOTH_RUN_DIR)"
 
 azoth-fast-train: venv check-db
@@ -635,6 +643,7 @@ azoth-fast-train: venv check-db
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FAST)
 	$(MAKE) azoth-publish AZOTH_ROOT=$(AZOTH_RUN_DIR)
 	$(MAKE) azoth-prune-runs
+	$(MAKE) azoth-prune-feature-cache
 	@echo "azoth-fast-train: published $(OUT_ROOT)/azoth -> $(AZOTH_RUN_DIR)"
 
 # azoth-publish-train: publication-grade k=2 out-of-fold calibration.
@@ -1463,7 +1472,7 @@ AZOTH_RUN_ID := $(shell date -u +%Y%m%dT%H%M%SZ)-$(shell openssl rand -hex 4 2>/
 endif
 AZOTH_RUN_DIR := $(AZOTH_RUNS_ROOT)/$(AZOTH_RUN_ID)
 
-.PHONY: azoth-run-new azoth-publish azoth-publish-deploy azoth-prune-runs
+.PHONY: azoth-run-new azoth-publish azoth-publish-deploy azoth-prune-runs azoth-prune-feature-cache
 
 # Create (if needed) and print the path to the run dir for AZOTH_RUN_ID.
 # Capture it with $(shell …) or make -s.
@@ -1490,6 +1499,23 @@ azoth-prune-runs:
 	  echo "  rm -rf $$d"; rm -rf "$$d"; \
 	done; \
 	true
+
+# Drop route-feature matrices older than $(AZOTH_KEEP_CACHE_DAYS) days. Safe to
+# run anytime, including mid-train: generations are disjoint by filename, and a
+# running stage's own generation is always today's. Set AZOTH_KEEP_CACHE_DAYS=0
+# to wipe the cache entirely (next run re-extracts from the DB).
+azoth-prune-feature-cache:
+	@set -e; \
+	dir=$(AZOTH_FEATURE_CACHE_DIR); \
+	if [ ! -d "$$dir" ]; then \
+	  echo "azoth-prune-feature-cache: $$dir does not exist; nothing to do"; \
+	  exit 0; \
+	fi; \
+	before=$$(du -sh "$$dir" 2>/dev/null | cut -f1); \
+	n=$$(find "$$dir" -maxdepth 1 -type f -mtime +$(AZOTH_KEEP_CACHE_DAYS) | wc -l); \
+	echo "azoth-prune-feature-cache: $$dir is $$before; dropping $$n file(s) older than $(AZOTH_KEEP_CACHE_DAYS) day(s)"; \
+	find "$$dir" -maxdepth 1 -type f -mtime +$(AZOTH_KEEP_CACHE_DAYS) -delete; \
+	echo "azoth-prune-feature-cache: now $$(du -sh "$$dir" 2>/dev/null | cut -f1)"
 
 # Apples-to-apples baseline scoring for autocollie. Given a route, an optional
 # row-ids file, and a deploy-root (defaults to AZOTH_ROOT, i.e. the currently
@@ -2513,6 +2539,7 @@ help:
 	@echo "  autocollie         Full hands-off ladder: screen + auto-promote per route"
 	@echo "  autocollie-loop    Same as autocollie with PASSES=0 (loop until Ctrl-C)"
 	@echo "  azoth-validate     Run azoth-deploy gates against AZOTH_ROOT without copying (AZOTH_SKIP_LITMUS_VALIDATE=1 skips litmus)"
+	@echo "  azoth-prune-feature-cache  Drop route-feature caches older than AZOTH_KEEP_CACHE_DAYS (default 2)"
 	@echo "  demo-db            Create a small SQLite DB for testing"
 	@echo "  test               Run unit tests"
 	@echo "  deploy             Alias for azoth-deploy (deploy the routed ensemble)"

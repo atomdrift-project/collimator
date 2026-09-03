@@ -92,6 +92,20 @@ find out/nightly -name '*.log' -type f -mtime +60 -delete
 exec > >(gawk '{ print strftime("%F %T"), $0; fflush() }' | tee -a "$nightly_log") 2>&1
 echo "nightly($mode): logging to $nightly_log"
 
+# Housekeeping: drop route-feature matrices older than AZOTH_KEEP_CACHE_DAYS.
+# Both modes prune, because the sweep is what actually fills the disk — it runs
+# for every idle hour and never goes through azoth-full-train, where the
+# Makefile already chains azoth-prune-feature-cache after a publish. Entries are
+# keyed route+max_id+spec_hash+rows_hash with max_id = live max(id) at run time,
+# so each run mints a ~20G generation that can never be hit again; unpruned this
+# reached 1003G / 52 generations by 2026-09-02 and took the box to 98% full.
+# Pruning here (before any work) is safe mid-flight: generations are disjoint by
+# filename and a running stage only ever touches today's. Delegated to the
+# Makefile so the retention policy has one definition. Never fatal — a failed
+# prune is a disk-space problem, not a reason to skip the night's training.
+echo "== prune feature cache =="
+make azoth-prune-feature-cache || echo "nightly($mode): feature-cache prune failed — continuing."
+
 [ -n "${NIGHTLY_ALLOW_REGRESSION:-}" ] && export AZOTH_ALLOW_REGRESSION=1
 
 # Cap parallelism for the unattended run. The retrain's vocabulary pass
