@@ -29,7 +29,7 @@ UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 SERVICE="azoth-nightly.service"
 SWEEP="azoth-autocollie.service"
 TIMER="azoth-nightly.timer"
-ONCALENDAR="${NIGHTLY_ONCALENDAR:-*-*-* 22:15:00}"
+ONCALENDAR="${NIGHTLY_ONCALENDAR:-*-*-* 21:00:00}"
 
 if [ "${1:-}" = "--remove" ] || [ "${1:-}" = "uninstall" ]; then
   systemctl --user disable --now "$TIMER" 2>/dev/null || true

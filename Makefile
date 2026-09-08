@@ -2473,7 +2473,7 @@ nightly:
 nightly-sweep:
 	scripts/nightly.sh autocollie
 
-# install-nightly: install the systemd --user units — a daily 23:00 timer for the
+# install-nightly: install the systemd --user units — a daily 21:00 timer for the
 # train plus the timer-less sweep unit it drives. Override the schedule with
 # NIGHTLY_ONCALENDAR (systemd OnCalendar syntax), e.g.
 #   make install-nightly NIGHTLY_ONCALENDAR='*-*-* 03:00:00'
