@@ -53,16 +53,24 @@ import numpy as np
 _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
-from collimator.data import LABELED_WHERE  # noqa: E402
 from collimator.thresholds import DEFAULT_SEVERITY_LEVEL  # noqa: E402
 
 
-def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str, str]]:
-    """Bulk-fetch (sha256, path, parent) by id from hopper.samples.
+def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str, str, str, str]]:
+    """Bulk-fetch (sha256, path, parent, label, skip) by id from hopper.samples.
 
     ``parent`` is the sha256 of the containing archive for extracted members
     (empty for standalone files). Triage uses it to pull the whole archive by
     sha — reliable even when the archive isn't itself a tracked sample row.
+
+    Deliberately NOT gated on ``LABELED_WHERE``: a row the operator has since
+    moved to another pool (good ↔ bad, or out to purgatory/sighted), or that
+    hopper has flagged (``skip`` set), still resolves here and carries its
+    CURRENT label. The score table's verdict for such a row is stale, so triage
+    shouldn't spend a download on it — but it should say WHY, which it can only
+    do if the row comes back. Gating here would make an already-relocated
+    sample indistinguishable from one deleted outright. The comparison and the
+    skipping live in ``triage_error_samples``.
     """
     if not row_ids:
         return {}
@@ -70,18 +78,14 @@ def _load_paths(db_dsn: str, row_ids: list[int]) -> dict[int, tuple[str, str, st
         import psycopg
     except ImportError:
         sys.exit("psycopg is required to resolve row_id → (sha256, path); install it or pre-populate")
-    out: dict[int, tuple[str, str, str]] = {}
+    out: dict[int, tuple[str, str, str, str, str]] = {}
     with psycopg.connect(db_dsn, connect_timeout=10) as conn, conn.cursor() as cur:
-        # Gate on the shared labeled-sample predicate so triage agrees with
-        # training/calibration: a row whose file was flagged by hopper (skip
-        # set) or relabeled away from good/bad after the score table was built
-        # resolves to no path here and drops out of the triage set.
         cur.execute(
-            f"SELECT id, sha256, path, parent FROM samples WHERE id = ANY(%s) AND {LABELED_WHERE}",
+            "SELECT id, sha256, path, parent, label, skip FROM samples WHERE id = ANY(%s)",
             (list(row_ids),),
         )
-        for rid, sha, path, parent in cur.fetchall():
-            out[int(rid)] = (sha, path, parent or "")
+        for rid, sha, path, parent, label, skip in cur.fetchall():
+            out[int(rid)] = (sha, path, parent or "", label or "", skip or "")
     return out
 
 
@@ -418,12 +422,16 @@ def main() -> None:
     paths = _load_paths(args.db, selected_row_ids) if args.db else {}
     if args.db and len(paths) < len(selected_row_ids):
         missing = len(selected_row_ids) - len(paths)
-        print(f"WARN: {missing}/{len(selected_row_ids)} row_ids missing in DB", file=sys.stderr)
+        print(
+            f"WARN: {missing}/{len(selected_row_ids)} row_ids no longer in the DB "
+            "(deleted since the score table was built)",
+            file=sys.stderr,
+        )
 
     rows_out: list[dict[str, Any]] = []
     for margin, row_i, entry in top:
         rid = int(row_ids[row_i])
-        sha, path, parent = paths.get(rid, ("", "", ""))
+        sha, path, parent, current_label, hopper_skip = paths.get(rid, ("", "", "", "", ""))
         trigs = list(entry["trigs"])
         # For FPs the headline route is the one with the largest delta.
         # For FNs the same — most permissive (smallest threshold shortfall).
@@ -434,6 +442,12 @@ def main() -> None:
             "path": path,
             "parent": parent,
             "label": "good" if is_fp else "bad",
+            # The pool the row sits in NOW, which may differ from the "label"
+            # above (that one is the pool the score table was built against).
+            # "" means the row is gone from the DB. Triage skips any row whose
+            # current pool has moved rather than downloading a stale verdict.
+            "current_label": current_label,
+            "hopper_skip": hopper_skip,
             "filetype": str(file_types[row_i]),
             "probability": headline[1] if headline else 0.0,
             "margin": margin,

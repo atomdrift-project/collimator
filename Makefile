@@ -6,7 +6,7 @@ SHELL := /bin/bash
 # autocollie's csv-joined env values (e.g. `pe=0.5,zip=2.0`) back into the
 # space-separated form make's $(foreach) expects.
 _comma := ,
-.PHONY: azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final azoth-check-bundle-layout azoth-shap false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
+.PHONY: azoth-backtest azoth-build-allowlist azoth-allowlist-monitor azoth-allowlist-tune azoth-full-train azoth-fast-train azoth-publish-train _azoth-train azoth-general azoth-general-fold-a azoth-general-fold-b azoth-oof-merge-general evaluate explain inspect errors scan traits thresholds thresholds-refresh filetype-matrix elf-model-benchmark elf-route-optimization azoth-specialists azoth-specialists-fold-a azoth-specialists-fold-b azoth-prefill-specialist-features azoth-oof-route-scores azoth-calibrate azoth-diagnostics azoth-policies azoth-deploy azoth-deploy-final azoth-check-bundle-layout azoth-shap false-positives false-negatives near-false-positives near-false-negatives false-positives-archive false-negatives-archive near-false-positives-archive near-false-negatives-archive false-positives-triage false-negatives-triage near-false-positives-triage mislabeled-triage benchmark build-splits experiment ablate ablation demo-db test lint clean deploy verify-litmus venv help repin azoth-clean-bundle
 
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
@@ -1517,6 +1517,36 @@ azoth-prune-feature-cache:
 	find "$$dir" -maxdepth 1 -type f -mtime +$(AZOTH_KEEP_CACHE_DAYS) -delete; \
 	echo "azoth-prune-feature-cache: now $$(du -sh "$$dir" 2>/dev/null | cut -f1)"
 
+# Out-of-time backtest of a route's operating point. Every number the pipeline
+# publishes is fitted and measured on the same benign pool; this fits on benign
+# ingested up to a cutoff and measures on what arrived after, which is the split
+# deploy actually faces. Reads score_table.npz + hopper ingest metadata — no
+# retraining, no feature extraction, seconds per experiment once the metadata
+# cache is warm.
+#
+# Always read the `validate` block first: it checks the harness reproduces the
+# thresholds azoth_route_policy_search.py shipped. If that says DRIFT, nothing
+# below it is trustworthy.
+#
+# Usage:
+#   make azoth-backtest ROUTE=pe
+#   make azoth-backtest ROUTE=pe BACKTEST_ARGS="--experiment pool-hygiene"
+#   make azoth-backtest ROUTE=pe BACKTEST_ARGS="--exclude-feed win32"
+BACKTEST_LEVEL ?= 25
+BACKTEST_HOLDOUT_DAYS ?= 30
+BACKTEST_OUTPUT ?= out/backtest/$(ROUTE).json
+BACKTEST_ARGS ?=
+azoth-backtest: venv
+	@test -n "$(ROUTE)" || { echo "error: ROUTE= is required (a file type, e.g. ROUTE=pe)"; exit 2; }
+	$(PYTHON) scripts/azoth_backtest.py \
+		--file-type $(ROUTE) \
+		--db $(DB) \
+		--score-table $(AZOTH_ROOT)/score_table.npz \
+		--level $(BACKTEST_LEVEL) \
+		--holdout-days $(BACKTEST_HOLDOUT_DAYS) \
+		--output $(BACKTEST_OUTPUT) \
+		$(BACKTEST_ARGS)
+
 # Apples-to-apples baseline scoring for autocollie. Given a route, an optional
 # row-ids file, and a deploy-root (defaults to AZOTH_ROOT, i.e. the currently
 # trained bundle), score the deployed model on those rows and write metrics to
@@ -1880,7 +1910,7 @@ false-positives-triage: mislabeled-fp-report
 		--report $(FP_REPORT) \
 		--output-dir $(FP_TRIAGE_DIR) \
 		--samples-dir $(SAMPLES_DIR) \
-		--kind false-positives --db $(DB) --top $(TOP_ERRORS)
+		--kind false-positives --top $(TOP_ERRORS)
 	@echo "report:   $(FP_REPORT)"
 	@echo "samples:  $(FP_TRIAGE_DIR)"
 
@@ -1889,7 +1919,7 @@ false-negatives-triage: mislabeled-fn-report
 		--report $(FN_REPORT) \
 		--output-dir $(FN_TRIAGE_DIR) \
 		--samples-dir $(SAMPLES_DIR) \
-		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
+		--kind false-negatives --top $(TOP_ERRORS)
 	@echo "report:   $(FN_REPORT)"
 	@echo "samples:  $(FN_TRIAGE_DIR)"
 
@@ -1898,12 +1928,12 @@ mislabeled-triage: mislabeled-fp-report mislabeled-fn-report
 		--report $(FP_REPORT) \
 		--output-dir $(MIS_TRIAGE_DIR)/false-positives \
 		--samples-dir $(SAMPLES_DIR) \
-		--kind false-positives --db $(DB) --top $(TOP_ERRORS)
+		--kind false-positives --top $(TOP_ERRORS)
 	$(PYTHON) scripts/triage_error_samples.py \
 		--report $(FN_REPORT) \
 		--output-dir $(MIS_TRIAGE_DIR)/false-negatives \
 		--samples-dir $(SAMPLES_DIR) \
-		--kind false-negatives --db $(DB) --top $(TOP_ERRORS)
+		--kind false-negatives --top $(TOP_ERRORS)
 	@echo "scope:    $(SCOPE) | level: L$(LEVEL) | severity: $(SEVERITY)"
 	@echo "reports:  $(FP_REPORT) + $(FN_REPORT)"
 	@echo "samples:  $(MIS_TRIAGE_DIR)/{false-positives,false-negatives}/"
@@ -2538,6 +2568,7 @@ help:
 	@echo "  autocollie-promote Confirm + full-train + compare; writes a deploy-or-not report"
 	@echo "  autocollie         Full hands-off ladder: screen + auto-promote per route"
 	@echo "  autocollie-loop    Same as autocollie with PASSES=0 (loop until Ctrl-C)"
+	@echo "  azoth-backtest     Out-of-time backtest of a route operating point (ROUTE=pe)"
 	@echo "  azoth-validate     Run azoth-deploy gates against AZOTH_ROOT without copying (AZOTH_SKIP_LITMUS_VALIDATE=1 skips litmus)"
 	@echo "  azoth-prune-feature-cache  Drop route-feature caches older than AZOTH_KEEP_CACHE_DAYS (default 2)"
 	@echo "  demo-db            Create a small SQLite DB for testing"

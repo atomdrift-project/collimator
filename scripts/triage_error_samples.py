@@ -159,28 +159,83 @@ def _fetch_from_hopper(
 
 
 
+# Marker dropped at the root of every directory triage writes to. It is what
+# makes a directory triage's to wipe on the next run: the output dir is cleared
+# recursively, so re-running with a mistyped --output-dir must not eat a
+# directory holding anything else. A temp root counts as triage's too, so dirs
+# from before the marker existed (/var/tmp/triage and friends) keep working.
+_MARKER = ".triage-output"
 _TEMP_ROOTS = (Path("/var/tmp"), Path(tempfile.gettempdir()))
 
 
-def _clear_directory(path: Path) -> None:
-    resolved = path.resolve(strict=False)
-    inside_temp = False
+def _under_temp_root(resolved: Path) -> bool:
     for root in _TEMP_ROOTS:
         r = root.resolve(strict=False)
         try:
             if os.path.commonpath([str(resolved), str(r)]) == str(r) and resolved != r:
-                inside_temp = True
-                break
+                return True
         except ValueError:
             pass
-    if not inside_temp:
-        raise ValueError(f"refusing to clear non-temp triage directory: {path}")
-    path.mkdir(parents=True, exist_ok=True)
-    for child in path.iterdir():
-        if child.is_dir() and not child.is_symlink():
-            shutil.rmtree(child)
-        else:
-            child.unlink()
+    return False
+
+
+def _clear_directory(path: Path) -> None:
+    """Empty ``path`` for a fresh triage run, refusing anything not ours.
+
+    Accepts a directory that doesn't exist yet, is empty, carries our marker
+    from a previous run, or lives under a temp root — anywhere on the
+    filesystem. Anything else (a mistyped path that happens to hit a real
+    directory with real contents) raises rather than being deleted.
+    """
+    if not path.is_absolute():
+        raise ValueError(f"refusing to clear relative triage directory: {path}")
+    resolved = path.resolve(strict=False)
+    if resolved.exists():
+        contents = list(resolved.iterdir())
+        ours = (resolved / _MARKER).exists() or not contents or _under_temp_root(resolved)
+        if not ours:
+            raise ValueError(
+                f"refusing to clear {path}: not a triage output directory "
+                f"(no {_MARKER} marker, not empty, not under /var/tmp or "
+                f"{tempfile.gettempdir()}). Delete it yourself or point "
+                "--output-dir somewhere else."
+            )
+        for child in contents:
+            if child.is_dir() and not child.is_symlink():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+    resolved.mkdir(parents=True, exist_ok=True)
+    (resolved / _MARKER).write_text(
+        "written by triage_error_samples.py; this directory is cleared on each run\n"
+    )
+
+
+def _relocated(row: dict[str, Any]) -> str | None:
+    """Why this row's sample is no longer worth downloading, or None.
+
+    The score table is a snapshot: between the training run that produced it
+    and this triage pass, the operator may have acted on the very sample the
+    report is asking about — moved it good ↔ bad, or out to purgatory/sighted
+    — or hopper may have flagged it (``skip``). Its stale verdict is not worth
+    a download, and the reviewer wants to see that it was already handled, not
+    a bare miss. Returns a short reason for the skip log.
+
+    ``current_label`` is absent in reports written before this field existed;
+    those fall through to the normal fetch path unchanged.
+    """
+    current = row.get("current_label")
+    if current is None:
+        return None
+    expected = str(row.get("label") or "")
+    if not current:
+        return "gone from hopper DB"
+    skip = str(row.get("hopper_skip") or "")
+    if skip:
+        return f"flagged by hopper (skip={skip})"
+    if current != expected:
+        return f"already relocated to {current}"
+    return None
 
 
 def _copy_rows(
@@ -211,8 +266,10 @@ def _copy_rows(
     repeat — a sibling member, the same archive flagged under another filetype,
     or a file already on disk — is reused without hitting the network. Keeps
     scanning past rows hopper can't serve until ``top`` files actually land.
-    Mutates the shared accumulators. Returns ``(landed_count, skip_reasons)``
-    where ``skip_reasons`` tallies, by server response, why rows didn't land.
+    Rows the operator has already sorted into another pool are skipped before
+    any network call (see ``_relocated``). Mutates the shared accumulators.
+    Returns ``(landed_count, skip_reasons)`` where ``skip_reasons`` tallies why
+    rows didn't land — by server response, or as an already-handled skip.
     """
     here = 0
     skipped: Counter[str] = Counter()
@@ -231,6 +288,15 @@ def _copy_rows(
     for row in rows:
         if here >= top:
             break
+        relocated = _relocated(row)
+        if relocated is not None:
+            # Don't burn a download — or a quota slot — on a sample the
+            # operator has already sorted; the over-fetch backfills behind it.
+            what = row.get("path") or row.get("sha256") or "?"
+            print(f"  skip ({relocated}): {what}", flush=True)
+            skipped[relocated] += 1
+            _record_error(row, str(row.get("path") or ""), "relocated", relocated)
+            continue
         resolved = _sample_path(samples_dir, row)
         if resolved is None:
             continue
