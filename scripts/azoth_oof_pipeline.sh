@@ -182,22 +182,43 @@ report_mem_watch() {
     wait "$MEM_WATCH_PID" 2>/dev/null
     MEM_WATCH_PID=""
     local low
-    low=$(awk -F'mem_available_gb=' '/mem_available_gb=/ { split($2, a, " "); if (min == "" || a[1] < min) min = a[1] } END { print min }' "$MEM_LOG")
+    # MEM_LOG is append-only across runs; reset at each "pipeline start" marker
+    # so this is this run's minimum, not the all-time one.
+    low=$(awk -F'mem_available_gb=' '/pipeline start/ { min = "" } /mem_available_gb=/ { split($2, a, " "); if (min == "" || a[1] < min) min = a[1] } END { print min }' "$MEM_LOG")
     [[ -n "$low" ]] && echo "[pipeline] MemAvailable low-water mark this run: ${low} GB (full trace: $MEM_LOG)"
 }
 
-# Chains run as background jobs; a failure in either must not leave the other
-# orphaned to keep training for hours against a run that is already dead.
+# Chains (and the backgrounded stage 3) run as background jobs; a failure or an
+# interrupt must not leave them orphaned to keep training for hours against a
+# run that is already dead. Killing just the job's PID is not enough: that is a
+# bash subshell, and the make -> python training under it gets reparented to
+# init and runs on (2026-09-24: a Ctrl-C left both generals training, and their
+# orphaned nightly.sh held out/nightly.lock so the systemd unit no-op'd). Async
+# jobs also ignore SIGINT in a non-interactive shell, so the terminal's Ctrl-C
+# never reaches them either. Collect each whole tree first, then signal it —
+# killing top-down would reparent the children before we could find them.
+descendants() {
+    local child
+    for child in $(pgrep -P "$1"); do
+        echo "$child"
+        descendants "$child"
+    done
+}
 CHAIN_PIDS=()
 cleanup() {
-    local pid
-    for pid in "${CHAIN_PIDS[@]:-}"; do
-        [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
+    local pid tree=()
+    for pid in "${CHAIN_PIDS[@]:-}" "${STAGE3_PID:-}"; do
+        [[ -n "$pid" ]] || continue
+        tree+=("$pid" $(descendants "$pid"))
     done
+    (( ${#tree[@]} )) && kill "${tree[@]}" 2>/dev/null
     [[ -n "$MEM_WATCH_PID" ]] && kill "$MEM_WATCH_PID" 2>/dev/null
     return 0
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+# Exit on a signal instead of returning into an interrupted `wait`, which would
+# otherwise be misreported as "a training chain failed". EXIT then runs cleanup.
+trap 'echo "[pipeline] interrupted — stopping any running chains."; exit 130' INT TERM
 
 # Default the parallel chains on hosts with enough cores to absorb two
 # concurrent trainings (>=32). Smaller boxes stay sequential: at 16 cores the

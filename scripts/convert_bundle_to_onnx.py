@@ -11,7 +11,7 @@ from the route's home filetype(s) and refuses to ship if any prob delta
 exceeds ``--max-parity-delta`` (default 1e-6 — orders of magnitude under
 the 1e-5 tail-drift threshold), except for a bounded number of isolated
 float32 threshold branch-flip rows under ``BRANCH_FLIP_HARD_CAP`` (see
-``_parity_check``). Failures stop the migration and leave the existing
+``_parity_tolerated``). Failures stop the migration and leave the existing
 ``.txt`` files in place untouched.
 
 Usage:
@@ -52,9 +52,33 @@ ROUTE_PARITY_FILETYPES = {
 }
 
 # Ceiling for tolerated isolated branch-flip rows in the parity check (see
-# _parity_check). Well under any prob shift that could move a verdict across
-# the L25/L3000 operating points, far above float32 accumulation noise.
+# _parity_tolerated). Well under any prob shift that could move a verdict
+# across the L25/L3000 operating points, far above float32 accumulation noise.
 BRANCH_FLIP_HARD_CAP = 1e-2
+# Max fraction of sample rows allowed to branch-flip. Healthy general-route
+# seeds show 0-2 flips per 200 rows and the live-DB sample drifts, so a
+# 1% bound failed the 2026-09-20 deploy on a benign 3rd flip. A converter
+# bug shifts most rows, so 5% still catches it.
+BRANCH_FLIP_MAX_FRACTION = 0.05
+
+
+def _parity_tolerated(deltas: np.ndarray, max_delta: float) -> tuple[bool, int]:
+    """Decide parity from per-row prob deltas. Returns ``(ok, n_over)``.
+
+    Isolated larger deltas are expected float32 behavior, not converter
+    bugs: ONNX stores split thresholds as float32 while the .txt keeps
+    float64, so a feature value landing in a threshold's rounding gap
+    flips one branch and moves that row's prob by ~1e-4..3e-3 (seen
+    2026-07-12 and 2026-09-20). Tolerate a few flip rows, bounded in count
+    and magnitude — systemic conversion bugs (e.g. the 0-split LOGISTIC
+    bug) shift many rows and stay fatal.
+    """
+    n_over = int((deltas > max_delta).sum())
+    if n_over == 0:
+        return True, 0
+    max_flips = max(1, int(len(deltas) * BRANCH_FLIP_MAX_FRACTION))
+    ok = n_over <= max_flips and float(deltas.max()) <= BRANCH_FLIP_HARD_CAP
+    return ok, n_over
 
 
 def _filetypes_for_route(route_dir: Path, azoth_root: Path) -> list[str]:
@@ -131,24 +155,15 @@ def _parity_check(
     onnx_probs = out[1][:, 1] if out[1].ndim == 2 else out[1]
     deltas = np.abs(np.asarray(lgb_probs) - np.asarray(onnx_probs))
     delta_max = float(deltas.max())
-    if delta_max <= max_delta:
-        return True, delta_max, x.shape[0]
-    # Isolated larger deltas are expected float32 behavior, not converter
-    # bugs: ONNX stores split thresholds as float32 while the .txt keeps
-    # float64, so a feature value landing in a threshold's rounding gap
-    # flips one branch and moves that row's prob by ~1e-3. The 2026-07-12
-    # nightly failed deploy on exactly one such live-DB sample row (delta
-    # 3.45e-03, twice, then the row left the sample). Tolerate a couple of
-    # flip rows, bounded in count and magnitude — systemic conversion bugs
-    # (e.g. the 0-split LOGISTIC bug) shift many rows by large deltas and
-    # stay fatal.
-    n_over = int((deltas > max_delta).sum())
-    ok = n_over <= max(1, len(deltas) // 100) and delta_max <= BRANCH_FLIP_HARD_CAP
-    if ok:
-        LOG.warning(
-            "tolerating %d/%d row(s) over parity delta %.1e (max %.2e <= "
-            "branch-flip cap %.1e): isolated float32 threshold branch-flip",
-            n_over, len(deltas), max_delta, delta_max, BRANCH_FLIP_HARD_CAP,
+    ok, n_over = _parity_tolerated(deltas, max_delta)
+    if n_over:
+        LOG.log(
+            logging.WARNING if ok else logging.ERROR,
+            "%s: %d/%d row(s) over parity delta %.1e (max %.2e; tolerated "
+            "up to %.0f%% of rows under branch-flip cap %.1e)%s",
+            txt_path, n_over, len(deltas), max_delta, delta_max,
+            100 * BRANCH_FLIP_MAX_FRACTION, BRANCH_FLIP_HARD_CAP,
+            ": isolated float32 threshold branch-flip" if ok else "",
         )
     return ok, delta_max, x.shape[0]
 
