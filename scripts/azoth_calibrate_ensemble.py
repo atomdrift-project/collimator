@@ -1078,6 +1078,7 @@ def _write_score_table(
     file_types: np.ndarray,
     file_groups: np.ndarray,
     route_scores: list[dict[str, Any]],
+    sha_buckets: np.ndarray | None = None,
 ) -> str:
     names = np.asarray([route["name"] for route in route_scores])
     kinds = np.asarray([route["kind"] for route in route_scores])
@@ -1100,6 +1101,10 @@ def _write_score_table(
         route_names=names,
         route_kinds=kinds,
         scores=scores,
+        # Last byte of each row's canonical sha: its test/dev/train bucket
+        # (collimator.data.partition_of). Lets readers partition without a
+        # 19M-row canonical_sha256 query against the DB.
+        **({"sha_bucket": sha_buckets} if sha_buckets is not None else {}),
     )
     os.replace(tmp, path)
     return _file_sha256(path)
@@ -1258,11 +1263,20 @@ def main() -> int:
         partition_mask = np.ones(len(row_ids), dtype=bool)
     row_index = {int(row_id): idx for idx, row_id in enumerate(row_ids)}
 
-    file_types_by_row = _fetch_file_types(args.db, row_ids)
+    # The test-partition call (--apply-thresholds-from) runs right after the
+    # full call, which just wrote these file types into the score table:
+    # reuse them instead of re-querying every row (10-30 min).
+    file_types: np.ndarray | None = None
+    if args.apply_thresholds_from is not None and args.score_table.is_file():
+        with np.load(args.score_table, allow_pickle=True) as table:
+            if np.array_equal(table["row_ids"], row_ids):
+                file_types = table["file_types"]
+    if file_types is None:
+        file_types_by_row = _fetch_file_types(args.db, row_ids)
+        file_types = np.asarray(
+            [file_types_by_row.get(int(row_id), "unknown") for row_id in row_ids],
+        )
     filetype_to_group = _filetype_to_group()
-    file_types = np.asarray(
-        [file_types_by_row.get(int(row_id), "unknown") for row_id in row_ids],
-    )
     file_groups = np.asarray([filetype_to_group.get(file_type, "") for file_type in file_types])
     route_scores = [
         {
@@ -1399,6 +1413,13 @@ def main() -> int:
         file_types=file_types,
         file_groups=file_groups,
         route_scores=route_scores,
+        sha_buckets=(
+            np.fromiter(
+                (int(str(c)[-2:], 16) for c in general_cache["canonical_shas"]),
+                dtype=np.uint8,
+            )
+            if "canonical_shas" in general_cache.files else None
+        ),
     )
     # Calibrators and L0..L9 thresholds are fit on the partition subset
     # only — that's where the leakage protection lives. Score table above

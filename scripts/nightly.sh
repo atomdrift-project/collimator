@@ -179,7 +179,19 @@ else
 fi
 
 echo "== repin =="
-make repin || rc=1
+# One snapshot for the whole run. Left unset, every stage (experiment, each
+# specialist suite, OOF merges, calibrate) re-queried max(id) on its own:
+# 2026-09-13 trained and scored on five different snapshots, dropped "drifted"
+# OOF rows, and no cache key ever matched across stages.
+if snapshot=$(.venv/bin/python -c 'import sys; from collimator import data; print(data.snapshot_max_id(sys.argv[1]))' \
+    "${DB:-postgres://hopper@localhost:5432/hopper}"); then
+  make repin PIN_TO="$snapshot" || rc=1
+  export THRESHOLD_MAX_ID="$snapshot"
+  echo "snapshot for this run: max_id=$snapshot"
+else
+  echo "could not resolve a snapshot; each stage will query max(id) itself"
+  make repin || rc=1
+fi
 
 echo "== azoth-publish-train (trains + gated OOF-deploy into $azoth) =="
 if make azoth-publish-train; then

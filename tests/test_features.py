@@ -1862,3 +1862,119 @@ def test_clamp_workers_disabled_ignores_shares(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("COLLIMATOR_MEM_SHARES", "4")
     monkeypatch.setenv("COLLIMATOR_MEM_AWARE_WORKERS", "0")
     assert clamp_workers_to_available_ram(32) == 32
+
+
+# ---------------------------------------------------------------------------
+# N-gram contract with scan (~/scan src/features.rs)
+# ---------------------------------------------------------------------------
+
+def _paths_report(paths: list[str], crit: int = 3) -> dict:
+    return _make_report(findings=[{"i": f"{p}::t", "l": crit, "c": 1.0} for p in paths])
+
+
+def _ngram_spec(bigrams: list[str], trigrams: list[str]) -> FeatureSpec:
+    names = [f"bigrams:{b}" for b in bigrams] + [f"trigram:{t}" for t in trigrams]
+    return FeatureSpec(
+        bigram_vocab=bigrams, trigram_vocab=trigrams,
+        feature_names=names, total_features=len(names),
+    )
+
+
+def test_ngram_paths_are_confident_notable_base_paths() -> None:
+    from collimator.features import _ngram_paths_for_file
+
+    report = _make_report(findings=[
+        {"i": "a/x::one", "l": 3, "c": 1.0},
+        {"i": "a/x::two", "l": 5, "c": 1.0},  # same base path
+        {"i": "b/y::t", "l": 2, "c": 1.0},  # baseline: scan ignores it
+        {"i": "c/z::t", "l": 5, "c": 0.5},  # below MIN_CONFIDENCE
+        {"i": "d/w", "l": 4, "c": 1.0},
+    ])
+    assert _ngram_paths_for_file(report["fs"][0]) == ["a/x", "d/w"]
+
+
+@pytest.mark.parametrize("family", ["bigram", "trigram"])
+def test_ngram_per_file_cap_counts_the_whole_ngram_vocab(family: str) -> None:
+    from collimator.features import BIGRAM_MAX_PATHS, TRIGRAM_MAX_PATHS
+
+    assert (BIGRAM_MAX_PATHS, TRIGRAM_MAX_PATHS) == (512, 256)  # scan's limits
+    # The filler paths are only in the OTHER family's vocab, yet count toward
+    # this family's cap, as in scan's path_to_id. Paths outside the vocab
+    # never count.
+    filler = [f"f/{i:04d}" for i in range(516)]  # divisible by 2 and 3: all in the vocab
+    if family == "bigram":
+        cap, ngram = BIGRAM_MAX_PATHS, "a/a + b/b"
+        trigrams = [" + ".join(filler[i:i + 3]) for i in range(0, len(filler), 3)]
+        spec = _ngram_spec([ngram], trigrams)
+    else:
+        cap, ngram = TRIGRAM_MAX_PATHS, "a/a + b/b + c/c"
+        bigrams = [" + ".join(filler[i:i + 2]) for i in range(0, len(filler), 2)]
+        spec = _ngram_spec(bigrams, [ngram])
+    index = spec.feature_names.index(f"{family}{'s' if family == 'bigram' else ''}:{ngram}")
+    own = ngram.split(" + ")
+    unknown = [f"u/{i}" for i in range(1000)]
+
+    def fires(n_filler: int, crit: int = 3) -> bool:
+        report = _paths_report(own + filler[:n_filler] + unknown, crit=crit)
+        return extract(report, spec)[index] == 1.0
+
+    assert fires(cap - len(own))
+    assert not fires(cap - len(own) + 1)
+    assert not fires(0, crit=2)  # baseline findings never form n-grams
+
+
+def test_vocab_pass_is_bounded_on_huge_files(monkeypatch) -> None:
+    import time
+
+    from collimator import data
+    from collimator.features import _vocab_labeled_db_batch_worker
+
+    # A re-analyzed wheel with ~21k finding paths per file once made this
+    # O(n^3) and ran for hours.
+    huge = _paths_report([f"metadata/import/{i}" for i in range(21_000)], crit=4)
+    small = _paths_report(["a/a", "b/b", "c/c"])
+    monkeypatch.setattr(
+        data, "fetch_cleave_results",
+        lambda _dsn, ids: {1: {"cleave_result": huge}, 2: {"cleave_result": small}},
+    )
+    start = time.monotonic()
+    result = _vocab_labeled_db_batch_worker(("unused", [(1, 1), (2, 1)]))
+    assert time.monotonic() - start < 10
+    bigrams, trigrams = result[3], result[9]
+    assert set(bigrams) == {"a/a + b/b", "a/a + c/c", "b/b + c/c"}
+    assert set(trigrams) == {"a/a + b/b + c/c"}
+
+
+def test_parallel_extraction_matches_serial(tmp_path) -> None:
+    reports = [
+        _make_report(findings=[
+            {"i": "objectives/evasion/process", "l": 5, "c": 1.0},
+            {"i": f"objectives/exfil/p{i % 3}", "l": 3, "c": 1.0},
+        ])
+        for i in range(40)
+    ]
+    spec = build_vocab(reports)
+    db_path = tmp_path / "samples.db"
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "CREATE TABLE samples ("
+        "id INTEGER PRIMARY KEY, cleave_result TEXT, formula TEXT, elements TEXT, "
+        "score INTEGER, mtime TEXT)"
+    )
+    for row_id, report in enumerate(reports, start=1):
+        conn.execute(
+            "INSERT INTO samples (id, cleave_result, formula, elements, score, mtime) "
+            "VALUES (?, ?, '', '', 10, '')",
+            (row_id, json.dumps(report)),
+        )
+    conn.commit()
+    conn.close()
+    ids = [(i, i % 2) for i in range(1, 41)]
+
+    def matrix(n_workers: int) -> np.ndarray:
+        blocks = extract_labeled_from_db_batches(
+            db_path, ids, spec, n_workers=n_workers, batch_size=7,
+        )
+        return np.vstack([X.toarray() for X, _y in blocks])
+
+    np.testing.assert_array_equal(matrix(2), matrix(1))

@@ -594,14 +594,6 @@ class FeatureConfig:
     include_extension_mismatch_signal: bool
     include_hostile_finding_density: bool
     include_hostile_depth_weight: bool
-    # N-gram path depth: 0 = full base path (default), 2/3 = truncate finding
-    # IDs to that many directory levels before generating bigrams/trigrams.
-    # Coarser paths produce more generalizable n-grams.
-    ngram_path_depth: int
-    # N-gram minimum criticality: only findings at this level or above
-    # participate in bigram/trigram generation. 0 = all (default/current),
-    # 1 = component+, 2 = baseline+, 3 = notable+, 4 = suspicious+, 5 = hostile.
-    ngram_min_crit: int
     # Taxonomy-exploitation features: kill chain span, cross-domain
     # co-occurrence, depth signal, and objective/micro-behavior ratio.
     include_taxonomy_features: bool
@@ -751,15 +743,6 @@ def feature_config_from_env() -> FeatureConfig:
         "1", "true", "yes", "on",
     }
 
-    try:
-        ngram_path_depth = int(os.getenv("COLLIMATOR_NGRAM_PATH_DEPTH", "0"))
-    except ValueError:
-        ngram_path_depth = 0
-    try:
-        ngram_min_crit = int(os.getenv("COLLIMATOR_NGRAM_MIN_CRIT", "0"))
-    except ValueError:
-        ngram_min_crit = 0
-
     include_extreme_features = os.getenv("COLLIMATOR_EXTREME_FEATURES") == "1"
     # Per-feature defaults inherit from the master EXTREME_FEATURES toggle.
     # Treat empty string as "not set" so Make can pass `VAR=` for inherit.
@@ -796,8 +779,6 @@ def feature_config_from_env() -> FeatureConfig:
         include_extension_mismatch_signal=_extreme_flag("COLLIMATOR_EXTENSION_MISMATCH_SIGNAL"),
         include_hostile_finding_density=_extreme_flag("COLLIMATOR_HOSTILE_FINDING_DENSITY"),
         include_hostile_depth_weight=_extreme_flag("COLLIMATOR_HOSTILE_DEPTH_WEIGHT"),
-        ngram_path_depth=ngram_path_depth,
-        ngram_min_crit=ngram_min_crit,
         include_taxonomy_features=os.getenv("COLLIMATOR_TAXONOMY_FEATURES") in {
             "1", "true", "yes", "on",
         },
@@ -2019,7 +2000,7 @@ class _ExtractContext:
         "trigram_lookup", "n_tri", "blindfold", "total_features",
         "score_interaction_lookup", "synergy_lookup",
         "absolute_lookup",
-        "bigram_vocab_paths", "trigram_vocab_paths", "synergy_vocab_paths",
+        "ngram_vocab_paths", "bigram_vocab_paths", "trigram_vocab_paths", "synergy_vocab_paths",
         "tiered_bigram_vocab_tokens", "tiered_trigram_vocab_tokens",
         "tiered_quadgram_vocab_tokens",
         "bigram_lookup_pair", "synergy_lookup_pair", "trigram_lookup_triple",
@@ -2135,6 +2116,11 @@ class _ExtractContext:
         # (~50 for trigrams, ~1k for bigrams) of the per-file path
         # universe, so filtering first turns ~390k trigram-string-formats
         # per file into ~10-20.
+        # Every path named in the n-gram vocab: scan's path_to_id. The
+        # per-file caps count against this set.
+        self.ngram_vocab_paths: frozenset[str] = frozenset(
+            p for ng in (*spec.bigram_vocab, *spec.trigram_vocab) for p in ng.split(" + ")
+        )
         self.bigram_vocab_paths: frozenset[str] = frozenset(
             p for bi in self.bigram_lookup for p in bi.split(" + ")
         )
@@ -3587,28 +3573,43 @@ def _truncate_path(base: str, depth: int) -> str:
     return "/".join(parts[:depth])
 
 
-def _ngram_paths_for_file(
-    file_entry: dict[str, Any],
-    depth: int,
-    min_crit: int = 0,
-) -> list[str]:
-    """Collect the unique (optionally truncated) finding paths for one file.
+# The n-gram contract with scan, which computes these features at serving time
+# (~/scan src/features.rs: unique_3level_paths and
+# write_{bigram,trigram}_features_optimized). Change both sides together.
+NGRAM_MIN_CRIT = 3  # only notable+ findings form n-grams
+BIGRAM_MAX_PATHS = 512  # a file with more n-gram paths gets no bigrams
+TRIGRAM_MAX_PATHS = 256  # ...and no trigrams above this
 
-    depth=0 → full base paths; depth=2/3 → truncated to that many segments.
-    min_crit=0 → all findings; 3 → notable+; 4 → suspicious+; etc.
-    Shared by bigram, trigram, and unsigned-bigram generation.
-    """
-    file_traits: set[str] = set()
+
+def _ngram_paths_for_file(file_entry: dict[str, Any]) -> list[str]:
+    """Sorted unique base paths of a file's confident notable+ findings."""
+    paths: set[str] = set()
     for finding in file_findings(file_entry):
-        fid = finding_id(finding) or ""
-        if not fid:
-            continue
-        if _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
-            continue
-        if min_crit > 0 and (finding_crit(finding) or 0) < min_crit:
-            continue
-        file_traits.add(fid)
-    return sorted({_truncate_path(fid.split("::")[0], depth) for fid in file_traits})
+        fid = finding_id(finding)
+        if (
+            fid
+            and _float(finding_conf(finding), 1.0) >= MIN_CONFIDENCE
+            and (finding_crit(finding) or 0) >= NGRAM_MIN_CRIT
+        ):
+            paths.add(fid.split("::")[0])
+    return sorted(paths)
+
+
+def _ngram_files(
+    report: dict[str, Any],
+    ctx: _ExtractContext,
+    max_paths: int,
+    family_paths: frozenset[str],
+) -> Iterator[list[str]]:
+    """Yield each file's n-gram paths that belong to one family's vocab.
+
+    Like scan, the per-file cap counts every path in the n-gram vocab, not
+    just the family's, and a file over the cap contributes nothing.
+    """
+    for file_entry in report_files(report):
+        paths = [p for p in _ngram_paths_for_file(file_entry) if p in ctx.ngram_vocab_paths]
+        if len(paths) <= max_paths:
+            yield [p for p in paths if p in family_paths]
 
 
 def _apply_bigram_features(
@@ -3620,11 +3621,8 @@ def _apply_bigram_features(
     """Group 11: trait bigram multi-hot features."""
     config = feature_config_from_env()
     use_conf = config.include_confidence_weighted_ngrams and summary is not None
-    vocab_paths = ctx.bigram_vocab_paths
     lookup = ctx.bigram_lookup_pair
-    for file_entry in report_files(report):
-        paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
-        paths_list = [p for p in paths_list if p in vocab_paths]
+    for paths_list in _ngram_files(report, ctx, BIGRAM_MAX_PATHS, ctx.bigram_vocab_paths):
         if use_conf:
             path_conf = summary.path_confidences
             for i, p1 in enumerate(paths_list):
@@ -3771,12 +3769,8 @@ def _apply_trigram_features(
     vec: np.ndarray,
 ) -> None:
     """Group 16: trait trigram multi-hot features."""
-    config = feature_config_from_env()
-    vocab_paths = ctx.trigram_vocab_paths
     lookup = ctx.trigram_lookup_triple
-    for file_entry in report_files(report):
-        paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
-        paths_list = [p for p in paths_list if p in vocab_paths]
+    for paths_list in _ngram_files(report, ctx, TRIGRAM_MAX_PATHS, ctx.trigram_vocab_paths):
         for i, p1 in enumerate(paths_list):
             for j in range(i + 1, len(paths_list)):
                 p2 = paths_list[j]
@@ -3821,12 +3815,8 @@ def _apply_signature_synergy_features(
     if not is_unsigned:
         return
 
-    config = feature_config_from_env()
-    vocab_paths = ctx.synergy_vocab_paths
     lookup = ctx.synergy_lookup_pair
-    for file_entry in report_files(report):
-        paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
-        paths_list = [p for p in paths_list if p in vocab_paths]
+    for paths_list in _ngram_files(report, ctx, BIGRAM_MAX_PATHS, ctx.synergy_vocab_paths):
         for i, p1 in enumerate(paths_list):
             for p2 in paths_list[i + 1 :]:
                 idx = lookup.get((p1, p2))
@@ -4141,9 +4131,9 @@ def _vocab_batch_worker(
                         sample_paths[path] = crit_ord
 
             # Collect co-occurring path pairs (bigrams) within each file.
-            # Uses shared helper that respects NGRAM_PATH_DEPTH and NGRAM_MIN_CRIT.
-            config = feature_config_from_env()
-            paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
+            paths_list = _ngram_paths_for_file(file_entry)
+            if len(paths_list) > BIGRAM_MAX_PATHS:
+                paths_list = []
             for i, p1 in enumerate(paths_list):
                 for p2 in paths_list[i + 1 :]:
                     # Hard cap at 50,000 unique bigrams per worker batch to prevent
@@ -4169,12 +4159,37 @@ def _vocab_db_batch_worker(
     return _vocab_batch_worker(list(results.values()))
 
 
+# An extraction pool's workers all see the same spec, so each builds its
+# context once, in the pool initializer, instead of per task: construction
+# costs ~0.7s (the element x filetype lookups) against ~0.3s of real work
+# in a 341-row task.
+_worker_ctx: _ExtractContext | None = None
+
+
+def _init_extract_worker(spec: FeatureSpec) -> None:
+    global _worker_ctx
+    _worker_ctx = _ExtractContext(spec)
+
+
+def _extract_pool(nw: int, spec: FeatureSpec) -> ProcessPoolExecutor:
+    return ProcessPoolExecutor(
+        max_workers=nw,
+        mp_context=mp.get_context("spawn"),
+        initializer=_init_extract_worker,
+        initargs=(spec,),
+    )
+
+
+def _context(spec: FeatureSpec) -> _ExtractContext:
+    return _worker_ctx if _worker_ctx is not None else _ExtractContext(spec)
+
+
 def _extract_batch_worker(
     args: tuple[int, list[tuple[dict[str, Any] | str, int]], FeatureSpec],
 ) -> tuple[list[int], list[int], list[float], list[int]]:
     """Extract features from a batch of (item, label) pairs. CPU-only."""
     offset, batch, spec = args
-    ctx = _ExtractContext(spec)
+    ctx = _context(spec)
     vec = np.zeros(spec.total_features, dtype=np.float32)
     rows: list[int] = []
     cols: list[int] = []
@@ -4434,10 +4449,7 @@ def extract_stream_batches(
         return X, y
 
     if nw > 1:
-        with ProcessPoolExecutor(
-            max_workers=nw,
-            mp_context=mp.get_context("spawn"),
-        ) as pool:
+        with _extract_pool(nw, spec) as pool:
             for result in _bounded_iter(pool, _extract_batch_worker, batch_iter, max_inflight=2 * nw):
                 yield _to_matrix(result)
         return
@@ -4478,10 +4490,7 @@ def extract_stream(
     )
 
     if nw > 1:
-        with ProcessPoolExecutor(
-            max_workers=nw,
-            mp_context=mp.get_context("spawn"),
-        ) as pool:
+        with _extract_pool(nw, spec) as pool:
             _consume(_bounded_iter(pool, _extract_batch_worker, batch_args, max_inflight=2 * nw))
 
     if nw <= 1:
@@ -4564,7 +4573,7 @@ def _extract_partitioned_batch_worker(
     numbering note below).
     """
     _train_offset, _test_offset, batch, spec = args
-    ctx = _ExtractContext(spec)
+    ctx = _context(spec)
     vec = np.zeros(spec.total_features, dtype=np.float32)
 
     train_rows: list[int] = []
@@ -4784,10 +4793,7 @@ def extract_labeled_from_db_batches(
         return X, y
 
     if nw > 1:
-        with ProcessPoolExecutor(
-            max_workers=nw,
-            mp_context=mp.get_context("spawn"),
-        ) as pool:
+        with _extract_pool(nw, spec) as pool:
             for result in _bounded_iter(
                 pool,
                 _extract_labeled_db_batch_worker,
@@ -4876,10 +4882,7 @@ def extract_labeled_metadata_from_db_batches_unordered(
         return metadata, X, y, stats
 
     if nw > 1:
-        with ProcessPoolExecutor(
-            max_workers=nw,
-            mp_context=mp.get_context("spawn"),
-        ) as pool:
+        with _extract_pool(nw, spec) as pool:
             for result in _bounded_unordered_iter(
                 pool,
                 _extract_labeled_metadata_db_batch_worker,
@@ -4973,9 +4976,13 @@ def _vocab_labeled_db_batch_worker(
                     if crit_ord > sample_paths.get(path, -1):
                         sample_paths[path] = crit_ord
 
-            # Uses shared helper for n-gram paths (respects NGRAM_PATH_DEPTH + NGRAM_MIN_CRIT).
-            config = feature_config_from_env()
-            paths_list = _ngram_paths_for_file(file_entry, config.ngram_path_depth, config.ngram_min_crit)
+            # The vocab doesn't exist yet, so the per-file caps count every
+            # n-gram path. That keeps enumeration bounded: a re-analyzed wheel
+            # with 21k paths once cost ~7h here (O(n^3) trigrams).
+            paths_list = _ngram_paths_for_file(file_entry)
+            if len(paths_list) > BIGRAM_MAX_PATHS:
+                paths_list = []
+            count_trigrams = len(paths_list) <= TRIGRAM_MAX_PATHS
             for i, p1 in enumerate(paths_list):
                 for p2 in paths_list[i + 1 :]:
                     # Hard cap at 100,000 unique bigrams per worker batch.
@@ -4983,6 +4990,8 @@ def _vocab_labeled_db_batch_worker(
                         bigram = f"{p1} + {p2}"
                         bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
 
+                if not count_trigrams:
+                    continue
                 for j in range(i + 1, len(paths_list)):
                     p2 = paths_list[j]
                     for p3 in paths_list[j + 1 :]:
@@ -5600,7 +5609,7 @@ def extract_partitioned_from_db(
     )
 
     if nw > 1:
-        with ProcessPoolExecutor(max_workers=nw, mp_context=mp.get_context("spawn")) as pool:
+        with _extract_pool(nw, spec) as pool:
             results = _bounded_iter(pool, _extract_partitioned_db_batch_worker, batch_args, max_inflight=2 * nw)
             return _assemble_partitioned_matrices(results, spec.total_features)
     return _assemble_partitioned_matrices(

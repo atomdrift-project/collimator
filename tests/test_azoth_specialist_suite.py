@@ -187,38 +187,21 @@ def meminfo_at(tmp_path, monkeypatch):
     return _install
 
 
-def test_clamp_parallelism_splits_headroom_across_concurrent_suites(
+def test_fit_mem_budget_splits_headroom_across_concurrent_suites(
     meminfo_at, monkeypatch,
 ) -> None:
-    # 200 GB available, 32 GB reserved, 28 GB/fit -> 6 fits for a lone suite.
     meminfo_at(200)
-    monkeypatch.delenv("AZOTH_CONCURRENT_SUITES", raising=False)
-    monkeypatch.delenv("AZOTH_MEM_PER_FIT_GB", raising=False)
     monkeypatch.delenv("AZOTH_MEM_RESERVE_GB", raising=False)
-    assert suite.clamp_parallelism_to_ram(16) == 6
-
-    # Two suites sharing the same box must admit half each, so that the fits
-    # actually resident across both still sum to ~6 rather than 12.
+    monkeypatch.delenv("AZOTH_CONCURRENT_SUITES", raising=False)
+    assert suite.fit_mem_budget_gb() == pytest.approx(168)  # 200 - 32 reserved
+    # Two suites sharing the box each admit fits against half the headroom.
     monkeypatch.setenv("AZOTH_CONCURRENT_SUITES", "2")
-    assert suite.clamp_parallelism_to_ram(16) == 3
+    assert suite.fit_mem_budget_gb() == pytest.approx(84)
+    meminfo_at(8)  # less free than the reserve: nothing to spare, never negative
+    assert suite.fit_mem_budget_gb() == 0
 
 
-def test_clamp_parallelism_never_raises_request_or_drops_below_one(
-    meminfo_at, monkeypatch,
-) -> None:
-    meminfo_at(200)
-    monkeypatch.setenv("AZOTH_CONCURRENT_SUITES", "1")
-    # A request under the cap is left alone — the clamp only ever reduces.
-    assert suite.clamp_parallelism_to_ram(2) == 2
-    # parallelism=1 short-circuits before any /proc read.
-    assert suite.clamp_parallelism_to_ram(1) == 1
-    # A box with less free RAM than the reserve still admits one fit rather
-    # than returning 0 and deadlocking the pool.
-    meminfo_at(8)
-    assert suite.clamp_parallelism_to_ram(16) == 1
-
-
-def test_clamp_parallelism_returns_request_when_meminfo_unreadable(monkeypatch) -> None:
+def test_fit_mem_budget_is_none_when_meminfo_unreadable(monkeypatch) -> None:
     real_open = open
 
     def fake_open(file, *args, **kwargs):
@@ -227,4 +210,29 @@ def test_clamp_parallelism_returns_request_when_meminfo_unreadable(monkeypatch) 
         return real_open(file, *args, **kwargs)
 
     monkeypatch.setattr("builtins.open", fake_open)
-    assert suite.clamp_parallelism_to_ram(8) == 8
+    assert suite.fit_mem_budget_gb() is None
+
+
+def test_fit_mem_estimate_uses_last_measurement_with_margin(monkeypatch) -> None:
+    monkeypatch.delenv("AZOTH_MEM_PER_FIT_GB", raising=False)
+    assert suite.fit_mem_estimate_gb({"pe": 20.0}, "pe") == pytest.approx(24.0)
+    # Never measured: assume the heaviest known fit, as the old clamp did.
+    assert suite.fit_mem_estimate_gb({"pe": 20.0}, "lua") == 28.0
+
+
+def test_next_fit_packs_small_fits_but_never_starves_the_head() -> None:
+    def fits(*gbs: float) -> list[dict]:
+        return [{"mem_gb": gb} for gb in gbs]
+
+    # An idle pool always starts the head, even one over budget.
+    assert suite.next_fit(fits(90, 1), 0, 0, 40, 8) == {"mem_gb": 90}
+    # Small fits pack in beside a running one while they fit.
+    assert suite.next_fit(fits(5, 5), 30, 1, 40, 8) == {"mem_gb": 5}
+    # The head doesn't fit: wait, even though a smaller fit behind it would.
+    queue = fits(20, 1)
+    assert suite.next_fit(queue, 30, 1, 40, 8) is None
+    assert queue == fits(20, 1)
+    # The concurrency cap holds regardless of memory.
+    assert suite.next_fit(fits(1), 1, 8, 40, 8) is None
+    # Without a budget (no /proc), only the concurrency cap applies.
+    assert suite.next_fit(fits(90), 90, 1, None, 8) == {"mem_gb": 90}

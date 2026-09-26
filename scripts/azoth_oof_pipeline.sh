@@ -50,7 +50,9 @@
 # was theirs. Both admission clamps read /proc/meminfo MemAvailable at start:
 #
 #   * collimator's DB-fetch worker clamp (features.clamp_workers_to_available_ram)
-#   * the specialist suite's parallelism clamp (azoth_specialist_suite.py)
+#   * the specialist suite's fit admission (azoth_specialist_suite.py), which
+#     packs fits into its RAM budget by each route's peak memory measured last
+#     run (out/cache/fit-mem/), assuming 28 GB for a route never measured
 #
 # Two concurrent chains would each see the full free RAM and each admit a full
 # budget — a 2x over-commit of the same bytes. So the parallel section exports
@@ -195,23 +197,22 @@ report_mem_watch() {
 # init and runs on (2026-09-24: a Ctrl-C left both generals training, and their
 # orphaned nightly.sh held out/nightly.lock so the systemd unit no-op'd). Async
 # jobs also ignore SIGINT in a non-interactive shell, so the terminal's Ctrl-C
-# never reaches them either. Collect each whole tree first, then signal it —
-# killing top-down would reparent the children before we could find them.
-descendants() {
-    local child
-    for child in $(pgrep -P "$1"); do
-        echo "$child"
-        descendants "$child"
-    done
+# never reaches them either. So each job is launched in its own process group
+# (bg_group) and cleanup signals the whole group. A snapshot of the process tree
+# is not enough: a Ctrl-C one second after launch beat the trainers' fork and
+# missed them (2026-09-24 16:21). Processes spawned later inherit the group.
+bg_group() {
+    set -m
+    "$@" &
+    BG_PID=$!
+    set +m
 }
 CHAIN_PIDS=()
 cleanup() {
-    local pid tree=()
+    local pid
     for pid in "${CHAIN_PIDS[@]:-}" "${STAGE3_PID:-}"; do
-        [[ -n "$pid" ]] || continue
-        tree+=("$pid" $(descendants "$pid"))
+        [[ -n "$pid" ]] && kill -TERM -- -"$pid" 2>/dev/null
     done
-    (( ${#tree[@]} )) && kill "${tree[@]}" 2>/dev/null
     [[ -n "$MEM_WATCH_PID" ]] && kill "$MEM_WATCH_PID" 2>/dev/null
     return 0
 }
@@ -403,10 +404,10 @@ if stage_active 0 || stage_active 1 || stage_active 2 || stage_active 4 || stage
         echo "          (fold-A gen -> fold-B gen -> fold-A spec -> fold-B spec)"
         echo "          2 concurrent trainings, RAM split 2 ways"
         echo "================================================================"
-        chain_prod > >(sed 's/^/[prod] /') 2>&1 &
-        PID_PROD=$!
-        chain_fold > >(sed 's/^/[fold] /') 2>&1 &
-        PID_FOLD=$!
+        bg_group chain_prod > >(sed 's/^/[prod] /') 2>&1
+        PID_PROD=$BG_PID
+        bg_group chain_fold > >(sed 's/^/[fold] /') 2>&1
+        PID_FOLD=$BG_PID
         CHAIN_PIDS=("$PID_PROD" "$PID_FOLD")
         CHAIN_FAIL=0
         # Both chains are waited on even after one fails, deliberately. Every
@@ -450,8 +451,10 @@ if stage_active 3; then
         # stages both emit per-batch progress and the mix is unreadable.
         STAGE3_LOG=$(mktemp -t azoth-oof-merge-general.XXXXXX.log)
         echo "[3] running concurrently with stage 6; streaming to ${STAGE3_LOG}, reaped before stage 7"
+        set -m   # own process group, so cleanup can stop the whole merge (see bg_group)
         (time make azoth-oof-merge-general "${PAR_ARGS[@]}") > "$STAGE3_LOG" 2>&1 &
         STAGE3_PID=$!
+        set +m
     else
         time make azoth-oof-merge-general "${PAR_ARGS[@]}" || { report_mem_watch; exit 1; }
     fi

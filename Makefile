@@ -312,6 +312,12 @@ AZOTH_SPECIALIST_FEATURE_ENV ?= native:COLLIMATOR_FORMAT_HINTS=1 native:COLLIMAT
 # uses autocollie's wins by default. Unset to revert to pure CLI/Makefile
 # defaults (legacy behavior, autocollie discoveries are dropped on the floor).
 AZOTH_AUTOCOLLIE_RUNS_DIR ?= out/experiments/azoth/runs
+# The promoted baselines that pick each route's config. Passed explicitly to
+# every suite: the suite's fallback looks under its own --output-root, which
+# for the fold suites is azoth.oof-fold-{a,b} — so folds silently trained ~15
+# routes with a different config than prod, and those OOF scores set prod's
+# thresholds.
+AZOTH_PROMOTED_BASELINES ?= $(AZOTH_ROOT)/.autocollie/promoted_baselines.json
 AZOTH_SPECIALIST_SKIP_EXISTING ?= 1
 AZOTH_SPECIALIST_SKIP_EXISTING_ARG := $(if $(filter 1 true yes,$(AZOTH_SPECIALIST_SKIP_EXISTING)),--skip-existing,)
 # Concurrent specialist trainings. Default derived with the other auto-
@@ -457,9 +463,6 @@ EXP_SUSPICIOUS_BREADTH_DENSITY ?= 1
 EXP_STRUCT_FILE_RISK_COVERAGE ?= 1
 EXP_TOP_K_RISK_FILES ?= 1
 EXP_MIN_SAMPLE_SCORE ?= 0
-# N-gram tuning: path depth (0=full, 2/3/4=truncated) and min crit (0=all, 3=notable+)
-EXP_NGRAM_PATH_DEPTH ?= 0
-EXP_NGRAM_MIN_CRIT ?= 0
 EXP_TAXONOMY_FEATURES ?= 0
 EXP_EXTENDED_METRICS ?= 1
 EXP_METRIC_MIN_FREQ_PCT ?= 5
@@ -1093,6 +1096,7 @@ azoth-specialists: venv check-db
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
 		$(foreach env,$(AZOTH_SPECIALIST_FEATURE_ENV),--feature-env $(env)) \
 		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
+		--promoted-baselines $(AZOTH_PROMOTED_BASELINES) \
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
 		$(AZOTH_SPECIALIST_FEATURE_CACHE_ARG) \
@@ -1154,6 +1158,7 @@ azoth-specialists-fold-a: venv check-db
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
 		$(foreach env,$(AZOTH_SPECIALIST_FEATURE_ENV),--feature-env $(env)) \
 		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
+		--promoted-baselines $(AZOTH_PROMOTED_BASELINES) \
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
 		$(AZOTH_OOF_SKIP_BENCHMARK_ARG) \
@@ -1191,6 +1196,7 @@ azoth-specialists-fold-b: venv check-db
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
 		$(foreach env,$(AZOTH_SPECIALIST_FEATURE_ENV),--feature-env $(env)) \
 		$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),--autocollie-best-runs-dir $(AZOTH_AUTOCOLLIE_RUNS_DIR),) \
+		--promoted-baselines $(AZOTH_PROMOTED_BASELINES) \
 		$(AZOTH_SPECIALIST_SKIP_EXISTING_ARG) \
 		$(AZOTH_FILEGROUP_SCORE_FILTER_ARG) \
 		$(AZOTH_OOF_SKIP_BENCHMARK_ARG) \
@@ -1300,9 +1306,10 @@ azoth-calibrate: venv check-db
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 	@# Honest test-bucket evaluation: same dev-fit thresholds applied to
 	@# the locked test partition. Output goes to $(AZOTH_ROOT)/test_metrics.json
-	@# alongside (not overwriting) the deployed config.json. The second call
-	@# hits the per-route calibration_scores.npz caches written above, so
-	@# parallelism mainly helps the first invocation; no harm passing it here.
+	@# alongside (not overwriting) the deployed config.json. It must read the
+	@# same OOF route scores as the call above: without them it re-extracted
+	@# and re-scored every route's rows (~3h a night) to recompute the test
+	@# scores azoth-oof-route-scores had already written.
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
@@ -1314,6 +1321,7 @@ azoth-calibrate: venv check-db
 		--partition test \
 		--parallelism $(AZOTH_CALIBRATE_PARALLELISM) \
 		--apply-thresholds-from $(AZOTH_CONFIG) \
+		$(AZOTH_OOF_ROUTE_SCORES_ARG) \
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 
 # azoth-set-low-water-mark pins the current deployed-bundle's
@@ -2075,8 +2083,6 @@ experiment: venv check-db
 	COLLIMATOR_DISABLE_FEATURE_GROUPS=$(EXP_DISABLE_FEATURE_GROUPS) \
 	COLLIMATOR_PACKAGED_CAPABILITY_MODE=$(EXP_PACKAGED_CAPABILITY_MODE) \
 	COLLIMATOR_MIN_SAMPLE_SCORE=$(EXP_MIN_SAMPLE_SCORE) \
-	COLLIMATOR_NGRAM_PATH_DEPTH=$(EXP_NGRAM_PATH_DEPTH) \
-	COLLIMATOR_NGRAM_MIN_CRIT=$(EXP_NGRAM_MIN_CRIT) \
 	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
 	COLLIMATOR_EXTENDED_METRICS=$(EXP_EXTENDED_METRICS) \
 	COLLIMATOR_METRIC_MIN_FREQ_PCT=$(EXP_METRIC_MIN_FREQ_PCT) \

@@ -10,6 +10,7 @@ import json
 import logging
 import math
 import os
+import resource
 import shutil
 import sys
 from collections.abc import Callable
@@ -1592,53 +1593,87 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
         return {"name": target["name"], "kind": target["kind"], "error": True}
 
 
-def clamp_parallelism_to_ram(parallelism: int) -> int:
-    """Cap concurrent fits to what currently-available RAM can hold.
+def _fit_in_own_process(job: dict[str, Any]) -> dict[str, Any]:
+    """Pool entrypoint (max_tasks_per_child=1): one fit, plus its peak memory."""
+    return {**_train_target_worker(job), "peak_mem_gb": _peak_mem_gb(job["workers"])}
 
-    Parallelism used to be a pure function of core count, so a host with MORE
-    cores ran more concurrent fits and was MORE likely to OOM — exactly
-    backwards. Each concurrent fit peaks at roughly AZOTH_MEM_PER_FIT_GB on the
-    heaviest route (measured: PE at full corpus ~21 GB once extraction workers
-    are bounded by AZOTH_EXTRACT_WORKERS_MAX; ~83 GB unbounded).
 
-    AZOTH_CONCURRENT_SUITES divides the headroom, for the same reason it divides
-    the thread and extraction-worker budgets: MemAvailable is a per-process
-    snapshot of the WHOLE box, so two suites started together each measured all
-    the free RAM and each admitted a full parallelism — 2x the fits against 1x
-    the memory. Dividing makes the concurrent admissions sum to a single suite's
-    budget, which is the operating point the per-fit estimate is calibrated for.
-    (Until 2026-08-07 the pipeline's parallel-folds path silently double-booked
-    RAM this way; only threads and workers were being split.)
+def _peak_mem_gb(extract_workers: int) -> float:
+    """Upper bound on this process tree's peak memory, in GB.
 
-    Linux-only (reads /proc/meminfo); returns the request unchanged on any other
-    platform or a parse failure, and never raises. Tune via AZOTH_MEM_PER_FIT_GB
-    / AZOTH_MEM_RESERVE_GB.
+    Valid only in a process that ran a single fit (max_tasks_per_child=1):
+    its own peak plus each extraction worker at the largest child's peak.
+    ru_maxrss is in KiB on Linux.
     """
-    if parallelism <= 1:
-        return parallelism
+    own = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    child = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+    return (own + extract_workers * child) / 2**20
+
+
+def fit_mem_budget_gb() -> float | None:
+    """This suite's share of free RAM for concurrent fits, in GB.
+
+    AZOTH_CONCURRENT_SUITES divides the headroom: MemAvailable is a snapshot
+    of the whole box, so two suites started together would otherwise each
+    admit fits against all of it. Returns None where /proc/meminfo is
+    unreadable. Tune the headroom with AZOTH_MEM_RESERVE_GB.
+    """
     try:
-        mem_per_fit = float(os.environ.get("AZOTH_MEM_PER_FIT_GB", "28"))
         reserve = float(os.environ.get("AZOTH_MEM_RESERVE_GB", "32"))
         suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
         with open("/proc/meminfo") as meminfo:
             avail_kb = next(
-                int(line.split()[1])
-                for line in meminfo
-                if line.startswith("MemAvailable:")
+                int(line.split()[1]) for line in meminfo if line.startswith("MemAvailable:")
             )
-        avail_gb = avail_kb / 1024 / 1024
-        mem_cap = max(1, int(((avail_gb - reserve) / suites) // max(mem_per_fit, 0.1)))
-    except (OSError, StopIteration, ValueError, ZeroDivisionError):
-        return parallelism  # non-Linux or unparseable /proc/meminfo
-    if mem_cap < parallelism:
-        LOG.warning(
-            "capping parallelism %d -> %d to fit RAM (MemAvailable=%.0f GB, "
-            "reserve=%.0f GB, per_fit=%.0f GB, concurrent_suites=%d). Override "
-            "with AZOTH_MEM_PER_FIT_GB / AZOTH_MEM_RESERVE_GB.",
-            parallelism, mem_cap, avail_gb, reserve, mem_per_fit, suites,
-        )
-        return mem_cap
-    return parallelism
+    except (OSError, StopIteration, ValueError):
+        return None
+    return max(0.0, (avail_kb / 2**20 - reserve) / suites)
+
+
+# A fit is admitted against the memory budget at the peak it measured last
+# run, plus this margin for corpus growth. A route never measured is assumed
+# to be as heavy as full-corpus PE (AZOTH_MEM_PER_FIT_GB), which serializes
+# it exactly as the old fixed 28 GB-per-fit clamp serialized every route.
+FIT_MEM_MARGIN = 1.2
+
+
+def fit_mem_estimate_gb(measured: dict[str, float], route: str) -> float:
+    if gb := measured.get(route):
+        return gb * FIT_MEM_MARGIN
+    return float(os.environ.get("AZOTH_MEM_PER_FIT_GB", "28"))
+
+
+def next_fit(
+    queue: list[dict[str, Any]],
+    running_gb: float,
+    n_running: int,
+    budget_gb: float | None,
+    max_running: int,
+) -> dict[str, Any] | None:
+    """Pop the head of the queue if it fits beside the running fits.
+
+    Strictly in order, so small fits can never starve a big one. A fit
+    always starts on an idle pool, even one bigger than the budget.
+    """
+    if not queue or n_running >= max_running:
+        return None
+    if n_running and budget_gb is not None and running_gb + queue[0]["mem_gb"] > budget_gb:
+        return None
+    return queue.pop(0)
+
+
+def _load_fit_mem(path: Path) -> dict[str, float]:
+    try:
+        return {str(k): float(v) for k, v in json.loads(path.read_text()).items()}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def _save_fit_mem(path: Path, measured: dict[str, float]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f"{path.name}.tmp.{os.getpid()}")
+    tmp.write_text(json.dumps(measured, indent=2, sort_keys=True) + "\n")
+    tmp.replace(path)
 
 
 def main() -> int:
@@ -1783,6 +1818,16 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--fit-mem-file",
+        type=Path,
+        default=None,
+        help=(
+            "Per-route peak fit memory measured by earlier runs, used to "
+            "schedule fits concurrently (default: "
+            "out/cache/fit-mem/<output-root name>.json)."
+        ),
+    )
+    parser.add_argument(
         "--skip-benchmark",
         action="store_true",
         help=(
@@ -1918,67 +1963,21 @@ def main() -> int:
             ", ".join(small_route_default_applied),
         )
 
-    # Clamp parallelism to available RAM *before* deriving the per-fit thread
-    # and extraction-worker budgets from it.
-    args.parallelism = clamp_parallelism_to_ram(args.parallelism)
-
-    # Auto-cap LightGBM threads per training when running multiple
-    # specialists concurrently. Without this, every concurrent training
-    # asks for all 128 cores via n_jobs=-1 and the host context-switches
-    # itself to death (we saw load avg ~240 on a 128-core box with
-    # parallelism=2). nproc // parallelism keeps total worker count
-    # roughly equal to the core count and yields predictable wall-clock.
-    #
-    # AZOTH_CONCURRENT_SUITES (set by scripts/azoth_oof_pipeline.sh when
-    # PARALLEL_FOLDS=1) tells the suite that another instance is running
-    # in parallel and the thread budget should be split across them.
-    # Without this knowledge each suite would claim the full host and
-    # 2× CPU oversubscription would erase the parallel-folds win.
+    # Concurrent fits share this suite's slice of the box. Each fit's share
+    # of it — memory, LightGBM threads, extraction workers alike — is its
+    # measured peak memory over the budget, so a lone heavy route still gets
+    # (nearly) the whole slice and a dozen small ones split it.
+    concurrent_suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
+    suite_threads = max(1, (os.cpu_count() or 1) // concurrent_suites)
+    # Extraction memory scales with workers * batch, so the absolute ceiling
+    # keeps the heaviest fit near the 28 GB it was measured at (~83 GB for a
+    # full-corpus PE fit with 128 workers, ~21 GB with 8).
+    suite_workers = max(1, args.workers // concurrent_suites) if args.workers else 0
+    extract_ceiling = max(1, int(os.environ.get("AZOTH_EXTRACT_WORKERS_MAX", "16")))
+    extract_workers = min(suite_workers, extract_ceiling) if suite_workers else args.workers
     lgbm_threads = args.lgbm_threads
-    if lgbm_threads is None and args.parallelism > 1:
-        nproc = os.cpu_count() or 1
-        concurrent_suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
-        lgbm_threads = max(1, nproc // (args.parallelism * concurrent_suites))
-        suite_note = f", concurrent_suites={concurrent_suites}" if concurrent_suites > 1 else ""
-        LOG.info(
-            "auto-capping LightGBM threads per training at %d "
-            "(%d cores / parallelism=%d%s). Override with --lgbm-threads N.",
-            lgbm_threads, nproc, args.parallelism, suite_note,
-        )
-
-    # Cap feature-extraction workers per fit. Each fit spawns its own
-    # extraction subprocesses, each fetching and parsing a batch of cleave
-    # reports, so peak extraction memory scales with (extract_workers *
-    # batch_size) reports resident. Measured on a 128-core host: a single
-    # full-corpus PE fit peaks at ~83 GB with workers=128 but ~21 GB with
-    # workers=8 — that delta is the worker-proportional report buffer.
-    #
-    # Two caps compound:
-    #   1. //parallelism — when fits stack, split the worker budget so the
-    #      host total stays ~= nproc.
-    #   2. An ABSOLUTE ceiling (AZOTH_EXTRACT_WORKERS_MAX, default 16 ~= the
-    #      ~28 GB/fit AZOTH_MEM_PER_FIT_GB operating point) applied even at
-    #      parallelism=1. Without it a solo general/PE fit re-creates the
-    #      83 GB spike (the //parallelism guard used to skip parallelism=1
-    #      entirely), and the MemAvailable clamp above — which assumes
-    #      ~28 GB/fit — silently under-counts. Bounding extract_workers makes
-    #      that per-fit estimate honest at any parallelism.
-    # Trade-off: extraction (DB/IO-bound, a minority of wall-clock and often
-    # served from the feature cache) uses fewer cores; the LightGBM fit still
-    # saturates them via its thread budget. Raise the ceiling on a high-RAM
-    # host if extraction wall-clock dominates an uncached run.
-    extract_workers = args.workers
-    if args.workers and args.workers > 1:
-        concurrent_suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
-        ceiling = max(1, int(os.environ.get("AZOTH_EXTRACT_WORKERS_MAX", "16")))
-        per_fit = args.workers // max(1, args.parallelism * concurrent_suites)
-        extract_workers = max(1, min(per_fit, ceiling))
-        if extract_workers != args.workers:
-            LOG.info(
-                "capping extraction workers per fit at %d "
-                "(requested %d, parallelism=%d, ceiling=%d).",
-                extract_workers, args.workers, args.parallelism, ceiling,
-            )
+    fit_mem_file = args.fit_mem_file or Path("out/cache/fit-mem") / f"{args.output_root.name}.json"
+    measured_mem = _load_fit_mem(fit_mem_file)
 
     config = train.TrainConfig(
         learner="azoth",
@@ -2031,6 +2030,7 @@ def main() -> int:
                 "feature_env": _route_feature_env(target, feature_envs),
                 "route_config": _route_train_config(config, target, train_overrides),
                 "workers": extract_workers,
+                "mem_gb": fit_mem_estimate_gb(measured_mem, str(target["name"])),
                 "max_id": args.max_id,
                 "filegroup_score_filter": filegroup_score_filter,
                 "min_malware_score": args.min_malware_score,
@@ -2042,38 +2042,74 @@ def main() -> int:
             },
         )
 
-    # Longest-processing-time-first: submit the heaviest routes (most rows)
-    # first so a big fit (pe/xml ~1.7M rows) starts immediately rather than
-    # stranding the pool to run solo at the tail — classic LPT makespan
-    # minimization. Results are reassembled via slot_index regardless of
-    # completion order, so this only affects scheduling, not output.
-    pending.sort(key=lambda job: -int(job["target"].get("total", 0)))
+    # Heaviest first (longest-processing-time-first): the big fits start
+    # while the pool is empty instead of running solo at the tail. Results
+    # are reassembled via slot_index, so order only affects scheduling.
+    pending.sort(key=lambda job: (-job["mem_gb"], -int(job["target"].get("total", 0))))
+
+    def record(job: dict[str, Any], payload: dict[str, Any]) -> None:
+        name = str(job["target"]["name"])
+        results[slot_index[name]] = payload
+        if payload.get("peak_mem_gb"):
+            measured_mem[name] = round(float(payload["peak_mem_gb"]), 2)
+            _save_fit_mem(fit_mem_file, measured_mem)
 
     if args.parallelism > 1 and len(pending) > 1:
+        budget_gb = fit_mem_budget_gb()
+        LOG.info(
+            "scheduling %d fits: up to %d at once within %s of RAM "
+            "(%d measured, rest assumed %.0f GB)",
+            len(pending), args.parallelism,
+            "an unknown amount" if budget_gb is None else f"{budget_gb:.0f} GB",
+            sum(1 for job in pending if str(job["target"]["name"]) in measured_mem),
+            fit_mem_estimate_gb({}, ""),
+        )
+
+        def sized(job: dict[str, Any]) -> dict[str, Any]:
+            share = min(1.0, job["mem_gb"] / budget_gb) if budget_gb else 1 / args.parallelism
+            threads = lgbm_threads or max(1, round(suite_threads * share))
+            workers = args.workers
+            if suite_workers:
+                workers = max(1, min(extract_ceiling, round(suite_workers * share)))
+            LOG.info(
+                "%s: starting (est %.1f GB, %d LightGBM threads, %d extraction workers)",
+                job["target"]["name"], job["mem_gb"], threads, workers,
+            )
+            config = replace(job["route_config"], num_threads=threads)
+            return {**job, "workers": workers, "route_config": config}
+
         # `spawn` start method — see azoth_calibrate_ensemble.py for the
         # rationale. Fork-based workers inherit the parent's OpenMP/BLAS
         # mutex state and silently futex_wait-deadlock when LightGBM warms
-        # up its thread pool inside the worker.
+        # up its thread pool inside the worker. One fit per process so each
+        # measures its own peak memory (and frees it on exit).
         import multiprocessing as _mp  # noqa: PLC0415
-        _spawn_ctx = _mp.get_context("spawn")
+        queue = list(pending)
+        running: dict[concurrent.futures.Future, dict[str, Any]] = {}
         with concurrent.futures.ProcessPoolExecutor(
             max_workers=args.parallelism,
-            mp_context=_spawn_ctx,
+            mp_context=_mp.get_context("spawn"),
             initializer=_pool_init,
             initargs=(args.log_level,),
+            max_tasks_per_child=1,
         ) as pool:
-            futures = {
-                pool.submit(_train_target_worker, job): job["target"]
-                for job in pending
-            }
-            for fut in concurrent.futures.as_completed(futures):
-                target = futures[fut]
-                try:
-                    payload = fut.result()
-                except Exception:
-                    LOG.exception("%s: worker raised", target["name"])
-                    payload = {"name": target["name"], "kind": target["kind"], "error": True}
-                results[slot_index[str(target["name"])]] = payload
+            while queue or running:
+                running_gb = sum(job["mem_gb"] for job in running.values())
+                while job := next_fit(queue, running_gb, len(running), budget_gb, args.parallelism):
+                    running[pool.submit(_fit_in_own_process, sized(job))] = job
+                    running_gb += job["mem_gb"]
+                done, _ = concurrent.futures.wait(
+                    running, return_when=concurrent.futures.FIRST_COMPLETED,
+                )
+                for fut in done:
+                    job = running.pop(fut)
+                    try:
+                        payload = fut.result()
+                    except Exception:
+                        LOG.exception("%s: worker raised", job["target"]["name"])
+                        target = job["target"]
+                        payload = {"name": target["name"], "kind": target["kind"], "error": True}
+                    record(job, payload)
     else:
         for job in pending:
             results[slot_index[str(job["target"]["name"])]] = _train_target_worker(job)
