@@ -63,3 +63,17 @@ def test_empty_or_malformed_entry_is_not_covered() -> None:
     assert _mod._entry_covers_current_grid({}) is False
     assert _mod._entry_covers_current_grid({"ensemble": None}) is False
     assert _mod._entry_recall_levels({}) == set()
+
+
+def test_bucket_mask_selects_the_same_rows_as_partition_of() -> None:
+    import numpy as np
+    import pytest
+
+    from collimator import data
+
+    buckets = np.array([0, 31, 32, 63, 64, 255], dtype=np.uint8)
+    for partition in ("test", "dev"):
+        want = [data.partition_of(f"{b:02x}") == partition for b in buckets]
+        assert _mod._bucket_mask(buckets, partition).tolist() == want
+    with pytest.raises(ValueError, match="unknown partition"):
+        _mod._bucket_mask(buckets, "train")

@@ -13,6 +13,7 @@ import os
 import resource
 import shutil
 import sys
+import time
 from collections.abc import Callable
 from dataclasses import asdict, fields, replace
 from datetime import UTC, datetime
@@ -1594,40 +1595,30 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
 
 
 def _fit_in_own_process(job: dict[str, Any]) -> dict[str, Any]:
-    """Pool entrypoint (max_tasks_per_child=1): one fit, plus its peak memory."""
-    return {**_train_target_worker(job), "peak_mem_gb": _peak_mem_gb(job["workers"])}
+    """Pool entrypoint (max_tasks_per_child=1): one fit, plus its peak memory.
 
-
-def _peak_mem_gb(extract_workers: int) -> float:
-    """Upper bound on this process tree's peak memory, in GB.
-
-    Valid only in a process that ran a single fit (max_tasks_per_child=1):
-    its own peak plus each extraction worker at the largest child's peak.
-    ru_maxrss is in KiB on Linux.
+    The peak is an upper bound for this process tree, valid because the
+    process ran only this fit: its own peak plus every extraction worker at
+    the largest child's peak. ru_maxrss is in KiB on Linux.
     """
+    payload = _train_target_worker(job)
     own = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     child = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-    return (own + extract_workers * child) / 2**20
+    return {**payload, "peak_mem_gb": (own + job["workers"] * child) / 2**20}
 
 
 def fit_mem_budget_gb() -> float | None:
-    """This suite's share of free RAM for concurrent fits, in GB.
+    """This suite's share of the RAM still free for fits, in GB.
 
-    AZOTH_CONCURRENT_SUITES divides the headroom: MemAvailable is a snapshot
-    of the whole box, so two suites started together would otherwise each
-    admit fits against all of it. Returns None where /proc/meminfo is
-    unreadable. Tune the headroom with AZOTH_MEM_RESERVE_GB.
+    AZOTH_CONCURRENT_SUITES divides the headroom: two suites started together
+    would otherwise each admit fits against all of it. The headroom honours
+    COLLIMATOR_MEM_CEILING_GB (features.ram_headroom_gb). None where
+    /proc/meminfo is unreadable. Tune the host reserve with AZOTH_MEM_RESERVE_GB.
     """
-    try:
-        reserve = float(os.environ.get("AZOTH_MEM_RESERVE_GB", "32"))
-        suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
-        with open("/proc/meminfo") as meminfo:
-            avail_kb = next(
-                int(line.split()[1]) for line in meminfo if line.startswith("MemAvailable:")
-            )
-    except (OSError, StopIteration, ValueError):
-        return None
-    return max(0.0, (avail_kb / 2**20 - reserve) / suites)
+    reserve = float(os.environ.get("AZOTH_MEM_RESERVE_GB", "32"))
+    suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
+    headroom = features.ram_headroom_gb(reserve)
+    return None if headroom is None else headroom / suites
 
 
 # A fit is admitted against the memory budget at the peak it measured last
@@ -1649,15 +1640,23 @@ def next_fit(
     n_running: int,
     budget_gb: float | None,
     max_running: int,
+    free_gb: float | None = None,
 ) -> dict[str, Any] | None:
     """Pop the head of the queue if it fits beside the running fits.
 
-    Strictly in order, so small fits can never starve a big one. A fit
-    always starts on an idle pool, even one bigger than the budget.
+    It must fit both the budget taken at suite start and the RAM free right
+    now (``free_gb``), since anything else on the box (the other chain, the
+    scan server) can grow mid-run. Strictly in order, so small fits can
+    never starve a big one. A fit always starts on an idle pool, even one
+    bigger than the budget, so the suite always makes progress.
     """
     if not queue or n_running >= max_running:
         return None
-    if n_running and budget_gb is not None and running_gb + queue[0]["mem_gb"] > budget_gb:
+    need = queue[0]["mem_gb"]
+    if n_running and (
+        (budget_gb is not None and running_gb + need > budget_gb)
+        or (free_gb is not None and need > free_gb)
+    ):
         return None
     return queue.pop(0)
 
@@ -1665,7 +1664,10 @@ def next_fit(
 def _load_fit_mem(path: Path) -> dict[str, float]:
     try:
         return {str(k): float(v) for k, v in json.loads(path.read_text()).items()}
-    except (OSError, ValueError, AttributeError):
+    except FileNotFoundError:
+        return {}
+    except (OSError, ValueError, TypeError, AttributeError) as exc:
+        LOG.warning("ignoring unreadable fit-memory file %s (%s); assuming defaults", path, exc)
         return {}
 
 
@@ -2047,22 +2049,29 @@ def main() -> int:
     # are reassembled via slot_index, so order only affects scheduling.
     pending.sort(key=lambda job: (-job["mem_gb"], -int(job["target"].get("total", 0))))
 
-    def record(job: dict[str, Any], payload: dict[str, Any]) -> None:
+    def record(job: dict[str, Any], payload: dict[str, Any], seconds: float) -> None:
         name = str(job["target"]["name"])
         results[slot_index[name]] = payload
-        if payload.get("peak_mem_gb"):
-            measured_mem[name] = round(float(payload["peak_mem_gb"]), 2)
+        peak = payload.get("peak_mem_gb")
+        LOG.info(
+            "%s: %s in %.1f min (peak %s, est %.1f GB)",
+            name, "failed" if payload.get("error") else "done", seconds / 60,
+            f"{peak:.1f} GB" if peak else "unmeasured", job["mem_gb"],
+        )
+        # A failed fit may have died before its heavy phase; its peak would
+        # under-size the next run's slot, so only successes are remembered.
+        if peak and not payload.get("error"):
+            measured_mem[name] = round(float(peak), 2)
             _save_fit_mem(fit_mem_file, measured_mem)
 
     if args.parallelism > 1 and len(pending) > 1:
         budget_gb = fit_mem_budget_gb()
         LOG.info(
-            "scheduling %d fits: up to %d at once within %s of RAM "
-            "(%d measured, rest assumed %.0f GB)",
-            len(pending), args.parallelism,
-            "an unknown amount" if budget_gb is None else f"{budget_gb:.0f} GB",
+            "scheduling %d fits (%d with measured memory): up to %d at once within %s of RAM",
+            len(pending),
             sum(1 for job in pending if str(job["target"]["name"]) in measured_mem),
-            fit_mem_estimate_gb({}, ""),
+            args.parallelism,
+            "an unknown amount" if budget_gb is None else f"{budget_gb:.0f} GB",
         )
 
         def sized(job: dict[str, Any]) -> dict[str, Any]:
@@ -2085,7 +2094,11 @@ def main() -> int:
         # measures its own peak memory (and frees it on exit).
         import multiprocessing as _mp  # noqa: PLC0415
         queue = list(pending)
-        running: dict[concurrent.futures.Future, dict[str, Any]] = {}
+        running: dict[concurrent.futures.Future, tuple[dict[str, Any], float]] = {}
+
+        def failed(job: dict[str, Any]) -> dict[str, Any]:
+            return {"name": job["target"]["name"], "kind": job["target"]["kind"], "error": True}
+
         with concurrent.futures.ProcessPoolExecutor(
             max_workers=args.parallelism,
             mp_context=_mp.get_context("spawn"),
@@ -2094,22 +2107,35 @@ def main() -> int:
             max_tasks_per_child=1,
         ) as pool:
             while queue or running:
-                running_gb = sum(job["mem_gb"] for job in running.values())
-                while job := next_fit(queue, running_gb, len(running), budget_gb, args.parallelism):
-                    running[pool.submit(_fit_in_own_process, sized(job))] = job
+                running_gb = sum(job["mem_gb"] for job, _ in running.values())
+                free_gb = fit_mem_budget_gb()
+                while job := next_fit(
+                    queue, running_gb, len(running), budget_gb, args.parallelism, free_gb,
+                ):
+                    try:
+                        fut = pool.submit(_fit_in_own_process, sized(job))
+                    except concurrent.futures.BrokenExecutor:
+                        # A worker died (OOM kill) and took the pool down;
+                        # every remaining fit fails the same way, as it would
+                        # have had it been submitted up front.
+                        LOG.error("%s: not started, worker pool is broken", job["target"]["name"])
+                        record(job, failed(job), 0.0)
+                        continue
+                    running[fut] = (job, time.monotonic())
                     running_gb += job["mem_gb"]
+                    if free_gb is not None:
+                        free_gb -= job["mem_gb"]
                 done, _ = concurrent.futures.wait(
                     running, return_when=concurrent.futures.FIRST_COMPLETED,
                 )
                 for fut in done:
-                    job = running.pop(fut)
+                    job, started = running.pop(fut)
                     try:
                         payload = fut.result()
                     except Exception:
                         LOG.exception("%s: worker raised", job["target"]["name"])
-                        target = job["target"]
-                        payload = {"name": target["name"], "kind": target["kind"], "error": True}
-                    record(job, payload)
+                        payload = failed(job)
+                    record(job, payload, time.monotonic() - started)
     else:
         for job in pending:
             results[slot_index[str(job["target"]["name"])]] = _train_target_worker(job)

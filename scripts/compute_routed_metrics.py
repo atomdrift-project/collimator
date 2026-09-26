@@ -660,10 +660,13 @@ def _ensemble_scores_specialist_priority(
 
 def _bucket_mask(sha_bucket: np.ndarray, partition: str) -> np.ndarray:
     """Rows of a partition, from each row's canonical-sha bucket byte."""
-    lower, upper = {
+    bounds = {
         "test": (0, collimator_data.TEST_BUCKET_MAX),
         "dev": (collimator_data.TEST_BUCKET_MAX, collimator_data.DEV_BUCKET_MAX),
-    }[partition]
+    }
+    if partition not in bounds:
+        raise ValueError(f"unknown partition: {partition!r}")
+    lower, upper = bounds[partition]
     mask = (sha_bucket >= lower) & (sha_bucket < upper)
     LOG.info("%s bucket: %d/%d rows (%.2f%%)",
              partition, int(mask.sum()), len(mask), 100.0 * mask.sum() / max(len(mask), 1))
@@ -982,8 +985,9 @@ def compute_per_filetype_metrics(
     # the locked reporting partition; dev is used for honest strategy
     # selection (see compute_per_filetype_metrics_honest below).
     partition_mask: np.ndarray | None = None
-    if db_path and "sha_bucket" in score_table.files:
-        partition_mask = _bucket_mask(score_table["sha_bucket"], partition)
+    buckets = score_table["sha_bucket"] if "sha_bucket" in score_table.files else None
+    if db_path and buckets is not None and buckets.shape == row_ids.shape:
+        partition_mask = _bucket_mask(buckets, partition)
     elif db_path:  # score table predates sha_bucket
         if test_mask_cache_dir is None:
             test_mask_cache_dir = _default_test_mask_cache_dir(score_table_path)

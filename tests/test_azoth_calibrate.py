@@ -455,3 +455,22 @@ def test_load_routes_drops_routes_without_a_model(tmp_path: Path) -> None:
     names = {r["route"] for r in routes}
     assert names == {"filetypes/elf"}
     assert routes[0]["output_dir"] == str(kept)
+
+
+def test_sha_bucket_matches_partition_of_and_tolerates_missing_hashes() -> None:
+    from collimator import data
+
+    for last in ("00", "1f", "20", "3f", "40", "ff"):
+        sha = "ab" * 31 + last
+        bucket = _mod._sha_bucket(sha)
+        assert bucket == int(last, 16)
+        if bucket < data.TEST_BUCKET_MAX:
+            assert data.partition_of(sha) == "test"
+        elif bucket < data.DEV_BUCKET_MAX:
+            assert data.partition_of(sha) == "dev"
+        else:
+            assert data.partition_of(sha) == "train"
+    # No usable hash: a train bucket, outside test and dev (as the DB query
+    # treats a NULL canonical_sha256).
+    for missing in ("", None, "x"):
+        assert _mod._sha_bucket(missing) == 255

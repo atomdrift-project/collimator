@@ -39,7 +39,8 @@
 # Env overrides: NIGHTLY_EXPERIMENTS (default 1), NIGHTLY_PASSES (default 0 =
 # loop until preempted), NIGHTLY_ALLOW_REGRESSION=1 (bypass the deploy
 # regression gate), NIGHTLY_WORKERS (default 24; caps the retrain's DB-fetch
-# parallelism — see the WORKERS export below).
+# parallelism — see the WORKERS export below), NIGHTLY_MEM_CEILING_GB (default
+# 192; most RAM the run may hold), NIGHTLY_OOM_SCORE_ADJ (default -200).
 set -uo pipefail
 
 mode="${1:-train}"
@@ -155,6 +156,12 @@ if [ "$mode" = train ] || [ -n "${NIGHTLY_VOCAB_PRUNE_EVERY:-}" ]; then
     echo "nightly($mode): vocab singleton-prune every $COLLIMATOR_VOCAB_PRUNE_EVERY batches"
 fi
 
+# The most RAM this run may hold. Every memory-aware admission (DB-fetch
+# workers, specialist fits) stops launching work as the run's cgroup nears it,
+# on top of leaving each clamp's reserve free for the rest of the host.
+export COLLIMATOR_MEM_CEILING_GB="${NIGHTLY_MEM_CEILING_GB-192}"
+echo "nightly($mode): memory ceiling ${COLLIMATOR_MEM_CEILING_GB:-none} GB"
+
 rc=0
 
 # ---------------------------------------------------------------- sweep mode
@@ -171,6 +178,16 @@ fi
 # Take the box back from the sweep before touching anything. `stop` is a
 # no-op-and-exit-0 when the unit is already inactive; it only fails when the
 # unit isn't installed or there's no user manager, which is survivable.
+# Stop being the kernel's first OOM victim. The user manager (and so this unit)
+# starts at +100 and only root can go lower, hence doas. -200 matches postgres:
+# lower would make postgres, which this run needs, die first. Children inherit.
+oom_adj="${NIGHTLY_OOM_SCORE_ADJ--200}"
+if doas -n choom -n "$oom_adj" -p $$ >/dev/null; then
+  echo "nightly($mode): oom_score_adj $oom_adj"
+else
+  echo "nightly($mode): could not set oom_score_adj $oom_adj; staying at $(cat /proc/$$/oom_score_adj)"
+fi
+
 echo "== preempt sweep =="
 if systemctl --user stop "$SWEEP_UNIT" 2>/dev/null; then
   echo "stopped $SWEEP_UNIT (whole cgroup, incl. any in-flight experiment)."
@@ -183,8 +200,19 @@ echo "== repin =="
 # specialist suite, OOF merges, calibrate) re-queried max(id) on its own:
 # 2026-09-13 trained and scored on five different snapshots, dropped "drifted"
 # OOF rows, and no cache key ever matched across stages.
-if snapshot=$(.venv/bin/python -c 'import sys; from collimator import data; print(data.snapshot_max_id(sys.argv[1]))' \
-    "${DB:-postgres://hopper@localhost:5432/hopper}"); then
+# Retried with exponential backoff + jitter (<= ~2 min) so a DB blip at 20:00
+# doesn't cost the run its single snapshot.
+snapshot=""
+for attempt in 1 2 3 4 5 6; do
+  snapshot=$(.venv/bin/python -c 'import sys; from collimator import data; print(data.snapshot_max_id(sys.argv[1]))' \
+    "${DB:-postgres://hopper@localhost:5432/hopper}") && [[ $snapshot =~ ^[1-9][0-9]*$ ]] && break
+  snapshot=""
+  (( attempt < 6 )) || break
+  delay=$(( (1 << attempt) + RANDOM % (1 << attempt) ))
+  echo "snapshot query failed (attempt $attempt/6); retrying in ${delay}s"
+  sleep "$delay"
+done
+if [ -n "$snapshot" ]; then
   make repin PIN_TO="$snapshot" || rc=1
   export THRESHOLD_MAX_ID="$snapshot"
   echo "snapshot for this run: max_id=$snapshot"

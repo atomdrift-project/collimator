@@ -236,3 +236,22 @@ def test_next_fit_packs_small_fits_but_never_starves_the_head() -> None:
     assert suite.next_fit(fits(1), 1, 8, 40, 8) is None
     # Without a budget (no /proc), only the concurrency cap applies.
     assert suite.next_fit(fits(90), 90, 1, None, 8) == {"mem_gb": 90}
+
+
+def test_next_fit_also_needs_the_ram_free_right_now() -> None:
+    # Within the start-of-suite budget, but the box has less free now (the
+    # other chain or the scan server grew): wait rather than overcommit.
+    assert suite.next_fit([{"mem_gb": 10}], 5, 1, 40, 8, free_gb=8) is None
+    assert suite.next_fit([{"mem_gb": 10}], 5, 1, 40, 8, free_gb=12) == {"mem_gb": 10}
+    # An idle pool still starts the head, so the suite always progresses.
+    assert suite.next_fit([{"mem_gb": 10}], 0, 0, 40, 8, free_gb=0) == {"mem_gb": 10}
+
+
+def test_fit_mem_file_round_trips_and_tolerates_garbage(tmp_path) -> None:
+    path = tmp_path / "fit-mem" / "azoth.json"
+    assert suite._load_fit_mem(path) == {}  # first run: nothing measured
+    suite._save_fit_mem(path, {"pe": 21.5, "lua": 0.6})
+    assert suite._load_fit_mem(path) == {"pe": 21.5, "lua": 0.6}
+    for garbage in ("not json", "[1, 2]", '{"pe": null}'):
+        path.write_text(garbage)
+        assert suite._load_fit_mem(path) == {}

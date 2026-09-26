@@ -1070,6 +1070,18 @@ def _filetype_to_group() -> dict[str, str]:
     return out
 
 
+def _sha_bucket(canonical_sha: object) -> int:
+    """The byte that picks a row's partition (collimator.data.partition_of).
+
+    A row without a usable hash gets 255, a train bucket: outside test and
+    dev, as the DB-side partition query treats a NULL canonical_sha256.
+    """
+    try:
+        return int(str(canonical_sha)[-2:], 16)
+    except ValueError:
+        return 255
+
+
 def _write_score_table(
     path: Path,
     *,
@@ -1414,10 +1426,7 @@ def main() -> int:
         file_groups=file_groups,
         route_scores=route_scores,
         sha_buckets=(
-            np.fromiter(
-                (int(str(c)[-2:], 16) for c in general_cache["canonical_shas"]),
-                dtype=np.uint8,
-            )
+            np.fromiter(map(_sha_bucket, general_cache["canonical_shas"]), dtype=np.uint8)
             if "canonical_shas" in general_cache.files else None
         ),
     )

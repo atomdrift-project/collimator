@@ -2116,11 +2116,6 @@ class _ExtractContext:
         # (~50 for trigrams, ~1k for bigrams) of the per-file path
         # universe, so filtering first turns ~390k trigram-string-formats
         # per file into ~10-20.
-        # Every path named in the n-gram vocab: scan's path_to_id. The
-        # per-file caps count against this set.
-        self.ngram_vocab_paths: frozenset[str] = frozenset(
-            p for ng in (*spec.bigram_vocab, *spec.trigram_vocab) for p in ng.split(" + ")
-        )
         self.bigram_vocab_paths: frozenset[str] = frozenset(
             p for bi in self.bigram_lookup for p in bi.split(" + ")
         )
@@ -2129,6 +2124,13 @@ class _ExtractContext:
         )
         self.synergy_vocab_paths: frozenset[str] = frozenset(
             p for bi in self.synergy_lookup for p in bi.split(" + ")
+        )
+        # Every path of an emitted n-gram feature: scan's path_to_id, which it
+        # builds from the saved bigram/trigram vocabs — and FeatureSpec.save
+        # derives those from the emitted names, not the (possibly unpruned)
+        # in-memory lists. The per-file caps count against this set.
+        self.ngram_vocab_paths: frozenset[str] = (
+            self.bigram_vocab_paths | self.synergy_vocab_paths | self.trigram_vocab_paths
         )
         # Tuple-keyed mirrors of the string-keyed bigram/trigram/synergy
         # lookups. Building "p1 + p2" / "p1 + p2 + p3" inside the hot
@@ -4181,7 +4183,14 @@ def _extract_pool(nw: int, spec: FeatureSpec) -> ProcessPoolExecutor:
 
 
 def _context(spec: FeatureSpec) -> _ExtractContext:
-    return _worker_ctx if _worker_ctx is not None else _ExtractContext(spec)
+    if _worker_ctx is None:
+        return _ExtractContext(spec)
+    if _worker_ctx.total_features != spec.total_features:
+        raise RuntimeError(
+            f"extraction worker built for {_worker_ctx.total_features} features "
+            f"got a task for {spec.total_features}",
+        )
+    return _worker_ctx
 
 
 def _extract_batch_worker(
@@ -4256,6 +4265,42 @@ def resolve_worker_count(n_workers: int) -> int:
     return n_workers if n_workers > 0 else _n_workers_default()
 
 
+def ram_headroom_gb(reserve_gb: float) -> float | None:
+    """GB of RAM this process tree may still claim; None if /proc/meminfo is unreadable.
+
+    The host's MemAvailable less ``reserve_gb`` for everything else on the box,
+    and, when COLLIMATOR_MEM_CEILING_GB is set (the nightly sets it), no more
+    than that ceiling less the anonymous memory this process's cgroup already
+    holds. Page cache is reclaimable, so it doesn't count against the ceiling.
+    """
+    try:
+        with open("/proc/meminfo") as meminfo:
+            avail_kb = next(
+                int(line.split()[1]) for line in meminfo if line.startswith("MemAvailable:")
+            )
+    except (OSError, StopIteration, ValueError):
+        return None
+    headroom = avail_kb / 2**20 - reserve_gb
+    if ceiling := os.getenv("COLLIMATOR_MEM_CEILING_GB"):
+        try:
+            headroom = min(headroom, float(ceiling) - _cgroup_anon_gb())
+        except (OSError, ValueError, IndexError) as exc:
+            log.warning("ignoring COLLIMATOR_MEM_CEILING_GB=%s: %s", ceiling, exc)
+    return max(0.0, headroom)
+
+
+def _cgroup_anon_gb() -> float:
+    """Anonymous memory held by this process's cgroup (v2), in GB."""
+    cgroup = next(
+        line.split("::", 1)[1].strip()
+        for line in Path("/proc/self/cgroup").read_text().splitlines()
+        if line.startswith("0::")
+    )
+    stat = (Path("/sys/fs/cgroup") / cgroup.lstrip("/") / "memory.stat").read_text()
+    anon = next(int(line.split()[1]) for line in stat.splitlines() if line.startswith("anon "))
+    return anon / 2**30
+
+
 def clamp_workers_to_available_ram(n_workers: int) -> int:
     """Best-effort cap on the DB-fetch worker count from currently-available RAM.
 
@@ -4284,33 +4329,28 @@ def clamp_workers_to_available_ram(n_workers: int) -> int:
         reserve = float(os.getenv("COLLIMATOR_MEM_RESERVE_GB", "48"))
         per_worker = float(os.getenv("COLLIMATOR_MEM_PER_WORKER_GB", "2"))
         shares = max(1, int(os.getenv("COLLIMATOR_MEM_SHARES", "1")))
-        with open("/proc/meminfo") as meminfo:
-            avail_kb = next(
-                int(line.split()[1])
-                for line in meminfo
-                if line.startswith("MemAvailable:")
-            )
-        avail_gb = avail_kb / 1024 / 1024
-        budget_gb = (avail_gb - reserve) / shares
-        cap = max(1, int(budget_gb // max(per_worker, 0.1)))
-        share_note = f", shares={shares}" if shares > 1 else ""
-        if cap < resolved:
-            log.warning(
-                "mem-aware workers: capping %d -> %d (MemAvailable=%.0f GB, "
-                "reserve=%.0f GB, per_worker=%.1f GB%s); tune via "
-                "COLLIMATOR_MEM_RESERVE_GB / COLLIMATOR_MEM_PER_WORKER_GB or "
-                "disable with COLLIMATOR_MEM_AWARE_WORKERS=0",
-                resolved, cap, avail_gb, reserve, per_worker, share_note,
-            )
-            return cap
-        log.info(
-            "mem-aware workers: %d workers fit (MemAvailable=%.0f GB, "
-            "reserve=%.0f GB, per_worker=%.1f GB%s)",
-            resolved, avail_gb, reserve, per_worker, share_note,
-        )
+    except ValueError:
         return resolved
-    except (OSError, StopIteration, ValueError):
+    headroom = ram_headroom_gb(reserve)
+    if headroom is None:
         return resolved  # non-Linux or unparseable /proc/meminfo: leave as requested
+    cap = max(1, int(headroom / shares // max(per_worker, 0.1)))
+    share_note = f", shares={shares}" if shares > 1 else ""
+    if cap < resolved:
+        log.warning(
+            "mem-aware workers: capping %d -> %d (headroom=%.0f GB after "
+            "reserve=%.0f GB, per_worker=%.1f GB%s); tune via "
+            "COLLIMATOR_MEM_RESERVE_GB / COLLIMATOR_MEM_PER_WORKER_GB or "
+            "disable with COLLIMATOR_MEM_AWARE_WORKERS=0",
+            resolved, cap, headroom, reserve, per_worker, share_note,
+        )
+        return cap
+    log.info(
+        "mem-aware workers: %d workers fit (headroom=%.0f GB after reserve=%.0f GB, "
+        "per_worker=%.1f GB%s)",
+        resolved, headroom, reserve, per_worker, share_note,
+    )
+    return resolved
 
 
 def _batched(items: Iterable[T], batch_size: int) -> Iterable[list[T]]:

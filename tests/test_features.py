@@ -1978,3 +1978,44 @@ def test_parallel_extraction_matches_serial(tmp_path) -> None:
         return np.vstack([X.toarray() for X, _y in blocks])
 
     np.testing.assert_array_equal(matrix(2), matrix(1))
+
+
+def test_ngram_cap_ignores_vocab_entries_pruned_from_feature_names() -> None:
+    from collimator.features import BIGRAM_MAX_PATHS
+
+    # Training's in-memory spec keeps pre-prune vocab lists; the saved spec
+    # scan reads only lists paths of emitted features, so pruned entries
+    # must not count toward the cap either.
+    pruned = [f"p/{i:04d} + q/{i:04d}" for i in range(BIGRAM_MAX_PATHS)]
+    spec = FeatureSpec(
+        bigram_vocab=["a/a + b/b", *pruned],
+        feature_names=["bigrams:a/a + b/b"],
+        total_features=1,
+    )
+    pruned_paths = [p for bi in pruned for p in bi.split(" + ")]
+    report = _paths_report(["a/a", "b/b", *pruned_paths])
+    assert extract(report, spec)[0] == 1.0
+
+
+def test_ram_headroom_honours_the_nightly_ceiling(tmp_path, monkeypatch) -> None:
+    from collimator import features
+
+    _meminfo_reader(tmp_path, monkeypatch, avail_gb=240)
+    monkeypatch.delenv("COLLIMATOR_MEM_CEILING_GB", raising=False)
+    assert features.ram_headroom_gb(32) == pytest.approx(208)  # host-bound
+
+    # The nightly may hold at most 192 GB; 150 GB already held leaves 42.
+    monkeypatch.setenv("COLLIMATOR_MEM_CEILING_GB", "192")
+    monkeypatch.setattr(features, "_cgroup_anon_gb", lambda: 150.0)
+    assert features.ram_headroom_gb(32) == pytest.approx(42)
+    monkeypatch.setattr(features, "_cgroup_anon_gb", lambda: 200.0)
+    assert features.ram_headroom_gb(32) == 0  # over the ceiling: nothing more
+
+    # An unreadable cgroup or a bad value falls back to the host bound.
+    def unreadable() -> float:
+        raise OSError("no cgroup v2")
+
+    monkeypatch.setattr(features, "_cgroup_anon_gb", unreadable)
+    assert features.ram_headroom_gb(32) == pytest.approx(208)
+    monkeypatch.setenv("COLLIMATOR_MEM_CEILING_GB", "lots")
+    assert features.ram_headroom_gb(32) == pytest.approx(208)

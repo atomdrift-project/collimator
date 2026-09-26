@@ -53,6 +53,11 @@ WorkingDirectory=$COLLIMATOR_DIR
 ExecStart=$NIGHTLY train
 # Multi-hour job — do not time it out at the default 90s.
 TimeoutStartSec=0
+# systemd's default (stop) ends the whole run when any process in it is
+# OOM-killed. With continue, the killed step fails (a specialist route, say)
+# and the pipeline decides what that means. OOM priority and the memory
+# ceiling are set by nightly.sh: a --user unit can't lower its own score.
+OOMPolicy=continue
 EOF
 
 # No [Install] section and no timer: the train starts this unit when it
