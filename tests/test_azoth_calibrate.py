@@ -474,3 +474,24 @@ def test_sha_bucket_matches_partition_of_and_tolerates_missing_hashes() -> None:
     # treats a NULL canonical_sha256).
     for missing in ("", None, "x"):
         assert _mod._sha_bucket(missing) == 255
+
+
+def test_fetch_file_types_returns_canonical_types_for_requested_rows(tmp_path) -> None:
+    import sqlite3
+
+    db = tmp_path / "samples.db"
+    conn = sqlite3.connect(db)
+    conn.execute(
+        "CREATE TABLE samples (id INTEGER PRIMARY KEY, label TEXT, cleave_result TEXT, "
+        "skip TEXT, file_type TEXT)"
+    )
+    conn.executemany(
+        "INSERT INTO samples VALUES (?, ?, '{}', '', ?)",
+        [(1, "bad", "tar.gz"), (2, "good", ""), (3, "good", "elf"), (4, "bad", "pe")],
+    )
+    conn.commit()
+    conn.close()
+
+    types = _mod._fetch_file_types(db, np.array([1, 2, 3]))
+    assert types == {1: "tar", 2: "unknown", 3: "elf"}  # row 4 wasn't asked for
+    assert _mod._fetch_file_types(db, np.array([], dtype=np.int64)) == {}

@@ -29,10 +29,6 @@ LOG = logging.getLogger("azoth_calibrate_ensemble")
 _POPCOUNT8 = np.asarray([int(i).bit_count() for i in range(256)], dtype=np.uint8)
 
 
-def _chunks(values: list[int], size: int) -> list[list[int]]:
-    return [values[i : i + size] for i in range(0, len(values), size)]
-
-
 def _file_sha256(path: Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -239,34 +235,15 @@ def _fetch_file_types(db_path: Path | str, row_ids: np.ndarray) -> dict[int, str
     table. Every downstream consumer (route discovery, specialist training,
     per-filetype metrics, scan route lookup) inherits the canonical form, so
     old and new spellings of one type train a single specialist named the way
-    scan receives it from filefacts at runtime."""
-    ids = [int(row_id) for row_id in row_ids]
-    out: dict[int, str] = {}
-    with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
-        if data._is_pg(db_path):  # noqa: SLF001
-            with conn.cursor() as cur:
-                for chunk in _chunks(ids, 10_000):
-                    cur.execute(
-                        "SELECT id, COALESCE(NULLIF(file_type, ''), 'unknown') "
-                        "FROM samples WHERE id = ANY(%s)",
-                        [chunk],
-                    )
-                    out.update({
-                        int(row_id): data.route_filetype(file_type)
-                        for row_id, file_type in cur
-                    })
-        else:
-            for chunk in _chunks(ids, 10_000):
-                placeholders = ",".join("?" for _ in chunk)
-                query = (
-                    "SELECT id, COALESCE(NULLIF(file_type, ''), 'unknown') "
-                    f"FROM samples WHERE id IN ({placeholders})"
-                )
-                out.update({
-                    int(row_id): data.route_filetype(file_type)
-                    for row_id, file_type in conn.execute(query, chunk)
-                })
-    return out
+    scan receives it from filefacts at runtime.
+
+    One scan (data.fetch_file_types), not ~2,000 id-list lookups: the
+    lookups took an hour of stage 7.
+    """
+    return {
+        row_id: data.route_filetype(file_type)
+        for row_id, file_type in data.fetch_file_types(db_path, row_ids.tolist()).items()
+    }
 
 
 def _fetch_rows(

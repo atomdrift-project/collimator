@@ -83,3 +83,19 @@ def test_no_blends_no_errors():
         {"level": 3, "hostile": {"best": {"thresholds": {"general": 0.9}}}}
     ]}}}
     assert _blend_errors(policy) == []
+
+
+def test_trait_path_depth_must_match_scan(tmp_path):
+    _trait_path_depth_errors = _mod._trait_path_depth_errors
+    route_dir = tmp_path / "filetypes" / "crx"
+    route_dir.mkdir(parents=True)
+    spec_path = route_dir / "feature_spec.json"
+
+    # Specs that predate the field were built at scan's depth.
+    spec_path.write_text('{"feature_names": []}')
+    assert _trait_path_depth_errors(tmp_path, "filetypes/crx") == []
+
+    spec_path.write_text('{"feature_names": [], "trait_path_depth": 5}')
+    assert _trait_path_depth_errors(tmp_path, "filetypes/crx") == [
+        "filetypes/crx: trait_path_depth=5 but scan serves depth 3"
+    ]

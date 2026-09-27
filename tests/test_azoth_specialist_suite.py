@@ -255,3 +255,28 @@ def test_fit_mem_file_round_trips_and_tolerates_garbage(tmp_path) -> None:
     for garbage in ("not json", "[1, 2]", '{"pe": null}'):
         path.write_text(garbage)
         assert suite._load_fit_mem(path) == {}
+
+
+def test_tree_rss_counts_the_fit_and_its_workers() -> None:
+    import os
+    import subprocess
+    import sys
+
+    def rss_kb(pid: int) -> int:
+        with open(f"/proc/{pid}/status") as status:
+            return next(int(line.split()[1]) for line in status if line.startswith("VmRSS:"))
+
+    worker = subprocess.Popen(
+        [sys.executable, "-c", "import time; b = bytearray(64 << 20); time.sleep(10)"],
+    )
+    try:
+        for _ in range(50):  # wait for the worker to allocate
+            if rss_kb(worker.pid) > 60 << 10:
+                break
+            __import__("time").sleep(0.1)
+        total = suite._tree_rss_kb(os.getpid())
+        assert total >= rss_kb(os.getpid()) + (60 << 10)
+    finally:
+        worker.kill()
+        worker.wait()
+    assert suite._tree_rss_kb(worker.pid) == 0  # gone: counts nothing

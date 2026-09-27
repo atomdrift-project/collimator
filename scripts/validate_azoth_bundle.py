@@ -17,6 +17,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from collimator import bundle, export  # noqa: E402  — late import after sys.path patch
+from collimator.features import DEFAULT_TRAIT_PATH_DEPTH  # noqa: E402
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -69,6 +70,18 @@ def _ensemble_feature_count_errors(root: Path, route: str) -> list[str]:
         return []
     detail = ", ".join(f"{p.name}={n}" for p, n in sorted(counts.items()))
     return [f"{route}: ensemble members disagree on feature count ({detail})"]
+
+
+def _trait_path_depth_errors(root: Path, route: str) -> list[str]:
+    """Scan's finding_paths serves DEFAULT_TRAIT_PATH_DEPTH levels. A spec built
+    at another depth has path-prefix vocab entries scan never emits (or emits
+    differently), which passes the layout gate but silently skews every
+    presence/ghost/tiered feature in production."""
+    with open(_route_path(root, route) / "feature_spec.json") as f:
+        depth = json.load(f).get("trait_path_depth", DEFAULT_TRAIT_PATH_DEPTH)
+    if depth == DEFAULT_TRAIT_PATH_DEPTH:
+        return []
+    return [f"{route}: trait_path_depth={depth} but scan serves depth {DEFAULT_TRAIT_PATH_DEPTH}"]
 
 
 def _policy_routes(policy: dict[str, Any]) -> set[str]:
@@ -182,6 +195,7 @@ def validate(root: Path) -> list[str]:
             errors.append(f"{route}: referenced but missing model file or feature_spec.json")
         else:
             errors.extend(_ensemble_feature_count_errors(root, route))
+            errors.extend(_trait_path_depth_errors(root, route))
             # Degenerate routes must never ship: they carry no signal and
             # (being .txt-only constant predictors) can't even export to ONNX.
             # Calibration drops them upstream; this is the hard deploy gate.

@@ -7,6 +7,7 @@ import json
 import logging
 import math
 import os
+import sqlite3
 import time
 from datetime import datetime
 from dataclasses import dataclass
@@ -717,17 +718,16 @@ def recall_at_per_100M(
 def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndarray:
     """Load primary file types for a set of row IDs.
 
-    Uses the lightweight ``file_type`` column when available (Postgres),
-    falling back to parsing cleave_result JSON (SQLite/demo DBs).
+    Reads the ``file_type`` column in one scan (data.fetch_file_types),
+    falling back to parsing cleave_result JSON on SQLite/demo DBs without it.
     """
-    file_types_by_row: dict[int, str] = {}
-    chunk_size = 5000
-    for start in range(0, len(row_ids), chunk_size):
-        chunk = row_ids[start : start + chunk_size]
-        try:
-            file_types_by_row.update(_fetch_file_types_lightweight(db_path, chunk))
-        except Exception:
-            # Fallback: parse from cleave_result JSON (slower, for SQLite).
+    try:
+        file_types_by_row = data.fetch_file_types(db_path, row_ids)
+    except sqlite3.OperationalError:
+        # No file_type column (SQLite/demo DBs): parse it from cleave_result.
+        file_types_by_row = {}
+        for start in range(0, len(row_ids), 5000):
+            chunk = row_ids[start : start + 5000]
             for row_id, item in data.fetch_cleave_results(db_path, chunk).items():
                 file_type = "unknown"
                 try:
@@ -746,27 +746,6 @@ def _load_primary_file_types(db_path: Path | str, row_ids: list[int]) -> np.ndar
         ],
         dtype=object,
     )
-
-
-def _fetch_file_types_lightweight(
-    db_path: Path | str, ids: list[int],
-) -> dict[int, str]:
-    """Fetch file_type column directly — no JSON parsing needed."""
-    if not ids:
-        return {}
-    with data._connect(db_path) as conn:
-        if data._is_pg(db_path):
-            with conn.cursor() as cur:
-                cur.execute("SELECT id, file_type FROM samples WHERE id = ANY(%s)", [ids])
-                return {int(rid): (ft or "unknown") for rid, ft in cur}
-        else:
-            placeholders = ",".join("?" for _ in ids)
-            return {
-                int(rid): (ft or "unknown")
-                for rid, ft in conn.execute(
-                    f"SELECT id, file_type FROM samples WHERE id IN ({placeholders})", ids  # noqa: S608
-                )
-            }
 
 
 def run_experiment(

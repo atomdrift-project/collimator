@@ -44,12 +44,15 @@ def _score_partition(
     db_path: str,
     model_path: Path,
     spec_path: Path,
+    rows: list[tuple[int, str, str, int, int, str]],
     *,
     oof_fold: int | None,
     workers: int,
-    max_id: int,
 ) -> dict[str, Any]:
-    """Score the model on rows whose oof_fold_of(canonical) == oof_fold.
+    """Score the model on the ``rows`` whose oof_fold_of(canonical) == oof_fold.
+
+    ``rows`` is data.stream_labeled_metadata_full's output, read once per run
+    and shared by every partition.
 
     Returns a dict with row_ids, sha256, paths, scores, labels, probs,
     canonical_shas — the same shape ``thresholds_refresh`` writes for the
@@ -67,12 +70,6 @@ def _score_partition(
     LOG.info("scoring %s on %s", model_path, label)
     spec = features.FeatureSpec.load(spec_path)
     model = load_model(model_path)
-    rows = list(
-        data.stream_labeled_metadata_full(
-            db_path,
-            max_id=max_id,
-        ),
-    )
     # Filter to rows in this OOF fold (or test partition when fold is None).
     kept_rows = []
     for row in rows:
@@ -234,14 +231,14 @@ def main() -> int:
     )
 
     # Score fold A on rows where oof_fold == 0 (held out from A's training).
+    rows = list(data.stream_labeled_metadata_full(args.db, max_id=args.max_id))
+    LOG.info("read %d labeled rows (max_id=%d)", len(rows), args.max_id)
     part_a = _score_partition(
-        args.db, fold_a_model, fold_a_spec,
-        oof_fold=0, workers=args.workers, max_id=args.max_id,
+        args.db, fold_a_model, fold_a_spec, rows, oof_fold=0, workers=args.workers,
     )
     # Score fold B on rows where oof_fold == 1.
     part_b = _score_partition(
-        args.db, fold_b_model, fold_b_spec,
-        oof_fold=1, workers=args.workers, max_id=args.max_id,
+        args.db, fold_b_model, fold_b_spec, rows, oof_fold=1, workers=args.workers,
     )
     parts = [part_a, part_b]
 
@@ -252,8 +249,7 @@ def main() -> int:
     if args.prod_bundle is not None:
         prod_model, prod_spec = _model_and_spec(args.prod_bundle / "general")
         part_test = _score_partition(
-            args.db, prod_model, prod_spec,
-            oof_fold=None, workers=args.workers, max_id=args.max_id,
+            args.db, prod_model, prod_spec, rows, oof_fold=None, workers=args.workers,
         )
         parts.append(part_test)
     else:

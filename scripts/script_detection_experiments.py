@@ -22,7 +22,14 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, f1_score, precision_score, recall_score, roc_auc_score
 
 from collimator import data
-from collimator.features import MIN_CONFIDENCE, _coerce_report, _finding_paths, _float, report_files  # noqa: PLC2701
+from collimator.features import (  # noqa: PLC2701
+    DEFAULT_TRAIT_PATH_DEPTH,
+    MIN_CONFIDENCE,
+    _coerce_report,
+    _finding_paths,
+    _float,
+    report_files,
+)
 
 LOG = logging.getLogger("script_detection_experiments")
 
@@ -170,7 +177,7 @@ def _finding_tokens(report: dict[str, Any], mode: FeatureMode) -> list[str]:
             if not _passes_filter(crit, mode.crit_filter):
                 continue
             prefix = f"{CRIT_PREFIX.get(crit, 'n')}:" if mode.tiered else ""
-            for path in _finding_paths(fid):
+            for path in _finding_paths(fid, DEFAULT_TRAIT_PATH_DEPTH):
                 tokens.append(prefix + _truncate(path, mode.depth))
     if mode.sequence:
         return tokens

@@ -31,7 +31,14 @@ import scipy.sparse as sp
 from sklearn.metrics import average_precision_score, f1_score, precision_score, recall_score, roc_auc_score
 
 from collimator import data
-from collimator.features import MIN_CONFIDENCE, _coerce_report, _finding_paths, _float, report_files  # noqa: PLC2701
+from collimator.features import (  # noqa: PLC2701
+    DEFAULT_TRAIT_PATH_DEPTH,
+    MIN_CONFIDENCE,
+    _coerce_report,
+    _finding_paths,
+    _float,
+    report_files,
+)
 from collimator.model import create_classifier, predict_proba
 
 LOG = logging.getLogger("ngram_pool_sweep")
@@ -188,7 +195,7 @@ def _tokens(report: dict[str, Any], *, depth: int, crit_filter: str, severity_pr
             crit = int(finding.get("l", 0) or 0)
             if not _passes_filter(crit, crit_filter):
                 continue
-            for path in _finding_paths(fid):
+            for path in _finding_paths(fid, DEFAULT_TRAIT_PATH_DEPTH):
                 p = _truncate_path(path, depth)
                 toks.add(f"{_tier(crit)}:{p}" if severity_prefix else p)
     return sorted(toks)

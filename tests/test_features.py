@@ -132,7 +132,7 @@ def _reports_with_finding(finding_id: str, crit: str, n: int = 35) -> list[dict]
 # ---------------------------------------------------------------------------
 
 def test_finding_paths_deep() -> None:
-    paths = _finding_paths("objectives/evasion/process/injection::technique-x")
+    paths = _finding_paths("objectives/evasion/process/injection::technique-x", 3)
     assert paths == (
         "objectives",
         "objectives/evasion",
@@ -141,13 +141,22 @@ def test_finding_paths_deep() -> None:
 
 
 def test_finding_paths_two_levels() -> None:
-    paths = _finding_paths("metadata/format::no-functions")
+    paths = _finding_paths("metadata/format::no-functions", 3)
     assert paths == ("metadata", "metadata/format")
 
 
 def test_finding_paths_single() -> None:
-    paths = _finding_paths("standalone")
+    paths = _finding_paths("standalone", 3)
     assert paths == ("standalone",)
+
+
+def test_finding_paths_respects_depth() -> None:
+    fid = "objectives/evasion/process/injection/hollowing::technique-x"
+    assert _finding_paths(fid, 5)[-2:] == (
+        "objectives/evasion/process/injection",
+        "objectives/evasion/process/injection/hollowing",
+    )
+    assert _finding_paths(fid, 1) == ("objectives",)
 
 
 def test_primary_file_returns_first() -> None:
@@ -526,6 +535,27 @@ def test_build_vocab_uses_configured_top_k_risk_files(monkeypatch) -> None:
 
     assert "agg:top3_file_suspicious_ratio_sum" in spec.feature_names
     assert "agg:top1_file_suspicious_ratio_sum" not in spec.feature_names
+
+
+def test_build_vocab_uses_configured_trait_path_depth(monkeypatch, tmp_path) -> None:
+    deep = "objectives/evasion/process/injection/hollowing"
+    reports = _reports_with_finding(deep, "hostile", n=35)
+    feature_config_from_env.cache_clear()
+    assert "objectives/evasion/process/injection" not in build_vocab(reports).presence_vocab
+
+    monkeypatch.setenv("COLLIMATOR_TRAIT_PATH_DEPTH", "5")
+    feature_config_from_env.cache_clear()
+    try:
+        spec = build_vocab(reports)
+        vec = extract(reports[0], spec)
+    finally:
+        feature_config_from_env.cache_clear()
+
+    assert deep in spec.presence_vocab
+    assert vec[spec.feature_names.index(f"present:{deep}")] == 1.0
+    path = tmp_path / "spec.json"
+    spec.save(path)
+    assert FeatureSpec.load(path).trait_path_depth == 5
 
 
 def test_extract_struct_file_risk_coverage(monkeypatch) -> None:
@@ -1488,7 +1518,7 @@ def test_batch3_tiered_quadgram_extraction(monkeypatch) -> None:
     # build path) and inject it into the spec for extraction.
     from collimator.features import _summarize_report_files, _tiered_bigram_tokens, _quadgram_tokens
     summary = _summarize_report_files(report["fs"])
-    tokens = _tiered_bigram_tokens(summary.sample_paths, depth=3, min_crit=3)
+    tokens = _tiered_bigram_tokens(summary.sample_paths, min_crit=3)
     expected_quads = list(_quadgram_tokens(tokens))
     assert len(expected_quads) >= 1, f"expected at least one quadgram from {len(tokens)} tokens"
 
@@ -1554,18 +1584,18 @@ def test_batch4_branch_min_crit_overrides_tiered_tokens() -> None:
         "metadata/format": 3,       # notable
         "metadata/binary": 4,       # suspicious
     }
-    base = _tiered_bigram_tokens(sample_paths, depth=2, min_crit=3)
+    base = _tiered_bigram_tokens(sample_paths, min_crit=3)
     assert sorted(base) == ["h:objectives/c2", "n:metadata/format", "s:metadata/binary"]
 
     # Lift metadata floor to 5 — only the hostile objectives token survives.
     raised = _tiered_bigram_tokens(
-        sample_paths, depth=2, min_crit=3, branch_min_crit={"metadata": 5},
+        sample_paths, min_crit=3, branch_min_crit={"metadata": 5},
     )
     assert raised == ["h:objectives/c2"]
 
     # Lower objectives floor to 0; metadata stays at default of 3.
     lowered = _tiered_bigram_tokens(
-        sample_paths, depth=2, min_crit=3, branch_min_crit={"objectives": 0},
+        sample_paths, min_crit=3, branch_min_crit={"objectives": 0},
     )
     assert sorted(lowered) == ["h:objectives/c2", "n:metadata/format", "s:metadata/binary"]
 

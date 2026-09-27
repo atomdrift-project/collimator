@@ -38,7 +38,7 @@
 #
 # Env overrides: NIGHTLY_EXPERIMENTS (default 1), NIGHTLY_PASSES (default 0 =
 # loop until preempted), NIGHTLY_ALLOW_REGRESSION=1 (bypass the deploy
-# regression gate), NIGHTLY_WORKERS (default 24; caps the retrain's DB-fetch
+# regression gate), NIGHTLY_WORKERS (default 48 train / 24 sweep; caps DB-fetch
 # parallelism — see the WORKERS export below), NIGHTLY_MEM_CEILING_GB (default
 # 192; most RAM the run may hold), NIGHTLY_OOM_SCORE_ADJ (default -200).
 set -uo pipefail
@@ -129,14 +129,17 @@ make azoth-prune-feature-cache || echo "nightly($mode): feature-cache prune fail
 # default of nproc. Applies to the sweep too — `make autocollie` threads
 # WORKERS into its per-experiment --make-args.
 #
-# This is a HOST-WIDE budget, not a per-training one. Since 2026-08-07 the
-# train runs two chains concurrently (scripts/azoth_oof_pipeline.sh) and that
-# script halves this number per chain, so the box still sees ~24 concurrent
-# fetch workers in total — the same operating point the value was tuned at.
-# Raising it therefore raises host-wide fetch memory; check the MemAvailable
-# low-water mark the pipeline now prints (out/pipeline-mem.log) before doing so.
-if [ -n "${NIGHTLY_WORKERS-24}" ]; then
-  export WORKERS="${NIGHTLY_WORKERS-24}"
+# This is a HOST-WIDE budget, not a per-training one: the train runs two
+# chains concurrently (scripts/azoth_oof_pipeline.sh), which halves it per
+# chain. The train defaults to 48 (24 per chain): on 2026-09-26 its fits sat
+# waiting on ~2.5 DB fetches at a time with ~7 of 128 cores busy and 120 GB
+# free. 24 per chain is also where pass 1's single merging process saturates,
+# and 48 plus hopper stays under postgres's 100 connections. The sweep runs
+# one experiment at a time, so it keeps 24. The mem-aware worker clamp still
+# lowers either when RAM is short.
+default_workers=$([ "$mode" = train ] && echo 48 || echo 24)
+if [ -n "${NIGHTLY_WORKERS-$default_workers}" ]; then
+  export WORKERS="${NIGHTLY_WORKERS-$default_workers}"
   echo "nightly($mode): capping WORKERS=$WORKERS (DB-fetch parallelism)"
 fi
 

@@ -29,7 +29,7 @@ import os
 import random
 import sqlite3
 import time
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -395,6 +395,20 @@ def _execute(conn, query: str, params=None):
             yield from cur
 
 
+def _read_table_in_order(conn: Any) -> None:
+    """Make this transaction scan ``samples`` sequentially (Postgres only).
+
+    For a query over the whole labeled corpus the planner picks
+    idx_samples_labeled_route, then fetches ~30M rows from the heap at
+    random: 11-16+ min (2026-09-27), and worse as dead tuples pile up. Reading
+    the table in order takes ~4 min, sort included. SET LOCAL lasts only for
+    the current transaction.
+    """
+    if not isinstance(conn, sqlite3.Connection):
+        for setting in ("enable_indexscan", "enable_indexonlyscan", "enable_bitmapscan"):
+            conn.execute(f"SET LOCAL {setting} = off")
+
+
 def _cleave_value(raw):
     """Return the raw cleave_result as-is for downstream pass-through.
 
@@ -530,6 +544,30 @@ except ValueError:
 # Secondary by-id lookups that merely enrich already-selected rows trust that
 # upstream selection and need not repeat it.
 LABELED_WHERE = "label IN ('bad', 'good') AND cleave_result IS NOT NULL AND skip = ''"
+
+
+def fetch_file_types(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, str]:
+    """Return {row_id: stored file_type or "unknown"} for labeled ``row_ids``.
+
+    One sequential scan over the labeled rows, keeping the requested ids:
+    ~4 min for any number of rows, where batched ``id = ANY(...)`` lookups
+    took 15-60 min for the nightly's 7-20M rows, and the planner's index-only
+    scan, with a stale visibility map, 16 min.
+    """
+    wanted = {int(row_id) for row_id in row_ids}
+    if not wanted:
+        return {}
+    query = (
+        "SELECT id, COALESCE(NULLIF(file_type, ''), 'unknown') FROM samples"
+        f" WHERE {LABELED_WHERE} AND id <= {max(wanted)}"
+    )
+    with _connect(db_path, repeatable_read=True) as conn:
+        _read_table_in_order(conn)
+        return {
+            int(row_id): file_type
+            for row_id, file_type in _execute(conn, query)
+            if int(row_id) in wanted
+        }
 
 
 def snapshot_max_id(db_path: Path | str) -> int:
@@ -731,6 +769,7 @@ def stream_labeled_metadata_full(
         if limit > 0:
             query += f" LIMIT {int(limit)}"
 
+        _read_table_in_order(conn)
         for row_id, sha256, path, label, score, canonical in _execute(conn, query, params):
             split_key = canonical or sha256
             if partition is not None and partition_of(split_key) != partition:
@@ -937,6 +976,8 @@ def stream_partitioned_metadata_grouped(
     if limit > 0:
         query += f" LIMIT {limit}"
     with _connect(db_path, repeatable_read=True) as conn:
+        if not file_types:  # a route's few rows: the (file_type, id) index is right
+            _read_table_in_order(conn)
         for row_id, sha256, label, canonical, score in _execute(conn, query, params):
             split_key = canonical or sha256
             yield (

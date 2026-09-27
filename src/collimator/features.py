@@ -117,6 +117,10 @@ LabeledMetadata = tuple[int, str, str, int, int] | tuple[int, str, str, int, int
 # Minimum number of samples a path must appear in to get a feature.
 MIN_PATH_FREQ = 5
 
+# Default trait hierarchy levels the path-prefix families see. Scan's
+# finding_paths serves exactly this many; see FeatureConfig.trait_path_depth.
+DEFAULT_TRAIT_PATH_DEPTH = 3
+
 
 # Minimum confidence for a finding to be included in feature extraction.
 # Low-confidence findings add noise without meaningful signal.
@@ -456,11 +460,13 @@ def _parse_branch_min_crit_overrides(items: tuple[str, ...]) -> dict[str, int]:
 def _tiered_bigram_tokens(
     sample_paths: dict[str, int],
     *,
-    depth: int,
     min_crit: int,
     branch_min_crit: dict[str, int] | None = None,
 ) -> list[str]:
     """Generate severity-prefixed report-level path tokens for tiered bigrams.
+
+    `sample_paths` already holds each finding's prefixes up to
+    trait_path_depth, so every qualifying prefix becomes one token.
 
     When `branch_min_crit` is supplied, the per-branch floor (matched against
     the path's top-level component) overrides the global `min_crit`. Branches
@@ -468,17 +474,14 @@ def _tiered_bigram_tokens(
     on noisy branches (e.g. `metadata=4`) and looser on signal-dense ones
     (e.g. `objectives=2`).
     """
-    token_max_crit: dict[str, int] = {}
     branch_min_crit = branch_min_crit or {}
+    tokens: list[str] = []
     for path, max_ord in sample_paths.items():
-        branch = path.split("/", 1)[0]
-        floor = branch_min_crit.get(branch, min_crit)
-        if max_ord < floor:
-            continue
-        key = _truncate_path(path, depth)
-        if max_ord > token_max_crit.get(key, 0):
-            token_max_crit[key] = max_ord
-    return sorted(f"{_CRIT_PREFIX.get(crit, 'n')}:{path}" for path, crit in token_max_crit.items())
+        floor = branch_min_crit.get(path.split("/", 1)[0], min_crit)
+        # Filtered (crit 0) paths never form tokens, even under a 0 floor.
+        if max_ord > 0 and max_ord >= floor:
+            tokens.append(f"{_CRIT_PREFIX.get(max_ord, 'n')}:{path}")
+    return sorted(tokens)
 
 
 def _quadgram_tokens(tokens: list[str]) -> "Iterator[str]":
@@ -620,17 +623,19 @@ class FeatureConfig:
     # Builds bigram/trigram vocabs from T-codes and MBC B-codes
     # discovered in training data.
     include_attack_code_ngrams: bool
+    # How many levels of a trait path (`objectives/evasion/process/...`) the
+    # path-prefix families see: presence, ghosts, taxonomy aggregates, and the
+    # tiered n-grams. Each finding contributes its 1..depth prefixes.
+    trait_path_depth: int
     # Report-level severity-prefixed trait bigrams from notable+ paths.
     # This is intentionally separate from generic per-file bigrams so it can
-    # be ablated independently. Default production setting is depth=3,
-    # min_crit=3, matching the scripts-pool sweep winner.
+    # be ablated independently. Default production setting is min_crit=3,
+    # matching the scripts-pool sweep winner.
     include_tiered_crit_bigrams: bool
-    tiered_bigram_path_depth: int
     tiered_bigram_min_crit: int
     tiered_bigram_max: int
     tiered_bigram_min_freq: int
     include_tiered_crit_trigrams: bool
-    tiered_trigram_path_depth: int
     tiered_trigram_min_crit: int
     tiered_trigram_max: int
     tiered_trigram_min_freq: int
@@ -676,7 +681,6 @@ class FeatureConfig:
     # so the per-token cap stays the same (512) but autocollie should
     # only enable this on routes where the trigram knob already won.
     include_tiered_crit_quadgrams: bool
-    tiered_quadgram_path_depth: int
     tiered_quadgram_min_crit: int
     tiered_quadgram_max: int
     tiered_quadgram_min_freq: int
@@ -809,17 +813,18 @@ def feature_config_from_env() -> FeatureConfig:
         include_attack_code_ngrams=os.getenv("COLLIMATOR_ATTACK_CODE_NGRAMS") in {
             "1", "true", "yes", "on",
         },
+        trait_path_depth=max(
+            int(os.getenv("COLLIMATOR_TRAIT_PATH_DEPTH", str(DEFAULT_TRAIT_PATH_DEPTH))), 1,
+        ),
         include_tiered_crit_bigrams=os.getenv("COLLIMATOR_TIERED_CRIT_BIGRAMS") in {
             "1", "true", "yes", "on",
         },
-        tiered_bigram_path_depth=int(os.getenv("COLLIMATOR_TIERED_BIGRAM_PATH_DEPTH", "3")),
         tiered_bigram_min_crit=int(os.getenv("COLLIMATOR_TIERED_BIGRAM_MIN_CRIT", "3")),
         tiered_bigram_max=int(os.getenv("COLLIMATOR_TIERED_BIGRAM_MAX", "5000")),
         tiered_bigram_min_freq=int(os.getenv("COLLIMATOR_TIERED_BIGRAM_MIN_FREQ", "5")),
         include_tiered_crit_trigrams=os.getenv("COLLIMATOR_TIERED_CRIT_TRIGRAMS") in {
             "1", "true", "yes", "on",
         },
-        tiered_trigram_path_depth=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_PATH_DEPTH", "3")),
         tiered_trigram_min_crit=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MIN_CRIT", "3")),
         tiered_trigram_max=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MAX", "5000")),
         tiered_trigram_min_freq=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MIN_FREQ", "5")),
@@ -879,7 +884,6 @@ def feature_config_from_env() -> FeatureConfig:
         include_tiered_crit_quadgrams=os.getenv("COLLIMATOR_TIERED_CRIT_QUADGRAMS") in {
             "1", "true", "yes", "on",
         },
-        tiered_quadgram_path_depth=int(os.getenv("COLLIMATOR_TIERED_QUADGRAM_PATH_DEPTH", "3")),
         tiered_quadgram_min_crit=int(os.getenv("COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT", "3")),
         tiered_quadgram_max=int(os.getenv("COLLIMATOR_TIERED_QUADGRAM_MAX", "5000")),
         tiered_quadgram_min_freq=int(os.getenv("COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ", "5")),
@@ -1204,9 +1208,10 @@ def _char_entropy(value: str) -> float:
 
 
 @lru_cache(maxsize=32768)
-def _finding_paths(finding_id: str) -> tuple[str, ...]:
-    """Extract hierarchical path prefixes (1, 2, 3 levels) from a finding ID.
+def _finding_paths(finding_id: str, depth: int) -> tuple[str, ...]:
+    """Extract hierarchical path prefixes (1..depth levels) from a finding ID.
 
+    At depth=3:
     "objectives/evasion/process/injection::technique-x"
         -> ("objectives", "objectives/evasion", "objectives/evasion/process")
     "metadata/format::no-functions"
@@ -1217,7 +1222,7 @@ def _finding_paths(finding_id: str) -> tuple[str, ...]:
     """
     base = finding_id.split("::")[0] if "::" in finding_id else finding_id
     parts = base.split("/")
-    return tuple("/".join(parts[:d]) for d in range(1, min(len(parts), 3) + 1))
+    return tuple("/".join(parts[:d]) for d in range(1, min(len(parts), depth) + 1))
 
 
 # ---------------------------------------------------------------------------
@@ -1273,6 +1278,10 @@ class FeatureSpec:
     # Whether the model was trained on standardized features. When False,
     # inference should use raw features directly (no z-score transform).
     standardized: bool = False
+    # Trait hierarchy levels the path-prefix vocabs were built at. Scan still
+    # serves DEFAULT_TRAIT_PATH_DEPTH, so any other value is research-only
+    # until scan reads this field.
+    trait_path_depth: int = DEFAULT_TRAIT_PATH_DEPTH
 
     def _litmus_offset_vocabs(self) -> tuple[list[str], list[str], list[str]]:
         """Return the presence/bigram/trigram vocabs litmus reconstructs the
@@ -1339,6 +1348,7 @@ class FeatureSpec:
             "symbol_trigram_vocab": self.symbol_trigram_vocab,
             "kv_vocab": self.kv_vocab,
             "mbc_id_vocab": self.mbc_id_vocab,
+            "trait_path_depth": self.trait_path_depth,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -1395,6 +1405,7 @@ class FeatureSpec:
             feature_means=data.get("feature_means"),
             feature_stds=data.get("feature_stds"),
             standardized=data.get("standardized", True),
+            trait_path_depth=data.get("trait_path_depth", DEFAULT_TRAIT_PATH_DEPTH),
         )
 
 
@@ -1978,6 +1989,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         trigram_vocab=trigram_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
+        trait_path_depth=feature_config_from_env().trait_path_depth,
     )
     return spec
 
@@ -2211,10 +2223,12 @@ def _merge_metric_values(files: list[dict[str, Any]]) -> dict[str, dict[str, flo
 def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     """Collect reusable per-report finding statistics."""
     # Hoist hot lookups into locals: dot-attribute and global-name lookups
-    # are slow in a tight loop. include_soft_presence is also read once
-    # (it's a config snapshot, not a per-finding switch) so we can branch
-    # outside the inner loop.
-    include_soft_presence = feature_config_from_env().include_soft_presence
+    # are slow in a tight loop. include_soft_presence and trait_path_depth are
+    # also read once (config snapshots, not per-finding switches) so we can
+    # branch outside the inner loop.
+    config = feature_config_from_env()
+    include_soft_presence = config.include_soft_presence
+    path_depth = config.trait_path_depth
     min_conf = MIN_CONFIDENCE
     finding_paths = _finding_paths
     sample_paths: dict[str, int] = {}
@@ -2282,7 +2296,7 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
             elif crit_ord >= 4:
                 well_known_suspicious += 1
 
-        paths = finding_paths(fid)
+        paths = finding_paths(fid, path_depth)
         if include_soft_presence:
             for path in paths:
                 if crit_ord > sample_paths.get(path, -1):
@@ -3563,18 +3577,6 @@ def _apply_neg_space_features(
             _assign(vec, ctx.absolute_lookup.get(f"missing:{ftype}*{trait}"), val)
 
 
-def _truncate_path(base: str, depth: int) -> str:
-    """Truncate a finding path to at most `depth` directory segments.
-
-    If depth <= 0, returns the full base path (no truncation).
-    "objectives/supply-chain/hidden-payload/staging" at depth=2 → "objectives/supply-chain"
-    """
-    if depth <= 0:
-        return base
-    parts = base.split("/")
-    return "/".join(parts[:depth])
-
-
 # The n-gram contract with scan, which computes these features at serving time
 # (~/scan src/features.rs: unique_3level_paths and
 # write_{bigram,trigram}_features_optimized). Change both sides together.
@@ -3650,7 +3652,6 @@ def _apply_tiered_bigram_features(
     config = feature_config_from_env()
     tokens = _tiered_bigram_tokens(
         summary.sample_paths,
-        depth=config.tiered_bigram_path_depth,
         min_crit=config.tiered_bigram_min_crit,
         branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
     )
@@ -3674,7 +3675,6 @@ def _apply_tiered_trigram_features(
     config = feature_config_from_env()
     tokens = _tiered_bigram_tokens(
         summary.sample_paths,
-        depth=config.tiered_trigram_path_depth,
         min_crit=config.tiered_trigram_min_crit,
     )
     if len(tokens) > 512:
@@ -3703,7 +3703,6 @@ def _apply_tiered_quadgram_features(
     config = feature_config_from_env()
     tokens = _tiered_bigram_tokens(
         summary.sample_paths,
-        depth=config.tiered_quadgram_path_depth,
         min_crit=config.tiered_quadgram_min_crit,
     )
     if len(tokens) > 64:
@@ -4082,6 +4081,7 @@ def _vocab_batch_worker(
     items: list[dict[str, Any] | str],
 ) -> tuple[dict[str, int], list[str], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
     """Count path, element, bigram, and skeleton occurrences for a batch. CPU-only."""
+    path_depth = feature_config_from_env().trait_path_depth
     presence_counts: dict[str, int] = {}
     filetypes: list[str] = []
     element_counts: dict[str, int] = {}
@@ -4128,7 +4128,7 @@ def _vocab_batch_worker(
                     continue
                 crit_ord = finding_crit(finding) or 0
                 file_traits.add(fid)
-                for path in _finding_paths(fid):
+                for path in _finding_paths(fid, path_depth):
                     if crit_ord > sample_paths.get(path, -1):
                         sample_paths[path] = crit_ord
 
@@ -4975,6 +4975,7 @@ def _vocab_labeled_db_batch_worker(
     tiered_trigram_counts: dict[str, int] = {}
 
     benign_ids = {rid for rid, label in ids_labels if label == 0}
+    path_depth = feature_config_from_env().trait_path_depth
 
     for rid, item in reports_map.items():
         raw_report = item["cleave_result"]
@@ -5012,7 +5013,7 @@ def _vocab_labeled_db_batch_worker(
                     continue
                 crit_ord = finding_crit(finding) or 0
                 file_traits.add(fid)
-                for path in _finding_paths(fid):
+                for path in _finding_paths(fid, path_depth):
                     if crit_ord > sample_paths.get(path, -1):
                         sample_paths[path] = crit_ord
 
@@ -5054,7 +5055,6 @@ def _vocab_labeled_db_batch_worker(
         if config.include_tiered_crit_bigrams:
             tokens = _tiered_bigram_tokens(
                 sample_paths,
-                depth=config.tiered_bigram_path_depth,
                 min_crit=config.tiered_bigram_min_crit,
             )
             if len(tokens) <= 512:
@@ -5066,7 +5066,6 @@ def _vocab_labeled_db_batch_worker(
         if config.include_tiered_crit_trigrams:
             tokens = _tiered_bigram_tokens(
                 sample_paths,
-                depth=config.tiered_trigram_path_depth,
                 min_crit=config.tiered_trigram_min_crit,
             )
             if len(tokens) <= 512:
@@ -5339,7 +5338,7 @@ def build_vocab_from_db(
                         fid = finding_id(finding) or ""
                         if not fid or _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
                             continue
-                        for path in _finding_paths(fid):
+                        for path in _finding_paths(fid, config.trait_path_depth):
                             crit_ord = finding_crit(finding) or 0
                             if crit_ord > sp.get(path, -1):
                                 sp[path] = crit_ord
@@ -5495,7 +5494,6 @@ def build_vocab_from_db(
                 quad_summary = _summarize_report_files(report_files(report))
                 tokens = _tiered_bigram_tokens(
                     quad_summary.sample_paths,
-                    depth=config.tiered_quadgram_path_depth,
                     min_crit=config.tiered_quadgram_min_crit,
                 )
                 # Tighter cap than tiered_trigram (which uses 512) because
@@ -5549,6 +5547,7 @@ def build_vocab_from_db(
         mbc_id_vocab=mbc_id_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
+        trait_path_depth=config.trait_path_depth,
     )
     log.info(
         "vocab: %d paths, %d filetypes, %d elements, %d bigrams, %d ghosts, %d ext_metrics -> %d features",

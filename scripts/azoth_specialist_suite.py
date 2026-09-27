@@ -10,9 +10,9 @@ import json
 import logging
 import math
 import os
-import resource
 import shutil
 import sys
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import asdict, fields, replace
@@ -524,6 +524,8 @@ def _eligible_filetypes(
     # OOXML files to at scan time.
     grouped: dict[str, dict[str, Any]] = {}
     with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
+        # Whole corpus: 27 min through the index on 2026-09-26, ~4 in order.
+        data._read_table_in_order(conn)  # noqa: SLF001
         rows = data._execute(conn, query, params)  # noqa: SLF001
         for file_type, bad, good, total in rows:
             normalized = data.route_filetype(file_type)
@@ -1597,14 +1599,43 @@ def _train_target_worker(job: dict[str, Any]) -> dict[str, Any]:
 def _fit_in_own_process(job: dict[str, Any]) -> dict[str, Any]:
     """Pool entrypoint (max_tasks_per_child=1): one fit, plus its peak memory.
 
-    The peak is an upper bound for this process tree, valid because the
-    process ran only this fit: its own peak plus every extraction worker at
-    the largest child's peak. ru_maxrss is in KiB on Linux.
+    The peak is the largest RSS of this process and its descendants (the
+    extraction workers) summed, sampled every 2s for the life of the fit.
     """
-    payload = _train_target_worker(job)
-    own = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    child = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-    return {**payload, "peak_mem_gb": (own + job["workers"] * child) / 2**20}
+    peak_kb = 0
+    done = threading.Event()
+
+    def watch() -> None:
+        nonlocal peak_kb
+        while True:
+            peak_kb = max(peak_kb, _tree_rss_kb(os.getpid()))
+            if done.wait(2):
+                return
+
+    watcher = threading.Thread(target=watch, daemon=True)
+    watcher.start()
+    try:
+        payload = _train_target_worker(job)
+    finally:
+        done.set()
+        watcher.join()
+    return {**payload, "peak_mem_gb": peak_kb / 2**20}
+
+
+def _tree_rss_kb(pid: int) -> int:
+    """Summed RSS (KiB) of ``pid`` and all its descendants; vanished ones count 0."""
+    total, stack = 0, [pid]
+    while stack:
+        p = stack.pop()
+        try:
+            with open(f"/proc/{p}/status") as status:
+                total += next(int(line.split()[1]) for line in status if line.startswith("VmRSS:"))
+            for task in os.listdir(f"/proc/{p}/task"):
+                with open(f"/proc/{p}/task/{task}/children") as children:
+                    stack.extend(int(child) for child in children.read().split())
+        except (OSError, StopIteration, ValueError):
+            continue
+    return total
 
 
 def fit_mem_budget_gb() -> float | None:
@@ -1619,6 +1650,11 @@ def fit_mem_budget_gb() -> float | None:
     suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
     headroom = features.ram_headroom_gb(reserve)
     return None if headroom is None else headroom / suites
+
+
+# Most DB fetchers one suite keeps in flight: two concurrent suites plus
+# hopper's own connections must stay under postgres's max_connections (100).
+SUITE_MAX_FETCHERS = 24
 
 
 # A fit is admitted against the memory budget at the peak it measured last
@@ -1965,19 +2001,27 @@ def main() -> int:
             ", ".join(small_route_default_applied),
         )
 
-    # Concurrent fits share this suite's slice of the box. Each fit's share
-    # of it — memory, LightGBM threads, extraction workers alike — is its
-    # measured peak memory over the budget, so a lone heavy route still gets
-    # (nearly) the whole slice and a dozen small ones split it.
+    # Every fit gets the same slice: AZOTH_EXTRACT_WORKERS_MAX extraction
+    # workers (DB fetchers), and up to --workers / that many fits run at once,
+    # so the suite keeps --workers fetches in flight. Fits spend most of their
+    # time waiting on those fetches, so concurrency, not per-fit CPU, is what
+    # makes a suite fast. A fixed slice also keeps each fit's measured memory
+    # valid for the next run. --workers is already this chain's share of the
+    # host (azoth_oof_pipeline.sh splits it between concurrent chains).
     concurrent_suites = max(1, int(os.environ.get("AZOTH_CONCURRENT_SUITES", "1")))
-    suite_threads = max(1, (os.cpu_count() or 1) // concurrent_suites)
-    # Extraction memory scales with workers * batch, so the absolute ceiling
-    # keeps the heaviest fit near the 28 GB it was measured at (~83 GB for a
-    # full-corpus PE fit with 128 workers, ~21 GB with 8).
-    suite_workers = max(1, args.workers // concurrent_suites) if args.workers else 0
-    extract_ceiling = max(1, int(os.environ.get("AZOTH_EXTRACT_WORKERS_MAX", "16")))
-    extract_workers = min(suite_workers, extract_ceiling) if suite_workers else args.workers
+    extract_workers = args.workers
+    if args.workers:
+        fetchers = min(args.workers, SUITE_MAX_FETCHERS)
+        per_fit = max(1, int(os.environ.get("AZOTH_EXTRACT_WORKERS_MAX", "6")))
+        extract_workers = min(fetchers, per_fit)
+        args.parallelism = max(1, min(args.parallelism, fetchers // extract_workers))
     lgbm_threads = args.lgbm_threads
+    if lgbm_threads is None and args.parallelism > 1:
+        lgbm_threads = max(1, (os.cpu_count() or 1) // (concurrent_suites * args.parallelism))
+    LOG.info(
+        "each fit: %d extraction workers, %s LightGBM threads; up to %d fits at once",
+        extract_workers, lgbm_threads or "all", args.parallelism,
+    )
     fit_mem_file = args.fit_mem_file or Path("out/cache/fit-mem") / f"{args.output_root.name}.json"
     measured_mem = _load_fit_mem(fit_mem_file)
 
@@ -2074,19 +2118,6 @@ def main() -> int:
             "an unknown amount" if budget_gb is None else f"{budget_gb:.0f} GB",
         )
 
-        def sized(job: dict[str, Any]) -> dict[str, Any]:
-            share = min(1.0, job["mem_gb"] / budget_gb) if budget_gb else 1 / args.parallelism
-            threads = lgbm_threads or max(1, round(suite_threads * share))
-            workers = args.workers
-            if suite_workers:
-                workers = max(1, min(extract_ceiling, round(suite_workers * share)))
-            LOG.info(
-                "%s: starting (est %.1f GB, %d LightGBM threads, %d extraction workers)",
-                job["target"]["name"], job["mem_gb"], threads, workers,
-            )
-            config = replace(job["route_config"], num_threads=threads)
-            return {**job, "workers": workers, "route_config": config}
-
         # `spawn` start method — see azoth_calibrate_ensemble.py for the
         # rationale. Fork-based workers inherit the parent's OpenMP/BLAS
         # mutex state and silently futex_wait-deadlock when LightGBM warms
@@ -2113,7 +2144,8 @@ def main() -> int:
                     queue, running_gb, len(running), budget_gb, args.parallelism, free_gb,
                 ):
                     try:
-                        fut = pool.submit(_fit_in_own_process, sized(job))
+                        LOG.info("%s: starting (est %.1f GB)", job["target"]["name"], job["mem_gb"])
+                        fut = pool.submit(_fit_in_own_process, job)
                     except concurrent.futures.BrokenExecutor:
                         # A worker died (OOM kill) and took the pool down;
                         # every remaining fit fails the same way, as it would
