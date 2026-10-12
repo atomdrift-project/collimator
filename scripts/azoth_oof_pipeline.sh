@@ -104,6 +104,7 @@
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
+source scripts/azoth_resources.sh
 
 START_STAGE=${START_STAGE:-0}
 STOP_STAGE=${STOP_STAGE:-99}
@@ -154,10 +155,6 @@ require_file() {
         echo "       Earlier stage ${stage} didn't complete. Resume with START_STAGE=${stage}."
         exit 2
     fi
-}
-
-mem_avail_gb() {
-    awk '/^MemAvailable:/ { printf "%.0f", $2/1024/1024 }' /proc/meminfo 2>/dev/null
 }
 
 # Sample MemAvailable for the life of the run. We have repeatedly guessed at
@@ -227,6 +224,7 @@ trap 'echo "[pipeline] interrupted — stopping any running chains."; exit 130' 
 # overlap wins. GPU users should set PARALLEL_CHAINS=0 explicitly — device
 # memory, not host RAM, is the binding constraint there and it is not shared out
 # by the clamps below. PARALLEL_FOLDS is the pre-2026-08 name; still honoured.
+REQUESTED_PARALLEL_CHAINS=${PARALLEL_CHAINS:-${PARALLEL_FOLDS:-auto}}
 if [[ -z "${PARALLEL_CHAINS:-}" ]]; then
     if [[ -n "${PARALLEL_FOLDS:-}" ]]; then
         PARALLEL_CHAINS=$PARALLEL_FOLDS
@@ -238,6 +236,16 @@ if [[ -z "${PARALLEL_CHAINS:-}" ]]; then
         PARALLEL_CHAINS=0
         echo "[pipeline] PARALLEL_CHAINS=0 (auto, $(nproc) cores — below 32-core threshold)"
     fi
+fi
+
+# CPU capacity is necessary but not sufficient. Never begin heavy work below
+# the single-training budget; use both chains only when RAM covers both.
+if (( START_STAGE <= 7 && STOP_STAGE >= 0 )); then
+    wait_for_azoth_memory "${AZOTH_SINGLE_MIN_AVAILABLE_GB:-96}" || exit 1
+fi
+if [[ "$PARALLEL_CHAINS" = 1 ]] && ! azoth_parallel_memory_ok; then
+    echo "[pipeline] RAM below parallel budget; using one training chain at a time"
+    PARALLEL_CHAINS=0
 fi
 
 NPROC=$(nproc)
@@ -442,6 +450,25 @@ fi
 # asks for.
 STAGE3_PID=""
 STAGE3_LOG=""
+# Reconsider after training: scoring can use both chains even if training had
+# to start serially, or fall back if other host workloads have grown.
+if stage_active 3 || stage_active 6; then
+    unsplit_resources
+    wait_for_azoth_memory "${AZOTH_SINGLE_MIN_AVAILABLE_GB:-96}" || exit 1
+    if (( NPROC >= 32 )) && [[ ${PARALLEL_FOLDS:-1} != 0 ]] && azoth_parallel_memory_ok; then
+        # Respect an explicit sequential request (saved before auto selection).
+        if [[ $REQUESTED_PARALLEL_CHAINS != 0 ]]; then
+            PARALLEL_CHAINS=1
+            export COLLIMATOR_MEM_SHARES=2 AZOTH_CONCURRENT_SUITES=2
+            export COLLIMATOR_NUM_THREADS=$(( NPROC / 2 ))
+            CHAIN_WORKERS=$(( ${WORKERS:-$NPROC} / 2 ))
+            (( CHAIN_WORKERS < 1 )) && CHAIN_WORKERS=1
+            PAR_ARGS=("WORKERS=$CHAIN_WORKERS")
+        fi
+    else
+        PARALLEL_CHAINS=0
+    fi
+fi
 if stage_active 3; then
     banner 3 "Merge OOF general predictions -> ${AZOTH_ROOT}/general/threshold_scores.npz"
     require_dir "fold-A general bundle" "${FOLD_A_ROOT}/general" 1
@@ -504,6 +531,7 @@ unsplit_resources
 # OOF override fires inside _score_route, but the legacy calibration_scores.npz
 # cache check happens FIRST.
 if stage_active 7; then
+    wait_for_azoth_memory "${AZOTH_SINGLE_MIN_AVAILABLE_GB:-96}" || exit 1
     banner 7 "Calibrate + gate + deploy (azoth-deploy, honest OOF probs)"
     require_dir "OOF route scores" "${OOF_ROUTE_SCORES_DIR}" 6
     time make azoth-deploy \

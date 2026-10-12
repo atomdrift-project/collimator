@@ -30,6 +30,13 @@ SERVICE="azoth-nightly.service"
 SWEEP="azoth-autocollie.service"
 TIMER="azoth-nightly.timer"
 ONCALENDAR="${NIGHTLY_ONCALENDAR:-*-*-* 21:00:00}"
+# Reinstalling resource limits must not silently replace a custom schedule.
+if [[ -z ${NIGHTLY_ONCALENDAR:-} && -f "$UNIT_DIR/$TIMER" ]]; then
+  CALENDAR_LINES=$(sed -n '/^OnCalendar=/p' "$UNIT_DIR/$TIMER")
+else
+  CALENDAR_LINES="OnCalendar=$ONCALENDAR"
+fi
+[[ -n $CALENDAR_LINES ]] || { echo "error: no calendar configured" >&2; exit 1; }
 
 if [ "${1:-}" = "--remove" ] || [ "${1:-}" = "uninstall" ]; then
   systemctl --user disable --now "$TIMER" 2>/dev/null || true
@@ -46,6 +53,8 @@ mkdir -p "$UNIT_DIR"
 cat > "$UNIT_DIR/$SERVICE" <<EOF
 [Unit]
 Description=Azoth nightly retrain, publish, and deploy
+StartLimitIntervalSec=12h
+StartLimitBurst=2
 
 [Service]
 Type=oneshot
@@ -53,11 +62,18 @@ WorkingDirectory=$COLLIMATOR_DIR
 ExecStart=$NIGHTLY train
 # Multi-hour job — do not time it out at the default 90s.
 TimeoutStartSec=0
-# systemd's default (stop) ends the whole run when any process in it is
-# OOM-killed. With continue, the killed step fails (a specialist route, say)
-# and the pipeline decides what that means. OOM priority and the memory
-# ceiling are set by nightly.sh: a --user unit can't lower its own score.
-OOMPolicy=continue
+# An OOM invalidates the run: clear the whole cgroup, then retry once rather
+# than leaving a partly killed chain holding the lock indefinitely. Ordinary
+# failures (including the publication regression gate) do not trigger retries.
+OOMPolicy=stop
+Restart=on-abnormal
+RestartSec=300
+# Bound growth after admission, including child processes and swap. The last
+# successful parallel run peaked at 76G; allow growth without consuming 192G
+# of a co-tenanted 251G host. MemoryHigh applies reclaim before the hard cap.
+MemoryHigh=112G
+MemoryMax=128G
+MemorySwapMax=16G
 EOF
 
 # No [Install] section and no timer: the train starts this unit when it
@@ -80,14 +96,17 @@ KillMode=control-group
 TimeoutStopSec=120
 Restart=on-failure
 RestartSec=300
+MemoryHigh=48G
+MemoryMax=64G
+MemorySwapMax=8G
 EOF
 
 cat > "$UNIT_DIR/$TIMER" <<EOF
 [Unit]
-Description=Run the Azoth nightly pipeline daily
+Description=Run the Azoth nightly pipeline on its configured calendar
 
 [Timer]
-OnCalendar=$ONCALENDAR
+$CALENDAR_LINES
 # Deliberately NOT persistent. A catch-up fire replays a missed window the
 # instant the user manager comes back, which on 2026-08-06 started an 8-34h
 # publish-train at 06:42 and put it in cyclotron's way for the whole working
@@ -119,7 +138,7 @@ fi
 echo
 echo "installed: $UNIT_DIR/$SERVICE"
 echo "installed: $UNIT_DIR/$SWEEP  (no timer — started/stopped by the train)"
-echo "installed: $UNIT_DIR/$TIMER  (OnCalendar=$ONCALENDAR)"
+echo "installed: $UNIT_DIR/$TIMER  ($CALENDAR_LINES)"
 echo
 systemctl --user list-timers "$TIMER" --no-pager 2>/dev/null || true
 echo

@@ -4,6 +4,7 @@ pyproject.toml
 src/collimator/__init__.py
 src/collimator/__main__.py
 src/collimator/ablation.py
+src/collimator/backtest.py
 src/collimator/benchmark.py
 src/collimator/bundle.py
 src/collimator/data.py
@@ -14,6 +15,7 @@ src/collimator/export.py
 src/collimator/features.py
 src/collimator/inspect.py
 src/collimator/model.py
+src/collimator/route_prune.py
 src/collimator/stats.py
 src/collimator/train.py
 src/collimator/traits.py
@@ -31,7 +33,10 @@ tests/test_azoth_calibrate.py
 tests/test_azoth_route_policy_search.py
 tests/test_azoth_specialist_suite.py
 tests/test_azoth_train_best.py
+tests/test_backtest.py
 tests/test_bundle.py
+tests/test_compute_routed_metrics_carry_forward.py
+tests/test_convert_bundle_to_onnx.py
 tests/test_data.py
 tests/test_data_splits.py
 tests/test_demo.py
@@ -40,12 +45,15 @@ tests/test_export.py
 tests/test_export_metadata.py
 tests/test_feature_db_paths.py
 tests/test_features.py
+tests/test_level_table.py
 tests/test_model.py
 tests/test_model_early_stopping.py
 tests/test_reporting_artifacts.py
+tests/test_route_prune.py
 tests/test_stage_azoth_runtime_bundle.py
 tests/test_stats.py
 tests/test_thresholds.py
 tests/test_train.py
 tests/test_traits.py
 tests/test_triage_error_samples.py
+tests/test_validate_azoth_bundle.py

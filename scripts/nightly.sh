@@ -40,7 +40,10 @@
 # loop until preempted), NIGHTLY_ALLOW_REGRESSION=1 (bypass the deploy
 # regression gate), NIGHTLY_WORKERS (default 48 train / 24 sweep; caps DB-fetch
 # parallelism — see the WORKERS export below), NIGHTLY_MEM_CEILING_GB (default
-# 192; most RAM the run may hold), NIGHTLY_OOM_SCORE_ADJ (default -200).
+# 192; admission ceiling), NIGHTLY_OOM_SCORE_ADJ (default -200).
+# AZOTH_SINGLE_MIN_AVAILABLE_GB=96 / AZOTH_PARALLEL_MIN_AVAILABLE_GB=144
+# reserve host RAM before starting; AZOTH_MEMORY_WAIT_SECONDS=21600 bounds
+# deferral. Installed units additionally enforce RAM/swap limits.
 set -uo pipefail
 
 mode="${1:-train}"
@@ -77,6 +80,17 @@ esac
 exec 9>"$lock"
 flock -n 9 || { echo "another '$mode' run is active ($lock) — exiting."; exit 0; }
 
+# Adjust before spawning *any* loggers: changing the parent later does not
+# update existing children. October's OOMs killed gawk/tee and broke stdout.
+if [ "$mode" = train ]; then
+  oom_adj="${NIGHTLY_OOM_SCORE_ADJ--200}"
+  if doas -n choom -n "$oom_adj" -p $$ >/dev/null; then
+    echo "nightly($mode): oom_score_adj $oom_adj (inherited by loggers and training)"
+  else
+    echo "nightly($mode): could not set oom_score_adj $oom_adj"
+  fi
+fi
+
 # Keep our own timestamped log. journald is not durable enough for a multi-hour
 # run on this box: the journal is capped at SystemMaxUse=4G and the
 # hopper/atomscan cluster churns through that in hours, so the run's entries
@@ -90,8 +104,9 @@ case "$mode" in
   autocollie) ln -sfn "$(basename "$nightly_log")" out/nightly/latest-sweep.log ;;
 esac
 find out/nightly -name '*.log' -type f -mtime +60 -delete
-exec > >(gawk '{ print strftime("%F %T"), $0; fflush() }' | tee -a "$nightly_log") 2>&1
+exec > >(exec 9>&-; gawk '{ print strftime("%F %T"), $0; fflush() }' | tee -a "$nightly_log") 2>&1
 echo "nightly($mode): logging to $nightly_log"
+echo "nightly($mode): oom_score_adj $(cat /proc/$$/oom_score_adj)"
 
 # Housekeeping: drop route-feature matrices older than AZOTH_KEEP_CACHE_DAYS.
 # Both modes prune, because the sweep is what actually fills the disk — it runs
@@ -166,9 +181,11 @@ export COLLIMATOR_MEM_CEILING_GB="${NIGHTLY_MEM_CEILING_GB-192}"
 echo "nightly($mode): memory ceiling ${COLLIMATOR_MEM_CEILING_GB:-none} GB"
 
 rc=0
+source scripts/azoth_resources.sh
 
 # ---------------------------------------------------------------- sweep mode
 if [ "$mode" = autocollie ]; then
+  wait_for_azoth_memory "${AZOTH_SINGLE_MIN_AVAILABLE_GB:-96}" || exit 1
   passes="${NIGHTLY_PASSES:-0}"
   echo "== autocollie sweep (every route, ${NIGHTLY_EXPERIMENTS:-1} experiment(s) each," \
        "$([ "$passes" = 0 ] && echo 'looping until preempted' || echo "$passes pass(es)")) =="
@@ -181,22 +198,32 @@ fi
 # Take the box back from the sweep before touching anything. `stop` is a
 # no-op-and-exit-0 when the unit is already inactive; it only fails when the
 # unit isn't installed or there's no user manager, which is survivable.
-# Stop being the kernel's first OOM victim. The user manager (and so this unit)
-# starts at +100 and only root can go lower, hence doas. -200 matches postgres:
-# lower would make postgres, which this run needs, die first. Children inherit.
-oom_adj="${NIGHTLY_OOM_SCORE_ADJ--200}"
-if doas -n choom -n "$oom_adj" -p $$ >/dev/null; then
-  echo "nightly($mode): oom_score_adj $oom_adj"
-else
-  echo "nightly($mode): could not set oom_score_adj $oom_adj; staying at $(cat /proc/$$/oom_score_adj)"
-fi
-
 echo "== preempt sweep =="
 if systemctl --user stop "$SWEEP_UNIT" 2>/dev/null; then
   echo "stopped $SWEEP_UNIT (whole cgroup, incl. any in-flight experiment)."
 else
   echo "no $SWEEP_UNIT to stop (not installed, or no --user manager) — continuing."
 fi
+
+# Restore idle-time experiments after ordinary errors. On termination let
+# systemd finish killing the training cgroup before any sweep is restarted.
+handoff_sweep() {
+  local status=$?
+  trap - EXIT
+  echo "== hand off to sweep =="
+  if systemctl --user start --no-block "$SWEEP_UNIT" 2>/dev/null; then
+    echo "started $SWEEP_UNIT (runs until the next train preempts it)."
+  else
+    echo "ERROR: could not start $SWEEP_UNIT; install with make install-nightly"
+    status=1
+  fi
+  exit "$status"
+}
+trap handoff_sweep EXIT
+trap 'trap - EXIT; exit 143' TERM
+trap 'trap - EXIT; exit 130' INT
+
+wait_for_azoth_memory "${AZOTH_SINGLE_MIN_AVAILABLE_GB:-96}" || exit 1
 
 echo "== repin =="
 # One snapshot for the whole run. Left unset, every stage (experiment, each
@@ -216,18 +243,18 @@ for attempt in 1 2 3 4 5 6; do
   sleep "$delay"
 done
 if [ -n "$snapshot" ]; then
-  make repin PIN_TO="$snapshot" || rc=1
+  make repin PIN_TO="$snapshot" || exit 1
   export THRESHOLD_MAX_ID="$snapshot"
   echo "snapshot for this run: max_id=$snapshot"
 else
-  echo "could not resolve a snapshot; each stage will query max(id) itself"
-  make repin || rc=1
+  echo "ERROR: could not resolve a consistent snapshot; refusing to train"
+  exit 1
 fi
 
 echo "== azoth-publish-train (trains + gated OOF-deploy into $azoth) =="
 if make azoth-publish-train; then
   echo "== commit + push =="
-  git -C "$azoth" add -A
+  git -C "$azoth" add -A || exit 1
   if git -C "$azoth" diff --cached --quiet; then
     echo "azoth bundle unchanged — nothing to push."
   else
@@ -239,19 +266,6 @@ else
   echo "azoth-publish-train did not deploy — retrain failed, or the regression"
   echo "gate blocked a net-negative build (expected; nothing shipped). Full detail"
   echo "is above, or: journalctl --user -u azoth-nightly.service -b"
-fi
-
-# Hand the box to the sweep regardless of how the train went — a failed train is
-# no reason to leave the machine idle until tomorrow. --no-block so we don't
-# wait on a unit that is meant to run for the next ~15h.
-echo "== hand off to sweep =="
-if systemctl --user start --no-block "$SWEEP_UNIT" 2>/dev/null; then
-  echo "started $SWEEP_UNIT (runs until the next train preempts it)."
-  echo "follow it with: make nightly-sweep-logs"
-else
-  rc=1
-  echo "ERROR: could not start $SWEEP_UNIT — the box will sit idle."
-  echo "Install it with: make install-nightly   (or run: make nightly-sweep)"
 fi
 
 exit "$rc"
