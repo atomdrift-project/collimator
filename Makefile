@@ -564,7 +564,11 @@ check-db-fresh: check-db
 venv: $(VENV_DIR)/.deps.stamp
 
 $(VENV_DIR)/bin/python:
-	python3 -m venv $(VENV_DIR)
+	# A venv can be left with a dangling interpreter symlink after its base
+	# Python is removed (or the venv is moved). Clear it before recreating so
+	# `venv` does not trip over the stale bin/python3 entry.
+	rm -f $(VENV_DIR)/.deps.stamp
+	python3 -m venv --clear $(VENV_DIR)
 
 $(VENV_DIR)/.deps.stamp: requirements.txt pyproject.toml | $(VENV_DIR)/bin/python
 	# Bootstrap pip if missing — handles the case where the venv was created

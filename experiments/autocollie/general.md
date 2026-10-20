@@ -1278,3 +1278,33 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261019T203416-general` — 2026-10-19T20:34:16Z
+
+_No specs ran._
+
+## Cycle `20261019T205147-general` — 2026-10-19T20:51:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | control_default_training_baseline | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-10-19T21-12-43_20261019T205147-general_control_default_training_baseline.log) |
+| `` | exploit_regularized_extra_trees | fail | — | — | — | 1800 | [log](out/autocollie/runs/2026-10-19T21-42-43_20261019T205147-general_exploit_regularized_extra_trees.log) |
+
+<details><summary>Spec details</summary>
+
+- **`control_default_training_baseline`** `EXP_ESTIMATORS=300 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=100 EXP_NUM_LEAVES=128 EXP_REG_LAMBDA=1 EXP_TRAIN_SAMPLES=30000` — Control: keep the default feature env and tune estimators/leaves to establish PR_AUC and ROC_AUC baselines for later exploit comparisons.
+- **`exploit_regularized_extra_trees`** `EXP_ESTIMATORS=350 EXP_EXTRA_TREES=1 EXP_LEARNING_RATE=0.04 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=150 EXP_MIN_CHILD_WEIGHT=5 EXP_NUM_LEAVES=128 …` — Exploit: stronger L2, larger min_child_samples, and extra_trees should reduce rare-pattern overfit, aiming to lift PR_AUC while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20261019T215422-general` — 2026-10-19T21:54:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | general_text_metrics_severity_tail | fail | — | — | — | 5400 | [log](out/autocollie/runs/2026-10-19T22-08-27_20261019T215422-general_general_text_metrics_severity_tail.log) |
+
+<details><summary>Spec details</summary>
+
+- **`general_text_metrics_severity_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable text_metrics_full and severity_fractions on the archived general surface to add obfuscation and size-invariant crit-tier signals, aiming to lift recall@3FPM on minimal/obfuscated tail samples while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

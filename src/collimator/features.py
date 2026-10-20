@@ -91,11 +91,12 @@ import subprocess
 import time
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 from collections.abc import Iterable, Iterator
-from itertools import islice
+from itertools import combinations, islice
 from typing import Any, TypeVar
 from datetime import datetime
 
@@ -1947,7 +1948,7 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         n_batches += 1
 
     if nw > 1:
-        with ProcessPoolExecutor(max_workers=nw, mp_context=mp.get_context("spawn")) as pool:
+        with _feature_worker_pool(nw) as pool:
             for res in _bounded_iter(
                 pool, _vocab_batch_worker, _batched(reports, batch_size),
                 max_inflight=2 * nw,
@@ -4077,6 +4078,30 @@ def _coerce_report(report: dict[str, Any] | str) -> dict[str, Any] | None:
     return report
 
 
+def _count_capped_ngrams(
+    paths: list[str],
+    order: int,
+    counts: dict[str, int],
+    max_unique: int,
+    benign_counts: dict[str, int] | None = None,
+) -> None:
+    """Count combinations until the batch vocabulary cap is reached.
+
+    The existing cap stops all counting, including repeat keys. Stop the
+    traversal too: continuing after saturation can take cubic time without
+    changing any counts, especially with full-depth trait paths.
+    """
+    if len(counts) >= max_unique:
+        return
+    for tokens in combinations(paths, order):
+        key = " + ".join(tokens)
+        counts[key] = counts.get(key, 0) + 1
+        if benign_counts is not None:
+            benign_counts[key] = benign_counts.get(key, 0) + 1
+        if len(counts) >= max_unique:
+            break
+
+
 def _vocab_batch_worker(
     items: list[dict[str, Any] | str],
 ) -> tuple[dict[str, int], list[str], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
@@ -4136,13 +4161,7 @@ def _vocab_batch_worker(
             paths_list = _ngram_paths_for_file(file_entry)
             if len(paths_list) > BIGRAM_MAX_PATHS:
                 paths_list = []
-            for i, p1 in enumerate(paths_list):
-                for p2 in paths_list[i + 1 :]:
-                    # Hard cap at 50,000 unique bigrams per worker batch to prevent
-                    # the 1.3M+ feature explosion while still finding frequent ones.
-                    if len(bigram_counts) < 50000:
-                        bigram = f"{p1} + {p2}"
-                        bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
+            _count_capped_ngrams(paths_list, 2, bigram_counts, 50000)
 
         for path, max_ord in sample_paths.items():
             if max_ord >= 2:
@@ -4173,13 +4192,10 @@ def _init_extract_worker(spec: FeatureSpec) -> None:
     _worker_ctx = _ExtractContext(spec)
 
 
-def _extract_pool(nw: int, spec: FeatureSpec) -> ProcessPoolExecutor:
-    return ProcessPoolExecutor(
-        max_workers=nw,
-        mp_context=mp.get_context("spawn"),
-        initializer=_init_extract_worker,
-        initargs=(spec,),
-    )
+@contextmanager
+def _extract_pool(nw: int, spec: FeatureSpec) -> Iterator[ProcessPoolExecutor]:
+    with _feature_worker_pool(nw, spec) as pool:
+        yield pool
 
 
 def _context(spec: FeatureSpec) -> _ExtractContext:
@@ -4227,6 +4243,38 @@ def _extract_batch_worker(
         vals.extend(vec[nz].tolist())
         labels.append(label)
     return rows, cols, vals, labels
+
+
+@contextmanager
+def _feature_worker_pool(
+    n_workers: int, spec: FeatureSpec | None = None,
+) -> Iterator[ProcessPoolExecutor]:
+    """Spawn feature workers without a nested numerical thread pool each.
+
+    Set these before spawning, so NumPy/SciPy do not create their default
+    machine-sized BLAS pools during import. Parent libraries are already
+    loaded; restore its environment before the later model-training stage.
+    """
+    thread_vars = (
+        "OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS",
+        "BLIS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "NUMEXPR_NUM_THREADS",
+    )
+    previous = {name: os.environ.get(name) for name in thread_vars}
+    try:
+        for name in thread_vars:
+            os.environ[name] = "1"
+        with ProcessPoolExecutor(
+            max_workers=n_workers, mp_context=mp.get_context("spawn"),
+            initializer=_init_extract_worker if spec is not None else None,
+            initargs=(spec,) if spec is not None else (),
+        ) as pool:
+            yield pool
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
 
 
 def _n_workers_default() -> int:
@@ -4973,9 +5021,10 @@ def _vocab_labeled_db_batch_worker(
     benign_trigrams: dict[str, int] = {}
     tiered_bigram_counts: dict[str, int] = {}
     tiered_trigram_counts: dict[str, int] = {}
+    config = feature_config_from_env()
 
     benign_ids = {rid for rid, label in ids_labels if label == 0}
-    path_depth = feature_config_from_env().trait_path_depth
+    path_depth = config.trait_path_depth
 
     for rid, item in reports_map.items():
         raw_report = item["cleave_result"]
@@ -5023,25 +5072,12 @@ def _vocab_labeled_db_batch_worker(
             paths_list = _ngram_paths_for_file(file_entry)
             if len(paths_list) > BIGRAM_MAX_PATHS:
                 paths_list = []
-            count_trigrams = len(paths_list) <= TRIGRAM_MAX_PATHS
-            for i, p1 in enumerate(paths_list):
-                for p2 in paths_list[i + 1 :]:
-                    # Hard cap at 100,000 unique bigrams per worker batch.
-                    if len(bigram_counts) < 100000:
-                        bigram = f"{p1} + {p2}"
-                        bigram_counts[bigram] = bigram_counts.get(bigram, 0) + 1
-
-                if not count_trigrams:
-                    continue
-                for j in range(i + 1, len(paths_list)):
-                    p2 = paths_list[j]
-                    for p3 in paths_list[j + 1 :]:
-                        # Hard cap at 50,000 unique trigrams per worker batch.
-                        if len(trigram_counts) < 50000:
-                            trigram = f"{p1} + {p2} + {p3}"
-                            trigram_counts[trigram] = trigram_counts.get(trigram, 0) + 1
-                            if rid in benign_ids:
-                                benign_trigrams[trigram] = benign_trigrams.get(trigram, 0) + 1
+            _count_capped_ngrams(paths_list, 2, bigram_counts, 100000)
+            if len(paths_list) <= TRIGRAM_MAX_PATHS:
+                _count_capped_ngrams(
+                    paths_list, 3, trigram_counts, 50000,
+                    benign_trigrams if rid in benign_ids else None,
+                )
 
         for path, max_ord in sample_paths.items():
             if max_ord >= 2:
@@ -5051,31 +5087,20 @@ def _vocab_labeled_db_batch_worker(
                 else:
                     malware_presence[path] = malware_presence.get(path, 0) + 1
 
-        config = feature_config_from_env()
         if config.include_tiered_crit_bigrams:
             tokens = _tiered_bigram_tokens(
                 sample_paths,
                 min_crit=config.tiered_bigram_min_crit,
             )
             if len(tokens) <= 512:
-                for i, t1 in enumerate(tokens):
-                    for t2 in tokens[i + 1:]:
-                        if len(tiered_bigram_counts) < 100000:
-                            bigram = f"{t1} + {t2}"
-                            tiered_bigram_counts[bigram] = tiered_bigram_counts.get(bigram, 0) + 1
+                _count_capped_ngrams(tokens, 2, tiered_bigram_counts, 100000)
         if config.include_tiered_crit_trigrams:
             tokens = _tiered_bigram_tokens(
                 sample_paths,
                 min_crit=config.tiered_trigram_min_crit,
             )
             if len(tokens) <= 512:
-                for i, t1 in enumerate(tokens):
-                    for j in range(i + 1, len(tokens)):
-                        t2 = tokens[j]
-                        for t3 in tokens[j + 1:]:
-                            if len(tiered_trigram_counts) < 100000:
-                                trigram = f"{t1} + {t2} + {t3}"
-                                tiered_trigram_counts[trigram] = tiered_trigram_counts.get(trigram, 0) + 1
+                _count_capped_ngrams(tokens, 3, tiered_trigram_counts, 100000)
 
     return (
         presence_counts, filetypes, element_counts, bigram_counts,
@@ -5110,6 +5135,8 @@ def build_vocab_from_db(
 
     benign_total = sum(1 for _rid, label in row_ids_labels if label == 0)
     malware_total = len(row_ids_labels) - benign_total
+    vocab_started = time.monotonic()
+    last_progress = vocab_started
 
     def _merge_batch(
         counts: dict[str, int],
@@ -5126,6 +5153,7 @@ def build_vocab_from_db(
         tier_bi_counts: dict[str, int],
         tier_tri_counts: dict[str, int],
     ) -> None:
+        nonlocal last_progress
         for k, v in counts.items():
             presence_counts[k] = presence_counts.get(k, 0) + v
         filetypes.update(fts)
@@ -5151,6 +5179,14 @@ def build_vocab_from_db(
             tiered_bigram_counts[k] = tiered_bigram_counts.get(k, 0) + v
         for k, v in tier_tri_counts.items():
             tiered_trigram_counts[k] = tiered_trigram_counts.get(k, 0) + v
+        now = time.monotonic()
+        if batches_merged == 0 or now - last_progress >= 30:
+            log.info(
+                "vocab progress: %d/%d rows, %d batches, %.1fs elapsed",
+                min((batches_merged + 1) * batch_size, len(row_ids_labels)),
+                len(row_ids_labels), batches_merged + 1, now - vocab_started,
+            )
+            last_progress = now
 
     # Bound peak vocab memory on large corpora by periodically dropping
     # count==1 keys from the big n-gram dicts. This is the phase where the
@@ -5189,10 +5225,7 @@ def build_vocab_from_db(
     batch_args = ((db_path, batch) for batch in _batched(row_ids_labels, batch_size))
 
     if nw > 1:
-        with ProcessPoolExecutor(
-            max_workers=nw,
-            mp_context=mp.get_context("spawn"),
-        ) as pool:
+        with _feature_worker_pool(nw) as pool:
             for res in _bounded_iter(
                 pool, _vocab_labeled_db_batch_worker, batch_args,
                 max_inflight=2 * nw,
@@ -5207,6 +5240,9 @@ def build_vocab_from_db(
             batches_merged += 1
             if prune_every and batches_merged % prune_every == 0:
                 _maybe_prune()
+
+    log.info("vocab counting complete: %d rows, %d batches, %.1fs elapsed",
+             len(row_ids_labels), batches_merged, time.monotonic() - vocab_started)
 
     presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
     filetype_vocab = sorted(filetypes)

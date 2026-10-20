@@ -57,3 +57,4 @@ tests/test_train.py
 tests/test_traits.py
 tests/test_triage_error_samples.py
 tests/test_validate_azoth_bundle.py
+tests/test_vocab_limits.py
