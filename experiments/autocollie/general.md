@@ -1308,3 +1308,20 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T131911-general` — 2026-10-20T13:19:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `32b73a0c67f48ce9` | inherit_from_filetypes_rtf_320ae377 | ok | 0.9683 | 0.9604 | 0.9060 | 88 | [log](out/autocollie/runs/2026-10-20T14-26-01_20261020T131911-general_inherit_from_filetypes_rtf_320ae377.log) |
+
+Rejected before run:
+
+- `general_control_reg_lambda_2` — features.min_sample_score: unknown knob (not in allowlist)
+- `general_kv_vocab_signal` — features.min_sample_score: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_320ae377`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=320ae377e6757db4, recall_at_50_per_100M=0.9962). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+

@@ -2102,3 +2102,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T101310-filetypes-python` — 2026-10-20T10:13:10Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `130071bb7fdd1433` | inherit_from_filetypes_elf_4c2de854 | ok | 0.8984 | 0.9359 | 0.8505 | 940 | [log](out/autocollie/runs/2026-10-20T10-22-06_20261020T101310-filetypes-python_inherit_from_filetypes_elf_4c2de854.log) |
+| `096a60b13f1e730d` | python_control_hardneg8_spw075 | ok | 0.8995 | 0.9357 | 0.8450 | 117 | [log](out/autocollie/runs/2026-10-20T10-37-45_20261020T101310-filetypes-python_python_control_hardneg8_spw075.log) |
+| `ef0637747d4b8148` | python_kv_textenc_vocab_reg | ok | 0.8994 | 0.9340 | 0.8483 | 164 | [log](out/autocollie/runs/2026-10-20T10-39-43_20261020T101310-filetypes-python_python_kv_textenc_vocab_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`python_control_hardneg8_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived python feature env with stronger hard-negative weighting and positive downweight to lift recall@3FPM while keeping PR_AUC and ROC_AUC flat.
+- **`python_kv_textenc_vocab_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable KV and text-encoding/metrics vocab to add rare payload and obfuscation rank signal, aiming PR_AUC and recall@3FPM gains with regularized trees to protect ROC_AUC.
+
+</details>
+

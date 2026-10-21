@@ -2596,3 +2596,127 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T053734-filetypes-go` — 2026-10-20T05:37:34Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f11cc73578121070` | inherit_from_filetypes_elf_4c2de854 | ok | 0.5187 | 0.7170 | 0.4539 | 722 | [log](out/autocollie/runs/2026-10-20T05-45-09_20261020T053734-filetypes-go_inherit_from_filetypes_elf_4c2de854.log) |
+| `138dbf9b39e3a108` | go_control_hardneg8 | ok | 0.5307 | 0.7330 | 0.4431 | 78 | [log](out/autocollie/runs/2026-10-20T05-57-10_20261020T053734-filetypes-go_go_control_hardneg8.log) |
+| `b8450dcfe0d42cc7` | go_textenc_metrics_full | ok | 0.5187 | 0.7170 | 0.4539 | 76 | [log](out/autocollie/runs/2026-10-20T05-58-29_20261020T053734-filetypes-go_go_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived go feature env with hard_negative_weight 8 to lift recall@3FPM at the strict-FP tail while keeping PR_AUC and ROC_AUC flat.
+- **`go_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable textenc research vocab (text_encoding + text_metrics_full) to add encoding/obfuscation rank signal for Go source, aiming to improve PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+
+</details>
+
+## Cycle `20261020T131923-filetypes-go` — 2026-10-20T13:19:23Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a2c03021eb388a05` | inherit_from_filetypes_rtf_320ae377 | ok | 0.5041 | 0.6935 | 0.4243 | 77 | [log](out/autocollie/runs/2026-10-20T13-22-33_20261020T131923-filetypes-go_inherit_from_filetypes_rtf_320ae377.log) |
+| `34748571072fc476` | go_control_hardneg8_baseline | ok | 0.4964 | 0.6730 | 0.4499 | 43 | [log](out/autocollie/runs/2026-10-20T13-23-50_20261020T131923-filetypes-go_go_control_hardneg8_baseline.log) |
+| `c0558578693e51cc` | go_training_dart_regularization | ok | 0.4722 | 0.6382 | 0.3783 | 11 | [log](out/autocollie/runs/2026-10-20T13-24-33_20261020T131923-filetypes-go_go_training_dart_regularization.log) |
+| `de80e4d5ce87a146` | go_training_extra_trees | ok | 0.5061 | 0.6773 | 0.4477 | 9 | [log](out/autocollie/runs/2026-10-20T13-24-44_20261020T131923-filetypes-go_go_training_extra_trees.log) |
+| `52b455bca8662f7f` | go_kv_vocab_expansion | ok | 0.4964 | 0.6730 | 0.4499 | 20 | [log](out/autocollie/runs/2026-10-20T13-24-53_20261020T131923-filetypes-go_go_kv_vocab_expansion.log) |
+| `ccb0fd2923f2f6fd` | go_symbol_vocab_imports | ok | 0.4964 | 0.6730 | 0.4499 | 30 | [log](out/autocollie/runs/2026-10-20T13-25-13_20261020T131923-filetypes-go_go_symbol_vocab_imports.log) |
+| `ea9b957154d38e95` | go_text_metrics_full | ok | 0.4983 | 0.6772 | 0.4476 | 34 | [log](out/autocollie/runs/2026-10-20T13-25-44_20261020T131923-filetypes-go_go_text_metrics_full.log) |
+| `59a465d8d0ec6192` | go_tiered_trigrams | ok | 0.4964 | 0.6730 | 0.4499 | 35 | [log](out/autocollie/runs/2026-10-20T13-26-17_20261020T131923-filetypes-go_go_tiered_trigrams.log) |
+| `d696882474551baa` | go_bigram_freq_lower | ok | 0.4964 | 0.6730 | 0.4499 | 20 | [log](out/autocollie/runs/2026-10-20T13-26-53_20261020T131923-filetypes-go_go_bigram_freq_lower.log) |
+| `17a7eb9582b5f348` | go_severity_fractions | ok | 0.4964 | 0.6730 | 0.4499 | 40 | [log](out/autocollie/runs/2026-10-20T13-27-13_20261020T131923-filetypes-go_go_severity_fractions.log) |
+| `45835c74831a2fa5` | go_seed_search_k3 | ok | 0.4949 | 0.6691 | 0.4483 | 11 | [log](out/autocollie/runs/2026-10-20T13-27-53_20261020T131923-filetypes-go_go_seed_search_k3.log) |
+| `cd169704dc71a666` | go_transfer_elf_symbol_bigrams | ok | 0.4964 | 0.6730 | 0.4499 | 39 | [log](out/autocollie/runs/2026-10-20T13-28-04_20261020T131923-filetypes-go_go_transfer_elf_symbol_bigrams.log) |
+| `e352d6679c4bd710` | go_ablation_blindfold | ok | 0.4972 | 0.6757 | 0.4506 | 40 | [log](out/autocollie/runs/2026-10-20T13-28-42_20261020T131923-filetypes-go_go_ablation_blindfold.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_320ae377`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=320ae377e6757db4, recall_at_50_per_100M=0.9962). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`go_control_hardneg8_baseline`** `EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TRAIN_SAMPLES=30000` — Control run replicating the best PR AUC feature set to establish a stable baseline for matrix cache hits and verify current performance.
+- **`go_training_dart_regularization`** `EXP_BOOSTING_TYPE=dart EXP_ESTIMATORS=250 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Tests if DART boosting improves tail recall@3FPM by reducing overfitting on rare benign patterns while keeping PR AUC flat.
+- **`go_training_extra_trees`** `EXP_ESTIMATORS=250 EXP_EXTRA_TREES=1 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Tests if extra_trees adds ensemble noise to improve generalization at the low-FPR tail, targeting recall@3FPM without hurting ROC AUC.
+- **`go_kv_vocab_expansion`** `EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 …` — Enables kv_vocab to capture key-value signal in Go source metadata, aiming to improve PR AUC by adding discriminative features.
+- **`go_symbol_vocab_imports`** `EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_MIN_FREQ=5 …` — Enables symbol_vocab to capture import/symbol patterns in Go binaries, targeting PR AUC improvement via structural signal.
+- **`go_text_metrics_full`** `EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TEXT_METRICS_FULL=1 …` — Enables text_metrics_full to capture line length and character distribution signals, aiming to improve PR AUC for obfuscated Go code.
+- **`go_tiered_trigrams`** `EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_TIERED_CRIT_TRIGRAMS=1 …` — Enables tiered_crit_trigrams to capture severity-prefixed path trigrams, targeting PR AUC by adding high-signal n-gram features.
+- **`go_bigram_freq_lower`** `EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 …` — Lowers bigram_min_freq to 500 to include rarer bigrams, aiming to improve recall@3FPM by capturing more specific attack patterns.
+- **`go_severity_fractions`** `EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEVERITY_FRACTION_FEATURES=1 …` — Enables severity_fractions to capture size-invariant crit-tier severity ratios, targeting PR AUC for minimal droppers.
+- **`go_seed_search_k3`** `EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SEED_SEARCH_K=3 …` — Uses seed_search_k=3 to average over multiple seeds, reducing variance and improving stability of recall@3FPM at the strict-FP tail.
+- **`go_transfer_elf_symbol_bigrams`** `EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SYMBOL_BIGRAMS=1 …` — Transfers symbol_bigrams from ELF route to Go, aiming to improve PR AUC by capturing import co-occurrence patterns.
+- **`go_ablation_blindfold`** `EXP_BLINDFOLD=0 EXP_ESTIMATORS=180 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 …` — Disables blindfold to test if removing dropout features reduces noise and improves PR AUC while keeping ROC AUC flat.
+
+</details>
+
+## Cycle `20261020T133013-filetypes-go` — 2026-10-20T13:30:13Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7cdc6be2d4ebeec7` | try_trait_path_depth | ok | 0.5051 | 0.6926 | 0.4352 | 42 | [log](out/autocollie/runs/2026-10-20T13-30-40_20261020T133013-filetypes-go_try_trait_path_depth.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_trait_path_depth`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=4` — Directed knob trial (--try-knobs=trait_path_depth=4): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20261020T133158-filetypes-go` — 2026-10-20T13:31:58Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e926adbb7cb05bc7` | try_trait_path_depth_trait_path_depth_trait_path_depth_trait_path_depth | ok | 0.5093 | 0.6999 | 0.4348 | 41 | [log](out/autocollie/runs/2026-10-20T13-32-00_20261020T133158-filetypes-go_try_trait_path_depth_trait_path_depth_trait_path_depth_trait_path_depth.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_trait_path_depth_trait_path_depth_trait_path_depth_trait_path_depth`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=5` — Directed knob trial (--try-knobs=trait_path_depth=4,trait_path_depth=3,trait_path_depth=2,trait_path_depth=5): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20261020T142037-filetypes-go` — 2026-10-20T14:20:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `0677a2ca7d27ae51` | try_trait_path_depth_trait_path_depth_trait_path_depth_trait_path_depth | ok | 0.5263 | 0.7283 | 0.4348 | 24 | [log](out/autocollie/runs/2026-10-20T14-21-27_20261020T142037-filetypes-go_try_trait_path_depth_trait_path_depth_trait_path_depth_trait_path_depth.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_trait_path_depth_trait_path_depth_trait_path_depth_trait_path_depth`** `EXP_MAX_TEST_SAMPLES=20000 EXP_TRAIN_SAMPLES=30000 EXP_TRAIT_PATH_DEPTH=5` — Directed knob trial (--try-knobs=trait_path_depth=4,trait_path_depth=3,trait_path_depth=2,trait_path_depth=5): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle.
+
+</details>
+
+## Cycle `20261020T144009-filetypes-go` — 2026-10-20T14:40:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fdc26e0b1a1c76fb` | try_trait_path_depth_4 | ok | 0.5238 | 0.7221 | 0.4493 | 87 | [log](out/autocollie/runs/2026-10-20T14-40-20_20261020T144009-filetypes-go_try_trait_path_depth_4.log) |
+| `876d2f24ded81051` | try_trait_path_depth_3 | ok | 0.5157 | 0.7096 | 0.4417 | 52 | [log](out/autocollie/runs/2026-10-20T14-41-47_20261020T144009-filetypes-go_try_trait_path_depth_3.log) |
+| `d4d9c3d237b9a561` | try_trait_path_depth_2 | ok | 0.5111 | 0.7038 | 0.4324 | 47 | [log](out/autocollie/runs/2026-10-20T14-42-39_20261020T144009-filetypes-go_try_trait_path_depth_2.log) |
+| `0677a2ca7d27ae51` | try_trait_path_depth_5 | dup | 0.5263 | 0.7283 | 0.4348 | 1 | [log](out/autocollie/runs/2026-10-20T14-43-25_20261020T144009-filetypes-go_try_trait_path_depth_5.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_trait_path_depth_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=trait_path_depth=4): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Starting run: 0677a2ca7d27ae51 (same recent evaluation cohort).
+- **`try_trait_path_depth_3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=trait_path_depth=3): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Starting run: 0677a2ca7d27ae51 (same recent evaluation cohort).
+- **`try_trait_path_depth_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=trait_path_depth=2): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Starting run: 0677a2ca7d27ae51 (same recent evaluation cohort).
+- **`try_trait_path_depth_5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=trait_path_depth=5): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Starting run: 0677a2ca7d27ae51 (same recent evaluation cohort).
+
+</details>
+
+## Cycle `20261020T145440-filetypes-go` — 2026-10-20T14:54:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4d3815f65b4a2a3e` | try_min_malware_score_0 | ok | 0.8382 | 0.9452 | 0.5097 | 103 | [log](out/autocollie/runs/2026-10-20T14-55-34_20261020T145440-filetypes-go_try_min_malware_score_0.log) |
+| `89839ff5f6b89ce1` | try_min_malware_score_1 | ok | 0.8017 | 0.9197 | 0.4767 | 55 | [log](out/autocollie/runs/2026-10-20T14-57-17_20261020T145440-filetypes-go_try_min_malware_score_1.log) |
+| `adb77503c9c06a62` | try_min_malware_score_2 | ok | 0.6725 | 0.7597 | 0.4759 | 68 | [log](out/autocollie/runs/2026-10-20T14-58-12_20261020T145440-filetypes-go_try_min_malware_score_2.log) |
+| `0677a2ca7d27ae51` | try_min_malware_score_4 | dup | 0.5263 | 0.7283 | 0.4348 | 3 | [log](out/autocollie/runs/2026-10-20T14-59-20_20261020T145440-filetypes-go_try_min_malware_score_4.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_min_malware_score_0`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=min_malware_score=0): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Starting run: 0677a2ca7d27ae51 (same recent evaluation cohort).
+- **`try_min_malware_score_1`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=min_malware_score=1): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Starting run: 0677a2ca7d27ae51 (same recent evaluation cohort).
+- **`try_min_malware_score_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=min_malware_score=2): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Starting run: 0677a2ca7d27ae51 (same recent evaluation cohort).
+- **`try_min_malware_score_4`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=min_malware_score=4): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Starting run: 0677a2ca7d27ae51 (same recent evaluation cohort).
+
+</details>
+

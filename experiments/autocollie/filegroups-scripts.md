@@ -1060,3 +1060,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T032126-filegroups-scripts` — 2026-10-20T03:21:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `66a557c332940c1a` | inherit_from_filegroups_config_fb3b4045 | ok | 0.8738 | 0.8583 | 0.6927 | 1648 | [log](out/autocollie/runs/2026-10-20T03-25-17_20261020T032126-filegroups-scripts_inherit_from_filegroups_config_fb3b4045.log) |
+| `6d25465e3e386a60` | scripts_control_archived_hardneg5 | ok | 0.8897 | 0.8836 | 0.7005 | 1556 | [log](out/autocollie/runs/2026-10-20T03-52-46_20261020T032126-filegroups-scripts_scripts_control_archived_hardneg5.log) |
+| `207973dd693fe4ca` | scripts_textenc_metrics_bigram250 | ok | 0.8902 | 0.8852 | 0.7009 | 135 | [log](out/autocollie/runs/2026-10-20T04-18-41_20261020T032126-filegroups-scripts_scripts_textenc_metrics_bigram250.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`scripts_control_archived_hardneg5`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control replicates the archived scripts feature_env and hard-negative training to anchor PR_AUC and ROC_AUC before feature-surface changes.
+- **`scripts_textenc_metrics_bigram250`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Enable text_encoding and text_metrics_full while lowering bigram_min_freq to 250 to add raw text-structure and rarer script bigram signal, aiming to lift PR_AUC while keeping ROC_AUC flat.
+
+</details>
+

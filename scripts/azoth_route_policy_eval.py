@@ -66,7 +66,7 @@ def _recall_pr_at_fp(
 
 
 def _pr_auc(probs: np.ndarray, labels: np.ndarray) -> float:
-    """PR-AUC (average precision). Numpy-only to avoid sklearn dep here."""
+    """Average precision with tied scores evaluated as one threshold."""
     valid = ~np.isnan(probs)
     if not np.any(valid):
         return math.nan
@@ -75,15 +75,8 @@ def _pr_auc(probs: np.ndarray, labels: np.ndarray) -> float:
     n_mal = int(np.sum(y == 1))
     if n_mal == 0 or n_mal == len(y):
         return math.nan
-    order = np.argsort(-p, kind="mergesort")
-    y_sorted = y[order]
-    tp_cum = np.cumsum(y_sorted == 1).astype(np.float64)
-    fp_cum = np.cumsum(y_sorted == 0).astype(np.float64)
-    precision = tp_cum / np.maximum(tp_cum + fp_cum, 1.0)
-    recall = tp_cum / n_mal
-    # AP = sum_k (R_k - R_{k-1}) * P_k, with R_{-1}=0.
-    delta_recall = np.diff(recall, prepend=0.0)
-    return float(np.sum(delta_recall * precision))
+    from sklearn.metrics import average_precision_score
+    return float(average_precision_score(y, p))
 
 
 _BLEND_LOGIT_EPS = 1e-6
@@ -103,33 +96,9 @@ def _deployed_blend_metrics(
     blend-route is NaN (specialist missing on that file) are treated as
     ineligible — same as OR-rule behavior at deploy.
     """
+    from collimator.policy import margin
     routes = blend["routes"]
-    weights = np.asarray(blend["weights"], dtype=np.float64)
-    intercept = float(blend["intercept"])
-    threshold = float(blend["threshold"])
-    n_rows = len(labels)
-    valid = np.ones(n_rows, dtype=bool)
-    cols: list[np.ndarray] = []
-    for r in routes:
-        probs = probs_by_route.get(r)
-        if probs is None:
-            return {"tp": 0, "fp": 0, "recall": math.nan, "active_routes": []}
-        # The blend is fit on RAW route probs (azoth_route_policy_search), and
-        # litmus feeds raw probs at serving now that the isotonic calibrator is
-        # gone — so eval uses raw here too, matching deploy exactly.
-        p = np.clip(
-            probs.astype(np.float64),
-            _BLEND_LOGIT_EPS,
-            1.0 - _BLEND_LOGIT_EPS,
-        )
-        with np.errstate(divide="ignore"):
-            cols.append(np.log(p / (1.0 - p)))
-        valid &= ~np.isnan(probs)
-    stacked = np.stack(cols, axis=1)
-    z = stacked @ weights + intercept
-    blend_score = np.full(n_rows, np.nan, dtype=np.float64)
-    blend_score[valid] = 1.0 / (1.0 + np.exp(-z[valid]))
-    hit = valid & (blend_score >= threshold)
+    hit = margin(probs_by_route, {"blend": blend}, len(labels)) >= 0
     malware = labels == 1
     benign = labels == 0
     tp = int(np.sum(hit & malware))
@@ -553,21 +522,14 @@ def main() -> int:
             for level in policy_payload.get("levels", []):
                 level_no = int(level["level"])
                 for severity in ("hostile",):
-                    best = level.get(severity, {}).get("best") or {}
-                    thresholds = best.get("thresholds") or {}
-                    blend = best.get("blend")
-                    # Learned-blend candidates carry their fit metadata in
-                    # ``blend`` and leave ``thresholds`` empty. Skip only
-                    # when BOTH are absent — that's the no_policy /
-                    # fire-never case.
-                    if not thresholds and not blend:
-                        continue
-                    or_metrics = _deployed_or_metrics(
-                        probs_by_route,
-                        labels_slice,
-                        thresholds,
-                        blend=blend,
-                    )
+                    from collimator.policy import swept_margin
+                    hit = swept_margin(probs_by_route, policy_payload["levels"], level_no,
+                                       len(labels_slice), severity=severity) >= 0
+                    tp = int(np.sum(hit & (labels_slice == 1)))
+                    fp = int(np.sum(hit & (labels_slice == 0)))
+                    n_mal = int(np.sum(labels_slice == 1))
+                    or_metrics = {"tp": tp, "fp": fp, "recall": tp / n_mal if n_mal else math.nan,
+                                  "active_routes": list(probs_by_route)}
                     deployed_or_by_level[(level_no, severity)] = or_metrics
                     # Headline summary: prefer L50 hostile (the deployment
                     # default after the per-100M migration); fallback to L100

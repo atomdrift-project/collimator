@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from collimator.demo import create_demo_db
 from collimator import features, thresholds as _severity
@@ -27,7 +28,8 @@ def test_allowlist_content_hash_tracks_content(tmp_path) -> None:
     f.write_text('["a", "b", "c"]')  # same path, new content
     assert _allowlist_content_hash(env) != h1
     assert _allowlist_content_hash({}) == ""  # unset
-    assert _allowlist_content_hash({"COLLIMATOR_ALLOWED_FEATURES_FILE": str(tmp_path / "missing.json")}) == ""
+    with pytest.raises(FileNotFoundError):
+        _allowlist_content_hash({"COLLIMATOR_ALLOWED_FEATURES_FILE": str(tmp_path / "missing.json")})
 
 
 def test_matrix_cache_key_invalidates_on_allowlist_content(tmp_path) -> None:

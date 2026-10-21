@@ -1252,3 +1252,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T030647-filegroups-portable` — 2026-10-20T03:06:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `75b53107d740f52b` | inherit_from_filegroups_config_fb3b4045 | ok | 0.8565 | 0.9543 | 0.8091 | 1257 | [log](out/autocollie/runs/2026-10-20T03-20-07_20261020T030647-filegroups-portable_inherit_from_filegroups_config_fb3b4045.log) |
+| `9df6a4490e919c0e` | portable_control_spw075 | ok | 0.8171 | 0.9318 | 0.7922 | 879 | [log](out/autocollie/runs/2026-10-20T03-41-05_20261020T030647-filegroups-portable_portable_control_spw075.log) |
+| `0548fb2277cb38ff` | portable_text_metrics_severity | ok | 0.8099 | 0.9145 | 0.8025 | 20 | [log](out/autocollie/runs/2026-10-20T03-55-44_20261020T030647-filegroups-portable_portable_text_metrics_severity.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`portable_control_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived best feature env with scale_pos_weight_mult 0.75 to reduce benign FPs and lift recall@3FPM at the strict-FP tail while keeping PR_AUC flat.
+- **`portable_text_metrics_severity`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Transfer the general/documents text_metrics_full plus severity_fractions idea to add obfuscation and size-invariant crit-tier signal, aiming PR_AUC and recall@3FPM for obfuscated or minimal portable droppers while preserving ROC_AUC.
+
+</details>
+

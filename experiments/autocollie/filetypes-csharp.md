@@ -1234,3 +1234,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T050053-filetypes-csharp` — 2026-10-20T05:00:53Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `1ec6670410523c69` | inherit_from_filegroups_config_fb3b4045 | ok | 0.5214 | 0.8810 | 0.3373 | 846 | [log](out/autocollie/runs/2026-10-20T05-11-48_20261020T050053-filetypes-csharp_inherit_from_filegroups_config_fb3b4045.log) |
+| `74aae01f1ce260f2` | csharp_control_hardneg8 | ok | 0.4803 | 0.8823 | 0.3882 | 673 | [log](out/autocollie/runs/2026-10-20T05-25-54_20261020T050053-filetypes-csharp_csharp_control_hardneg8.log) |
+| `4e48a8cf2f72020b` | csharp_kv_vocab12k_reg | ok | 0.4788 | 0.8764 | 0.3867 | 25 | [log](out/autocollie/runs/2026-10-20T05-37-07_20261020T050053-filetypes-csharp_csharp_kv_vocab12k_reg.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`csharp_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived best C# feature env with hard_negative_weight raised to 8 to cut benign C# FP tail and improve recall@3FPM while keeping PR_AUC flat.
+- **`csharp_kv_vocab12k_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab with a 12k cap to add rare key-value token signal from C# config/attribute strings, aiming to lift PR_AUC by separating malicious payloads from benign source while regularization preserves ROC_AUC.
+
+</details>
+

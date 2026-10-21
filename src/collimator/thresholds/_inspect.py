@@ -8,6 +8,7 @@ arrays, so they live separately from the pure-math helpers in
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -19,7 +20,7 @@ from typing import Any
 
 import numpy as np
 
-from collimator import data, features
+from collimator import bundle, cache_identity, data, features
 from collimator.model import load_model, predict_proba
 
 from . import (
@@ -124,90 +125,32 @@ def _score_labeled_corpus(
         and max_score is None
         and limit == 0
     )
+    model_revision = (cache_identity.model_revision(model_path) if model_path.is_dir() else
+                      hashlib.sha256(hashlib.sha256(model_path.read_bytes()).digest()).hexdigest())
+    spec_revision = hashlib.sha256(spec_path.read_bytes()).hexdigest()
+    identity = hashlib.sha256((model_revision + spec_revision +
+        cache_identity.code_revision("features") + cache_identity.code_revision("training") +
+        cache_identity.database_revision(db_path)).encode()).hexdigest()
     if cacheable and not refresh_cache and cache_path.exists():
-        newest_input = max(model_path.stat().st_mtime, spec_path.stat().st_mtime)
-        if cache_path.stat().st_mtime >= newest_input:
-            log.info("loading threshold score cache from %s", cache_path)
-            arrays = np.load(cache_path, allow_pickle=False)
-            # Caches without canonical_shas predate the dev/test/train
-            # methodology and can't support partition-aware filtering;
-            # fall through to rebuild.
-            if "canonical_shas" not in arrays.files:
-                log.info("threshold score cache lacks canonical_shas; rebuilding for partition-aware calibration")
-            else:
-                labels = arrays["labels"].astype(np.float32)
-                row_ids = arrays["row_ids"]
-            cache_samples = int(arrays["corpus_samples"][()]) if "corpus_samples" in arrays.files else int(len(labels))
-            cache_malware = int(arrays["corpus_malware"][()]) if "corpus_malware" in arrays.files else int(np.sum(labels == 1))
-            cache_benign = int(arrays["corpus_benign"][()]) if "corpus_benign" in arrays.files else int(np.sum(labels == 0))
-            cache_max_row_id = (
-                int(arrays["corpus_max_row_id"][()])
-                if "corpus_max_row_id" in arrays.files
-                else int(np.max(row_ids)) if len(row_ids) else 0
-            )
-            cache_requested_max_id = (
-                int(arrays["corpus_requested_max_id"][()])
-                if "corpus_requested_max_id" in arrays.files
-                else cache_max_row_id if max_id > 0 else 0
-            )
-            if max_id > 0 and cache_requested_max_id != max_id:
-                log.info(
-                    "threshold score cache was built for max_id=%d, requested max_id=%d; rebuilding",
-                    cache_requested_max_id,
-                    max_id,
-                )
-            elif max_id == 0 and cache_requested_max_id > 0:
-                log.info(
-                    "threshold score cache was built for pinned max_id=%d, requested live corpus; rebuilding",
-                    cache_requested_max_id,
-                )
-            else:
-                log.info(
-                    "threshold score cache corpus: %d rows (%d malware, %d benign), max_row_id=%d",
-                    cache_samples,
-                    cache_malware,
-                    cache_benign,
-                    cache_max_row_id,
-                )
-                try:
-                    current = data.labeled_corpus_metadata_full(db_path, max_id=max_id)
-                    if current["samples"] != cache_samples or current["max_row_id"] != cache_max_row_id:
-                        log.info(
-                            "current DB threshold corpus: %d rows (%+d vs cache), max_row_id=%d (%+d)",
-                            current["samples"],
-                            current["samples"] - cache_samples,
-                            current["max_row_id"],
-                            current["max_row_id"] - cache_max_row_id,
-                        )
-                except Exception as exc:  # pragma: no cover - diagnostic only
-                    log.warning("could not compare threshold score cache to current DB corpus: %s", exc)
+        with np.load(cache_path, allow_pickle=False) as arrays:
+            valid = ("canonical_shas" in arrays.files and "score_identity" in arrays.files
+                     and str(arrays["score_identity"]) == identity
+                     and int(arrays["corpus_requested_max_id"]) == max_id
+                     and (not include_samples or {"sha256", "paths", "scores"} <= set(arrays.files)))
+            if valid:
                 samples = []
                 if include_samples:
-                    samples = [
-                        ScoredSample(
-                            row_id=int(row_id),
-                            sha256=str(sha256),
-                            path=str(path),
-                            score=int(score),
-                            label=int(label),
-                            canonical_sha256=str(canonical),
-                        )
-                        for row_id, sha256, path, score, label, canonical in zip(
-                            arrays["row_ids"],
-                            arrays["sha256"],
-                            arrays["paths"],
-                            arrays["scores"],
-                            arrays["labels"],
-                            arrays["canonical_shas"],
-                            strict=True,
-                        )
-                    ]
-                return samples, arrays["probs"], labels
+                    samples = [ScoredSample(int(rid), str(sha), str(path), int(score), int(label), str(canonical))
+                        for rid, sha, path, score, label, canonical in zip(
+                            arrays["row_ids"], arrays["sha256"], arrays["paths"], arrays["scores"],
+                            arrays["labels"], arrays["canonical_shas"], strict=True)]
+                log.info("loading verified threshold score cache from %s", cache_path)
+                return samples, arrays["probs"], arrays["labels"].astype(np.float32)
 
     if cacheable:
         log.info("building threshold score cache at %s", cache_path)
     spec = features.FeatureSpec.load(spec_path)
-    model = load_model(model_path)
+    model = bundle.Ensemble.load_bundle(model_path) if model_path.is_dir() else load_model(model_path)
     size_aware_batches = os.getenv("COLLIMATOR_THRESHOLD_SIZE_AWARE_BATCHES", "").strip().lower() in {
         "1",
         "true",
@@ -275,7 +218,8 @@ def _score_labeled_corpus(
     ):
         X_input = features.standardize(X_batch, spec) if spec.standardized else X_batch
         predict_started = time.monotonic()
-        pred_batches.append(predict_proba(model, X_input).astype(np.float32))
+        pred_batches.append((model.predict_proba(X_input) if isinstance(model, bundle.Ensemble)
+                            else predict_proba(model, X_input)).astype(np.float32))
         predict_sec = time.monotonic() - predict_started
         label_batches.append(y_batch.astype(np.float32))
         scored_samples.extend(
@@ -285,6 +229,7 @@ def _score_labeled_corpus(
                 path=str(row[2]),
                 score=int(row[3]),
                 label=int(row[4]),
+                canonical_sha256=str(row[-1] or row[1]),
             )
             for row in metadata_batch
         )
@@ -365,13 +310,22 @@ def _score_labeled_corpus(
         # the real cause (out of disk) is obvious.
         # Temp name must keep the .npz suffix, else np.savez appends its own
         # (foo.npz.tmp -> foo.npz.tmp.npz) and os.replace would miss it.
-        tmp_path = cache_path.with_name(cache_path.stem + ".tmp.npz")
+        tmp_path = cache_path.with_name(cache_path.stem + f".tmp.{os.getpid()}.npz")
         np.savez(
             tmp_path,
+            score_identity=np.asarray(identity),
+            model_revision=np.asarray(model_revision),
+            spec_revision=np.asarray(spec_revision),
+            score_space=np.asarray("raw"),
             row_ids=np.array([sample.row_id for sample in samples], dtype=np.int64),
-            sha256=np.array([sample.sha256 for sample in samples]),
-            paths=np.array([sample.path for sample in samples]),
-            scores=np.array([sample.score for sample in samples], dtype=np.int32),
+            # Calibration needs IDs, canonical groups, labels and probabilities.
+            # Fixed-width Unicode paths pad every row to the longest archive
+            # path and can inflate this cache by tens of gigabytes.
+            **({
+                "sha256": np.array([sample.sha256 for sample in samples]),
+                "paths": np.array([sample.path for sample in samples]),
+                "scores": np.array([sample.score for sample in samples], dtype=np.int32),
+            } if include_samples else {}),
             labels=y.astype(np.int8),
             probs=probs.astype(np.float32),
             canonical_shas=np.array([sample.canonical_sha256 or sample.sha256 for sample in samples]),
@@ -424,6 +378,7 @@ def tune_thresholds(
     min_score: int | None = None,
     max_score: int | None = None,
     top_errors: int = 20,
+    scores_only: bool = False,
     output_path: Path | None = None,
     limit: int = 0,
     max_id: int = 0,
@@ -444,8 +399,10 @@ def tune_thresholds(
         n_workers=n_workers,
         cache_path=cache_path,
         refresh_cache=refresh_cache,
-        include_samples=top_errors > 0,
+        include_samples=top_errors > 0 and not scores_only,
     )
+    if scores_only:
+        return {"rows": len(y), "score_space": "raw"}
     benign = int(np.sum(y == 0))
     malware = int(np.sum(y == 1))
     policies = evaluate_policies(probs, y)

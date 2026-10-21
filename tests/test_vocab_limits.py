@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import os
 from itertools import combinations
-from math import comb
+from pathlib import Path
+import random
 
 import numpy as np
 import pytest
 from threadpoolctl import threadpool_info
 
 from collimator import data, features
+from collimator.vocabulary import VocabularyCounts
 
 
 @pytest.fixture(autouse=True)
@@ -21,47 +23,81 @@ def clear_feature_config_cache():
 
 
 @pytest.mark.parametrize("order", [2, 3])
-@pytest.mark.parametrize("cap", [0, 2, 5, 100])
-def test_capped_ngrams_preserve_counts_and_benign_tallies(order, cap):
-    counts, expected = {}, {}
-    benign_counts, expected_benign = {}, {}
-    for paths, benign in [
-        (["a", "b", "c", "d"], True),
-        (["a", "b", "c"], False),
-        (["b", "c", "d", "e"], True),
-    ]:
-        # The old implementation continues iterating after its cap, but stops
-        # updating both new and existing keys. Preserve that behavior exactly.
-        for tokens in combinations(paths, order):
-            if len(expected) < cap:
-                key = " + ".join(tokens)
-                expected[key] = expected.get(key, 0) + 1
-                if benign:
-                    expected_benign[key] = expected_benign.get(key, 0) + 1
-        features._count_capped_ngrams(
-            paths, order, counts, cap, benign_counts if benign else None,
+@pytest.mark.parametrize("buffer_size", [1, 2, 100])
+def test_ngram_counts_are_exact_across_flushes(order, buffer_size):
+    expected, benign = {}, {}
+    with VocabularyCounts(buffer_size=buffer_size) as counts:
+        for document, (paths, is_benign) in enumerate([
+            (["a", "b", "c", "d"], True),
+            (["a", "b", "c"], False),
+            (["b", "c", "d", "e"], True),
+        ]):
+            for parts in combinations(paths, order):
+                token = " + ".join(parts)
+                expected[token] = expected.get(token, 0) + 1
+                if is_benign:
+                    benign[token] = benign.get(token, 0) + 1
+            # Repeated embedded files must not increase document frequency.
+            for _ in range(3):
+                features._count_ngrams(paths, order, counts, "ngram", document,
+                                       "benign" if is_benign else "")
+        assert counts.view("ngram") == expected
+        assert counts.view("benign") == benign
+
+
+def test_counts_merge_and_filter_before_ranking(tmp_path):
+    paths = []
+    for number in range(2):
+        path = tmp_path / f"batch{number}.sqlite"
+        with VocabularyCounts(str(path), buffer_size=1) as counts:
+            counts.increment("bigram", "common", 100)
+            counts.increment("benign", "common", 100)
+            counts.increment("bigram", "z-late", 10)
+            counts.increment("bigram", "a-late", 10)
+            view = counts.view("bigram")
+        paths.append(view)
+    with VocabularyCounts() as merged:
+        for view in reversed(paths):
+            merged.merge(view)
+            assert not Path(view.path).exists()
+        assert merged.view("bigram")["common"] == 200
+        assert merged.top("bigram", 1, 1) == ["common"]
+        assert merged.top("bigram", 1, 1, benign_family="benign") == ["a-late"]
+
+
+@pytest.mark.parametrize("buffer_size", [1, 2, 7, 1000])
+def test_packed_counts_match_document_sets_under_eviction(buffer_size):
+    rng = random.Random(43)
+    expected = {}
+    with VocabularyCounts(buffer_size=buffer_size) as counts:
+        for document in range(20):
+            seen = set()
+            for _ in range(100):
+                parts = tuple(sorted(rng.sample(["a", "b", "c", "d", "e", "f"], 3)))
+                name = " + ".join(parts)
+                counts.increment("trigram", parts, document=document)
+                seen.add(name)
+            for name in seen:
+                expected[name] = expected.get(name, 0) + 1
+        assert counts.view("trigram") == expected
+        assert counts.top("trigram", 7, 1) == sorted(
+            sorted(expected, key=lambda name: (-expected[name], name))[:7]
         )
-        assert counts == expected
-        assert benign_counts == expected_benign
 
 
-def test_capped_ngrams_stop_consuming_combinations(monkeypatch):
-    consumed = 0
-
-    def guarded_combinations(paths, order):
-        nonlocal consumed
-        for tokens in combinations(paths, order):
-            consumed += 1
-            assert consumed <= 3, "traversal continued after vocabulary saturation"
-            yield tokens
-
-    monkeypatch.setattr(features, "combinations", guarded_combinations)
-    paths = [f"trait/{i}" for i in range(10000)]
-    counts = {}
-    features._count_capped_ngrams(paths, 3, counts, 3)
-    features._count_capped_ngrams(paths, 3, counts, 3)
-    assert consumed == 3
-    assert len(counts) == 3
+def test_packed_merge_remaps_worker_token_ids(tmp_path):
+    views = []
+    for i, tokens in enumerate([["z", "a", "m"], ["m", "a", "z"]]):
+        with VocabularyCounts(str(tmp_path / f"{i}.sqlite")) as counts:
+            for token in tokens:
+                counts.increment("tokens", token)
+            counts.increment("bigram", ("a", "z"), document=i)
+            views.append(counts.view("bigram"))
+    with VocabularyCounts() as merged:
+        for view in views:
+            merged.merge(view)
+        assert merged.view("bigram") == {"a + z": 2}
+        assert merged.top("tokens", 1, 1) == ["a"]
 
 
 def test_labeled_vocab_preserves_base_paths_and_benign_counts(monkeypatch):
@@ -77,9 +113,9 @@ def test_labeled_vocab_preserves_base_paths_and_benign_counts(monkeypatch):
     })
     result = features._vocab_labeled_db_batch_worker(("unused", [(1, 0), (2, 1), (3, 1)]))
     tokens = sorted(paths)
-    assert result[3] == {" + ".join(pair): 3 for pair in combinations(tokens, 2)}
-    assert result[9] == {" + ".join(triple): 3 for triple in combinations(tokens, 3)}
-    assert result[10] == {" + ".join(triple): 1 for triple in combinations(tokens, 3)}
+    assert result[3] == {" + ".join(pair): 2 for pair in combinations(tokens, 2)}
+    assert result[9] == {" + ".join(triple): 2 for triple in combinations(tokens, 3)}
+    assert result[10] == {}  # Benign prevalence is measured after candidate selection.
 
 
 @pytest.mark.parametrize("n_paths", [256, 257, 512, 513])
@@ -92,14 +128,29 @@ def test_vocab_workers_preserve_per_file_caps(monkeypatch, n_paths):
     monkeypatch.setattr(data, "fetch_cleave_results", lambda _dsn, _ids: {
         1: {"cleave_result": report},
     })
-    plain = features._vocab_batch_worker([report])
-    labeled = features._vocab_labeled_db_batch_worker(("unused", [(1, 0)]))
-    pairs = comb(n_paths, 2) if n_paths <= features.BIGRAM_MAX_PATHS else 0
-    triples = comb(n_paths, 3) if n_paths <= features.TRIGRAM_MAX_PATHS else 0
-    assert len(plain[3]) == min(pairs, 50000)
-    assert len(labeled[3]) == min(pairs, 100000)
-    assert len(labeled[9]) == min(triples, 50000)
-    assert labeled[10] == labeled[9]
+    calls = []
+    monkeypatch.setattr(features, "_count_ngrams", lambda paths, order, _counts, family, *rest:
+                        calls.append((family, order, len(paths))))
+    features._vocab_batch_worker([report])
+    features._vocab_labeled_db_batch_worker(("unused", [(1, 1)]))
+    pairs = min(n_paths, features.BIGRAM_MAX_PATHS)
+    assert calls[:2] == [("bigram", 2, pairs)] * 2
+    assert calls[2] == ("trigram", 3, min(n_paths, 128))
+
+
+def test_archive_vocab_counts_documents_not_members(monkeypatch):
+    file = {"type": "vsix", "ts": [
+        {"i": f"trait/{i}", "c": 1, "l": 4} for i in range(4)
+    ]}
+    monkeypatch.setattr(data, "fetch_cleave_results", lambda *_: {
+        1: {"cleave_result": {"v": "4", "fs": [file] * 10}},
+    })
+    result = features._vocab_labeled_db_batch_worker(("unused", [(1, 1)]))
+    assert len(result[3]) == 6
+    assert len(result[9]) == 4
+    assert set(result[3].values()) == {1}
+    assert set(result[9].values()) == {1}
+    assert result[10] == {}
 
 
 def _worker_context_id(spec):
@@ -130,3 +181,101 @@ def test_feature_pool_limits_blas_and_restores_parent_env(monkeypatch, extractio
             assert pool.submit(_worker_context_id, spec).result(timeout=30) == first
     assert os.environ["OPENBLAS_NUM_THREADS"] == "8"
     assert "OMP_NUM_THREADS" not in os.environ
+
+
+def test_extended_metric_frequency_counts_reports(monkeypatch):
+    monkeypatch.setenv("COLLIMATOR_EXTENDED_METRICS", "1")
+    common = {"type": "vsix", "ms": {"custom": {"common_count": 1}}}
+    repeated = {"type": "javascript", "ms": {"custom": {"rare_count": 1}}}
+    reports = {
+        rid: {"cleave_result": {"v": "4", "fs": [common] + ([repeated] * 100 if rid == 1 else [])}}
+        for rid in range(1, 21)
+    }
+    monkeypatch.setattr(data, "fetch_cleave_results", lambda _db, ids: {rid: reports[rid] for rid in ids})
+    spec = features.build_vocab_from_db("unused", [(rid, rid % 2) for rid in reports], n_workers=1)
+    assert "custom_common_count" in spec.metric_vocab
+    assert "custom_rare_count" not in spec.metric_vocab
+
+
+def test_benign_trigram_scan_matches_candidates_without_cross_file_mixing(monkeypatch):
+    def file(paths):
+        return {"type": "javascript", "ts": [{"i": p, "l": 4, "c": 1.0} for p in paths]}
+    report = {"v": "4", "fs": [file(["a", "b", "c"])] * 20 + [file(["d", "e"]), file(["f"])]}
+    monkeypatch.setattr(data, "fetch_cleave_results", lambda *_: {1: {"cleave_result": report}})
+    result = features._vocab_benign_trigram_worker(("unused", [1], ["a + b + c", "d + e + f"], None))
+    assert result == {"a + b + c": 1}
+
+
+def test_trigram_vocab_requires_malware_support_and_checks_benign_fraction(monkeypatch):
+    monkeypatch.setenv("COLLIMATOR_TRIGRAM_MIN_FREQ", "2")
+    monkeypatch.setenv("COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC", "0")
+    def report(groups):
+        return {"cleave_result": {"v": "4", "fs": [{"type": "vsix", "ts": [
+            {"i": p, "l": 4, "c": 1.0} for p in paths
+        ]} for paths in groups]}}
+    reports = {
+        1: report([["a", "b", "c"], ["d", "e", "f"]]),
+        2: report([["a", "b", "c"], ["d", "e", "f"]]),
+        3: report([["g", "h", "i"], ["d", "e", "f"]]),
+        4: report([["g", "h", "i"]]),
+    }
+    monkeypatch.setattr(data, "fetch_cleave_results", lambda _db, ids: {rid: reports[rid] for rid in ids})
+    spec = features.build_vocab_from_db("unused", [(1, 1), (2, 1), (3, 0), (4, 0)], n_workers=1)
+    assert spec.trigram_vocab == ["a + b + c"]
+
+
+def test_singletons_use_both_classes_and_combinations_use_malware(monkeypatch):
+    for name in ("BIGRAM_MIN_FREQ", "TRIGRAM_MIN_FREQ",
+                 "TIERED_BIGRAM_MIN_FREQ", "TIERED_TRIGRAM_MIN_FREQ",
+                 "TIERED_QUADGRAM_MIN_FREQ"):
+        monkeypatch.setenv(f"COLLIMATOR_{name}", "1")
+    for name in ("TIERED_CRIT_BIGRAMS", "TIERED_CRIT_TRIGRAMS", "TIERED_CRIT_QUADGRAMS"):
+        monkeypatch.setenv(f"COLLIMATOR_{name}", "1")
+
+    def report(prefix):
+        return {"cleave_result": {"v": "4", "fs": [{
+            "type": "vsix",
+            "ts": [{"i": f"{prefix}{i}", "l": 4, "c": 1.0} for i in range(4)],
+        }]}}
+
+    # Enough support for singleton admission, entirely disjoint class signals.
+    reports = {rid: report("signed" if rid <= 30 else "unsigned") for rid in range(1, 61)}
+    labels = [(rid, int(rid > 30)) for rid in reports]
+    monkeypatch.setattr(data, "fetch_cleave_results",
+                        lambda _db, ids: {rid: reports[rid] for rid in ids})
+    spec = features.build_vocab_from_db("unused", labels, n_workers=1)
+    assert {"signed0", "unsigned0"} <= set(spec.presence_vocab)
+    for vocab in (spec.bigram_vocab, spec.trigram_vocab, spec.tiered_bigram_vocab,
+                  spec.tiered_trigram_vocab, spec.tiered_quadgram_vocab):
+        assert vocab
+        assert all("unsigned" in token and "signed" not in token.replace("unsigned", "")
+                   for token in vocab)
+
+
+def test_auxiliary_singletons_and_combinations_follow_class_policy(monkeypatch):
+    for name in ("CRIT_CATEGORY_NGRAMS", "ATTACK_CODE_NGRAMS", "MBC_ID_VOCAB",
+                 "SYMBOL_VOCAB", "SYMBOL_BIGRAMS", "SYMBOL_TRIGRAMS"):
+        monkeypatch.setenv(f"COLLIMATOR_{name}", "1")
+    monkeypatch.setenv("COLLIMATOR_SYMBOL_MIN_FREQ", "1")
+
+    def report(prefix):
+        return {"cleave_result": {"v": "4", "fs": [{
+            "type": "vsix", "ff": {"fn": [f"{prefix}{i}" for i in range(3)]},
+            "ts": [{"i": f"objectives/{prefix}{i}", "l": 4, "c": 1.0,
+                    "a": f"T{prefix}{i}", "m": f"B{prefix}{i}"} for i in range(3)],
+        }]}}
+
+    reports = {rid: report("clean" if rid <= 30 else "malware") for rid in range(1, 61)}
+    labels = [(rid, int(rid > 30)) for rid in reports]
+    monkeypatch.setattr(data, "fetch_cleave_results",
+                        lambda _db, ids: {rid: reports[rid] for rid in ids})
+    spec = features.build_vocab_from_db("unused", labels, n_workers=1)
+    for vocab in (spec.crit_unigram_vocab, spec.mbc_id_vocab, spec.symbol_vocab):
+        assert any("clean" in token for token in vocab)
+        assert any("malware" in token for token in vocab)
+    for vocab in (spec.crit_bigram_vocab, spec.crit_trigram_vocab,
+                  spec.attack_bigram_vocab, spec.attack_trigram_vocab,
+                  spec.mbc_bigram_vocab, spec.mbc_trigram_vocab,
+                  spec.symbol_bigram_vocab, spec.symbol_trigram_vocab):
+        assert vocab
+        assert all("malware" in token and "clean" not in token for token in vocab)

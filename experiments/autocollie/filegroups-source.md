@@ -1202,3 +1202,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T035604-filegroups-source` — 2026-10-20T03:56:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e7364ec04903dd7d` | inherit_from_filegroups_config_fb3b4045 | ok | 0.8631 | 0.8542 | 0.5201 | 1529 | [log](out/autocollie/runs/2026-10-20T04-04-49_20261020T035604-filegroups-source_inherit_from_filegroups_config_fb3b4045.log) |
+| `c87b065769084f8a` | source_control_hardneg8 | ok | 0.8850 | 0.8745 | 0.5248 | 44 | [log](out/autocollie/runs/2026-10-20T04-30-18_20261020T035604-filegroups-source_source_control_hardneg8.log) |
+| `0daf855035cfce25` | source_text_metrics_full | ok | 0.8798 | 0.8692 | 0.5240 | 33 | [log](out/autocollie/runs/2026-10-20T04-31-02_20261020T035604-filegroups-source_source_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`source_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=0 …` — Control on the archived source feature_env; aims recall@3FPM by transferring the native hard-negative weight 8 setting to suppress benign FPs at the strict tail while keeping PR_AUC flat.
+- **`source_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=0 …` — Aims PR_AUC by enabling text_metrics_full to add obfuscation and encoding metrics for source files, improving precision ranking of malicious samples while keeping ROC_AUC flat.
+
+</details>
+

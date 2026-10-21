@@ -822,3 +822,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T125428-filetypes-java` — 2026-10-20T12:54:28Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d7672e93d2f122da` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.3573 | 0.8948 | 0.1737 | 28 | [log](out/autocollie/runs/2026-10-20T12-55-46_20261020T125428-filetypes-java_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `387849cc231b01c7` | java_control_hardneg10 | ok | 0.2526 | 0.8681 | 0.1643 | 23 | [log](out/autocollie/runs/2026-10-20T12-56-14_20261020T125428-filetypes-java_java_control_hardneg10.log) |
+| `bb00ab13b2cd4b97` | java_kv_vocab_signal | ok | 0.2109 | 0.8153 | 0.1614 | 19 | [log](out/autocollie/runs/2026-10-20T12-56-37_20261020T125428-filetypes-java_java_kv_vocab_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_control_hardneg10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control run using the archived best feature set with increased hard_negative_weight to 10 to improve PR_AUC by better penalizing difficult benign samples at the tail.
+- **`java_kv_vocab_signal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Enable kv_vocab to capture key-value pair signals in Java files, aiming to improve PR_AUC by adding discriminative features for configuration-based malware patterns.
+
+</details>
+

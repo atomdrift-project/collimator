@@ -460,3 +460,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T125409-filetypes-crx` — 2026-10-20T12:54:09Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f7e2c38fc55760d5` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.8549 | 0.9771 | 0.7697 | 65 | [log](out/autocollie/runs/2026-10-20T12-54-55_20261020T125409-filetypes-crx_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `d61384c99d454c65` | crx_control_reg_lambda_2 | ok | 0.8638 | 0.9821 | 0.7212 | 38 | [log](out/autocollie/runs/2026-10-20T12-56-00_20261020T125409-filetypes-crx_crx_control_reg_lambda_2.log) |
+| `e312a4b50ebf4cd0` | crx_kv_vocab_10k | ok | 0.8594 | 0.9808 | 0.7107 | 43 | [log](out/autocollie/runs/2026-10-20T12-56-38_20261020T125409-filetypes-crx_crx_kv_vocab_10k.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`crx_control_reg_lambda_2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control run using the archived promoted feature set with increased L2 regularization (reg_lambda=2.0) to reduce overfitting on rare CRX patterns and improve PR_AUC stability.
+- **`crx_kv_vocab_10k`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Feature experiment expanding kv_vocab_max to 10000 to capture more specific CRX metadata keys (e.g., permissions, manifest fields) that may distinguish malicious extensions, aiming to improve recall@3FPM.
+
+</details>
+

@@ -20,7 +20,7 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 
-from collimator import bundle, data, export, features, thresholds
+from collimator import bundle, cache_identity, data, export, features, thresholds
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: E402
@@ -331,79 +331,37 @@ def _score_route(
     refresh_routes: set[str],
     feature_cache_dir: Path | None,
     oof_route_scores_dir: Path | None = None,
+    cache_context: str | None = None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     output_dir = Path(route["output_dir"])
     cache_path = output_dir / "calibration_scores.npz"
 
-    # OOF override: when a per-route OOF threshold_scores.npz exists under
-    # ``oof_route_scores_dir`` (produced by azoth_oof_score_routes.py),
-    # short-circuit the in-sample scoring path. The OOF file already has
-    # row_ids and probs in honest OOF order — train+dev rows scored by
-    # whichever fold model didn't see them, test rows scored by the
-    # production bundle (if --prod-root was passed to the merge script).
-    # This eliminates the in-sample-specialist bias the calibration has
-    # historically carried; downstream (recall-monotone floor, Pareto
-    # curves, future stacker) consumes honest probabilities.
     if oof_route_scores_dir is not None:
-        oof_path = oof_route_scores_dir / route["route"] / "threshold_scores.npz"
-        if oof_path.is_file():
-            indices, probs = _load_oof_route_scores(
-                oof_path,
-                row_index=row_index,
-                route_label=route["route"],
-            )
-            LOG.info(
-                "%s: using OOF scores from %s (%d rows in %.2fs)",
-                route["route"],
-                oof_path,
-                len(indices),
-                time.perf_counter() - started,
-            )
-            return {
-                "name": route["route"],
-                "kind": route["kind"],
-                "file_types": route["file_types"],
-                "output_dir": str(output_dir),
-                "indices": indices,
-                "probs": probs,
-            }
-        LOG.warning(
-            "%s: OOF route scores requested but %s is missing; falling back "
-            "to in-sample scoring (this measurement carries in-sample bias)",
-            route["route"],
-            oof_path,
-        )
-    route_hash = _hash_route_artifacts(output_dir)
+        raise ValueError("OOF scores belong to different models; calibrate production models on dev")
+    # Indices refer to this exact row order. Include code and corpus identity
+    # so relabels, report updates, and feature changes invalidate both caches.
+    score_identity = cache_context or hashlib.sha256((
+        cache_identity.database_revision(db_path) + cache_identity.code_revision("features")
+        + cache_identity.code_revision("training") + _file_sha256(Path(__file__))
+        + _hash_ints(np.fromiter(row_index, dtype=np.int64))
+        + _hash_ints(np.fromiter(row_index.values(), dtype=np.int64))
+    ).encode()).hexdigest()
+    route_hash = hashlib.sha256((_hash_route_artifacts(output_dir) + score_identity).encode()).hexdigest()
     force_refresh = refresh or route["route"] in refresh_routes or route["name"] in refresh_routes
     if cache_path.exists() and not force_refresh:
-        cache = np.load(cache_path)
-        cached_hash = str(cache["route_hash"]) if "route_hash" in cache.files else ""
-        cached_max_id = int(cache["max_id"]) if "max_id" in cache.files else max_id
-        if cached_hash and cached_hash != route_hash:
-            LOG.info("%s: route artifacts changed; refreshing score cache", route["route"])
-        elif not cached_hash and _route_artifacts_newer_than(cache_path, output_dir):
-            LOG.info("%s: legacy cache is older than route artifacts; refreshing score cache", route["route"])
-        elif cached_max_id != max_id:
-            LOG.info(
-                "%s: cache snapshot changed (%d != %d); refreshing score cache",
-                route["route"],
-                cached_max_id,
-                max_id,
-            )
-        else:
-            if not cached_hash:
-                LOG.warning("%s: using legacy score cache without artifact hash", route["route"])
-            else:
-                LOG.info("%s: using cached scores", route["route"])
-            return {
-                "name": route["route"],
-                "kind": route["kind"],
-                "file_types": route["file_types"],
-                "output_dir": str(output_dir),
-                "indices": cache["indices"].astype(np.int64),
-                "probs": cache["probs"].astype(np.float32),
-            }
+        with np.load(cache_path) as cache:
+            valid = ("route_hash" in cache.files and str(cache["route_hash"]) == route_hash
+                     and "max_id" in cache.files and int(cache["max_id"]) == max_id)
+            if valid:
+                LOG.info("%s: using verified cached scores", route["route"])
+                return {
+                    "name": route["route"], "kind": route["kind"],
+                    "file_types": route["file_types"], "output_dir": str(output_dir),
+                    "indices": cache["indices"].astype(np.int64),
+                    "probs": cache["probs"].astype(np.float32),
+                }
+        LOG.info("%s: score identity changed; refreshing", route["route"])
 
     t0 = time.perf_counter()
     rows_all = _fetch_rows(db_path, file_types=route["file_types"], max_id=max_id)
@@ -420,7 +378,7 @@ def _score_route(
         )
     t0 = time.perf_counter()
     spec_path = output_dir / "feature_spec.json"
-    spec_hash = _file_sha256(spec_path)
+    spec_hash = hashlib.sha256((_file_sha256(spec_path) + score_identity).encode()).hexdigest()
     spec = features.FeatureSpec.load(spec_path)
     # ``Ensemble`` averages across all members of a multi-seed bundle; for the
     # legacy single-model layout it's a length-1 ensemble whose ``predict_proba``
@@ -461,17 +419,20 @@ def _score_route(
         extract_s = 0.0
         matrix_s = 0.0
     t0 = time.perf_counter()
-    probs = clf.predict_proba(x_matrix)
+    X_input = features.standardize(x_matrix, spec) if spec.standardized else x_matrix
+    probs = clf.predict_proba(X_input)
     predict_s = time.perf_counter() - t0
     t0 = time.perf_counter()
     indices = np.asarray([row_index[row_id] for row_id, _label in rows], dtype=np.int64)
+    temporary = cache_path.with_name(f"{cache_path.stem}.tmp.{os.getpid()}.npz")
     np.savez_compressed(
-        cache_path,
+        temporary,
         indices=indices,
         probs=probs.astype(np.float32),
         route_hash=np.asarray(route_hash),
         max_id=np.asarray(max_id, dtype=np.int64),
     )
+    os.replace(temporary, cache_path)
     write_s = time.perf_counter() - t0
     LOG.info(
         "%s: refreshed %d rows in %.1fs "
@@ -1090,6 +1051,7 @@ def _write_score_table(
         route_names=names,
         route_kinds=kinds,
         scores=scores,
+        score_space=np.asarray("raw"),
         # Last byte of each row's canonical sha: its test/dev/train bucket
         # (collimator.data.partition_of). Lets readers partition without a
         # 19M-row canonical_sha256 query against the DB.
@@ -1117,7 +1079,18 @@ def _score_route_worker(job: dict[str, Any]) -> dict[str, Any]:
         refresh_routes=job["refresh_routes"],
         feature_cache_dir=job["feature_cache_dir"],
         oof_route_scores_dir=job.get("oof_route_scores_dir"),
+        cache_context=job.get("cache_context"),
     )
+
+
+def _validate_general_scores(general_cache, general_dir: Path) -> None:
+    """A one-seed or fold cache must never calibrate another ensemble."""
+    expected = {"model_revision": cache_identity.model_revision(general_dir),
+                "spec_revision": _file_sha256(general_dir / "feature_spec.json"),
+                "score_space": "raw"}
+    for name, value in expected.items():
+        if name not in general_cache or str(general_cache[name]) != value:
+            raise SystemExit(f"general score cache has wrong/missing {name}; regenerate with the production ensemble")
 
 
 def main() -> int:
@@ -1134,6 +1107,7 @@ def main() -> int:
     )
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument("--refresh", action="store_true")
+    parser.add_argument("--check-inputs-only", action="store_true", help="Check model provenance before expensive scoring")
     parser.add_argument(
         "--refresh-route",
         action="append",
@@ -1155,16 +1129,7 @@ def main() -> int:
         "--oof-route-scores-dir",
         type=Path,
         default=None,
-        help=(
-            "Directory of per-route OOF scores produced by "
-            "azoth_oof_score_routes.py. When set, each route's scoring "
-            "step reads "
-            "{oof_route_scores_dir}/<route>/threshold_scores.npz instead "
-            "of running an in-sample predict_proba pass. Routes missing "
-            "an OOF file fall back to in-sample scoring with a warning. "
-            "Pair with --general-scores pointing at an OOF general "
-            "threshold_scores.npz for fully-honest calibration."
-        ),
+        help=("Obsolete: OOF scores are diagnostics; calibrate production ensembles on dev"),
     )
     parser.add_argument(
         "--partition",
@@ -1175,8 +1140,8 @@ def main() -> int:
             "(default) is the held-out selection slice — calibrators and L0..L9 "
             "thresholds are fit honestly here. 'test' applies the existing bundle "
             "to the locked test slice for headline reporting (use with "
-            "--apply-thresholds-from to skip fitting). 'all' is the legacy leaky-"
-            "corpus behavior, retained for sanity-check comparisons only."
+            "--apply-thresholds-from to skip fitting). 'all' is evaluation-only "
+            "and also requires --apply-thresholds-from."
         ),
     )
     parser.add_argument(
@@ -1211,7 +1176,24 @@ def main() -> int:
         level=getattr(logging, args.log_level.upper()),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    if args.partition != "dev" and args.apply_thresholds_from is None:
+        parser.error("threshold fitting requires --partition dev; test is evaluation-only")
+    if args.oof_route_scores_dir is not None:
+        parser.error("OOF scores belong to different models; use production scores on dev")
+    general_dir = args.azoth_root / "general"
+    cache_identity.require_reserved_dev(general_dir)
+    if any(p.suffix != ".onnx" for p in bundle.model_files(general_dir)):
+        raise ValueError("export general to ONNX before calibration")
+    routes = list(_load_routes(args.summary))
+    for route in routes:
+        directory = Path(route["output_dir"])
+        cache_identity.require_reserved_dev(directory)
+        if any(p.suffix != ".onnx" for p in bundle.model_files(directory)):
+            raise ValueError(f"export {route['route']} to ONNX before calibration")
+    if args.check_inputs_only:
+        return 0
     general_cache = np.load(args.general_scores)
+    _validate_general_scores(general_cache, general_dir)
     feature_cache_dir = None if str(args.feature_cache_dir).lower() == "none" else args.feature_cache_dir
     row_ids = general_cache["row_ids"].astype(np.int64)
     labels = general_cache["labels"].astype(np.int8)
@@ -1277,7 +1259,6 @@ def main() -> int:
             "probs": general_probs,
         },
     ]
-    routes = list(_load_routes(args.summary))
     refresh_routes = set(args.refresh_route)
     # Cap per-route extraction workers. Each of the `parallelism` concurrent
     # route jobs re-extracts its FULL-row matrix, and each worker buffers a
@@ -1294,6 +1275,13 @@ def main() -> int:
         if extract_workers != args.workers:
             LOG.info("capping per-route extraction workers at %d (requested %d, parallelism=%d, ceiling=%d)",
                      extract_workers, args.workers, args.parallelism, ceiling)
+    # Hash the shared corpus/order once, rather than duplicating multi-million
+    # row arrays in every worker. The score file includes IDs and canonical groups.
+    cache_context = hashlib.sha256((
+        _file_sha256(args.general_scores) + cache_identity.database_revision(args.db)
+        + cache_identity.code_revision("features") + cache_identity.code_revision("training")
+        + _file_sha256(Path(__file__))
+    ).encode()).hexdigest() if routes else ""
     score_jobs = [
         {
             "db_path": args.db,
@@ -1305,6 +1293,7 @@ def main() -> int:
             "refresh_routes": refresh_routes,
             "feature_cache_dir": feature_cache_dir,
             "oof_route_scores_dir": args.oof_route_scores_dir,
+            "cache_context": cache_context,
         }
         for route in routes
     ]
@@ -1348,6 +1337,11 @@ def main() -> int:
     # rows count for tp/fp at each level.
     if args.apply_thresholds_from is not None:
         prior = json.loads(Path(args.apply_thresholds_from).read_text())
+        if prior.get("fit_partition") != "dev" or prior.get("score_space") != "raw":
+            raise ValueError("test evaluation requires thresholds fitted on dev production scores")
+        for record in prior.get("models", []):
+            if record.get("model_revision") != cache_identity.model_revision(args.azoth_root / record["route"]):
+                raise ValueError(f"{record['route']}: models changed since calibration")
         prior_levels = prior.get("levels", [])
         if not prior_levels:
             raise SystemExit(
@@ -1477,6 +1471,7 @@ def main() -> int:
         "malware": int(np.sum(labels == 1)),
         "benign": int(np.sum(labels == 0)),
         "fit_partition": args.partition,
+        "score_space": "raw",
         "fit_rows": int(len(fit_labels)),
         "fit_malware": int(np.sum(fit_labels == 1)),
         "fit_benign": int(np.sum(fit_labels == 0)),
@@ -1490,6 +1485,8 @@ def main() -> int:
             {
                 "route": route["name"],
                 "kind": route["kind"],
+                "model_revision": cache_identity.model_revision(Path(route["output_dir"])),
+                "spec_revision": _file_sha256(Path(route["output_dir"]) / "feature_spec.json"),
                 "rows": int(len(route["indices"])),
             }
             for route in route_scores

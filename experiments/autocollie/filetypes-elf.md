@@ -1836,3 +1836,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T050616-filetypes-elf` — 2026-10-20T05:06:16Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4c2de85400c5e128` | inherit_from_filegroups_config_fb3b4045 | ok | 0.9995 | 0.9995 | 0.9900 | 1124 | [log](out/autocollie/runs/2026-10-20T05-13-18_20261020T050616-filetypes-elf_inherit_from_filegroups_config_fb3b4045.log) |
+| `3c871e7e110b2468` | elf_control_hardneg8_spw075 | ok | 0.9995 | 0.9994 | 0.9895 | 83 | [log](out/autocollie/runs/2026-10-20T05-32-02_20261020T050616-filetypes-elf_elf_control_hardneg8_spw075.log) |
+| `da07e85a18267d6d` | elf_symbol_vocab_bigrams | ok | 0.9995 | 0.9995 | 0.9900 | 92 | [log](out/autocollie/runs/2026-10-20T05-33-26_20261020T050616-filetypes-elf_elf_symbol_vocab_bigrams.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`elf_control_hardneg8_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims recall@3FPM by keeping the archived ELF feature_env and upweighting hard benigns while downweighting positives to cut strict-tail FPs with PR_AUC flat.
+- **`elf_symbol_vocab_bigrams`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Aims PR_AUC by enabling ELF symbol vocab and import-pair bigrams to add rank signal from malicious import co-occurrence while keeping ROC_AUC flat.
+
+</details>
+

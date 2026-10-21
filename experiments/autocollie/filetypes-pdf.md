@@ -2688,3 +2688,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T084622-filetypes-pdf` — 2026-10-20T08:46:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f5c2654a31af55fc` | inherit_from_filetypes_elf_4c2de854 | ok | 0.9959 | 0.9886 | 0.8554 | 731 | [log](out/autocollie/runs/2026-10-20T08-52-52_20261020T084622-filetypes-pdf_inherit_from_filetypes_elf_4c2de854.log) |
+| `19830978ce14ebce` | pdf_control_baseline_training_reg | ok | 0.9957 | 0.9879 | 0.8567 | 35 | [log](out/autocollie/runs/2026-10-20T09-05-03_20261020T084622-filetypes-pdf_pdf_control_baseline_training_reg.log) |
+| `b7ed79332b56cd62` | pdf_text_metrics_full_obfuscation | ok | 0.9959 | 0.9886 | 0.8554 | 43 | [log](out/autocollie/runs/2026-10-20T09-05-38_20261020T084622-filetypes-pdf_pdf_text_metrics_full_obfuscation.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pdf_control_baseline_training_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control the archived best PDF feature env while adding L2/min-child regularization and more low-LR estimators to stabilize PR_AUC and lift recall@3FPM at the strict-FP operating point.
+- **`pdf_text_metrics_full_obfuscation`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable text_metrics_full plus PDF obfuscation aggregates to add null-byte, line-length, and escape-density signal, aiming to lift recall@3FPM and PR_AUC on obfuscated PDFs while keeping ROC_AUC flat.
+
+</details>
+

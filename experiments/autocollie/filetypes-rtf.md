@@ -852,3 +852,36 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T104743-filetypes-rtf` — 2026-10-20T10:47:43Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b2fc38ce84d511f8` | inherit_from_filetypes_elf_4c2de854 | ok | 0.8534 | 0.5000 | 0.9209 | 963 | [log](out/autocollie/runs/2026-10-20T10-56-23_20261020T104743-filetypes-rtf_inherit_from_filetypes_elf_4c2de854.log) |
+
+Rejected before run:
+
+- `rtf_control_archived_hardreg` — features.repetition_penalty_features: unknown knob (not in allowlist); features.severity_fraction_features: unknown knob (not in allowlist)
+- `rtf_textenc_linebuckets_kv12k` — features.repetition_penalty_features: unknown knob (not in allowlist); features.severity_fraction_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20261020T131604-filetypes-rtf` — 2026-10-20T13:16:04Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `b2fc38ce84d511f8` | inherit_from_filetypes_elf_4c2de854 | dup | 0.8534 | 0.5000 | 0.9209 | 1 | [log](out/autocollie/runs/2026-10-20T13-16-20_20261020T131604-filetypes-rtf_inherit_from_filetypes_elf_4c2de854.log) |
+| `77feb0236bdecba1` | rtf_control_archived_hardreg | ok | 0.9999 | 0.9993 | 0.9974 | 9 | [log](out/autocollie/runs/2026-10-20T13-16-21_20261020T131604-filetypes-rtf_rtf_control_archived_hardreg.log) |
+| `320ae377e6757db4` | rtf_text_metrics_full_kv_vocab | ok | 0.9999 | 0.9997 | 0.9981 | 7 | [log](out/autocollie/runs/2026-10-20T13-16-30_20261020T131604-filetypes-rtf_rtf_text_metrics_full_kv_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rtf_control_archived_hardreg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Control run using the inherited ELF feature set with hard-negative upweighting to improve recall@3FPM by forcing the model to better distinguish benign RTF from malicious payloads without changing the feature surface.
+- **`rtf_text_metrics_full_kv_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 EXP_ESTIMATORS=300 …` — Enable text_metrics_full and kv_vocab to capture document-specific obfuscation signals and key-value structures, aiming to improve PR_AUC by adding rank signal for RTF-specific malware patterns.
+
+</details>
+

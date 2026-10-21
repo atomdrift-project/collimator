@@ -1812,3 +1812,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T111226-filetypes-shell` — 2026-10-20T11:12:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `dc670e2eabdd9b33` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.9667 | 0.9807 | 0.9394 | 746 | [log](out/autocollie/runs/2026-10-20T11-24-15_20261020T111226-filetypes-shell_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `21aa0e88080f6d9d` | shell_control_hardneg8 | ok | 0.9685 | 0.9821 | 0.9404 | 29 | [log](out/autocollie/runs/2026-10-20T11-36-41_20261020T111226-filetypes-shell_shell_control_hardneg8.log) |
+| `04ed44a51364e00a` | shell_kv_vocab_bigram250 | ok | 0.9679 | 0.9814 | 0.9414 | 32 | [log](out/autocollie/runs/2026-10-20T11-37-10_20261020T111226-filetypes-shell_shell_kv_vocab_bigram250.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`shell_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived shell feature env with hard_negative_weight raised to 8 to improve recall@3FPM by penalizing benign hard negatives while keeping PR_AUC flat.
+- **`shell_kv_vocab_bigram250`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 …` — Enable kv_vocab and lower bigram_min_freq to 250 to add key-value and rarer path signal for shell scripts, aiming to lift PR_AUC without hurting ROC_AUC.
+
+</details>
+

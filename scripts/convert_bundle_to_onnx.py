@@ -26,7 +26,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import os
 import sys
@@ -244,17 +243,8 @@ def main() -> int:
                    ))
     p.add_argument("--parity-rows", type=int, default=200,
                    help="Rows per route to use for parity (default 200)")
-    p.add_argument("--no-weakness-gate", action="store_true",
-                   help="Skip the pre-conversion quality gate that drops "
-                        "filetype specialists meaningfully worse than the "
-                        "general route on home-filetype PR-AUC.")
-    p.add_argument("--max-pr-auc-deficit", type=float,
-                   default=route_prune.DEFAULT_PR_AUC_TOLERANCE,
-                   help="Drop a filetype specialist when the general route "
-                        "beats it on home-filetype PR-AUC by more than this "
-                        "(default %(default)s). A dead-band, not a required "
-                        "gain: ties and noise-level deficits are kept, so "
-                        "strong specialists tied with general survive.")
+    p.add_argument("--no-weakness-gate", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--max-pr-auc-deficit", type=float, default=.005, help=argparse.SUPPRESS)
     p.add_argument("--skip-parity", action="store_true",
                    help="Convert without parity check. Faster but unsafe.")
     p.add_argument("--dry-run", action="store_true",
@@ -269,37 +259,9 @@ def main() -> int:
     if not args.skip_parity and not args.db:
         raise SystemExit("--db is required (or set $DB) unless --skip-parity is passed")
 
-    # Pass 0 — quality gate. Drop filetype specialists too weak to ship BEFORE
-    # spending any effort converting them, so a near-random model can never
-    # reach (let alone be blocked by) the float32 ONNX parity check. A
-    # specialist that doesn't beat the general route on its home filetype's
-    # PR-AUC carries no defensible signal; the filetype falls back to the
-    # general/filegroup routes it already ensembles with.
+    # Policy search selects useful combinations on dev. Test metrics must not
+    # change membership, and removing a fitted blend input requires refitting.
     pruned_weak: set[str] = set()
-    metrics_path = azoth_root / "per_filetype_metrics.json"
-    if args.no_weakness_gate:
-        LOG.info("weakness gate disabled (--no-weakness-gate)")
-    elif not metrics_path.is_file():
-        LOG.warning("weakness gate skipped: %s not found", metrics_path)
-    else:
-        metrics = json.loads(metrics_path.read_text())
-        weak = route_prune.weak_filetype_specialists(
-            metrics, tolerance=args.max_pr_auc_deficit)
-        # Only routes actually present as a deployable model in this bundle.
-        weak = {r: v for r, v in weak.items()
-                if (azoth_root / r / "feature_spec.json").is_file()}
-        for route, info in sorted(weak.items()):
-            LOG.warning(
-                "weakness gate: dropping %s (PR-AUC %.4f vs general %.4f, "
-                "deficit %.4f > %.4g) — filetype falls back to general/filegroup",
-                route, info["specialist_pr_auc"], info["general_pr_auc"],
-                info["deficit"], args.max_pr_auc_deficit,
-            )
-        if weak and args.dry_run:
-            LOG.info("[dry-run] would prune weak specialists: %s", sorted(weak))
-        elif weak:
-            pruned_weak = route_prune.prune_routes(azoth_root, set(weak))
-
     # Pass 1: identify every .txt that needs an .onnx sibling.
     to_convert: list[tuple[Path, Path, Path]] = []  # (route_dir, txt, onnx)
     for route_dir in _walk_route_dirs(azoth_root):
@@ -321,6 +283,8 @@ def main() -> int:
             else:
                 to_convert.append((route_dir, legacy, onnx))
 
+    if to_convert and (azoth_root / "config.json").exists() and not args.dry_run:
+        raise SystemExit("convert models before calibration; replacing the scored artifact requires recalibration")
     LOG.info("found %d .txt files to convert", len(to_convert))
     if args.dry_run:
         for rd, txt, onnx in to_convert:
@@ -332,9 +296,7 @@ def main() -> int:
     n_skipped = 0
     failures: list[tuple[Path, str]] = []
     skipped: list[tuple[Path, str]] = []
-    # Specialist routes whose ONNX failed parity: dropped (fall back), not fatal.
-    # The general route is exempt — a parity failure there stays fatal because
-    # it is the fallback of last resort, with nothing to fall back to.
+    # Every parity failure stops publication; policy selection handles weak routes on dev.
     parity_failed_routes: set[str] = set()
     for route_dir, txt, onnx in to_convert:
         t0 = time.perf_counter()
@@ -370,8 +332,8 @@ def main() -> int:
                           "(FATAL: general route)", txt, e)
             else:
                 parity_failed_routes.add(route)
-                LOG.warning("parity check errored for %s: %s — dropping specialist "
-                            "route %s (filetype falls back to general/filegroup)",
+                LOG.warning("parity check errored for %s: %s — failing specialist "
+                            "route %s (re-export before calibration)",
                             txt, e, route)
             continue
         if not ok:
@@ -387,8 +349,8 @@ def main() -> int:
             else:
                 parity_failed_routes.add(route)
                 LOG.warning(
-                    "%s FAILED parity: delta=%.2e > %.2e (rows=%d) — dropping specialist "
-                    "route %s (filetype falls back to general/filegroup)",
+                    "%s FAILED parity: delta=%.2e > %.2e (rows=%d) — failing specialist "
+                    "route %s (re-export before calibration)",
                     txt, delta, args.max_parity_delta, n_rows, route,
                 )
             continue
@@ -399,10 +361,11 @@ def main() -> int:
             txt.relative_to(azoth_root), onnx.name, delta, n_rows, elapsed_ms,
         )
 
-    # Drop specialist routes whose ONNX failed parity (general is never here).
+    # Failed parity is a failed build, including specialists. Never alter a
+    # calibrated policy after evaluating it on test.
     parity_pruned: set[str] = set()
-    if parity_failed_routes and not args.dry_run:
-        parity_pruned = route_prune.prune_routes(azoth_root, parity_failed_routes)
+    for route in sorted(parity_failed_routes):
+        failures.append((azoth_root / route, "ONNX parity failed; repair export before calibration"))
 
     dropped = sorted(pruned_weak | parity_pruned)
 

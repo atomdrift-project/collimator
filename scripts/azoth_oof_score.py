@@ -34,8 +34,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from collimator import data, features  # noqa: E402
-from collimator.model import load_model, predict_proba  # noqa: E402
+from collimator import bundle, cache_identity, data, features  # noqa: E402
 
 LOG = logging.getLogger("azoth_oof_score")
 
@@ -69,7 +68,7 @@ def _score_partition(
     label = "test" if oof_fold is None else f"OOF fold {oof_fold}"
     LOG.info("scoring %s on %s", model_path, label)
     spec = features.FeatureSpec.load(spec_path)
-    model = load_model(model_path)
+    model = bundle.Ensemble.load_bundle(model_path)
     # Filter to rows in this OOF fold (or test partition when fold is None).
     kept_rows = []
     for row in rows:
@@ -94,7 +93,8 @@ def _score_partition(
         spec,
         n_workers=workers,
     ):
-        pred_batches.append(predict_proba(model, X))
+        X_input = features.standardize(X, spec) if spec.standardized else X
+        pred_batches.append(model.predict_proba(X_input))
         label_batches.append(y)
         sample_buffer.extend(batch_meta)
     probs = np.concatenate(pred_batches).astype(np.float32) if pred_batches else np.array([], dtype=np.float32)
@@ -189,15 +189,9 @@ def main() -> int:
 
     def _model_and_spec(general_dir: Path) -> tuple[Path, Path]:
         spec = general_dir / "feature_spec.json"
-        # Multi-seed bundles ship models/ instead of model.txt. Pick seed_42 by
-        # convention; if absent, fall back to the lowest-numbered seed file
-        # (matches the same logic used by the deploy chain's promote step).
-        if (general_dir / "model.txt").exists():
-            return general_dir / "model.txt", spec
-        candidates = sorted((general_dir / "models").glob("seed_*.txt"))
-        if not candidates:
-            raise SystemExit(f"no general model.txt or models/seed_*.txt under {general_dir}")
-        return candidates[0], spec
+        if not bundle.has_model(general_dir):
+            raise SystemExit(f"no general ensemble under {general_dir}")
+        return general_dir, spec
 
     fold_a_model, fold_a_spec = _model_and_spec(fold_a_general)
     fold_b_model, fold_b_spec = _model_and_spec(fold_b_general)
@@ -206,17 +200,10 @@ def main() -> int:
     # the production general bundle into BOTH fold-a/ and fold-b/. Both
     # bundles would then produce identical OOF predictions (in-sample on the
     # whole train+dev set), silently corrupting downstream calibration.
-    # Hash the primary model bytes and abort if they match — catches the
+    # Hash every ensemble member and abort if the bundles match — catches the
     # collision before we sink an hour of feature extraction into bad data.
-    import hashlib  # noqa: PLC0415
-    def _sha256(path: Path) -> str:
-        h = hashlib.sha256()
-        with open(path, "rb") as f:
-            for chunk in iter(lambda: f.read(1024 * 1024), b""):
-                h.update(chunk)
-        return h.hexdigest()
-    fold_a_hash = _sha256(fold_a_model)
-    fold_b_hash = _sha256(fold_b_model)
+    fold_a_hash = cache_identity.model_revision(fold_a_model)
+    fold_b_hash = cache_identity.model_revision(fold_b_model)
     if fold_a_hash == fold_b_hash:
         raise SystemExit(
             f"fold-A model {fold_a_model} and fold-B model {fold_b_model} "

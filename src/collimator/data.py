@@ -379,6 +379,8 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
             raise FileNotFoundError(f"Database not found: {db_path}")
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         try:
+            if repeatable_read:
+                conn.execute("BEGIN")
             yield conn
         finally:
             conn.close()
@@ -511,23 +513,11 @@ try:
 except ValueError:
     MIN_SAMPLE_SCORE = _default_min
 
-# Parallel workers per Gather for collimator's own connections.
-#
-# hopper's replica pins `max_parallel_workers_per_gather = 0` on the shared
-# `hopper` role (hopper scripts/replica/setup.sh). That cap exists for prism,
-# which runs many small concurrent feed queries whose parallel workers scan with
-# the bulkread ring buffer and starve the single-threaded logical-apply worker
-# for device queue. collimator connects as the same role but has the opposite
-# shape: a couple of long scans of the labeled corpus, not fifteen concurrent
-# page renders. Inheriting prism's cap silently made every full-corpus stream
-# single-threaded, so we opt back in per session rather than by widening the
-# role for everyone.
-#
-# The default is PostgreSQL's own default of 2 — enough to restore what the role
-# cap took away, and bounded so two nightly runs add four backends rather than
-# an unbounded fan-out. Set COLLIMATOR_PG_PARALLEL_WORKERS=0 to inherit the role
-# setting again if the replica is fighting to catch up.
-_default_parallel = 2
+# Corpus scans share storage with the logical-replication apply workers.
+# Keep parallel query workers opt-in so concurrent experiments do not undo
+# the replica's hopper-role limit. Dedicated training databases can opt in
+# with COLLIMATOR_PG_PARALLEL_WORKERS=2 (or another explicit worker count).
+_default_parallel = 0
 try:
     PG_PARALLEL_WORKERS = max(
         0, int(os.getenv("COLLIMATOR_PG_PARALLEL_WORKERS", str(_default_parallel)))
@@ -547,25 +537,37 @@ LABELED_WHERE = "label IN ('bad', 'good') AND cleave_result IS NOT NULL AND skip
 
 
 def fetch_file_types(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, str]:
-    """Return {row_id: stored file_type or "unknown"} for labeled ``row_ids``.
+    """Return stored file types for the requested usable labeled rows.
 
-    One sequential scan over the labeled rows, keeping the requested ids:
-    ~4 min for any number of rows, where batched ``id = ANY(...)`` lookups
-    took 15-60 min for the nightly's 7-20M rows, and the planner's index-only
-    scan, with a stale visibility map, 16 min.
+    Requests up to 250k rows use bounded ID lookups, covering the usual
+    150k-row experiment. Larger requests read the labeled
+    population once, allowing PostgreSQL to use the covering (file_type, id)
+    index. Forcing a sequential scan here reads the entire samples heap for
+    metadata that fits in that index and competes with replication apply.
     """
     wanted = {int(row_id) for row_id in row_ids}
     if not wanted:
         return {}
     query = (
         "SELECT id, COALESCE(NULLIF(file_type, ''), 'unknown') FROM samples"
-        f" WHERE {LABELED_WHERE} AND id <= {max(wanted)}"
+        f" WHERE {LABELED_WHERE}"
     )
     with _connect(db_path, repeatable_read=True) as conn:
-        _read_table_in_order(conn)
+        if len(wanted) <= 250_000:
+            result: dict[int, str] = {}
+            ordered = sorted(wanted)
+            for start in range(0, len(ordered), 500):
+                chunk = ordered[start : start + 500]
+                if isinstance(conn, sqlite3.Connection):
+                    placeholders = ",".join("?" for _ in chunk)
+                    rows = _execute(conn, query + f" AND id IN ({placeholders})", chunk)
+                else:
+                    rows = _execute(conn, query + " AND id = ANY(%s)", [chunk])
+                result.update((int(row_id), file_type) for row_id, file_type in rows)
+            return result
         return {
             int(row_id): file_type
-            for row_id, file_type in _execute(conn, query)
+            for row_id, file_type in _execute(conn, query + f" AND id <= {max(wanted)}")
             if int(row_id) in wanted
         }
 

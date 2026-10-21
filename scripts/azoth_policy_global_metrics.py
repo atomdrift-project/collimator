@@ -106,24 +106,16 @@ def _decisions(
     level: int,
     severity: str,
 ) -> tuple[np.ndarray, dict[str, int]]:
+    from collimator.policy import routed_margin
     hit = np.zeros(len(labels), dtype=bool)
-    route_hits: dict[str, int] = {}
-    config_thresholds = _config_thresholds(config, level, severity)
-    for filetype in sorted(set(str(value) for value in file_types)):
+    policy_hits: dict[str, int] = {}
+    for filetype in np.unique(file_types):
         mask = file_types == filetype
-        thresholds = _policy_thresholds(policy, filetype, level, severity)
-        if thresholds is None:
-            thresholds = config_thresholds
-        for route, threshold in thresholds.items():
-            if route not in route_names:
-                continue
-            route_idx = route_names.index(route)
-            route_score = scores[route_idx, mask]
-            route_hit = ~np.isnan(route_score) & (route_score >= threshold)
-            if np.any(route_hit):
-                hit[np.flatnonzero(mask)[route_hit]] = True
-                route_hits[route] = route_hits.get(route, 0) + int(np.sum(route_hit))
-    return hit, route_hits
+        subset = {route: scores[index, mask] for index, route in enumerate(route_names)}
+        hit[mask] = routed_margin(subset, config, policy, str(filetype), level,
+                                  int(mask.sum()), severity=severity) >= 0
+        policy_hits[f"filetypes/{filetype}"] = int(hit[mask].sum())
+    return hit, policy_hits
 
 
 def _pct(value: float) -> str:
@@ -216,7 +208,9 @@ def main() -> int:
 
     config = _load_json(args.config)
     policy = _load_json(args.policy)
-    score_table = np.load(args.score_table)
+    from collimator import policy as frozen_policy
+    with np.load(args.score_table) as table:
+        score_table = frozen_policy.partition_table(table, "test")
     labels = score_table["labels"].astype(np.int8)
     file_types = np.asarray([str(value) for value in score_table["file_types"]])
     route_names = [str(value) for value in score_table["route_names"]]
@@ -275,6 +269,7 @@ def main() -> int:
         "schema": "azoth.global_policy_metrics.v1",
         "calibration_snapshot_id": config.get("calibration_snapshot_id"),
         "rows": int(len(labels)),
+        "evaluated_on": "test_bucket_only",
         "malware": int(np.sum(labels == 1)),
         "benign": int(np.sum(labels == 0)),
         "levels": levels,

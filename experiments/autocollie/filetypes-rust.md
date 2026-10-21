@@ -1208,3 +1208,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T110756-filetypes-rust` — 2026-10-20T11:07:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `53601f4d000035ac` | inherit_from_filetypes_elf_4c2de854 | ok | 0.2293 | 0.8792 | 0.1250 | 693 | [log](out/autocollie/runs/2026-10-20T11-20-41_20261020T110756-filetypes-rust_inherit_from_filetypes_elf_4c2de854.log) |
+| `c2af683de92696c5` | rust_control_archive_env_hardneg8 | ok | 0.0966 | 0.7026 | 0.1267 | 646 | [log](out/autocollie/runs/2026-10-20T11-32-13_20261020T110756-filetypes-rust_rust_control_archive_env_hardneg8.log) |
+| `237f74f6ccb52b14` | rust_text_metrics_full | ok | 0.0899 | 0.6677 | 0.1270 | 30 | [log](out/autocollie/runs/2026-10-20T11-43-00_20261020T110756-filetypes-rust_rust_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`rust_control_archive_env_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=0 …` — Control on the archived best rust feature env with hard-negative weight 8 to lift recall@3FPM by suppressing benign FPs while keeping PR_AUC and ROC_AUC flat.
+- **`rust_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=0 …` — Enable text_metrics_full on the archived rust env to add obfuscation, line-shape, and escape-density rank signal, aiming PR_AUC and recall@3FPM for sparse malicious Rust droppers.
+
+</details>
+

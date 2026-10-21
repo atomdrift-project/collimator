@@ -1198,3 +1198,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T024012-filegroups-media` — 2026-10-20T02:40:12Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `4c9e45677eabfe5e` | inherit_from_filegroups_config_fb3b4045 | ok | 0.3945 | 0.7230 | 0.1602 | 1000 | [log](out/autocollie/runs/2026-10-20T02-49-37_20261020T024012-filegroups-media_inherit_from_filegroups_config_fb3b4045.log) |
+| `f7ed8cb6a47fd2e7` | media_archive_control_spw075 | ok | 0.4123 | 0.7026 | 0.1693 | 16 | [log](out/autocollie/runs/2026-10-20T03-06-17_20261020T024012-filegroups-media_media_archive_control_spw075.log) |
+| `aa1b495d03492280` | media_text_metrics_full | ok | 0.3945 | 0.7230 | 0.1602 | 14 | [log](out/autocollie/runs/2026-10-20T03-06-33_20261020T024012-filegroups-media_media_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`media_archive_control_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Pin the archived best feature env and downweight positives to cut benign FPs at the strict tail, targeting recall@3FPM while keeping PR_AUC flat.
+- **`media_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable text_metrics_full to add null-byte, escape, and invisible-character signal in media payloads, aiming to lift PR_AUC and recall@3FPM by separating obfuscated malware from benign media.
+
+</details>
+

@@ -20,11 +20,12 @@ import scipy.sparse as sp
 
 from azoth_calibrate_ensemble import (
     _budget,
+    _file_sha256,
     _clopper_pearson_fp_per_million_upper,
     _max_dev_fp_for_target,
     _quantile_severity_threshold,
 )
-from collimator import bundle, features
+from collimator import bundle, features, policy
 
 
 def _json_clean(value: Any) -> Any:
@@ -543,17 +544,20 @@ def _fit_learned_blend(
         if len(keep) <= 2:
             return None
         del keep[worst]
-    weights = w
-    intercept = float(clf.intercept_[0])
+    # The runtime deserializes coefficients and probabilities as f32. Select
+    # thresholds on those exact outputs, including rounding at the boundary.
+    weights = w.astype(np.float32)
+    intercept = float(np.float32(clf.intercept_[0]))
     kept_routes = tuple(present_routes[i] for i in keep)
     sub = stacked[:, keep]
     # Recompute the valid-row mask over only the kept columns: dropping a route
     # can make rows valid that were excluded solely for that route's NaN.
     valid_row = ~np.any(np.isnan(sub), axis=1)
     # Apply the blend to every valid slice row, NaN otherwise.
-    z = sub @ weights + intercept
-    blend = np.full(len(labels), np.nan, dtype=np.float64)
-    blend[valid_row] = 1.0 / (1.0 + np.exp(-z[valid_row]))
+    blend = policy.margin(route_probs, {"blend": {
+        "routes": kept_routes, "weights": weights, "intercept": intercept, "threshold": 0.,
+    }}, len(labels))
+    blend[~valid_row] = np.nan
     return {
         "blend_score": blend,
         "valid_row": valid_row,
@@ -1521,6 +1525,8 @@ def _csv_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
 def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="") as f:
+        if not rows:
+            return
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
@@ -1955,9 +1961,18 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.override_route:
+        parser.error("stage replacement models and recalibrate before policy search")
     with open(args.config) as f:
         config = json.load(f)
-    score_table = np.load(args.score_table)
+    if config.get("fit_partition") != "dev" or config.get("score_space") != "raw":
+        raise ValueError("policy search requires production raw-score calibration on dev")
+    if config.get("score_table_hash") != _file_sha256(args.score_table):
+        raise ValueError("score table differs from calibration; regenerate calibration")
+    with np.load(args.score_table) as full_table:
+        score_table = policy.partition_table(full_table, "dev")
+    if len(score_table["labels"]) == 0:
+        raise ValueError("no dev rows for policy selection")
     labels = score_table["labels"].astype(np.int8)
     file_types = np.asarray([str(value) for value in score_table["file_types"]])
     filetype_to_group = {str(k): str(v) for k, v in config.get("filetype_to_group", {}).items()}
@@ -1988,90 +2003,10 @@ def main() -> int:
 
     unique_filetypes = sorted(set(file_types))
 
-    # Carry-forward optimization for single-route promotes. When
-    # --previous-bundle is set, compare the current score_table.npz
-    # against the previous one; for filetypes whose relevant routes
-    # are bytewise-identical between bundles, the policy choice cannot
-    # have changed (it's a deterministic function of the scores).
-    # Copy those entries from <previous-bundle>/route_policies.json
-    # rather than re-running policy_search on them.
+    # Recompute on dev. Score-only carry-forward missed label, partition,
+    # and search-setting changes and could silently preserve leaky policies.
     carry_forward_policies: dict[str, dict[str, Any]] = {}
-    # A self-comparison (previous-bundle == the bundle being written) is unsafe:
-    # carry-forward keys on model identity, so when the score table is
-    # regenerated (e.g. in-sample → OOF scores, or a corpus refresh) but the
-    # models are unchanged, every route is judged "unchanged" and its policy is
-    # frozen at whatever it was first computed from — the thresholds silently
-    # stop tracking the current benign distribution and the FP budget drifts.
-    # Carry-forward only makes sense against a *different* (deployed) bundle, the
-    # autocollie single-route-promote case. Disable it on self-comparison so the
-    # authoritative calibrate/deploy always recomputes from the live score table.
-    if args.previous_bundle is not None and (
-        (args.previous_bundle / "route_policies.json").resolve() == Path(args.output).resolve()
-    ):
-        print(
-            "policy_search: previous-bundle is the bundle being written "
-            "(self-comparison); disabling carry-forward to recompute every route "
-            "from the current score table (avoids frozen/stale thresholds)",
-            file=sys.stderr,
-        )
-        args.previous_bundle = None
-    if args.previous_bundle is not None:
-        try:
-            import sys as _sys
-            _sys.path.insert(0, str(Path(__file__).parent))
-            from azoth_impact import changed_routes, unchanged_filetypes  # noqa: PLC0415
-            from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: PLC0415
-            prev_score_table = args.previous_bundle / "score_table.npz"
-            prev_policies_path = args.previous_bundle / "route_policies.json"
-            prev_config_path = args.previous_bundle / "config.json"
-            # Carry-forward is sound ONLY when the level grid is identical
-            # between bundles. _decisions in azoth_policy_global_metrics.py
-            # looks up policy thresholds by exact level match — if a level
-            # exists in the new grid but not in the carried-forward policy,
-            # every filetype falls back to global config thresholds at that
-            # level, producing absurd FP counts that look like a calibrator
-            # regression. Drop carry-forward entirely on any grid mismatch.
-            current_grid = tuple(int(item["level"]) for item in config.get("levels", []))
-            prev_grid: tuple[int, ...] = ()
-            if prev_config_path.is_file():
-                with open(prev_config_path) as f:
-                    prev_grid = tuple(int(item["level"]) for item in json.load(f).get("levels", []))
-            if prev_grid != current_grid:
-                print(
-                    f"policy_search: level grid changed since previous bundle "
-                    f"({len(prev_grid)} → {len(current_grid)} levels); "
-                    f"disabling carry-forward to keep per-filetype policies "
-                    f"in sync with the new grid"
-                )
-                raise RuntimeError("level grid mismatch; carry-forward disabled")
-            changed_set, _ = changed_routes(args.score_table, prev_score_table)
-            avail_routes = set(routes.keys())
-            unchanged = unchanged_filetypes(
-                changed_set, DEPLOYMENT_GROUPS, avail_routes, unique_filetypes,
-            )
-            print(
-                f"policy_search carry-forward: {len(changed_set)}/{len(avail_routes)} "
-                f"routes changed; {len(unchanged)}/{len(unique_filetypes)} filetypes "
-                f"can be carried forward from previous bundle"
-            )
-            if prev_policies_path.is_file():
-                with open(prev_policies_path) as f:
-                    prev_payload = json.load(f)
-                prev_routes = prev_payload.get("routes", {}) or {}
-                for ft in unchanged:
-                    route_key = f"filetypes/{ft}"
-                    if route_key in prev_routes:
-                        carry_forward_policies[route_key] = prev_routes[route_key]
-        except Exception as e:  # noqa: BLE001
-            print(f"policy_search: carry-forward setup failed ({e}); "
-                  f"running full search")
-            carry_forward_policies = {}
-
-    # Stash carried-forward results into route_payload directly; only
-    # process the remaining filetypes.
-    for route_key, entry in carry_forward_policies.items():
-        route_payload[route_key] = entry
-    skipped = set(rk.split("/", 1)[1] for rk in carry_forward_policies if rk.startswith("filetypes/"))
+    skipped: set[str] = set()
     to_process = [ft for ft in unique_filetypes if ft not in skipped]
 
     parallelism = _resolve_parallelism(args.parallelism, len(to_process))
@@ -2098,6 +2033,9 @@ def main() -> int:
     payload = {
         "timestamp": datetime.now(UTC).isoformat(),
         "schema": "azoth.route_policy_search.v1",
+        "fit_partition": "dev",
+        "score_space": "raw",
+        "score_table_hash": config.get("score_table_hash"),
         "calibration_snapshot_id": config.get("calibration_snapshot_id"),
         "rows": int(len(labels)),
         "malware": int(np.sum(labels == 1)),

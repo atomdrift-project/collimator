@@ -528,11 +528,13 @@ def main() -> None:
         help="Score the full labeled corpus with an existing model and compare threshold policies",
     )
     p_tune.add_argument("--db", required=True, help="Path to hopper database (SQLite path or postgres:// DSN)")
-    p_tune.add_argument("--model", default="out/model.json", help="Path to trained XGBoost model")
+    p_tune.add_argument("--model", default="out/model.json",
+                        help="Exported ensemble directory or a single model file")
     p_tune.add_argument("--spec", default="out/feature_spec.json", help="Path to feature_spec.json")
     p_tune.add_argument("--path-substr", default=None, help="Only include rows whose sample path contains this substring")
     p_tune.add_argument("--min-score", type=int, default=None, help="Optional minimum hopper score to include")
     p_tune.add_argument("--max-score", type=int, default=None, help="Optional maximum hopper score to include")
+    p_tune.add_argument("--scores-only", action="store_true", help="Build/verify the raw score cache without fitting diagnostic thresholds")
     p_tune.add_argument("--top-errors", type=int, default=20, help="How many FP/FN paths to show per policy level")
     p_tune.add_argument("--output", default=None, help="Optional JSON output path")
     p_tune.add_argument("--limit", type=int, default=0, help="Optional row cap after filters (0 = no cap)")
@@ -834,6 +836,7 @@ def main() -> None:
             min_score=args.min_score,
             max_score=args.max_score,
             top_errors=args.top_errors,
+            scores_only=args.scores_only,
             output_path=Path(args.output) if args.output else None,
             limit=args.limit,
             max_id=args.max_id,

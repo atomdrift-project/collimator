@@ -1290,3 +1290,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T121456-filetypes-zip` — 2026-10-20T12:14:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fda992d32f7ac004` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.9643 | 0.9605 | 0.8270 | 127 | [log](out/autocollie/runs/2026-10-20T12-20-02_20261020T121456-filetypes-zip_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `acb9d517ff2260d8` | zip_control_hardneg8_scalepos075 | ok | 0.9656 | 0.9615 | 0.8243 | 146 | [log](out/autocollie/runs/2026-10-20T12-22-09_20261020T121456-filetypes-zip_zip_control_hardneg8_scalepos075.log) |
+| `5747eb91ddd43560` | zip_kv_vocab_value_split | ok | 0.9680 | 0.9656 | 0.8300 | 250 | [log](out/autocollie/runs/2026-10-20T12-24-35_20261020T121456-filetypes-zip_zip_kv_vocab_value_split.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`zip_control_hardneg8_scalepos075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived best zip feature_env; tests whether stronger hard-negative weighting and lower positive weight improve recall@3FPM while keeping PR_AUC flat.
+- **`zip_kv_vocab_value_split`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enables KV vocab and value splitting on the archived zip feature set to add archive metadata rank signal, aiming to lift PR_AUC and recall@3FPM without hurting ROC_AUC.
+
+</details>
+

@@ -2632,3 +2632,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T085927-filetypes-pe` — 2026-10-20T08:59:27Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `3890f4da94cf1bbe` | inherit_from_filetypes_elf_4c2de854 | ok | 0.9976 | 0.9976 | 0.9759 | 1120 | [log](out/autocollie/runs/2026-10-20T09-07-25_20261020T085927-filetypes-pe_inherit_from_filetypes_elf_4c2de854.log) |
+| `29ed2fd879d2a21c` | pe_control_hardneg8 | ok | 0.9976 | 0.9976 | 0.9748 | 85 | [log](out/autocollie/runs/2026-10-20T09-26-05_20261020T085927-filetypes-pe_pe_control_hardneg8.log) |
+| `75fd86e4adf0c5bf` | pe_symbol_vocab_overlay | ok | 0.9976 | 0.9977 | 0.9755 | 225 | [log](out/autocollie/runs/2026-10-20T09-27-29_20261020T085927-filetypes-pe_pe_symbol_vocab_overlay.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pe_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived PE feature env with hard_negative_weight raised to 8 to improve recall@3FPM at the strict-FP tail while keeping PR_AUC flat.
+- **`pe_symbol_vocab_overlay`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable symbol_vocab and overlay_signal on the archived PE base to add import/symbol and packer/overlay rank signal, aiming to lift PR_AUC and recall@3FPM without hurting ROC_AUC.
+
+</details>
+

@@ -16,7 +16,6 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from collimator import bundle  # noqa: E402
-from collimator.features import MODEL_ABI_VERSION  # noqa: E402
 
 
 # Per-route files that aren't model artifacts. Model files are picked up
@@ -29,7 +28,7 @@ from collimator.features import MODEL_ABI_VERSION  # noqa: E402
 # SHAP is generated every train (see the Makefile `azoth-shap` target) and kept
 # in out/ as an internal debugging aid for `ascan --extra`; it is not published
 # in the deployed bundle.
-ROUTE_AUX_FILES = ("feature_spec.json", "README.md", "recall_curve.svg")
+ROUTE_AUX_FILES = ("training_provenance.json", "feature_spec.json", "README.md", "recall_curve.svg")
 ROOT_FILES = ("config.json", "route_policies.json")
 
 # Optional root files. Deploy proceeds without them, but downstream
@@ -49,45 +48,12 @@ def _copy_if_exists(src: Path, dst: Path) -> None:
 
 
 def _stage_feature_spec(src: Path, dst: Path) -> None:
-    """Copy feature_spec.json, re-deriving the offset-written families' vocabs
-    (presence/bigram/trigram) as the UNION of each family's paths in
-    feature_names.
+    """Preserve the feature extractor calibrated with the model, byte for byte.
 
-    The allowlist prune can leave a path in feature_names for only one side of a
-    pair (e.g. maxcrit:X kept while present:X is dropped). Without the path in the
-    vocab, litmus can't produce the surviving member — it extracts as a silent
-    zero and logs "feature spec contains features unknown to this extractor".
-    Re-deriving here (not just at FeatureSpec.save time) makes every staged
-    bundle self-consistent regardless of how the source spec was produced, so a
-    plain `make deploy` of an already-trained bundle ships clean specs too.
+    Vocabulary repair and ABI changes belong before training/scoring. Rewriting
+    them during publication makes the verified scores describe another model.
     """
-    if not src.is_file():
-        return
-
-    def _union(names: list[str], prefixes: tuple[str, ...]) -> list[str]:
-        seen: dict[str, None] = {}
-        for name in names:
-            for prefix in prefixes:
-                if name.startswith(prefix):
-                    seen.setdefault(name[len(prefix):], None)
-                    break
-        return list(seen)
-
-    with src.open() as f:
-        spec = json.load(f)
-    # A staged runtime bundle must match the litmus ABI this collimator build
-    # targets. Older generated specs can be forward-compatible by feature list:
-    # litmus fills newer optional features as zeros when absent from the spec.
-    spec["version"] = MODEL_ABI_VERSION
-    spec["abi_version"] = MODEL_ABI_VERSION
-    names = spec.get("feature_names") or []
-    if names:
-        spec["presence_vocab"] = _union(names, ("present:", "maxcrit:"))
-        spec["bigram_vocab"] = _union(names, ("bigrams:", "unsigned_bigram:"))
-        spec["trigram_vocab"] = _union(names, ("trigram:",))
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    with dst.open("w") as f:
-        json.dump(spec, f, indent=2)
+    _copy_if_exists(src, dst)
 
 
 def _copy_route(src: Path, dst: Path) -> bool:

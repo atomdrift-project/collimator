@@ -1200,3 +1200,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T090640-filetypes-php` — 2026-10-20T09:06:40Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7615559deb1ac583` | inherit_from_filetypes_elf_4c2de854 | ok | 0.8822 | 0.9496 | 0.8513 | 609 | [log](out/autocollie/runs/2026-10-20T09-18-08_20261020T090640-filetypes-php_inherit_from_filetypes_elf_4c2de854.log) |
+| `2896ff73bfafc491` | php_control_hardneg8 | ok | 0.8705 | 0.9544 | 0.8600 | 650 | [log](out/autocollie/runs/2026-10-20T09-28-17_20261020T090640-filetypes-php_php_control_hardneg8.log) |
+| `771786e2964dae0b` | php_textenc_metrics_full | ok | 0.8655 | 0.9511 | 0.8528 | 41 | [log](out/autocollie/runs/2026-10-20T09-39-07_20261020T090640-filetypes-php_php_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`php_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived best feature_env with hard_negative_weight raised to 8 to cut benign FP at the strict tail and improve recall@3FPM while keeping PR_AUC flat.
+- **`php_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable text_encoding and text_metrics_full while removing textenc from disable_groups to add PHP obfuscation/encoding rank signal, aiming to lift PR_AUC and recall@3FPM at the strict-FP tail.
+
+</details>
+

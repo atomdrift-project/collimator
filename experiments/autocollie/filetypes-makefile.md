@@ -868,3 +868,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T080756-filetypes-makefile` — 2026-10-20T08:07:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7ddcb93d541a102a` | inherit_from_filetypes_elf_4c2de854 | ok | 0.1332 | 0.6805 | 0.1864 | 714 | [log](out/autocollie/runs/2026-10-20T08-16-51_20261020T080756-filetypes-makefile_inherit_from_filetypes_elf_4c2de854.log) |
+| `020aef04918d5f27` | makefile_control_spw075 | ok | 0.0382 | 0.4615 | 0.0877 | 559 | [log](out/autocollie/runs/2026-10-20T08-28-45_20261020T080756-filetypes-makefile_makefile_control_spw075.log) |
+| `b82f76be0102e467` | makefile_text_metrics_full | ok | 0.0502 | 0.5368 | 0.0811 | 14 | [log](out/autocollie/runs/2026-10-20T08-38-04_20261020T080756-filetypes-makefile_makefile_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`makefile_control_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=0 …` — Control on the archived best makefile feature env with positive down-weighting to cut benign FP and lift recall@3FPM while keeping PR_AUC flat.
+- **`makefile_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CONFIDENCE_WEIGHTED_NGRAMS=0 …` — Enable text_encoding and text_metrics_full on the best makefile env to add obfuscation and line-structure rank signal, aiming PR_AUC and recall@3FPM.
+
+</details>
+

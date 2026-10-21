@@ -1120,3 +1120,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T121026-filetypes-xml` — 2026-10-20T12:10:26Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e42de4ab3376eb3f` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.1358 | 0.5326 | 0.1099 | 17 | [log](out/autocollie/runs/2026-10-20T12-16-42_20261020T121026-filetypes-xml_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `d55c4bb3c4176bbe` | xml_archived_baseline_hardneg8 | ok | 0.1962 | 0.6444 | 0.1493 | 20 | [log](out/autocollie/runs/2026-10-20T12-16-59_20261020T121026-filetypes-xml_xml_archived_baseline_hardneg8.log) |
+| `466a824056eb198f` | xml_textenc_metrics_full | ok | 0.1735 | 0.5812 | 0.1423 | 15 | [log](out/autocollie/runs/2026-10-20T12-17-19_20261020T121026-filetypes-xml_xml_textenc_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`xml_archived_baseline_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived XML feature_env with stronger hard-negative weighting to cut benign FPs and lift recall@3FPM while keeping PR_AUC flat.
+- **`xml_textenc_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable text_encoding and text_metrics_full on the archived XML surface to add obfuscation and encoding rank signal, aiming to improve PR_AUC and recall@3FPM on suspicious-laden XML.
+
+</details>
+

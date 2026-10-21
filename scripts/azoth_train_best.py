@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay the highest-F1 historical run for a given route, with multi-seed averaging.
+"""Replay a historical training configuration with multi-seed averaging.
 
 Why this exists
 ---------------
@@ -19,6 +19,11 @@ specialist suite.
 
 Selection
 ---------
+- Registered promotions take precedence, followed by meaningful paired
+  comparisons against the deployed model on identical test rows.
+- Specialists without either can bootstrap from recent screen evidence:
+  choose PR AUC within the newest successful evaluation cohort. This is a
+  provisional training configuration, not an operational promotion.
 - Runs are filtered to a target route (default ``general``).
 - Primary key is ``sampled_test_metrics.recall_at_50_per_100M``,
   the recall at the L50 hostile deploy budget (0.5 FP/M). This is
@@ -63,6 +68,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 from collimator.thresholds import default_recall_per_100M_field  # noqa: E402
+from collimator.autocollie_selection import replay_feature_env, replay_malware_score, select_bootstrap_run  # noqa: E402
 
 LOG = logging.getLogger("azoth_train_best")
 
@@ -242,6 +248,10 @@ def _select_best_run(
          warning logs when this whole fallback fires so the human
          knows the route needs a promote cycle.
 
+      C. **Provisional specialist bootstrap**, when neither A nor a
+         meaningful paired B exists. Rank healthy runs by PR AUC within
+         the newest evaluation cohort, without using noisy tail recall.
+
     Runs without ``avg_precision`` are skipped entirely. Runs without
     either ``recall_at_50_per_100M`` or the legacy
     ``recall_at_fp_per_million_3`` get sorted with fallback recall 0.0.
@@ -261,11 +271,12 @@ def _select_best_run(
             route, runs_dir,
         )
     if not runs_dir.is_dir():
-        LOG.error("runs dir %s does not exist", runs_dir)
+        LOG.info("runs dir %s does not exist yet", runs_dir)
         return None
     best: tuple[bool, float, float, float, bool, str, dict[str, Any]] | None = None
     apples_to_apples_count = 0
     legacy_count = 0
+    bootstrap_runs: dict[str, dict[str, Any]] = {}
     for path in runs_dir.glob("*.json"):
         if path.name.endswith("_feature_spec.json"):
             continue
@@ -278,7 +289,7 @@ def _select_best_run(
             continue
         metrics = run.get("sampled_test_metrics") or {}
         ap = metrics.get("avg_precision")
-        if not isinstance(ap, (int, float)):
+        if not isinstance(ap, (int, float)) or not math.isfinite(ap):
             continue
         op_val = _op_recall(metrics)
         r_op = op_val if op_val is not None else 0.0
@@ -306,11 +317,15 @@ def _select_best_run(
         n_ben = deployed.get("n_benign", 0) or 0
         has_apples = (
             deployed_op is not None
+            and deployed.get("held_out") is True
+            and bool(run.get("evaluation_revision"))
+            and deployed.get("evaluation_revision") == run.get("evaluation_revision")
             and n_mal >= APPLES_MIN_MALWARE_HOLDOUT
             and n_ben >= APPLES_MIN_BENIGN_HOLDOUT
         )
         if route_supports_apples and not has_apples:
             legacy_count += 1
+            bootstrap_runs[str(run.get("experiment_key") or path.stem)] = run
             continue
         delta_r_op = (r_op - float(deployed_op)) if has_apples else 0.0
         if has_apples:
@@ -336,6 +351,14 @@ def _select_best_run(
             best[1], best[2],
         )
     elif legacy_count > 0 and (route.startswith("filetypes/") or route.startswith("filegroups/")):
+        bootstrap = select_bootstrap_run(list(bootstrap_runs.values()))
+        if bootstrap is not None:
+            LOG.warning(
+                "bootstrap for route %s: key=%s source=screen_bootstrap_pr_auc "
+                "(recent common evaluation cohort; not a promoted baseline)",
+                route, bootstrap.get("experiment_key", "?"),
+            )
+            return bootstrap
         LOG.warning(
             "fallback picker for route %s scanned %d screen run(s), none "
             "with apples-to-apples on holdout >= %d malware / %d benign; "
@@ -358,10 +381,9 @@ def _resolve_env(run: dict[str, Any], extra: dict[str, str]) -> dict[str, str]:
         if exp_name is None:
             continue
         env[exp_name] = _format_env_value(value)
-    # min_malware_training_score lives outside train_config in older schemas.
-    filters = run.get("filters") or {}
-    if "min_malware_training_score" in filters and filters["min_malware_training_score"] is not None:
-        env["EXP_MIN_MALWARE_SCORE"] = _format_env_value(filters["min_malware_training_score"])
+    cutoff = replay_malware_score(run)
+    if cutoff is not None:
+        env["EXP_MIN_MALWARE_SCORE"] = str(cutoff)
     # Top-level fields the experiment spec carries explicitly.
     if isinstance(run.get("seed"), int):
         env["SEED"] = _format_env_value(run["seed"])
@@ -374,9 +396,8 @@ def _resolve_env(run: dict[str, Any], extra: dict[str, str]) -> dict[str, str]:
         if src_key in spec and spec[src_key] is not None:
             env[env_name] = _format_env_value(spec[src_key])
     # Feature env vars (already in COLLIMATOR_* form).
-    for key, value in (run.get("feature_env") or {}).items():
-        if str(key).startswith("COLLIMATOR_"):
-            env[str(key)] = _format_env_value(value)
+    for key, value in replay_feature_env(run).items():
+        env[key] = value
     # Caller's last-mile overrides win — used by the Makefile to inject DB,
     # WORKERS, and the multi-seed flags that aren't in the historical spec.
     env.update(extra)
@@ -387,14 +408,13 @@ _MAKEFILE_PATH = Path(__file__).resolve().parent.parent / "Makefile"
 
 
 def _collimator_to_exp_map(makefile: Path = _MAKEFILE_PATH) -> dict[str, str]:
-    """COLLIMATOR_* -> EXP_* pairs parsed from the `experiment` recipe lines
-    (``\\tCOLLIMATOR_X=$(EXP_Y) \\``).
+    """COLLIMATOR_* -> EXP_* pairs from Makefile's shared feature environment.
 
     The recipe re-derives every listed COLLIMATOR_* from its EXP_* twin, so a
     COLLIMATOR_* value handed to ``make experiment`` (env or command line) is
     silently clobbered unless delivered under the EXP_* name. autocollie's Go
     side does this rewrite via its KnobSet; this is the Python mirror.
-    Parsing the recipe (rather than hard-coding a table) keeps the map from
+    Parsing the assignments (rather than hard-coding a table) keeps the map from
     drifting when knobs are added — and covers the non-suffix pairs
     (COLLIMATOR_NUM_THREADS -> EXP_LGBM_THREADS, _EXPERIMENT_TAG -> EXP_TAG).
     """
@@ -406,7 +426,7 @@ def _collimator_to_exp_map(makefile: Path = _MAKEFILE_PATH) -> dict[str, str]:
         return pairs
     import re  # noqa: PLC0415
 
-    for m in re.finditer(r"^\t(COLLIMATOR_[A-Z0-9_]+)=\$\((EXP_[A-Z0-9_]+)\)", text, re.M):
+    for m in re.finditer(r"^[ \t]+(COLLIMATOR_[A-Z0-9_]+)=\$\((EXP_[A-Z0-9_]+)\)", text, re.M):
         pairs[m.group(1)] = m.group(2)
     return pairs
 
@@ -475,6 +495,10 @@ def main() -> int:
     )
     parser.add_argument("--route", default="general")
     parser.add_argument(
+        "--default-min-malware-score", type=int,
+        help="Training cutoff when neither history nor --set specifies one.",
+    )
+    parser.add_argument(
         "--set",
         action="append",
         default=[],
@@ -520,19 +544,19 @@ def main() -> int:
         baselines_path = args.promoted_baselines if str(args.promoted_baselines) else None
         run = _select_best_run(Path(runs_dir_str), args.route, baselines_path=baselines_path)
         if run is None:
-            LOG.error("no historical run found for route %r in %s", args.route, runs_dir_str)
-            return 1
-        metrics = run.get("sampled_test_metrics") or {}
-        r_op = _op_recall(metrics)
-        LOG.info(
-            "best for route %s: key=%s recall@L50=%s avg_precision=%.4f save_all=%s idea=%s",
-            args.route,
-            run.get("experiment_key", "?"),
-            f"{r_op:.4f}" if r_op is not None else "?",
-            metrics.get("avg_precision", float("nan")),
-            bool(run.get("save_all_seeds")),
-            run.get("idea", "?"),
-        )
+            LOG.warning("no usable history for route %s; bootstrapping with current defaults", args.route)
+        else:
+            metrics = run.get("sampled_test_metrics") or {}
+            r_op = _op_recall(metrics)
+            LOG.info(
+                "best for route %s: key=%s recall@L50=%s avg_precision=%.4f save_all=%s idea=%s",
+                args.route,
+                run.get("experiment_key", "?"),
+                f"{r_op:.4f}" if r_op is not None else "?",
+                metrics.get("avg_precision", float("nan")),
+                bool(run.get("save_all_seeds")),
+                run.get("idea", "?"),
+            )
     else:
         LOG.info(
             "defaults-only mode for route %s (no --runs-dir): replaying --set "
@@ -552,6 +576,8 @@ def main() -> int:
     else:
         extra.setdefault("EXP_IDEA", f"{args.route}_defaults")
     env = _resolve_env(run, extra) if run is not None else dict(extra)
+    if args.default_min_malware_score is not None:
+        env.setdefault("EXP_MIN_MALWARE_SCORE", str(args.default_min_malware_score))
 
     if args.print_env:
         # Printed in make-experiment form (the documented use is piping into

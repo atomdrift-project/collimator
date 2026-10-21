@@ -1152,3 +1152,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T113742-filetypes-tar` — 2026-10-20T11:37:42Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `8517c8836073e10a` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.9434 | 0.9818 | 0.8615 | 776 | [log](out/autocollie/runs/2026-10-20T11-47-06_20261020T113742-filetypes-tar_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `bee777dee910d393` | tar_control_spw075 | ok | 0.9357 | 0.9744 | 0.8194 | 71 | [log](out/autocollie/runs/2026-10-20T12-00-02_20261020T113742-filetypes-tar_tar_control_spw075.log) |
+| `1f75fd4e283ccee3` | tar_kv_vocab_research | ok | 0.9357 | 0.9744 | 0.8194 | 67 | [log](out/autocollie/runs/2026-10-20T12-01-13_20261020T113742-filetypes-tar_tar_kv_vocab_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`tar_control_spw075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control training variant of the archived tar feature env; scale_pos_weight_mult 0.75 down-weights positives to cut benign FP and lift recall@3FPM while keeping PR_AUC and ROC_AUC flat.
+- **`tar_kv_vocab_research`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab on the archived tar feature base to add key-value rank signal for archive metadata and embedded package fields, aiming to lift recall@3FPM on tail malicious tarballs while keeping PR_AUC and ROC_AUC flat.
+
+</details>
+

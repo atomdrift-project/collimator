@@ -1422,3 +1422,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T080135-filetypes-macho` — 2026-10-20T08:01:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `43366a6d32f0a29d` | inherit_from_filetypes_elf_4c2de854 | ok | 0.9715 | 0.9954 | 0.9153 | 929 | [log](out/autocollie/runs/2026-10-20T08-12-34_20261020T080135-filetypes-macho_inherit_from_filetypes_elf_4c2de854.log) |
+| `b1ed35e574805d44` | macho_control_kv_reg_tail | ok | 0.9671 | 0.9946 | 0.9135 | 618 | [log](out/autocollie/runs/2026-10-20T08-28-03_20261020T080135-filetypes-macho_macho_control_kv_reg_tail.log) |
+| `ab52315808497f0a` | macho_symbol_bigram_vocab | ok | 0.9674 | 0.9947 | 0.9237 | 58 | [log](out/autocollie/runs/2026-10-20T08-38-21_20261020T080135-filetypes-macho_macho_symbol_bigram_vocab.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`macho_control_kv_reg_tail`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the best archived Mach-O feature env; down-weighting positives plus mild L2 aims to improve recall@3FPM at the strict-FP operating point while keeping PR_AUC flat.
+- **`macho_symbol_bigram_vocab`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds Mach-O symbol and symbol-bigram vocab to capture malicious import co-occurrence, aiming to lift PR_AUC and tail recall@3FPM with new rank signal.
+
+</details>
+

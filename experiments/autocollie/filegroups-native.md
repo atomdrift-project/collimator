@@ -1200,3 +1200,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T024948-filegroups-native` — 2026-10-20T02:49:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d0b68d96f4cd6594` | inherit_from_filegroups_config_fb3b4045 | ok | 0.9979 | 0.9979 | 0.9702 | 1204 | [log](out/autocollie/runs/2026-10-20T02-55-20_20261020T024948-filegroups-native_inherit_from_filegroups_config_fb3b4045.log) |
+| `20aa3565613ca2da` | native_control_hardneg8 | ok | 0.9981 | 0.9981 | 0.9741 | 232 | [log](out/autocollie/runs/2026-10-20T03-15-24_20261020T024948-filegroups-native_native_control_hardneg8.log) |
+| `d455e1f58cf66517` | native_symbol_vocab_research | ok | 0.9981 | 0.9981 | 0.9741 | 131 | [log](out/autocollie/runs/2026-10-20T03-19-16_20261020T024948-filegroups-native_native_symbol_vocab_research.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`native_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims recall@3FPM by upweighting hard benigns on the archived native feature_env to cut strict-FP false positives while keeping PR_AUC and ROC_AUC flat.
+- **`native_symbol_vocab_research`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims PR_AUC and recall@3FPM by adding symbol_vocab import/symbol presence signal for native binaries, improving rank of malicious API patterns while keeping ROC_AUC flat.
+
+</details>
+

@@ -1253,3 +1253,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T093948-filetypes-powershell` — 2026-10-20T09:39:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f52324e17089025d` | inherit_from_filetypes_elf_4c2de854 | ok | 0.9894 | 0.9867 | 0.9454 | 745 | [log](out/autocollie/runs/2026-10-20T09-46-01_20261020T093948-filetypes-powershell_inherit_from_filetypes_elf_4c2de854.log) |
+| `b113c14082d26f34` | powershell_control_hardneg8 | ok | 0.9882 | 0.9851 | 0.9504 | 884 | [log](out/autocollie/runs/2026-10-20T09-58-26_20261020T093948-filetypes-powershell_powershell_control_hardneg8.log) |
+| `c6f3a9f6fb1977d0` | powershell_kv_textenc_textmetrics_bigram100 | ok | 0.9887 | 0.9857 | 0.9520 | 22 | [log](out/autocollie/runs/2026-10-20T10-13-10_20261020T093948-filetypes-powershell_powershell_kv_textenc_textmetrics_bigram100.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`powershell_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived best feature env with hard_negative_weight 8 to sharpen benign separation and lift recall@3FPM while keeping PR_AUC and ROC_AUC flat.
+- **`powershell_kv_textenc_textmetrics_bigram100`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=100 EXP_BLINDFOLD=1 …` — Enable kv_vocab, text_encoding, and text_metrics_full plus lower bigram_min_freq to add PowerShell key-value, encoding, and text-structure signal, aiming to improve PR_AUC and recall@3FPM at the tail.
+
+</details>
+

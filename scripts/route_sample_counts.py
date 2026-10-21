@@ -17,6 +17,8 @@ Output format (JSON to stdout):
 
 For ``filegroups/<X>`` and ``general`` the counts pool across all member
 filetypes (mapped via the deployed bundle's config.json filetype_to_group).
+The restored archive group uses the trainer's shared membership so it also
+works before the first bundle containing that group is built.
 filegroup/general routes train on pooled data so their counts reflect what
 the model actually sees.
 
@@ -38,17 +40,20 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from collimator import data as cdata  # noqa: E402
+from collimator.filegroups import ARCHIVE_FILETYPES  # noqa: E402
 
 
 def _filetypes_for_route(route: str, bundle_root: Path) -> list[str] | None:
-    """``filetypes/X`` → [X]; ``filegroups/X`` → members from
+    """``filetypes/X`` → X and stored aliases; ``filegroups/X`` → members from
     bundle's filetype_to_group; ``general`` → None (means all)."""
     if route == "general":
         return None
     if route.startswith("filetypes/"):
-        return [route.split("/", 1)[1]]
+        return list(cdata.expand_filetype_aliases((route.split("/", 1)[1],)))
     if route.startswith("filegroups/"):
         group = route.split("/", 1)[1]
+        if group == "archive":
+            return list(cdata.expand_filetype_aliases(ARCHIVE_FILETYPES))
         config_path = bundle_root / "config.json"
         if not config_path.is_file():
             # No bundle config. Best we can do is empty — caller treats
@@ -56,7 +61,7 @@ def _filetypes_for_route(route: str, bundle_root: Path) -> list[str] | None:
             return []
         cfg = json.loads(config_path.read_text())
         mapping = cfg.get("filetype_to_group") or {}
-        return sorted(ft for ft, g in mapping.items() if g == group)
+        return list(cdata.expand_filetype_aliases(tuple(ft for ft, g in mapping.items() if g == group)))
     raise SystemExit(f"unknown route layout: {route!r}")
 
 

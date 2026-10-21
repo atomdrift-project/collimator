@@ -84,19 +84,23 @@ import hashlib
 import json
 import logging
 import math
+import heapq
 import multiprocessing as mp
 import os
 import re
 import subprocess
 import time
+import tempfile
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 from collections.abc import Iterable, Iterator
 from itertools import combinations, islice
+from multiprocessing.util import Finalize
 from typing import Any, TypeVar
 from datetime import datetime
 
@@ -104,7 +108,10 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.stats as stats
 
+from .vocabulary import CountView, VocabularyCounts
+
 log = logging.getLogger(__name__)
+_extract_trait_depth: ContextVar[int | None] = ContextVar("extract_trait_depth", default=None)
 T = TypeVar("T")
 LabeledMetadata = tuple[int, str, str, int, int] | tuple[int, str, str, int, int, int]
 
@@ -141,7 +148,9 @@ TOP_K_RISK_FILES = 1
 # model is stored in. Older litmus (1.2.x) reading a v17 bundle that
 # now ships .onnx + .txt silently ignores the .onnx and uses the .txt;
 # fully forward-compatible. Bump this when feature families are added
-# or removed (last bump: v18 added the ALWAYS_KEEP_METRICS allowlist, which
+# or removed (v20 ranks n-gram tokens before limiting them;
+# v19 makes trait_path_depth a per-model runtime contract;
+# v18 added the ALWAYS_KEEP_METRICS allowlist, which
 # grows the extended-metrics block by `ast_depth_capped`; v17 added cluster:* +
 # agg:static_*).
 #
@@ -153,7 +162,7 @@ TOP_K_RISK_FILES = 1
 # v17 and ran litmus's unsigned-bigram block off the end of the vector. The
 # `feature_layout_hash` written into every spec records the exact layout so
 # such a change is detectable even when this number is forgotten.
-MODEL_ABI_VERSION = 18
+MODEL_ABI_VERSION = 20
 
 # Curated code metrics — covers binary, text, string, and PE analysis.
 # Each entry is (metric_group, field_name, use_log1p).
@@ -485,6 +494,40 @@ def _tiered_bigram_tokens(
     return sorted(tokens)
 
 
+# v20 keeps evidence instead of dropping the whole family on overflow.
+# Higher-order families have smaller budgets to bound vocabulary enumeration.
+TIERED_TOKEN_LIMITS = {2: 512, 3: 128, 4: 64}
+
+
+def _finding_score(criticality: int, confidence: float) -> float:
+    # Cleave stores confidence as f32. Canonicalize before multiplying so
+    # JSON decoding precision cannot change ranking at the token boundary.
+    if not math.isfinite(confidence):
+        return 0.0
+    return criticality * float(np.float32(min(1.0, max(0.0, confidence))))
+
+
+def _ranked_tiered_tokens(
+    sample_paths: dict[str, int],
+    path_scores: dict[str, float],
+    *,
+    order: int,
+    min_crit: int,
+    branch_min_crit: dict[str, int] | None = None,
+) -> list[str]:
+    tokens = _tiered_bigram_tokens(
+        sample_paths, min_crit=min_crit, branch_min_crit=branch_min_crit,
+    )
+    limit = TIERED_TOKEN_LIMITS[order]
+    if len(tokens) > limit:
+        # Every score is max(criticality * confidence) from an actual finding.
+        # Lexical ties make the result independent of report/file ordering.
+        tokens = heapq.nsmallest(
+            limit, tokens, key=lambda token: (-path_scores.get(token[2:], 0.0), token),
+        )
+    return sorted(tokens)
+
+
 def _quadgram_tokens(tokens: list[str]) -> "Iterator[str]":
     """Yield 4-token combinations as `t1 + t2 + t3 + t4` strings.
 
@@ -640,7 +683,13 @@ class FeatureConfig:
     tiered_trigram_min_crit: int
     tiered_trigram_max: int
     tiered_trigram_min_freq: int
-    include_text_encoding_features: bool
+    include_symbol_vocab: bool
+    symbol_vocab_max: int
+    symbol_min_freq: int
+    include_kv_vocab: bool
+    kv_vocab_max: int
+    kv_min_freq: int
+    include_kv_shape_features: bool
     exp_import_categories: bool      # 1: import functional category count
     exp_suspicious_api_combo: bool   # 2: suspicious API category co-occurrence
     exp_confidence_skew: bool        # 3: finding confidence distribution skew
@@ -673,13 +722,24 @@ class FeatureConfig:
     # CSV of `<group_a>.<key_a>*<group_b>.<key_b>` pairs exposed as derived
     # `metrics:derived_corr_*` columns (pre-computed pairwise products).
     metric_correlation_pairs: tuple[str, ...]
+    # Additionally split string-valued kv tokens on common separators.
+    include_kv_value_split: bool
+    # Batch 3 — symbol & string n-grams. Each toggle adds a new vocab built
+    # from the corpus scan; columns appear in the spec only when the
+    # corresponding bool is on. Defaults preserve current behavior (off).
+    include_symbol_bigrams: bool
+    symbol_bigram_max: int
+    symbol_min_freq_bigram: int
+    include_symbol_trigrams: bool
+    symbol_trigram_max: int
+    symbol_min_freq_trigram: int
     # Symmetry fix: existing path-trigrams hard-code `c >= 5` for vocab
     # inclusion. This knob exposes that floor so autocollie can sweep it
     # the same way it sweeps `bigram_min_freq`.
     trigram_min_freq: int
     # Tiered crit quadgrams — extends the tiered_crit_bigrams /
     # tiered_crit_trigrams ladder one more order. C(n, 4) cost is steep,
-    # so the per-token cap stays the same (512) but autocollie should
+    # so the per-token cap is tighter (64) and autocollie should
     # only enable this on routes where the trigram knob already won.
     include_tiered_crit_quadgrams: bool
     tiered_quadgram_min_crit: int
@@ -829,11 +889,21 @@ def feature_config_from_env() -> FeatureConfig:
         tiered_trigram_min_crit=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MIN_CRIT", "3")),
         tiered_trigram_max=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MAX", "5000")),
         tiered_trigram_min_freq=int(os.getenv("COLLIMATOR_TIERED_TRIGRAM_MIN_FREQ", "5")),
-        include_text_encoding_features=os.getenv("COLLIMATOR_TEXT_ENCODING_FEATURES") in {
+        include_symbol_vocab=os.getenv("COLLIMATOR_SYMBOL_VOCAB") in {
+            "1", "true", "yes", "on",
+        },
+        symbol_vocab_max=int(os.getenv("COLLIMATOR_SYMBOL_VOCAB_MAX", "5000")),
+        symbol_min_freq=int(os.getenv("COLLIMATOR_SYMBOL_MIN_FREQ", "5")),
+        include_kv_vocab=os.getenv("COLLIMATOR_KV_VOCAB") in {
+            "1", "true", "yes", "on",
+        },
+        kv_vocab_max=int(os.getenv("COLLIMATOR_KV_VOCAB_MAX", "5000")),
+        kv_min_freq=int(os.getenv("COLLIMATOR_KV_MIN_FREQ", "5")),
+        include_kv_shape_features=os.getenv("COLLIMATOR_KV_SHAPE_FEATURES") in {
             "1", "true", "yes", "on",
         },
         bigram_max=int(os.getenv("COLLIMATOR_BIGRAM_MAX", "5000")),
-        bigram_min_freq=int(os.getenv("COLLIMATOR_BIGRAM_MIN_FREQ", "1000")),
+        bigram_min_freq=int(os.getenv("COLLIMATOR_BIGRAM_MIN_FREQ", "5")),
         trigram_max=int(os.getenv("COLLIMATOR_TRIGRAM_MAX", "500")),
         trigram_max_benign_frac=float(os.getenv("COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC", "0.01")),
         exp_import_categories=os.getenv("COLLIMATOR_EXP_1") == "1",
@@ -881,6 +951,20 @@ def feature_config_from_env() -> FeatureConfig:
             p.strip() for p in os.getenv("COLLIMATOR_METRIC_CORRELATION_PAIRS", "").split(",")
             if p.strip()
         ),
+        include_kv_value_split=os.getenv("COLLIMATOR_KV_VALUE_SPLIT") in {
+            "1", "true", "yes", "on",
+        },
+        # Batch 3 — symbol & string n-grams.
+        include_symbol_bigrams=os.getenv("COLLIMATOR_SYMBOL_BIGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        symbol_bigram_max=int(os.getenv("COLLIMATOR_SYMBOL_BIGRAM_MAX", "5000")),
+        symbol_min_freq_bigram=int(os.getenv("COLLIMATOR_SYMBOL_MIN_FREQ_BIGRAM", "10")),
+        include_symbol_trigrams=os.getenv("COLLIMATOR_SYMBOL_TRIGRAMS") in {
+            "1", "true", "yes", "on",
+        },
+        symbol_trigram_max=int(os.getenv("COLLIMATOR_SYMBOL_TRIGRAM_MAX", "2000")),
+        symbol_min_freq_trigram=int(os.getenv("COLLIMATOR_SYMBOL_MIN_FREQ_TRIGRAM", "10")),
         trigram_min_freq=int(os.getenv("COLLIMATOR_TRIGRAM_MIN_FREQ", "5")),
         include_tiered_crit_quadgrams=os.getenv("COLLIMATOR_TIERED_CRIT_QUADGRAMS") in {
             "1", "true", "yes", "on",
@@ -1151,6 +1235,20 @@ def _file_symbols(file_entry: dict[str, Any]) -> set[str]:
     return symbols
 
 
+_SYMBOL_BIGRAM_CAP = 64
+_SYMBOL_TRIGRAM_CAP = 24
+
+
+def _file_symbol_bigrams(file_entry: dict[str, Any]) -> list[str]:
+    symbols = sorted(_file_symbols(file_entry))[:_SYMBOL_BIGRAM_CAP]
+    return ["||".join(pair) for pair in combinations(symbols, 2)]
+
+
+def _file_symbol_trigrams(file_entry: dict[str, Any]) -> list[str]:
+    symbols = sorted(_file_symbols(file_entry))[:_SYMBOL_TRIGRAM_CAP]
+    return ["||".join(triple) for triple in combinations(symbols, 3)]
+
+
 def _bucket_count(value: int) -> str:
     if value <= 0:
         return "0"
@@ -1196,6 +1294,48 @@ def _bucket_number(value: float) -> str:
 
 
 _KV_VALUE_SPLIT_SEPARATORS = re.compile(r"[\s,;:/\\|]+")
+
+
+def _metric_kv_tokens(
+    file_entry: dict[str, Any],
+    *,
+    include_shape: bool = False,
+    split_string_values: bool = False,
+) -> set[str]:
+    """Categorical metric values, with optional bounded shape/part tokens."""
+    tokens: set[str] = set()
+    for group, fields in file_metrics(file_entry).items():
+        if not isinstance(fields, dict):
+            continue
+        for key, value in fields.items():
+            base = f"{group}.{key}"
+            if include_shape:
+                tokens.add(f"{base}:exists")
+            if isinstance(value, bool):
+                val = str(value).lower()
+                tokens.add(f"{base}={val}")
+                if include_shape:
+                    tokens.add(f"{base}:bool={val}")
+            elif isinstance(value, str):
+                val = _normalize_vocab_token(value, max_len=80)
+                if val:
+                    tokens.add(f"{base}={val}")
+                if include_shape:
+                    tokens.add(f"{base}:strlen={_bucket_count(len(value))}")
+                    tokens.add(f"{base}:nonempty" if value else f"{base}:empty")
+                if split_string_values:
+                    for part in _KV_VALUE_SPLIT_SEPARATORS.split(value):
+                        part = _normalize_vocab_token(part, max_len=64)
+                        if part:
+                            tokens.add(f"{base}=part:{part}")
+            elif include_shape:
+                if value in (None, [], {}, ()):
+                    tokens.add(f"{base}:empty")
+                if isinstance(value, (int, float)):
+                    tokens.add(f"{base}:number={_bucket_number(float(value))}")
+                elif isinstance(value, (list, tuple, set, dict)):
+                    tokens.add(f"{base}:len={_bucket_count(len(value))}")
+    return tokens
 
 
 def _char_entropy(value: str) -> float:
@@ -1279,10 +1419,11 @@ class FeatureSpec:
     # Whether the model was trained on standardized features. When False,
     # inference should use raw features directly (no z-score transform).
     standardized: bool = False
-    # Trait hierarchy levels the path-prefix vocabs were built at. Scan still
-    # serves DEFAULT_TRAIT_PATH_DEPTH, so any other value is research-only
-    # until scan reads this field.
+    # Trait hierarchy levels the path-prefix vocabs were built at. Scan v19
+    # reads this per model; absent fields in older specs default to depth 3.
     trait_path_depth: int = DEFAULT_TRAIT_PATH_DEPTH
+    tiered_min_crit: tuple[int, int, int] = (3, 3, 3)
+    tiered_branch_min_crit: dict[str, int] = field(default_factory=dict)
 
     def _litmus_offset_vocabs(self) -> tuple[list[str], list[str], list[str]]:
         """Return the presence/bigram/trigram vocabs litmus reconstructs the
@@ -1350,6 +1491,8 @@ class FeatureSpec:
             "kv_vocab": self.kv_vocab,
             "mbc_id_vocab": self.mbc_id_vocab,
             "trait_path_depth": self.trait_path_depth,
+            "tiered_min_crit": list(self.tiered_min_crit),
+            "tiered_branch_min_crit": self.tiered_branch_min_crit,
             "feature_names": self.feature_names,
             "total_features": self.total_features,
         }
@@ -1407,6 +1550,8 @@ class FeatureSpec:
             feature_stds=data.get("feature_stds"),
             standardized=data.get("standardized", True),
             trait_path_depth=data.get("trait_path_depth", DEFAULT_TRAIT_PATH_DEPTH),
+            tiered_min_crit=tuple(data.get("tiered_min_crit", [3, 3, 3])),
+            tiered_branch_min_crit=data.get("tiered_branch_min_crit", {}),
         )
 
 
@@ -1416,20 +1561,16 @@ class FeatureSpec:
 
 @lru_cache(maxsize=1)
 def allowed_features() -> frozenset[str] | None:
-    """Load allowed feature names from a file if COLLIMATOR_ALLOWED_FEATURES_FILE is set."""
+    """Read an explicit name filter. Missing or invalid pins are errors."""
     path = os.getenv("COLLIMATOR_ALLOWED_FEATURES_FILE")
     if not path:
         return None
-    try:
-        import json
-        with open(path) as f:
-            data = json.load(f)
-            if isinstance(data, list):
-                return frozenset(data)
-            return frozenset(data.get("significant_features", []))
-    except Exception as exc:
-        log.warning("failed to load allowed features from %s: %s", path, exc)
-        return None
+    with open(path) as f:
+        content = json.load(f)
+    names = content.get("significant_features") if isinstance(content, dict) else content
+    if not isinstance(names, list) or not names or any(not isinstance(n, str) or not n for n in names):
+        raise ValueError(f"{path}: expected a nonempty feature-name list or significant_features list")
+    return frozenset(names)
 
 
 def _build_feature_names(
@@ -1880,12 +2021,34 @@ def _build_feature_names(
             for trait in traits:
                 feature_names.append(f"missing:{ftype}*{trait}")
 
-    # NEW: Filter based on allowed list if provided.
+    # Metadata vocabularies share the same knobs at discovery and extraction.
+    if "symbols" in config.enabled_groups and config.include_symbol_vocab:
+        for sym in symbol_vocab or []:
+            feature_names.append(f"symbol:{sym}")
+
+    # Batch 3: symbol n-grams. Same `symbols` group toggle so they ride the
+    # disable_groups switch alongside `symbol_vocab`.
+    if "symbols" in config.enabled_groups and config.include_symbol_bigrams:
+        for bi in symbol_bigram_vocab or []:
+            feature_names.append(f"symbol_bi:{bi}")
+    if "symbols" in config.enabled_groups and config.include_symbol_trigrams:
+        for tri in symbol_trigram_vocab or []:
+            feature_names.append(f"symbol_tri:{tri}")
+
+    if "kv" in config.enabled_groups and config.include_kv_vocab:
+        for kv in kv_vocab or []:
+            feature_names.append(f"kv:{kv}")
+
+    # Optional explicit name filter.
     allowed = allowed_features()
     if allowed is not None:
         original_count = len(feature_names)
         feature_names = [name for name in feature_names if _allowed_with_pair(name, allowed)]
+        if not feature_names:
+            raise ValueError("selected allowlist excludes every discovered feature")
         log.info("pruned feature spec: %d -> %d features", original_count, len(feature_names))
+    else:
+        log.info("feature vocabulary: %d columns (no fixed name filter)", len(feature_names))
 
     return feature_names
 
@@ -1912,6 +2075,16 @@ def _allowed_with_pair(name: str, allowed: "frozenset[str]") -> bool:
 
 
 def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> FeatureSpec:
+    """Unlabeled helper: count the supplied reports without class selection.
+
+    Training uses build_vocab_from_db to discover singletons from both classes
+    and combinations from malware.
+    """
+    with _vocabulary_counts() as (counts, scratch):
+        return _build_vocab(reports, n_workers, counts, scratch)
+
+
+def _build_vocab(reports, n_workers, counts, scratch) -> FeatureSpec:
     """Scan all reports to build the feature vocabulary."""
     # This standard build_vocab doesn't have labels, so it can't find ghosts.
     # Ghosts require build_vocab_from_db or a labeled stream.
@@ -1920,29 +2093,27 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     presence_counts: dict[str, int] = {}
     filetypes: set[str] = set()
     element_counts: dict[str, int] = {}
-    bigram_counts: dict[str, int] = {}
     skeleton_counts: dict[str, int] = {}
     batch_size = _feature_batch_size(nw)
     n_batches = 0
     _PROGRESS_BATCH_INTERVAL = 500
 
     def _merge_batch(
-        counts: dict[str, int],
+        path_counts: dict[str, int],
         fts: list[str],
         el_counts: dict[str, int],
-        bi_counts: dict[str, int],
+        bi_counts: CountView,
         b_pres: dict[str, int],
         m_pres: dict[str, int],
         sk_counts: dict[str, int],
     ) -> None:
         nonlocal n_batches
-        for k, v in counts.items():
+        for k, v in path_counts.items():
             presence_counts[k] = presence_counts.get(k, 0) + v
         filetypes.update(fts)
         for k, v in el_counts.items():
             element_counts[k] = element_counts.get(k, 0) + v
-        for k, v in bi_counts.items():
-            bigram_counts[k] = bigram_counts.get(k, 0) + v
+        counts.merge(bi_counts)
         for k, v in sk_counts.items():
             skeleton_counts[k] = skeleton_counts.get(k, 0) + v
         n_batches += 1
@@ -1950,18 +2121,18 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
     if nw > 1:
         with _feature_worker_pool(nw) as pool:
             for res in _bounded_iter(
-                pool, _vocab_batch_worker, _batched(reports, batch_size),
+                pool, _vocab_stream_batch_worker, ((batch, scratch) for batch in _batched(reports, batch_size)),
                 max_inflight=2 * nw,
             ):
                 _merge_batch(*res)
     else:
-        for res in map(_vocab_batch_worker, _batched(reports, batch_size)):
+        for res in map(_vocab_stream_batch_worker, ((batch, scratch) for batch in _batched(reports, batch_size))):
             _merge_batch(*res)
 
     presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
     filetype_vocab = sorted(filetypes)
     element_vocab = sorted(k for k, c in element_counts.items() if c >= MIN_PATH_FREQ)
-    bigram_vocab = sorted(k for k, c in bigram_counts.items() if c >= 1000)[:5000]
+    bigram_vocab = counts.top("bigram", feature_config_from_env().bigram_max, feature_config_from_env().bigram_min_freq)
     skeleton_vocab = sorted(k for k, c in skeleton_counts.items() if c >= 100)
     ghost_vocab: list[str] = []
     # Legacy build_vocab doesn't track rare_elements or trigrams — those need
@@ -1991,6 +2162,8 @@ def build_vocab(reports: Iterable[dict[str, Any] | str], n_workers: int = 0) -> 
         feature_names=feature_names,
         total_features=len(feature_names),
         trait_path_depth=feature_config_from_env().trait_path_depth,
+        tiered_min_crit=(feature_config_from_env().tiered_bigram_min_crit, feature_config_from_env().tiered_trigram_min_crit, feature_config_from_env().tiered_quadgram_min_crit),
+        tiered_branch_min_crit=_parse_branch_min_crit_overrides(feature_config_from_env().tiered_bigram_branch_min_crit),
     )
     return spec
 
@@ -2004,6 +2177,7 @@ class _ExtractContext:
 
     __slots__ = (
         "presence_lookup", "maxcrit_lookup", "ft_lookup", "n_ft",
+        "tiered_min_crit", "tiered_branch_min_crit",
         "element_lookup", "element_interaction_lookup", "n_el",
         "bigram_lookup", "n_bi", "tiered_bigram_lookup", "n_tier_bi",
         "tiered_trigram_lookup", "n_tier_tri",
@@ -2017,12 +2191,17 @@ class _ExtractContext:
         "tiered_bigram_vocab_tokens", "tiered_trigram_vocab_tokens",
         "tiered_quadgram_vocab_tokens",
         "bigram_lookup_pair", "synergy_lookup_pair", "trigram_lookup_triple",
+        "trait_path_depth", "ranked_ngrams", "tiered_slots",
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
         config = feature_config_from_env()
         self.blindfold = config.include_blindfold
+        self.trait_path_depth = max(1, spec.trait_path_depth)
+        self.ranked_ngrams = spec.abi_version >= 20
         self.total_features = spec.total_features
+        self.tiered_min_crit = spec.tiered_min_crit
+        self.tiered_branch_min_crit = spec.tiered_branch_min_crit
         
         # Build lookups that map to the actual indices in feature_names.
         name_to_idx = {name: i for i, name in enumerate(spec.feature_names)}
@@ -2092,6 +2271,12 @@ class _ExtractContext:
                 for t in key[len("tierquad:"):].split(" + "):
                     _quad_tokens.add(t)
         self.tiered_quadgram_vocab_tokens: frozenset[str] = frozenset(_quad_tokens)
+
+        self.tiered_slots = {
+            order: [(idx, tuple(name[len(prefix):].split(" + ")))
+                    for name, idx in name_to_idx.items() if name.startswith(prefix)]
+            for order, prefix in ((2, "tierbi:"), (3, "tiertri:"), (4, "tierquad:"))
+        }
 
         self.ghost_vocab = spec.ghost_vocab
         self.ghost_lookup: dict[str, int] = {}
@@ -2185,6 +2370,7 @@ class _FindingSummary:
     well_known_suspicious: int
     has_yara: bool
     path_confidences: dict[str, float] = field(default_factory=dict)
+    path_scores: dict[str, float] = field(default_factory=dict)
     finding_confidences: list[float] = field(default_factory=list)
 
 
@@ -2229,11 +2415,13 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
     # branch outside the inner loop.
     config = feature_config_from_env()
     include_soft_presence = config.include_soft_presence
-    path_depth = config.trait_path_depth
+    depth_override = _extract_trait_depth.get()
+    path_depth = config.trait_path_depth if depth_override is None else depth_override
     min_conf = MIN_CONFIDENCE
     finding_paths = _finding_paths
     sample_paths: dict[str, int] = {}
     path_confidences: dict[str, float] = {}
+    path_scores: dict[str, float] = {}
     finding_confidences: list[float] = []
     filtered_finding_count = 0
     notable_finding_count = 0
@@ -2298,6 +2486,9 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
                 well_known_suspicious += 1
 
         paths = finding_paths(fid, path_depth)
+        score = _finding_score(crit_ord, conf)
+        for path in paths:
+            path_scores[path] = max(path_scores.get(path, 0.0), score)
         if include_soft_presence:
             for path in paths:
                 if crit_ord > sample_paths.get(path, -1):
@@ -2327,6 +2518,7 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         well_known_suspicious=well_known_suspicious,
         has_yara=has_yara,
         path_confidences=path_confidences,
+        path_scores=path_scores,
         finding_confidences=finding_confidences,
     )
 
@@ -2355,6 +2547,7 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
     well_known_suspicious = 0
     has_yara = False
     path_confidences: dict[str, float] = {}
+    path_scores: dict[str, float] = {}
     finding_confidences: list[float] = []
 
     for file_entry in files:
@@ -2384,6 +2577,7 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
             if max_ord > sample_paths.get(path, -1):
                 sample_paths[path] = max_ord
             path_confidences[path] = max(path_confidences.get(path, 0.0), summary.path_confidences.get(path, 0.0))
+            path_scores[path] = max(path_scores.get(path, 0.0), summary.path_scores.get(path, 0.0))
 
         finding_confidences.extend(summary.finding_confidences)
 
@@ -2417,6 +2611,7 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
         well_known_suspicious=well_known_suspicious,
         has_yara=has_yara,
         path_confidences=path_confidences,
+        path_scores=path_scores,
         finding_confidences=finding_confidences,
     )
 
@@ -3174,6 +3369,59 @@ def _apply_metric_features(
                     _assign(vec, idx, val)
 
 
+def _apply_symbol_vocab_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Experimental import/symbol vocabulary features."""
+    lookup = ctx.absolute_lookup
+    for file_entry in files:
+        for sym in _file_symbols(file_entry):
+            _assign(vec, lookup.get(f"symbol:{sym}"), 1.0)
+
+
+def _apply_symbol_bigram_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Batch 3: bigram multi-hot over import/symbol pairs (capped per file)."""
+    lookup = ctx.absolute_lookup
+    for file_entry in files:
+        for bi in _file_symbol_bigrams(file_entry):
+            _assign(vec, lookup.get(f"symbol_bi:{bi}"), 1.0)
+
+
+def _apply_symbol_trigram_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Batch 3: trigram multi-hot over import/symbol triples (capped per file)."""
+    lookup = ctx.absolute_lookup
+    for file_entry in files:
+        for tri in _file_symbol_trigrams(file_entry):
+            _assign(vec, lookup.get(f"symbol_tri:{tri}"), 1.0)
+
+
+def _apply_kv_vocab_features(
+    files: list[dict[str, Any]],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+) -> None:
+    """Experimental categorical ms.* key/value vocabulary features."""
+    lookup = ctx.absolute_lookup
+    config = feature_config_from_env()
+    for file_entry in files:
+        for token in _metric_kv_tokens(
+            file_entry,
+            include_shape=config.include_kv_shape_features,
+            split_string_values=config.include_kv_value_split,
+        ):
+            _assign(vec, lookup.get(f"kv:{token}"), 1.0)
+
+
 def _apply_mbc_id_features(
     files: list[dict[str, Any]],
     ctx: _ExtractContext,
@@ -3582,8 +3830,8 @@ def _apply_neg_space_features(
 # (~/scan src/features.rs: unique_3level_paths and
 # write_{bigram,trigram}_features_optimized). Change both sides together.
 NGRAM_MIN_CRIT = 3  # only notable+ findings form n-grams
-BIGRAM_MAX_PATHS = 512  # a file with more n-gram paths gets no bigrams
-TRIGRAM_MAX_PATHS = 256  # ...and no trigrams above this
+BIGRAM_MAX_PATHS = 512  # v20 keeps the strongest paths; older models drop overflow
+TRIGRAM_MAX_PATHS = 256  # legacy cap; v20 selects 128 to bound discovery work
 
 
 def _ngram_paths_for_file(file_entry: dict[str, Any]) -> list[str]:
@@ -3600,21 +3848,40 @@ def _ngram_paths_for_file(file_entry: dict[str, Any]) -> list[str]:
     return sorted(paths)
 
 
+def _ranked_ngram_paths(file_entry: dict[str, Any], limit: int) -> list[str]:
+    """Select before vocabulary filtering, identically in discovery and serving."""
+    scores: dict[str, float] = {}
+    for finding in file_findings(file_entry):
+        fid = finding_id(finding)
+        conf = _float(finding_conf(finding), 1.0)
+        crit = finding_crit(finding) or 0
+        if fid and conf >= MIN_CONFIDENCE and crit >= NGRAM_MIN_CRIT:
+            path = fid.split("::")[0]
+            score = _finding_score(crit, conf)
+            scores[path] = max(scores.get(path, 0.0), score)
+    if len(scores) <= limit:
+        return sorted(scores)
+    return sorted(heapq.nsmallest(limit, scores, key=lambda path: (-scores[path], path)))
+
+
 def _ngram_files(
     report: dict[str, Any],
     ctx: _ExtractContext,
     max_paths: int,
     family_paths: frozenset[str],
 ) -> Iterator[list[str]]:
-    """Yield each file's n-gram paths that belong to one family's vocab.
-
-    Like scan, the per-file cap counts every path in the n-gram vocab, not
-    just the family's, and a file over the cap contributes nothing.
-    """
+    """Yield selected paths; v19 retains its historical overflow behavior."""
+    if not family_paths:
+        return
     for file_entry in report_files(report):
-        paths = [p for p in _ngram_paths_for_file(file_entry) if p in ctx.ngram_vocab_paths]
-        if len(paths) <= max_paths:
+        if ctx.ranked_ngrams:
+            limit = 128 if max_paths == TRIGRAM_MAX_PATHS else max_paths
+            paths = _ranked_ngram_paths(file_entry, limit)
             yield [p for p in paths if p in family_paths]
+        else:
+            paths = [p for p in _ngram_paths_for_file(file_entry) if p in ctx.ngram_vocab_paths]
+            if len(paths) <= max_paths:
+                yield [p for p in paths if p in family_paths]
 
 
 def _apply_bigram_features(
@@ -3628,92 +3895,46 @@ def _apply_bigram_features(
     use_conf = config.include_confidence_weighted_ngrams and summary is not None
     lookup = ctx.bigram_lookup_pair
     for paths_list in _ngram_files(report, ctx, BIGRAM_MAX_PATHS, ctx.bigram_vocab_paths):
-        if use_conf:
-            path_conf = summary.path_confidences
-            for i, p1 in enumerate(paths_list):
-                c1 = path_conf.get(p1, 1.0)
-                for p2 in paths_list[i + 1 :]:
-                    idx = lookup.get((p1, p2))
-                    if idx is not None:
-                        vec[idx] = (c1 + path_conf.get(p2, 1.0)) / 2.0
-        else:
-            for i, p1 in enumerate(paths_list):
-                for p2 in paths_list[i + 1 :]:
-                    idx = lookup.get((p1, p2))
-                    if idx is not None:
-                        vec[idx] = 1.0
+        present = set(paths_list)
+        for (p1, p2), idx in lookup.items():
+            if p1 in present and p2 in present:
+                vec[idx] = ((summary.path_confidences.get(p1, 1.0)
+                             + summary.path_confidences.get(p2, 1.0)) / 2.0) if use_conf else 1.0
 
 
-def _apply_tiered_bigram_features(
-    summary: "_FindingSummary",
-    ctx: _ExtractContext,
-    vec: np.ndarray,
+def _apply_tiered_features(
+    summary: "_FindingSummary", ctx: _ExtractContext, vec: np.ndarray, order: int,
 ) -> None:
-    """Report-level severity-prefixed notable+ trait bigrams."""
-    config = feature_config_from_env()
-    tokens = _tiered_bigram_tokens(
-        summary.sample_paths,
-        min_crit=config.tiered_bigram_min_crit,
-        branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
-    )
-    if len(tokens) > 512:
-        log.warning("too many tiered bigram tokens (%d); skipping sample", len(tokens))
+    slots = ctx.tiered_slots[order]
+    if not slots:
         return
-    vocab_tokens = ctx.tiered_bigram_vocab_tokens
-    tokens = [t for t in tokens if t in vocab_tokens]
-    tiered_lookup = ctx.tiered_bigram_lookup
-    for i, t1 in enumerate(tokens):
-        for t2 in tokens[i + 1:]:
-            _assign(vec, tiered_lookup.get(f"{t1} + {t2}"), 1.0)
+    options = dict(min_crit=ctx.tiered_min_crit[order - 2],
+                   branch_min_crit=ctx.tiered_branch_min_crit)
+    if ctx.ranked_ngrams:
+        tokens = _ranked_tiered_tokens(
+            summary.sample_paths, summary.path_scores, order=order, **options,
+        )
+    else:
+        tokens = _tiered_bigram_tokens(summary.sample_paths, **options)
+        if len(tokens) > (64 if order == 4 else 512):
+            return
+    present = set(tokens)
+    # Work is bounded by the model vocabulary, not C(n, order).
+    for slot, parts in slots:
+        if all(part in present for part in parts):
+            vec[slot] = 1.0
 
 
-def _apply_tiered_trigram_features(
-    summary: "_FindingSummary",
-    ctx: _ExtractContext,
-    vec: np.ndarray,
-) -> None:
-    """Report-level severity-prefixed notable+ trait trigrams."""
-    config = feature_config_from_env()
-    tokens = _tiered_bigram_tokens(
-        summary.sample_paths,
-        min_crit=config.tiered_trigram_min_crit,
-    )
-    if len(tokens) > 512:
-        log.warning("too many tiered trigram tokens (%d); skipping sample", len(tokens))
-        return
-    vocab_tokens = ctx.tiered_trigram_vocab_tokens
-    tokens = [t for t in tokens if t in vocab_tokens]
-    tiered_lookup = ctx.tiered_trigram_lookup
-    for i, t1 in enumerate(tokens):
-        for j in range(i + 1, len(tokens)):
-            t2 = tokens[j]
-            for t3 in tokens[j + 1:]:
-                _assign(vec, tiered_lookup.get(f"{t1} + {t2} + {t3}"), 1.0)
+def _apply_tiered_bigram_features(summary, ctx, vec) -> None:
+    _apply_tiered_features(summary, ctx, vec, 2)
 
 
-def _apply_tiered_quadgram_features(
-    summary: "_FindingSummary",
-    ctx: _ExtractContext,
-    vec: np.ndarray,
-) -> None:
-    """Batch 3: report-level severity-prefixed quadgrams (one order up from trigrams).
+def _apply_tiered_trigram_features(summary, ctx, vec) -> None:
+    _apply_tiered_features(summary, ctx, vec, 3)
 
-    Tighter token cap than trigrams (64 vs 512) because C(n, 4) grows much
-    faster — 64 tokens = 635k quadgrams; 128 = 10.5M.
-    """
-    config = feature_config_from_env()
-    tokens = _tiered_bigram_tokens(
-        summary.sample_paths,
-        min_crit=config.tiered_quadgram_min_crit,
-    )
-    if len(tokens) > 64:
-        log.warning("too many tiered quadgram tokens (%d); skipping sample", len(tokens))
-        return
-    vocab_tokens = ctx.tiered_quadgram_vocab_tokens
-    tokens = [t for t in tokens if t in vocab_tokens]
-    absolute_lookup = ctx.absolute_lookup
-    for quad in _quadgram_tokens(tokens):
-        _assign(vec, absolute_lookup.get(f"tierquad:{quad}"), 1.0)
+
+def _apply_tiered_quadgram_features(summary, ctx, vec) -> None:
+    _apply_tiered_features(summary, ctx, vec, 4)
 
 
 def _apply_ghost_features(
@@ -3773,13 +3994,10 @@ def _apply_trigram_features(
     """Group 16: trait trigram multi-hot features."""
     lookup = ctx.trigram_lookup_triple
     for paths_list in _ngram_files(report, ctx, TRIGRAM_MAX_PATHS, ctx.trigram_vocab_paths):
-        for i, p1 in enumerate(paths_list):
-            for j in range(i + 1, len(paths_list)):
-                p2 = paths_list[j]
-                for p3 in paths_list[j + 1 :]:
-                    idx = lookup.get((p1, p2, p3))
-                    if idx is not None:
-                        vec[idx] = 1.0
+        present = set(paths_list)
+        for parts, idx in lookup.items():
+            if all(p in present for p in parts):
+                vec[idx] = 1.0
 
 
 def _apply_logic_gap_features(
@@ -3819,11 +4037,10 @@ def _apply_signature_synergy_features(
 
     lookup = ctx.synergy_lookup_pair
     for paths_list in _ngram_files(report, ctx, BIGRAM_MAX_PATHS, ctx.synergy_vocab_paths):
-        for i, p1 in enumerate(paths_list):
-            for p2 in paths_list[i + 1 :]:
-                idx = lookup.get((p1, p2))
-                if idx is not None:
-                    vec[idx] = 1.0
+        present = set(paths_list)
+        for (p1, p2), idx in lookup.items():
+            if p1 in present and p2 in present:
+                vec[idx] = 1.0
 
 
 def _apply_intent_gap_features(
@@ -3876,6 +4093,23 @@ def _extract_into(
     cluster_id: int = -1,
 ) -> None:
     """Extract features from a report into a pre-allocated vector."""
+    token = _extract_trait_depth.set(ctx.trait_path_depth)
+    try:
+        _extract_into_at_depth(report, ctx, vec, formula, elements, score, mtime, cluster_id)
+    finally:
+        _extract_trait_depth.reset(token)
+
+
+def _extract_into_at_depth(
+    report: dict[str, Any],
+    ctx: _ExtractContext,
+    vec: np.ndarray,
+    formula: str,
+    elements: str,
+    score: int,
+    mtime: str,
+    cluster_id: int,
+) -> None:
     config = feature_config_from_env()
     files = report_files(report)
     if not files:
@@ -4005,6 +4239,18 @@ def _extract_into(
     if "neg_space" in config.enabled_groups:
         _apply_neg_space_features(files, summary.sample_paths, ctx, vec)
 
+    if "symbols" in config.enabled_groups and config.include_symbol_vocab:
+        _apply_symbol_vocab_features(files, ctx, vec)
+    if "symbols" in config.enabled_groups and config.include_symbol_bigrams:
+        _apply_symbol_bigram_features(files, ctx, vec)
+    if "symbols" in config.enabled_groups and config.include_symbol_trigrams:
+        _apply_symbol_trigram_features(files, ctx, vec)
+    # Batch 4: MBC ID unigram vocab. Lives in the `agg` group since attack
+    # features (its closest sibling) live there too.
+    if "agg" in config.enabled_groups and config.include_mbc_id_vocab:
+        _apply_mbc_id_features(files, ctx, vec)
+    if "kv" in config.enabled_groups and config.include_kv_vocab:
+        _apply_kv_vocab_features(files, ctx, vec)
     # Experimental feature batch + ATT&CK + targeted n-grams.
     if any((config.include_attack_features,
             config.include_objective_trigrams, config.include_suspicious_trigrams,
@@ -4078,42 +4324,50 @@ def _coerce_report(report: dict[str, Any] | str) -> dict[str, Any] | None:
     return report
 
 
-def _count_capped_ngrams(
-    paths: list[str],
-    order: int,
-    counts: dict[str, int],
-    max_unique: int,
-    benign_counts: dict[str, int] | None = None,
-) -> None:
-    """Count combinations until the batch vocabulary cap is reached.
-
-    The existing cap stops all counting, including repeat keys. Stop the
-    traversal too: continuing after saturation can take cubic time without
-    changing any counts, especially with full-depth trait paths.
-    """
-    if len(counts) >= max_unique:
-        return
-    for tokens in combinations(paths, order):
-        key = " + ".join(tokens)
-        counts[key] = counts.get(key, 0) + 1
-        if benign_counts is not None:
-            benign_counts[key] = benign_counts.get(key, 0) + 1
-        if len(counts) >= max_unique:
-            break
+def _count_ngrams(paths, order, counts, family, document, benign_family="") -> None:
+    """Exact document frequencies; input token selection bounds the work."""
+    counts.increment_combinations(family, paths, order, document, benign_family)
 
 
-def _vocab_batch_worker(
-    items: list[dict[str, Any] | str],
+@contextmanager
+def _vocabulary_counts():
+    root = Path(os.getenv("COLLIMATOR_VOCAB_TMPDIR", "out/cache/vocabulary"))
+    root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="count-", dir=root.resolve()) as scratch:
+        with VocabularyCounts(str(Path(scratch) / "merged.sqlite")) as counts:
+            yield counts, scratch
+
+
+def _batch_count_path(scratch):
+    if scratch is None:
+        return ""
+    fd, path = tempfile.mkstemp(suffix=".sqlite", dir=scratch)
+    os.close(fd)
+    return path
+
+
+def _vocab_stream_batch_worker(args):
+    items, scratch = args
+    with VocabularyCounts(_batch_count_path(scratch)) as counts:
+        return _count_vocab_batch(items, counts)
+
+
+def _vocab_batch_worker(items):
+    return _vocab_stream_batch_worker((items, None))
+
+
+def _count_vocab_batch(
+    items: list[dict[str, Any] | str], counts: VocabularyCounts,
 ) -> tuple[dict[str, int], list[str], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
     """Count path, element, bigram, and skeleton occurrences for a batch. CPU-only."""
-    path_depth = feature_config_from_env().trait_path_depth
+    config = feature_config_from_env()
+    path_depth = config.trait_path_depth
     presence_counts: dict[str, int] = {}
     filetypes: list[str] = []
     element_counts: dict[str, int] = {}
-    bigram_counts: dict[str, int] = {}
     skeleton_counts: dict[str, int] = {}
 
-    for item in items:
+    for document, item in enumerate(items):
         if isinstance(item, dict) and "cleave_result" in item:
             raw_report = item["cleave_result"]
             elements_str = item.get("elements", "")
@@ -4138,6 +4392,7 @@ def _vocab_batch_worker(
                 if el:
                     element_counts[el] = element_counts.get(el, 0) + 1
 
+        seen_bigrams: set[tuple[str, ...]] = set()
         sample_paths: dict[str, int] = {}
         for file_entry in report_files(report):
             ftype = file_entry.get("type", "")
@@ -4158,15 +4413,16 @@ def _vocab_batch_worker(
                         sample_paths[path] = crit_ord
 
             # Collect co-occurring path pairs (bigrams) within each file.
-            paths_list = _ngram_paths_for_file(file_entry)
-            if len(paths_list) > BIGRAM_MAX_PATHS:
-                paths_list = []
-            _count_capped_ngrams(paths_list, 2, bigram_counts, 50000)
+            paths_list = _ranked_ngram_paths(file_entry, BIGRAM_MAX_PATHS)
+            path_key = tuple(paths_list)
+            if config.bigram_max > 0 and path_key not in seen_bigrams:
+                seen_bigrams.add(path_key)
+                _count_ngrams(paths_list, 2, counts, "bigram", document)
 
         for path, max_ord in sample_paths.items():
             if max_ord >= 2:
                 presence_counts[path] = presence_counts.get(path, 0) + 1
-    return presence_counts, filetypes, element_counts, bigram_counts, {}, {}, skeleton_counts
+    return presence_counts, filetypes, element_counts, counts.view("bigram"), {}, {}, skeleton_counts
 
 
 def _vocab_db_batch_worker(
@@ -4998,29 +5254,55 @@ def _enumerate_partitioned_batches(
         test_offset += len(batch) - batch_train
 
 
-def _vocab_labeled_db_batch_worker(
-    args: tuple[Path | str, list[tuple[int, int]]],
-) -> tuple[dict[str, int], list[str], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int], dict[str, int]]:
-    """Fetch and count paths for a batch of IDs with labels."""
-    from . import data  # noqa: PLC0415
+def _vocab_labeled_db_batch_worker(args):
+    dsn, ids_labels, *rest = args
+    with VocabularyCounts(_batch_count_path(rest[0] if rest else None)) as counts:
+        return _count_labeled_vocab_batch(dsn, ids_labels, counts)
 
-    dsn, ids_labels = args
+
+# Keep fetched reports bounded to one batch, but combine repeated n-grams
+# locally before the parent touches its much larger database. Rotate files
+# after eight batches so both temporary disk use and merge latency stay bounded.
+_VOCAB_SHARD_BATCHES = 8
+_vocab_shard_counts: VocabularyCounts | None = None
+_vocab_shard_batches = 0
+_vocab_shard_finalizer: Finalize | None = None
+
+
+def _vocab_labeled_db_shard_worker(args):
+    global _vocab_shard_counts, _vocab_shard_batches, _vocab_shard_finalizer
+    dsn, ids_labels, scratch = args
+    if _vocab_shard_counts is None:
+        _vocab_shard_counts = VocabularyCounts(_batch_count_path(scratch))
+        _vocab_shard_batches = 0
+        _vocab_shard_finalizer = Finalize(
+            _vocab_shard_counts, _vocab_shard_counts.close, exitpriority=10,
+        )
+    result = _count_labeled_vocab_batch(dsn, ids_labels, _vocab_shard_counts)
+    _vocab_shard_batches += 1
+    sealed = _vocab_shard_batches >= _VOCAB_SHARD_BATCHES
+    if sealed:
+        _vocab_shard_counts.close()
+        _vocab_shard_counts = None
+        _vocab_shard_finalizer.cancel()
+        _vocab_shard_finalizer = None
+    return result, sealed, len(ids_labels)
+
+
+def _count_labeled_vocab_batch(dsn, ids_labels, counts):
+    from . import data
+
     ids = [rid for rid, _l in ids_labels]
     reports_map = data.fetch_cleave_results(dsn, ids)
 
     presence_counts: dict[str, int] = {}
     filetypes: list[str] = []
     element_counts: dict[str, int] = {}
-    bigram_counts: dict[str, int] = {}
     benign_presence: dict[str, int] = {}
     malware_presence: dict[str, int] = {}
     skeleton_counts: dict[str, int] = {}
     benign_elements: dict[str, int] = {}
     malware_elements: dict[str, int] = {}
-    trigram_counts: dict[str, int] = {}
-    benign_trigrams: dict[str, int] = {}
-    tiered_bigram_counts: dict[str, int] = {}
-    tiered_trigram_counts: dict[str, int] = {}
     config = feature_config_from_env()
 
     benign_ids = {rid for rid, label in ids_labels if label == 0}
@@ -5049,7 +5331,10 @@ def _vocab_labeled_db_batch_worker(
                     else:
                         malware_elements[el] = malware_elements.get(el, 0) + 1
 
+        seen_bigrams: set[tuple[str, ...]] = set()
+        seen_trigrams: set[tuple[str, ...]] = set()
         sample_paths: dict[str, int] = {}
+        path_scores: dict[str, float] = {}
         for file_entry in report_files(report):
             ftype = file_entry.get("type", "")
             if ftype:
@@ -5061,23 +5346,30 @@ def _vocab_labeled_db_batch_worker(
                 if not fid or _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
                     continue
                 crit_ord = finding_crit(finding) or 0
+                conf = _float(finding_conf(finding), 1.0)
+                score = _finding_score(crit_ord, conf)
                 file_traits.add(fid)
                 for path in _finding_paths(fid, path_depth):
+                    path_scores[path] = max(path_scores.get(path, 0.0), score)
                     if crit_ord > sample_paths.get(path, -1):
                         sample_paths[path] = crit_ord
 
-            # The vocab doesn't exist yet, so the per-file caps count every
-            # n-gram path. That keeps enumeration bounded: a re-analyzed wheel
-            # with 21k paths once cost ~7h here (O(n^3) trigrams).
-            paths_list = _ngram_paths_for_file(file_entry)
-            if len(paths_list) > BIGRAM_MAX_PATHS:
-                paths_list = []
-            _count_capped_ngrams(paths_list, 2, bigram_counts, 100000)
-            if len(paths_list) <= TRIGRAM_MAX_PATHS:
-                _count_capped_ngrams(
-                    paths_list, 3, trigram_counts, 50000,
-                    benign_trigrams if rid in benign_ids else None,
-                )
+            # Select the strongest paths before vocabulary filtering, exactly
+            # as at serving time. Fixed budgets bound discovery combinations.
+            if rid not in benign_ids and config.bigram_max > 0:
+                paths_list = _ranked_ngram_paths(file_entry, BIGRAM_MAX_PATHS)
+                path_key = tuple(paths_list)
+                if path_key not in seen_bigrams:
+                    seen_bigrams.add(path_key)
+                    _count_ngrams(paths_list, 2, counts, "bigram", rid)
+            # This family is malware-enriched: discover candidates from
+            # positives, then measure only supported candidates on benigns.
+            if rid not in benign_ids and config.trigram_max > 0:
+                tri_paths = _ranked_ngram_paths(file_entry, 128)
+                tri_key = tuple(tri_paths)
+                if tri_key not in seen_trigrams:
+                    seen_trigrams.add(tri_key)
+                    _count_ngrams(tri_paths, 3, counts, "trigram", rid)
 
         for path, max_ord in sample_paths.items():
             if max_ord >= 2:
@@ -5087,62 +5379,103 @@ def _vocab_labeled_db_batch_worker(
                 else:
                     malware_presence[path] = malware_presence.get(path, 0) + 1
 
-        if config.include_tiered_crit_bigrams:
-            tokens = _tiered_bigram_tokens(
-                sample_paths,
+        if rid in benign_ids:
+            continue
+
+        if config.include_tiered_crit_bigrams and config.tiered_bigram_max > 0:
+            tokens = _ranked_tiered_tokens(
+                sample_paths, path_scores, order=2,
                 min_crit=config.tiered_bigram_min_crit,
+                branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
             )
-            if len(tokens) <= 512:
-                _count_capped_ngrams(tokens, 2, tiered_bigram_counts, 100000)
-        if config.include_tiered_crit_trigrams:
-            tokens = _tiered_bigram_tokens(
-                sample_paths,
+            _count_ngrams(tokens, 2, counts, "tiered_bigram", rid)
+        if config.include_tiered_crit_trigrams and config.tiered_trigram_max > 0:
+            tokens = _ranked_tiered_tokens(
+                sample_paths, path_scores, order=3,
                 min_crit=config.tiered_trigram_min_crit,
+                branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
             )
-            if len(tokens) <= 512:
-                _count_capped_ngrams(tokens, 3, tiered_trigram_counts, 100000)
+            _count_ngrams(tokens, 3, counts, "tiered_trigram", rid)
 
     return (
-        presence_counts, filetypes, element_counts, bigram_counts,
+        presence_counts, filetypes, element_counts, counts.view("bigram"),
         benign_presence, malware_presence, skeleton_counts,
-        benign_elements, malware_elements, trigram_counts, benign_trigrams,
-        tiered_bigram_counts, tiered_trigram_counts,
+        benign_elements, malware_elements, counts.view("trigram"), counts.view("benign_trigram"),
+        counts.view("tiered_bigram"), counts.view("tiered_trigram"),
     )
 
 
-def build_vocab_from_db(
-    db_path: Path | str,
-    row_ids_labels: list[tuple[int, int]],
-    n_workers: int = 0,
-) -> FeatureSpec:
-    """Scan sampled reports in the DB to build a feature vocabulary."""
+def _vocab_benign_trigram_worker(args):
+    """Count supported candidates without enumerating every benign triple."""
+    from . import data
+
+    dsn, ids, candidates, scratch = args
+    by_first: dict[str, dict[str, set[str]]] = {}
+    for candidate in candidates:
+        a, b, c = candidate.split(" + ")
+        by_first.setdefault(a, {}).setdefault(b, set()).add(c)
+    with VocabularyCounts(_batch_count_path(scratch)) as counts:
+        for rid, item in data.fetch_cleave_results(dsn, ids).items():
+            report = _coerce_report(item["cleave_result"])
+            if report is None:
+                continue
+            seen_files: set[tuple[str, ...]] = set()
+            for file in report_files(report):
+                paths = tuple(_ranked_ngram_paths(file, 128))
+                if paths in seen_files:
+                    continue
+                seen_files.add(paths)
+                present = set(paths)
+                for a in present.intersection(by_first):
+                    for b, thirds in by_first[a].items():
+                        if b in present:
+                            for c in present.intersection(thirds):
+                                counts.increment("benign_trigram", (a, b, c), document=rid)
+        return counts.view("benign_trigram")
+
+
+def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int]], n_workers: int = 0) -> FeatureSpec:
+    with _vocabulary_counts() as (counts, scratch):
+        return _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch)
+
+
+def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) -> FeatureSpec:
     config = feature_config_from_env()
     nw = resolve_worker_count(n_workers)
     presence_counts: dict[str, int] = {}
     filetypes: set[str] = set()
     element_counts: dict[str, int] = {}
-    bigram_counts: dict[str, int] = {}
     benign_presence: dict[str, int] = {}
     malware_presence: dict[str, int] = {}
     skeleton_counts: dict[str, int] = {}
     benign_elements: dict[str, int] = {}
     malware_elements: dict[str, int] = {}
-    trigram_counts: dict[str, int] = {}
-    benign_trigrams: dict[str, int] = {}
-    tiered_bigram_counts: dict[str, int] = {}
-    tiered_trigram_counts: dict[str, int] = {}
     batch_size = _feature_batch_size(nw)
+    pending_shards: dict[str, CountView] = {}
+    merged_shards: set[str] = set()
+    rows_counted = 0
 
     benign_total = sum(1 for _rid, label in row_ids_labels if label == 0)
     malware_total = len(row_ids_labels) - benign_total
+    if config.bigram_max > 0 and config.bigram_min_freq > malware_total:
+        log.warning("bigram_min_freq=%d exceeds %d malware training samples; "
+                    "lower the cutoff to discover ordinary bigrams",
+                    config.bigram_min_freq, malware_total)
     vocab_started = time.monotonic()
     last_progress = vocab_started
+    # Auxiliary vocab scans share a reproducible uniform training sample.
+    # Taking the first IDs would favor the oldest ingestion batches.
+    scan_rows = [
+        row_ids_labels[int(i)] for i in np.random.default_rng(0).choice(
+            len(row_ids_labels), min(5000, len(row_ids_labels)), replace=False,
+        )
+    ]
 
     def _merge_batch(
-        counts: dict[str, int],
+        path_counts: dict[str, int],
         fts: list[str],
         el_counts: dict[str, int],
-        bi_counts: dict[str, int],
+        bi_counts: CountView,
         b_pres: dict[str, int],
         m_pres: dict[str, int],
         sk_counts: dict[str, int],
@@ -5150,17 +5483,26 @@ def build_vocab_from_db(
         m_els: dict[str, int],
         tri_counts: dict[str, int],
         b_tris: dict[str, int],
-        tier_bi_counts: dict[str, int],
+        tier_bi_counts: CountView,
         tier_tri_counts: dict[str, int],
+        *,
+        n_rows: int | None = None,
     ) -> None:
-        nonlocal last_progress
-        for k, v in counts.items():
+        nonlocal last_progress, rows_counted
+        rows_counted += batch_size if n_rows is None else n_rows
+        for k, v in path_counts.items():
             presence_counts[k] = presence_counts.get(k, 0) + v
         filetypes.update(fts)
         for k, v in el_counts.items():
             element_counts[k] = element_counts.get(k, 0) + v
-        for k, v in bi_counts.items():
-            bigram_counts[k] = bigram_counts.get(k, 0) + v
+        if nw > 1:
+            # Results from one worker can be consumed out of order. A sealed
+            # shard already includes its earlier batches, even if their small
+            # singleton-count results have not reached the parent yet.
+            if bi_counts.path not in merged_shards:
+                pending_shards[bi_counts.path] = bi_counts
+        else:
+            counts.merge(bi_counts)
         for k, v in b_pres.items():
             benign_presence[k] = benign_presence.get(k, 0) + v
         for k, v in m_pres.items():
@@ -5171,75 +5513,46 @@ def build_vocab_from_db(
             benign_elements[k] = benign_elements.get(k, 0) + v
         for k, v in m_els.items():
             malware_elements[k] = malware_elements.get(k, 0) + v
-        for k, v in tri_counts.items():
-            trigram_counts[k] = trigram_counts.get(k, 0) + v
-        for k, v in b_tris.items():
-            benign_trigrams[k] = benign_trigrams.get(k, 0) + v
-        for k, v in tier_bi_counts.items():
-            tiered_bigram_counts[k] = tiered_bigram_counts.get(k, 0) + v
-        for k, v in tier_tri_counts.items():
-            tiered_trigram_counts[k] = tiered_trigram_counts.get(k, 0) + v
         now = time.monotonic()
         if batches_merged == 0 or now - last_progress >= 30:
             log.info(
                 "vocab progress: %d/%d rows, %d batches, %.1fs elapsed",
-                min((batches_merged + 1) * batch_size, len(row_ids_labels)),
+                min(rows_counted, len(row_ids_labels)),
                 len(row_ids_labels), batches_merged + 1, now - vocab_started,
             )
             last_progress = now
 
-    # Bound peak vocab memory on large corpora by periodically dropping
-    # count==1 keys from the big n-gram dicts. This is the phase where the
-    # nightly full-train OOM'd (pass 1): these dicts otherwise grow to the full
-    # distinct-key set of a ~2M-file corpus and are only min_freq-pruned at the
-    # very end. We prune ONLY dicts gated purely by a `count >= min_freq` test
-    # (every such min_freq here is >= 5, so a dropped singleton could never have
-    # qualified). benign_*/malware_* dicts feed absence/ceiling tests (rare
-    # element "benign==0", trigram benign ceiling) and are left intact — except
-    # benign_trigrams, dropped in lockstep with trigram_counts to stay
-    # consistent (a trigram at count 1 can't survive, so its benign tally is
-    # moot). Near-lossless but schedule-dependent; set
-    # COLLIMATOR_VOCAB_PRUNE_EVERY=0 for bit-exact reproducibility.
-    prune_every = int(os.getenv("COLLIMATOR_VOCAB_PRUNE_EVERY", "0") or "0")
+    # Counts spill to disk; never discard singletons between batches.
     batches_merged = 0
 
-    def _maybe_prune() -> None:
-        prunable = (bigram_counts, element_counts, tiered_bigram_counts, tiered_trigram_counts)
-        before = sum(len(d) for d in prunable) + len(trigram_counts)
-        for k in [k for k, c in trigram_counts.items() if c == 1]:
-            del trigram_counts[k]
-            benign_trigrams.pop(k, None)
-        for d in prunable:
-            for k in [k for k, c in d.items() if c == 1]:
-                del d[k]
-        after = sum(len(d) for d in prunable) + len(trigram_counts)
-        if before != after:
-            log.info(
-                "vocab prune @%d batches: dropped %d singleton n-gram keys "
-                "(%d -> %d entries; bi=%d tri=%d el=%d tbi=%d ttri=%d)",
-                batches_merged, before - after, before, after,
-                len(bigram_counts), len(trigram_counts), len(element_counts),
-                len(tiered_bigram_counts), len(tiered_trigram_counts),
-            )
-
-    batch_args = ((db_path, batch) for batch in _batched(row_ids_labels, batch_size))
+    batch_args = ((db_path, batch, scratch) for batch in _batched(row_ids_labels, batch_size))
 
     if nw > 1:
         with _feature_worker_pool(nw) as pool:
-            for res in _bounded_iter(
-                pool, _vocab_labeled_db_batch_worker, batch_args,
+            for res, sealed, n_rows in _bounded_unordered_iter(
+                pool, _vocab_labeled_db_shard_worker, batch_args,
                 max_inflight=2 * nw,
             ):
-                _merge_batch(*res)
+                _merge_batch(*res, n_rows=n_rows)
+                if sealed:
+                    counts.merge(pending_shards.pop(res[3].path))
+                    merged_shards.add(res[3].path)
                 batches_merged += 1
-                if prune_every and batches_merged % prune_every == 0:
-                    _maybe_prune()
+        # A worker's last file may contain fewer than eight batches. Wait for
+        # pool shutdown before reading these files so no worker can still write
+        # them. Full shards above are closed before their result is returned.
+        merge_started = last_merge_progress = time.monotonic()
+        for i, view in enumerate(pending_shards.values(), 1):
+            counts.merge(view)
+            now = time.monotonic()
+            if i == 1 or i == len(pending_shards) or now - last_merge_progress >= 30:
+                log.info("vocab final merge: %d/%d shards, %.1fs elapsed",
+                         i, len(pending_shards), now - merge_started)
+                last_merge_progress = now
     else:
         for res in map(_vocab_labeled_db_batch_worker, batch_args):
             _merge_batch(*res)
             batches_merged += 1
-            if prune_every and batches_merged % prune_every == 0:
-                _maybe_prune()
 
     log.info("vocab counting complete: %d rows, %d batches, %.1fs elapsed",
              len(row_ids_labels), batches_merged, time.monotonic() - vocab_started)
@@ -5249,33 +5562,29 @@ def build_vocab_from_db(
     element_vocab = sorted(k for k, c in element_counts.items() if c >= MIN_PATH_FREQ)
     # Bigram/trigram vocab sizes are controlled by FeatureConfig (which reads
     # from env vars) so they're included in the matrix cache key.
-    bigram_vocab = sorted(k for k, c in bigram_counts.items() if c >= config.bigram_min_freq)[:config.bigram_max]
+    bigram_vocab = counts.top("bigram", config.bigram_max, config.bigram_min_freq)
     skeleton_vocab = sorted(k for k, c in skeleton_counts.items() if c >= 100)
 
-    # Trigrams: malware-enriched triplets, top N by frequency. Min-freq cutoff
-    # is configurable (Batch 3 symmetry fix); previous hardcoded `>= 5`.
+    # Require support in distinct malware samples before spending work on
+    # benign prevalence. Benign-only triples are outside this discovery policy.
+    candidates = counts.at_least("trigram", config.trigram_min_freq) if config.trigram_max > 0 else []
+    if candidates:
+        benign_ids = [rid for rid, label in row_ids_labels if label == 0]
+        args = ((db_path, batch, candidates, scratch) for batch in _batched(benign_ids, batch_size))
+        log.info("trigram prevalence: %d supported malware candidates, %d benign samples",
+                 len(candidates), len(benign_ids))
+        if nw > 1:
+            with _feature_worker_pool(nw) as pool:
+                for result in _bounded_iter(pool, _vocab_benign_trigram_worker, args, max_inflight=2 * nw):
+                    counts.merge(result)
+        else:
+            for result in map(_vocab_benign_trigram_worker, args):
+                counts.merge(result)
     trigram_benign_ceil = int(config.trigram_max_benign_frac * benign_total) if config.trigram_max_benign_frac > 0 else 0
-    malware_only_trigrams = sorted(
-        [(k, c) for k, c in trigram_counts.items()
-         if benign_trigrams.get(k, 0) <= trigram_benign_ceil and c >= config.trigram_min_freq],
-        key=lambda x: x[1],
-        reverse=True,
-    )[:config.trigram_max]
-    trigram_vocab = sorted(k for k, c in malware_only_trigrams)
-    tiered_bigram_vocab: list[str] = []
-    if config.include_tiered_crit_bigrams:
-        tiered_bigram_vocab = sorted(
-            k for k, c in sorted(tiered_bigram_counts.items(), key=lambda x: -x[1])[:config.tiered_bigram_max]
-            if c >= config.tiered_bigram_min_freq
-        )
-        log.info("tiered crit bigrams: %d vocab entries", len(tiered_bigram_vocab))
-    tiered_trigram_vocab: list[str] = []
-    if config.include_tiered_crit_trigrams:
-        tiered_trigram_vocab = sorted(
-            k for k, c in sorted(tiered_trigram_counts.items(), key=lambda x: -x[1])[:config.tiered_trigram_max]
-            if c >= config.tiered_trigram_min_freq
-        )
-        log.info("tiered crit trigrams: %d vocab entries", len(tiered_trigram_vocab))
+    trigram_vocab = counts.top("trigram", config.trigram_max, config.trigram_min_freq,
+                               benign_family="benign_trigram", benign_ceiling=trigram_benign_ceil)
+    tiered_bigram_vocab = counts.top("tiered_bigram", config.tiered_bigram_max, config.tiered_bigram_min_freq)
+    tiered_trigram_vocab = counts.top("tiered_trigram", config.tiered_trigram_max, config.tiered_trigram_min_freq)
 
     # Rare Elements: highly specific to malware (e.g. 0% benign, >= 5 malware samples).
     rare_element_vocab = sorted([
@@ -5297,13 +5606,14 @@ def build_vocab_from_db(
         from . import data as _data  # noqa: PLC0415
         metric_key_counts: dict[str, int] = {}
         # Scan a random subset for speed (5000 rows is enough to find common keys).
-        scan_ids = [rid for rid, _l in row_ids_labels[:5000]]
+        scan_ids = [rid for rid, _l in scan_rows]
         for start in range(0, len(scan_ids), 500):
             chunk = scan_ids[start:start + 500]
             for _rid, item in _data.fetch_cleave_results(db_path, chunk).items():
                 report = _coerce_report(item["cleave_result"])
                 if report is None:
                     continue
+                report_metric_keys: set[str] = set()
                 for file_entry in report_files(report):
                     ms = file_metrics(file_entry)
                     for group, fields in ms.items():
@@ -5312,7 +5622,9 @@ def build_vocab_from_db(
                         for k, v in fields.items():
                             if isinstance(v, (int, float)):
                                 mk = f"{group}_{k}"
-                                metric_key_counts[mk] = metric_key_counts.get(mk, 0) + 1
+                                report_metric_keys.add(mk)
+                for mk in report_metric_keys:
+                    metric_key_counts[mk] = metric_key_counts.get(mk, 0) + 1
         # Keep keys appearing above a frequency threshold. Exclude keys already in KEY_METRICS.
         # Default 5%; override via COLLIMATOR_METRIC_MIN_FREQ_PCT for experiments.
         # When `extended_metrics_include` is set, restrict to keys matching one of
@@ -5359,7 +5671,7 @@ def build_vocab_from_db(
         crit_tri_counts: dict[str, int] = {}
         crit_bi_benign: dict[str, int] = {}
         crit_tri_benign: dict[str, int] = {}
-        scan_ids_labels = row_ids_labels[:5000]
+        scan_ids_labels = scan_rows
         benign_scan_ids = {rid for rid, label in scan_ids_labels if label == 0}
         for start in range(0, len(scan_ids_labels), 500):
             chunk_ids = [rid for rid, _l in scan_ids_labels[start:start + 500]]
@@ -5385,14 +5697,16 @@ def build_vocab_from_db(
                 for i, t1 in enumerate(tokens):
                     for t2 in tokens[i + 1:]:
                         bi = f"{t1} + {t2}"
-                        crit_bi_counts[bi] = crit_bi_counts.get(bi, 0) + 1
+                        if not is_benign:
+                            crit_bi_counts[bi] = crit_bi_counts.get(bi, 0) + 1
                         if is_benign:
                             crit_bi_benign[bi] = crit_bi_benign.get(bi, 0) + 1
                     for j in range(i + 1, len(tokens)):
                         t2 = tokens[j]
                         for t3 in tokens[j + 1:]:
                             tri = f"{t1} + {t2} + {t3}"
-                            crit_tri_counts[tri] = crit_tri_counts.get(tri, 0) + 1
+                            if not is_benign:
+                                crit_tri_counts[tri] = crit_tri_counts.get(tri, 0) + 1
                             if is_benign:
                                 crit_tri_benign[tri] = crit_tri_benign.get(tri, 0) + 1
 
@@ -5403,12 +5717,18 @@ def build_vocab_from_db(
 
         crit_unigram_vocab = sorted(k for k, c in crit_uni_counts.items() if c >= 10)
         crit_bigram_vocab = sorted(
-            k for k, c in sorted(crit_bi_counts.items(), key=lambda x: -x[1])[:500]
-            if c >= 5 and crit_bi_benign.get(k, 0) <= benign_ceil
+            sorted(
+                (k for k, c in crit_bi_counts.items()
+                 if c >= 5 and crit_bi_benign.get(k, 0) <= benign_ceil),
+                key=lambda k: (-crit_bi_counts[k], k),
+            )[:500]
         )
         crit_trigram_vocab = sorted(
-            k for k, c in sorted(crit_tri_counts.items(), key=lambda x: -x[1])[:500]
-            if c >= 3 and crit_tri_benign.get(k, 0) <= benign_ceil
+            sorted(
+                (k for k, c in crit_tri_counts.items()
+                 if c >= 3 and crit_tri_benign.get(k, 0) <= benign_ceil),
+                key=lambda k: (-crit_tri_counts[k], k),
+            )[:500]
         )
         log.info(
             "crit-category n-grams: %d unigrams, %d bigrams, %d trigrams from %d scanned rows",
@@ -5432,7 +5752,7 @@ def build_vocab_from_db(
         mbc_unigram_counts: dict[str, int] = {}
         atk_bi_benign: dict[str, int] = {}
         mbc_bi_benign: dict[str, int] = {}
-        scan_ids_labels = row_ids_labels[:5000]
+        scan_ids_labels = scan_rows
         benign_scan = {rid for rid, label in scan_ids_labels if label == 0}
         for start in range(0, len(scan_ids_labels), 500):
             chunk_ids = [rid for rid, _l in scan_ids_labels[start:start + 500]]
@@ -5462,42 +5782,52 @@ def build_vocab_from_db(
                     for j in range(i + 1, len(sorted_a)):
                         a2 = sorted_a[j]
                         bi = f"{a1} + {a2}"
-                        atk_bi_counts[bi] = atk_bi_counts.get(bi, 0) + 1
+                        if not is_benign:
+                            atk_bi_counts[bi] = atk_bi_counts.get(bi, 0) + 1
                         if is_benign:
                             atk_bi_benign[bi] = atk_bi_benign.get(bi, 0) + 1
                         for a3 in sorted_a[j + 1:]:
                             tri = f"{a1} + {a2} + {a3}"
-                            atk_tri_counts[tri] = atk_tri_counts.get(tri, 0) + 1
+                            if not is_benign:
+                                atk_tri_counts[tri] = atk_tri_counts.get(tri, 0) + 1
                 # MBC bigrams/trigrams
                 sorted_m = sorted(mbcs)
                 for i, m1 in enumerate(sorted_m):
                     for j in range(i + 1, len(sorted_m)):
                         m2 = sorted_m[j]
                         bi = f"{m1} + {m2}"
-                        mbc_bi_counts[bi] = mbc_bi_counts.get(bi, 0) + 1
+                        if not is_benign:
+                            mbc_bi_counts[bi] = mbc_bi_counts.get(bi, 0) + 1
                         if is_benign:
                             mbc_bi_benign[bi] = mbc_bi_benign.get(bi, 0) + 1
                         for m3 in sorted_m[j + 1:]:
                             tri = f"{m1} + {m2} + {m3}"
-                            mbc_tri_counts[tri] = mbc_tri_counts.get(tri, 0) + 1
+                            if not is_benign:
+                                mbc_tri_counts[tri] = mbc_tri_counts.get(tri, 0) + 1
 
         n_benign_scan = len(benign_scan)
         benign_ceil = int(0.01 * n_benign_scan)
         if config.include_attack_code_ngrams:
             attack_bigram_vocab = sorted(
-                k for k, c in sorted(atk_bi_counts.items(), key=lambda x: -x[1])[:500]
-                if c >= 5 and atk_bi_benign.get(k, 0) <= benign_ceil
+                sorted(
+                    (k for k, c in atk_bi_counts.items()
+                     if c >= 5 and atk_bi_benign.get(k, 0) <= benign_ceil),
+                    key=lambda k: (-atk_bi_counts[k], k),
+                )[:500]
             )
             attack_trigram_vocab = sorted(
-                k for k, c in sorted(atk_tri_counts.items(), key=lambda x: -x[1])[:500]
+                k for k, c in sorted(atk_tri_counts.items(), key=lambda x: (-x[1], x[0]))[:500]
                 if c >= 3
             )
             mbc_bigram_vocab = sorted(
-                k for k, c in sorted(mbc_bi_counts.items(), key=lambda x: -x[1])[:500]
-                if c >= 5 and mbc_bi_benign.get(k, 0) <= benign_ceil
+                sorted(
+                    (k for k, c in mbc_bi_counts.items()
+                     if c >= 5 and mbc_bi_benign.get(k, 0) <= benign_ceil),
+                    key=lambda k: (-mbc_bi_counts[k], k),
+                )[:500]
             )
             mbc_trigram_vocab = sorted(
-                k for k, c in sorted(mbc_tri_counts.items(), key=lambda x: -x[1])[:500]
+                k for k, c in sorted(mbc_tri_counts.items(), key=lambda x: (-x[1], x[0]))[:500]
                 if c >= 3
             )
             log.info(
@@ -5508,43 +5838,104 @@ def build_vocab_from_db(
         if config.include_mbc_id_vocab:
             # Min freq=5 mirrors the bigram floor; cap at 500 to keep vocab tight.
             mbc_id_vocab = sorted(
-                k for k, c in sorted(mbc_unigram_counts.items(), key=lambda x: -x[1])[:500]
+                k for k, c in sorted(mbc_unigram_counts.items(), key=lambda x: (-x[1], x[0]))[:500]
                 if c >= 5
             )
             log.info("MBC unigram vocab: %d entries from %d scanned rows",
                      len(mbc_id_vocab), len(scan_ids_labels))
 
+    symbol_vocab: list[str] = []
+    symbol_bigram_vocab: list[str] = []
+    symbol_trigram_vocab: list[str] = []
     tiered_quadgram_vocab: list[str] = []
-    if config.include_tiered_crit_quadgrams:
+    kv_vocab: list[str] = []
+    needs_symbol_scan = (
+        config.include_symbol_vocab
+        or config.include_symbol_bigrams
+        or config.include_symbol_trigrams
+    )
+    if needs_symbol_scan or config.include_kv_vocab or config.include_tiered_crit_quadgrams:
         from . import data as _data  # noqa: PLC0415
-        tiered_quadgram_counts: dict[str, int] = {}
-        scan_ids = [rid for rid, _l in row_ids_labels[:5000]]
+        symbol_counts: dict[str, int] = {}
+        symbol_bigram_counts: dict[str, int] = {}
+        symbol_trigram_counts: dict[str, int] = {}
+        kv_counts: dict[str, int] = {}
+        scan_ids = [rid for rid, _l in scan_rows]
+        malware_scan_ids = {rid for rid, label in scan_rows if label == 1}
         for start in range(0, len(scan_ids), 500):
             chunk = scan_ids[start:start + 500]
             for _rid, item in _data.fetch_cleave_results(db_path, chunk).items():
                 report = _coerce_report(item["cleave_result"])
                 if report is None:
                     continue
-                # Tiered quadgrams: one per report (not per file). Use the
-                # already-summarized sample_paths via _summarize_report_files.
-                quad_summary = _summarize_report_files(report_files(report))
-                tokens = _tiered_bigram_tokens(
-                    quad_summary.sample_paths,
-                    min_crit=config.tiered_quadgram_min_crit,
-                )
-                # Tighter cap than tiered_trigram (which uses 512) because
-                # C(n, 4) grows much faster: 64 tokens -> 635k quadgrams.
-                if len(tokens) <= 64:
-                    for quad in _quadgram_tokens(tokens):
-                        if len(tiered_quadgram_counts) >= 100000:
-                            break
-                        tiered_quadgram_counts[quad] = tiered_quadgram_counts.get(quad, 0) + 1
-        tiered_quadgram_vocab = sorted(
-            k for k, c in sorted(tiered_quadgram_counts.items(), key=lambda x: -x[1])[:config.tiered_quadgram_max]
-            if c >= config.tiered_quadgram_min_freq
-        )
-        log.info("tiered crit quadgrams: %d vocab entries from %d scanned rows",
-                 len(tiered_quadgram_vocab), len(scan_ids))
+                report_symbols: set[str] = set()
+                report_symbol_bigrams: set[str] = set()
+                report_symbol_trigrams: set[str] = set()
+                report_kvs: set[str] = set()
+                for file_entry in report_files(report):
+                    if config.include_symbol_vocab:
+                        report_symbols.update(_file_symbols(file_entry))
+                    if config.include_symbol_bigrams and _rid in malware_scan_ids:
+                        report_symbol_bigrams.update(_file_symbol_bigrams(file_entry))
+                    if config.include_symbol_trigrams and _rid in malware_scan_ids:
+                        report_symbol_trigrams.update(_file_symbol_trigrams(file_entry))
+                    if config.include_kv_vocab:
+                        report_kvs.update(
+                            _metric_kv_tokens(
+                                file_entry,
+                                include_shape=config.include_kv_shape_features,
+                                split_string_values=config.include_kv_value_split,
+                            )
+                        )
+                if (_rid in malware_scan_ids and config.include_tiered_crit_quadgrams
+                        and config.tiered_quadgram_max > 0):
+                    # Tiered quadgrams: one per report (not per file). Use the
+                    # already-summarized sample_paths via _summarize_report_files.
+                    quad_summary = _summarize_report_files(report_files(report))
+                    tokens = _ranked_tiered_tokens(
+                        quad_summary.sample_paths, quad_summary.path_scores, order=4,
+                        min_crit=config.tiered_quadgram_min_crit,
+                        branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
+                    )
+                    _count_ngrams(tokens, 4, counts, "tiered_quadgram", _rid)
+                for sym in report_symbols:
+                    symbol_counts[sym] = symbol_counts.get(sym, 0) + 1
+                for bi in report_symbol_bigrams:
+                    symbol_bigram_counts[bi] = symbol_bigram_counts.get(bi, 0) + 1
+                for tri in report_symbol_trigrams:
+                    symbol_trigram_counts[tri] = symbol_trigram_counts.get(tri, 0) + 1
+                for kv in report_kvs:
+                    kv_counts[kv] = kv_counts.get(kv, 0) + 1
+        if config.include_symbol_vocab:
+            symbol_vocab = sorted(
+                k for k, c in sorted(symbol_counts.items(), key=lambda x: (-x[1], x[0]))[:config.symbol_vocab_max]
+                if c >= config.symbol_min_freq
+            )
+            log.info("symbol vocab: %d entries from %d scanned rows", len(symbol_vocab), len(scan_ids))
+        if config.include_symbol_bigrams:
+            symbol_bigram_vocab = sorted(
+                k for k, c in sorted(symbol_bigram_counts.items(), key=lambda x: (-x[1], x[0]))[:config.symbol_bigram_max]
+                if c >= config.symbol_min_freq_bigram
+            )
+            log.info("symbol bigram vocab: %d entries (cap=%d/file) from %d scanned rows",
+                     len(symbol_bigram_vocab), _SYMBOL_BIGRAM_CAP, len(scan_ids))
+        if config.include_symbol_trigrams:
+            symbol_trigram_vocab = sorted(
+                k for k, c in sorted(symbol_trigram_counts.items(), key=lambda x: (-x[1], x[0]))[:config.symbol_trigram_max]
+                if c >= config.symbol_min_freq_trigram
+            )
+            log.info("symbol trigram vocab: %d entries (cap=%d/file) from %d scanned rows",
+                     len(symbol_trigram_vocab), _SYMBOL_TRIGRAM_CAP, len(scan_ids))
+        if config.include_kv_vocab:
+            kv_vocab = sorted(
+                k for k, c in sorted(kv_counts.items(), key=lambda x: (-x[1], x[0]))[:config.kv_vocab_max]
+                if c >= config.kv_min_freq
+            )
+            log.info("kv vocab: %d entries from %d scanned rows", len(kv_vocab), len(scan_ids))
+        if config.include_tiered_crit_quadgrams and config.tiered_quadgram_max > 0:
+            tiered_quadgram_vocab = counts.top("tiered_quadgram", config.tiered_quadgram_max, config.tiered_quadgram_min_freq)
+            log.info("tiered crit quadgrams: %d vocab entries from %d scanned rows",
+                     len(tiered_quadgram_vocab), len(scan_ids))
 
     feature_names = _build_feature_names(
         presence_vocab, filetype_vocab, element_vocab, bigram_vocab,
@@ -5552,7 +5943,7 @@ def build_vocab_from_db(
         metric_vocab, crit_unigram_vocab, crit_bigram_vocab, crit_trigram_vocab,
         attack_bigram_vocab, attack_trigram_vocab, mbc_bigram_vocab, mbc_trigram_vocab,
         tiered_bigram_vocab, tiered_trigram_vocab, tiered_quadgram_vocab,
-        [], [], [], [],
+        symbol_vocab, symbol_bigram_vocab, symbol_trigram_vocab, kv_vocab,
         mbc_id_vocab=mbc_id_vocab,
     )
 
@@ -5576,14 +5967,16 @@ def build_vocab_from_db(
         tiered_bigram_vocab=tiered_bigram_vocab,
         tiered_trigram_vocab=tiered_trigram_vocab,
         tiered_quadgram_vocab=tiered_quadgram_vocab,
-        symbol_vocab=[],
-        symbol_bigram_vocab=[],
-        symbol_trigram_vocab=[],
-        kv_vocab=[],
+        symbol_vocab=symbol_vocab,
+        symbol_bigram_vocab=symbol_bigram_vocab,
+        symbol_trigram_vocab=symbol_trigram_vocab,
+        kv_vocab=kv_vocab,
         mbc_id_vocab=mbc_id_vocab,
         feature_names=feature_names,
         total_features=len(feature_names),
         trait_path_depth=config.trait_path_depth,
+        tiered_min_crit=(config.tiered_bigram_min_crit, config.tiered_trigram_min_crit, config.tiered_quadgram_min_crit),
+        tiered_branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
     )
     log.info(
         "vocab: %d paths, %d filetypes, %d elements, %d bigrams, %d ghosts, %d ext_metrics -> %d features",

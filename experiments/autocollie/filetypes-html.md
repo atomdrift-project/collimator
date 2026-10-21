@@ -371,3 +371,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T055948-filetypes-html` — 2026-10-20T05:59:48Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `e5f6eaa59f96a3cd` | inherit_from_filetypes_elf_4c2de854 | ok | 0.9965 | 0.9957 | 0.9653 | 767 | [log](out/autocollie/runs/2026-10-20T06-08-49_20261020T055948-filetypes-html_inherit_from_filetypes_elf_4c2de854.log) |
+| `212a7893be3af01a` | html_control_maxrecall_threshold | ok | 0.9955 | 0.9945 | 0.0000 | 70 | [log](out/autocollie/runs/2026-10-20T06-21-36_20261020T055948-filetypes-html_html_control_maxrecall_threshold.log) |
+| `c65ac4d2a4259b47` | html_text_metrics_full_textenc | ok | 0.9955 | 0.9945 | 0.9630 | 136 | [log](out/autocollie/runs/2026-10-20T06-22-46_20261020T055948-filetypes-html_html_text_metrics_full_textenc.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`html_control_maxrecall_threshold`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims recall@3FPM by switching threshold tuning to max_recall_at_fpr on the archived HTML feature set, keeping PR_AUC and ROC_AUC flat.
+- **`html_text_metrics_full_textenc`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Aims PR_AUC and recall@3FPM by adding text_metrics_full and text_encoding obfuscation signal for HTML, with stronger regularization to avoid ROC_AUC regression.
+
+</details>
+

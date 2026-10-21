@@ -1120,3 +1120,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T063802-filetypes-java_class` — 2026-10-20T06:38:02Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2e2bb24cfdb45d78` | inherit_from_filetypes_elf_4c2de854 | ok | 0.8901 | 0.9636 | 0.8864 | 808 | [log](out/autocollie/runs/2026-10-20T06-48-15_20261020T063802-filetypes-java_class_inherit_from_filetypes_elf_4c2de854.log) |
+| `0b97046c93ce4f32` | java_class_control_archived_hardreg | ok | 0.8792 | 0.9654 | 0.8784 | 863 | [log](out/autocollie/runs/2026-10-20T07-01-43_20261020T063802-filetypes-java_class_java_class_control_archived_hardreg.log) |
+| `38e1a5cdbcf3ea5e` | java_class_kv_vocab_archived | ok | 0.8792 | 0.9654 | 0.8784 | 21 | [log](out/autocollie/runs/2026-10-20T07-16-05_20261020T063802-filetypes-java_class_java_class_kv_vocab_archived.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`java_class_control_archived_hardreg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived best feature_env with stronger L2 and more leaves to lift PR_AUC by sharpening positive ranking while keeping ROC_AUC flat.
+- **`java_class_kv_vocab_archived`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab on the archived feature set to add key-value metadata signal, aiming to raise recall@3FPM and PR_AUC on the Java-class tail without hurting ROC_AUC.
+
+</details>
+

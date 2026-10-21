@@ -1256,3 +1256,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T131849-filetypes-vbs` — 2026-10-20T13:18:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2885e8bec1fa613f` | inherit_from_filetypes_rtf_320ae377 | ok | 0.9925 | 0.9734 | 0.9234 | 76 | [log](out/autocollie/runs/2026-10-20T13-20-08_20261020T131849-filetypes-vbs_inherit_from_filetypes_rtf_320ae377.log) |
+| `a6d693a22d74594d` | vbs_control_hardneg8 | ok | 0.9940 | 0.9791 | 0.9188 | 33 | [log](out/autocollie/runs/2026-10-20T13-21-24_20261020T131849-filetypes-vbs_vbs_control_hardneg8.log) |
+| `49fbc3401062ac6d` | vbs_text_metrics_full | ok | 0.9935 | 0.9772 | 0.9221 | 34 | [log](out/autocollie/runs/2026-10-20T13-21-57_20261020T131849-filetypes-vbs_vbs_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_320ae377`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=320ae377e6757db4, recall_at_50_per_100M=0.9962). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`vbs_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control run using the archived best feature set with increased hard_negative_weight to 8.0 to improve tail recall@3FPM by sharpening the decision boundary against benign VBS scripts without changing the feature surface.
+- **`vbs_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Feature experiment enabling text_metrics_full to capture structural obfuscation signals (line length, null bytes, escape density) in VBS scripts, aiming to improve PR_AUC by adding discriminative features for malicious script patterns.
+
+</details>
+

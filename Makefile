@@ -72,55 +72,36 @@ AZOTH_SLICE_METRICS_CSV ?= $(AZOTH_ROOT)/slice_metrics.csv
 AZOTH_ROUTE_POLICIES ?= $(AZOTH_ROOT)/route_policies.json
 AZOTH_ROUTE_POLICIES_CSV ?= $(AZOTH_ROOT)/route_policies.csv
 
-# Feature allow-list: drops vocab entries where ALL produced columns fire on
-# < 10 rows across a 671k-row training matrix. ~26% feature reduction, zero
-# borderline drops (no feature firing on ≥10 malware was culled). cleave's
-# allowed_features() reader (src/collimator/features.py:1306) returns None
-# gracefully when the file is missing, so unsetting this is a safe no-op.
-#
-# The default points at the in-repo committed snapshot so fresh checkouts get
-# the optimization without having to first run the build script. This snapshot
-# is frequency-only (min-freq 10, ~30k features) and PINNED — it does not track
-# the corpus and goes stale. Two ways to regenerate:
-#
-#   # frequency-only (legacy, conservative):
-#   python scripts/azoth_feature_frequency_audit.py
-#   python scripts/azoth_build_allowed_features.py --threshold 10 \
-#       --output src/collimator/data/azoth_allowed_features_minfreq10.json
-#
-#   # self-calibrating importance-union ∪ frequency-floor (recommended):
-#   make azoth-build-allowlist          # -> out/models/azoth/allowed_features.json
-#
-# The importance-union form keeps the features the deployed ensemble actually
-# splits on (so it can prune deeper — ~13k vs 30k — without a tail hit) PLUS a
-# live-recounted frequency floor so new features are still discoverable. Adopt a
-# regenerated allowlist only behind the deploy regression gate
-# (scripts/check_azoth_regression.py) — see azoth-build-allowlist.
-#
-# 2026-06-05: switched default from minfreq10 (~21.5k features, of which the
-# trees only split on ~4.1k) to the importance∪floor "10k" pin: 8,595 features
-# (4,114 importance + 4,481 frequency-floor buffer), a 60% cut with no proxy
-# recall@1e-3 regression across general/elf/source and javascript/python/elf
-# (scripts/azoth_allowlist_experiment.py sweep). The L50 tail is unmeasured by
-# the proxy, so this only takes effect on the NEXT train and is GATED there by
-# check_azoth_regression before deploy. Inert for deploying an already-trained
-# bundle (deploy loads baked-in specs, not this allowlist).
-AZOTH_ALLOWED_FEATURES_FILE ?= src/collimator/data/azoth_allowed_features_importance10k.json
+# Discover features from each route's training rows. Frequency cutoffs and
+# per-family caps bound the vocabulary; a deployed model is not required.
+# A fixed allowlist is an optional optimization, explicitly selected for both
+# experiments and full training. Empty means no additional name filter.
+AZOTH_ALLOWED_FEATURES_FILE ?=
 export COLLIMATOR_ALLOWED_FEATURES_FILE := $(AZOTH_ALLOWED_FEATURES_FILE)
 
-# Regenerate the self-calibrating allowlist from the live deployed bundle's
-# feature importances (one-cycle feedback) unioned with a frequency floor
-# recounted from the current DB. Run this each deploy cycle BEFORE a retrain to
-# keep the kept-feature set tracking the data instead of pinning a stale file.
+# Optional size optimization: discover candidates from current training rows,
+# then retain frequent columns plus names used by existing tree splits.
 # AZOTH_ALLOWLIST_SIZE is the aggressiveness knob (memory vs tail) that autocollie
 # should sweep + validate against FP/100M; it is NOT pinned here.
 AZOTH_ALLOWLIST_SIZE ?= 15000
+AZOTH_ALLOWLIST_SAMPLE_PER_TYPE ?= 6000
+AZOTH_ALLOWLIST_SAMPLING_WORKERS ?= 4
+AZOTH_ALLOWLIST_MAX_DB_WORKERS ?= 24
+AZOTH_ALLOWLIST_CACHE_DIR ?= out/cache/azoth-allowlist
+AZOTH_ALLOWLIST_CACHE_MAX_AGE ?= 3600
+AZOTH_ALLOWLIST_REFRESH ?= 0
 azoth-build-allowlist: venv check-db
-	$(PYTHON) scripts/azoth_build_feature_allowlist.py \
+	$(EXPERIMENT_FEATURE_ENV) $(PYTHON) scripts/azoth_build_feature_allowlist.py \
 		--bundle $(AZOTH_DEPLOY_DIR) \
 		--db $(DB) \
 		--workers $(if $(WORKERS),$(WORKERS),16) \
 		--target-size $(AZOTH_ALLOWLIST_SIZE) \
+		--sample-per-type $(AZOTH_ALLOWLIST_SAMPLE_PER_TYPE) \
+		--sampling-workers $(AZOTH_ALLOWLIST_SAMPLING_WORKERS) \
+		--max-db-workers $(AZOTH_ALLOWLIST_MAX_DB_WORKERS) \
+		--cache-dir $(AZOTH_ALLOWLIST_CACHE_DIR) \
+		--cache-max-age $(AZOTH_ALLOWLIST_CACHE_MAX_AGE) \
+		$(if $(filter 1 true yes,$(AZOTH_ALLOWLIST_REFRESH)),--refresh,) \
 		--output out/models/azoth/allowed_features.json
 	@echo "to use it for the next retrain:"
 	@echo "  make azoth-full-train AZOTH_ALLOWED_FEATURES_FILE=out/models/azoth/allowed_features.json"
@@ -134,6 +115,7 @@ azoth-build-allowlist: venv check-db
 # screens coarse quality only (R@1e-3); the L50 tail stays owned by the gate.
 AZOTH_MONITOR_ROUTES ?= general,elf,source
 azoth-allowlist-monitor: venv check-db
+	@test -n "$(AZOTH_ALLOWED_FEATURES_FILE)" || { echo "error: set AZOTH_ALLOWED_FEATURES_FILE to the allowlist to monitor"; exit 1; }
 	-$(PYTHON) scripts/azoth_allowlist_experiment.py \
 		--prepare --routes $(AZOTH_MONITOR_ROUTES) --db $(DB) \
 		--workers $(if $(WORKERS),$(WORKERS),16) \
@@ -304,10 +286,12 @@ AZOTH_SPECIALIST_FEATURE_CACHE_DIR ?= out/cache/azoth-route-features
 AZOTH_SPECIALIST_FEATURE_CACHE_ARG := $(if $(AZOTH_SPECIALIST_FEATURE_CACHE_DIR),--feature-cache-dir $(AZOTH_SPECIALIST_FEATURE_CACHE_DIR),)
 AZOTH_SPECIALIST_ONLY ?=
 AZOTH_SPECIALIST_MASK_SPEC ?=
-AZOTH_SPECIALIST_TRAIN_OVERRIDE ?= pe:hard_negative_fraction=0.01 pe:hard_negative_weight=12.0
-AZOTH_SPECIALIST_FEATURE_ENV ?= native:COLLIMATOR_FORMAT_HINTS=1 native:COLLIMATOR_TAXONOMY_FEATURES=1 native:COLLIMATOR_EMBER_LITE_FEATURES=1
+# Explicit operator overrides win over discovered configurations. Keep these
+# empty by default so historical experiments actually determine each route.
+AZOTH_SPECIALIST_TRAIN_OVERRIDE ?=
+AZOTH_SPECIALIST_FEATURE_ENV ?=
 # Where autocollie-driven experiments write run JSONs. Pointing the suite at
-# this dir lets it auto-pick each route's highest-F1 historical experiment
+# this dir lets it auto-pick each route's best supported historical experiment
 # and replay its train_config + feature_env, so `make azoth-specialist-suite`
 # uses autocollie's wins by default. Unset to revert to pure CLI/Makefile
 # defaults (legacy behavior, autocollie discoveries are dropped on the floor).
@@ -376,12 +360,8 @@ EXP_RERUN ?= 0
 EXP_RERUN_ARG := $(if $(filter 1 true yes,$(EXP_RERUN)),--rerun-existing,)
 EXP_ROUTE ?= general
 EXP_IDEA ?= $(if $(EXP_TAG),$(patsubst _%,%,$(EXP_TAG)),adhoc)
-# Default experiments (incl. every autocollie `make experiment`) to the SAME
-# allowlist the deploy uses, so screen/confirm/promote evaluate candidates on the
-# pruned feature set they'll actually ship with — not the full vocab. Was empty
-# (full vocab), which made autocollie screen at ~21k while deployed models run
-# the ~10k pin: a feature-axis apples-to-oranges. Override with
-# `EXP_ALLOWED_FEATURES_FILE=` (empty) to explore the full vocab deliberately.
+# Match full training's explicit filter, if any. Otherwise each experiment
+# discovers its vocabulary from its training rows and feature knobs.
 EXP_ALLOWED_FEATURES_FILE ?= $(abspath $(AZOTH_ALLOWED_FEATURES_FILE))
 EXP_FOLDS ?= 0
 EXP_HOLDOUT_FRACTION ?= 0.12
@@ -434,6 +414,9 @@ EXP_BETA ?= 2.0
 # helps c slightly, and leaves ruby's tail recall flat. 4 is the global
 # default; autocollie tunes per-route (go wants ~5, ruby ~2).
 EXP_MIN_MALWARE_SCORE ?= 4
+# A Make default must not overwrite autocollie's selected per-route cutoff.
+# An explicit command-line/environment value still overrides every route.
+AZOTH_MALWARE_SCORE_OVERRIDE = $(if $(filter file default undefined,$(origin EXP_MIN_MALWARE_SCORE)),,$(EXP_MIN_MALWARE_SCORE))
 # Ablation 2026-04-10: silent_packer (Exp 43) and mtime_kurtosis (Exp 44) were
 # net-negative at 75k experiment scale. air_gap_signal (Exp 46) and the
 # extreme-features bundle (Exps 48/49/54/55/56) are kept ON.
@@ -471,7 +454,7 @@ EXP_EXTENDED_METRICS ?= 1
 EXP_METRIC_MIN_FREQ_PCT ?= 5
 EXP_EMBER_LITE_FEATURES ?= 0
 EXP_BIGRAM_MAX ?= 5000
-EXP_BIGRAM_MIN_FREQ ?= 1000
+EXP_BIGRAM_MIN_FREQ ?= 5
 EXP_TRIGRAM_MAX ?= 500
 EXP_TRIGRAM_MAX_BENIGN_FRAC ?= 0.01
 EXP_CONFIDENCE_WEIGHTED_NGRAMS ?= 0
@@ -499,7 +482,6 @@ EXP_KV_VOCAB ?= 0
 EXP_KV_VOCAB_MAX ?= 5000
 EXP_KV_MIN_FREQ ?= 5
 EXP_KV_SHAPE_FEATURES ?= 0
-EXP_TEXT_ENCODING_FEATURES ?= 0
 # Batch 1 — cheap metric extracts (default off; autocollie can toggle each).
 EXP_PE_FORMAT_FLAGS ?= 0
 EXP_PE_TEMPORAL_ANOMALY ?= 0
@@ -635,6 +617,7 @@ azoth-full-train: venv check-db
 	@mkdir -p $(AZOTH_RUN_DIR)
 	$(MAKE) _azoth-train \
 		AZOTH_ROOT=$(AZOTH_RUN_DIR) \
+		AZOTH_PROMOTED_BASELINES="$(AZOTH_PROMOTED_BASELINES)" \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL)
 	$(MAKE) azoth-publish AZOTH_ROOT=$(AZOTH_RUN_DIR)
@@ -647,6 +630,7 @@ azoth-fast-train: venv check-db
 	@mkdir -p $(AZOTH_RUN_DIR)
 	$(MAKE) _azoth-train \
 		AZOTH_ROOT=$(AZOTH_RUN_DIR) \
+		AZOTH_PROMOTED_BASELINES="$(AZOTH_PROMOTED_BASELINES)" \
 		DEPLOY_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FAST) \
 		DEPLOY_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FAST)
 	$(MAKE) azoth-publish AZOTH_ROOT=$(AZOTH_RUN_DIR)
@@ -654,46 +638,11 @@ azoth-fast-train: venv check-db
 	$(MAKE) azoth-prune-feature-cache
 	@echo "azoth-fast-train: published $(OUT_ROOT)/azoth -> $(AZOTH_RUN_DIR)"
 
-# azoth-publish-train: publication-grade k=2 out-of-fold calibration.
-#
-# The weekly default (azoth-full-train) calibrates on dev only — ~150k
-# benigns, which puts every hostile L0..L50 below data resolution at 95%
-# CI. This target instead runs k=2 OOF: two fold-A/B trainings + a final
-# training, then combines fold-A's predictions on fold-1 rows with
-# fold-B's predictions on fold-0 rows into a single OOF threshold-score
-# table covering ~2.4M benigns. The Clopper-Pearson floor drops from
-# ~2000 FP/100M (≈ 20 FP/M) to ~125 FP/100M (≈ 1.25 FP/M); L50
-# (q=50/100M = 0.5 FP/M) becomes resolvable for the first time.
-#
-# Compute cost: ~3× weekly (two extra full trainings). Use for paper
-# runs and quarterly publication-grade builds; weekly retrains stay on
-# azoth-full-train.
-#
-# Steps:
-#   1. Clean bundle slot.
-#   2. Train fold A (with EXP_OOF_FOLD_EXCLUDE=0 — model trained on rows
-#      whose oof_fold != 0, which makes its predictions on fold-0 rows OOF).
-#      Stash to out/models/azoth.oof-fold-a/.
-#   3. Train fold B (EXP_OOF_FOLD_EXCLUDE=1). Stash to out/models/azoth.oof-fold-b/.
-#   4. Train final (no exclusion) — this is the deployed model.
-#   5. Combine fold-A-on-fold-0 + fold-B-on-fold-1 predictions into the
-#      general/threshold_scores.npz. Replaces the single-pass scoring step.
-#   6. Calibrate using the OOF score table; --partition all means we use
-#      the full OOF coverage, not just the dev byte-range filter.
-#   7. Deploy.
-#
-# Full k=2 OOF for BOTH the general model AND the per-route specialists. Each
-# fold trains general + specialists on that fold's data (excluding the OOF
-# fold), so every row is scored by a model that did NOT train on it — honest
-# out-of-fold probabilities for the whole ensemble, used at calibration.
-#
-# This replaced the earlier general-only-OOF flow once we (a) measured that
-# specialists are ~30-40 min/fold (folds skip benchmarks), not the ~27h the old
-# estimate assumed, and (b) found that in-fold specialist calibration overshoots
-# catastrophically — e.g. filetypes/c picked a 0.123 threshold flagging 663k
-# benigns — poisoning the deployed dial. OOF-calibrating the specialists is
-# corrective, not optional. Set THRESHOLD_MAX_ID / AZOTH_SPECIALIST_PARALLELISM
-# as usual; they propagate to the sub-makes.
+# azoth-publish-train additionally computes k=2 OOF diagnostics.
+# Fold-model scores cannot calibrate the separately trained production models:
+# their score distributions differ. Publication always fits production ONNX
+# ensemble scores on dev, then applies the saved policies to locked test.
+# Use azoth-full-train when fold diagnostics are unnecessary.
 #
 # The recipe used to inline all nine steps in sequence, which idled 126 of 128
 # cores between LightGBM phases for 7h29m of trainings. It now delegates to
@@ -748,11 +697,13 @@ azoth-publish-train: venv check-db
 azoth-general: venv check-db azoth-clean-bundle
 	$(PYTHON) scripts/azoth_train_best.py \
 		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
+		--promoted-baselines "$(AZOTH_PROMOTED_BASELINES)" \
 		--route general \
 		--set DB=$(DB) \
 		--set EXP_ALLOWED_FEATURES_FILE=$(abspath $(AZOTH_ALLOWED_FEATURES_FILE)) \
 		--set COLLIMATOR_MIN_SAMPLE_SCORE=$(EXP_MIN_SAMPLE_SCORE) \
-		--set EXP_MIN_MALWARE_SCORE=$(EXP_MIN_MALWARE_SCORE) \
+		--default-min-malware-score $(EXP_MIN_MALWARE_SCORE) \
+		$(if $(AZOTH_MALWARE_SCORE_OVERRIDE),--set EXP_MIN_MALWARE_SCORE=$(AZOTH_MALWARE_SCORE_OVERRIDE),) \
 		--set EXP_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES) \
 		--set EXP_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES) \
 		--set EXP_ESTIMATORS=$(DEPLOY_ESTIMATORS) \
@@ -772,35 +723,30 @@ azoth-general: venv check-db azoth-clean-bundle
 	@# the fold targets point each invocation at its own workspace.
 	@mkdir -p $(AZOTH_GENERAL_DIR)
 	@if [ -d $(EXP_OUT_DIR)/models ]; then \
-		rm -rf $(AZOTH_GENERAL_DIR)/models $(AZOTH_GENERAL_DIR)/model.txt $(AZOTH_GENERAL_DIR)/model.json; \
+		rm -rf $(AZOTH_GENERAL_DIR)/models $(AZOTH_GENERAL_DIR)/model.txt $(AZOTH_GENERAL_DIR)/model.json $(AZOTH_GENERAL_DIR)/model.onnx; \
 		cp -a $(EXP_OUT_DIR)/models $(AZOTH_GENERAL_DIR)/models; \
 	elif [ -f $(EXP_OUT_DIR)/model.txt ]; then \
-		rm -rf $(AZOTH_GENERAL_DIR)/models $(AZOTH_GENERAL_DIR)/model.txt; \
+		rm -rf $(AZOTH_GENERAL_DIR)/models $(AZOTH_GENERAL_DIR)/model.txt $(AZOTH_GENERAL_DIR)/model.json $(AZOTH_GENERAL_DIR)/model.onnx; \
 		cp -a $(EXP_OUT_DIR)/model.txt $(AZOTH_GENERAL_DIR)/model.txt; \
 	else \
 		echo "error: azoth_train_best did not produce a general model in $(EXP_OUT_DIR)/"; \
 		exit 1; \
 	fi
 	cp -a $(EXP_OUT_DIR)/feature_spec.json $(AZOTH_GENERAL_DIR)/feature_spec.json
+	@if [ -f $(EXP_OUT_DIR)/model.onnx ]; then cp -a $(EXP_OUT_DIR)/model.onnx $(AZOTH_GENERAL_DIR)/model.onnx; fi
+	@rm -f $(AZOTH_GENERAL_DIR)/training_provenance.json
+	@if [ -f $(EXP_OUT_DIR)/training_provenance.json ]; then cp -a $(EXP_OUT_DIR)/training_provenance.json $(AZOTH_GENERAL_DIR)/training_provenance.json; fi
 	@# Rebuild the general's threshold_scores cache against the freshly-
 	@# promoted model. Without this, azoth-calibrate would consume a stale
 	@# score table whose probabilities map to a previous model — calibrators
 	@# and L0..L100 thresholds would be fit on the wrong score distribution.
-	@# Picks model.txt for single-seed bundles, else the lowest-numbered
-	@# seed_*.txt for multi-seed bundles (seed_42 by convention).
 	@if [ "$(AZOTH_GENERAL_SKIP_RESCORE)" = "1" ]; then \
 		echo "AZOTH_GENERAL_SKIP_RESCORE=1: skipping threshold_scores rescore"; \
 	else \
 		set -e; \
-		if [ -f $(AZOTH_GENERAL_DIR)/model.txt ]; then \
-		    seed_model=$(AZOTH_GENERAL_DIR)/model.txt; \
-		else \
-		    seed_model=$$(ls $(AZOTH_GENERAL_DIR)/models/seed_*.txt 2>/dev/null | sort | head -1); \
-		fi; \
-		[ -n "$$seed_model" ] || { echo "error: no general seed model found in $(AZOTH_GENERAL_DIR)"; exit 1; }; \
 		echo "rescoring general against full labeled corpus -> $(AZOTH_GENERAL_SCORES)"; \
 		$(PYTHON) -u -m collimator tune-thresholds --db $(DB) \
-		    --model $$seed_model \
+		    --model "$(AZOTH_GENERAL_DIR)" --scores-only \
 		    --spec $(AZOTH_GENERAL_DIR)/feature_spec.json \
 		    $(WORKERS_ARG) \
 		    --scores-cache $(AZOTH_GENERAL_SCORES) \
@@ -842,7 +788,7 @@ azoth-general-fold-b: venv check-db
 
 # Merge the two fold-trained general bundles into honest OOF probabilities.
 # Reads from the stash dirs created by azoth-general-fold-{a,b}, writes
-# the combined threshold_scores.npz that azoth-calibrate consumes. Pulled
+# diagnostic scores under oof_route_scores/general, separate from calibration. Pulled
 # out of azoth-publish-train so it's individually rerunnable when only
 # the merge needs refreshing.
 azoth-oof-merge-general: venv check-db
@@ -851,7 +797,7 @@ azoth-oof-merge-general: venv check-db
 		--fold-a-bundle $(OUT_ROOT)/azoth.oof-fold-a \
 		--fold-b-bundle $(OUT_ROOT)/azoth.oof-fold-b \
 		--prod-bundle $(AZOTH_ROOT) \
-		--output $(AZOTH_GENERAL_SCORES) \
+		--output $(AZOTH_OOF_ROUTE_SCORES_DIR)/general/threshold_scores.npz \
 		$(WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG)
 
@@ -1069,12 +1015,7 @@ elf-route-optimization: venv check-db
 # come in via --autocollie-best-runs-dir (read from the suite, see the flag
 # in scripts/azoth_specialist_suite.py).
 azoth-specialists: venv check-db
-	$(if $(AZOTH_AUTOCOLLIE_RUNS_DIR),\
-		$(PYTHON) scripts/azoth_train_best.py \
-			--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
-			--route general \
-			--exec ,) \
-	$(PYTHON) scripts/azoth_specialist_suite.py \
+	$(EXPERIMENT_FEATURE_ENV) $(PYTHON) scripts/azoth_specialist_suite.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
@@ -1095,7 +1036,8 @@ azoth-specialists: venv check-db
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
-		--min-malware-score $(EXP_MIN_MALWARE_SCORE) \
+		--default-min-malware-score $(EXP_MIN_MALWARE_SCORE) \
+		$(if $(AZOTH_MALWARE_SCORE_OVERRIDE),--min-malware-score $(AZOTH_MALWARE_SCORE_OVERRIDE),) \
 		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
 		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
@@ -1133,10 +1075,7 @@ azoth-rediscover: venv check-db
 # alone — the deployed model stays single-fold; the fold bundles exist
 # only to feed honest score merging downstream.
 azoth-specialists-fold-a: venv check-db
-	EXP_OOF_FOLD_EXCLUDE=0 $(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
-		--route general \
-		--exec $(PYTHON) scripts/azoth_specialist_suite.py \
+	$(EXPERIMENT_FEATURE_ENV) EXP_OOF_FOLD_EXCLUDE=0 $(PYTHON) scripts/azoth_specialist_suite.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
@@ -1157,7 +1096,8 @@ azoth-specialists-fold-a: venv check-db
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
-		--min-malware-score $(EXP_MIN_MALWARE_SCORE) \
+		--default-min-malware-score $(EXP_MIN_MALWARE_SCORE) \
+		$(if $(AZOTH_MALWARE_SCORE_OVERRIDE),--min-malware-score $(AZOTH_MALWARE_SCORE_OVERRIDE),) \
 		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
 		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
@@ -1172,10 +1112,7 @@ azoth-specialists-fold-a: venv check-db
 		$(if $(DEVICE),--device $(DEVICE),)
 
 azoth-specialists-fold-b: venv check-db
-	EXP_OOF_FOLD_EXCLUDE=1 $(PYTHON) scripts/azoth_train_best.py \
-		--runs-dir "$(AZOTH_AUTOCOLLIE_RUNS_DIR)" \
-		--route general \
-		--exec $(PYTHON) scripts/azoth_specialist_suite.py \
+	$(EXPERIMENT_FEATURE_ENV) EXP_OOF_FOLD_EXCLUDE=1 $(PYTHON) scripts/azoth_specialist_suite.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG) \
@@ -1196,7 +1133,8 @@ azoth-specialists-fold-b: venv check-db
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
 		--min-bad $(AZOTH_SPECIALIST_MIN_BAD) \
 		--min-good $(AZOTH_SPECIALIST_MIN_GOOD) \
-		--min-malware-score $(EXP_MIN_MALWARE_SCORE) \
+		--default-min-malware-score $(EXP_MIN_MALWARE_SCORE) \
+		$(if $(AZOTH_MALWARE_SCORE_OVERRIDE),--min-malware-score $(AZOTH_MALWARE_SCORE_OVERRIDE),) \
 		$(foreach target,$(AZOTH_SPECIALIST_ONLY),--only $(target)) \
 		$(foreach mask,$(AZOTH_SPECIALIST_MASK_SPEC),--mask-spec $(mask)) \
 		$(foreach override,$(AZOTH_SPECIALIST_TRAIN_OVERRIDE),--train-override $(override)) \
@@ -1248,54 +1186,30 @@ azoth-oof-route-scores: venv check-db
 		$(EXP_WORKERS_ARG) \
 		$(THRESHOLD_MAX_ID_ARG)
 
-# AZOTH_CALIBRATE_PARTITION selects which rows the calibrators and L0..L100
-# threshold search see. Default 'dev' is the weekly methodology (dev-only,
-# CP-aware budget acknowledging the volume floor). 'all' is for k=2 OOF
-# publication runs where the general/threshold_scores.npz already covers
-# train+dev OOF — no further filtering needed.
+# Fit thresholds on held-out dev scores from the exact production ensemble.
 AZOTH_CALIBRATE_PARTITION ?= dev
 # Concurrent route scoring. The auto-derived default (NPROC/8, capped at 16)
 # is set with the rest of the parallelism block near the top of this file;
 # this comment block is kept for context. Override via the command line if
 # you have a specific DB/CPU bottleneck you want to dodge.
 
-# When AZOTH_USE_OOF_ROUTE_SCORES=1, pass --oof-route-scores-dir so the
-# calibrator reads honest fold-merged specialist probs instead of running
-# in-sample predict_proba. The flag is opt-in so the existing pipeline
-# stays bit-for-bit unchanged when unset.
+# Retain the old option so callers receive an explicit error if they attempt
+# to calibrate production models with diagnostic OOF scores.
 AZOTH_OOF_ROUTE_SCORES_ARG := $(if $(filter 1,$(AZOTH_USE_OOF_ROUTE_SCORES)),--oof-route-scores-dir $(AZOTH_OOF_ROUTE_SCORES_DIR),)
 
 azoth-calibrate: venv check-db
-	@# Auto-generate general/threshold_scores.npz if missing. This is the gap
-	@# autocollie's promote-validate flow hits: the candidate bundle is staged
-	@# without the OOF score pipeline ever running, so the file calibrate
-	@# expects doesn't exist and np.load raises FileNotFoundError. The live
-	@# deploy bundle gets honest OOF scores via azoth-oof-merge-general; for a
-	@# candidate we fall back to a single-pass tune-thresholds invocation
-	@# against whatever model the bundle ships (model.txt if present, else the
-	@# first models/seed_*.txt). This is NOT OOF-quality — single-seed probs
-	@# under-approximate the ensemble — but it's sufficient to let calibrate
-	@# run for candidate validation; for the live bundle this branch is a
-	@# no-op since the OOF scores file already exists.
-	@if [ ! -f "$(AZOTH_GENERAL_SCORES)" ]; then \
-		_model="$(AZOTH_GENERAL_DIR)/model.txt"; \
-		if [ ! -f "$$_model" ]; then \
-			_model=$$(ls "$(AZOTH_GENERAL_DIR)"/models/seed_*.txt 2>/dev/null | head -1); \
-		fi; \
-		[ -n "$$_model" ] && [ -f "$$_model" ] || { \
-			echo "azoth-calibrate: $(AZOTH_GENERAL_SCORES) missing AND no general model found in $(AZOTH_GENERAL_DIR) — bundle is incomplete" >&2; \
-			exit 1; \
-		}; \
-		echo "azoth-calibrate: $(AZOTH_GENERAL_SCORES) missing — generating via tune-thresholds (model=$$_model; single-seed approximation suitable for candidate validation; OOF path is azoth-oof-merge-general)"; \
-		$(PYTHON) -m collimator tune-thresholds \
-			--db $(DB) \
-			--model "$$_model" \
-			--spec "$(AZOTH_GENERAL_DIR)/feature_spec.json" \
-			$(EXP_WORKERS_ARG) \
-			--scores-cache "$(AZOTH_GENERAL_SCORES)" \
-			--refresh-cache \
-			--output "$(AZOTH_GENERAL_DIR)/threshold_tuning.json"; \
-	fi
+	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
+		--db $(DB) --azoth-root $(AZOTH_ROOT) --summary $(AZOTH_SPECIALISTS_SUMMARY) \
+		--general-scores $(AZOTH_GENERAL_SCORES) --partition $(AZOTH_CALIBRATE_PARTITION) \
+		$(AZOTH_OOF_ROUTE_SCORES_ARG) --check-inputs-only
+	@# Cache reuse verifies ensemble, feature code, corpus, and canonical partitions.
+	$(PYTHON) -m collimator tune-thresholds \
+		--db $(DB) \
+		--model "$(AZOTH_GENERAL_DIR)" --scores-only \
+		--spec "$(AZOTH_GENERAL_DIR)/feature_spec.json" \
+		$(EXP_WORKERS_ARG) \
+		--scores-cache "$(AZOTH_GENERAL_SCORES)" \
+		--output "$(AZOTH_GENERAL_DIR)/threshold_tuning.json"
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
@@ -1313,10 +1227,7 @@ azoth-calibrate: venv check-db
 		--feature-cache-dir $(AZOTH_FEATURE_CACHE_DIR)
 	@# Honest test-bucket evaluation: same dev-fit thresholds applied to
 	@# the locked test partition. Output goes to $(AZOTH_ROOT)/test_metrics.json
-	@# alongside (not overwriting) the deployed config.json. It must read the
-	@# same OOF route scores as the call above: without them it re-extracted
-	@# and re-scored every route's rows (~3h a night) to recompute the test
-	@# scores azoth-oof-route-scores had already written.
+	@# alongside config.json, reusing verified production score caches.
 	$(PYTHON) scripts/azoth_calibrate_ensemble.py \
 		--db $(DB) \
 		$(EXP_WORKERS_ARG) \
@@ -1431,9 +1342,7 @@ azoth-validate: azoth-calibrate
 	@# promote-full-train ships .txt seeds. Idempotent: no-op when every seed
 	@# already has its .onnx sibling.
 	$(PYTHON) scripts/convert_bundle_to_onnx.py --azoth-root $(AZOTH_ROOT) --db $(DB)
-	@# convert_bundle_to_onnx may DROP weak/parity-failing specialist routes, so
-	@# the bundle membership can change here. Regenerate READMEs from the final
-	@# (post-prune) bundle so the docs never dangle a link to a dropped route.
+	@# Conversion must preserve the calibrated ensemble; parity failures stop publication.
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	@# SCAN_NO_UPDATE=1: see the note in azoth-deploy-final — the litmus checks
 	@# below hand $$_STAGE to atomscan via SCAN_MODELS_DIR, which also makes it the
@@ -1709,9 +1618,7 @@ azoth-deploy-final: venv
 	@# checked: refuses to ship if any prob delta exceeds the converter's
 	@# default tolerance.
 	$(PYTHON) scripts/convert_bundle_to_onnx.py --azoth-root $(AZOTH_ROOT) --db $(DB)
-	@# convert_bundle_to_onnx may DROP weak/parity-failing specialist routes, so
-	@# the bundle membership can change here. Regenerate READMEs from the final
-	@# (post-prune) bundle so the docs never dangle a link to a dropped route.
+	@# Conversion must preserve the calibrated ensemble; parity failures stop publication.
 	$(PYTHON) scripts/write_azoth_readmes.py --azoth-root $(AZOTH_ROOT)
 	@# Mirror staged bundle into deploy dir, deleting anything in the deploy
 	@# tree that isn't in the staged copy. Per-route slot contents (e.g. an
@@ -2060,97 +1967,100 @@ benchmark: venv check-db
 build-splits: venv check-db
 	$(PYTHON) -m collimator build-splits --db $(DB)
 
+# One feature environment for discovery and experiments; new knobs belong here.
+EXPERIMENT_FEATURE_ENV = \
+    COLLIMATOR_NUM_THREADS=$(EXP_LGBM_THREADS) \
+    COLLIMATOR_ALLOWED_FEATURES_FILE=$(EXP_ALLOWED_FEATURES_FILE) \
+    COLLIMATOR_SILENT_PACKER_SIGNAL=$(EXP_SILENT_PACKER_SIGNAL) \
+    COLLIMATOR_MTIME_KURTOSIS=$(EXP_MTIME_KURTOSIS) \
+    COLLIMATOR_AIR_GAP_SIGNAL=$(EXP_AIR_GAP_SIGNAL) \
+    COLLIMATOR_EXTREME_FEATURES=$(EXP_EXTREME_FEATURES) \
+    COLLIMATOR_ANACHRONISTIC_INJECTION=$(EXP_ANACHRONISTIC_INJECTION) \
+    COLLIMATOR_CODE_ENTROPY_SPIKE=$(EXP_CODE_ENTROPY_SPIKE) \
+    COLLIMATOR_FOREIGN_BINARY_SIGNAL=$(EXP_FOREIGN_BINARY_SIGNAL) \
+    COLLIMATOR_EXTENSION_MISMATCH_SIGNAL=$(EXP_EXTENSION_MISMATCH_SIGNAL) \
+    COLLIMATOR_HOSTILE_FINDING_DENSITY=$(EXP_HOSTILE_FINDING_DENSITY) \
+    COLLIMATOR_HOSTILE_DEPTH_WEIGHT=$(EXP_HOSTILE_DEPTH_WEIGHT) \
+    COLLIMATOR_FILETYPE_INTERACTIONS=$(EXP_FILETYPE_INTERACTIONS) \
+    COLLIMATOR_FORMAT_HINTS=$(EXP_FORMAT_HINTS) \
+    COLLIMATOR_BLINDFOLD=$(EXP_BLINDFOLD) \
+    COLLIMATOR_SCORE_WEIGHTED_TRAITS=$(EXP_SCORE_WEIGHTED_TRAITS) \
+    COLLIMATOR_SOFT_PRESENCE=$(EXP_SOFT_PRESENCE) \
+    COLLIMATOR_REPETITION_PENALTY_FEATURES=$(EXP_REPETITION_PENALTY_FEATURES) \
+    COLLIMATOR_FILE_SEVERITY_DISTRIBUTION=$(EXP_FILE_SEVERITY_DISTRIBUTION) \
+    COLLIMATOR_SEVERITY_FRACTION_FEATURES=$(EXP_SEVERITY_FRACTION_FEATURES) \
+    COLLIMATOR_HOSTILE_WEIGHTED_DENSITY=$(EXP_HOSTILE_WEIGHTED_DENSITY) \
+    COLLIMATOR_HOSTILE_ESCALATION_FEATURES=$(EXP_HOSTILE_ESCALATION_FEATURES) \
+    COLLIMATOR_SUSPICIOUS_BREADTH_DENSITY=$(EXP_SUSPICIOUS_BREADTH_DENSITY) \
+    COLLIMATOR_STRUCT_FILE_RISK_COVERAGE=$(EXP_STRUCT_FILE_RISK_COVERAGE) \
+    COLLIMATOR_TOP_K_RISK_FILES=$(EXP_TOP_K_RISK_FILES) \
+    COLLIMATOR_DISABLE_FEATURE_GROUPS=$(EXP_DISABLE_FEATURE_GROUPS) \
+    COLLIMATOR_PACKAGED_CAPABILITY_MODE=$(EXP_PACKAGED_CAPABILITY_MODE) \
+    COLLIMATOR_MIN_SAMPLE_SCORE=$(EXP_MIN_SAMPLE_SCORE) \
+    COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
+    COLLIMATOR_EXTENDED_METRICS=$(EXP_EXTENDED_METRICS) \
+    COLLIMATOR_METRIC_MIN_FREQ_PCT=$(EXP_METRIC_MIN_FREQ_PCT) \
+    COLLIMATOR_EMBER_LITE_FEATURES=$(EXP_EMBER_LITE_FEATURES) \
+    COLLIMATOR_BIGRAM_MAX=$(EXP_BIGRAM_MAX) \
+    COLLIMATOR_BIGRAM_MIN_FREQ=$(EXP_BIGRAM_MIN_FREQ) \
+    COLLIMATOR_TRIGRAM_MAX=$(EXP_TRIGRAM_MAX) \
+    COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=$(EXP_TRIGRAM_MAX_BENIGN_FRAC) \
+    COLLIMATOR_ATTACK_FEATURES=$(EXP_ATTACK_FEATURES) \
+    COLLIMATOR_CONFIDENCE_WEIGHTED_NGRAMS=$(EXP_CONFIDENCE_WEIGHTED_NGRAMS) \
+    COLLIMATOR_OBJECTIVE_TRIGRAMS=$(EXP_OBJECTIVE_TRIGRAMS) \
+    COLLIMATOR_SUSPICIOUS_TRIGRAMS=$(EXP_SUSPICIOUS_TRIGRAMS) \
+    COLLIMATOR_ATTACK_NGRAMS=$(EXP_ATTACK_NGRAMS) \
+    COLLIMATOR_CRIT_CATEGORY_NGRAMS=$(EXP_CRIT_CATEGORY_NGRAMS) \
+    COLLIMATOR_TRAIT_PATH_DEPTH=$(EXP_TRAIT_PATH_DEPTH) \
+    COLLIMATOR_TIERED_CRIT_BIGRAMS=$(EXP_TIERED_CRIT_BIGRAMS) \
+    COLLIMATOR_TIERED_BIGRAM_MIN_CRIT=$(EXP_TIERED_BIGRAM_MIN_CRIT) \
+    COLLIMATOR_TIERED_BIGRAM_MAX=$(EXP_TIERED_BIGRAM_MAX) \
+    COLLIMATOR_TIERED_BIGRAM_MIN_FREQ=$(EXP_TIERED_BIGRAM_MIN_FREQ) \
+    COLLIMATOR_TIERED_CRIT_TRIGRAMS=$(EXP_TIERED_CRIT_TRIGRAMS) \
+    COLLIMATOR_TIERED_TRIGRAM_MIN_CRIT=$(EXP_TIERED_TRIGRAM_MIN_CRIT) \
+    COLLIMATOR_TIERED_TRIGRAM_MAX=$(EXP_TIERED_TRIGRAM_MAX) \
+    COLLIMATOR_TIERED_TRIGRAM_MIN_FREQ=$(EXP_TIERED_TRIGRAM_MIN_FREQ) \
+    COLLIMATOR_SYMBOL_VOCAB=$(EXP_SYMBOL_VOCAB) \
+    COLLIMATOR_SYMBOL_VOCAB_MAX=$(EXP_SYMBOL_VOCAB_MAX) \
+    COLLIMATOR_SYMBOL_MIN_FREQ=$(EXP_SYMBOL_MIN_FREQ) \
+    COLLIMATOR_KV_VOCAB=$(EXP_KV_VOCAB) \
+    COLLIMATOR_KV_VOCAB_MAX=$(EXP_KV_VOCAB_MAX) \
+    COLLIMATOR_KV_MIN_FREQ=$(EXP_KV_MIN_FREQ) \
+    COLLIMATOR_KV_SHAPE_FEATURES=$(EXP_KV_SHAPE_FEATURES) \
+    COLLIMATOR_ATTACK_CODE_NGRAMS=$(EXP_ATTACK_CODE_NGRAMS) \
+    COLLIMATOR_PE_FORMAT_FLAGS=$(EXP_PE_FORMAT_FLAGS) \
+    COLLIMATOR_PE_TEMPORAL_ANOMALY=$(EXP_PE_TEMPORAL_ANOMALY) \
+    COLLIMATOR_TEXT_METRICS_FULL=$(EXP_TEXT_METRICS_FULL) \
+    COLLIMATOR_OVERLAY_SIGNAL=$(EXP_OVERLAY_SIGNAL) \
+    COLLIMATOR_METRIC_RATIO_FEATURES=$(EXP_METRIC_RATIO_FEATURES) \
+    COLLIMATOR_SIZE_NORMALIZED_METRICS=$(EXP_SIZE_NORMALIZED_METRICS) \
+    COLLIMATOR_NONSTANDARD_SECTION_SIGNAL=$(EXP_NONSTANDARD_SECTION_SIGNAL) \
+    COLLIMATOR_LINE_LENGTH_BUCKETS=$(EXP_LINE_LENGTH_BUCKETS) \
+    COLLIMATOR_EXTENDED_METRICS_INCLUDE=$(EXP_EXTENDED_METRICS_INCLUDE) \
+    COLLIMATOR_TOP_K_RISK_FILES_MIN_CRIT=$(EXP_TOP_K_RISK_FILES_MIN_CRIT) \
+    COLLIMATOR_METRIC_CORRELATION_PAIRS=$(EXP_METRIC_CORRELATION_PAIRS) \
+    COLLIMATOR_KV_VALUE_SPLIT=$(EXP_KV_VALUE_SPLIT) \
+    COLLIMATOR_SYMBOL_BIGRAMS=$(EXP_SYMBOL_BIGRAMS) \
+    COLLIMATOR_SYMBOL_BIGRAM_MAX=$(EXP_SYMBOL_BIGRAM_MAX) \
+    COLLIMATOR_SYMBOL_MIN_FREQ_BIGRAM=$(EXP_SYMBOL_MIN_FREQ_BIGRAM) \
+    COLLIMATOR_SYMBOL_TRIGRAMS=$(EXP_SYMBOL_TRIGRAMS) \
+    COLLIMATOR_SYMBOL_TRIGRAM_MAX=$(EXP_SYMBOL_TRIGRAM_MAX) \
+    COLLIMATOR_SYMBOL_MIN_FREQ_TRIGRAM=$(EXP_SYMBOL_MIN_FREQ_TRIGRAM) \
+    COLLIMATOR_TRIGRAM_MIN_FREQ=$(EXP_TRIGRAM_MIN_FREQ) \
+    COLLIMATOR_TIERED_CRIT_QUADGRAMS=$(EXP_TIERED_CRIT_QUADGRAMS) \
+    COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT=$(EXP_TIERED_QUADGRAM_MIN_CRIT) \
+    COLLIMATOR_TIERED_QUADGRAM_MAX=$(EXP_TIERED_QUADGRAM_MAX) \
+    COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ=$(EXP_TIERED_QUADGRAM_MIN_FREQ) \
+    COLLIMATOR_MBC_ID_VOCAB=$(EXP_MBC_ID_VOCAB) \
+    COLLIMATOR_TRAIT_CONFIDENCE_MOMENTS=$(EXP_TRAIT_CONFIDENCE_MOMENTS) \
+    COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE=$(EXP_TRAIT_ID_LEXICAL_DISTANCE) \
+    COLLIMATOR_DOCUMENT_OBFUSCATION_FEATURES=$(EXP_DOCUMENT_OBFUSCATION_FEATURES) \
+    COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT=$(EXP_TIERED_BIGRAM_BRANCH_MIN_CRIT) \
+    COLLIMATOR_EXPERIMENT_TAG=$(EXP_TAG)
+
 experiment: venv check-db
 	@mkdir -p $(EXP_LOG_DIR)
-	COLLIMATOR_NUM_THREADS=$(EXP_LGBM_THREADS) \
-	COLLIMATOR_ALLOWED_FEATURES_FILE=$(EXP_ALLOWED_FEATURES_FILE) \
-	COLLIMATOR_SILENT_PACKER_SIGNAL=$(EXP_SILENT_PACKER_SIGNAL) \
-	COLLIMATOR_MTIME_KURTOSIS=$(EXP_MTIME_KURTOSIS) \
-	COLLIMATOR_AIR_GAP_SIGNAL=$(EXP_AIR_GAP_SIGNAL) \
-	COLLIMATOR_EXTREME_FEATURES=$(EXP_EXTREME_FEATURES) \
-	COLLIMATOR_ANACHRONISTIC_INJECTION=$(EXP_ANACHRONISTIC_INJECTION) \
-	COLLIMATOR_CODE_ENTROPY_SPIKE=$(EXP_CODE_ENTROPY_SPIKE) \
-	COLLIMATOR_FOREIGN_BINARY_SIGNAL=$(EXP_FOREIGN_BINARY_SIGNAL) \
-	COLLIMATOR_EXTENSION_MISMATCH_SIGNAL=$(EXP_EXTENSION_MISMATCH_SIGNAL) \
-	COLLIMATOR_HOSTILE_FINDING_DENSITY=$(EXP_HOSTILE_FINDING_DENSITY) \
-	COLLIMATOR_HOSTILE_DEPTH_WEIGHT=$(EXP_HOSTILE_DEPTH_WEIGHT) \
-	COLLIMATOR_FILETYPE_INTERACTIONS=$(EXP_FILETYPE_INTERACTIONS) \
-	COLLIMATOR_FORMAT_HINTS=$(EXP_FORMAT_HINTS) \
-	COLLIMATOR_BLINDFOLD=$(EXP_BLINDFOLD) \
-	COLLIMATOR_SCORE_WEIGHTED_TRAITS=$(EXP_SCORE_WEIGHTED_TRAITS) \
-	COLLIMATOR_SOFT_PRESENCE=$(EXP_SOFT_PRESENCE) \
-	COLLIMATOR_REPETITION_PENALTY_FEATURES=$(EXP_REPETITION_PENALTY_FEATURES) \
-	COLLIMATOR_FILE_SEVERITY_DISTRIBUTION=$(EXP_FILE_SEVERITY_DISTRIBUTION) \
-	COLLIMATOR_SEVERITY_FRACTION_FEATURES=$(EXP_SEVERITY_FRACTION_FEATURES) \
-	COLLIMATOR_HOSTILE_WEIGHTED_DENSITY=$(EXP_HOSTILE_WEIGHTED_DENSITY) \
-	COLLIMATOR_HOSTILE_ESCALATION_FEATURES=$(EXP_HOSTILE_ESCALATION_FEATURES) \
-	COLLIMATOR_SUSPICIOUS_BREADTH_DENSITY=$(EXP_SUSPICIOUS_BREADTH_DENSITY) \
-	COLLIMATOR_STRUCT_FILE_RISK_COVERAGE=$(EXP_STRUCT_FILE_RISK_COVERAGE) \
-	COLLIMATOR_TOP_K_RISK_FILES=$(EXP_TOP_K_RISK_FILES) \
-	COLLIMATOR_DISABLE_FEATURE_GROUPS=$(EXP_DISABLE_FEATURE_GROUPS) \
-	COLLIMATOR_PACKAGED_CAPABILITY_MODE=$(EXP_PACKAGED_CAPABILITY_MODE) \
-	COLLIMATOR_MIN_SAMPLE_SCORE=$(EXP_MIN_SAMPLE_SCORE) \
-	COLLIMATOR_TAXONOMY_FEATURES=$(EXP_TAXONOMY_FEATURES) \
-	COLLIMATOR_EXTENDED_METRICS=$(EXP_EXTENDED_METRICS) \
-	COLLIMATOR_METRIC_MIN_FREQ_PCT=$(EXP_METRIC_MIN_FREQ_PCT) \
-	COLLIMATOR_EMBER_LITE_FEATURES=$(EXP_EMBER_LITE_FEATURES) \
-	COLLIMATOR_BIGRAM_MAX=$(EXP_BIGRAM_MAX) \
-	COLLIMATOR_BIGRAM_MIN_FREQ=$(EXP_BIGRAM_MIN_FREQ) \
-	COLLIMATOR_TRIGRAM_MAX=$(EXP_TRIGRAM_MAX) \
-	COLLIMATOR_TRIGRAM_MAX_BENIGN_FRAC=$(EXP_TRIGRAM_MAX_BENIGN_FRAC) \
-	COLLIMATOR_ATTACK_FEATURES=$(EXP_ATTACK_FEATURES) \
-	COLLIMATOR_CONFIDENCE_WEIGHTED_NGRAMS=$(EXP_CONFIDENCE_WEIGHTED_NGRAMS) \
-	COLLIMATOR_OBJECTIVE_TRIGRAMS=$(EXP_OBJECTIVE_TRIGRAMS) \
-	COLLIMATOR_SUSPICIOUS_TRIGRAMS=$(EXP_SUSPICIOUS_TRIGRAMS) \
-	COLLIMATOR_ATTACK_NGRAMS=$(EXP_ATTACK_NGRAMS) \
-	COLLIMATOR_CRIT_CATEGORY_NGRAMS=$(EXP_CRIT_CATEGORY_NGRAMS) \
-	COLLIMATOR_TRAIT_PATH_DEPTH=$(EXP_TRAIT_PATH_DEPTH) \
-	COLLIMATOR_TIERED_CRIT_BIGRAMS=$(EXP_TIERED_CRIT_BIGRAMS) \
-	COLLIMATOR_TIERED_BIGRAM_MIN_CRIT=$(EXP_TIERED_BIGRAM_MIN_CRIT) \
-	COLLIMATOR_TIERED_BIGRAM_MAX=$(EXP_TIERED_BIGRAM_MAX) \
-	COLLIMATOR_TIERED_BIGRAM_MIN_FREQ=$(EXP_TIERED_BIGRAM_MIN_FREQ) \
-	COLLIMATOR_TIERED_CRIT_TRIGRAMS=$(EXP_TIERED_CRIT_TRIGRAMS) \
-	COLLIMATOR_TIERED_TRIGRAM_MIN_CRIT=$(EXP_TIERED_TRIGRAM_MIN_CRIT) \
-	COLLIMATOR_TIERED_TRIGRAM_MAX=$(EXP_TIERED_TRIGRAM_MAX) \
-	COLLIMATOR_TIERED_TRIGRAM_MIN_FREQ=$(EXP_TIERED_TRIGRAM_MIN_FREQ) \
-	COLLIMATOR_SYMBOL_VOCAB=$(EXP_SYMBOL_VOCAB) \
-	COLLIMATOR_SYMBOL_VOCAB_MAX=$(EXP_SYMBOL_VOCAB_MAX) \
-	COLLIMATOR_SYMBOL_MIN_FREQ=$(EXP_SYMBOL_MIN_FREQ) \
-	COLLIMATOR_KV_VOCAB=$(EXP_KV_VOCAB) \
-	COLLIMATOR_KV_VOCAB_MAX=$(EXP_KV_VOCAB_MAX) \
-	COLLIMATOR_KV_MIN_FREQ=$(EXP_KV_MIN_FREQ) \
-	COLLIMATOR_KV_SHAPE_FEATURES=$(EXP_KV_SHAPE_FEATURES) \
-	COLLIMATOR_TEXT_ENCODING_FEATURES=$(EXP_TEXT_ENCODING_FEATURES) \
-	COLLIMATOR_ATTACK_CODE_NGRAMS=$(EXP_ATTACK_CODE_NGRAMS) \
-	COLLIMATOR_PE_FORMAT_FLAGS=$(EXP_PE_FORMAT_FLAGS) \
-	COLLIMATOR_PE_TEMPORAL_ANOMALY=$(EXP_PE_TEMPORAL_ANOMALY) \
-	COLLIMATOR_TEXT_METRICS_FULL=$(EXP_TEXT_METRICS_FULL) \
-	COLLIMATOR_OVERLAY_SIGNAL=$(EXP_OVERLAY_SIGNAL) \
-	COLLIMATOR_METRIC_RATIO_FEATURES=$(EXP_METRIC_RATIO_FEATURES) \
-	COLLIMATOR_SIZE_NORMALIZED_METRICS=$(EXP_SIZE_NORMALIZED_METRICS) \
-	COLLIMATOR_NONSTANDARD_SECTION_SIGNAL=$(EXP_NONSTANDARD_SECTION_SIGNAL) \
-	COLLIMATOR_LINE_LENGTH_BUCKETS=$(EXP_LINE_LENGTH_BUCKETS) \
-	COLLIMATOR_EXTENDED_METRICS_INCLUDE=$(EXP_EXTENDED_METRICS_INCLUDE) \
-	COLLIMATOR_TOP_K_RISK_FILES_MIN_CRIT=$(EXP_TOP_K_RISK_FILES_MIN_CRIT) \
-	COLLIMATOR_METRIC_CORRELATION_PAIRS=$(EXP_METRIC_CORRELATION_PAIRS) \
-	COLLIMATOR_KV_VALUE_SPLIT=$(EXP_KV_VALUE_SPLIT) \
-	COLLIMATOR_SYMBOL_BIGRAMS=$(EXP_SYMBOL_BIGRAMS) \
-	COLLIMATOR_SYMBOL_BIGRAM_MAX=$(EXP_SYMBOL_BIGRAM_MAX) \
-	COLLIMATOR_SYMBOL_MIN_FREQ_BIGRAM=$(EXP_SYMBOL_MIN_FREQ_BIGRAM) \
-	COLLIMATOR_SYMBOL_TRIGRAMS=$(EXP_SYMBOL_TRIGRAMS) \
-	COLLIMATOR_SYMBOL_TRIGRAM_MAX=$(EXP_SYMBOL_TRIGRAM_MAX) \
-	COLLIMATOR_SYMBOL_MIN_FREQ_TRIGRAM=$(EXP_SYMBOL_MIN_FREQ_TRIGRAM) \
-	COLLIMATOR_TRIGRAM_MIN_FREQ=$(EXP_TRIGRAM_MIN_FREQ) \
-	COLLIMATOR_TIERED_CRIT_QUADGRAMS=$(EXP_TIERED_CRIT_QUADGRAMS) \
-	COLLIMATOR_TIERED_QUADGRAM_MIN_CRIT=$(EXP_TIERED_QUADGRAM_MIN_CRIT) \
-	COLLIMATOR_TIERED_QUADGRAM_MAX=$(EXP_TIERED_QUADGRAM_MAX) \
-	COLLIMATOR_TIERED_QUADGRAM_MIN_FREQ=$(EXP_TIERED_QUADGRAM_MIN_FREQ) \
-	COLLIMATOR_MBC_ID_VOCAB=$(EXP_MBC_ID_VOCAB) \
-	COLLIMATOR_TRAIT_CONFIDENCE_MOMENTS=$(EXP_TRAIT_CONFIDENCE_MOMENTS) \
-	COLLIMATOR_TRAIT_ID_LEXICAL_DISTANCE=$(EXP_TRAIT_ID_LEXICAL_DISTANCE) \
-	COLLIMATOR_DOCUMENT_OBFUSCATION_FEATURES=$(EXP_DOCUMENT_OBFUSCATION_FEATURES) \
-	COLLIMATOR_TIERED_BIGRAM_BRANCH_MIN_CRIT=$(EXP_TIERED_BIGRAM_BRANCH_MIN_CRIT) \
-	COLLIMATOR_EXPERIMENT_TAG=$(EXP_TAG) \
+	$(EXPERIMENT_FEATURE_ENV) \
 	$(PYTHON) -u -m collimator experiment --db $(DB) --output $(EXP_OUT_DIR) --model-name $(MODEL) --learner $(LEARNER) $(EXP_WORKERS_ARG) --seed $(SEED) \
 		--experiment-idea $(EXP_IDEA) --route $(EXP_ROUTE) $(EXP_RERUN_ARG) \
 		--train-samples $(EXP_TRAIN_SAMPLES) --max-test-samples $(EXP_MAX_TEST_SAMPLES) \
@@ -2266,7 +2176,7 @@ AUTOCOLLIE_DB ?= postgres://hopper@localhost:5432/hopper
 # ROUTE (singular) is accepted as a convenience.
 ROUTES ?= $(ROUTE)
 
-.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-confirm autocollie-promote azoth-augment-small-routes
+.PHONY: autocollie autocollie-loop autocollie-build autocollie-dryrun autocollie-screen autocollie-full-train autocollie-confirm autocollie-promote azoth-augment-small-routes
 
 # azoth-augment-small-routes — post-hoc threshold re-search for routes whose
 # default-level policy is `no_policy` because their own benign pool is too
@@ -2307,7 +2217,7 @@ azoth-augment-small-routes: venv check-db
 # Autocollie targets all default DB to AUTOCOLLIE_DB (local replica). User can
 # still override with `make autocollie DB=...`; command-line vars beat
 # target-specific assignments in GNU make.
-autocollie autocollie-screen autocollie-confirm autocollie-promote autocollie-loop autocollie-dryrun: DB = $(AUTOCOLLIE_DB)
+autocollie autocollie-screen autocollie-full-train autocollie-confirm autocollie-promote autocollie-loop autocollie-dryrun: DB = $(AUTOCOLLIE_DB)
 
 autocollie-build:
 	@test -d $(AUTOCOLLIE_DIR) || { echo "error: $(AUTOCOLLIE_DIR) does not exist"; exit 1; }
@@ -2320,17 +2230,36 @@ autocollie-dryrun: autocollie-build
 		--collimator $(CURDIR) \
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--routes $(ROUTES) \
+		$(if $(TRY),--try-knobs $(TRY),) \
 		--experiments $(EXPERIMENTS)
 
+autocollie-screen: ROUTE_CONCURRENCY = 2
 autocollie-screen: venv check-db autocollie-build
 	@test -n "$(ROUTES)" || { echo "error: set ROUTES=route1,route2 (or ROUTE=route)"; exit 1; }
 	$(AUTOCOLLIE_BIN) screen \
 		--collimator $(CURDIR) \
 		--autocollie $(abspath $(AUTOCOLLIE_DIR)) \
 		--routes $(ROUTES) \
+		$(if $(TRY),--try-knobs $(TRY),) \
 		--experiments $(EXPERIMENTS) \
 		--llm-timeout $(AUTOCOLLIE_LLM_TIMEOUT) \
-		--make-args "DB=$(DB) EXP_WORKERS=$(or $(WORKERS),$(NPROC)) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
+		--screen-timeout $(AUTOCOLLIE_SCREEN_TIMEOUT) \
+		--route-concurrency $(ROUTE_CONCURRENCY) \
+		--max-cpu-threads $(MAX_CPU_THREADS) \
+		--make-args "DB=$(DB) EXP_LGBM_THREADS=$(EXP_LGBM_THREADS) EXP_ESTIMATORS=$(or $(EXP_ESTIMATORS_DEFAULT),250)$(if $(DEVICE), DEVICE=$(DEVICE),)"
+
+# Run two new proposals plus the inherited candidate per route, then consume
+# the saved per-route results in one full bundle build. Make stops on a failed
+# screen command, just like `autocollie screen ... && make azoth-full-train`.
+# Share the memory budget during concurrent screens; the subsequent full train
+# gets the normal single-job memory budget.
+# Usage: make autocollie-full-train ROUTES=general,filegroups/archive MAX_CPU_THREADS=64
+autocollie-full-train: EXPERIMENTS = 2
+autocollie-full-train: ROUTE_CONCURRENCY = 2
+autocollie-full-train:
+	COLLIMATOR_MEM_SHARES=$(ROUTE_CONCURRENCY) $(MAKE) autocollie-screen \
+		EXPERIMENTS=$(EXPERIMENTS) ROUTE_CONCURRENCY=$(ROUTE_CONCURRENCY)
+	$(MAKE) azoth-full-train AZOTH_AUTOCOLLIE_RUNS_DIR="$(AZOTH_AUTOCOLLIE_RUNS_DIR)"
 
 # Confirm a screening winner by re-running with a different seed.
 # Usage: make autocollie-confirm KEY=<16-hex experiment_key> [SEED=43]
@@ -2575,6 +2504,7 @@ help:
 	@echo "  autocollie-build   Build the autocollie Go orchestrator (../autocollie)"
 	@echo "  autocollie-dryrun  Generate+validate experiment specs via LLM (no run)"
 	@echo "  autocollie-screen  Generate, validate, and run experiment specs via LLM"
+	@echo "  autocollie-full-train  Screen each route, then build the full bundle using the run history"
 	@echo "  autocollie-confirm Re-run KEY=<16hex> with a different seed (SEED=43 default)"
 	@echo "  autocollie-promote Confirm + full-train + compare; writes a deploy-or-not report"
 	@echo "  autocollie         Full hands-off ladder: screen + auto-promote per route"

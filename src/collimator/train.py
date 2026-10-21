@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import numpy as np
@@ -32,6 +32,8 @@ log = logging.getLogger(__name__)
 # Minimum samples per class to enable a holdout split.
 MIN_HOLDOUT_CLASS_SIZE = 20
 MIN_CALIBRATION_CLASS_SIZE = 8
+# A handful of positives cannot reliably choose a boosting iteration.
+MIN_EARLY_STOPPING_CLASS_SIZE = 30
 
 # Row-chunk size for the float64 sum-of-squares pass used to derive export-only
 # feature standardization stats. Bounds the float64 transient to one chunk
@@ -62,7 +64,7 @@ class TrainConfig:
     reg_alpha: float = 0.0
     reg_lambda: float = 1.0
     beta: float = 2.0  # F-beta for threshold selection; >1.0 favors recall on malware
-    monotone_constraints: str | dict[str, int] | None = None
+    monotone_constraints: str | dict[str, int] | tuple[int, ...] | None = None
     threshold_mode: str = "fbeta"  # fbeta | max_recall_at_fpr
     threshold_fpr_target: float | None = None
     hard_negative_fraction: float = 0.0
@@ -320,11 +322,24 @@ def _fit_model(
     eval_set: list[tuple[np.ndarray | sp.spmatrix, np.ndarray]] | None = None,
     early_stopping_rounds: int | None = None,
 ) -> None:
+    if eval_set and early_stopping_rounds:
+        validation_labels = eval_set[-1][1]
+        counts = [int(np.sum(validation_labels == label)) for label in (0, 1)]
+        if min(counts) < MIN_EARLY_STOPPING_CLASS_SIZE:
+            log.info(
+                "early stopping disabled: validation classes=%s; need %d each; "
+                "using configured estimator budget",
+                counts, MIN_EARLY_STOPPING_CLASS_SIZE,
+            )
+            early_stopping_rounds = None
+            # XGBoost stores early stopping on the estimator; LightGBM uses callbacks.
+            if not model.__class__.__module__.startswith("lightgbm"):
+                model.set_params(early_stopping_rounds=None)
     if model.__class__.__module__.startswith("lightgbm"):
         callbacks = []
         if eval_set and early_stopping_rounds:
             import lightgbm as lgb  # noqa: PLC0415
-            callbacks.append(lgb.early_stopping(early_stopping_rounds, verbose=False))
+            callbacks.append(lgb.early_stopping(early_stopping_rounds, first_metric_only=True, verbose=False))
         model.fit(
             X,
             y,
@@ -387,6 +402,15 @@ def train(
     """
     if config is None:
         config = TrainConfig()
+    if isinstance(config.monotone_constraints, dict):
+        if feature_names is None:
+            raise ValueError("named monotone constraints require feature_names")
+        unknown = config.monotone_constraints.keys() - set(feature_names)
+        if unknown:
+            raise ValueError(f"unknown constrained features: {sorted(unknown)}")
+        config = replace(config, monotone_constraints=tuple(
+            config.monotone_constraints.get(name, 0) for name in feature_names
+        ))
 
     np.random.seed(config.seed)
     if sample_file_types is not None and len(sample_file_types) != len(y):
@@ -762,38 +786,17 @@ def train(
     iso_calibrator: IsotonicRegression | None = None
     if X_holdout is not None:
         calib_preds = predict_proba(final_model, X_calib)
-        iso_calibrator = IsotonicRegression(out_of_bounds="clip")
-        iso_calibrator.fit(calib_preds, y_calib)
-        calib_preds_cal = iso_calibrator.predict(calib_preds)
-        # Detect degenerate calibration (too few unique outputs = overfitting on small split).
-        if len(np.unique(calib_preds_cal)) <= 5:
-            log.warning(
-                "isotonic calibration degenerate (%d unique outputs on %d samples); "
-                "falling back to raw scores for threshold",
-                len(np.unique(calib_preds_cal)), len(y_calib),
-            )
-            iso_calibrator = None
-            optimal_threshold = _select_threshold(
-                y_calib,
-                calib_preds,
-                mode=config.threshold_mode,
-                beta=config.beta,
-                max_fpr=config.threshold_fpr_target,
-            )
-            eval_preds = predict_proba(final_model, X_eval)
-        else:
-            optimal_threshold = _select_threshold(
-                y_calib,
-                calib_preds_cal,
-                mode=config.threshold_mode,
-                beta=config.beta,
-                max_fpr=config.threshold_fpr_target,
-            )
-            eval_preds = iso_calibrator.predict(predict_proba(final_model, X_eval))
+        # Training artifacts export raw model scores. Choose and report their
+        # threshold in that same space; deployment calibrates the ensemble later.
+        optimal_threshold = _select_threshold(
+            y_calib, calib_preds, mode=config.threshold_mode,
+            beta=config.beta, max_fpr=config.threshold_fpr_target,
+        )
+        eval_preds = predict_proba(final_model, X_eval)
         metrics = _compute_metrics(y_eval, eval_preds, optimal_threshold)
         calibration = _calibration_summary(y_eval, eval_preds)
         eval_y = y_eval
-        cal_label = "isotonic calibrated" if iso_calibrator is not None else "raw (calibration degenerate)"
+        cal_label = "raw model scores"
         log.info("evaluation: AUC=%.4f F1=%.4f threshold=%.3f (%s)",
                  metrics["roc_auc"], metrics["f1"], optimal_threshold, cal_label)
     elif n_folds >= 2:

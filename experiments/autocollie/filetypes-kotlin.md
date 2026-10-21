@@ -1254,3 +1254,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T125806-filetypes-kotlin` — 2026-10-20T12:58:06Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `a854dd13b798f435` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.9737 | 0.9831 | 0.7628 | 24 | [log](out/autocollie/runs/2026-10-20T12-59-23_20261020T125806-filetypes-kotlin_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `a7a608eef5586e39` | kotlin_control_hardneg8 | ok | 0.9737 | 0.9831 | 0.8456 | 19 | [log](out/autocollie/runs/2026-10-20T12-59-46_20261020T125806-filetypes-kotlin_kotlin_control_hardneg8.log) |
+| `5b97aeebeac36cfb` | kotlin_kv_vocab_signal | ok | 0.9731 | 0.9825 | 0.8061 | 35 | [log](out/autocollie/runs/2026-10-20T13-00-06_20261020T125806-filetypes-kotlin_kotlin_kv_vocab_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`kotlin_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control run using the archived best feature set with increased hard_negative_weight to 8.0 to improve PR_AUC by better penalizing hard benign negatives at the tail.
+- **`kotlin_kv_vocab_signal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab to capture key-value pair signals in Kotlin files, aiming to improve PR_AUC by adding discriminative features for malicious configuration patterns.
+
+</details>
+

@@ -1280,3 +1280,36 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T114329-filetypes-text` — 2026-10-20T11:43:29Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5aa4b7fe6e8cb655` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.2317 | 0.7439 | 0.1266 | 763 | [log](out/autocollie/runs/2026-10-20T11-50-01_20261020T114329-filetypes-text_inherit_from_filetypes_rtf_b2fc38ce.log) |
+
+Rejected before run:
+
+- `text_control_spw075` — features.repetition_penalty_features: unknown knob (not in allowlist)
+- `text_textenc_metrics_reg` — features.repetition_penalty_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20261020T131637-filetypes-text` — 2026-10-20T13:16:37Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `d5995c2416cfe0aa` | inherit_from_filetypes_rtf_320ae377 | ok | 0.1825 | 0.6639 | 0.1275 | 33 | [log](out/autocollie/runs/2026-10-20T13-17-59_20261020T131637-filetypes-text_inherit_from_filetypes_rtf_320ae377.log) |
+| `4b2768fdf4be29dd` | text_control_spw075 | ok | 0.1929 | 0.6771 | 0.1275 | 18 | [log](out/autocollie/runs/2026-10-20T13-18-32_20261020T131637-filetypes-text_text_control_spw075.log) |
+| `f76847a68ddceebc` | text_kv_vocab_signal | ok | 0.1843 | 0.6597 | 0.1296 | 21 | [log](out/autocollie/runs/2026-10-20T13-18-50_20261020T131637-filetypes-text_text_kv_vocab_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_320ae377`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=320ae377e6757db4, recall_at_50_per_100M=0.9962). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`text_control_spw075`** `EXP_DISABLE_FEATURE_GROUPS=kv,symbols,textenc EXP_ESTIMATORS=300 EXP_KV_VOCAB=0 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=96 EXP_SCALE_POS_WEIGHT_MULT=0.75 …` — Control run to test if down-weighting positives (scale_pos_weight_mult=0.75) improves recall@3FPM by reducing false positives at the strict operating point, keeping PR_AUC flat.
+- **`text_kv_vocab_signal`** `EXP_DISABLE_FEATURE_GROUPS=symbols,textenc EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=10000 EXP_LEARNING_RATE=0.05 EXP_MAX_DEPTH=12 EXP_MAX_TEST_SAMPLES=20000 …` — Enable kv_vocab to capture key-value pair signals in text files, aiming to improve PR_AUC by adding discriminative features for malicious configuration or script patterns.
+
+</details>
+

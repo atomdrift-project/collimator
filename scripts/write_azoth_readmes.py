@@ -1201,9 +1201,8 @@ def _write_route(root: Path, path: Path) -> None:
         lines.extend([
             f"## Specialist Performance",
             "",
-            f"`filetypes/{name}` specialist scored *alone* on the same slice "
-            f"(the ensemble usually does better — that's the point of the "
-            f"routing).",
+            f"`filetypes/{name}` specialist scored alone on the same held-out slice, "
+            "using its saved thresholds.",
             "",
             f"| PR AUC | ROC AUC | F1 | Recall @ {_DEFAULT_LEVEL_LABEL} | Brier | Δ vs EMBER 2024 |",
             "|---:|---:|---:|---:|---:|---:|",
@@ -1262,10 +1261,9 @@ def _write_route(root: Path, path: Path) -> None:
         "## Routing",
         "",
         f"Files matching `{name}` are scored by {routes_str}. The ensemble's "
-        "per-row score is whatever combiner strategy "
-        f"(`{pf_entry.get('ensemble_strategy', '—') if pf_entry else '—'}`) "
-        "the metrics step selected for this route. The per-level operating "
-        "thresholds litmus applies on top live in "
+        "decisions apply the saved routing policy, including every level at or "
+        "below the requested level. Ranking metrics use the signed distance "
+        "from that policy's decision boundary. See "
         f"[`route_policies.md`](../../route_policies.md).",
         "",
         "## Training",
@@ -1422,13 +1420,10 @@ def _write_bundle(root: Path) -> None:
         "",
         "## Per-filetype Ensemble Performance",
         "",
-        "Each row is the routed ensemble's intrinsic ranking quality on "
-        "that filetype's slice of the locked test partition — PR AUC, "
-        "ROC AUC, F1 at the F-beta-tuned threshold, and recall at the "
-        f"{_DEFAULT_LEVEL_PHRASE} operating point. These are properties of the model's "
-        "scores; how litmus chooses to threshold those scores at each "
-        "severity level is a runtime concern documented in "
-        "[`route_policies.md`](route_policies.md).",
+        "Each row reports the frozen routing policy on the locked test partition. "
+        "PR AUC and ROC AUC rank signed policy margins; F1 and recall measure "
+        f"actual decisions at {_DEFAULT_LEVEL_PHRASE}. Observed false-positive "
+        "rates can differ from the dev calibration target.",
         "",
         "A filetype appears here when it has at least 25 malware and "
         "25 benign in the test slice, or at least 100 of each across "
@@ -1436,15 +1431,10 @@ def _write_bundle(root: Path) -> None:
         "gz, …), `data`, and `unknown` are excluded — their score "
         "reflects the container's shape, not the classifier's quality.",
         "",
-        "**Optimization target.** Each filetype's ensemble combiner is "
-        f"selected to maximize **recall at {_DEFAULT_LEVEL_PHRASE}** on the dev partition, "
-        "with PR AUC as a tiebreak. Selection is constrained so the "
-        "ensemble can never report worse than the specialist alone — "
-        "when no combiner clears the specialist on dev, the ensemble "
-        "falls back to `specialist_priority` (which equals the "
-        "specialist by construction). This matches the deployment "
-        "budget litmus operates at and the design intent that routing "
-        "must improve, not degrade, the per-filetype model.",
+        "**Selection and reporting.** Models train on train; thresholds and routing "
+        "policies are selected on dev using the exported production ensembles. "
+        "Test measures those saved decisions. An ensemble can perform worse "
+        "than a specialist on test; the report preserves that result.",
         "",
         *_ensemble_table(
             metrics, eval_data, _headline_filetypes(metrics, config, eval_data),
@@ -1514,37 +1504,13 @@ def _write_ensemble_card(root: Path) -> None:
         "(`filetypes/<name>`). Specialists are trained only on files of "
         "their domain; the general model is trained on everything.",
         "",
-        "## Per-filetype combiner selection",
+        "## Selection and reporting",
         "",
-        "The Ensemble Performance row in the bundle README shows the "
-        "**best combiner per filetype**, picked from a handful of "
-        "candidates evaluated on the dev partition:",
-        "",
-        "- `specialist_priority` — for each row, use the most specific "
-        "route's raw score (filetype specialist → filegroup → general). "
-        "By construction this equals the specialist on filetype-X rows, "
-        "so `ensemble ≥ specialist` holds always for this strategy.",
-        "- `calibrated_max` — per-route isotonic-calibrate (5-fold OOF), "
-        "then `max` of the calibrated probabilities. Wins when routes "
-        "score on different distributions and the calibrated max is "
-        "more comparable than the raw max.",
-        "- `stacked_lr` / `stacked_xgb` — a small stacker (logistic "
-        "regression or XGBoost) over the per-route calibrated probs. "
-        "Wins when routes carry complementary signal that linear/tree "
-        "combination can exploit.",
-        "- `naive_max` — raw `max` across routes, kept as a sanity "
-        "check; rejected from the picker because raw scores don't share "
-        "a probability calibration.",
-        "",
-        f"**Selection criterion**: maximize **recall at {_DEFAULT_LEVEL_PHRASE}** on the "
-        "dev partition (matching the deployment FP/M target), with "
-        "**PR AUC** as a secondary tiebreak. The picker is constrained "
-        "by a floor: no combiner may report worse than "
-        "`specialist_priority`, on either dev or test. If a combiner "
-        "would clear the floor on dev but regress below it on test "
-        "(sampling variance), the report falls back to "
-        "`specialist_priority`. This guarantees the **ensemble ≥ "
-        "specialist** invariant in every row of the bundle README.",
+        "Policy search selects route combinations and thresholds on dev raw "
+        "scores from the exact exported ensembles. The locked test partition "
+        "is used only to report saved decisions, without fitting a new "
+        "calibrator, threshold, or combiner. Models, feature specs and policies "
+        "stay fixed during publication.",
         "",
         "## Routing policies",
         "",
@@ -1558,7 +1524,7 @@ def _write_ensemble_card(root: Path) -> None:
         "with per-route thresholds calibrated to a joint FP/M target "
         "of N per million. The common case.",
         "- `learned_blend_at_fp_N` — a logit blend "
-        "`σ(b + Σ wᵢ · logit(pᵢ))` over calibrated route probabilities, "
+        "`σ(b + Σ wᵢ · logit(pᵢ))` over raw route probabilities, "
         "thresholded to hit the FP/M target. Wins when route scores "
         "are complementary in a way a simple OR misses.",
         "- `filetype_only` / `filetype_only_at_fp_N` — the specialist "

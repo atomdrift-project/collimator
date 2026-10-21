@@ -555,7 +555,15 @@ def test_build_vocab_uses_configured_trait_path_depth(monkeypatch, tmp_path) -> 
     assert vec[spec.feature_names.index(f"present:{deep}")] == 1.0
     path = tmp_path / "spec.json"
     spec.save(path)
-    assert FeatureSpec.load(path).trait_path_depth == 5
+    loaded = FeatureSpec.load(path)
+    assert loaded.trait_path_depth == 5
+    # Scoring must honor the loaded model, independently of the ambient env.
+    monkeypatch.setenv("COLLIMATOR_TRAIT_PATH_DEPTH", "2")
+    feature_config_from_env.cache_clear()
+    try:
+        assert extract(reports[0], loaded)[loaded.feature_names.index(f"present:{deep}")] == 1.0
+    finally:
+        feature_config_from_env.cache_clear()
 
 
 def test_extract_struct_file_risk_coverage(monkeypatch) -> None:
@@ -1940,6 +1948,7 @@ def test_ngram_per_file_cap_counts_the_whole_ngram_vocab(family: str) -> None:
         cap, ngram = TRIGRAM_MAX_PATHS, "a/a + b/b + c/c"
         bigrams = [" + ".join(filler[i:i + 2]) for i in range(0, len(filler), 2)]
         spec = _ngram_spec(bigrams, [ngram])
+    spec.abi_version = 19  # Preserve the serving contract for existing models.
     index = spec.feature_names.index(f"{family}{'s' if family == 'bigram' else ''}:{ngram}")
     own = ngram.split(" + ")
     unknown = [f"u/{i}" for i in range(1000)]
@@ -1967,12 +1976,14 @@ def test_vocab_pass_is_bounded_on_huge_files(monkeypatch) -> None:
         data, "fetch_cleave_results",
         lambda _dsn, ids: {1: {"cleave_result": huge}, 2: {"cleave_result": small}},
     )
+    calls = []
+    monkeypatch.setattr("collimator.features._count_ngrams",
+                        lambda paths, order, *args: calls.append((order, len(paths))))
     start = time.monotonic()
-    result = _vocab_labeled_db_batch_worker(("unused", [(1, 1), (2, 1)]))
+    _vocab_labeled_db_batch_worker(("unused", [(1, 1), (2, 1)]))
     assert time.monotonic() - start < 10
-    bigrams, trigrams = result[3], result[9]
-    assert set(bigrams) == {"a/a + b/b", "a/a + c/c", "b/b + c/c"}
-    assert set(trigrams) == {"a/a + b/b + c/c"}
+    assert calls[:2] == [(2, 512), (3, 128)]
+    assert (2, 3) in calls and (3, 3) in calls
 
 
 def test_parallel_extraction_matches_serial(tmp_path) -> None:

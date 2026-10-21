@@ -9,6 +9,7 @@ rejects at scan time.
 """
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -85,7 +86,7 @@ def test_no_blends_no_errors():
     assert _blend_errors(policy) == []
 
 
-def test_trait_path_depth_must_match_scan(tmp_path):
+def test_trait_path_depth_requires_runtime_support(tmp_path):
     _trait_path_depth_errors = _mod._trait_path_depth_errors
     route_dir = tmp_path / "filetypes" / "crx"
     route_dir.mkdir(parents=True)
@@ -97,5 +98,10 @@ def test_trait_path_depth_must_match_scan(tmp_path):
 
     spec_path.write_text('{"feature_names": [], "trait_path_depth": 5}')
     assert _trait_path_depth_errors(tmp_path, "filetypes/crx") == [
-        "filetypes/crx: trait_path_depth=5 but scan serves depth 3"
+        "filetypes/crx: trait_path_depth=5 requires model ABI >=19"
     ]
+    spec_path.write_text('{"feature_names": [], "trait_path_depth": 5, "abi_version": 19}')
+    assert _trait_path_depth_errors(tmp_path, "filetypes/crx") == []
+    for depth in (0, -1, True, "5"):
+        spec_path.write_text(json.dumps({"trait_path_depth": depth, "abi_version": 19}))
+        assert _trait_path_depth_errors(tmp_path, "filetypes/crx")

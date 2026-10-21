@@ -1300,3 +1300,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T131038-filetypes-package.json` — 2026-10-20T13:10:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `94970b80d35bf96b` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.9782 | 0.9871 | 0.9646 | 109 | [log](out/autocollie/runs/2026-10-20T13-11-55_20261020T131038-filetypes-package.json_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `fba3e94a0651cf95` | pkgjson_control_hardneg10 | ok | 0.9779 | 0.9872 | 0.9632 | 64 | [log](out/autocollie/runs/2026-10-20T13-13-43_20261020T131038-filetypes-package.json_pkgjson_control_hardneg10.log) |
+| `28378ff5d01d5f6d` | pkgjson_kv_vocab_signal | ok | 0.9697 | 0.9766 | 0.9579 | 52 | [log](out/autocollie/runs/2026-10-20T13-14-48_20261020T131038-filetypes-package.json_pkgjson_kv_vocab_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`pkgjson_control_hardneg10`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control run using the archived best feature set with increased hard_negative_weight to 10 to improve ranking of difficult benigns and boost recall@3FPM while maintaining PR_AUC.
+- **`pkgjson_kv_vocab_signal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab to capture dependency and script metadata signals, aiming to improve PR_AUC by adding discriminative features for malicious package.json structures.
+
+</details>
+

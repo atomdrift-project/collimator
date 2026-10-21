@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# End-to-end honest-OOF publish pipeline — trains, OOF-scores, calibrates,
+# Production training with OOF diagnostics — trains, scores, calibrates,
 # gates and deploys the Azoth bundle. This is what `make azoth-publish-train`
 # (and therefore `make nightly`) runs.
 #
@@ -71,7 +71,7 @@
 #   1. fold-A general    -> out/models/azoth.oof-fold-a/
 #   2. fold-B general    -> out/models/azoth.oof-fold-b/
 #   3. azoth-oof-merge-general   43m  honest OOF general probs ->
-#                                     out/models/azoth/general/threshold_scores.npz
+#                                     out/models/azoth/oof_route_scores/general/threshold_scores.npz
 #   4. fold-A specialists, and the prod specialists (the prod chain's
 #      specialist step is gated here, not at stage 0, so STOP_STAGE=2 means
 #      "generals only" in both chains)
@@ -470,7 +470,7 @@ if stage_active 3 || stage_active 6; then
     fi
 fi
 if stage_active 3; then
-    banner 3 "Merge OOF general predictions -> ${AZOTH_ROOT}/general/threshold_scores.npz"
+    banner 3 "Merge OOF general predictions -> ${OOF_ROUTE_SCORES_DIR}/general/threshold_scores.npz"
     require_dir "fold-A general bundle" "${FOLD_A_ROOT}/general" 1
     require_dir "fold-B general bundle" "${FOLD_B_ROOT}/general" 2
     if [[ "$PARALLEL_CHAINS" = "1" ]]; then
@@ -522,21 +522,15 @@ fi
 unsplit_resources
 
 # azoth-deploy is the whole publish tail: calibrate (--partition all over the
-# full OOF coverage, AZOTH_USE_OOF_ROUTE_SCORES=1 swapping each specialist's
-# in-fold scores for its honest OOF scores) -> diagnostics -> route policy
-# search -> global policy metrics -> routed metrics -> test-partition eval ->
-# READMEs -> azoth-deploy-final (ONNX convert + validate + regression gate +
-# litmus validate + mirror into the deploy dir). AZOTH_REFRESH_SCORES=1 forces
-# a rescore so cached in-sample probs from a prior run cannot leak through: the
-# OOF override fires inside _score_route, but the legacy calibration_scores.npz
-# cache check happens FIRST.
+# OOF outputs are diagnostics of the fold models. Publication regenerates raw
+# scores from the production ensembles, fits on dev and reports on test.
 if stage_active 7; then
     wait_for_azoth_memory "${AZOTH_SINGLE_MIN_AVAILABLE_GB:-96}" || exit 1
-    banner 7 "Calibrate + gate + deploy (azoth-deploy, honest OOF probs)"
+    banner 7 "Calibrate production ensembles on dev + gate + deploy"
     require_dir "OOF route scores" "${OOF_ROUTE_SCORES_DIR}" 6
     time make azoth-deploy \
-        AZOTH_CALIBRATE_PARTITION=all \
-        AZOTH_USE_OOF_ROUTE_SCORES=1 \
+        AZOTH_CALIBRATE_PARTITION=dev \
+        AZOTH_USE_OOF_ROUTE_SCORES=0 \
         AZOTH_REFRESH_SCORES=${AZOTH_REFRESH_SCORES:-1} || { report_mem_watch; exit 1; }
 else
     skipped 7 "azoth-deploy"
@@ -545,8 +539,7 @@ fi
 # Per-route SHAP against the freshly deployed boosters. Pure inference
 # (~seconds/route) but not optional: ascan --extra refuses a bundle whose SHAP
 # feature-space digest doesn't match its models, so skipping it ships a bundle
-# with stale SHAP. Runs after stage 7 because the deploy's weakness prune
-# decides which routes actually survive.
+# with stale SHAP. Runs after stage 7 against the verified production bundle.
 if stage_active 8; then
     banner 8 "Regenerate per-route SHAP (azoth-shap)"
     time make azoth-shap || { report_mem_watch; exit 1; }

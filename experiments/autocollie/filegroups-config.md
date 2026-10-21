@@ -1700,3 +1700,31 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T015556-filegroups-config` — 2026-10-20T01:55:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | try_train_samples | fail | — | — | — | 1100 | [log](out/autocollie/runs/2026-10-20T01-55-59_20261020T015556-filegroups-config_try_train_samples.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_train_samples`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=train_samples=30000): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Seeded from archived full-train 46ff0d1aba5cabfb (2026-07-15T10:34:30Z).
+
+</details>
+
+## Cycle `20261020T021638-filegroups-config` — 2026-10-20T02:16:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `fb3b40458e429b29` | inherit_from_general_31488a65 | ok | 0.8947 | 0.9115 | 0.8703 | 50 | [log](out/autocollie/runs/2026-10-20T02-26-08_20261020T021638-filegroups-config_inherit_from_general_31488a65.log) |
+| `c384d9a182840da1` | config_control_hardneg_tail | ok | 0.8889 | 0.9059 | 0.8695 | 40 | [log](out/autocollie/runs/2026-10-20T02-26-57_20261020T021638-filegroups-config_config_control_hardneg_tail.log) |
+| `9e779b3de3cdb13f` | config_kv_severity_fractions | ok | 0.8880 | 0.9040 | 0.8712 | 33 | [log](out/autocollie/runs/2026-10-20T02-27-37_20261020T021638-filegroups-config_config_kv_severity_fractions.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_general_31488a65`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from general (key=31488a65ac15bdf5, recall_at_50_per_100M=0.6109). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`config_control_hardneg_tail`** `EXP_DISABLE_FEATURE_GROUPS=clusters,kv,symbols,textenc EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.1 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_KV_VOCAB=0 EXP_LEARNING_RATE=0.03 EXP_MAX_TEST_SAMPLES=20000 EXP_MIN_CHILD_SAMPLES=120 …` — Control on the archived best feature_env; stronger hard-negative weighting and lower positive weight to cut benign FPs and lift recall@3FPM while keeping PR_AUC flat.
+- **`config_kv_severity_fractions`** `EXP_DISABLE_FEATURE_GROUPS=clusters,symbols,textenc EXP_ESTIMATORS=400 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=5 EXP_KV_MIN_FREQ=5 EXP_KV_VALUE_SPLIT=1 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=12000 …` — Enable kv_vocab/kv_value_split and severity_fractions to add explicit config key/value and size-invariant crit-tier signal, aiming to improve PR_AUC and recall@3FPM on minimal malicious config droppers.
+
+</details>
+

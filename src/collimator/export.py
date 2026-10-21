@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 import json
 import logging
+import os
 import platform
 from pathlib import Path
 
@@ -295,13 +296,17 @@ def save_model(model: object, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if model.__class__.__module__.startswith("lightgbm"):
         booster = model.booster_
-        booster.save_model(str(output_path))
+        temporary = output_path.with_name(f".{output_path.name}.tmp")
+        booster.save_model(str(temporary))
+        os.replace(temporary, output_path)
         log.info("saved LightGBM model to %s", output_path)
         # Sibling .onnx with the same stem. Skip when the destination
         # would be the .onnx itself (defensive — save_model shouldn't
         # be called with an .onnx output path, but checked anyway).
         if output_path.suffix == ".txt":
             onnx_path = output_path.with_suffix(".onnx")
+            # A failed conversion must not leave an older model preferred at load time.
+            onnx_path.unlink(missing_ok=True)
             try:
                 export_lightgbm_onnx(
                     booster, booster.num_feature(), onnx_path,

@@ -1524,3 +1524,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T043135-filetypes-c` — 2026-10-20T04:31:35Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `7ba7e4dd229d76d8` | inherit_from_filegroups_config_fb3b4045 | ok | 0.7124 | 0.8497 | 0.3494 | 876 | [log](out/autocollie/runs/2026-10-20T04-37-32_20261020T043135-filetypes-c_inherit_from_filegroups_config_fb3b4045.log) |
+| `dc70a054463c1142` | c_control_hardneg_reg | ok | 0.7307 | 0.8588 | 0.3697 | 29 | [log](out/autocollie/runs/2026-10-20T04-52-08_20261020T043135-filetypes-c_c_control_hardneg_reg.log) |
+| `ccd3f54dc41bd732` | c_text_metrics_full | ok | 0.7124 | 0.8497 | 0.3494 | 19 | [log](out/autocollie/runs/2026-10-20T04-52-36_20261020T043135-filetypes-c_c_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`c_control_hardneg_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Replicates the archived best C feature_env and tests whether stronger regularization plus heavier hard-negative weighting improves recall@3FPM and PR_AUC by suppressing benign C false positives at the strict-FP tail.
+- **`c_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Adds text_metrics_full to the best C feature_env to improve PR_AUC by giving the model obfuscation and text-structure signals, such as line-length variance, escape density, and repeated characters, that can separate malicious C droppers from benign C source.
+
+</details>
+

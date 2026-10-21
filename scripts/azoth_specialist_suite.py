@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import contextlib
+import hashlib
 import json
 import logging
 import math
@@ -30,7 +31,15 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from collimator import bundle, data, export, features, model, thresholds, train
+from collimator import bundle, cache_identity, data, export, features, model, thresholds, train
+from collimator.autocollie_selection import (
+    replay_feature_env,
+    replay_malware_score,
+    select_bootstrap_run,
+    selection_record,
+    write_selection_report,
+)
+from collimator.filegroups import ARCHIVE_FILETYPES
 
 LOG = logging.getLogger("azoth_specialist_suite")
 
@@ -97,8 +106,8 @@ RESIDUAL_FILETYPES: frozenset[str] = frozenset({"unknown", "data"})
 # models in the first place (e.g., 93-benign holdouts make 3 FP/M
 # unmeasurable since min-observable FP/M = 1e6/93 ≈ 10752), then even
 # a paired comparison can't extract signal. Below these floors the
-# run is treated as legacy and ineligible; the route falls through to
-# suite defaults rather than locking in a noisy "win." This is what
+# run is ineligible for paired ranking. Bootstrap selection instead uses
+# PR AUC on a recent common evaluation cohort. This is what
 # would have prevented the 2026-05-22 pdf regression: an old screen
 # run with r3=1.0 on a tiny holdout was picked over recent runs with
 # stronger configs because no apples-to-apples baseline disqualified
@@ -263,6 +272,7 @@ LITMUS_EXTRACTED_FILETYPES: frozenset[str] = RAW_COMPRESSED_FILETYPES
 
 
 DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
+    "archive": data.expand_filetype_aliases(ARCHIVE_FILETYPES),
     "scripts": (
         "batch",
         "javascript",
@@ -410,6 +420,8 @@ def _fetch_rows(
                 cur.execute(query, params)
                 for row_id, sha256, label, canonical, score, file_type in cur:
                     split_key = canonical or sha256
+                    if data.is_dev_sample(split_key):
+                        continue
                     if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
                         continue
                     label_int = _label_int(str(label))
@@ -424,6 +436,8 @@ def _fetch_rows(
             query = select + " FROM samples WHERE " + " AND ".join(where) + " ORDER BY id"
             for row_id, sha256, label, canonical, score, file_type in conn.execute(query, params):
                 split_key = canonical or sha256
+                if data.is_dev_sample(split_key):
+                    continue
                 if oof_exclude is not None and data.oof_fold_of(split_key) == oof_exclude:
                     continue
                 label_int = _label_int(str(label))
@@ -769,7 +783,8 @@ def _load_autocollie_best_per_route(
     runs_dir: Path,
     targets: list[dict[str, Any]],
     baselines_path: Path | None = None,
-) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, str]]]:
+    selection_report_path: Path | None = None,
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, str]], dict[str, int]]:
     """Scan ``runs_dir/*.json`` for each target's best historical run by
     operational metric and return its train_config + feature_env as
     per-route override dicts.
@@ -807,18 +822,20 @@ def _load_autocollie_best_per_route(
     delta closes that gap by comparing the candidate and the
     deployed model on identical rows.
 
-    Routes with no historical runs in ``runs_dir`` get empty overrides
-    and fall through to the suite's CLI defaults. Runs missing both
+    Without a promoted or meaningful paired result, use a provisional
+    bootstrap config chosen by PR AUC on a recent common test cohort.
+    This does not promote the candidate or claim a deployed-model win.
+    Routes without usable evidence fall through to CLI defaults. Runs missing both
     ``recall_at_50_per_100M`` and ``recall_at_fp_per_million_3`` get
     sorted with a fallback recall of 0.0 — penalized vs runs that
     recorded the operational metric, but not excluded.
 
-    Returns ``(train_overrides_by_route, feature_envs_by_route)``. Both
+    Returns ``(train_overrides_by_route, feature_envs_by_route, malware_cutoffs_by_route)``. All
     maps are keyed by the canonical route name (e.g. ``filetypes/perl``).
     """
     if not runs_dir.is_dir():
         LOG.info("autocollie-best: %s is not a directory; skipping", runs_dir)
-        return {}, {}
+        return {}, {}, {}
 
     targeted_routes = {_route_key_for_target(t) for t in targets}
 
@@ -838,6 +855,7 @@ def _load_autocollie_best_per_route(
     # Skip routes that already have a promoted baseline — those win.
     best: dict[str, tuple[bool, float, float, float, bool, str, dict[str, Any]]] = {}
     apples_counts: dict[str, list[int]] = {}  # route -> [apples, legacy]
+    unpaired: dict[str, dict[str, dict[str, Any]]] = {}
     for path in runs_dir.glob("*.json"):
         # Skip the *_feature_spec.json sidecars and the multi-seed dirs.
         if path.name.endswith("_feature_spec.json"):
@@ -854,7 +872,7 @@ def _load_autocollie_best_per_route(
             continue  # promoted baseline wins; don't bother evaluating screens
         metrics = run.get("sampled_test_metrics") or {}
         ap = metrics.get("avg_precision")
-        if not isinstance(ap, (int, float)):
+        if not isinstance(ap, (int, float)) or not math.isfinite(ap):
             continue
         op_val = _op_recall(metrics)
         r_op = op_val if op_val is not None else 0.0
@@ -871,12 +889,16 @@ def _load_autocollie_best_per_route(
         n_ben = deployed.get("n_benign", 0) or 0
         has_apples = (
             deployed_op is not None
+            and deployed.get("held_out") is True
+            and bool(run.get("evaluation_revision"))
+            and deployed.get("evaluation_revision") == run.get("evaluation_revision")
             and n_mal >= APPLES_MIN_MALWARE_HOLDOUT
             and n_ben >= APPLES_MIN_BENIGN_HOLDOUT
         )
         counts = apples_counts.setdefault(route, [0, 0])
         if not has_apples:
             counts[1] += 1
+            unpaired.setdefault(route, {})[str(run.get("experiment_key") or path.stem)] = run
             continue
         counts[0] += 1
         delta_r_op = r_op - float(deployed_op)
@@ -899,8 +921,8 @@ def _load_autocollie_best_per_route(
             LOG.warning(
                 "autocollie-best %s: scanned %d screen run(s), none with "
                 "apples-to-apples on holdout >= %d malware / %d benign; "
-                "route falls through to suite defaults. Run an autocollie "
-                "cycle on this route to generate a trustworthy baseline.",
+                "trying provisional bootstrap selection by PR AUC on a "
+                "recent common evaluation cohort.",
                 route, n_legacy,
                 APPLES_MIN_MALWARE_HOLDOUT, APPLES_MIN_BENIGN_HOLDOUT,
             )
@@ -908,6 +930,8 @@ def _load_autocollie_best_per_route(
     valid_train_fields = _train_config_field_names()
     train_overrides: dict[str, dict[str, Any]] = {}
     feature_envs: dict[str, dict[str, str]] = {}
+    malware_cutoffs: dict[str, int] = {}
+    selections: dict[str, dict[str, Any]] = {}
 
     def _record(route: str, run: dict[str, Any], source: str) -> None:
         train_cfg = run.get("train_config") or {}
@@ -920,10 +944,13 @@ def _load_autocollie_best_per_route(
         if cfg_overrides:
             train_overrides[route] = cfg_overrides
 
-        env = run.get("feature_env") or {}
-        env_overrides = {str(k): str(v) for k, v in env.items() if str(k).startswith("COLLIMATOR_")}
+        env_overrides = replay_feature_env(run)
+        cutoff = replay_malware_score(run)
+        if cutoff is not None:
+            malware_cutoffs[route] = cutoff
         if env_overrides:
             feature_envs[route] = env_overrides
+        selections[route] = selection_record(run, source)
 
         metrics = run.get("sampled_test_metrics") or {}
         r_op = _op_recall(metrics)
@@ -950,6 +977,18 @@ def _load_autocollie_best_per_route(
         source = "screen_runs_apples_to_apples" if has_apples else "screen_runs_legacy"
         _record(route, run, source=source)
 
+    for route, candidates in unpaired.items():
+        if route in promoted_runs or route in best:
+            continue
+        run = select_bootstrap_run(list(candidates.values()))
+        if run is not None:
+            _record(route, run, source="screen_bootstrap_pr_auc")
+        else:
+            LOG.warning("autocollie-best %s: no healthy bootstrap evidence; using suite defaults", route)
+
+    if selection_report_path is not None:
+        write_selection_report(selection_report_path, selections)
+
     if best and not promoted_runs:
         LOG.warning(
             "no promoted_baselines.json entries for any of %d target routes; "
@@ -959,7 +998,7 @@ def _load_autocollie_best_per_route(
             len(best),
         )
 
-    return train_overrides, feature_envs
+    return train_overrides, feature_envs, malware_cutoffs
 
 
 def _merge_route_overrides(
@@ -1063,6 +1102,17 @@ def _route_train_config(
     return replace(base_config, **overrides)
 
 
+def _route_malware_score(
+    target: dict[str, Any],
+    cutoffs: dict[str, int],
+    default: int,
+    override: int | None,
+) -> int:
+    if override is not None:
+        return override
+    return cutoffs.get(_route_key_for_target(target), default)
+
+
 def _route_feature_env(
     target: dict[str, Any],
     feature_envs: dict[str, dict[str, str]],
@@ -1157,6 +1207,8 @@ def _train_one(
     skip_benchmark: bool = False,
     feature_cache_dir: Path | None = None,
 ) -> dict[str, Any]:
+    LOG.info("%s: malware training cutoff=%s", name, min_malware_score)
+    db_revision = cache_identity.database_revision(db_path)
     train_rows = _fetch_rows(
         db_path,
         file_types=file_types,
@@ -1183,24 +1235,15 @@ def _train_one(
         if not benchmark_ids_labels:
             raise ValueError(f"{name}: no benchmark rows")
 
-    spec = general_spec
-    spec_path = general_spec_path
-    feature_spec_policy = "general_shared"
-    feature_env_metadata: dict[str, Any] | None = None
+    feature_spec_policy = "route_specific"
+    feature_env_metadata = dict(sorted(feature_env.items()))
     with _temporary_feature_env(feature_env):
-        if feature_env:
-            LOG.info("%s: building route-specific feature spec with %d env overrides", name, len(feature_env))
-            spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=workers)
-            spec_path = output_dir / "feature_spec.json"
-            feature_spec_policy = "route_specific"
-            feature_env_metadata = dict(sorted(feature_env.items()))
-            # Persist the spec immediately. Downstream feature-cache lookup
-            # hashes spec_path (line ~855), which fails with FileNotFoundError
-            # when the spec exists only in memory. Native filegroup hit this
-            # and skipped training entirely — produced an empty
-            # filegroups/native bundle dir and broke deploy verification.
-            output_dir.mkdir(parents=True, exist_ok=True)
-            spec.save(spec_path)
+        LOG.info("%s: building route vocabulary from %d training rows (%d env overrides)", name, len(train_ids_labels), len(feature_env))
+        spec = features.build_vocab_from_db(db_path, train_ids_labels, n_workers=workers)
+        spec_path = output_dir / "feature_spec.json"
+        # Cache lookup hashes this file; persist it before extracting matrices.
+        output_dir.mkdir(parents=True, exist_ok=True)
+        spec.save(spec_path)
         LOG.info(
             "%s: extracting train and benchmark features with %s spec (%d features)",
             name,
@@ -1231,6 +1274,9 @@ def _train_one(
             spec_hash = _file_sha256(output_dir / "feature_spec.json") \
                 if (output_dir / "feature_spec.json").exists() \
                 else _file_sha256(spec_path)
+            spec_hash = hashlib.sha256(
+                (spec_hash + db_revision + cache_identity.code_revision("features")).encode()
+            ).hexdigest()
             train_row_ids = np.asarray(
                 [rid for rid, _label in train_ids_labels], dtype=np.int64,
             )
@@ -1285,7 +1331,8 @@ def _train_one(
                 spec,
                 n_workers=workers,
             )
-            if feature_cache_dir is not None and cache_key is not None and x_train.shape[0] > 0:
+            if (feature_cache_dir is not None and cache_key is not None and x_train.shape[0] > 0
+                    and cache_identity.database_revision(db_path) == db_revision):
                 _, _, _, _save_cache = _feature_cache_helpers()
                 _save_cache(feature_cache_dir, matrix=x_train, **cache_key)
     allowed_mask, mask_metadata = _allowed_mask_from_spec(spec, mask_spec_path)
@@ -1371,10 +1418,7 @@ def _train_one(
     accepted_models = [seed_result.model for _seed, seed_result in accepted_seed_results]
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    if feature_env:
-        spec.save(output_dir / "feature_spec.json")
-    else:
-        shutil.copy2(spec_path, output_dir / "feature_spec.json")
+    spec.save(output_dir / "feature_spec.json")
 
     # Multi-seed (item A): with --n-seed-extras=K, train K additional models
     # against the SAME extracted matrix (cheap — extraction was the slow part)
@@ -1396,14 +1440,7 @@ def _train_one(
             # sibling export, and the deployed bundle is ONNX-only — every seed
             # needs an .onnx or the route strands on the retired LightGBM loader.
             final_txt = bundle.write_seed_model_path(output_dir, seed, "txt")
-            tmp_txt = final_txt.with_name(f".{final_txt.name}.tmp")
-            export.save_model(model_obj, tmp_txt)
-            os.replace(tmp_txt, final_txt)
-            booster = getattr(model_obj, "booster_", model_obj)
-            final_onnx = final_txt.with_suffix(".onnx")
-            tmp_onnx = final_onnx.with_name(f".{final_onnx.name}.tmp")
-            if export.export_lightgbm_onnx(booster, booster.num_feature(), tmp_onnx):
-                os.replace(tmp_onnx, final_onnx)
+            export.save_model(model_obj, final_txt)
         for accepted_seed, accepted_result in accepted_seed_results:
             _save_seed_atomic(accepted_seed, accepted_result.model)
 
@@ -1421,11 +1458,13 @@ def _train_one(
                     continue
                 if stale_seed not in accepted_seeds:
                     stale.unlink()
-        for legacy in (output_dir / "model.txt", output_dir / "model.json"):
+        for legacy in (output_dir / "model.txt", output_dir / "model.json", output_dir / "model.onnx"):
             if legacy.is_file():
                 legacy.unlink()
     else:
         export.save_model(result.model, output_dir / "model.txt")
+        if (output_dir / "models").is_dir():
+            shutil.rmtree(output_dir / "models")
 
     # Benchmark probabilities use the same averaging the deployed runtime will,
     # so reported metrics match what litmus emits. Skipped entirely when
@@ -1446,6 +1485,8 @@ def _train_one(
     # ``collimator.bundle.model_files``.
     primary_model = bundle.primary_model_file(output_dir)
     payload = {
+        "training_partitions": ["train"],
+        "score_space": "raw",
         "name": name,
         "kind": kind,
         "file_types": list(file_types),
@@ -1478,6 +1519,7 @@ def _train_one(
         ),
         "levels": [] if skip_benchmark else _level_table(y_bench, probs),
         "train_config": asdict(config),
+        "min_malware_training_score": min_malware_score,
         "train_score_filter": (
             {"min_score": data.MIN_SAMPLE_SCORE, "scope": "all labels"}
             if kind == "filegroup" and filegroup_score_filter
@@ -1486,12 +1528,20 @@ def _train_one(
     }
     with open(output_dir / "benchmark.json", "w") as f:
         json.dump(_strip_nan(payload), f, indent=2, allow_nan=False)
+    cache_identity.write_training_provenance(output_dir)
     return payload
 
 
 def _publish_general(general_dir: Path, output_dir: Path) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    for filename in ("model.txt", "feature_spec.json", "threshold_tuning.json"):
+    if general_dir.resolve() != output_dir.resolve():
+        for name in ("model.txt", "model.json", "model.onnx", "training_provenance.json"):
+            (output_dir / name).unlink(missing_ok=True)
+        if (output_dir / "models").is_dir():
+            shutil.rmtree(output_dir / "models")
+        if (general_dir / "models").is_dir():
+            shutil.copytree(general_dir / "models", output_dir / "models")
+    for filename in ("model.txt", "model.onnx", "feature_spec.json", "threshold_tuning.json", "training_provenance.json"):
         src = general_dir / filename
         dst = output_dir / filename
         if src.exists() and src.resolve() != dst.resolve():
@@ -1777,10 +1827,13 @@ def main() -> int:
     )
     parser.add_argument("--min-bad", type=int, default=50)
     parser.add_argument(
-        "--min-malware-score", type=int, default=0,
-        help="drop malware with hopper score below this from TRAINING only "
-             "(benigns + test malware kept); focuses specialists on confident "
-             "malware. 0 = off.",
+        "--min-malware-score", type=int,
+        help="Override every route's malware training cutoff, including selected "
+             "autocollie settings. 0 = off; evaluation stays unfiltered.",
+    )
+    parser.add_argument(
+        "--default-min-malware-score", type=int, default=0,
+        help="Malware training cutoff for routes without a selected autocollie value.",
     )
     parser.add_argument("--min-good", type=int, default=50)
     parser.add_argument("--only", action="append", default=[])
@@ -1913,6 +1966,7 @@ def main() -> int:
     mask_specs = _parse_mask_specs(args.mask_spec)
     feature_envs = _parse_feature_envs(args.feature_env)
     train_overrides = _parse_train_overrides(args.train_override)
+    malware_cutoffs: dict[str, int] = {}
 
     # Resolve targets early so we can scope the autocollie-best scan to
     # routes we'll actually train.
@@ -1927,9 +1981,10 @@ def main() -> int:
             default_baselines = args.output_root / ".autocollie" / "promoted_baselines.json"
             if default_baselines.is_file():
                 baselines_path = default_baselines
-        auto_train, auto_env = _load_autocollie_best_per_route(
+        auto_train, auto_env, malware_cutoffs = _load_autocollie_best_per_route(
             args.autocollie_best_runs_dir, targets,
             baselines_path=baselines_path,
+            selection_report_path=args.output_root / ".autocollie" / "training_selections.json",
         )
         # Operator overrides (CLI --train-override / --feature-env) win on
         # collisions, so the merge order is auto-first then CLI on top.
@@ -2079,7 +2134,9 @@ def main() -> int:
                 "mem_gb": fit_mem_estimate_gb(measured_mem, str(target["name"])),
                 "max_id": args.max_id,
                 "filegroup_score_filter": filegroup_score_filter,
-                "min_malware_score": args.min_malware_score,
+                "min_malware_score": _route_malware_score(
+                    target, malware_cutoffs, args.default_min_malware_score, args.min_malware_score,
+                ),
                 "n_seed_extras": args.n_seed_extras,
                 "seed_health_min_roc_auc": args.seed_health_min_roc_auc,
                 "seed_retry_budget": args.seed_retry_budget,

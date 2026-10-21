@@ -294,3 +294,43 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T015556-filegroups-archive` — 2026-10-20T01:55:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | try_train_samples | fail | — | — | — | 4 | [log](out/autocollie/runs/2026-10-20T01-55-59_20261020T015556-filegroups-archive_try_train_samples.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_train_samples`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=train_samples=30000): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Seeded from archived full-train f41420c201ba5268 (2026-05-08T15:01:26Z).
+
+</details>
+
+## Cycle `20261020T020449-filegroups-archive` — 2026-10-20T02:04:49Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | try_train_samples | fail | — | — | — | 481 | [log](out/autocollie/runs/2026-10-20T02-06-18_20261020T020449-filegroups-archive_try_train_samples.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_train_samples`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=train_samples=30000): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Seeded from archived full-train f41420c201ba5268 (2026-05-08T15:01:26Z).
+
+</details>
+
+## Cycle `20261020T021638-filegroups-archive` — 2026-10-20T02:16:38Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `abc44654ae4330c1` | inherit_from_general_31488a65 | ok | 0.9552 | 0.9429 | 0.8747 | 1011 | [log](out/autocollie/runs/2026-10-20T02-27-15_20261020T021638-filegroups-archive_inherit_from_general_31488a65.log) |
+| `0395cda502fe8122` | archive_control_tiered_bigram_l2 | ok | 0.9453 | 0.9244 | 0.8765 | 197 | [log](out/autocollie/runs/2026-10-20T02-44-06_20261020T021638-filegroups-archive_archive_control_tiered_bigram_l2.log) |
+| `` | archive_kv_vocab_value_split_topk3 | fail | — | — | — | 144 | [log](out/autocollie/runs/2026-10-20T02-47-24_20261020T021638-filegroups-archive_archive_kv_vocab_value_split_topk3.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_general_31488a65`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from general (key=31488a65ac15bdf5, recall_at_50_per_100M=0.6109). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`archive_control_tiered_bigram_l2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the promoted archive feature env with stronger L2 and larger min-child to lift PR_AUC by reducing overfit at the strict-FP tail.
+- **`archive_kv_vocab_value_split_topk3`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=1 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable KV vocab with value splitting and raise the top-k risk-file crit floor to add archive metadata signal and cut low-crit noise, aiming to lift PR_AUC and recall@3FPM.
+
+</details>
+

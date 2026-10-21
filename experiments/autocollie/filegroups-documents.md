@@ -2552,3 +2552,31 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T015603-filegroups-documents` — 2026-10-20T01:56:03Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `` | try_train_samples | fail | — | — | — | 1095 | [log](out/autocollie/runs/2026-10-20T01-56-04_20261020T015603-filegroups-documents_try_train_samples.log) |
+
+<details><summary>Spec details</summary>
+
+- **`try_train_samples`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Directed knob trial (--try-knobs=train_samples=30000): forced onto this route's best-known config to measure the knob's isolated effect vs the deployed bundle. Seeded from archived full-train d93ba29a681bdc8d (2026-08-25T21:20:56Z).
+
+</details>
+
+## Cycle `20261020T022811-filegroups-documents` — 2026-10-20T02:28:11Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c40f94adaf09655e` | inherit_from_filegroups_config_fb3b4045 | ok | 0.9865 | 0.9860 | 0.8667 | 56 | [log](out/autocollie/runs/2026-10-20T02-37-38_20261020T022811-filegroups-documents_inherit_from_filegroups_config_fb3b4045.log) |
+| `6626df41cfa07d90` | documents_control_best_env_reg | ok | 0.9850 | 0.9846 | 0.8652 | 77 | [log](out/autocollie/runs/2026-10-20T02-38-34_20261020T022811-filegroups-documents_documents_control_best_env_reg.log) |
+| `ca1f3ec7ede3c990` | documents_text_metrics_full | ok | 0.9867 | 0.9864 | 0.8670 | 21 | [log](out/autocollie/runs/2026-10-20T02-39-51_20261020T022811-filegroups-documents_documents_text_metrics_full.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`documents_control_best_env_reg`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived best document feature env; lower LR and stronger L2/min-child regularization to lift PR_AUC at the strict-FP tail while keeping ROC_AUC flat.
+- **`documents_text_metrics_full`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable text_encoding and text_metrics_full on the archived best env to capture document obfuscation/encoding anomalies, aiming to raise recall@3FPM and PR_AUC without ROC_AUC regression.
+
+</details>
+

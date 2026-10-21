@@ -16,7 +16,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from collimator import bundle, export  # noqa: E402  — late import after sys.path patch
+from collimator import bundle, cache_identity, export, model_bounds  # noqa: E402  — late import after sys.path patch
 from collimator.features import DEFAULT_TRAIT_PATH_DEPTH  # noqa: E402
 
 
@@ -73,15 +73,18 @@ def _ensemble_feature_count_errors(root: Path, route: str) -> list[str]:
 
 
 def _trait_path_depth_errors(root: Path, route: str) -> list[str]:
-    """Scan's finding_paths serves DEFAULT_TRAIT_PATH_DEPTH levels. A spec built
-    at another depth has path-prefix vocab entries scan never emits (or emits
-    differently), which passes the layout gate but silently skews every
-    presence/ghost/tiered feature in production."""
+    """Require valid depths and a runtime ABI that honors nondefault depths."""
     with open(_route_path(root, route) / "feature_spec.json") as f:
-        depth = json.load(f).get("trait_path_depth", DEFAULT_TRAIT_PATH_DEPTH)
-    if depth == DEFAULT_TRAIT_PATH_DEPTH:
-        return []
-    return [f"{route}: trait_path_depth={depth} but scan serves depth {DEFAULT_TRAIT_PATH_DEPTH}"]
+        spec = json.load(f)
+    depth = spec.get("trait_path_depth", DEFAULT_TRAIT_PATH_DEPTH)
+    if isinstance(depth, bool) or not isinstance(depth, int) or depth < 1:
+        return [f"{route}: invalid trait_path_depth={depth!r}; expected a positive integer"]
+    abi = spec.get("abi_version", 18)
+    if depth != DEFAULT_TRAIT_PATH_DEPTH and (
+        isinstance(abi, bool) or not isinstance(abi, int) or abi < 19
+    ):
+        return [f"{route}: trait_path_depth={depth} requires model ABI >=19"]
+    return []
 
 
 def _policy_routes(policy: dict[str, Any]) -> set[str]:
@@ -98,6 +101,7 @@ def _policy_routes(policy: dict[str, Any]) -> set[str]:
                         f"route_policies.json: {route_name} L{level.get('level')} {severity} thresholds must be an object",
                     )
                 routes.update(str(name) for name in thresholds)
+                routes.update(str(name) for name in (best.get("blend") or {}).get("routes", []))
     return routes
 
 
@@ -170,6 +174,38 @@ def _level_monotonicity_errors(policy: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _calibration_errors(root: Path, config: dict, policy: dict) -> list[str]:
+    errors = []
+    for name, document in (("config.json", config), ("route_policies.json", policy)):
+        if document.get("fit_partition") != "dev" or document.get("score_space") != "raw":
+            errors.append(f"{name}: calibration must use production raw scores on dev; rebuild calibration")
+    if not config.get("score_table_hash") or config.get("score_table_hash") != policy.get("score_table_hash"):
+        errors.append("config and route policies must use the same score table")
+    records = {item["route"]: item for item in config.get("models", [])}
+    for route in {"general"} | set(records) | _policy_routes(policy):
+        directory = root / route
+        if not _route_exists(root, route):
+            continue
+        record = records.get(route, {})
+        if record.get("model_revision") != cache_identity.model_revision(directory):
+            errors.append(f"{route}: model differs from calibration or lacks identity; recalibrate")
+        import hashlib
+        if record.get("spec_revision") != hashlib.sha256((directory / "feature_spec.json").read_bytes()).hexdigest():
+            errors.append(f"{route}: feature spec differs from calibration or lacks identity; recalibrate")
+        try:
+            cache_identity.require_reserved_dev(directory)
+            bounds = model_bounds.probability_bounds(directory)
+        except (ValueError, OSError) as exc:
+            errors.append(str(exc))
+            continue
+        if bounds is not None:
+            for item in config.get("levels", []):
+                threshold = item.get("hostile", {}).get("thresholds", {}).get(route)
+                if threshold is not None and bounds[1] < threshold < 1:
+                    errors.append(f"{route} L{item['level']}: threshold {threshold:.6g} exceeds model upper bound {bounds[1]:.6g}")
+    return errors
+
+
 def validate(root: Path) -> list[str]:
     config_path = root / "config.json"
     policy_path = root / "route_policies.json"
@@ -224,6 +260,7 @@ def validate(root: Path) -> list[str]:
                     f"{route_name}: filegroup {group!r} does not match config mapping {mapped!r}",
                 )
 
+    errors.extend(_calibration_errors(root, config, policy))
     errors.extend(_blend_errors(policy))
     errors.extend(_level_monotonicity_errors(policy))
 

@@ -1186,3 +1186,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T093136-filetypes-png` — 2026-10-20T09:31:36Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `f8099ccbd7ec0bcf` | inherit_from_filetypes_elf_4c2de854 | ok | 0.1457 | 0.4975 | 0.1605 | 769 | [log](out/autocollie/runs/2026-10-20T09-45-50_20261020T093136-filetypes-png_inherit_from_filetypes_elf_4c2de854.log) |
+| `5034381010ab71bf` | png_control_posweight075 | ok | 0.2195 | 0.6698 | 0.1065 | 863 | [log](out/autocollie/runs/2026-10-20T09-58-39_20261020T093136-filetypes-png_png_control_posweight075.log) |
+| `7b9098aaf3372c30` | png_kv_vocab_metadata | ok | 0.2214 | 0.6581 | 0.1065 | 8 | [log](out/autocollie/runs/2026-10-20T10-13-02_20261020T093136-filetypes-png_png_kv_vocab_metadata.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`png_control_posweight075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Control on the best archived PNG feature_env; down-weight positives to cut benign FP at the strict operating point, aiming recall@3FPM while keeping PR_AUC and ROC_AUC flat.
+- **`png_kv_vocab_metadata`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 EXP_CRIT_CATEGORY_NGRAMS=1 …` — Enable PNG metadata key-value vocab to capture malicious tEXt/zTXt chunk keys/values, aiming PR_AUC and tail recall@3FPM from rare metadata signal.
+
+</details>
+

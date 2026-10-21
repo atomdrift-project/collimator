@@ -986,3 +986,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T130041-filetypes-lnk` — 2026-10-20T13:00:41Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `c112f3bf4c6819ac` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.9871 | 0.9614 | 0.8946 | 11 | [log](out/autocollie/runs/2026-10-20T13-01-41_20261020T130041-filetypes-lnk_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `6ab333a3c4817503` | lnk_control_hardneg15_reglambda2 | ok | 0.9967 | 0.9870 | 0.8924 | 8 | [log](out/autocollie/runs/2026-10-20T13-01-51_20261020T130041-filetypes-lnk_lnk_control_hardneg15_reglambda2.log) |
+| `0fe32d5b80deb98e` | lnk_kv_vocab_signal | ok | 0.9967 | 0.9871 | 0.8943 | 8 | [log](out/autocollie/runs/2026-10-20T13-01-59_20261020T130041-filetypes-lnk_lnk_kv_vocab_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`lnk_control_hardneg15_reglambda2`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Control run replicating the best archived feature set (62f37a1) with increased L2 regularization (reg_lambda 1->2) and slightly higher hard_negative_weight (15) to reduce overfitting on rare LNK patterns, aiming to improve PR_AUC and recall@3FPM while keeping ROC_AUC flat.
+- **`lnk_kv_vocab_signal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=2 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=500 EXP_BLINDFOLD=1 …` — Feature experiment enabling kv_vocab (disabled in the best archived config) to capture LNK-specific key-value metadata (e.g., target path, volume ID) as rank signal, aiming to improve PR_AUC and recall@3FPM by distinguishing malicious shortcut targets from benign ones.
+
+</details>
+

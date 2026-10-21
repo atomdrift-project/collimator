@@ -157,7 +157,7 @@ def create_classifier(
     gamma: float = 0.0,
     reg_alpha: float = 0.0,
     reg_lambda: float = 1.0,
-    monotone_constraints: str | dict[str, int] | None = None,
+    monotone_constraints: str | dict[str, int] | tuple[int, ...] | None = None,
     learner: str = "litmus-xg",
     scale_pos_weight_mult: float = 1.0,
     boosting_type: str = "gbdt",
@@ -198,12 +198,15 @@ def create_classifier(
             log.warning("LightGBM not built with CUDA; using CPU (pick_device chose %s)", device)
             device = "cpu"
         device_params: dict[str, object] = {}
+        if boosting_type == "goss" and subsample != 1:
+            raise ValueError("GOSS does not support row bagging; set subsample=1")
         if device and device not in {"cpu", "auto"}:
             if device not in {"cuda", "gpu"}:
                 raise ValueError(f"unsupported azoth device: {device}")
             device_params["device_type"] = device
         return lgb.LGBMClassifier(
             objective="binary",
+            metric="average_precision",
             boosting_type=boosting_type,
             extra_trees=bool(extra_trees),
             n_estimators=n_estimators,
@@ -214,6 +217,9 @@ def create_classifier(
             **({"num_leaves": num_leaves} if num_leaves is not None else {}),
             colsample_bytree=colsample_bytree,
             subsample=subsample,
+            subsample_freq=1 if subsample < 1 else 0,
+            min_split_gain=gamma,
+            **({"monotone_constraints": monotone_constraints} if monotone_constraints is not None else {}),
             reg_alpha=reg_alpha,
             reg_lambda=reg_lambda,
             scale_pos_weight=spw,

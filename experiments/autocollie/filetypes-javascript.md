@@ -1861,3 +1861,19 @@ _No specs ran._
 
 </details>
 
+## Cycle `20261020T125656-filetypes-javascript` — 2026-10-20T12:56:56Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `2887eb98b75513c0` | inherit_from_filetypes_rtf_b2fc38ce | ok | 0.9809 | 0.9754 | 0.9070 | 359 | [log](out/autocollie/runs/2026-10-20T13-06-23_20261020T125656-filetypes-javascript_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `9fb072b1de1d60e7` | js_control_hardneg8 | ok | 0.9727 | 0.9650 | 0.9123 | 309 | [log](out/autocollie/runs/2026-10-20T13-12-22_20261020T125656-filetypes-javascript_js_control_hardneg8.log) |
+| `5a64068a7b102f37` | js_kv_vocab_signal | ok | 0.9715 | 0.9638 | 0.9126 | 78 | [log](out/autocollie/runs/2026-10-20T13-17-31_20261020T125656-filetypes-javascript_js_kv_vocab_signal.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`js_control_hardneg8`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control run using the archived promoted feature set with increased hard_negative_weight to 8.0 to improve recall@3FPM by better penalizing benign patterns that mimic malicious traits, while keeping PR_AUC flat.
+- **`js_kv_vocab_signal`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab to capture key-value pair signals in JavaScript files, aiming to improve PR_AUC by adding discriminative features for malicious configuration patterns that are missed by n-grams alone.
+
+</details>
+

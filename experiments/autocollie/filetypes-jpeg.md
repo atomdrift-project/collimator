@@ -1418,3 +1418,36 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T071347-filetypes-jpeg` — 2026-10-20T07:13:47Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5785f0dbc59be2ff` | inherit_from_filetypes_elf_4c2de854 | ok | 0.2669 | 0.6993 | 0.3333 | 572 | [log](out/autocollie/runs/2026-10-20T07-24-51_20261020T071347-filetypes-jpeg_inherit_from_filetypes_elf_4c2de854.log) |
+
+Rejected before run:
+
+- `jpeg_control_hardneg8_tail_threshold` — features.repetition_penalty_features: unknown knob (not in allowlist)
+- `jpeg_kv_vocab_exif_metadata` — features.repetition_penalty_features: unknown knob (not in allowlist)
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+
+</details>
+
+## Cycle `20261020T125722-filetypes-jpeg` — 2026-10-20T12:57:22Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `5785f0dbc59be2ff` | inherit_from_filetypes_rtf_b2fc38ce | dup | 0.2669 | 0.6993 | 0.3333 | 1 | [log](out/autocollie/runs/2026-10-20T12-57-41_20261020T125722-filetypes-jpeg_inherit_from_filetypes_rtf_b2fc38ce.log) |
+| `f94cfc80736e91db` | jpeg_control_hardneg8_tail_threshold | ok | 0.2904 | 0.6672 | 0.3367 | 13 | [log](out/autocollie/runs/2026-10-20T12-57-43_20261020T125722-filetypes-jpeg_jpeg_control_hardneg8_tail_threshold.log) |
+| `ed3f1c8a54530673` | jpeg_kv_vocab_exif_metadata | ok | 0.2195 | 0.6212 | 0.3347 | 11 | [log](out/autocollie/runs/2026-10-20T12-57-55_20261020T125722-filetypes-jpeg_jpeg_kv_vocab_exif_metadata.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_rtf_b2fc38ce`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/rtf (key=b2fc38ce84d511f8, recall_at_50_per_100M=1.0000). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jpeg_control_hardneg8_tail_threshold`** `EXP_ESTIMATORS=300 EXP_HARD_NEGATIVE_FRACTION=0.2 EXP_HARD_NEGATIVE_WEIGHT=8 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_REPETITION_PENALTY_FEATURES=0 EXP_THRESHOLD_FPR_TARGET=2.5e-07 …` — Control run using hard negatives and max_recall_at_fpr threshold to maximize recall@3FPM while preserving PR_AUC by focusing the model on difficult benign JPEGs.
+- **`jpeg_kv_vocab_exif_metadata`** `EXP_ESTIMATORS=300 EXP_KV_MIN_FREQ=5 EXP_KV_VOCAB=1 EXP_KV_VOCAB_MAX=5000 EXP_LEARNING_RATE=0.05 EXP_MAX_TEST_SAMPLES=20000 EXP_NUM_LEAVES=128 EXP_TRAIN_SAMPLES=30000` — Enable kv_vocab to capture EXIF metadata and embedded strings, aiming to improve PR_AUC by adding discriminative signal from JPEG headers that are often ignored by generic text features.
+
+</details>
+

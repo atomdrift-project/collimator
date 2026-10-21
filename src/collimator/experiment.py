@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import logging
 import math
 import os
+import shutil
 import sqlite3
+import tempfile
 import time
 from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import scipy.sparse as sp
@@ -26,9 +30,48 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-from . import bundle, data, export, features, train
+from . import bundle, cache_identity, data, export, features, train
 from . import thresholds as _severity  # aliased: a local `thresholds` var shadows the name in recall_at_per_100M
+from .filegroups import ARCHIVE_FILETYPES
 from .model import predict_proba
+
+
+def _restore_run_artifacts(output_dir: Path, key: str) -> bool:
+    """Reuse a result only when its own model, spec and provenance are complete."""
+    runs = output_dir / "runs"
+    spec = runs / f"{key}_feature_spec.json"
+    proof = runs / f"{key}_training_provenance.json"
+    if not spec.is_file() or not proof.is_file():
+        return False
+    with tempfile.TemporaryDirectory(dir=output_dir) as temporary:
+        staged = Path(temporary)
+        models = runs / f"{key}_models"
+        if models.is_dir():
+            shutil.copytree(models, staged / "models")
+        else:
+            for ext in ("txt", "onnx", "json"):
+                source = runs / f"{key}_model.{ext}"
+                if source.is_file():
+                    shutil.copy2(source, staged / f"model.{ext}")
+        if not bundle.has_model(staged):
+            return False
+        record = json.loads(proof.read_text())
+        if record.get("model_revision") != cache_identity.model_revision(staged):
+            return False
+        shutil.copy2(spec, staged / "feature_spec.json")
+        shutil.copy2(proof, staged / "training_provenance.json")
+        # Concurrent screens share this compatibility directory. Their durable
+        # artifacts remain keyed; serialize only the short shared installation.
+        with (output_dir / ".artifacts.lock").open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            for path in output_dir.glob("model.*"):
+                if path.suffix in {".txt", ".onnx", ".json"}:
+                    path.unlink()
+            if (output_dir / "models").is_dir():
+                shutil.rmtree(output_dir / "models")
+            for source in staged.iterdir():
+                os.replace(source, output_dir / source.name)
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -59,6 +102,7 @@ from .model import predict_proba
 # `expand_filetype_aliases` widens each canonical label to its stored spellings
 # at query time.
 EXPERIMENT_FILEGROUPS: dict[str, tuple[str, ...]] = {
+    "archive": ARCHIVE_FILETYPES,
     "scripts": (
         "batch",
         "javascript",
@@ -102,6 +146,8 @@ def _corpus_cache_key(
     total_limit: int,
     test_natural_prevalence: bool = False,
     oof_fold_exclude: int | None = None,
+    database_revision: str = "",
+    evaluation_seed: int = 42,
 ) -> str:
     """Deterministic hash for the row-selection parameters.
 
@@ -113,6 +159,9 @@ def _corpus_cache_key(
     rows back.
     """
     blob = json.dumps({
+        "code_revision": cache_identity.code_revision("corpus"),
+        "database_revision": database_revision,
+        "evaluation_seed": evaluation_seed,
         "seed": seed,
         "train_samples": train_samples,
         "max_test_samples": max_test_samples,
@@ -155,7 +204,7 @@ def _route_file_types(route: str) -> tuple[str, ...]:
 
 
 def _allowlist_content_hash(feature_env: dict[str, str]) -> str:
-    """sha256 of the COLLIMATOR_ALLOWED_FEATURES_FILE contents ("" if unset/unreadable).
+    """sha256 of the explicit name filter (empty if unset).
 
     ``feature_env`` carries only the allowlist file *path*. Keying the matrix
     cache on the path alone means overwriting a fixed path with new content —
@@ -166,11 +215,8 @@ def _allowlist_content_hash(feature_env: dict[str, str]) -> str:
     path = feature_env.get("COLLIMATOR_ALLOWED_FEATURES_FILE", "")
     if not path:
         return ""
-    try:
-        with open(path, "rb") as f:
-            return hashlib.sha256(f.read()).hexdigest()[:16]
-    except OSError:
-        return ""
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()[:16]
 
 
 def _matrix_cache_key(
@@ -181,6 +227,7 @@ def _matrix_cache_key(
     """Deterministic hash for corpus + feature configuration."""
     cfg_dict = _feature_config_dict(feature_cfg)
     key_dict: dict[str, object] = {
+        "code_revision": cache_identity.code_revision("features"),
         "corpus": corpus_hash,
         "feature_config": cfg_dict,
         "feature_env": feature_env,
@@ -408,6 +455,7 @@ def sample_partitioned_reports(
     max_id: int = 0,
     route_file_types: tuple[str, ...] = (),
     test_natural_prevalence: bool = False,
+    evaluation_seed: int = 42,
 ) -> ExperimentCorpus:
     """Reservoir-sample train rows and optionally cap the external test bucket.
 
@@ -423,7 +471,12 @@ def sample_partitioned_reports(
     provide (route benign counts dominate the FP/M denominator).
     If max_test_samples == 0, we take ALL test rows from the stream (natural distribution).
     """
-    rng = np.random.default_rng(seed)
+    # Each class/partition owns its RNG. Training budgets, score filters and
+    # fit seeds must not move the evaluation cohort (or the benign reservoir).
+    train_rng = {label: np.random.default_rng(np.random.SeedSequence([seed, label]))
+                 for label in (0, 1)}
+    eval_rng = {label: np.random.default_rng(np.random.SeedSequence([evaluation_seed, label]))
+                for label in (0, 1, 2)}
 
     train_malware_target = max(train_samples // 2, 1) if train_samples > 1 else train_samples
     train_benign_target = max(train_samples - train_malware_target, 0)
@@ -507,9 +560,9 @@ def sample_partitioned_reports(
 
             if train_samples > 0:
                 if label == 1:
-                    seen[key] = _reservoir_update(train_malware, sample, train_malware_target, seen[key], rng)
+                    seen[key] = _reservoir_update(train_malware, sample, train_malware_target, seen[key], train_rng[1])
                 else:
-                    seen[key] = _reservoir_update(train_benign, sample, train_benign_target, seen[key], rng)
+                    seen[key] = _reservoir_update(train_benign, sample, train_benign_target, seen[key], train_rng[0])
             else:
                 if label == 1:
                     train_malware.append(sample)
@@ -519,12 +572,12 @@ def sample_partitioned_reports(
         else:
             if test_natural_prevalence and max_test_samples > 0:
                 # Single pooled reservoir across both classes — natural prevalence.
-                test_seen = _reservoir_update(test_pool, sample, test_total_target, test_seen, rng)
+                test_seen = _reservoir_update(test_pool, sample, test_total_target, test_seen, eval_rng[2])
             elif max_test_samples > 0:
                 if label == 1:
-                    seen[key] = _reservoir_update(test_malware, sample, test_malware_target, seen[key], rng)
+                    seen[key] = _reservoir_update(test_malware, sample, test_malware_target, seen[key], eval_rng[1])
                 else:
-                    seen[key] = _reservoir_update(test_benign, sample, test_benign_target, seen[key], rng)
+                    seen[key] = _reservoir_update(test_benign, sample, test_benign_target, seen[key], eval_rng[0])
             else:
                 if label == 1:
                     test_malware.append(sample)
@@ -807,6 +860,8 @@ def run_experiment(
         refresh=refresh_cache_snapshot,
     )
     log.info("dataset snapshot: max_id=%d", pinned_max_id)
+    db_revision = cache_identity.database_revision(db_path)
+    evaluation_seed = int(os.getenv("EXP_EVAL_SEED", "42"))
 
     feature_cfg = features.feature_config_from_env()
     feature_env = _collimator_env()
@@ -848,6 +903,12 @@ def run_experiment(
     if _oof_fold_exclude_str in {"0", "1"}:
         _oof_fold_exclude = int(_oof_fold_exclude_str)
     experiment_spec: dict[str, object] = {
+        "database_revision": db_revision,
+        "code_revision": cache_identity.code_revision("training"),
+        "feature_revision": cache_identity.code_revision("features"),
+        "allowlist_revision": _allowlist_content_hash(feature_env),
+        "evaluation_seed": evaluation_seed,
+        "training_partitions": ["train"],
         "route": route,
         "route_file_types": list(route_file_types),
         "snapshot_max_id": int(pinned_max_id),
@@ -878,7 +939,8 @@ def run_experiment(
     }
     exp_key = _experiment_key(experiment_spec)
     keyed_result_path = output_dir / "runs" / f"{exp_key}.json" if output_dir is not None else None
-    if keyed_result_path is not None and keyed_result_path.exists() and not rerun_existing:
+    if (keyed_result_path is not None and keyed_result_path.exists()
+            and not rerun_existing and _restore_run_artifacts(output_dir, exp_key)):
         with open(keyed_result_path) as f:
             existing = json.load(f)
         payload = existing.get("experiment", existing)
@@ -911,6 +973,8 @@ def run_experiment(
             total_limit,
             test_natural_prevalence=test_natural_prevalence,
             oof_fold_exclude=_oof_fold_exclude,
+            database_revision=db_revision,
+            evaluation_seed=evaluation_seed,
         )
         if cache_dir
         else ""
@@ -926,6 +990,9 @@ def run_experiment(
     cached_matrices = _load_matrix_cache(cache_dir, matrix_hash) if cache_dir else None
     if cached_matrices is not None:
         spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids = cached_matrices
+        eval_revision = cache_identity.evaluation_revision(db_path, list(map(int, test_row_ids)), y_test)
+        if cache_identity.database_revision(db_path) != db_revision:
+            raise RuntimeError("database changed while loading cached matrices; retry")
         print(f"\nEXPERIMENT (cached matrices: {X_train.shape[0]} train, {X_test.shape[0]} test)")
     else:
         # --- Cache level 1: corpus row selections + file types ----------------
@@ -943,10 +1010,11 @@ def run_experiment(
                 max_id=pinned_max_id,
                 route_file_types=route_file_types,
                 test_natural_prevalence=test_natural_prevalence,
+                evaluation_seed=evaluation_seed,
             )
             sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
             train_file_types = _load_primary_file_types(db_path, [s.row_id for s in sorted_train])
-            if cache_dir:
+            if cache_dir and cache_identity.database_revision(db_path) == db_revision:
                 _save_corpus_cache(cache_dir, corpus_hash, corpus, train_file_types)
         _print_dataset_summary(corpus)
 
@@ -958,6 +1026,9 @@ def run_experiment(
         sorted_test = sorted(corpus.test_samples, key=lambda s: s.row_id)
         test_row_ids = np.asarray(
             [int(s.row_id) for s in sorted_test], dtype=np.int64,
+        )
+        eval_revision = cache_identity.evaluation_revision(
+            db_path, list(map(int, test_row_ids)), [s.label for s in sorted_test],
         )
 
         # Clamp fetch parallelism to available RAM before the two DB passes.
@@ -981,11 +1052,13 @@ def run_experiment(
             n_workers=n_workers,
         )
 
-        if cache_dir:
+        if cache_dir and cache_identity.database_revision(db_path) == db_revision:
             _save_matrix_cache(
                 cache_dir, matrix_hash, spec, X_train, y_train, X_test, y_test,
                 train_file_types, test_row_ids=test_row_ids,
             )
+
+    eval_ids = [int(x) for x in test_row_ids] if test_row_ids is not None else []
 
     # Experiment 38: Semantic Clustering.
     if "clusters" in features.feature_config_from_env().enabled_groups:
@@ -1032,25 +1105,8 @@ def run_experiment(
             "dropped feature prefixes for experiment: %s (%d features remain)",
             drop_feature_prefixes, spec.total_features,
         )
-    # Build monotonic constraints for all behavior features.
-    # We want to force the model to treat 'presence', 'criticality', and 'aggregate counts'
-    # of findings as purely additive signals for malware.
-    # We use a tuple aligned by index because XGBoost cannot reliably match
-    # feature names when training on sparse matrices.
-    constraints = [0] * len(spec.feature_names)
-    for i, name in enumerate(spec.feature_names):
-        if monotone_constraints and name in monotone_constraints:
-            constraints[i] = monotone_constraints[name]
-            continue
-
-        if name.startswith(("present:", "maxcrit:")):
-            constraints[i] = 1
-        elif name.startswith("agg:") and ("suspicious" in name or "hostile" in name or "findings_log" in name):
-            constraints[i] = 1
-        elif name in ("struct:stealth_potential", "struct:silent_packer_signal"):
-            constraints[i] = 1
-        elif name.startswith("gap:"):
-            constraints[i] = 1
+    # Constraints must be explicit: presence includes benign evidence too.
+    constraints = monotone_constraints or None
 
     # Best-of-K seed search: train K models with seeds [seed, seed+1, ..., seed+K-1],
     # ship the one with highest holdout recall@L50 (= 50 FP/100M = 0.5 FP/M, the
@@ -1108,7 +1164,7 @@ def run_experiment(
                 scale_pos_weight_mult=scale_pos_weight_mult,
                 boosting_type=boosting_type,
                 extra_trees=extra_trees,
-                monotone_constraints=tuple(constraints),
+                monotone_constraints=constraints,
                 holdout_fraction=holdout_fraction,
             ),
             feature_names=spec.feature_names,
@@ -1235,7 +1291,12 @@ def run_experiment(
             averaged_threshold,
         )
 
+    if cache_identity.evaluation_revision(db_path, eval_ids, y_test) != eval_revision:
+        raise RuntimeError("evaluation rows changed during training; rerun on stable data")
     results = {
+        "evaluation_revision": eval_revision,
+        "training_partitions": ["train"],
+        "score_space": "raw",
         "model_name": model_name,
         "experiment_key": exp_key,
         "idea": experiment_idea,
@@ -1289,104 +1350,35 @@ def run_experiment(
         "snapshot_max_id": int(pinned_max_id),
     }
     if output_dir is not None:
-        spec.save(output_dir / "feature_spec.json")
-        ext = "txt" if learner == "azoth" else "json"
-        model_filename = f"model.{ext}"
-        if deploy_averaged:
-            # Multi-seed bundle: write every member to a `.tmp` sibling
-            # first, then rename atomically. Crash safety: a kill mid-write
-            # leaves at most one stray `.tmp` (which `model_files()` skips
-            # because it filters by extension). The legacy single-model
-            # artifact is unlinked LAST — only after every new seed file
-            # is durable on disk — so we never end up with a bundle that
-            # has no models at all.
-            shared_models_dir = output_dir / "models"
-            shared_models_dir.mkdir(parents=True, exist_ok=True)
-            # Prune stale seed files from prior runs that used a different K
-            # (or different seed list). Otherwise an orphaned seed_<S>.{ext}
-            # gets promoted into the deployed bundle and triggers the
-            # mismatched-feature-count check at runtime — caught only by
-            # litmus 11 hours into a deploy.
-            current_seeds = {int(s) for s in all_attempt_seeds}
-            for stale in shared_models_dir.glob(f"seed_*.{ext}"):
-                try:
-                    stale_seed = int(stale.stem.removeprefix("seed_"))
-                except ValueError:
-                    continue
-                if stale_seed not in current_seeds:
-                    stale.unlink()
-            for s, m in zip(all_attempt_seeds, all_attempt_models, strict=True):
-                final_path = shared_models_dir / f"seed_{s}.{ext}"
-                tmp_path = shared_models_dir / f".seed_{s}.{ext}.tmp"
-                export.save_model(m, tmp_path)
-                os.replace(tmp_path, final_path)
-            for legacy in (output_dir / "model.txt", output_dir / "model.json"):
-                if legacy.is_file():
-                    legacy.unlink()
-        else:
-            export.save_model(result.model, output_dir / model_filename)
-            # Symmetric to the multi-seed branch above (which unlinks any
-            # leftover `model.txt`): a previous multi-seed run may have
-            # left an `output_dir/models/` directory on disk. Without
-            # this cleanup, the Makefile's `azoth-general` recipe — which
-            # prefers a `models/` directory over a single `model.txt` —
-            # would silently promote the stale bundle and throw away
-            # this freshly-trained single-seed model.
-            stale_models_dir = output_dir / "models"
-            if stale_models_dir.is_dir():
-                for stale in stale_models_dir.iterdir():
-                    if stale.is_file():
-                        stale.unlink()
-                try:
-                    stale_models_dir.rmdir()
-                except OSError:
-                    # Directory not empty (e.g. nested layout we didn't
-                    # write). Leave it alone rather than silently
-                    # nuking unrelated files.
-                    log.warning(
-                        "stale_models_dir %s is non-empty after pruning; leaving in place",
-                        stale_models_dir,
-                    )
-        export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
-        if keyed_result_path is not None:
-            # Atomic write: autocollie reads this as the source of truth for
-            # the experiment's metrics and replays its env via
-            # azoth_train_best.py.  A truncated keyed JSON would fail JSON
-            # parse and silently exclude the run from historical-best
-            # selection.
-            bundle.atomic_write_json(keyed_result_path, results)
-            log.info("saved keyed experiment summary to %s", keyed_result_path)
-            # Also save spec + model under per-key paths so downstream consumers
-            # (notably autocollie's candidate-bundle staging) can pick them up
-            # by experiment_key without racing against the shared
-            # `output_dir / feature_spec.json` and `model.txt` files, which get
-            # overwritten by the next `make experiment` invocation.  Without
-            # this, when full-train hits the AlreadyExists short-circuit and
-            # skips re-extraction, staging would copy whatever spec the most
-            # recent unrelated experiment happened to leave behind.
-            keyed_spec_path = keyed_result_path.with_name(f"{exp_key}_feature_spec.json")
-            spec.save(keyed_spec_path)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        runs_dir = output_dir / "runs"
+        runs_dir.mkdir(exist_ok=True)
+        # Export once in a private directory. Concurrent routes must never copy
+        # models or provenance from each other's shared output files.
+        with tempfile.TemporaryDirectory(dir=output_dir) as temporary:
+            staged = Path(temporary)
+            spec.save(staged / "feature_spec.json")
+            ext = "txt" if learner == "azoth" else "json"
             if deploy_averaged:
-                # Multi-seed keyed layout: <key>_models/seed_<S>.{txt,json}.
-                # autocollie's stageCandidateBundle prefers this directory
-                # over the legacy single keyed file when present.  Same
-                # tmp-rename pattern as the shared write above so a kill
-                # mid-loop never leaves a partial seed file in the keyed
-                # dir for staging to pick up.
-                keyed_models_dir = keyed_result_path.with_name(f"{exp_key}_models")
-                keyed_models_dir.mkdir(parents=True, exist_ok=True)
-                for s, m in zip(all_attempt_seeds, all_attempt_models, strict=True):
-                    final_path = keyed_models_dir / f"seed_{s}.{ext}"
-                    tmp_path = keyed_models_dir / f".seed_{s}.{ext}.tmp"
-                    export.save_model(m, tmp_path)
-                    os.replace(tmp_path, final_path)
-                log.info(
-                    "saved keyed feature_spec and %d-seed ensemble to %s, %s",
-                    len(all_attempt_models), keyed_spec_path, keyed_models_dir,
-                )
+                for member_seed, member in zip(all_attempt_seeds, all_attempt_models, strict=True):
+                    export.save_model(member, staged / "models" / f"seed_{member_seed}.{ext}")
             else:
-                keyed_model_path = keyed_result_path.with_name(f"{exp_key}_{model_filename}")
-                export.save_model(result.model, keyed_model_path)
-                log.info("saved keyed feature_spec and model to %s, %s",
-                         keyed_spec_path, keyed_model_path)
+                export.save_model(result.model, staged / f"model.{ext}")
+            cache_identity.write_training_provenance(staged)
+            # Publish the result last: it is the marker that all artifacts exist.
+            keyed_result_path.unlink(missing_ok=True)
+            for name in ("model.txt", "model.json", "model.onnx", "models"):
+                previous = runs_dir / f"{exp_key}_{name}"
+                if previous.is_dir():
+                    shutil.rmtree(previous)
+                else:
+                    previous.unlink(missing_ok=True)
+            for source in staged.iterdir():
+                destination = runs_dir / f"{exp_key}_{source.name}"
+                os.replace(source, destination)
+            bundle.atomic_write_json(keyed_result_path, results)
+        if not _restore_run_artifacts(output_dir, exp_key):
+            raise RuntimeError(f"incomplete artifacts for experiment {exp_key}")
+        export.save_run_summary(kind="experiment", payload=results, output_dir=output_dir)
+        log.info("saved keyed experiment summary to %s", keyed_result_path)
     return results

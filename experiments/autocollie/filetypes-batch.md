@@ -1380,3 +1380,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T042057-filetypes-batch` — 2026-10-20T04:20:57Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `9da19b3d13ada4be` | inherit_from_filegroups_config_fb3b4045 | ok | 0.9977 | 0.9840 | 0.2985 | 966 | [log](out/autocollie/runs/2026-10-20T04-30-33_20261020T042057-filetypes-batch_inherit_from_filegroups_config_fb3b4045.log) |
+| `e8f3c5d6744ec56c` | batch_control_maxrecall_fpr | ok | 0.9746 | 0.8515 | 0.2956 | 822 | [log](out/autocollie/runs/2026-10-20T04-46-39_20261020T042057-filetypes-batch_batch_control_maxrecall_fpr.log) |
+| `7fd0a9c23586f846` | batch_textenc_metrics_bigram250 | ok | 0.9842 | 0.9171 | 0.3007 | 32 | [log](out/autocollie/runs/2026-10-20T05-00-20_20261020T042057-filetypes-batch_batch_textenc_metrics_bigram250.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filegroups_config_fb3b4045`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filegroups/config (key=fb3b40458e429b29, recall_at_50_per_100M=0.7634). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`batch_control_maxrecall_fpr`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived batch feature env; switch threshold_mode to max_recall_at_fpr to lift recall@3FPM at the strict-FP operating point while keeping PR_AUC and ROC_AUC flat.
+- **`batch_textenc_metrics_bigram250`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=250 EXP_BLINDFOLD=1 …` — Enable text_encoding and text_metrics_full while lowering bigram_min_freq to 250 to add rare text-structure and command-pattern signal for obfuscated batch droppers, aiming to improve PR_AUC and recall@3FPM.
+
+</details>
+

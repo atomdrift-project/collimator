@@ -245,11 +245,19 @@ def prune_routes(azoth_root: Path, drop_routes: set[str]) -> set[str]:
             f"without writing (bundle would fail validation)"
         )
 
+    # Pruning changes decisions, especially jointly fitted blends. The edited
+    # bundle is a training workspace until calibration and reporting rerun.
+    # Publication must never treat the remaining coefficients as a verified fit.
+    for document in (config, policy):
+        document["fit_partition"] = None
+        document["score_table_hash"] = None
+        document["requires_recalibration"] = True
     config_path.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n")
     policy_path.write_text(json.dumps(policy, indent=2, ensure_ascii=False) + "\n")
     if metrics_path.is_file():
         metrics = json.loads(metrics_path.read_text())
         _prune_per_filetype_metrics(metrics, drop)
+        metrics["requires_recalibration"] = True
         metrics_path.write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n")
 
     pruned: set[str] = set()

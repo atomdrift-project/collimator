@@ -53,7 +53,7 @@ _SRC = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-from collimator import bundle, data as collimator_data, features  # noqa: E402
+from collimator import bundle, cache_identity, data as collimator_data, features  # noqa: E402
 from collimator.experiment import recall_at_per_100M  # noqa: E402
 
 LOG = logging.getLogger("azoth_score_deployed")
@@ -80,34 +80,80 @@ def _resolve_route_dir(deploy_root: Path, route: str) -> Path:
 
 
 def _model_files(route_dir: Path) -> list[Path]:
-    """Multi-seed bundles expose ``models/seed_*.txt``; legacy single-model
-    bundles have ``model.txt`` at the top. Both supported."""
-    multi = sorted((route_dir / "models").glob("seed_*.txt")) if (route_dir / "models").is_dir() else []
-    if multi:
-        return multi
-    legacy = route_dir / "model.txt"
-    if legacy.is_file():
-        return [legacy]
-    return []
+    return bundle.model_files(route_dir)
 
 
 def _deployed_model_hash(route_dir: Path) -> str:
     """Combined sha256 of the route's model files. A multi-seed bundle's
     hash includes every seed in deterministic sort order, so retraining
     any seed invalidates the cache."""
-    paths = _model_files(route_dir)
-    if not paths:
-        raise SystemExit(f"no model files under {route_dir}")
     h = hashlib.sha256()
-    for path in paths:
-        h.update(path.name.encode())
-        with open(path, "rb") as f:
-            while True:
-                chunk = f.read(1024 * 1024)
-                if not chunk:
-                    break
-                h.update(chunk)
+    h.update(cache_identity.model_revision(route_dir).encode())
+    h.update((route_dir / "feature_spec.json").read_bytes())
+    h.update(cache_identity.code_revision("features").encode())
+    h.update(cache_identity.code_revision("training").encode())
     return h.hexdigest()
+
+
+def _require_held_out(db: str, model_dir: Path, row_ids: list[int]) -> None:
+    """Legacy models may use locked test rows; dev needs training provenance."""
+    path = model_dir / "training_provenance.json"
+    provenance = json.loads(path.read_text()) if path.exists() else {}
+    dev_is_held_out = (
+        provenance.get("training_partitions") == ["train"]
+        and provenance.get("model_revision") == cache_identity.model_revision(model_dir)
+    )
+    found = 0
+    with collimator_data._connect(db, repeatable_read=True) as conn:
+        for start in range(0, len(row_ids), 2000):
+            ids = row_ids[start:start + 2000]
+            if collimator_data._is_pg(db):
+                rows = conn.execute(
+                    f"SELECT sha256, canonical_sha256 FROM samples WHERE id=ANY(%s) AND {collimator_data.LABELED_WHERE}",
+                    (ids,),
+                )
+            else:
+                markers = ",".join("?" for _ in ids)
+                rows = conn.execute(
+                    f"SELECT sha256, canonical_sha256 FROM samples WHERE id IN ({markers}) AND {collimator_data.LABELED_WHERE}", ids,
+                )
+            for sha, canonical in rows:
+                found += 1
+                partition = collimator_data.partition_of(canonical or sha)
+                if partition == "train" or (partition == "dev" and not dev_is_held_out):
+                    raise ValueError("baseline training may include requested evaluation rows; retrain baseline with dev held out")
+    if found != len(row_ids):
+        raise ValueError("evaluation rows were deleted, relabeled or skipped; rerun screening")
+
+
+def _score_subset(args, model_dir: Path) -> int:
+    ids = sorted({int(x) for x in args.row_ids_file.read_text().split()})
+    if not ids:
+        raise ValueError("evaluation row list is empty")
+    _require_held_out(args.db, model_dir, ids)
+    revision = cache_identity.evaluation_revision(args.db, ids)
+    identity = _deployed_model_hash(model_dir)
+    key = hashlib.sha256((identity + revision).encode()).hexdigest()
+    path = args.cache_root / _route_slug(args.route) / f"subset_{key}.npz"
+    if path.exists():
+        with np.load(path) as cached:
+            if cached["row_ids"].tolist() != ids:
+                raise ValueError("cached evaluation row IDs disagree")
+            probs = cached["probs"]
+    else:
+        probs = _extract_and_predict(
+            route_dir=model_dir, db_path=args.db, row_ids=ids, workers=args.workers,
+        )
+    metrics = _metrics(np.asarray(ids), probs, db_path=args.db, subset_ids=None)
+    if cache_identity.evaluation_revision(args.db, ids) != revision:
+        raise ValueError("evaluation rows changed during baseline scoring; retry")
+    if metrics["n_rows"] != len(ids):
+        raise ValueError("baseline evaluation lost rows")
+    if not path.exists():
+        _save_cache(path, np.asarray(ids), probs)
+    metrics.update(held_out=True, evaluation_revision=revision, model_hash_used=identity, route=args.route)
+    bundle.atomic_write_json(args.output, _strip_nan(metrics))
+    return 0
 
 
 def _route_slug(route: str) -> str:
@@ -567,10 +613,6 @@ def main() -> int:
     if not route_dir.is_dir():
         raise SystemExit(f"deployed route dir not found: {route_dir}")
 
-    file_types = args.file_type or _file_types_for_route(
-        args.route, route_dir, args.deploy_root,
-    )
-
     # A route with no specialist model — suite-skipped raw-compressed filetypes
     # (zst/gz/xz/tar) or any route that fell below the min-bad/min-good floor —
     # is served by the GENERAL model at inference, so baseline its rows against
@@ -592,7 +634,12 @@ def main() -> int:
         )
         model_dir = general_dir
 
-    model_hash = _deployed_model_hash(model_dir)
+    if args.row_ids_file is not None:
+        return _score_subset(args, model_dir)
+
+    file_types = args.file_type or _file_types_for_route(args.route, route_dir, args.deploy_root)
+    db_revision = cache_identity.database_revision(args.db)
+    model_hash = hashlib.sha256((_deployed_model_hash(model_dir) + db_revision).encode()).hexdigest()
     cache_path = args.cache_root / _route_slug(args.route) / f"{model_hash[:16]}.npz"
     sidecar_path = _sidecar_path(cache_path)
 

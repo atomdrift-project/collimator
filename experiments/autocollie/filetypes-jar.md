@@ -1084,3 +1084,19 @@ Rejected before run:
 
 </details>
 
+## Cycle `20261020T061819-filetypes-jar` — 2026-10-20T06:18:19Z
+
+| spec key | idea | status | PR AUC | ROC AUC | F1 | wall_s | log |
+|----------|------|--------|--------|---------|----|--------|-----|
+| `df36e8ccd14cc837` | inherit_from_filetypes_elf_4c2de854 | ok | 0.9606 | 0.9883 | 0.8694 | 824 | [log](out/autocollie/runs/2026-10-20T06-28-14_20261020T061819-filetypes-jar_inherit_from_filetypes_elf_4c2de854.log) |
+| `f503790fb4504d6a` | jar_control_scale_pos_weight_075 | ok | 0.9300 | 0.9810 | 0.8884 | 895 | [log](out/autocollie/runs/2026-10-20T06-41-57_20261020T061819-filetypes-jar_jar_control_scale_pos_weight_075.log) |
+| `246be5b5ef901a99` | jar_kv_vocab_5000 | ok | 0.9280 | 0.9798 | 0.8836 | 97 | [log](out/autocollie/runs/2026-10-20T06-56-53_20261020T061819-filetypes-jar_jar_kv_vocab_5000.log) |
+
+<details><summary>Spec details</summary>
+
+- **`inherit_from_filetypes_elf_4c2de854`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Sister-route inheritance from filetypes/elf (key=4c2de85400c5e128, recall_at_50_per_100M=0.9412). Tries a known-working config from a related route before letting the LLM propose novel knob combinations.
+- **`jar_control_scale_pos_weight_075`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Control on the archived best feature_env; lower scale_pos_weight_mult to 0.75 to reduce benign FP pressure and lift recall@3FPM while keeping PR_AUC flat.
+- **`jar_kv_vocab_5000`** `EXP_AIR_GAP_SIGNAL=1 EXP_ATTACK_CODE_NGRAMS=1 EXP_ATTACK_FEATURES=1 EXP_ATTACK_NGRAMS=0 EXP_BETA=1.25 EXP_BIGRAM_MAX=5000 EXP_BIGRAM_MIN_FREQ=1000 EXP_BLINDFOLD=1 …` — Enable kv_vocab and remove kv from disable_groups to add manifest/dependency key-value signal, aiming PR_AUC by improving positive ranking in the tail.
+
+</details>
+
