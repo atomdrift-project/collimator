@@ -312,12 +312,18 @@ def move(args):
                 record({"sha256": sha, "skipped_at": current["skipped_at"]})
             row["skipped_at"] = skip_times.get(sha, current["skipped_at"])
             outcomes = Counter()
+            skip = preserve_skip(conn, row, args.source)
+            if skip != "preserved":
+                record({"sha256": sha, "skip_status": skip})
+                outcomes["skip_" + skip] += 1
+                if skip != "restored":
+                    return outcomes
             for loc in row["bad_locations"]:
                 path = loc["path"]
+                if (sha, path) in completed:
+                    outcomes["already_moved"] += 1
+                    continue
                 try:
-                    if (sha, path) in completed:
-                        outcomes["already_moved"] += 1
-                        continue
                     if loc["parent_sha256"]:
                         current_loc = conn.execute("SELECT parent_sha256,rel FROM sample_locations WHERE id=%s", (loc["id"],)).fetchone()
                         if current_loc and current_loc["parent_sha256"]:

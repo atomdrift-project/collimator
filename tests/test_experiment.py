@@ -19,6 +19,36 @@ from collimator.experiment import (
 )
 
 
+def test_experiment_preserves_vocab_worker_request_and_rebudgets_extraction(tmp_path, monkeypatch):
+    from collimator import experiment
+
+    db_path = tmp_path / "demo.db"
+    create_demo_db(db_path, n_benign=32, n_malware=32, seed=7)
+    events = []
+
+    def vocabulary(*args, n_workers):
+        events.append(("vocabulary", n_workers))
+        return features.FeatureSpec()
+
+    def budget(requested):
+        events.append(("budget", requested))
+        return 3
+
+    class ExtractionReached(Exception):
+        pass
+
+    def extract(*args, n_workers):
+        events.append(("extraction", n_workers))
+        raise ExtractionReached
+
+    monkeypatch.setattr(features, "build_vocab_from_db", vocabulary)
+    monkeypatch.setattr(features, "clamp_workers_to_available_ram", budget)
+    monkeypatch.setattr(features, "extract_partitioned_from_db", extract)
+    with pytest.raises(ExtractionReached):
+        experiment.run_experiment(db_path, train_samples=40, n_workers=48)
+    assert events == [("vocabulary", 48), ("budget", 48), ("extraction", 3)]
+
+
 def test_allowlist_content_hash_tracks_content(tmp_path) -> None:
     f = tmp_path / "allow.json"
     f.write_text('["a", "b"]')

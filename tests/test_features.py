@@ -1978,7 +1978,7 @@ def test_vocab_pass_is_bounded_on_huge_files(monkeypatch) -> None:
     )
     calls = []
     monkeypatch.setattr("collimator.features._count_ngrams",
-                        lambda paths, order, *args: calls.append((order, len(paths))))
+                        lambda paths, order, *args, **kwargs: calls.append((order, len(paths))))
     start = time.monotonic()
     _vocab_labeled_db_batch_worker(("unused", [(1, 1), (2, 1)]))
     assert time.monotonic() - start < 10

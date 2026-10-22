@@ -1031,11 +1031,6 @@ def run_experiment(
             db_path, list(map(int, test_row_ids)), [s.label for s in sorted_test],
         )
 
-        # Clamp fetch parallelism to available RAM before the two DB passes.
-        # Re-read here (not at CLI parse) so each per-fold / final subprocess
-        # sees the box's state at *its* start, not the nightly's launch moment.
-        n_workers = features.clamp_workers_to_available_ram(n_workers)
-
         log.info("pass 1: building vocabulary (worker-local DB fetching)")
         spec = features.build_vocab_from_db(
             db_path,
@@ -1044,12 +1039,15 @@ def run_experiment(
         )
 
         log.info("pass 2: extracting all features (worker-local DB fetching)")
+        # Keep the requested maximum intact: vocabulary admission can recover
+        # from temporary pressure, and extraction gets its own current budget.
+        extraction_workers = features.clamp_workers_to_available_ram(n_workers)
         X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
             db_path,
             [(s.row_id, s.label) for s in sorted_train],
             [(s.row_id, s.label) for s in sorted_test],
             spec,
-            n_workers=n_workers,
+            n_workers=extraction_workers,
         )
 
         if cache_dir and cache_identity.database_revision(db_path) == db_revision:

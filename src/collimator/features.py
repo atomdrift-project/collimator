@@ -92,13 +92,13 @@ import subprocess
 import time
 import tempfile
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from itertools import combinations, islice
 from multiprocessing.util import Finalize
 from typing import Any, TypeVar
@@ -3859,6 +3859,10 @@ def _ranked_ngram_paths(file_entry: dict[str, Any], limit: int) -> list[str]:
             path = fid.split("::")[0]
             score = _finding_score(crit, conf)
             scores[path] = max(scores.get(path, 0.0), score)
+    return _select_ngram_paths(scores, limit)
+
+
+def _select_ngram_paths(scores: dict[str, float], limit: int) -> list[str]:
     if len(scores) <= limit:
         return sorted(scores)
     return sorted(heapq.nsmallest(limit, scores, key=lambda path: (-scores[path], path)))
@@ -4324,9 +4328,9 @@ def _coerce_report(report: dict[str, Any] | str) -> dict[str, Any] | None:
     return report
 
 
-def _count_ngrams(paths, order, counts, family, document, benign_family="") -> None:
+def _count_ngrams(paths, order, counts, family, document, benign_family="", *, n=1) -> None:
     """Exact document frequencies; input token selection bounds the work."""
-    counts.increment_combinations(family, paths, order, document, benign_family)
+    counts.increment_combinations(family, paths, order, document, benign_family, n=n)
 
 
 @contextmanager
@@ -4334,8 +4338,28 @@ def _vocabulary_counts():
     root = Path(os.getenv("COLLIMATOR_VOCAB_TMPDIR", "out/cache/vocabulary"))
     root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="count-", dir=root.resolve()) as scratch:
-        with VocabularyCounts(str(Path(scratch) / "merged.sqlite")) as counts:
+        # The merge thread uses this connection exclusively during counting;
+        # the parent queries it only after the thread has joined.
+        with VocabularyCounts(str(Path(scratch) / "merged.sqlite"), check_same_thread=False) as counts:
             yield counts, scratch
+
+
+_VOCAB_MERGE_BACKLOG = 4
+
+
+@contextmanager
+def _background_vocab_merges(counts):
+    """Overlap one SQLite writer with counting; bound queued shard files."""
+    pending = collections.deque()
+    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="vocab-merge") as pool:
+        def submit(view):
+            if len(pending) >= _VOCAB_MERGE_BACKLOG:
+                pending.popleft().result()
+            pending.append(pool.submit(counts.merge, view))
+
+        yield submit
+        for future in pending:
+            future.result()
 
 
 def _batch_count_path(scratch):
@@ -4504,6 +4528,7 @@ def _extract_batch_worker(
 @contextmanager
 def _feature_worker_pool(
     n_workers: int, spec: FeatureSpec | None = None,
+    *, initializer: Callable | None = None, initargs: tuple = (),
 ) -> Iterator[ProcessPoolExecutor]:
     """Spawn feature workers without a nested numerical thread pool each.
 
@@ -4516,13 +4541,16 @@ def _feature_worker_pool(
         "BLIS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "NUMEXPR_NUM_THREADS",
     )
     previous = {name: os.environ.get(name) for name in thread_vars}
+    if spec is not None:
+        if initializer is not None:
+            raise ValueError("spec and a custom worker initializer are mutually exclusive")
+        initializer, initargs = _init_extract_worker, (spec,)
     try:
         for name in thread_vars:
             os.environ[name] = "1"
         with ProcessPoolExecutor(
             max_workers=n_workers, mp_context=mp.get_context("spawn"),
-            initializer=_init_extract_worker if spec is not None else None,
-            initargs=(spec,) if spec is not None else (),
+            initializer=initializer, initargs=initargs,
         ) as pool:
             yield pool
     finally:
@@ -4605,7 +4633,7 @@ def _cgroup_anon_gb() -> float:
     return anon / 2**30
 
 
-def clamp_workers_to_available_ram(n_workers: int) -> int:
+def clamp_workers_to_available_ram(n_workers: int, *, log_budget: bool = True) -> int:
     """Best-effort cap on the DB-fetch worker count from currently-available RAM.
 
     Each concurrent fetch worker opens its own postgres backend and holds a
@@ -4613,9 +4641,9 @@ def clamp_workers_to_available_ram(n_workers: int) -> int:
     full worker count when the box is *already* full is what tips it into a
     global OOM. This reads /proc/meminfo MemAvailable at call time and clamps
     the resolved worker count so ``(MemAvailable - reserve)`` covers the
-    per-worker headroom. It is a start-of-run snapshot, NOT a peak-usage model
-    — pair it with COLLIMATOR_VOCAB_PRUNE_EVERY, which bounds in-pass vocab
-    growth. Linux-only; on any other platform or a parse failure it returns the
+    per-worker headroom. Vocabulary scheduling rechecks this budget during
+    the pass; extraction takes a fresh snapshot after vocabulary completes.
+    Linux-only; on any other platform or a parse failure it returns the
     request unchanged (never raises). Tune via COLLIMATOR_MEM_RESERVE_GB /
     COLLIMATOR_MEM_PER_WORKER_GB, or disable with COLLIMATOR_MEM_AWARE_WORKERS=0.
 
@@ -4641,19 +4669,21 @@ def clamp_workers_to_available_ram(n_workers: int) -> int:
     cap = max(1, int(headroom / shares // max(per_worker, 0.1)))
     share_note = f", shares={shares}" if shares > 1 else ""
     if cap < resolved:
-        log.warning(
-            "mem-aware workers: capping %d -> %d (headroom=%.0f GB after "
-            "reserve=%.0f GB, per_worker=%.1f GB%s); tune via "
-            "COLLIMATOR_MEM_RESERVE_GB / COLLIMATOR_MEM_PER_WORKER_GB or "
-            "disable with COLLIMATOR_MEM_AWARE_WORKERS=0",
-            resolved, cap, headroom, reserve, per_worker, share_note,
-        )
+        if log_budget:
+            log.warning(
+                "mem-aware workers: capping %d -> %d (headroom=%.0f GB after "
+                "reserve=%.0f GB, per_worker=%.1f GB%s); tune via "
+                "COLLIMATOR_MEM_RESERVE_GB / COLLIMATOR_MEM_PER_WORKER_GB or "
+                "disable with COLLIMATOR_MEM_AWARE_WORKERS=0",
+                resolved, cap, headroom, reserve, per_worker, share_note,
+            )
         return cap
-    log.info(
-        "mem-aware workers: %d workers fit (headroom=%.0f GB after reserve=%.0f GB, "
-        "per_worker=%.1f GB%s)",
-        resolved, headroom, reserve, per_worker, share_note,
-    )
+    if log_budget:
+        log.info(
+            "mem-aware workers: %d workers fit (headroom=%.0f GB after reserve=%.0f GB, "
+            "per_worker=%.1f GB%s)",
+            resolved, headroom, reserve, per_worker, share_note,
+        )
     return resolved
 
 
@@ -4887,21 +4917,59 @@ def _bounded_iter(pool: ProcessPoolExecutor, fn, it: Iterable, *, max_inflight: 
             pass
 
 
-def _bounded_unordered_iter(pool: ProcessPoolExecutor, fn, it: Iterable, *, max_inflight: int) -> Iterator:
-    """Submit tasks with bounded concurrency, yielding results as they complete."""
+_WORKER_BUDGET_REFRESH_SECONDS = 30.0
+
+
+def _bounded_unordered_iter(
+    pool: ProcessPoolExecutor, fn, it: Iterable,
+    *, max_inflight: int | Callable[[], int],
+) -> Iterator:
+    """Yield completed tasks, optionally refreshing their admission budget.
+
+    Timed waits allow a growing budget to admit work even while the first
+    batch is still running. A shrinking budget drains existing work before
+    submitting replacements; running batches are never cancelled.
+    """
     pending = set()
     source = iter(it)
-    for item in islice(source, max_inflight):
-        pending.add(pool.submit(fn, item))
-    while pending:
-        for future in as_completed(pending):
-            pending.remove(future)
-            yield future.result()
+    exhausted = False
+    refresh_at = 0.0
+    limit = max_inflight if isinstance(max_inflight, int) else 1
+    while pending or not exhausted:
+        if callable(max_inflight) and time.monotonic() >= refresh_at:
+            limit = max(1, max_inflight())
+            refresh_at = time.monotonic() + _WORKER_BUDGET_REFRESH_SECONDS
+        while not exhausted and len(pending) < limit:
             try:
                 pending.add(pool.submit(fn, next(source)))
             except StopIteration:
-                pass
-            break
+                exhausted = True
+        if not pending:
+            return
+        timeout = max(0.0, refresh_at - time.monotonic()) if callable(max_inflight) else None
+        done, _ = wait(pending, timeout=timeout, return_when=FIRST_COMPLETED)
+        if done:
+            future = next(iter(done))
+            pending.remove(future)
+            yield future.result()
+
+
+def _memory_budgeted_unordered_iter(pool, fn, it, *, n_workers: int) -> Iterator:
+    previous = None
+
+    def budget():
+        nonlocal previous
+        admitted = clamp_workers_to_available_ram(n_workers, log_budget=previous is None)
+        if admitted != previous:
+            log.info("vocab worker budget: %s -> %d/%d workers; rechecking every %.0fs",
+                     previous if previous is not None else "initial", admitted, n_workers,
+                     _WORKER_BUDGET_REFRESH_SECONDS)
+            previous = admitted
+        return admitted
+
+    # With a pool sized for future growth, queuing 2*budget tasks could spawn
+    # 2*budget workers. Admit only one task per budgeted worker.
+    yield from _bounded_unordered_iter(pool, fn, it, max_inflight=budget)
 
 
 def _extract_partitioned_batch_worker(
@@ -5296,7 +5364,7 @@ def _count_labeled_vocab_batch(dsn, ids_labels, counts):
     reports_map = data.fetch_cleave_results(dsn, ids)
 
     presence_counts: dict[str, int] = {}
-    filetypes: list[str] = []
+    filetypes: set[str] = set()
     element_counts: dict[str, int] = {}
     benign_presence: dict[str, int] = {}
     malware_presence: dict[str, int] = {}
@@ -5307,6 +5375,26 @@ def _count_labeled_vocab_batch(dsn, ids_labels, counts):
 
     benign_ids = {rid for rid, label in ids_labels if label == 0}
     path_depth = config.trait_path_depth
+    tiered_enabled = (
+        config.include_tiered_crit_bigrams and config.tiered_bigram_max > 0
+        or config.include_tiered_crit_trigrams and config.tiered_trigram_max > 0
+    )
+    branch_floors = _parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit)
+    grouped: dict[tuple[str, int, tuple[str, ...]], int] = {}
+
+    def group(paths, order, family):
+        if len(paths) >= order:
+            key = (family, order, tuple(paths))
+            grouped[key] = grouped.get(key, 0) + 1
+
+    def count_document(files, order, family, document):
+        if len(files) == 1:
+            # One selected token set per sample has no cross-file overlaps.
+            # Count identical sets once, weighted by their distinct samples.
+            group(next(iter(files)), order, family)
+        else:
+            for paths in files:
+                _count_ngrams(paths, order, counts, family, document)
 
     for rid, item in reports_map.items():
         raw_report = item["cleave_result"]
@@ -5315,6 +5403,9 @@ def _count_labeled_vocab_batch(dsn, ids_labels, counts):
         report = _coerce_report(raw_report)
         if report is None:
             continue
+        malware = rid not in benign_ids
+        ngrams_enabled = malware and (config.bigram_max > 0 or config.trigram_max > 0)
+        need_scores = ngrams_enabled or malware and tiered_enabled
 
         if formula:
             skeleton = "".join([c for c in formula if c.isalpha()])
@@ -5338,38 +5429,40 @@ def _count_labeled_vocab_batch(dsn, ids_labels, counts):
         for file_entry in report_files(report):
             ftype = file_entry.get("type", "")
             if ftype:
-                filetypes.append(ftype)
+                filetypes.add(ftype)
 
-            file_traits: set[str] = set()
+            file_path_scores: dict[str, float] = {}
             for finding in file_findings(file_entry):
                 fid = finding_id(finding) or ""
-                if not fid or _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
+                conf = _float(finding_conf(finding), 1.0)
+                if not fid or conf < MIN_CONFIDENCE:
                     continue
                 crit_ord = finding_crit(finding) or 0
-                conf = _float(finding_conf(finding), 1.0)
-                score = _finding_score(crit_ord, conf)
-                file_traits.add(fid)
+                score = _finding_score(crit_ord, conf) if need_scores else 0.0
+                if ngrams_enabled and conf >= MIN_CONFIDENCE and crit_ord >= NGRAM_MIN_CRIT:
+                    path = fid.split("::")[0]
+                    file_path_scores[path] = max(file_path_scores.get(path, 0.0), score)
                 for path in _finding_paths(fid, path_depth):
-                    path_scores[path] = max(path_scores.get(path, 0.0), score)
+                    if malware and tiered_enabled:
+                        path_scores[path] = max(path_scores.get(path, 0.0), score)
                     if crit_ord > sample_paths.get(path, -1):
                         sample_paths[path] = crit_ord
 
             # Select the strongest paths before vocabulary filtering, exactly
             # as at serving time. Fixed budgets bound discovery combinations.
-            if rid not in benign_ids and config.bigram_max > 0:
-                paths_list = _ranked_ngram_paths(file_entry, BIGRAM_MAX_PATHS)
-                path_key = tuple(paths_list)
-                if path_key not in seen_bigrams:
-                    seen_bigrams.add(path_key)
-                    _count_ngrams(paths_list, 2, counts, "bigram", rid)
+            if malware and config.bigram_max > 0:
+                paths_list = _select_ngram_paths(file_path_scores, BIGRAM_MAX_PATHS)
+                if len(paths_list) >= 2:
+                    seen_bigrams.add(tuple(paths_list))
             # This family is malware-enriched: discover candidates from
             # positives, then measure only supported candidates on benigns.
-            if rid not in benign_ids and config.trigram_max > 0:
-                tri_paths = _ranked_ngram_paths(file_entry, 128)
-                tri_key = tuple(tri_paths)
-                if tri_key not in seen_trigrams:
-                    seen_trigrams.add(tri_key)
-                    _count_ngrams(tri_paths, 3, counts, "trigram", rid)
+            if malware and config.trigram_max > 0:
+                tri_paths = _select_ngram_paths(file_path_scores, 128)
+                if len(tri_paths) >= 3:
+                    seen_trigrams.add(tuple(tri_paths))
+
+        count_document(seen_bigrams, 2, "bigram", rid)
+        count_document(seen_trigrams, 3, "trigram", rid)
 
         for path, max_ord in sample_paths.items():
             if max_ord >= 2:
@@ -5386,23 +5479,47 @@ def _count_labeled_vocab_batch(dsn, ids_labels, counts):
             tokens = _ranked_tiered_tokens(
                 sample_paths, path_scores, order=2,
                 min_crit=config.tiered_bigram_min_crit,
-                branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
+                branch_min_crit=branch_floors,
             )
-            _count_ngrams(tokens, 2, counts, "tiered_bigram", rid)
+            group(tokens, 2, "tiered_bigram")
         if config.include_tiered_crit_trigrams and config.tiered_trigram_max > 0:
             tokens = _ranked_tiered_tokens(
                 sample_paths, path_scores, order=3,
                 min_crit=config.tiered_trigram_min_crit,
-                branch_min_crit=_parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit),
+                branch_min_crit=branch_floors,
             )
-            _count_ngrams(tokens, 3, counts, "tiered_trigram", rid)
+            group(tokens, 3, "tiered_trigram")
+
+    for (family, order, paths), n_documents in grouped.items():
+        # These samples were not counted in the multi-file path above. None
+        # adds their total support without treating them as one document.
+        _count_ngrams(paths, order, counts, family, None, n=n_documents)
+
+    def view(family):
+        return counts.view(family, flush=not counts.path)
 
     return (
-        presence_counts, filetypes, element_counts, counts.view("bigram"),
+        presence_counts, sorted(filetypes), element_counts, view("bigram"),
         benign_presence, malware_presence, skeleton_counts,
-        benign_elements, malware_elements, counts.view("trigram"), counts.view("benign_trigram"),
-        counts.view("tiered_bigram"), counts.view("tiered_trigram"),
+        benign_elements, malware_elements, view("trigram"), view("benign_trigram"),
+        view("tiered_bigram"), view("tiered_trigram"),
     )
+
+
+def _trigram_candidate_index(candidates):
+    by_first: dict[str, dict[str, set[str]]] = {}
+    for candidate in candidates:
+        a, b, c = candidate.split(" + ")
+        by_first.setdefault(a, {}).setdefault(b, set()).add(c)
+    return by_first
+
+
+_worker_trigram_candidates: dict[str, dict[str, set[str]]] | None = None
+
+
+def _init_trigram_candidates(candidates):
+    global _worker_trigram_candidates
+    _worker_trigram_candidates = _trigram_candidate_index(candidates)
 
 
 def _vocab_benign_trigram_worker(args):
@@ -5410,10 +5527,12 @@ def _vocab_benign_trigram_worker(args):
     from . import data
 
     dsn, ids, candidates, scratch = args
-    by_first: dict[str, dict[str, set[str]]] = {}
-    for candidate in candidates:
-        a, b, c = candidate.split(" + ")
-        by_first.setdefault(a, {}).setdefault(b, set()).add(c)
+    if candidates is None:
+        by_first = _worker_trigram_candidates
+        if by_first is None:
+            raise RuntimeError("trigram candidate index was not initialized")
+    else:
+        by_first = candidates if isinstance(candidates, dict) else _trigram_candidate_index(candidates)
     with VocabularyCounts(_batch_count_path(scratch)) as counts:
         for rid, item in data.fetch_cleave_results(dsn, ids).items():
             report = _coerce_report(item["cleave_result"])
@@ -5427,10 +5546,10 @@ def _vocab_benign_trigram_worker(args):
                 seen_files.add(paths)
                 present = set(paths)
                 for a in present.intersection(by_first):
-                    for b, thirds in by_first[a].items():
-                        if b in present:
-                            for c in present.intersection(thirds):
-                                counts.increment("benign_trigram", (a, b, c), document=rid)
+                    seconds = by_first[a]
+                    for b in present.intersection(seconds):
+                        for c in present.intersection(seconds[b]):
+                            counts.increment("benign_trigram", (a, b, c), document=rid)
         return counts.view("benign_trigram")
 
 
@@ -5528,16 +5647,17 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
     batch_args = ((db_path, batch, scratch) for batch in _batched(row_ids_labels, batch_size))
 
     if nw > 1:
-        with _feature_worker_pool(nw) as pool:
-            for res, sealed, n_rows in _bounded_unordered_iter(
-                pool, _vocab_labeled_db_shard_worker, batch_args,
-                max_inflight=2 * nw,
-            ):
-                _merge_batch(*res, n_rows=n_rows)
-                if sealed:
-                    counts.merge(pending_shards.pop(res[3].path))
-                    merged_shards.add(res[3].path)
-                batches_merged += 1
+        with _background_vocab_merges(counts) as merge:
+            with _feature_worker_pool(nw) as pool:
+                for res, sealed, n_rows in _memory_budgeted_unordered_iter(
+                    pool, _vocab_labeled_db_shard_worker, batch_args,
+                    n_workers=nw,
+                ):
+                    _merge_batch(*res, n_rows=n_rows)
+                    if sealed:
+                        merge(pending_shards.pop(res[3].path))
+                        merged_shards.add(res[3].path)
+                    batches_merged += 1
         # A worker's last file may contain fewer than eight batches. Wait for
         # pool shutdown before reading these files so no worker can still write
         # them. Full shards above are closed before their result is returned.
@@ -5570,14 +5690,21 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
     candidates = counts.at_least("trigram", config.trigram_min_freq) if config.trigram_max > 0 else []
     if candidates:
         benign_ids = [rid for rid, label in row_ids_labels if label == 0]
-        args = ((db_path, batch, candidates, scratch) for batch in _batched(benign_ids, batch_size))
         log.info("trigram prevalence: %d supported malware candidates, %d benign samples",
                  len(candidates), len(benign_ids))
         if nw > 1:
-            with _feature_worker_pool(nw) as pool:
-                for result in _bounded_iter(pool, _vocab_benign_trigram_worker, args, max_inflight=2 * nw):
-                    counts.merge(result)
+            args = ((db_path, batch, None, scratch) for batch in _batched(benign_ids, batch_size))
+            with _background_vocab_merges(counts) as merge:
+                with _feature_worker_pool(
+                    nw, initializer=_init_trigram_candidates, initargs=(candidates,),
+                ) as pool:
+                    for result in _memory_budgeted_unordered_iter(
+                        pool, _vocab_benign_trigram_worker, args, n_workers=nw,
+                    ):
+                        merge(result)
         else:
+            index = _trigram_candidate_index(candidates)
+            args = ((db_path, batch, index, scratch) for batch in _batched(benign_ids, batch_size))
             for result in map(_vocab_benign_trigram_worker, args):
                 counts.merge(result)
     trigram_benign_ceil = int(config.trigram_max_benign_frac * benign_total) if config.trigram_max_benign_frac > 0 else 0

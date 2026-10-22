@@ -46,14 +46,15 @@ class VocabularyCounts:
     scale with individual paths; only the much larger combination table spills.
     """
 
-    def __init__(self, path: str = "", buffer_size: int = 100_000) -> None:
+    def __init__(self, path: str = "", buffer_size: int = 100_000,
+                 *, check_same_thread: bool = True) -> None:
         self.path = path
         self.buffer_size = max(1, buffer_size)
         # Per key: count, first document, last document since the last write.
         self.pending: OrderedDict[tuple[str, bytes], list] = OrderedDict()
         self.token_ids: dict[str, int] = {}
         self.tokens: dict[int, str] = {}
-        self.db = sqlite3.connect(path, uri=True)
+        self.db = sqlite3.connect(path, uri=True, check_same_thread=check_same_thread)
         self.db.execute("PRAGMA cache_size=-32768")
         self.db.execute("PRAGMA temp_store=FILE")
         # Scratch data is recreated on failure, not a durable artifact.
@@ -95,16 +96,17 @@ class VocabularyCounts:
         key = (family, struct.pack(f">{len(parts)}I", *(self._token_id(p) for p in parts)))
         self._increment_key(key, n, document)
 
-    def increment_combinations(self, family: str, tokens: Iterable[str], order: int, document: int,
-                               benign_family: str = "") -> None:
+    def increment_combinations(self, family: str, tokens: Iterable[str], order: int,
+                               document: int | None, benign_family: str = "", *, n: int = 1) -> None:
+        """Count a file, or add n pre-aggregated samples when document is None."""
         # Resolve paths once per file rather than for every pair/triple.
         ids = [self._token_id(token) for token in tokens]
         pack = struct.Struct(f">{order}I").pack
         for parts in combinations(ids, order):
             packed = pack(*parts)
-            self._increment_key((family, packed), 1, document)
+            self._increment_key((family, packed), n, document)
             if benign_family:
-                self._increment_key((benign_family, packed), 1, document)
+                self._increment_key((benign_family, packed), n, document)
 
     def _increment_key(self, key: tuple[str, bytes], n: int, document: int | None) -> None:
         pending = self.pending.get(key)
@@ -135,8 +137,11 @@ class VocabularyCounts:
         )
         self.db.commit()
 
-    def view(self, family: str):
-        self.flush()
+    def view(self, family: str, *, flush: bool = True):
+        # Active shards transfer only descriptors. Their owner flushes before
+        # sealing, so keep the write cache warm between input batches.
+        if flush or not self.path:
+            self.flush()
         if self.path:
             return CountView(self.path, family)
         return {_name(key, self.tokens): n for key, n in self.db.execute(
@@ -151,20 +156,24 @@ class VocabularyCounts:
             mapping = {i: self._token_id(token) for i, token in self.db.execute(
                 "SELECT id, token FROM vocab_batch.tokens",
             )}
+            if all(old == new for old, new in mapping.items()):
+                # Identical dictionaries already have destination key order.
+                # Avoid a Python callback per row and an external re-sort.
+                key, ordering = "token", "family, token"
+            else:
+                def remap(key):
+                    mapped = [mapping[i] for i in _ids(key)]
+                    return struct.pack(f">{len(mapped)}I", *mapped)
 
-            def remap(key):
-                mapped = [mapping[i] for i in _ids(key)]
-                return struct.pack(f">{len(mapped)}I", *mapped)
-
-            self.db.create_function("vocab_remap", 1, remap, deterministic=True)
-            # Worker-local token IDs put rows in an arbitrary order in the
-            # destination's key space. Sort after remapping so a large merge
-            # visits destination B-tree pages sequentially. SQLite spills the
-            # sort to disk; Python never materializes the combination table.
+                self.db.create_function("vocab_remap", 1, remap, deterministic=True)
+                key, ordering = "vocab_remap(token)", "family, mapped"
+            # Different worker dictionaries need a sort after remapping so
+            # destination B-tree pages are visited sequentially. SQLite spills
+            # the sort to disk instead of materializing it in Python.
             self.db.execute(
                 "INSERT INTO counts"
-                " SELECT family, vocab_remap(token) AS mapped, n, NULL, NULL"
-                " FROM vocab_batch.counts WHERE true ORDER BY family, mapped"
+                f" SELECT family, {key} AS mapped, n, NULL, NULL"
+                f" FROM vocab_batch.counts WHERE true ORDER BY {ordering}"
                 " ON CONFLICT(family, token) DO UPDATE SET n=n+excluded.n,"
                 " first_document=NULL, document=NULL",
             )
@@ -189,16 +198,22 @@ class VocabularyCounts:
         if limit <= 0:
             return []
         self.flush()
-        query = (
-            " FROM counts c LEFT JOIN counts b ON b.family=? AND b.token=c.token"
-            " WHERE c.family=? AND c.n>=? AND COALESCE(b.n, 0)<=?"
-        )
-        args = (benign_family, family, minimum, benign_ceiling)
+
+        def selection(minimum):
+            if benign_family:
+                return (
+                    " FROM counts c LEFT JOIN counts b ON b.family=? AND b.token=c.token"
+                    " WHERE c.family=? AND c.n>=? AND COALESCE(b.n, 0)<=?",
+                    (benign_family, family, minimum, benign_ceiling),
+                )
+            return " FROM counts c WHERE c.family=? AND c.n>=?", (family, minimum)
+
+        query, args = selection(minimum)
         cutoff = self.db.execute(
             "SELECT c.n" + query + " ORDER BY c.n DESC LIMIT 1 OFFSET ?", (*args, limit - 1),
         ).fetchone()
         if cutoff:
-            args = (benign_family, family, max(minimum, cutoff[0]), benign_ceiling)
+            query, args = selection(max(minimum, cutoff[0]))
         rows = self.db.execute("SELECT c.token, c.n" + query, args)
         # Only the top frequency band needs decoding. nsmallest bounds memory
         # even when millions of eligible features tie at the cutoff.

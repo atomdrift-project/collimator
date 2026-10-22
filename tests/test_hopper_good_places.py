@@ -1,12 +1,14 @@
 """The optional SQL tests use only temporary tables, rolled back on exit."""
 import json
 import os
+from types import SimpleNamespace
 
 import psycopg
 import pytest
 from psycopg.rows import dict_row
 
 from scripts.hopper_good_places import PLAN_SQL, apply_batch, eligible, read_manifest, move_request, preserve_skip, normalize_location
+from scripts import hopper_good_places as repair
 
 
 def sha(n):
@@ -171,3 +173,38 @@ def test_normalize_is_compare_and_swap(db):
     assert normalize_location(db, sha(1), loc)
     assert not normalize_location(db, sha(1), loc)
     assert db.execute("SELECT parent_sha256,rel FROM sample_locations").fetchone() == {"parent_sha256": "", "rel": ""}
+
+
+def test_resume_completed_moves_restores_skip_once_per_file(db, tmp_path, monkeypatch):
+    old = two_parents(db)
+    apply_batch(db, [old], "test")
+    skipped_at = db.execute("SELECT skipped_at FROM samples WHERE sha256=%s", (sha(1),)).fetchone()["skipped_at"]
+    db.execute("UPDATE samples SET skip='',skipped_at=NULL WHERE sha256=%s", (sha(1),))
+    old["bad_locations"] = [{"path": f"bad/copy{i}"} for i in range(10)]
+    (tmp_path / "plan.jsonl").write_text(json.dumps(old, default=str)+"\n")
+    (tmp_path / "apply_summary.json").write_text("{}")
+    log = [{"sha256": sha(1), "skipped_at": skipped_at}] + [
+        {"sha256": sha(1), "path": loc["path"], "result": {"source_removed": True}}
+        for loc in old["bad_locations"]]
+    (tmp_path / "moves.jsonl").write_text("".join(json.dumps(r, default=str)+"\n" for r in log))
+    queries = []
+
+    class Connection:
+        def execute(self, query, params):
+            queries.append(query)
+            return db.execute(query, params)
+
+        def transaction(self):
+            return db.transaction()
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(repair.psycopg, "connect", lambda *a, **kw: Connection())
+    # No API call is needed for a completed move, including crash recovery.
+    monkeypatch.setattr(repair, "HopperAPI", lambda *a: object())
+    repair.move(SimpleNamespace(output=str(tmp_path), api="unused", token="unused", db="unused", source="test", workers=1))
+    assert sum("FOR UPDATE" in q for q in queries) == 1
+    assert db.execute("SELECT skip,skipped_at FROM samples WHERE sha256=%s", (sha(1),)).fetchone() == {
+        "skip": old["skip"], "skipped_at": skipped_at}
+    assert json.loads((tmp_path / "move_summary.json").read_text())["already_moved"] == 10

@@ -154,6 +154,30 @@ Vocabulary frequencies count samples, not repeated archive members. Exact
 counts spill to scratch SQLite files under `out/cache/vocabulary` (override
 with `COLLIMATOR_VOCAB_TMPDIR`); counts are never dropped when a batch fills.
 Eligible features are ranked by frequency with deterministic ties.
+
+Vocabulary workers recheck their memory budget every 30 seconds, increasing
+task concurrency when RAM recovers and draining tasks when the budget shrinks.
+The requested worker count remains the maximum; `COLLIMATOR_MEM_RESERVE_GB`,
+`COLLIMATOR_MEM_PER_WORKER_GB`, `COLLIMATOR_MEM_CEILING_GB`, and
+`COLLIMATOR_MEM_SHARES` still bound admission. Feature extraction takes a fresh
+memory budget after vocabulary completes.
+
+Identical single-file token sets are counted once per batch with their full
+sample frequency. Multi-file overlaps still count each sample once. Worker
+write caches stay warm until their shard is sealed, and a bounded background
+merge queue overlaps SQLite writes with worker counting. Benign trigram
+candidates are indexed once per worker and matched using set intersections.
+
+Run the synthetic counting and merge benchmark with:
+
+```bash
+.venv/bin/python scripts/benchmark_vocabulary.py --repeat 3
+```
+
+Add `--baseline-dir DIR` to compare against snapshots named
+`features_before.py` and `vocabulary_before.py`; every benchmark checks exact
+counts. These component timings do not predict full-corpus runtime.
+
 Singleton vocabularies use both benign and malware training samples, so benign
 signals can become features too. Combination vocabularies (bigrams, trigrams,
 and quadgrams) require support in malware samples. The classifier still learns

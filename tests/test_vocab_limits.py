@@ -129,7 +129,7 @@ def test_vocab_workers_preserve_per_file_caps(monkeypatch, n_paths):
         1: {"cleave_result": report},
     })
     calls = []
-    monkeypatch.setattr(features, "_count_ngrams", lambda paths, order, _counts, family, *rest:
+    monkeypatch.setattr(features, "_count_ngrams", lambda paths, order, _counts, family, *rest, **_kw:
                         calls.append((family, order, len(paths))))
     features._vocab_batch_worker([report])
     features._vocab_labeled_db_batch_worker(("unused", [(1, 1)]))
