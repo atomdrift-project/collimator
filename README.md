@@ -162,6 +162,13 @@ The requested worker count remains the maximum; `COLLIMATOR_MEM_RESERVE_GB`,
 `COLLIMATOR_MEM_SHARES` still bound admission. Feature extraction takes a fresh
 memory budget after vocabulary completes.
 
+Startup admission, worker budgets, and specialist fit budgets include ZFS ARC
+above its minimum (`size - c_min` from `/proc/spl/kstat/zfs/arcstats`) in
+addition to Linux's `MemAvailable`, matching htop's available-memory estimate.
+Missing or invalid ARC counters fall back to `MemAvailable`. Host reserves,
+memory shares, and the run's memory ceiling still apply; ARC reclaim may lag
+allocations. Memory budgets use GiB.
+
 Identical single-file token sets are counted once per batch with their full
 sample frequency. Multi-file overlaps still count each sample once. Worker
 write caches stay warm until their shard is sealed, and a bounded background

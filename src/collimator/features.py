@@ -109,6 +109,7 @@ import scipy.sparse as sp
 import scipy.stats as stats
 
 from .vocabulary import CountView, VocabularyCounts
+from .memory import available_memory_gb
 
 log = logging.getLogger(__name__)
 _extract_trait_depth: ContextVar[int | None] = ContextVar("extract_trait_depth", default=None)
@@ -4600,19 +4601,16 @@ def resolve_worker_count(n_workers: int) -> int:
 def ram_headroom_gb(reserve_gb: float) -> float | None:
     """GB of RAM this process tree may still claim; None if /proc/meminfo is unreadable.
 
-    The host's MemAvailable less ``reserve_gb`` for everything else on the box,
+    Available host RAM (including reclaimable ZFS ARC) less ``reserve_gb`` for
+    everything else on the box,
     and, when COLLIMATOR_MEM_CEILING_GB is set (the nightly sets it), no more
     than that ceiling less the anonymous memory this process's cgroup already
     holds. Page cache is reclaimable, so it doesn't count against the ceiling.
     """
-    try:
-        with open("/proc/meminfo") as meminfo:
-            avail_kb = next(
-                int(line.split()[1]) for line in meminfo if line.startswith("MemAvailable:")
-            )
-    except (OSError, StopIteration, ValueError):
+    available = available_memory_gb()
+    if available is None:
         return None
-    headroom = avail_kb / 2**20 - reserve_gb
+    headroom = available - reserve_gb
     if ceiling := os.getenv("COLLIMATOR_MEM_CEILING_GB"):
         try:
             headroom = min(headroom, float(ceiling) - _cgroup_anon_gb())
@@ -4639,15 +4637,15 @@ def clamp_workers_to_available_ram(n_workers: int, *, log_budget: bool = True) -
     Each concurrent fetch worker opens its own postgres backend and holds a
     fetch/count buffer, so on a co-tenanted host (hopper + scan) launching the
     full worker count when the box is *already* full is what tips it into a
-    global OOM. This reads /proc/meminfo MemAvailable at call time and clamps
-    the resolved worker count so ``(MemAvailable - reserve)`` covers the
+    global OOM. This reads host RAM including reclaimable ZFS ARC at call time
+    and clamps the resolved worker count so ``(available RAM - reserve)`` covers the
     per-worker headroom. Vocabulary scheduling rechecks this budget during
     the pass; extraction takes a fresh snapshot after vocabulary completes.
     Linux-only; on any other platform or a parse failure it returns the
     request unchanged (never raises). Tune via COLLIMATOR_MEM_RESERVE_GB /
     COLLIMATOR_MEM_PER_WORKER_GB, or disable with COLLIMATOR_MEM_AWARE_WORKERS=0.
 
-    MemAvailable is read independently by every process that calls this, so N
+    Available RAM is read independently by every process that calls this, so N
     trainings launched concurrently each see the WHOLE box free and each admit
     a full worker count — an N-fold over-commit of the same RAM. An orchestrator
     that fans out (scripts/azoth_oof_pipeline.sh) must therefore export

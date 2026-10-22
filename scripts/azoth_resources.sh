@@ -2,8 +2,9 @@
 # Shared memory admission for the unattended train and sweep.
 # Budgets include 48 GB of host reserve and 48 GB per resident training.
 # The last successful two-chain run peaked at 76 GB; leave room for growth.
+# Admission and Python worker/fit budgeting share ZFS-aware accounting.
 mem_avail_gb() {
-    awk '/^MemAvailable:/ { printf "%.0f", $2/1024/1024; found=1 } END { if (!found) exit 1 }' /proc/meminfo
+    python3 "$(dirname "${BASH_SOURCE[0]}")/../src/collimator/memory.py"
 }
 
 wait_for_azoth_memory() {
@@ -17,14 +18,14 @@ wait_for_azoth_memory() {
     while true; do
         available=$(mem_avail_gb) || available=unknown
         if [[ $available =~ ^[0-9]+$ ]] && (( available >= required )); then
-            echo "[memory] admitted: ${available} GB available, ${required} GB required"
+            echo "[memory] admitted: ${available} GiB available, ${required} GiB required"
             return 0
         fi
         if (( waited >= max_wait )); then
-            echo "ERROR: memory admission timed out after ${waited}s (${available} GB available, ${required} GB required)" >&2
+            echo "ERROR: memory admission timed out after ${waited}s (${available} GiB available, ${required} GiB required)" >&2
             return 1
         fi
-        echo "[memory] waiting: ${available} GB available, ${required} GB required (${waited}/${max_wait}s)"
+        echo "[memory] waiting: ${available} GiB available, ${required} GiB required (${waited}/${max_wait}s)"
         local delay=$interval
         (( delay > max_wait - waited )) && delay=$(( max_wait - waited ))
         sleep "$delay"

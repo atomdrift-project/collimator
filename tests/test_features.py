@@ -1860,6 +1860,8 @@ def _meminfo_reader(tmp_path, monkeypatch, avail_gb: float) -> None:
     def fake_open(file, *args, **kwargs):
         if file == "/proc/meminfo":
             return real_open(meminfo, *args, **kwargs)
+        if file == "/proc/spl/kstat/zfs/arcstats":
+            raise FileNotFoundError(file)
         return real_open(file, *args, **kwargs)
 
     monkeypatch.setattr("builtins.open", fake_open)

@@ -19,6 +19,11 @@ def shell_env(tmp_path):
     events = tmp_path / "events"
     stubs = {
         "nproc": "echo 128\n",
+        "python3": """case "$1" in
+  */src/collimator/memory.py) cat "$TEST_MEMORY" ;;
+  *) exec /usr/bin/python3 "$@" ;;
+esac
+""",
         "awk": """case "$*" in
   */proc/meminfo*) read -r available < "$TEST_MEMORY"; printf '%s' "$available" ;;
   *) exec /usr/bin/awk "$@" ;;
@@ -182,6 +187,9 @@ def test_nightly_logger_protection_and_snapshot_gate(shell_env, tmp_path, snapsh
             'export PATH="$PATH"',
         )
         (scripts / name).write_text(content)
+    memory_helper = sandbox / "src/collimator/memory.py"
+    memory_helper.parent.mkdir(parents=True)
+    memory_helper.write_text((ROOT / "src/collimator/memory.py").read_text())
     python = sandbox / ".venv/bin/python"
     python.parent.mkdir(parents=True)
     python.write_text(f"#!/bin/bash\necho {snapshot}\n")
