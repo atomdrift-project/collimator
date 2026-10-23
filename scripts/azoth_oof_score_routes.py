@@ -15,7 +15,7 @@ production single-fold bundle, which never saw them at training time
 either.
 
 Output: ``<output-dir>/<route_path>/threshold_scores.npz`` per route. The
-schema matches what ``azoth_oof_score.py`` writes (row_ids, sha256, paths,
+schema matches what ``azoth_oof_score.py`` writes (row_ids, sha256,
 scores, labels, probs, canonical_shas, plus corpus_* metadata). The
 downstream consumer in ``azoth_calibrate_ensemble.py --oof-route-scores-dir``
 reads these files in lieu of running its own in-sample ``predict_proba``
@@ -34,9 +34,11 @@ notes for why this is the foundation rather than another single fix.
 from __future__ import annotations
 
 import argparse
+from contextlib import nullcontext
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -51,6 +53,7 @@ if str(_SCRIPTS) not in sys.path:
 
 from collimator import bundle, data, features  # noqa: E402
 from collimator.model import load_model, predict_proba  # noqa: E402
+from collimator.profiling import event, timed  # noqa: E402
 
 LOG = logging.getLogger("azoth_oof_score_routes")
 
@@ -119,6 +122,7 @@ def _load_route_file_types(summary_path: Path) -> dict[str, list[str]]:
     return out
 
 
+@timed("db.route_metadata")
 def _fetch_route_rows(
     db_path: Path | str,
     file_types: list[str],
@@ -127,7 +131,10 @@ def _fetch_route_rows(
     """Return labeled rows for the given file_types in metadata-full shape.
 
     Tuple format matches ``data.stream_labeled_metadata_full``:
-    ``(row_id, sha256, path, score, label, split_key)``. We construct it
+    ``(row_id, sha256, path, score, label, split_key)``. Path is an unused
+    empty placeholder: extraction reads reports by ID and output omits paths.
+    Keeping selection covered by the sampling index avoids a heap lookup for
+    every matching row, especially expensive when table pages are cold. We construct it
     via direct SQL so we can apply the file_type filter at the database
     rather than streaming the entire labeled corpus per route.
     """
@@ -141,15 +148,12 @@ def _fetch_route_rows(
     if max_id > 0:
         where.append(f"id <= {marker}")
         params.append(int(max_id))
-    select = (
-        "SELECT id, sha256, path, score, label, canonical_sha256 FROM samples"
-    )
     rows: list[tuple[int, str, str, int, int, str]] = []
     with data._connect(db_path, repeatable_read=True) as conn:  # noqa: SLF001
         if data._is_pg(db_path):  # noqa: SLF001
             where.append("file_type = ANY(%s)")
             params.append(list(file_types))
-            query = select + " WHERE " + " AND ".join(where) + " ORDER BY id"
+            query = _route_metadata_query(" AND ".join(where))
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 for row_id, sha256, path, score, label, canonical in cur:
@@ -163,7 +167,7 @@ def _fetch_route_rows(
             placeholders = ",".join("?" for _ in file_types)
             where.append(f"file_type IN ({placeholders})")
             params.extend(file_types)
-            query = select + " WHERE " + " AND ".join(where) + " ORDER BY id"
+            query = _route_metadata_query(" AND ".join(where))
             for row_id, sha256, path, score, label, canonical in conn.execute(query, params):
                 split_key = canonical or sha256
                 rows.append((
@@ -172,6 +176,11 @@ def _fetch_route_rows(
                     str(split_key),
                 ))
     return rows
+
+
+def _route_metadata_query(where: str) -> str:
+    return ("SELECT id, sha256, '' AS path, score, label, canonical_sha256 "
+            f"FROM samples WHERE {where} ORDER BY id")
 
 
 def _sha256_file(path: Path) -> str:
@@ -189,23 +198,21 @@ def _score_route_shared_extract(
     bundles_by_fold: dict[int | None, Path],
     *,
     workers: int,
+    worker_pool: features.MetadataExtractionPool | None = None,
 ) -> list[dict[str, np.ndarray]] | None:
     """Extract features ONCE for the union of fold-0+fold-1+test rows,
     then predict each row's features with its fold-appropriate bundle.
 
-    Returns ``None`` when the bundles don't share a single feature spec
-    (rare but possible if folds drifted) — caller falls back to the
-    per-bundle ``_score_rows`` path.
+    Returns ``None`` when the independently learned fold vocabularies differ;
+    the caller then uses each bundle's own spec on its disjoint row partition.
 
     Memory: streams batches end-to-end. One ``predict_proba`` call per
     bundle per batch instead of one batched-extract-and-predict per
     bundle, which means the full union matrix is never materialized in
     memory.
     """
-    # All bundles must agree on the feature spec for shared extraction
-    # to be correct. The specs are usually byte-identical (same env,
-    # same trainer) so this is just defensive. Hash the spec file once
-    # per bundle and compare.
+    # Identical feature layouts allow mixed-fold batches. Independently
+    # learned vocabularies normally differ even with identical trainer flags.
     spec_path_ref: Path | None = None
     spec_hash_ref: str | None = None
     for bundle_dir in bundles_by_fold.values():
@@ -215,7 +222,7 @@ def _score_route_shared_extract(
             spec_hash_ref = sp_hash
             spec_path_ref = sp_path
         elif sp_hash != spec_hash_ref:
-            LOG.warning(
+            LOG.debug(
                 "shared-extract: bundles disagree on feature spec "
                 "(%s vs %s); falling back to per-bundle extraction",
                 spec_path_ref, sp_path,
@@ -249,7 +256,7 @@ def _score_route_shared_extract(
     }
 
     for batch_meta, x_matrix, y, _stats in features.extract_labeled_metadata_from_db_batches_unordered(
-        db_path, rows_to_extract, spec, n_workers=workers,
+        db_path, rows_to_extract, spec, n_workers=workers, worker_pool=worker_pool,
     ):
         if not batch_meta:
             continue
@@ -304,12 +311,13 @@ def _score_rows(
     bundle_dir: Path,
     *,
     workers: int,
+    worker_pool: features.MetadataExtractionPool | None = None,
 ) -> dict[str, np.ndarray]:
     """Run a bundle over the given rows; return arrays in row_id order.
 
     Uses ``bundle.Ensemble.load_bundle`` so multi-seed bundles average
     member predictions the same way ``azoth_calibrate_ensemble._score_route``
-    does at deploy. Returns ``{row_ids, sha256, paths, scores, labels,
+    does at deploy. Returns ``{row_ids, sha256, scores, labels,
     probs, canonical_shas}`` — the schema ``azoth_oof_score._combine`` and
     downstream consumers expect.
     """
@@ -323,19 +331,39 @@ def _score_rows(
             "probs": np.array([], dtype=np.float32),
             "canonical_shas": empty_str,
         }
+    started = time.monotonic()
     spec_path = bundle_dir / "feature_spec.json"
     spec = features.FeatureSpec.load(spec_path)
     clf = bundle.Ensemble.load_bundle(bundle_dir)
+    load_sec = time.monotonic() - started
+    totals = dict(fetch_sec=0., extract_sec=0., context_sec=0., matrix_sec=0., predict_sec=0.)
+    first_batch_sec = None
+    context_rebuilds = 0
 
     pred_batches: list[np.ndarray] = []
     label_batches: list[np.ndarray] = []
     sample_buffer: list[Any] = []
-    for batch_meta, x_matrix, y, _stats in features.extract_labeled_metadata_from_db_batches_unordered(
-        db_path, rows, spec, n_workers=workers,
+    for batch_meta, x_matrix, y, stats in features.extract_labeled_metadata_from_db_batches_unordered(
+        db_path, rows, spec, n_workers=workers, worker_pool=worker_pool,
     ):
+        if first_batch_sec is None:
+            first_batch_sec = time.monotonic() - started
+        for name in totals:
+            totals[name] += stats.get(name, 0.)
+        context_rebuilds += int(stats.get("context_rebuilt", 0))
+        predict_started = time.monotonic()
         pred_batches.append(clf.predict_proba(x_matrix).astype(np.float32))
+        totals["predict_sec"] += time.monotonic() - predict_started
         label_batches.append(y)
         sample_buffer.extend(batch_meta)
+    event("scoring.bundle", "counts", bundle=str(bundle_dir), rows=len(sample_buffer),
+          wall_seconds=time.monotonic() - started, load_sec=load_sec,
+          first_batch_sec=first_batch_sec, context_rebuilds=context_rebuilds, **totals)
+    LOG.info("%s: scored %d rows in %.2fs (load %.2fs, first batch %.2fs, predict %.2fs; "
+             "worker sums: fetch %.2fs, extract %.2fs, context %.2fs)",
+             bundle_dir, len(sample_buffer), time.monotonic() - started, load_sec,
+             first_batch_sec or 0, totals["predict_sec"], totals["fetch_sec"],
+             totals["extract_sec"], totals["context_sec"])
     if not sample_buffer:
         raise RuntimeError(
             f"{bundle_dir}: feature extraction returned no rows for {len(rows)} inputs",
@@ -472,6 +500,8 @@ def main() -> int:
         ),
     )
     parser.add_argument("--workers", type=int, default=0)
+    parser.add_argument("--worker-pool", choices=("route", "persistent"), default="persistent",
+                        help="Reuse extraction processes across routes and fold-specific specs.")
     parser.add_argument("--max-id", type=int, default=0)
     parser.add_argument("--log-level", default="INFO")
     parser.add_argument(
@@ -532,87 +562,87 @@ def main() -> int:
         )
 
     LOG.info("scoring %d routes", len(common))
-    for route_name in common:
-        file_types = route_file_types[route_name]
-        rows = _fetch_route_rows(args.db, file_types, args.max_id)
-        if not rows:
-            LOG.warning("%s: no rows match file_types=%s", route_name, file_types)
-            continue
-        fold_0, fold_1, test_rows = _split_by_fold(rows)
-        LOG.info(
-            "%s: %d rows (fold0=%d, fold1=%d, test=%d) over %s",
-            route_name, len(rows), len(fold_0), len(fold_1), len(test_rows), file_types,
-        )
-
-        # Single-extraction fast path: when the three bundles (fold-A,
-        # fold-B, production) share a feature spec, extract features
-        # once over the union of fold-0+fold-1+test rows and predict
-        # each row with its appropriate bundle. Saves ~50-66% of the
-        # extraction cost for this route. Falls back to the per-bundle
-        # path when specs diverge (rare; defensive).
-        bundles_by_fold: dict[int | None, Path] = {}
-        if fold_0:
-            bundles_by_fold[0] = fold_a_routes[route_name]
-        if fold_1:
-            bundles_by_fold[1] = fold_b_routes[route_name]
-        if test_rows and route_name in prod_routes:
-            bundles_by_fold[None] = prod_routes[route_name]
-
-        parts: list[dict[str, np.ndarray]] | None = None
-        if len(bundles_by_fold) >= 2:
+    pool_context = (features.MetadataExtractionPool(args.workers)
+                    if args.worker_pool == "persistent" else nullcontext(None))
+    with pool_context as worker_pool:
+        for route_name in common:
+            file_types = route_file_types[route_name]
+            rows = _fetch_route_rows(args.db, file_types, args.max_id)
+            if not rows:
+                LOG.warning("%s: no rows match file_types=%s", route_name, file_types)
+                continue
+            fold_0, fold_1, test_rows = _split_by_fold(rows)
             LOG.info(
-                "%s: shared-extract path over %d folds (fold0=%d, fold1=%d, test=%d)",
-                route_name, len(bundles_by_fold),
-                len(fold_0), len(fold_1), len(test_rows),
+                "%s: %d rows (fold0=%d, fold1=%d, test=%d) over %s",
+                route_name, len(rows), len(fold_0), len(fold_1), len(test_rows), file_types,
             )
-            parts = _score_route_shared_extract(
-                args.db,
-                fold_0 + fold_1 + test_rows,
-                bundles_by_fold,
-                workers=args.workers,
-            )
-        if parts is None:
-            # Fallback: spec mismatch detected, or only one fold to score.
-            parts = []
+
+            # Matching specs can share mixed-fold batches. Otherwise keep
+            # each fold's independently learned layout. Both paths extract
+            # each row once per route; the fold partitions are disjoint.
+            bundles_by_fold: dict[int | None, Path] = {}
             if fold_0:
-                LOG.info("%s: scoring fold-0 rows with fold-A bundle", route_name)
-                parts.append(_score_rows(
-                    args.db, fold_0, fold_a_routes[route_name], workers=args.workers,
-                ))
+                bundles_by_fold[0] = fold_a_routes[route_name]
             if fold_1:
-                LOG.info("%s: scoring fold-1 rows with fold-B bundle", route_name)
-                parts.append(_score_rows(
-                    args.db, fold_1, fold_b_routes[route_name], workers=args.workers,
-                ))
-            if test_rows:
-                if route_name in prod_routes:
-                    LOG.info("%s: scoring test rows with production bundle", route_name)
-                    parts.append(_score_rows(
-                        args.db, test_rows, prod_routes[route_name], workers=args.workers,
-                    ))
-                else:
-                    LOG.info(
-                        "%s: %d test rows — no --prod-root for this route, skipping; "
-                        "eval will see NaN test probs",
-                        route_name, len(test_rows),
-                    )
-        elif test_rows and route_name not in prod_routes:
-            LOG.info(
-                "%s: %d test rows — no --prod-root for this route, skipping; "
-                "eval will see NaN test probs",
-                route_name, len(test_rows),
-            )
-        combined = _combine(parts)
+                bundles_by_fold[1] = fold_b_routes[route_name]
+            if test_rows and route_name in prod_routes:
+                bundles_by_fold[None] = prod_routes[route_name]
 
-        out_path = args.output_dir / route_name / "threshold_scores.npz"
-        _write_route(out_path, combined, max_id_requested=args.max_id)
-        n = int(len(combined["labels"]))
-        n_mal = int(np.sum(combined["labels"] == 1)) if n else 0
-        n_ben = int(np.sum(combined["labels"] == 0)) if n else 0
-        LOG.info(
-            "wrote %s: %d rows (%d malware, %d benign)",
-            out_path, n, n_mal, n_ben,
-        )
+            parts: list[dict[str, np.ndarray]] | None = None
+            if len(bundles_by_fold) >= 2:
+                LOG.info(
+                    "%s: shared-extract path over %d folds (fold0=%d, fold1=%d, test=%d)",
+                    route_name, len(bundles_by_fold),
+                    len(fold_0), len(fold_1), len(test_rows),
+                )
+                parts = _score_route_shared_extract(
+                    args.db,
+                    fold_0 + fold_1 + test_rows,
+                    bundles_by_fold,
+                    workers=args.workers, worker_pool=worker_pool,
+                )
+            if parts is None:
+                # Fallback: spec mismatch detected, or only one fold to score.
+                parts = []
+                if fold_0:
+                    LOG.info("%s: scoring fold-0 rows with fold-A bundle", route_name)
+                    parts.append(_score_rows(
+                        args.db, fold_0, fold_a_routes[route_name], workers=args.workers, worker_pool=worker_pool,
+                    ))
+                if fold_1:
+                    LOG.info("%s: scoring fold-1 rows with fold-B bundle", route_name)
+                    parts.append(_score_rows(
+                        args.db, fold_1, fold_b_routes[route_name], workers=args.workers, worker_pool=worker_pool,
+                    ))
+                if test_rows:
+                    if route_name in prod_routes:
+                        LOG.info("%s: scoring test rows with production bundle", route_name)
+                        parts.append(_score_rows(
+                            args.db, test_rows, prod_routes[route_name], workers=args.workers, worker_pool=worker_pool,
+                        ))
+                    else:
+                        LOG.info(
+                            "%s: %d test rows — no --prod-root for this route, skipping; "
+                            "eval will see NaN test probs",
+                            route_name, len(test_rows),
+                        )
+            elif test_rows and route_name not in prod_routes:
+                LOG.info(
+                    "%s: %d test rows — no --prod-root for this route, skipping; "
+                    "eval will see NaN test probs",
+                    route_name, len(test_rows),
+                )
+            combined = _combine(parts)
+
+            out_path = args.output_dir / route_name / "threshold_scores.npz"
+            _write_route(out_path, combined, max_id_requested=args.max_id)
+            n = int(len(combined["labels"]))
+            n_mal = int(np.sum(combined["labels"] == 1)) if n else 0
+            n_ben = int(np.sum(combined["labels"] == 0)) if n else 0
+            LOG.info(
+                "wrote %s: %d rows (%d malware, %d benign)",
+                out_path, n, n_mal, n_ben,
+            )
 
     print(f"wrote {len(common)} route OOF score files under {args.output_dir}")
     return 0

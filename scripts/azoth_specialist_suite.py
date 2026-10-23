@@ -1606,6 +1606,8 @@ def _targets(args: argparse.Namespace) -> list[dict[str, Any]]:
 def _pool_init(log_level: str) -> None:
     """Initialize logging in each worker. With fork start-method workers
     inherit handlers; with spawn they don't, so set up explicitly."""
+    from collimator.profiling import initialize_worker
+    initialize_worker()
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",

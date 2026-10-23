@@ -184,6 +184,132 @@ Partial-work recovery still validates its selected inputs, as described below.
 Use `NIGHTLY_FRESH=1 make nightly` to select a new snapshot instead, or
 `AZOTH_PIPELINE_RESUME=0` to rerun pipeline stages.
 
+For fresh performance iterations, `make azoth-profile` runs the full production
+and two-fold pipeline on approximately **1% of canonical hashes**. The first
+32 bits of an MD5 digest of the canonical group key select the sample independently of the suffix bytes used for
+train/dev/test and OOF partitions. General models, specialists, scoring, and
+calibration select the same cohort; related files with the same canonical hash
+stay together. Rehashing avoids bias from canonicalization picking the minimum
+hash within an archive.
+
+Test evaluation reuses the raw score table captured during dev calibration,
+after checking its content hash, model and feature identities, and general
+score cache. It applies the frozen thresholds to the captured test partition
+without re-extracting features from a changing database.
+
+Each invocation creates a new directory under `out/profiles/` containing models,
+experiment outputs, caches, a pinned max ID in `run.json`, `pipeline.log`,
+CPU profiles in `cpu/`, and live phase timings in `timings/`. It reads existing
+replay configurations, but reuses no previous training artifacts. It runs
+`azoth-validate` instead of publishing.
+Sampling also explicitly blocks the publish/deploy targets. The profiling run
+uses the nightly memory scope and refuses to overlap an active nightly/sweep.
+
+```sh
+make azoth-profile PROFILE_DRY_RUN=1         # inspect paths and sampling rule
+make azoth-profile                         # fresh 1% run with cProfile
+make azoth-profile PROFILE_PERCENT=5        # larger deterministic cohort
+make azoth-profile PROFILE_PERCENT=2 PROFILE_TARGET_MINUTES=20 PROFILE_PROFILER=none
+make azoth-profile PROFILE_STOP_STAGE=2     # just the three general models
+.venv/bin/python scripts/azoth_profile_report.py out/profiles/<run>
+```
+
+`PROFILE_PIN=<max_id>` repeats the ID bound from an earlier run. Live row updates
+can still change inputs under that bound. `PROFILE_PROFILER=none` measures runtime
+without profiler overhead; `PROFILE_PROFILER=perf` records native CPU samples
+across descendant processes/threads when host perf permissions allow it.
+The default cProfile mode requires no tracing privileges and includes feature
+workers, specialist workers, and the vocabulary merge thread. Its call timings
+include waits and profiling overhead; summed profiles are not wall-clock time.
+A small sample can fail quality gates or leave rare routes too small to train;
+its metrics are for iteration, and the profiles remain available on failure.
+
+Profiling iterations start at 1%, targeting a complete fresh run in 15 minutes
+before increasing to 2% and a 20-minute target. `result.json` records elapsed
+time, exit status, and whether the whole pipeline completed within the target.
+Use `PROFILE_PROFILER=none` to verify wall time without cProfile overhead. Live
+phase records include wall time, current-thread CPU time and process peak RSS;
+30-second PostgreSQL samples report active backend wait states. Nested phases
+and concurrent workers overlap, so their durations must not be added for an ETA.
+
+For samples up to 2%, profiling uses an 8 GiB initial specialist-fit estimate
+and four extraction workers per fit; measured 1% fit peaks were below 4.1 GiB.
+The profiling worker budget is 48 total, split between the two training chains.
+This admits several small fits instead of reserving 28 GiB for each. Live
+memory admission and the 128 GiB hard scope still apply. Override with
+`PROFILE_FIT_MEMORY_GB` and `PROFILE_EXTRACT_WORKERS_PER_FIT`; larger samples
+default to the regular 28 GiB estimate and six extraction workers per fit.
+
+Vocabulary counting keeps exact document frequencies. Workers aggregate compact
+token-set signatures across fetch batches, then sort and reduce packed integer
+keys in bounded NumPy chunks (262,144 combinations). Multi-file archives retain
+per-document union semantics. Candidate discovery and benign prevalence both
+combine up to 16 fetch batches per shard; workers also rotate between batches
+after 60 seconds or 512 MiB on disk. The signature cache has an 8 MiB budget,
+and only four completed shards queue behind the merge writer. These bounds do
+not discard low-frequency keys. Counts and batch completion markers still commit
+together for recovery. Deterministic token IDs let ordinary shards merge without
+per-key Python remapping or a second sort. Full token strings detect hash
+collisions; collisions and older checkpoint dictionaries use exact remapping.
+`COLLIMATOR_VOCAB_SHARD_BATCHES` overrides the batch limit
+for direct training runs. Timing files distinguish discovery and benign merges,
+and record signature reuse and shard sizes.
+
+For local aggregation experiments, capture a bounded set of counting inputs
+from an existing model's score cohort, then replay without accessing PostgreSQL:
+
+```sh
+.venv/bin/python scripts/replay_vocabulary.py capture \
+  --model out/profiles/<run>/models/azoth/general \
+  --db "$DB" --rows 8192 --batch-size 170 --input /tmp/vocab-inputs.jsonl
+.venv/bin/python scripts/replay_vocabulary.py compare --input /tmp/vocab-inputs.jsonl
+```
+
+The comparison fixes fetch boundaries, varies aggregation windows (8/16/32
+batches), compares Python/native reducers and dense/deterministic IDs, and verifies every canonical
+key/count. It reports counting/merging time and peak RSS separately from the
+exact-count verification. This is an aggregation benchmark; it excludes database
+fetches, report decoding, benign-candidate matching, and model training.
+
+OOF route scoring reuses one extraction pool across routes and fold bundles.
+Each task identifies its complete feature specification, and each worker retains
+only its current extraction context. Different vocabularies with equal column
+counts remain separate. Worker counts and in-flight batch limits still apply;
+`azoth_oof_score_routes.py --worker-pool route` selects the previous pool-per-call
+behavior for comparison. Bundle timing records include model loading, first-batch
+latency, prediction, and worker fetch/extraction/context time (worker sums overlap).
+Route metadata selection omits unused file paths so the existing covering index
+can supply all required fields without fetching each row from the table.
+
+To benchmark scoring without retraining, capture reports for rows already selected
+by an existing run, then compare against the frozen inputs and models:
+
+```sh
+.venv/bin/python scripts/replay_route_scoring.py capture \
+  --run out/profiles/<run> --db "$DB" \
+  --capture /tmp/scoring-capture --rows-per-route 2048
+.venv/bin/python scripts/replay_route_scoring.py compare \
+  --capture /tmp/scoring-capture --output /tmp/scoring-comparison --workers 24
+```
+
+Both destinations must be new. The replay uses local SQLite reports, verifies
+model/spec and database fingerprints, and compares every saved score and metadata
+array exactly. Its timing excludes capture and fingerprint validation. It measures
+scoring on a bounded cohort; it does not establish a fresh full-pipeline runtime.
+
+Database selection scans and candidate counts need not shrink in direct
+proportion to the sample percentage. Hopper's replica-only
+`scripts/replica/training-index.sql` and `training-statistics.sql` migrations
+support this exact sampling expression. The covering index selects the cohort;
+metadata queries that need paths fetch them by primary key only after selecting
+sampled IDs. Route scoring does not need those path lookups.
+The one-time index build is separate from the fresh pipeline runtime.
+
+Trigram extraction indexes learned triples by their first token, so archive
+members only test triples whose first token is present. This preserves feature
+values and the existing per-file token limits. On 1,000 archive reports, complete
+feature extraction fell from 8.27 to 2.11 seconds with identical feature vectors.
+
 Vocabulary counting also checkpoints each committed shard, including scalar
 counts and completed batch IDs, in the experiment cache. Recovery hashes the
 selected IDs and labels already in memory, feature settings, and code; it does

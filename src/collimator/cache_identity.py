@@ -40,6 +40,8 @@ def code_revision(stage: str) -> str:
 
 def database_revision(db: Path | str) -> str:
     h = hashlib.sha256()
+    # Sampled and full-corpus caches must never share an identity.
+    h.update(data.SAMPLE_PREDICATE.encode())
     if data._is_pg(db):
         with data._connect(db) as conn:
             row = conn.execute(

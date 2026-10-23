@@ -11,6 +11,13 @@ _comma := ,
 VENV_DIR ?= .venv
 PYTHON ?= $(VENV_DIR)/bin/python
 DB ?= postgres://hopper@localhost:5432/hopper
+PROFILE_PERCENT ?= 1
+PROFILE_WORKERS ?= 48
+PROFILE_PROFILER ?= cprofile
+PROFILE_STOP_STAGE ?= 9
+PROFILE_TARGET_MINUTES ?= 15
+PROFILE_FIT_MEMORY_GB ?=
+PROFILE_EXTRACT_WORKERS_PER_FIT ?=
 MODEL ?= azoth
 LEARNER ?= $(if $(filter azoth%,$(MODEL)),azoth,$(MODEL))
 OUT_ROOT ?= out/models
@@ -28,6 +35,8 @@ MODEL_FILE ?= $(patsubst $(OUT_DIR)/%,%,$(or \
 	$(OUT_DIR)/model.$(MODEL_FILE_EXT)))
 LOG_DIR ?= $(OUT_DIR)/logs
 EXP_OUT_DIR ?= out/experiments/$(MODEL)
+AZOTH_FOLD_A_EXP_OUT_DIR ?= out/experiments/azoth.oof-fold-a
+AZOTH_FOLD_B_EXP_OUT_DIR ?= out/experiments/azoth.oof-fold-b
 EXP_LOG_DIR ?= $(EXP_OUT_DIR)/logs
 THRESHOLD_SCORES ?= $(OUT_DIR)/threshold_scores.npz
 THRESHOLD_MAX_ID ?=
@@ -305,6 +314,7 @@ AZOTH_PROMOTED_BASELINES ?= $(AZOTH_ROOT)/.autocollie/promoted_baselines.json
 # Both fold suites fit the same routes on half the rows each, so they share
 # one peak-memory file: fold-B is packed by what fold-A measured that night.
 AZOTH_FOLD_FIT_MEM_FILE ?= out/cache/fit-mem/fold.json
+AZOTH_SPECIALIST_FIT_MEM_FILE ?=
 AZOTH_SPECIALIST_SKIP_EXISTING ?= 1
 AZOTH_SPECIALIST_SKIP_EXISTING_ARG := $(if $(filter 1 true yes,$(AZOTH_SPECIALIST_SKIP_EXISTING)),--skip-existing,)
 # Concurrent specialist trainings. Default derived with the other auto-
@@ -638,6 +648,18 @@ azoth-fast-train: venv check-db
 	$(MAKE) azoth-prune-feature-cache
 	@echo "azoth-fast-train: published $(OUT_ROOT)/azoth -> $(AZOTH_RUN_DIR)"
 
+.PHONY: azoth-profile
+azoth-profile: venv check-db
+	$(VENV_DIR)/bin/python scripts/azoth_profile.py --db "$(DB)" \
+		--percent "$(PROFILE_PERCENT)" --workers "$(PROFILE_WORKERS)" \
+		--profiler "$(PROFILE_PROFILER)" --stop-stage "$(PROFILE_STOP_STAGE)" \
+		--target-minutes "$(PROFILE_TARGET_MINUTES)" \
+		$(if $(PROFILE_FIT_MEMORY_GB),--fit-memory-gb "$(PROFILE_FIT_MEMORY_GB)",) \
+		$(if $(PROFILE_EXTRACT_WORKERS_PER_FIT),--extract-workers-per-fit "$(PROFILE_EXTRACT_WORKERS_PER_FIT)",) \
+		$(if $(PROFILE_DIR),--output "$(PROFILE_DIR)",) \
+		$(if $(PROFILE_PIN),--pin "$(PROFILE_PIN)",) \
+		$(if $(filter 1,$(PROFILE_DRY_RUN)),--dry-run,)
+
 # azoth-publish-train additionally computes k=2 OOF diagnostics.
 # Fold-model scores cannot calibrate the separately trained production models:
 # their score distributions differ. Publication always fits production ONNX
@@ -670,7 +692,7 @@ azoth-publish-train: venv check-db
 	PUBLISH_TRAIN_SAMPLES=$(DEPLOY_TRAIN_SAMPLES_FULL) \
 	PUBLISH_MAX_TEST_SAMPLES=$(DEPLOY_MAX_TEST_SAMPLES_FULL) \
 	scripts/azoth_oof_pipeline.sh
-	@echo "azoth-publish-train: complete; full-OOF bundle deployed."
+	@echo "azoth-publish-train: complete (validation-only=$(or $(AZOTH_VALIDATE_ONLY),0))."
 	@echo "azoth-publish-train: archived fold bundles at out/models/azoth.oof-fold-{a,b}/"
 
 # azoth-general: train the general model at deploy fidelity, promote it
@@ -773,7 +795,7 @@ azoth-general-fold-a: venv check-db
 	@# cross-run cache hits.
 	EXP_OOF_FOLD_EXCLUDE=0 $(MAKE) azoth-general \
 		AZOTH_ROOT=$(OUT_ROOT)/azoth.oof-fold-a \
-		EXP_OUT_DIR=out/experiments/azoth.oof-fold-a \
+		EXP_OUT_DIR=$(AZOTH_FOLD_A_EXP_OUT_DIR) \
 		AZOTH_GENERAL_SKIP_RESCORE=1 \
 		AZOTH_GENERAL_SEED_SEARCH_K=$(AZOTH_OOF_SEED_SEARCH_K)
 	@echo "fold-A bundle ready at $(OUT_ROOT)/azoth.oof-fold-a/"
@@ -781,7 +803,7 @@ azoth-general-fold-a: venv check-db
 azoth-general-fold-b: venv check-db
 	EXP_OOF_FOLD_EXCLUDE=1 $(MAKE) azoth-general \
 		AZOTH_ROOT=$(OUT_ROOT)/azoth.oof-fold-b \
-		EXP_OUT_DIR=out/experiments/azoth.oof-fold-b \
+		EXP_OUT_DIR=$(AZOTH_FOLD_B_EXP_OUT_DIR) \
 		AZOTH_GENERAL_SKIP_RESCORE=1 \
 		AZOTH_GENERAL_SEED_SEARCH_K=$(AZOTH_OOF_SEED_SEARCH_K)
 	@echo "fold-B bundle ready at $(OUT_ROOT)/azoth.oof-fold-b/"
@@ -1031,6 +1053,7 @@ azoth-specialists: venv check-db
 		--num-leaves $(AZOTH_SPECIALIST_NUM_LEAVES) \
 		--min-child-samples $(AZOTH_SPECIALIST_MIN_CHILD_SAMPLES) \
 		--n-seed-extras $(AZOTH_SPECIALIST_N_SEED_EXTRAS) \
+		$(if $(AZOTH_SPECIALIST_FIT_MEM_FILE),--fit-mem-file $(AZOTH_SPECIALIST_FIT_MEM_FILE),) \
 		--seed-health-min-roc-auc $(AZOTH_SPECIALIST_SEED_HEALTH_MIN_ROC_AUC) \
 		--seed-retry-budget $(AZOTH_SPECIALIST_SEED_RETRY_BUDGET) \
 		--parallelism $(AZOTH_SPECIALIST_PARALLELISM) \
@@ -1207,6 +1230,7 @@ azoth-calibrate: venv check-db
 		--db $(DB) \
 		--model "$(AZOTH_GENERAL_DIR)" --scores-only \
 		--spec "$(AZOTH_GENERAL_DIR)/feature_spec.json" \
+		$(THRESHOLD_MAX_ID_ARG) \
 		$(EXP_WORKERS_ARG) \
 		--scores-cache "$(AZOTH_GENERAL_SCORES)" \
 		--output "$(AZOTH_GENERAL_DIR)/threshold_tuning.json"
@@ -1407,6 +1431,7 @@ azoth-run-new:
 # Validate that AZOTH_ROOT looks like a complete bundle, then atomically
 # point $(OUT_ROOT)/azoth at it. Errors out if the bundle is incomplete.
 azoth-publish: venv
+	@test -z "$(COLLIMATOR_SAMPLE_PERCENT)$(COLLIMATOR_PROFILE_DIR)" || { echo "Refusing to publish a sampled/profiling run"; exit 1; }
 	$(PYTHON) scripts/azoth_publish_run.py $(AZOTH_ROOT) --link $(OUT_ROOT)/azoth
 
 # Retain only the newest $(AZOTH_KEEP_RUNS) run dirs under $(AZOTH_RUNS_ROOT)
@@ -1599,6 +1624,7 @@ azoth-deploy: azoth-calibrate
 #     shipped nothing. Comparing against the staged fingerprint has no such
 #     exception: the legitimate re-run passes, both no-op modes fail.
 azoth-deploy-final: venv
+	@test -z "$(COLLIMATOR_SAMPLE_PERCENT)$(COLLIMATOR_PROFILE_DIR)" || { echo "Refusing to deploy a sampled/profiling run"; exit 1; }
 	@test -f $(AZOTH_ROOT)/config.json || { echo "error: $(AZOTH_ROOT)/config.json not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/score_table.npz || { echo "error: $(AZOTH_ROOT)/score_table.npz not found"; exit 1; }
 	@test -f $(AZOTH_ROOT)/specialists.json || { echo "error: $(AZOTH_ROOT)/specialists.json not found"; exit 1; }

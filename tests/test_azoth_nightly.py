@@ -171,7 +171,8 @@ def test_scoring_rechecks_memory(shell_env, tmp_path, before, after):
     assert overlaps == (after == 200)
 
 
-def test_publication_runs_gates_without_corpus_checksum(shell_env, tmp_path):
+@pytest.mark.parametrize("validate_only", [False, True])
+def test_publication_runs_gates_without_corpus_checksum(shell_env, tmp_path, validate_only):
     env, _, events = shell_env
     models = tmp_path / "models"
     (models / "azoth/oof_route_scores").mkdir(parents=True)
@@ -181,10 +182,12 @@ def test_publication_runs_gates_without_corpus_checksum(shell_env, tmp_path):
         # Old service environments must not re-enable a database-wide check.
         AZOTH_DATA_REVISION="obsolete-checksum",
         DB="postgres://unreachable.invalid/corpus",
+        AZOTH_VALIDATE_ONLY="1" if validate_only else "0",
     )
     result = run_pipeline(env)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert events.read_text().splitlines() == ["start azoth-deploy", "end azoth-deploy"]
+    target = "azoth-validate" if validate_only else "azoth-deploy"
+    assert events.read_text().splitlines() == [f"start {target}", f"end {target}"]
 
 
 def test_admission_waits_and_recovers(shell_env):

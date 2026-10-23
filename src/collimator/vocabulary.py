@@ -7,15 +7,25 @@ identity. No frequency counts are discarded under memory pressure.
 
 from __future__ import annotations
 
+from .profiling import event, timed
+
 import heapq
+import hashlib
 import json
 import sqlite3
 import struct
 from collections import OrderedDict
 from collections.abc import Iterable
 from dataclasses import dataclass
-from itertools import combinations
+from itertools import combinations, islice
+from math import comb
 from pathlib import Path
+
+_SIGNATURE_REDUCE_KEYS = 262_144
+
+
+def _token_hash(token: str) -> int:
+    return int.from_bytes(hashlib.blake2s(token.encode(), digest_size=4).digest(), "big")
 
 
 def _ids(key: bytes) -> tuple[int, ...]:
@@ -72,11 +82,22 @@ class VocabularyCounts:
 
     def __init__(self, path: str = "", buffer_size: int = 100_000,
                  *, check_same_thread: bool = True, durable: bool = False,
-                 resume: bool = False, cache_size_mib: int = 32) -> None:
+                 resume: bool = False, cache_size_mib: int = 32,
+                 signature_bytes: int = 8 * 1024 * 1024,
+                 bulk_signatures: bool = True, stable_token_ids: bool = True) -> None:
         self.path = path
         self.buffer_size = max(1, buffer_size)
         # Per key: count, first document, last document since the last write.
         self.pending: OrderedDict[tuple[str, bytes], list] = OrderedDict()
+        # Retain compact token-set signatures across fetch batches. Expanding
+        # one repeated set once is much cheaper than aggregating its millions
+        # of repeated combinations. This cache is independent of report size.
+        self.signatures: dict[tuple[str, int, bytes], int] = {}
+        self.signature_bytes = max(0, signature_bytes)
+        self.signature_size = 0
+        self.signature_documents = 0
+        self.bulk_signatures = bulk_signatures
+        self.stable_token_ids = stable_token_ids
         self.token_ids: dict[str, int] = {}
         self.tokens: dict[int, str] = {}
         self.db = sqlite3.connect(path, uri=True, check_same_thread=check_same_thread)
@@ -132,7 +153,13 @@ class VocabularyCounts:
     def _token_id(self, token: str) -> int:
         index = self.token_ids.get(token)
         if index is None:
-            index = len(self.token_ids)
+            # Common token identities now agree across workers. This makes the
+            # usual merge a sorted INSERT SELECT, with no Python remap callback
+            # or external sort. A hash is only an allocation hint: retain full
+            # strings and resolve collisions, never conflate their counts.
+            index = _token_hash(token) if self.stable_token_ids else len(self.token_ids)
+            while index in self.tokens:
+                index = (index + 1) & 0xFFFFFFFF
             self.token_ids[token] = index
             self.tokens[index] = token
             self.db.execute("INSERT INTO tokens VALUES (?, ?)", (index, token))
@@ -156,6 +183,90 @@ class VocabularyCounts:
             if benign_family:
                 self._increment_key((benign_family, packed), n, document)
 
+    def group_combinations(self, family: str, tokens: Iterable[str], order: int,
+                           *, n: int = 1) -> None:
+        """Queue n distinct single-set documents; multi-file unions stay explicit."""
+        ids = tuple(self._token_id(token) for token in tokens)
+        if len(ids) < order:
+            return
+        packed = struct.pack(f">{len(ids)}I", *ids)
+        key = family, order, packed
+        if key not in self.signatures:
+            # Includes dict/tuple/bytes/int overhead, with conservative slack.
+            self.signature_size += len(packed) + 256
+        self.signatures[key] = self.signatures.get(key, 0) + n
+        self.signature_documents += n
+        if self.signature_size >= self.signature_bytes:
+            self.flush_signatures()
+
+    @timed("vocabulary.signatures")
+    def flush_signatures(self) -> None:
+        if not self.signatures:
+            return
+        event("vocabulary.signatures", "counts", documents=self.signature_documents,
+              signatures=len(self.signatures), estimated_bytes=self.signature_size)
+        if self.bulk_signatures:
+            self._flush_pending()
+            self._reduce_signatures()
+            self.signature_size = self.signature_documents = 0
+            return
+        while self.signatures:
+            (family, order, packed), n = self.signatures.popitem()
+            pack = struct.Struct(f">{order}I").pack
+            for parts in combinations(_ids(packed), order):
+                self._increment_key((family, pack(*parts)), n, None)
+        self.signature_size = self.signature_documents = 0
+
+    def _reduce_signatures(self) -> None:
+        """Expand and sort bounded packed arrays in native code, then bulk UPSERT.
+
+        Each queued signature represents complete, distinct documents. Explicit
+        multi-file unions have already been flushed, so adding these weights
+        must not participate in the last-document deduplication bookkeeping.
+        """
+        import numpy as np
+
+        limit = _SIGNATURE_REDUCE_KEYS
+        families = sorted({(family, order) for family, order, _ in self.signatures})
+        for family, order in families:
+            arrays, weights, buffered = [], [], 0
+
+            def write():
+                nonlocal arrays, weights, buffered
+                if not buffered:
+                    return
+                keys = np.concatenate(arrays)
+                values = np.concatenate(weights)
+                permutation = np.argsort(keys)
+                keys, values = keys[permutation], values[permutation]
+                starts = np.r_[0, np.flatnonzero(keys[1:] != keys[:-1]) + 1]
+                totals = np.add.reduceat(values, starts)
+                self.db.executemany(
+                    "INSERT INTO counts VALUES (?, ?, ?, NULL, NULL)"
+                    " ON CONFLICT(family, token) DO UPDATE SET n=n+excluded.n,"
+                    " first_document=NULL, document=NULL",
+                    ((family, bytes(keys[i]), int(n)) for i, n in zip(starts, totals)),
+                )
+                self.db.commit()
+                arrays, weights, buffered = [], [], 0
+
+            # Copy only signature references, never the expanded combinations.
+            for key in [key for key in self.signatures if key[:2] == (family, order)]:
+                n = self.signatures.pop(key)
+                ids = _ids(key[2])
+                remaining = comb(len(ids), order)
+                parts = combinations(ids, order)
+                while remaining:
+                    size = min(remaining, limit - buffered)
+                    array = np.fromiter(islice(parts, size), dtype=np.dtype((">u4", order)), count=size)
+                    arrays.append(array.view(f"V{4 * order}").reshape(-1))
+                    weights.append(np.full(size, n, dtype=np.int64))
+                    buffered += size
+                    remaining -= size
+                    if buffered == limit:
+                        write()
+            write()
+
     def _increment_key(self, key: tuple[str, bytes], n: int, document: int | None) -> None:
         pending = self.pending.get(key)
         if pending is None:
@@ -168,9 +279,13 @@ class VocabularyCounts:
         if len(self.pending) >= self.buffer_size:
             # Keep recently used keys, including counts accumulated across
             # documents. Flushing by document would rewrite common keys often.
-            self.flush(max(1, self.buffer_size // 4))
+            self._flush_pending(max(1, self.buffer_size // 4))
 
     def flush(self, limit: int | None = None) -> None:
+        self.flush_signatures()
+        self._flush_pending(limit)
+
+    def _flush_pending(self, limit: int | None = None) -> None:
         def rows():
             for _ in range(len(self.pending) if limit is None else min(limit, len(self.pending))):
                 (family, key), (n, first, last) = self.pending.popitem(last=False)
@@ -196,6 +311,7 @@ class VocabularyCounts:
             "SELECT token, n FROM counts WHERE family=?", (family,),
         )}
 
+    @timed("vocabulary.merge")
     def merge(self, view: CountView) -> None:
         self.flush()
         self.db.execute("ATTACH DATABASE ? AS vocab_batch",
@@ -232,6 +348,10 @@ class VocabularyCounts:
             # merge rolls both back, so a restart can safely repeat its batch.
             self.db.execute("INSERT INTO batches SELECT * FROM vocab_batch.batches")
             self.db.commit()
+            event("vocabulary.merge", "counts", batches=len(incoming),
+                  phase=incoming[0][0].split(":")[0] if incoming else "unknown",
+                  token_dictionary=len(mapping), source_bytes=Path(view.path).stat().st_size,
+                  remapped=any(old != new for old, new in mapping.items()))
         except BaseException:
             self.db.rollback()
             raise

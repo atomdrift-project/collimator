@@ -33,7 +33,8 @@ def test_ordered_merge_matches_document_sets_and_keeps_all_families(tmp_path):
     expected = {}
     views = []
     for batch in range(5):
-        with VocabularyCounts(str(tmp_path / f"batch {batch}?.sqlite"), buffer_size=7) as counts:
+        with VocabularyCounts(str(tmp_path / f"batch {batch}?.sqlite"), buffer_size=7,
+                              stable_token_ids=False) as counts:
             rng.shuffle(tokens)
             for document in range(batch * 8, (batch + 1) * 8):
                 paths = sorted(rng.sample(tokens, 7))
@@ -79,8 +80,9 @@ def test_failed_merge_retains_source_and_detaches_it(tmp_path):
 
 
 @pytest.mark.parametrize("buffer_size", [1, 7, 100_000])
+@pytest.mark.parametrize("signature_bytes", [0, 1024, 8 * 1024 * 1024])
 def test_grouped_single_file_and_overlapping_archives_count_distinct_samples(
-    tmp_path, monkeypatch, buffer_size,
+    tmp_path, monkeypatch, buffer_size, signature_bytes,
 ):
     for family in ("BIGRAMS", "TRIGRAMS"):
         monkeypatch.setenv(f"COLLIMATOR_TIERED_CRIT_{family}", "1")
@@ -126,7 +128,8 @@ def test_grouped_single_file_and_overlapping_archives_count_distinct_samples(
                 for parts in combinations(tokens, order):
                     token = " + ".join(parts)
                     expected[family][token] = expected[family].get(token, 0) + 1
-        with VocabularyCounts(str(tmp_path / "grouped.sqlite"), buffer_size=buffer_size) as counts:
+        with VocabularyCounts(str(tmp_path / "grouped.sqlite"), buffer_size=buffer_size,
+                              signature_bytes=signature_bytes) as counts:
             for start in range(0, len(labels), 7):
                 features._count_labeled_vocab_batch("unused", labels[start:start + 7], counts)
             for family, reference in expected.items():
@@ -145,7 +148,7 @@ def test_active_shards_keep_cache_between_batches(tmp_path, monkeypatch):
     with VocabularyCounts(str(tmp_path / "shard.sqlite")) as counts:
         for rid in (1, 2):
             result = features._count_labeled_vocab_batch("unused", [(rid, 1)], counts)
-            assert counts.pending
+            assert counts.signatures
             assert isinstance(result[3], CountView)
     assert dict(result[3].items()) == {"a + b": 2, "a + c": 2, "b + c": 2}
 
@@ -231,9 +234,11 @@ def test_benign_candidate_index_is_reused_between_batches(monkeypatch):
 
 @pytest.mark.parametrize("reverse_results", [False, True])
 @pytest.mark.parametrize("recover_memory", [False, True])
+@pytest.mark.parametrize("shard_batches", [8, 16, 32])
 def test_parallel_vocab_matches_serial_across_shard_rotation(
-    tmp_path, monkeypatch, reverse_results, recover_memory,
+    tmp_path, monkeypatch, reverse_results, recover_memory, shard_batches,
 ):
+    monkeypatch.setenv("COLLIMATOR_VOCAB_SHARD_BATCHES", str(shard_batches))
     for name in ("BIGRAM_MIN_FREQ", "TRIGRAM_MIN_FREQ", "TIERED_BIGRAM_MIN_FREQ",
                  "TIERED_TRIGRAM_MIN_FREQ"):
         monkeypatch.setenv(f"COLLIMATOR_{name}", "1")
@@ -298,3 +303,86 @@ def test_parallel_vocab_matches_serial_across_shard_rotation(
         assert not list((tmp_path / "scratch").iterdir())
     finally:
         features.feature_config_from_env.cache_clear()
+
+
+def test_shard_rotation_caps_time_and_disk_between_batches(tmp_path, monkeypatch):
+    monkeypatch.setenv("COLLIMATOR_VOCAB_SHARD_BATCHES", "16")
+    monkeypatch.setattr(features.time, "monotonic", lambda: 120)
+    with VocabularyCounts(str(tmp_path / "worker.sqlite")) as counts:
+        assert not features._vocab_shard_limit_reached(counts, 15, 61)
+        assert features._vocab_shard_limit_reached(counts, 16, 61)
+        assert features._vocab_shard_limit_reached(counts, 1, 60)
+        monkeypatch.setattr(features.os.path, "getsize", lambda _: 512 * 1024 * 1024)
+        assert features._vocab_shard_limit_reached(counts, 1, 119)
+
+
+def test_repeated_signatures_expand_once_across_batches(tmp_path, monkeypatch):
+    from collimator import vocabulary
+    expanded = []
+    original = vocabulary.combinations
+
+    def combinations_once(tokens, order):
+        expanded.append((tuple(tokens), order))
+        return original(tokens, order)
+
+    monkeypatch.setattr(vocabulary, "combinations", combinations_once)
+    with VocabularyCounts(str(tmp_path / "worker.sqlite")) as counts:
+        for _ in range(100):
+            counts.group_combinations("trigram", ["a", "b", "c", "d"], 3)
+        assert not expanded
+        result = dict(counts.view("trigram").items())
+        assert len(expanded) == 1
+        assert result == {" + ".join(parts): 100 for parts in original("abcd", 3)}
+
+
+def test_native_reduction_counts_overlaps_across_chunk_boundaries(tmp_path, monkeypatch):
+    from collimator import vocabulary
+    monkeypatch.setattr(vocabulary, "_SIGNATURE_REDUCE_KEYS", 7)
+    paths = [f"path/{i:02d}" for i in range(16)]
+    expected = {}
+    with VocabularyCounts(str(tmp_path / "worker.sqlite"), buffer_size=1) as counts:
+        for family, order in (("bigram", 2), ("trigram", 3), ("quadgram", 4)):
+            reference = expected.setdefault(family, {})
+            for start, n in ((0, 3), (3, 7), (5, 2)):
+                counts.group_combinations(family, paths[start:start + 9], order, n=n)
+                for parts in combinations(paths[start:start + 9], order):
+                    token = " + ".join(parts)
+                    reference[token] = reference.get(token, 0) + n
+        for family, reference in expected.items():
+            assert dict(counts.view(family).items()) == reference
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_stable_token_collisions_remap_exactly_and_resume_legacy_ids(tmp_path, monkeypatch, legacy):
+    from collimator import vocabulary
+    # Force all paths to collide, including unsigned wraparound. Different
+    # insertion orders produce different local resolutions of the collision.
+    monkeypatch.setattr(vocabulary, "_token_hash", lambda _: 0xFFFFFFFF)
+    master = tmp_path / "master.sqlite"
+    with VocabularyCounts(str(master), durable=True, stable_token_ids=not legacy) as counts:
+        counts.increment("bigram", ("a", "b"), n=2)
+    for number, paths in enumerate((("z", "b", "a"), ("b", "a", "z"))):
+        with VocabularyCounts(str(tmp_path / f"worker-{number}.sqlite")) as worker:
+            for path in paths:
+                worker._token_id(path)
+            worker.group_combinations("bigram", ["a", "b", "z"], 2, n=3)
+            view = worker.view("bigram")
+        with VocabularyCounts(str(master), durable=True, resume=True) as counts:
+            counts.merge(view)
+    with VocabularyCounts(str(master), durable=True, resume=True) as counts:
+        assert dict(counts.view("bigram").items()) == {"a + b": 8, "a + z": 6, "b + z": 6}
+        assert len(set(counts.token_ids.values())) == 3
+
+
+def test_stable_tokens_avoid_remapping_for_different_insertion_orders(tmp_path, monkeypatch):
+    from collimator import vocabulary
+    monkeypatch.setattr(vocabulary, "_packed_remapper", lambda _: pytest.fail("unnecessary remapping"))
+    with VocabularyCounts(str(tmp_path / "master.sqlite")) as counts:
+        counts.increment("bigram", ("a", "b"))
+        with VocabularyCounts(str(tmp_path / "worker.sqlite")) as worker:
+            worker._token_id("b")
+            worker._token_id("a")
+            worker.increment("bigram", ("a", "b"))
+            view = worker.view("bigram")
+        counts.merge(view)
+        assert dict(counts.view("bigram").items()) == {"a + b": 2}

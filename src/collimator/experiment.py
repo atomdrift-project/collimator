@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .profiling import timed
+
 import fcntl
 import hashlib
 import json
@@ -339,6 +341,7 @@ def _load_corpus_cache(
     return ExperimentCorpus(train_samples=train, test_samples=test), file_types
 
 
+@timed('cache.matrix_write')
 def _save_matrix_cache(
     cache_dir: Path,
     matrix_hash: str,
@@ -440,6 +443,7 @@ def _reservoir_update(
     return seen
 
 
+@timed('corpus.selection')
 def sample_partitioned_reports(
     db_path: Path | str,
     *,

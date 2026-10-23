@@ -23,7 +23,10 @@ this still doesn't address (family-level correlation, temporal drift).
 
 from __future__ import annotations
 
+from .profiling import timed
+
 import json
+import hashlib
 import logging
 import os
 import random
@@ -378,6 +381,8 @@ def _connect(dsn: Path | str, *, repeatable_read: bool = False):
         if not db_path.exists():
             raise FileNotFoundError(f"Database not found: {db_path}")
         conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        conn.create_function("md5", 1, lambda value: hashlib.md5(value.encode()).hexdigest(),
+                             deterministic=True)
         try:
             if repeatable_read:
                 conn.execute("BEGIN")
@@ -406,7 +411,9 @@ def _read_table_in_order(conn: Any) -> None:
     the table in order takes ~4 min, sort included. SET LOCAL lasts only for
     the current transaction.
     """
-    if not isinstance(conn, sqlite3.Connection):
+    # Hash samples have a selective replica-side expression index. The full
+    # corpus workaround must not disable that access path for iteration runs.
+    if not SAMPLE_PREDICATE and not isinstance(conn, sqlite3.Connection):
         for setting in ("enable_indexscan", "enable_indexonlyscan", "enable_bitmapscan"):
             conn.execute(f"SET LOCAL {setting} = off")
 
@@ -440,6 +447,7 @@ def _cleave_report(raw):
     return None
 
 
+@timed('db.fetch_and_decode')
 def fetch_cleave_results(
     dsn: Path | str, ids: list[int], *, evaluation_labels: dict[int, int] | None = None,
 ) -> dict[int, dict[str, Any]]:
@@ -568,9 +576,42 @@ except ValueError:
 # append their own clauses (score >=, file_type, id <=, partition) with AND.
 # Secondary by-id lookups that merely enrich already-selected rows trust that
 # upstream selection and need not repeat it.
+def sample_predicate(percent: str) -> str:
+    """Repeatable canonical-hash sample, independent of suffix-based splits.
+
+    Keep canonical groups together. Rehash the canonical key before sampling:
+    its raw prefix is biased because archive canonicalization selects a minimum.
+    The leading 32 digest bits select the cohort. Existing train/dev/test and
+    OOF splits still use the original canonical key's trailing bytes.
+    The predicate uses SQL supported by both PostgreSQL and SQLite.
+    """
+    from decimal import Decimal, InvalidOperation
+
+    try:
+        fraction = Decimal(percent) / 100
+    except InvalidOperation as exc:
+        raise ValueError("sample percent must be greater than 0 and at most 100") from exc
+    if not fraction.is_finite() or not 0 < fraction <= 1:
+        raise ValueError("sample percent must be greater than 0 and at most 100")
+    if fraction == 1:
+        return ""
+    cutoff = int(fraction * (1 << 32))
+    if not cutoff:
+        raise ValueError("sample percent is too small for a 32-bit hash sample")
+    return (
+        "substr(md5(lower(COALESCE(NULLIF(canonical_sha256, ''), sha256))), 1, 8)"
+        f" < '{cutoff:08x}'"
+    )
+
+
+SAMPLE_PERCENT = os.environ.get("COLLIMATOR_SAMPLE_PERCENT", "100")
+SAMPLE_PREDICATE = sample_predicate(SAMPLE_PERCENT)
 LABELED_WHERE = "label IN ('bad', 'good') AND cleave_result IS NOT NULL AND skip = ''"
+if SAMPLE_PREDICATE:
+    LABELED_WHERE += f" AND ({SAMPLE_PREDICATE})"
 
 
+@timed('db.file_types')
 def fetch_file_types(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, str]:
     """Return stored file types for the requested usable labeled rows.
 
@@ -588,7 +629,10 @@ def fetch_file_types(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, s
         f" WHERE {LABELED_WHERE}"
     )
     with _connect(db_path, repeatable_read=True) as conn:
-        if len(wanted) <= 250_000:
+        # A cohort scan uses the covering training-hash index once, instead of
+        # hundreds of random ID probes (and repeated scans of the hash range).
+        sampled_scan = bool(SAMPLE_PREDICATE) and len(wanted) > 500
+        if len(wanted) <= 250_000 and not sampled_scan:
             result: dict[int, str] = {}
             ordered = sorted(wanted)
             for start in range(0, len(ordered), 500):
@@ -607,6 +651,7 @@ def fetch_file_types(db_path: Path | str, row_ids: Iterable[int]) -> dict[int, s
         }
 
 
+@timed('db.snapshot_pin')
 def snapshot_max_id(db_path: Path | str) -> int:
     """Return max(id) of trainable samples at this moment.
 
@@ -765,6 +810,39 @@ def stream_labeled_samples_full(
             )
 
 
+def _metadata_full_query(
+    where: str, *, postgres: bool, path_predicate: str = "", limit: int = 0,
+) -> str:
+    """Select the indexed sample before fetching uncovered file paths.
+
+    Materialization prevents a path projection from turning the small hash
+    cohort scan into a heap scan of every row in a file type. Path filtering
+    and limits still apply before yielding rows, in ID order.
+    """
+    if postgres and SAMPLE_PREDICATE:
+        query = (
+            "WITH cohort AS MATERIALIZED ("
+            "SELECT id, sha256, score, label, canonical_sha256 FROM samples"
+            f" WHERE {where})"
+            " SELECT c.id, c.sha256, s.path, c.score, c.label, c.canonical_sha256"
+            " FROM cohort c JOIN samples s ON s.id = c.id"
+        )
+        if path_predicate:
+            query += f" WHERE {path_predicate}"
+        query += " ORDER BY c.id"
+    else:
+        query = (
+            "SELECT id, sha256, path, score, label, canonical_sha256 FROM samples"
+            f" WHERE {where}"
+        )
+        if path_predicate:
+            query += f" AND {path_predicate}"
+        query += " ORDER BY id"
+    if limit > 0:
+        query += f" LIMIT {int(limit)}"
+    return query
+
+
 def stream_labeled_metadata_full(
     db_path: Path | str,
     *,
@@ -786,28 +864,26 @@ def stream_labeled_metadata_full(
     with _connect(db_path, repeatable_read=True) as conn:
         params: list[Any] = []
         placeholder = "?" if isinstance(conn, sqlite3.Connection) else "%s"
-        query = (
-            "SELECT id, sha256, path, label, score, canonical_sha256"
-            " FROM samples"
-            f" WHERE {LABELED_WHERE}"
-        )
+        where = LABELED_WHERE
         if max_id > 0:
-            query += f" AND id <= {int(max_id)}"
-        if path_substr:
-            query += f" AND LOWER(path) LIKE {placeholder}"
-            params.append(f"%{path_substr.lower()}%")
+            where += f" AND id <= {int(max_id)}"
         if min_score is not None:
-            query += f" AND score >= {placeholder}"
+            where += f" AND score >= {placeholder}"
             params.append(int(min_score))
         if max_score is not None:
-            query += f" AND score <= {placeholder}"
+            where += f" AND score <= {placeholder}"
             params.append(int(max_score))
-        query += " ORDER BY id"
-        if limit > 0:
-            query += f" LIMIT {int(limit)}"
+        path_predicate = ""
+        if path_substr:
+            path_predicate = f"LOWER(path) LIKE {placeholder}"
+            params.append(f"%{path_substr.lower()}%")
+        query = _metadata_full_query(
+            where, postgres=not isinstance(conn, sqlite3.Connection),
+            path_predicate=path_predicate, limit=limit,
+        )
 
         _read_table_in_order(conn)
-        for row_id, sha256, path, label, score, canonical in _execute(conn, query, params):
+        for row_id, sha256, path, score, label, canonical in _execute(conn, query, params):
             split_key = canonical or sha256
             if partition is not None and partition_of(split_key) != partition:
                 continue

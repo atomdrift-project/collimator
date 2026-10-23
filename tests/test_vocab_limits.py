@@ -88,7 +88,7 @@ def test_packed_counts_match_document_sets_under_eviction(buffer_size):
 def test_packed_merge_remaps_worker_token_ids(tmp_path):
     views = []
     for i, tokens in enumerate([["z", "a", "m"], ["m", "a", "z"]]):
-        with VocabularyCounts(str(tmp_path / f"{i}.sqlite")) as counts:
+        with VocabularyCounts(str(tmp_path / f"{i}.sqlite"), stable_token_ids=False) as counts:
             for token in tokens:
                 counts.increment("tokens", token)
             counts.increment("bigram", ("a", "z"), document=i)
@@ -130,6 +130,9 @@ def test_vocab_workers_preserve_per_file_caps(monkeypatch, n_paths):
     })
     calls = []
     monkeypatch.setattr(features, "_count_ngrams", lambda paths, order, _counts, family, *rest, **_kw:
+                        calls.append((family, order, len(paths))))
+    monkeypatch.setattr(VocabularyCounts, "group_combinations",
+                        lambda self, family, paths, order, **_kw:
                         calls.append((family, order, len(paths))))
     features._vocab_batch_worker([report])
     features._vocab_labeled_db_batch_worker(("unused", [(1, 1)]))

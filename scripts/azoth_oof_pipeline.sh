@@ -124,6 +124,16 @@ NUM_STAGES=10  # stages 0..9
 
 MEM_LOG=${MEM_LOG:-out/pipeline-mem.log}
 
+timed_stage() {
+    local key=$1
+    shift
+    if [[ -n ${COLLIMATOR_TIMING_DIR:-} ]]; then
+        .venv/bin/python scripts/profile_stage.py "$key" "$@"
+    else
+        "$@"
+    fi
+}
+
 checkpoint_stage() {
     local key=$1
     shift
@@ -134,7 +144,7 @@ checkpoint_stage() {
     else
         while [[ $1 != -- ]]; do shift; done
         shift
-        "$@"
+        timed_stage "$key" "$@"
     fi
 }
 
@@ -550,9 +560,13 @@ unsplit_resources
 # scores from the production ensembles, fits on dev and reports on test.
 if stage_active 7; then
     wait_for_azoth_memory "${AZOTH_SINGLE_MIN_AVAILABLE_GB:-96}" || exit 1
-    banner 7 "Calibrate production ensembles on dev + gate + deploy"
+    deploy_target=azoth-deploy
+    if [[ ${AZOTH_VALIDATE_ONLY:-0} == 1 ]]; then
+        deploy_target=azoth-validate
+    fi
+    banner 7 "Calibrate production ensembles on dev + gate ($deploy_target)"
     require_dir "OOF route scores" "${OOF_ROUTE_SCORES_DIR}" 6
-    time make azoth-deploy \
+    time timed_stage validation make "$deploy_target" \
         AZOTH_CALIBRATE_PARTITION=dev \
         AZOTH_USE_OOF_ROUTE_SCORES=0 \
         AZOTH_REFRESH_SCORES=${AZOTH_REFRESH_SCORES:-1} || { report_mem_watch; exit 1; }
@@ -566,7 +580,7 @@ fi
 # with stale SHAP. Runs after stage 7 against the verified production bundle.
 if stage_active 8; then
     banner 8 "Regenerate per-route SHAP (azoth-shap)"
-    time make azoth-shap || { report_mem_watch; exit 1; }
+    time timed_stage shap make azoth-shap || { report_mem_watch; exit 1; }
 else
     skipped 8 "azoth-shap"
 fi

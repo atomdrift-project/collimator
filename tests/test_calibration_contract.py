@@ -160,6 +160,65 @@ def test_calibration_rejects_leaky_or_wrong_model_inputs_before_loading_data(mon
         calibrate.main()
 
 
+@pytest.mark.parametrize("changed", [None, "table", "model", "spec", "general", "routes"])
+def test_test_evaluation_uses_verified_captured_scores_without_database(tmp_path, monkeypatch, changed):
+    table = score_table()
+    np.savez(tmp_path / "scores.npz", **table)
+    general_scores = tmp_path / "general.npz"
+    general_scores.write_bytes(b"captured general cache")
+    records, model_routes = [], []
+    for name in table["route_names"]:
+        directory = tmp_path / name
+        directory.mkdir(parents=True)
+        (directory / "model.onnx").write_bytes(name.encode())
+        (directory / "feature_spec.json").write_text("{}")
+        cache_identity.write_training_provenance(directory)
+        records.append({"route": str(name), "model_revision": cache_identity.model_revision(directory),
+                        "spec_revision": calibrate._file_sha256(directory / "feature_spec.json")})
+        model_routes.append({"name": str(name), "output_dir": str(directory)})
+    config, _ = config_and_policy()
+    config["levels"][0]["hostile"].update(target_per_million=.25, below_resolution=True)
+    config.update(models=records, score_table_hash=calibrate._file_sha256(tmp_path / "scores.npz"),
+                  model_set_hash=calibrate._hash_model_set(general_scores, model_routes))
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps(config))
+    before = config_path.read_bytes()
+    routes = [{"route": "filetypes/vsix", "output_dir": str(tmp_path / "filetypes/vsix")}]
+    monkeypatch.setattr(calibrate, "_load_routes", lambda _: routes)
+    def forbidden(*args, **kwargs):
+        pytest.fail("captured evaluation must not query the live database or rescore")
+    monkeypatch.setattr(calibrate.data, "_connect", forbidden)
+    monkeypatch.setattr(calibrate, "_score_route_worker", forbidden)
+    monkeypatch.setattr(calibrate, "_calibrate_one", forbidden)
+    if changed == "table":
+        table["labels"][:2] = [0, 1]
+        np.savez(tmp_path / "scores.npz", **table)
+    elif changed == "model":
+        (tmp_path / "general/model.onnx").write_bytes(b"changed")
+    elif changed == "spec":
+        (tmp_path / "general/feature_spec.json").write_text('{"changed":true}')
+    elif changed == "general":
+        general_scores.write_bytes(b"changed")
+    elif changed == "routes":
+        routes.clear()
+    monkeypatch.setattr(sys, "argv", [
+        "calibrate", "--db", "unused", "--azoth-root", str(tmp_path),
+        "--general-scores", str(general_scores), "--score-table", str(tmp_path / "scores.npz"),
+        "--partition", "test", "--apply-thresholds-from", str(config_path),
+    ])
+    if changed:
+        with pytest.raises(ValueError):
+            calibrate.main()
+        assert not (tmp_path / "test_metrics.json").exists()
+    else:
+        assert calibrate.main() == 0
+        result = json.loads((tmp_path / "test_metrics.json").read_text())
+        assert (result["rows"], result["malware"], result["benign"]) == (2, 1, 1)
+        assert result["levels"][0]["hostile"]["tp"] == 0
+        assert result["levels"][0]["hostile"]["below_resolution"] is True
+    assert config_path.read_bytes() == before
+
+
 def test_policy_search_only_sees_dev_and_never_carries_forward_test_fitted_policies(tmp_path, monkeypatch):
     table = score_table()
     np.savez(tmp_path / "scores.npz", **table)

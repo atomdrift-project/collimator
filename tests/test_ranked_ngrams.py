@@ -6,6 +6,33 @@ import pytest
 from collimator import features as f
 
 
+@pytest.mark.parametrize("abi", [19, 20])
+def test_indexed_trigrams_match_exhaustive_membership_across_archive_files(abi):
+    rng = np.random.default_rng(42)
+    tokens = [f"path{i:04}" for i in range(180)]
+    triples = sorted({tuple(sorted(rng.choice(tokens, 3, replace=False))) for _ in range(500)})
+    vocab = [" + ".join(parts) for parts in triples]
+    spec = f.FeatureSpec(abi_version=abi, trigram_vocab=vocab,
+                         feature_names=[f"trigram:{name}" for name in vocab], total_features=len(vocab))
+    ctx = f._ExtractContext(spec)
+    # Include empty, sparse, dense and overflowing archive members; matching
+    # paths in different files must never combine into a trigram.
+    report = {"v": "4", "fs": [{"type": "zip", "ts": [
+        {"i": str(path), "l": 3, "c": 1.0}
+        for path in rng.choice(tokens, count, replace=False)
+    ]} for count in (0, 1, 2, 3, 8, 40, 130, 180)]}
+    expected = np.zeros(len(vocab))
+    for paths in f._ngram_files(report, ctx, f.TRIGRAM_MAX_PATHS, ctx.trigram_vocab_paths):
+        present = set(paths)
+        for parts, idx in ctx.trigram_lookup_triple.items():
+            if all(path in present for path in parts):
+                expected[idx] = 1.0
+    actual = np.zeros(len(vocab))
+    f._apply_trigram_features(report, ctx, actual)
+    assert expected.any()
+    np.testing.assert_array_equal(actual, expected)
+
+
 @pytest.fixture(autouse=True)
 def config_cache():
     f.feature_config_from_env.cache_clear()

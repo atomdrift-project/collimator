@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .profiling import timed
+
 import logging
 import os
 import warnings
@@ -313,6 +315,7 @@ def _merge_sample_weights(
     return (base_weight * extra_weight).astype(np.float32, copy=False)
 
 
+@timed('training.fit')
 def _fit_model(
     model: Any,
     X: np.ndarray | sp.spmatrix,
@@ -384,6 +387,7 @@ def _split_calibration_eval(
     )
 
 
+@timed('training.total')
 def train(
     X: np.ndarray | sp.spmatrix,
     y: np.ndarray,

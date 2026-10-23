@@ -79,6 +79,8 @@ Feature groups:
 
 from __future__ import annotations
 
+from .profiling import timed
+
 import collections
 import fcntl
 import hashlib
@@ -2193,7 +2195,7 @@ class _ExtractContext:
         "ngram_vocab_paths", "bigram_vocab_paths", "trigram_vocab_paths", "synergy_vocab_paths",
         "tiered_bigram_vocab_tokens", "tiered_trigram_vocab_tokens",
         "tiered_quadgram_vocab_tokens",
-        "bigram_lookup_pair", "synergy_lookup_pair", "trigram_lookup_triple",
+        "bigram_lookup_pair", "synergy_lookup_pair", "trigram_lookup_triple", "trigrams_by_first",
         "trait_path_depth", "ranked_ngrams", "tiered_slots",
     )
 
@@ -2352,6 +2354,12 @@ class _ExtractContext:
             parts = tri.split(" + ")
             if len(parts) == 3:
                 self.trigram_lookup_triple[(parts[0], parts[1], parts[2])] = idx
+        # Only test triples whose first token occurs in the current file.
+        # Scanning every vocabulary triple per archive member dominated CPU
+        # time even when that member contained none of the vocabulary paths.
+        self.trigrams_by_first: dict[str, list[tuple[str, str, int]]] = {}
+        for (first, second, third), idx in self.trigram_lookup_triple.items():
+            self.trigrams_by_first.setdefault(first, []).append((second, third, idx))
 
 
 @dataclass(slots=True)
@@ -3999,12 +4007,13 @@ def _apply_trigram_features(
     vec: np.ndarray,
 ) -> None:
     """Group 16: trait trigram multi-hot features."""
-    lookup = ctx.trigram_lookup_triple
+    lookup = ctx.trigrams_by_first
     for paths_list in _ngram_files(report, ctx, TRIGRAM_MAX_PATHS, ctx.trigram_vocab_paths):
         present = set(paths_list)
-        for parts, idx in lookup.items():
-            if all(p in present for p in parts):
-                vec[idx] = 1.0
+        for first in present:
+            for second, third, idx in lookup.get(first, ()):
+                if second in present and third in present:
+                    vec[idx] = 1.0
 
 
 def _apply_logic_gap_features(
@@ -4375,10 +4384,15 @@ def _background_vocab_merges(counts):
     """Overlap one SQLite writer with counting; bound queued shard files."""
     pending = collections.deque()
     with ThreadPoolExecutor(max_workers=1, thread_name_prefix="vocab-merge") as pool:
+        def merge(view):
+            from .profiling import profile
+            with profile("vocab-merge"):
+                counts.merge(view)
+
         def submit(view):
             if len(pending) >= _VOCAB_MERGE_BACKLOG:
                 pending.popleft().result()
-            pending.append(pool.submit(counts.merge, view))
+            pending.append(pool.submit(merge, view))
 
         yield submit
         for future in pending:
@@ -4488,6 +4502,47 @@ def _vocab_db_batch_worker(
 # costs ~0.7s (the element x filetype lookups) against ~0.3s of real work
 # in a 341-row task.
 _worker_ctx: _ExtractContext | None = None
+_worker_spec_identity: bytes | None = None
+
+
+class MetadataExtractionPool:
+    """Reuse processes across scoring calls, retaining only one spec per worker.
+
+    Calls are consumed sequentially; each task carries its complete spec identity
+    so equal-width, different-layout models can never share the wrong context.
+    """
+
+    def __init__(self, n_workers: int = 0):
+        self.n_workers = resolve_worker_count(n_workers)
+        self.pool = None
+        self._manager = None
+
+    def __enter__(self):
+        if self.pool is not None:
+            raise RuntimeError("metadata extraction pool is already open")
+        self._manager = _feature_worker_pool(self.n_workers)
+        self.pool = self._manager.__enter__()
+        return self
+
+    def __exit__(self, *exc):
+        try:
+            return self._manager.__exit__(*exc)
+        finally:
+            self.pool = None
+
+
+def _extract_persistent_metadata_worker(args):
+    global _worker_spec_identity
+    identity, task = args
+    started = time.monotonic()
+    rebuilt = _worker_spec_identity != identity
+    if rebuilt:
+        _init_extract_worker(task[2])
+        _worker_spec_identity = identity
+    context_sec = time.monotonic() - started
+    result = _extract_labeled_metadata_db_batch_worker(task)
+    result[-1].update(context_sec=context_sec, context_rebuilt=int(rebuilt), worker_pid=os.getpid())
+    return result
 
 
 def _init_extract_worker(spec: FeatureSpec) -> None:
@@ -4564,10 +4619,15 @@ def _feature_worker_pool(
         "BLIS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS", "NUMEXPR_NUM_THREADS",
     )
     previous = {name: os.environ.get(name) for name in thread_vars}
+    if os.environ.get("COLLIMATOR_PROFILE_DIR"):
+        from .profiling import initialize_worker
+        # Compose below, after the extraction initializer has been selected.
     if spec is not None:
         if initializer is not None:
             raise ValueError("spec and a custom worker initializer are mutually exclusive")
         initializer, initargs = _init_extract_worker, (spec,)
+    if os.environ.get("COLLIMATOR_PROFILE_DIR"):
+        initializer, initargs = initialize_worker, (initializer, initargs)
     try:
         for name in thread_vars:
             os.environ[name] = "1"
@@ -5307,6 +5367,7 @@ def extract_labeled_metadata_from_db_batches_unordered(
     *,
     n_workers: int = 0,
     batch_size: int | None = None,
+    worker_pool: MetadataExtractionPool | None = None,
 ) -> Iterator[tuple[list[LabeledMetadata], sp.csr_matrix, np.ndarray, dict[str, float | int]]]:
     """Yield DB-backed feature batches with metadata as workers complete.
 
@@ -5315,6 +5376,10 @@ def extract_labeled_metadata_from_db_batches_unordered(
     predictions stay aligned within each yielded batch.
     """
     nw = resolve_worker_count(n_workers)
+    if worker_pool is not None:
+        if worker_pool.pool is None:
+            raise RuntimeError("metadata extraction pool is not open")
+        nw = min(nw, worker_pool.n_workers)
     eff_batch_size = batch_size if batch_size is not None and batch_size > 0 else _feature_batch_size(nw)
     max_batch_bytes = int(os.getenv("COLLIMATOR_THRESHOLD_BATCH_BYTES", str(16 * 1024 * 1024)))
     # Size-aware batching is enabled iff a row carries an int json_bytes
@@ -5374,6 +5439,16 @@ def extract_labeled_metadata_from_db_batches_unordered(
         )
         return metadata, X, y, stats
 
+    if worker_pool is not None:
+        import pickle
+        identity = hashlib.sha256(pickle.dumps(spec, protocol=5)).digest()
+        for result in _bounded_unordered_iter(
+            worker_pool.pool, _extract_persistent_metadata_worker,
+            ((identity, task) for task in batch_args), max_inflight=2 * nw,
+        ):
+            yield _to_matrix(result)
+        return
+
     if nw > 1:
         with _extract_pool(nw, spec) as pool:
             for result in _bounded_unordered_iter(
@@ -5414,35 +5489,62 @@ def _vocab_labeled_db_batch_worker(args):
 
 # Keep fetched reports bounded to one batch, but combine repeated n-grams
 # locally before the parent touches its much larger database. Rotate files
-# after eight batches so both temporary disk use and merge latency stay bounded.
-_VOCAB_SHARD_BATCHES = 8
+# independently of fetch size, with time/disk bounds for checkpoint latency.
+_VOCAB_SHARD_BATCHES = 16
 _vocab_shard_counts: VocabularyCounts | None = None
 _vocab_shard_batches = 0
 _vocab_shard_finalizer: Finalize | None = None
+_vocab_shard_started = 0.0
 
 
-def _vocab_labeled_db_shard_worker(args):
-    global _vocab_shard_counts, _vocab_shard_batches, _vocab_shard_finalizer
-    dsn, ids_labels, scratch, *batch_id = args
+def _vocab_shard_limit_reached(counts, batches, started):
+    return (
+        batches >= max(1, int(os.getenv("COLLIMATOR_VOCAB_SHARD_BATCHES", str(_VOCAB_SHARD_BATCHES))))
+        or time.monotonic() - started >= 60
+        or os.path.getsize(counts.path) >= 512 * 1024 * 1024
+    )
+
+
+def _active_vocab_shard(scratch):
+    global _vocab_shard_counts, _vocab_shard_batches, _vocab_shard_finalizer, _vocab_shard_started
     if _vocab_shard_counts is None:
         _vocab_shard_counts = VocabularyCounts(_batch_count_path(scratch))
         _vocab_shard_batches = 0
+        _vocab_shard_started = time.monotonic()
         _vocab_shard_finalizer = Finalize(
             _vocab_shard_counts, _vocab_shard_counts.close, exitpriority=10,
         )
-    result = _count_labeled_vocab_batch(dsn, ids_labels, _vocab_shard_counts)
-    if batch_id:
-        _vocab_shard_counts.record_batch(batch_id[0], result, len(ids_labels))
+    return _vocab_shard_counts
+
+
+def _finish_vocab_shard_batch():
+    global _vocab_shard_counts, _vocab_shard_batches, _vocab_shard_finalizer
     _vocab_shard_batches += 1
-    sealed = _vocab_shard_batches >= _VOCAB_SHARD_BATCHES
+    sealed = _vocab_shard_limit_reached(_vocab_shard_counts, _vocab_shard_batches, _vocab_shard_started)
     if sealed:
         _vocab_shard_counts.close()
         _vocab_shard_counts = None
         _vocab_shard_finalizer.cancel()
         _vocab_shard_finalizer = None
-    return result, sealed, len(ids_labels)
+    return sealed
 
 
+def _vocab_labeled_db_shard_worker(args):
+    dsn, ids_labels, scratch, *batch_id = args
+    counts = _active_vocab_shard(scratch)
+    result = _count_labeled_vocab_batch(dsn, ids_labels, counts)
+    if batch_id:
+        counts.record_batch(batch_id[0], result, len(ids_labels))
+    return result, _finish_vocab_shard_batch(), len(ids_labels)
+
+
+def _vocab_benign_trigram_shard_worker(args):
+    counts = _active_vocab_shard(args[3])
+    result = _vocab_benign_trigram_worker(args, counts=counts)
+    return result, _finish_vocab_shard_batch()
+
+
+@timed('vocabulary.batch')
 def _count_labeled_vocab_batch(dsn, ids_labels, counts):
     from . import data
 
@@ -5466,12 +5568,9 @@ def _count_labeled_vocab_batch(dsn, ids_labels, counts):
         or config.include_tiered_crit_trigrams and config.tiered_trigram_max > 0
     )
     branch_floors = _parse_branch_min_crit_overrides(config.tiered_bigram_branch_min_crit)
-    grouped: dict[tuple[str, int, tuple[str, ...]], int] = {}
-
     def group(paths, order, family):
         if len(paths) >= order:
-            key = (family, order, tuple(paths))
-            grouped[key] = grouped.get(key, 0) + 1
+            counts.group_combinations(family, paths, order)
 
     def count_document(files, order, family, document):
         if len(files) == 1:
@@ -5576,11 +5675,6 @@ def _count_labeled_vocab_batch(dsn, ids_labels, counts):
             )
             group(tokens, 3, "tiered_trigram")
 
-    for (family, order, paths), n_documents in grouped.items():
-        # These samples were not counted in the multi-file path above. None
-        # adds their total support without treating them as one document.
-        _count_ngrams(paths, order, counts, family, None, n=n_documents)
-
     def view(family):
         return counts.view(family, flush=not counts.path)
 
@@ -5610,9 +5704,11 @@ def _init_trigram_candidates(candidates):
                                   else _trigram_candidate_index(candidates))
 
 
-def _vocab_benign_trigram_worker(args):
+@timed("vocabulary.benign_batch")
+def _vocab_benign_trigram_worker(args, *, counts=None):
     """Count supported candidates without enumerating every benign triple."""
     from . import data
+    from contextlib import nullcontext
 
     dsn, ids, candidates, scratch, *batch_id = args
     if candidates is None:
@@ -5624,7 +5720,8 @@ def _vocab_benign_trigram_worker(args):
             by_first = candidates
         else:
             by_first = _trigram_candidate_index(candidates)
-    with VocabularyCounts(_batch_count_path(scratch)) as counts:
+    with (nullcontext(counts) if counts is not None
+          else VocabularyCounts(_batch_count_path(scratch))) as counts:
         for rid, item in data.fetch_cleave_results(dsn, ids).items():
             report = _coerce_report(item["cleave_result"])
             if report is None:
@@ -5647,7 +5744,7 @@ def _vocab_benign_trigram_worker(args):
                             counts.increment("benign_trigram", (a, b, c), document=rid)
         if batch_id:
             counts.record_batch(batch_id[0], None, len(ids))
-        return counts.view("benign_trigram")
+        return counts.view("benign_trigram", flush=not counts.path)
 
 
 def vocabulary_identity(db_path: Path | str, row_ids_labels: Iterable[tuple[int, int]]) -> str:
@@ -5672,6 +5769,7 @@ def vocabulary_identity(db_path: Path | str, row_ids_labels: Iterable[tuple[int,
     return identity.hexdigest()
 
 
+@timed('vocabulary.total')
 def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int]],
                         n_workers: int = 0, *, checkpoint_dir: Path | None = None) -> FeatureSpec:
     with _vocabulary_counts(checkpoint_dir) as (counts, scratch):
@@ -5813,12 +5911,14 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
                         merge(pending_shards.pop(res[3].path))
                         merged_shards.add(res[3].path)
                     batches_merged += 1
-        # A worker's last file may contain fewer than eight batches. Wait for
+        # A worker's last file may contain fewer than the shard limit. Wait for
         # pool shutdown before reading these files so no worker can still write
         # them. Full shards above are closed before their result is returned.
+        from .profiling import profile
         merge_started = last_merge_progress = time.monotonic()
         for i, view in enumerate(pending_shards.values(), 1):
-            counts.merge(view)
+            with profile("vocab-merge"):
+                counts.merge(view)
             now = time.monotonic()
             if i == 1 or i == len(pending_shards) or now - last_merge_progress >= 30:
                 log.info("vocab final merge: %d/%d shards, %.1fs elapsed",
@@ -5853,14 +5953,23 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
             args = ((db_path, batch, None, scratch, f"benign:{i}")
                     for i, batch in enumerate(_batched(benign_ids, batch_size))
                     if f"benign:{i}" not in done_benign)
+            pending_benign = {}
+            merged_benign = set()
             with _background_vocab_merges(counts) as merge:
                 with _feature_worker_pool(
                     nw, initializer=_init_trigram_candidates, initargs=(source,),
                 ) as pool:
-                    for result in _memory_budgeted_unordered_iter(
-                        pool, _vocab_benign_trigram_worker, args, n_workers=nw,
+                    for result, sealed in _memory_budgeted_unordered_iter(
+                        pool, _vocab_benign_trigram_shard_worker, args, n_workers=nw,
                     ):
-                        merge(result)
+                        if result.path not in merged_benign:
+                            pending_benign[result.path] = result
+                        if sealed:
+                            merge(pending_benign.pop(result.path))
+                            merged_benign.add(result.path)
+                # Finalizers close the partial shards when the pool exits.
+                for result in pending_benign.values():
+                    merge(result)
         else:
             index = DiskTrigramCandidates(source)
             try:
@@ -6340,6 +6449,7 @@ def _assemble_partitioned_matrices(
     return X_train, y_train, X_test, y_test
 
 
+@timed('features.extract')
 def extract_partitioned_from_db(
     db_path: Path | str,
     train_ids_labels: list[tuple[int, int]],

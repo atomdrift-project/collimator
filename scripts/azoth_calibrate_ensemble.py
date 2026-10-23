@@ -20,7 +20,8 @@ from typing import Any
 import numpy as np
 import scipy.sparse as sp
 
-from collimator import bundle, cache_identity, data, export, features, thresholds
+from collimator import bundle, cache_identity, data, export, features, policy, thresholds
+from collimator.profiling import initialize_worker, timed
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from azoth_specialist_suite import DEPLOYMENT_GROUPS  # noqa: E402
@@ -1061,13 +1062,102 @@ def _write_score_table(
     return _file_sha256(path)
 
 
+@timed("calibration.evaluate_captured")
+def _evaluate_captured_scores(args, routes) -> int:
+    """Evaluate frozen dev thresholds on the test rows captured in that run.
+
+    The dev pass already scores every partition. Re-reading live reports here
+    wastes a second extraction pass and can mix new inputs with old labels.
+    Bind reuse to the exact table, general cache, models and feature specs.
+    """
+    prior = json.loads(Path(args.apply_thresholds_from).read_text())
+    if prior.get("fit_partition") != "dev" or prior.get("score_space") != "raw":
+        raise ValueError("test evaluation requires thresholds fitted on dev production scores")
+    if prior.get("score_table_hash") != _file_sha256(args.score_table):
+        raise ValueError("score table changed since calibration; recalibrate")
+    expected = {"general", *(route["route"] for route in routes)}
+    records = prior.get("models", [])
+    if len(records) != len(expected) or {r["route"] for r in records} != expected:
+        raise ValueError("route set changed since calibration; recalibrate")
+    model_routes = []
+    for record in records:
+        directory = args.azoth_root / record["route"]
+        if (record.get("model_revision") != cache_identity.model_revision(directory)
+                or record.get("spec_revision") != _file_sha256(directory / "feature_spec.json")):
+            raise ValueError(f"{record['route']}: models or features changed since calibration")
+        model_routes.append({"name": record["route"], "output_dir": str(directory)})
+    if prior.get("model_set_hash") != _hash_model_set(args.general_scores, model_routes):
+        raise ValueError("general scores or model set changed since calibration; recalibrate")
+    with np.load(args.score_table, allow_pickle=False) as table:
+        if str(table["score_space"]) != "raw":
+            raise ValueError("test evaluation requires raw production scores")
+        names = table["route_names"].tolist()
+        if len(names) != len(expected) or set(names) != expected:
+            raise ValueError("score table route set differs from calibration")
+        selected = (dict(table) if args.partition == "all"
+                    else policy.partition_table(table, args.partition))
+    eval_labels = selected["labels"]
+    if not len(eval_labels):
+        raise ValueError(f"no rows in partition '{args.partition}'")
+    eval_route_scores = []
+    for name, scores in zip(names, selected["scores"], strict=True):
+        indices = np.flatnonzero(np.isfinite(scores))
+        eval_route_scores.append({"name": name, "indices": indices, "probs": scores[indices]})
+    LOG.info("evaluating %d captured %s rows; score-table and model identities verified",
+             len(eval_labels), args.partition)
+    prior_levels = prior.get("levels", [])
+    if not prior_levels:
+        raise SystemExit(
+            f"--apply-thresholds-from {args.apply_thresholds_from} has no "
+            "levels; was the dev calibration completed?",
+        )
+    eval_levels: list[dict[str, Any]] = []
+    for prior_level in prior_levels:
+        level_id = int(prior_level["level"])
+        hostile = _evaluate_thresholds_at_level(
+            eval_labels, eval_route_scores,
+            thresholds_for_level=prior_level["hostile"].get("thresholds", {}),
+            target_per_million=float(prior_level["hostile"]["target_per_million"]),
+        )
+        # Carry through the dev-side resolution flags. These are
+        # properties of the threshold-fit data, not of test eval — we
+        # propagate them so cards rendered from test_metrics.json can
+        # mark "below resolution" rows transparently.
+        sev_src = prior_level["hostile"]
+        if "below_resolution" in sev_src:
+            hostile["below_resolution"] = bool(sev_src["below_resolution"])
+        if "cp_floor_per_million" in sev_src:
+            hostile["cp_floor_per_million"] = float(sev_src["cp_floor_per_million"])
+        LOG.info(
+            "L%d on %s: hostile recall=%.2f%% fp=%d (FP/100M=%.2f)",
+            level_id, args.partition,
+            hostile["recall"] * 100, hostile["fp"], hostile["fp_per_100M"],
+        )
+        eval_levels.append({"level": level_id, "hostile": hostile})
+    metrics_path = args.azoth_root / f"{args.partition}_metrics.json"
+    bundle.atomic_write_json(metrics_path, {
+        "schema": "azoth.evaluation.v1",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "applied_from": str(args.apply_thresholds_from),
+        "partition": args.partition,
+        "rows": int(eval_labels.size),
+        "malware": int(np.sum(eval_labels == 1)),
+        "benign": int(np.sum(eval_labels == 0)),
+        "levels": eval_levels,
+    })
+    print(f"wrote {metrics_path}")
+    return 0
+
+
 def _score_pool_init(log_level: str) -> None:
+    initialize_worker()
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
 
+@timed("calibration.score_route")
 def _score_route_worker(job: dict[str, Any]) -> dict[str, Any]:
     return _score_route(
         job["db_path"],
@@ -1192,6 +1282,8 @@ def main() -> int:
             raise ValueError(f"export {route['route']} to ONNX before calibration")
     if args.check_inputs_only:
         return 0
+    if args.apply_thresholds_from is not None:
+        return _evaluate_captured_scores(args, routes)
     general_cache = np.load(args.general_scores)
     _validate_general_scores(general_cache, general_dir)
     feature_cache_dir = None if str(args.feature_cache_dir).lower() == "none" else args.feature_cache_dir
@@ -1234,19 +1326,10 @@ def main() -> int:
         partition_mask = np.ones(len(row_ids), dtype=bool)
     row_index = {int(row_id): idx for idx, row_id in enumerate(row_ids)}
 
-    # The test-partition call (--apply-thresholds-from) runs right after the
-    # full call, which just wrote these file types into the score table:
-    # reuse them instead of re-querying every row (10-30 min).
-    file_types: np.ndarray | None = None
-    if args.apply_thresholds_from is not None and args.score_table.is_file():
-        with np.load(args.score_table, allow_pickle=True) as table:
-            if np.array_equal(table["row_ids"], row_ids):
-                file_types = table["file_types"]
-    if file_types is None:
-        file_types_by_row = _fetch_file_types(args.db, row_ids)
-        file_types = np.asarray(
-            [file_types_by_row.get(int(row_id), "unknown") for row_id in row_ids],
-        )
+    file_types_by_row = _fetch_file_types(args.db, row_ids)
+    file_types = np.asarray(
+        [file_types_by_row.get(int(row_id), "unknown") for row_id in row_ids],
+    )
     filetype_to_group = _filetype_to_group()
     file_groups = np.asarray([filetype_to_group.get(file_type, "") for file_type in file_types])
     route_scores = [
@@ -1328,64 +1411,6 @@ def main() -> int:
         for job in score_jobs:
             LOG.info("scoring %s", job["route"]["route"])
             route_scores.append(_score_route_worker(job))
-
-    # Eval-only short-circuit: load thresholds from a prior dev-fit config,
-    # apply them to this partition's rows, and write metrics-only output.
-    # The deployed score_table.npz, isotonic calibrators, and config.json
-    # all came from the dev run and stay on disk untouched. Routes are
-    # scored on the full corpus above; the partition_mask restricts which
-    # rows count for tp/fp at each level.
-    if args.apply_thresholds_from is not None:
-        prior = json.loads(Path(args.apply_thresholds_from).read_text())
-        if prior.get("fit_partition") != "dev" or prior.get("score_space") != "raw":
-            raise ValueError("test evaluation requires thresholds fitted on dev production scores")
-        for record in prior.get("models", []):
-            if record.get("model_revision") != cache_identity.model_revision(args.azoth_root / record["route"]):
-                raise ValueError(f"{record['route']}: models changed since calibration")
-        prior_levels = prior.get("levels", [])
-        if not prior_levels:
-            raise SystemExit(
-                f"--apply-thresholds-from {args.apply_thresholds_from} has no "
-                "levels; was the dev calibration completed?",
-            )
-        eval_labels = labels[partition_mask]
-        eval_route_scores = _apply_mask_to_routes(route_scores, partition_mask)
-        eval_levels: list[dict[str, Any]] = []
-        for prior_level in prior_levels:
-            level_id = int(prior_level["level"])
-            hostile = _evaluate_thresholds_at_level(
-                eval_labels, eval_route_scores,
-                thresholds_for_level=prior_level["hostile"].get("thresholds", {}),
-                target_per_million=float(prior_level["hostile"]["target_per_million"]),
-            )
-            # Carry through the dev-side resolution flags. These are
-            # properties of the threshold-fit data, not of test eval — we
-            # propagate them so cards rendered from test_metrics.json can
-            # mark "below resolution" rows transparently.
-            sev_src = prior_level["hostile"]
-            if "below_resolution" in sev_src:
-                hostile["below_resolution"] = bool(sev_src["below_resolution"])
-            if "cp_floor_per_million" in sev_src:
-                hostile["cp_floor_per_million"] = float(sev_src["cp_floor_per_million"])
-            LOG.info(
-                "L%d on %s: hostile recall=%.2f%% fp=%d (FP/100M=%.2f)",
-                level_id, args.partition,
-                hostile["recall"] * 100, hostile["fp"], hostile["fp_per_100M"],
-            )
-            eval_levels.append({"level": level_id, "hostile": hostile})
-        metrics_path = args.azoth_root / f"{args.partition}_metrics.json"
-        bundle.atomic_write_json(metrics_path, {
-            "schema": "azoth.evaluation.v1",
-            "timestamp": datetime.now(UTC).isoformat(),
-            "applied_from": str(args.apply_thresholds_from),
-            "partition": args.partition,
-            "rows": int(eval_labels.size),
-            "malware": int(np.sum(eval_labels == 1)),
-            "benign": int(np.sum(eval_labels == 0)),
-            "levels": eval_levels,
-        })
-        print(f"wrote {metrics_path}")
-        return 0
 
     # Score table over the full labeled corpus — downstream tools need full
     # benign coverage to compute deployment-time FP/M.
