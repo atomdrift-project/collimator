@@ -440,15 +440,50 @@ def _cleave_report(raw):
     return None
 
 
-def fetch_cleave_results(dsn: Path | str, ids: list[int]) -> dict[int, dict[str, Any]]:
+def fetch_cleave_results(
+    dsn: Path | str, ids: list[int], *, evaluation_labels: dict[int, int] | None = None,
+) -> dict[int, dict[str, Any]]:
     """Batch-fetch cleave_result JSON and related metadata by row IDs.
 
     Used by feature extraction workers. Each worker opens its own
-    connection via this function — safe for multiprocessing.
+    connection via this function — safe for multiprocessing. When selected
+    evaluation labels are provided, capture row digests in this same SELECT,
+    using those labels rather than racing a later read of the live labels.
     """
     if not ids:
         return {}
     with _connect(dsn) as conn:
+        if evaluation_labels:
+            from .cache_identity import evaluation_row_digest
+
+            pg = _is_pg(dsn)
+            if pg:
+                rows = conn.execute(
+                    "SELECT id, cleave_result, formula, elements, score, mtime, "
+                    "xmin::text AS row_version FROM samples WHERE id = ANY(%s)", [ids],
+                )
+            else:
+                markers = ",".join("?" for _ in ids)
+                rows = conn.execute(f"SELECT * FROM samples WHERE id IN ({markers})", ids)
+            columns = [column[0] for column in rows.description]
+            result = {}
+            for row in rows:
+                values = dict(zip(columns, row, strict=True))
+                rid = int(values["id"])
+                if values["cleave_result"] is None:
+                    continue
+                item = {key: values[key] for key in ("cleave_result", "formula", "elements", "score")}
+                item.update(mtime=str(values["mtime"]) if values["mtime"] else "", cluster_id=0)
+                if rid in evaluation_labels:
+                    label = {0: "good", 1: "bad"}[evaluation_labels[rid]]
+                    if pg:
+                        version = [rid, values["row_version"], label]
+                    else:
+                        version = list(row)
+                        version[columns.index("label")] = label
+                    item["evaluation_digest"] = evaluation_row_digest(version)
+                result[rid] = item
+            return result
         if _is_pg(dsn):
             # PostgreSQL: use ANY(%s) with array parameter.
             query = "SELECT id, cleave_result, formula, elements, score, mtime, 0 AS cluster_id FROM samples WHERE id = ANY(%s)"

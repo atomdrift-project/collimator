@@ -35,6 +35,18 @@ printf 'end %s\\n' "$1" >> "$TEST_EVENTS"
 if [[ ${TEST_MEMORY_SWITCH_TARGET:-} == "$1" ]]; then
     printf '%s\\n' "$TEST_MEMORY_AFTER" > "$TEST_MEMORY"
 fi
+if [[ ${TEST_CREATE_ARTIFACTS:-0} == 1 ]]; then
+    case "$1" in
+      azoth-general) root="$AZOTH_ROOT" ;;
+      azoth-general-fold-a) root="$OUT_ROOT/azoth.oof-fold-a" ;;
+      azoth-general-fold-b) root="$OUT_ROOT/azoth.oof-fold-b" ;;
+      *) root="" ;;
+    esac
+    if [[ -n "$root" ]]; then
+        mkdir -p "$root/general"
+        echo "$1" > "$root/general/model.txt"
+    fi
+fi
 if [[ ${TEST_FAIL_TARGET:-} == "$1" ]]; then exit 1; fi
 """,
         "systemctl": "exit 0\n",
@@ -60,8 +72,32 @@ if [[ ${TEST_FAIL_TARGET:-} == "$1" ]]; then exit 1; fi
         STOP_STAGE="2",
         WORKERS="48",
         XDG_CONFIG_HOME=str(tmp_path / "config"),
+        NIGHTLY_MEMORY_SCOPE="0",
     )
     return env, memory, events
+
+
+def test_pipeline_keeps_successful_generals_when_another_stage_fails(shell_env, tmp_path):
+    env, _, events = shell_env
+    env.update(
+        THRESHOLD_MAX_ID="123", OUT_ROOT=str(tmp_path / "models"),
+        AZOTH_ROOT=str(tmp_path / "models/azoth"),
+        AZOTH_CHECKPOINT_DIR=str(tmp_path / "checkpoints"),
+        TEST_CREATE_ARTIFACTS="1", TEST_FAIL_TARGET="azoth-general-fold-b",
+    )
+    first = run_pipeline(env)
+    assert first.returncode != 0, first.stdout + first.stderr
+    events.write_text("")
+    env.pop("TEST_FAIL_TARGET")
+    # Rebudgeting to a sequential run must still recover completed stages.
+    env["PARALLEL_CHAINS"] = "0"
+    second = run_pipeline(env)
+    assert second.returncode == 0, second.stdout + second.stderr
+    assert "prod-general: completed" in second.stdout
+    assert "fold-a-general: completed" in second.stdout
+    assert events.read_text().splitlines() == [
+        "start azoth-general-fold-b", "end azoth-general-fold-b",
+    ]
 
 
 def run_pipeline(env):
@@ -135,6 +171,22 @@ def test_scoring_rechecks_memory(shell_env, tmp_path, before, after):
     assert overlaps == (after == 200)
 
 
+def test_publication_runs_gates_without_corpus_checksum(shell_env, tmp_path):
+    env, _, events = shell_env
+    models = tmp_path / "models"
+    (models / "azoth/oof_route_scores").mkdir(parents=True)
+    env.update(
+        OUT_ROOT=str(models), AZOTH_ROOT=str(models / "azoth"),
+        START_STAGE="7", STOP_STAGE="7", THRESHOLD_MAX_ID="123",
+        # Old service environments must not re-enable a database-wide check.
+        AZOTH_DATA_REVISION="obsolete-checksum",
+        DB="postgres://unreachable.invalid/corpus",
+    )
+    result = run_pipeline(env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert events.read_text().splitlines() == ["start azoth-deploy", "end azoth-deploy"]
+
+
 def test_admission_waits_and_recovers(shell_env):
     env, _, _ = shell_env
     result = subprocess.run(
@@ -192,7 +244,16 @@ def test_nightly_logger_protection_and_snapshot_gate(shell_env, tmp_path, snapsh
     memory_helper.write_text((ROOT / "src/collimator/memory.py").read_text())
     python = sandbox / ".venv/bin/python"
     python.parent.mkdir(parents=True)
-    python.write_text(f"#!/bin/bash\necho {snapshot}\n")
+    # Any database-wide preflight is an error: only the max-ID query is allowed.
+    def pin_query(value):
+        return (
+            '#!/bin/bash\n'
+            '[[ "$2" == *"data.snapshot_max_id("* ]] || exit 97\n'
+            'echo pin-query >> "$TEST_EVENTS"\n'
+            f'echo {value}\n'
+        )
+
+    python.write_text(pin_query(snapshot))
     python.chmod(0o755)
     bindir = Path(env["PATH"].split(":")[0])
     for name, body in {
@@ -220,3 +281,36 @@ def test_nightly_logger_protection_and_snapshot_gate(shell_env, tmp_path, snapsh
     else:
         assert "start repin" in lines
         assert "start azoth-publish-train" in lines
+        assert lines.count("pin-query") == 1
+        # The retry keeps the old snapshot even if ingestion has advanced.
+        python.write_text(pin_query("999999"))
+        retried = subprocess.run(
+            ["bash", str(scripts / "nightly.sh"), "train"], cwd=sandbox, env=env,
+            text=True, capture_output=True, timeout=10,
+        )
+        assert retried.returncode != 0
+        assert "continuing unfinished nightly snapshot max_id=123456" in retried.stdout
+        assert events.read_text().splitlines().count("pin-query") == 1
+        assert events.read_text().splitlines().count("start azoth-publish-train") == 2
+        assert (sandbox / "out/nightly/resume/snapshot").read_text().endswith(" 123456\n")
+        env["NIGHTLY_FRESH"] = "1"
+        fresh = subprocess.run(
+            ["bash", str(scripts / "nightly.sh"), "train"], cwd=sandbox, env=env,
+            text=True, capture_output=True, timeout=10,
+        )
+        assert "snapshot for this run: max_id=999999" in fresh.stdout
+        assert events.read_text().splitlines().count("pin-query") == 2
+
+        # Scope setup happens before any training or lock acquisition.
+        scope = bindir / "systemd-run"
+        scope.write_text('#!/bin/bash\nprintf "%s\\n" "$*" > "$TEST_EVENTS"\n')
+        scope.chmod(0o755)
+        env["NIGHTLY_MEMORY_SCOPE"] = "1"
+        scoped = subprocess.run(
+            ["bash", str(scripts / "nightly.sh"), "train"], cwd=sandbox, env=env,
+            text=True, capture_output=True, timeout=10,
+        )
+        assert scoped.returncode == 0, scoped.stderr
+        assert "MemoryMax=128G" in events.read_text()
+        assert "OOMPolicy=kill" in events.read_text()
+        assert "NIGHTLY_IN_SCOPE=1" in events.read_text()

@@ -59,10 +59,23 @@ def database_revision(db: Path | str) -> str:
     return h.hexdigest()
 
 
-def evaluation_revision(db: Path | str, row_ids: list[int], labels=None) -> str:
-    """Fingerprint exactly the evaluated rows, including in-place updates."""
-    h = hashlib.sha256()
+def evaluation_hasher(db: Path | str):
+    """Combine fixed-size row digests in sorted ID order, across any batch size."""
+    h = hashlib.sha256(b"evaluation-v2\n")
     h.update(str(db if data._is_pg(db) else Path(db).resolve()).encode())
+    h.update(b"\n")
+    return h
+
+
+def evaluation_row_digest(row) -> bytes:
+    return hashlib.sha256(
+        json.dumps(list(row), default=str, separators=(",", ":")).encode()
+    ).digest()
+
+
+def evaluation_revision(db: Path | str, row_ids: list[int], labels=None) -> str:
+    """Fingerprint live evaluated rows, for comparisons against captured inputs."""
+    h = evaluation_hasher(db)
     expected = dict(zip(row_ids, labels, strict=True)) if labels is not None else None
     row_ids = sorted(row_ids)
     found = 0
@@ -87,8 +100,7 @@ def evaluation_revision(db: Path | str, row_ids: list[int], labels=None) -> str:
                     label = {"bad": 1, "good": 0}.get(row[label_column])
                     if label != expected[row[id_column]]:
                         raise ValueError("evaluation labels changed; rerun screening")
-                h.update(json.dumps(list(row), default=str, separators=(",", ":")).encode())
-                h.update(b"\n")
+                h.update(evaluation_row_digest(row))
     if found != len(row_ids):
         raise ValueError("evaluation rows were deleted; rerun screening")
     return h.hexdigest()

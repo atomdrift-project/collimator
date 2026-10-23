@@ -280,3 +280,61 @@ def test_experiment_artifacts_cache_and_database_mutation(tmp_path, monkeypatch,
     assert third["experiment_key"] != first["experiment_key"]
     assert third["evaluation_revision"] != first["evaluation_revision"]
     assert third["test_sample_row_ids"] == first["test_sample_row_ids"]
+
+
+@pytest.mark.parametrize("partition", ["train", "evaluation"])
+def test_live_label_changes_keep_captured_evaluation(tmp_path, monkeypatch, partition):
+    """Relabeling before extraction and updates during fitting cannot abort a run."""
+    from collimator.demo import create_demo_db
+
+    monkeypatch.setenv("COLLIMATOR_NUM_THREADS", "1")
+    monkeypatch.setenv("COLLIMATOR_DISABLE_FEATURE_GROUPS", "clusters")
+    db_path = tmp_path / "demo.db"
+    create_demo_db(db_path, n_benign=200, n_malware=200, seed=7)
+    selected = []
+    selected_test = []
+    sample = experiment.sample_partitioned_reports
+    revision = cache_identity.evaluation_revision
+    extract = features.extract_partitioned_from_db
+    extracted = []
+    captured = []
+
+    def select_then_relabel(*args, **kwargs):
+        corpus = sample(*args, **kwargs)
+        selected.extend(sorted((s.row_id, s.label) for s in corpus.train_samples))
+        selected_test.extend(sorted((s.row_id, s.label) for s in corpus.test_samples))
+        row_id, label = (selected if partition == "train" else selected_test)[0]
+        with sqlite3.connect(db_path) as conn:
+            conn.execute("UPDATE samples SET label=? WHERE id=?",
+                         ("good" if label else "bad", row_id))
+        return corpus
+
+    def unexpected_live_scan(*args, **kwargs):
+        pytest.fail("experiment reread live evaluation rows")
+
+    def extract_selected(db, train_ids, test_ids, spec, **kwargs):
+        assert train_ids == selected
+        assert test_ids == selected_test
+        matrices = extract(db, train_ids, test_ids, spec, **kwargs)
+        np.testing.assert_array_equal(matrices[1], [label for _, label in selected])
+        np.testing.assert_array_equal(matrices[3], [label for _, label in selected_test])
+        captured.append(kwargs["identity"]["evaluation_revision"])
+        # A subsequent update must not relabel or invalidate the extracted matrix.
+        with sqlite3.connect(db_path) as conn:
+            conn.execute("UPDATE samples SET score=score+1 WHERE id=?", (selected_test[0][0],))
+        extracted.append(True)
+        return matrices
+
+    monkeypatch.setattr(experiment, "sample_partitioned_reports", select_then_relabel)
+    monkeypatch.setattr(cache_identity, "evaluation_revision", unexpected_live_scan)
+    monkeypatch.setattr(features, "extract_partitioned_from_db", extract_selected)
+    result = experiment.run_experiment(
+        db_path, output_dir=tmp_path / "output", cache_dir=tmp_path / "cache",
+        n_workers=1, learner="azoth", model_name="azoth", device="cpu",
+        n_estimators=5, n_folds=0, holdout_fraction=.2,
+        train_samples=200, max_test_samples=40,
+    )
+    assert extracted == [True]
+    assert result["evaluation_revision"] == captured[0]
+    assert result["evaluation_revision"] != revision(db_path, result["test_sample_row_ids"])
+    assert list((tmp_path / "cache").glob("vocabulary_*/feature_spec.json"))

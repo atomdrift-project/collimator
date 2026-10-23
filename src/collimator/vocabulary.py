@@ -8,6 +8,7 @@ identity. No frequency counts are discarded under memory pressure.
 from __future__ import annotations
 
 import heapq
+import json
 import sqlite3
 import struct
 from collections import OrderedDict
@@ -23,6 +24,29 @@ def _ids(key: bytes) -> tuple[int, ...]:
 
 def _name(key: bytes, tokens: dict[int, str]) -> str:
     return " + ".join(tokens[i] for i in _ids(key))
+
+
+def _packed_remapper(mapping: dict[int, int]):
+    """Remap packed IDs without unpacking/repacking each combination in Python.
+
+    The source B-tree visits adjacent keys with the same prefix. Retain just
+    that prefix, so most triples need one token lookup and one concatenation.
+    The cache is constant-sized and remains correct for unordered input too.
+    """
+    pack = struct.Struct(">I").pack
+    words = {pack(old): pack(new) for old, new in mapping.items()}
+    last_prefix = None
+    last_mapped = b""
+
+    def remap(key: bytes) -> bytes:
+        nonlocal last_prefix, last_mapped
+        prefix = key[:-4]
+        if prefix != last_prefix:
+            last_mapped = b"".join(words[prefix[i:i + 4]] for i in range(0, len(prefix), 4))
+            last_prefix = prefix
+        return last_mapped + words[key[-4:]]
+
+    return remap
 
 
 @dataclass(frozen=True)
@@ -47,7 +71,8 @@ class VocabularyCounts:
     """
 
     def __init__(self, path: str = "", buffer_size: int = 100_000,
-                 *, check_same_thread: bool = True) -> None:
+                 *, check_same_thread: bool = True, durable: bool = False,
+                 resume: bool = False, cache_size_mib: int = 32) -> None:
         self.path = path
         self.buffer_size = max(1, buffer_size)
         # Per key: count, first document, last document since the last write.
@@ -55,16 +80,39 @@ class VocabularyCounts:
         self.token_ids: dict[str, int] = {}
         self.tokens: dict[int, str] = {}
         self.db = sqlite3.connect(path, uri=True, check_same_thread=check_same_thread)
-        self.db.execute("PRAGMA cache_size=-32768")
+        self.db.execute(f"PRAGMA cache_size={-1024 * max(1, int(cache_size_mib))}")
         self.db.execute("PRAGMA temp_store=FILE")
-        # Scratch data is recreated on failure, not a durable artifact.
-        self.db.execute("PRAGMA journal_mode=OFF")
-        self.db.execute("PRAGMA synchronous=OFF")
-        self.db.execute("CREATE TABLE tokens (id INTEGER PRIMARY KEY, token TEXT NOT NULL)")
+        self.db.execute(f"PRAGMA journal_mode={'WAL' if durable else 'OFF'}")
+        self.db.execute(f"PRAGMA synchronous={'FULL' if durable else 'OFF'}")
+        create = "CREATE TABLE IF NOT EXISTS" if resume else "CREATE TABLE"
+        self.db.execute(f"{create} tokens (id INTEGER PRIMARY KEY, token TEXT NOT NULL)")
         self.db.execute(
-            "CREATE TABLE counts (family TEXT, token BLOB, n INTEGER NOT NULL,"
+            f"{create} counts (family TEXT, token BLOB, n INTEGER NOT NULL,"
             " first_document INTEGER, document INTEGER, PRIMARY KEY (family, token)) WITHOUT ROWID"
         )
+        self.db.execute(f"{create} batches (id TEXT PRIMARY KEY, summary TEXT, n_rows INTEGER)")
+        self.db.execute(f"{create} state (key TEXT PRIMARY KEY, value TEXT)")
+        if resume:
+            self.tokens = dict(self.db.execute("SELECT id, token FROM tokens"))
+            self.token_ids = {token: i for i, token in self.tokens.items()}
+
+    def record_batch(self, batch_id: str, summary, n_rows: int) -> None:
+        # CountView descriptors aren't needed to restore scalar summaries.
+        scalar = [None if isinstance(value, CountView) else value for value in summary] if summary else None
+        self.db.execute("INSERT INTO batches VALUES (?, ?, ?)",
+                        (batch_id, json.dumps(scalar), n_rows))
+
+    def completed_batches(self, prefix: str):
+        return self.db.execute("SELECT id, summary, n_rows FROM batches WHERE id LIKE ?",
+                               (prefix + ":%",))
+
+    def state(self, key: str, default=None):
+        row = self.db.execute("SELECT value FROM state WHERE key=?", (key,)).fetchone()
+        return json.loads(row[0]) if row else default
+
+    def set_state(self, key: str, value) -> None:
+        self.db.execute("INSERT OR REPLACE INTO state VALUES (?, ?)", (key, json.dumps(value)))
+        self.db.commit()
 
     def __enter__(self) -> VocabularyCounts:
         return self
@@ -153,6 +201,13 @@ class VocabularyCounts:
         self.db.execute("ATTACH DATABASE ? AS vocab_batch",
                         (Path(view.path).resolve().as_uri() + "?mode=ro",))
         try:
+            incoming = list(self.db.execute("SELECT id FROM vocab_batch.batches"))
+            seen = sum(self.db.execute("SELECT 1 FROM batches WHERE id=?", row).fetchone()
+                       is not None for row in incoming)
+            if seen:
+                if seen != len(incoming):
+                    raise ValueError("overlapping vocabulary checkpoint batches")
+                return  # An already committed shard must never count twice.
             mapping = {i: self._token_id(token) for i, token in self.db.execute(
                 "SELECT id, token FROM vocab_batch.tokens",
             )}
@@ -161,11 +216,7 @@ class VocabularyCounts:
                 # Avoid a Python callback per row and an external re-sort.
                 key, ordering = "token", "family, token"
             else:
-                def remap(key):
-                    mapped = [mapping[i] for i in _ids(key)]
-                    return struct.pack(f">{len(mapped)}I", *mapped)
-
-                self.db.create_function("vocab_remap", 1, remap, deterministic=True)
+                self.db.create_function("vocab_remap", 1, _packed_remapper(mapping), deterministic=True)
                 key, ordering = "vocab_remap(token)", "family, mapped"
             # Different worker dictionaries need a sort after remapping so
             # destination B-tree pages are visited sequentially. SQLite spills
@@ -177,6 +228,9 @@ class VocabularyCounts:
                 " ON CONFLICT(family, token) DO UPDATE SET n=n+excluded.n,"
                 " first_document=NULL, document=NULL",
             )
+            # Counts and their completion markers commit together. A killed
+            # merge rolls both back, so a restart can safely repeat its batch.
+            self.db.execute("INSERT INTO batches SELECT * FROM vocab_batch.batches")
             self.db.commit()
         except BaseException:
             self.db.rollback()
@@ -185,6 +239,11 @@ class VocabularyCounts:
             self.db.execute("DETACH DATABASE vocab_batch")
             self.db.create_function("vocab_remap", 1, None)
         Path(view.path).unlink()
+
+    def count_at_least(self, family: str, minimum: int) -> int:
+        self.flush()
+        return self.db.execute("SELECT count(*) FROM counts WHERE family=? AND n>=?",
+                               (family, minimum)).fetchone()[0]
 
     def at_least(self, family: str, minimum: int) -> list[str]:
         self.flush()
@@ -219,3 +278,66 @@ class VocabularyCounts:
         # even when millions of eligible features tie at the cutoff.
         best = heapq.nsmallest(limit, ((-n, _name(key, self.tokens)) for key, n in rows))
         return sorted(name for _, name in best)
+
+
+@dataclass(frozen=True)
+class TrigramSource:
+    path: str
+    minimum: int
+
+
+class DiskTrigramCandidates:
+    """Look up packed triples in the shared counts DB with a bounded cache.
+
+    Worker startup loads only the token dictionary, never the candidate list.
+    SQLite's (family, token) primary key supports a range lookup per token pair.
+    """
+
+    def __init__(self, source: TrigramSource, cache_bytes: int = 16 * 1024 * 1024):
+        self.db = sqlite3.connect(Path(source.path).resolve().as_uri() + "?mode=ro", uri=True,
+                                 timeout=120)
+        self.db.execute("PRAGMA cache_size=-8192")
+        self.minimum = source.minimum
+        self.token_ids = {token: i for i, token in self.db.execute("SELECT id, token FROM tokens")}
+        self.cache: OrderedDict[bytes, tuple[int, ...]] = OrderedDict()
+        self.cache_bytes = cache_bytes
+        self.used_bytes = 0
+
+    def close(self):
+        self.db.close()
+
+    def _suffixes(self, prefix: bytes):
+        if prefix in self.cache:
+            self.cache.move_to_end(prefix)
+            yield from self.cache[prefix]
+            return
+        values = []
+        size = 128
+        rows = self.db.execute(
+            "SELECT token FROM counts WHERE family='trigram' AND token>=? AND token<=? AND n>=?",
+            (prefix + b"\0" * 4, prefix + b"\xff" * 4, self.minimum),
+        )
+        try:
+            for (key,) in rows:
+                value = struct.unpack(">I", key[8:])[0]
+                if size <= self.cache_bytes:
+                    values.append(value)
+                    size += 40  # int plus tuple slot, with room for cache overhead
+                yield value
+        finally:
+            rows.close()
+        if size <= self.cache_bytes:
+            while self.cache and self.used_bytes + size > self.cache_bytes:
+                _, evicted = self.cache.popitem(last=False)
+                self.used_bytes -= 128 + len(evicted) * 40
+            self.cache[prefix] = tuple(values)
+            self.used_bytes += size
+
+    def matches(self, paths):
+        present = {self.token_ids[path]: path for path in paths if path in self.token_ids}
+        ordered = sorted(present, key=present.__getitem__)
+        for a, b in combinations(ordered, 2):
+            prefix = struct.pack(">II", a, b)
+            for c in self._suffixes(prefix):
+                if c in present:
+                    yield present[a], present[b], present[c]

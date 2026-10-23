@@ -154,6 +154,9 @@ Vocabulary frequencies count samples, not repeated archive members. Exact
 counts spill to scratch SQLite files under `out/cache/vocabulary` (override
 with `COLLIMATOR_VOCAB_TMPDIR`); counts are never dropped when a batch fills.
 Eligible features are ranked by frequency with deterministic ties.
+The central vocabulary merge uses a 256 MiB SQLite page cache; each counting
+worker keeps its 32 MiB cache. Merges translate packed token IDs with a single
+cached key prefix, avoiding repeated integer unpacking for adjacent n-grams.
 
 Vocabulary workers recheck their memory budget every 30 seconds, increasing
 task concurrency when RAM recovers and draining tasks when the budget shrinks.
@@ -169,11 +172,58 @@ Missing or invalid ARC counters fall back to `MemAvailable`. Host reserves,
 memory shares, and the run's memory ceiling still apply; ARC reclaim may lag
 allocations. Memory budgets use GiB.
 
+Nightly keeps an unfinished run's snapshot in `out/nightly/resume/snapshot`.
+Run `make nightly` again after an interruption to continue that snapshot.
+Completed training and OOF scoring stages are reused only when their source,
+configuration, artifact dependencies, and output hashes still match. The pin
+bounds row IDs; it does not freeze the live corpus. Completed stages remain
+reusable when rows below the pin change. There is no full-corpus checksum at
+startup or publication. Calibration and publication gates run again using
+production-model scores; reused OOF scores are diagnostics from completed work.
+Partial-work recovery still validates its selected inputs, as described below.
+Use `NIGHTLY_FRESH=1 make nightly` to select a new snapshot instead, or
+`AZOTH_PIPELINE_RESUME=0` to rerun pipeline stages.
+
+Vocabulary counting also checkpoints each committed shard, including scalar
+counts and completed batch IDs, in the experiment cache. Recovery hashes the
+selected IDs and labels already in memory, feature settings, and code; it does
+not scan the database again or require live training labels to remain unchanged.
+Counting and extraction use those selected labels. Committed batches retain
+counts from the reports they read; unfinished batches read current reports.
+This is incremental processing of a live corpus, not an immutable content
+snapshot. A different selection or selected label starts a different checkpoint.
+Worker-count changes preserve the original batch boundaries.
+Benign trigram prevalence uses a shared disk index with an 8 MiB
+SQLite cache and at most 16 MiB of cached token-pair lookups per worker; it never
+copies the full candidate vocabulary into workers. Uncommitted shards may be
+recomputed after a crash. Once the feature spec is saved, completed counts are
+removed; the spec and its identity remain reusable. Old runs without checkpoints
+cannot be resumed from their anonymous scratch files.
+
+Experiment evaluation uses the selected labels and captures row versions in
+the same queries that fetch reports for extraction. Its revision describes the
+inputs actually scored; later live label/report changes do not abort training.
+Deleted or invalid reports are excluded with their IDs, keeping feature rows,
+labels, and evaluation IDs aligned. Matrix caches retain this revision and
+older caches without it are rebuilt. Baseline comparisons still require a
+matching evaluation revision; changed live inputs are not treated as comparable
+to captured results. Publication calibration and regression gates still rerun.
+
+Vocabulary admission can drain to zero and wait when RAM is short, then grow
+again after recovery. It also waits when kernel `MemAvailable` falls below
+`COLLIMATOR_MEM_MIN_AVAILABLE_GB` (default 8), allowing ARC reclaim to catch up.
+Manual nightly runs enter a systemd user scope with `MemoryHigh=112G`,
+`MemoryMax=128G`, and `OOMPolicy=kill`, so an OOM terminates the training group.
+A user systemd manager is required. `NIGHTLY_MEMORY_SCOPE=0` is an explicit
+opt-out for runs already contained by another supervisor. The advisory ceiling
+defaults to 112 GiB for training and 48 GiB for the sweep, and training no longer
+lowers its OOM score by default.
+
 Identical single-file token sets are counted once per batch with their full
 sample frequency. Multi-file overlaps still count each sample once. Worker
 write caches stay warm until their shard is sealed, and a bounded background
 merge queue overlaps SQLite writes with worker counting. Benign trigram
-candidates are indexed once per worker and matched using set intersections.
+candidates stay in the shared counts database and use bounded token-pair lookups.
 
 Run the synthetic counting and merge benchmark with:
 

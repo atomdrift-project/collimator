@@ -1,7 +1,7 @@
 """Worker admission follows changing memory without losing queued work."""
 
 from concurrent.futures import Future, ThreadPoolExecutor
-from threading import Event
+from threading import Event, Timer
 
 import pytest
 
@@ -93,9 +93,10 @@ def test_live_admission_keeps_memory_shares_and_opt_out(
 def test_recovery_admits_another_task_while_first_is_blocked(monkeypatch, budget_env):
     first_started = Event()
     another_started = Event()
+    memory_recovered = Event()
     monkeypatch.setattr(features, "_WORKER_BUDGET_REFRESH_SECONDS", 0.01)
     monkeypatch.setattr(features, "ram_headroom_gb",
-                        lambda reserve: 8.0 if first_started.is_set() else 0.0)
+                        lambda reserve: 8.0 if memory_recovered.is_set() else 0.0)
 
     def task(item):
         if item == 0:
@@ -105,8 +106,30 @@ def test_recovery_admits_another_task_while_first_is_blocked(monkeypatch, budget
             another_started.set()
         return item
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        results = list(features._memory_budgeted_unordered_iter(
-            pool, task, range(12), n_workers=4,
-        ))
+    timer = Timer(0.03, memory_recovered.set)
+    timer.start()
+    try:
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(features._memory_budgeted_unordered_iter(
+                pool, task, range(12), n_workers=4,
+            ))
+    finally:
+        timer.cancel()
     assert sorted(results) == list(range(12))
+
+
+def test_serial_recovery_waits_without_dropping_a_batch(monkeypatch, budget_env):
+    recovered = False
+    monkeypatch.setattr(features, "ram_headroom_gb", lambda _: 8 if recovered else 0)
+
+    def sleep(seconds):
+        nonlocal recovered
+        assert seconds == 30
+        recovered = True
+
+    def work(value):
+        assert recovered
+        return abs(value)
+
+    monkeypatch.setattr(features.time, "sleep", sleep)
+    assert list(features._memory_budgeted_serial_iter(work, range(-3, 0))) == [3, 2, 1]

@@ -37,7 +37,7 @@ def test_experiment_preserves_vocab_worker_request_and_rebudgets_extraction(tmp_
     class ExtractionReached(Exception):
         pass
 
-    def extract(*args, n_workers):
+    def extract(*args, n_workers, identity):
         events.append(("extraction", n_workers))
         raise ExtractionReached
 

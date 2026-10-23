@@ -40,7 +40,7 @@
 # loop until preempted), NIGHTLY_ALLOW_REGRESSION=1 (bypass the deploy
 # regression gate), NIGHTLY_WORKERS (default 48 train / 24 sweep; caps DB-fetch
 # parallelism — see the WORKERS export below), NIGHTLY_MEM_CEILING_GB (default
-# 192; admission ceiling), NIGHTLY_OOM_SCORE_ADJ (default -200).
+# 112; admission ceiling), NIGHTLY_OOM_SCORE_ADJ (default 0).
 # AZOTH_SINGLE_MIN_AVAILABLE_GB=96 / AZOTH_PARALLEL_MIN_AVAILABLE_GB=144
 # reserve host RAM before starting; AZOTH_MEMORY_WAIT_SECONDS=21600 bounds
 # deferral. Installed units additionally enforce RAM/swap limits.
@@ -65,6 +65,22 @@ export LANG="${LANG:-C.UTF-8}"
 cd "$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")" || exit 1   # collimator/
 azoth="$(dirname "$PWD")/azoth"
 
+# Manual runs need the same hard boundary as the installed service. Re-enter
+# in a dedicated scope before taking locks or starting loggers. Fail before
+# doing work if a user manager is unavailable; an explicit opt-out is intended
+# for other supervisors that already impose a memory limit.
+if [[ ${NIGHTLY_MEMORY_SCOPE:-1} != 0 && ${NIGHTLY_IN_SCOPE:-0} != 1 ]] &&
+   ! rg -q '/azoth-(nightly|autocollie)\.service$' /proc/self/cgroup; then
+  hard_limit=$([ "$mode" = train ] && echo 128G || echo 64G)
+  soft_limit=$([ "$mode" = train ] && echo 112G || echo 48G)
+  echo "nightly($mode): entering memory scope (high=$soft_limit, max=$hard_limit)"
+  exec systemd-run --user --scope --collect --quiet \
+    --unit="azoth-${mode}-manual-$$" \
+    --property="MemoryHigh=$soft_limit" --property="MemoryMax=$hard_limit" \
+    --property=MemorySwapMax=8G --property=OOMPolicy=kill \
+    env NIGHTLY_IN_SCOPE=1 bash "$PWD/scripts/nightly.sh" "$mode"
+fi
+
 # One run at a time *per mode*. Redundant with systemd for the scheduled run,
 # but guards a manual `make nightly` colliding with an in-progress scheduled
 # one. The two modes take different locks on purpose: the train holds its lock
@@ -83,7 +99,7 @@ flock -n 9 || { echo "another '$mode' run is active ($lock) — exiting."; exit 
 # Adjust before spawning *any* loggers: changing the parent later does not
 # update existing children. October's OOMs killed gawk/tee and broke stdout.
 if [ "$mode" = train ]; then
-  oom_adj="${NIGHTLY_OOM_SCORE_ADJ--200}"
+  oom_adj="${NIGHTLY_OOM_SCORE_ADJ-0}"
   if doas -n choom -n "$oom_adj" -p $$ >/dev/null; then
     echo "nightly($mode): oom_score_adj $oom_adj (inherited by loggers and training)"
   else
@@ -177,7 +193,8 @@ fi
 # The most RAM this run may hold. Every memory-aware admission (DB-fetch
 # workers, specialist fits) stops launching work as the run's cgroup nears it,
 # on top of leaving each clamp's reserve free for the rest of the host.
-export COLLIMATOR_MEM_CEILING_GB="${NIGHTLY_MEM_CEILING_GB-192}"
+default_ceiling=$([ "$mode" = train ] && echo 112 || echo 48)
+export COLLIMATOR_MEM_CEILING_GB="${NIGHTLY_MEM_CEILING_GB-$default_ceiling}"
 echo "nightly($mode): memory ceiling ${COLLIMATOR_MEM_CEILING_GB:-none} GB"
 
 rc=0
@@ -233,7 +250,19 @@ echo "== repin =="
 # Retried with exponential backoff + jitter (<= ~2 min) so a DB blip at 20:00
 # doesn't cost the run its single snapshot.
 snapshot=""
+state_dir="${NIGHTLY_STATE_DIR:-out/nightly/resume}"
+mkdir -p "$state_dir" || exit 1
+db_identity=$(printf '%s' "${DB:-postgres://hopper@localhost:5432/hopper}" | sha256sum | cut -d' ' -f1)
+if [[ ${NIGHTLY_FRESH:-0} != 1 && -f "$state_dir/snapshot" ]]; then
+  read -r saved_db saved_snapshot < "$state_dir/snapshot" || exit 1
+  if [[ $saved_db = "$db_identity" ]]; then
+    snapshot=$saved_snapshot
+    [[ $snapshot =~ ^[1-9][0-9]*$ ]] || { echo "ERROR: invalid recovery snapshot in $state_dir"; exit 1; }
+    echo "[resume] continuing unfinished nightly snapshot max_id=$snapshot"
+  fi
+fi
 for attempt in 1 2 3 4 5 6; do
+  [[ -n "$snapshot" ]] && break
   snapshot=$(.venv/bin/python -c 'import sys; from collimator import data; print(data.snapshot_max_id(sys.argv[1]))' \
     "${DB:-postgres://hopper@localhost:5432/hopper}") && [[ $snapshot =~ ^[1-9][0-9]*$ ]] && break
   snapshot=""
@@ -243,9 +272,16 @@ for attempt in 1 2 3 4 5 6; do
   sleep "$delay"
 done
 if [ -n "$snapshot" ]; then
+  printf '%s %s\n' "$db_identity" "$snapshot" > "$state_dir/snapshot.tmp" || exit 1
+  mv "$state_dir/snapshot.tmp" "$state_dir/snapshot" || exit 1
   make repin PIN_TO="$snapshot" || exit 1
   export THRESHOLD_MAX_ID="$snapshot"
+  export AZOTH_CHECKPOINT_DIR="$state_dir/$db_identity/$snapshot"
   echo "snapshot for this run: max_id=$snapshot"
+  # The pin bounds row selection, not the lifetime of live corpus contents.
+  # Completed stages validate their configuration and artifact dependencies;
+  # partial-work recovery validates its own selected inputs.
+  echo "[resume] using pinned max_id; completed stages check configuration and artifacts"
 else
   echo "ERROR: could not resolve a consistent snapshot; refusing to train"
   exit 1
@@ -268,4 +304,7 @@ else
   echo "is above, or: journalctl --user -u azoth-nightly.service -b"
 fi
 
+if (( rc == 0 )); then
+  mv "$state_dir/snapshot" "$state_dir/last-completed-snapshot" || exit 1
+fi
 exit "$rc"

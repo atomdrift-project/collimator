@@ -47,7 +47,7 @@
 #
 # Concurrency here is bounded by RAM, not cores, and every OOM this pipeline
 # has had came from processes that each measured the whole box and assumed it
-# was theirs. Both admission clamps read /proc/meminfo MemAvailable at start:
+# was theirs. Both admission clamps include reclaimable ZFS ARC in available RAM:
 #
 #   * collimator's DB-fetch worker clamp (features.clamp_workers_to_available_ram)
 #   * the specialist suite's fit admission (azoth_specialist_suite.py), which
@@ -61,7 +61,7 @@
 # admissions then sum to what one sequential run would have taken, which is the
 # operating point those per-fit estimates were calibrated against.
 #
-# MEM_LOG records MemAvailable every 60s for the whole run; the low-water mark
+# MEM_LOG records available RAM including ARC every 60s; the low-water mark
 # is printed at the end. That is the number to look at before raising any
 # parallelism knob — we have been tuning these blind.
 #
@@ -99,7 +99,9 @@
 #                                                 # don't touch the deploy
 #   PARALLEL_CHAINS=0 scripts/azoth_oof_pipeline.sh   # old sequential order
 #
-# If a stage fails the script exits; relaunch with START_STAGE=N to resume.
+# With a pinned THRESHOLD_MAX_ID, completed training/scoring stages resume
+# automatically after their input and artifact hashes have been checked.
+# START_STAGE/STOP_STAGE remain explicit overrides. Deployment gates rerun.
 
 set -uo pipefail
 
@@ -121,6 +123,20 @@ EVAL_OUT_JSON=${AZOTH_ROOT}/route_policy_eval_oof.json
 NUM_STAGES=10  # stages 0..9
 
 MEM_LOG=${MEM_LOG:-out/pipeline-mem.log}
+
+checkpoint_stage() {
+    local key=$1
+    shift
+    if [[ ${THRESHOLD_MAX_ID:-} =~ ^[1-9][0-9]*$ && ${AZOTH_PIPELINE_RESUME:-1} != 0 ]]; then
+        python3 scripts/azoth_checkpoint.py \
+            --state-dir "${AZOTH_CHECKPOINT_DIR:-out/cache/azoth-pipeline/$THRESHOLD_MAX_ID}" \
+            --stage "$key" "$@"
+    else
+        while [[ $1 != -- ]]; do shift; done
+        shift
+        "$@"
+    fi
+}
 
 stage_active() {
     local n=$1
@@ -157,16 +173,15 @@ require_file() {
     fi
 }
 
-# Sample MemAvailable for the life of the run. We have repeatedly guessed at
-# per-fit memory (28 GB/fit, 2 GB/worker) without ever recording what the box
-# actually did, so every parallelism change has been a leap. This costs one awk
-# per minute; the low-water mark it yields is the evidence for the next tuning
-# decision. Killed via the EXIT trap.
+# Sample available RAM including reclaimable ARC for the life of the run.
+# We have repeatedly guessed at per-fit memory (28 GB/fit, 2 GB/worker) without
+# ever recording what the box actually did. The low-water mark from sampling
+# once a minute is the evidence for the next tuning decision. Killed via EXIT.
 MEM_WATCH_PID=""
 start_mem_watch() {
     [[ -r /proc/meminfo ]] || return 0
     mkdir -p "$(dirname "$MEM_LOG")"
-    echo "# $(date +%F' '%T) pipeline start (MemTotal $(awk '/^MemTotal:/ {printf "%.0f", $2/1024/1024}' /proc/meminfo) GB)" >> "$MEM_LOG"
+    echo "# $(date +%F' '%T) pipeline start (MemTotal $(awk '/^MemTotal:/ {printf "%.0f", $2/1024/1024}' /proc/meminfo) GiB; available includes reclaimable ZFS ARC)" >> "$MEM_LOG"
     (
         while true; do
             echo "$(date +%F' '%T) mem_available_gb=$(mem_avail_gb) swap_free_gb=$(awk '/^SwapFree:/ {printf "%.0f", $2/1024/1024}' /proc/meminfo)"
@@ -184,7 +199,7 @@ report_mem_watch() {
     # MEM_LOG is append-only across runs; reset at each "pipeline start" marker
     # so this is this run's minimum, not the all-time one.
     low=$(awk -F'mem_available_gb=' '/pipeline start/ { min = "" } /mem_available_gb=/ { split($2, a, " "); if (min == "" || a[1] < min) min = a[1] } END { print min }' "$MEM_LOG")
-    [[ -n "$low" ]] && echo "[pipeline] MemAvailable low-water mark this run: ${low} GB (full trace: $MEM_LOG)"
+    [[ -n "$low" ]] && echo "[pipeline] available RAM (including ZFS ARC) low-water mark: ${low} GiB (full trace: $MEM_LOG)"
 }
 
 # Chains (and the backgrounded stage 3) run as background jobs; a failure or an
@@ -304,7 +319,7 @@ if [[ "$PARALLEL_CHAINS" = "1" ]]; then
     echo "[pipeline] 2 concurrent chains: COLLIMATOR_MEM_SHARES=2, AZOTH_CONCURRENT_SUITES=2," \
          "COLLIMATOR_NUM_THREADS=${COLLIMATOR_NUM_THREADS}, WORKERS=${CHAIN_WORKERS}/chain" \
          "(nproc=${NPROC}, requested WORKERS=${WORKERS:-$NPROC})"
-    echo "[pipeline] MemAvailable at start: $(mem_avail_gb) GB"
+    echo "[pipeline] available RAM (including ZFS ARC) at start: $(mem_avail_gb) GiB"
 fi
 
 # Undo the split for stages that run alone — they should have the whole box.
@@ -317,13 +332,8 @@ unsplit_resources() {
 
 start_mem_watch
 
-# Resume is expressed by START_STAGE, NEVER by what happens to be on disk. An
-# earlier version of this script skipped the prod general whenever a model file
-# existed, to save time on repeat runs. That is wrong for a publish: the fold
-# generals retrain unconditionally, so a stale prod general would be paired with
-# folds trained on a newer corpus and the bundle shipped would be internally
-# inconsistent — with nothing in the log saying so. If you want to keep a
-# trained stage, skip it explicitly (START_STAGE=N).
+# A file's presence alone never skips training: checkpoint_stage checks the
+# pinned snapshot, configuration, source code, dependencies, and output hashes.
 #
 # The one disk check that remains is a resume guard: stage 6 NEEDS the prod
 # specialists summary (azoth_oof_score_routes.py reads the route -> file_type
@@ -340,7 +350,8 @@ prod_specialists_ready() {
 chain_prod() {
     if stage_active 0; then
         banner 0 "Train PROD GENERAL (no fold exclusion -> ${AZOTH_ROOT})"
-        time make azoth-general AZOTH_GENERAL_SKIP_RESCORE=1 "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
+        time checkpoint_stage prod-general --output "${AZOTH_ROOT}/general" -- \
+            make azoth-general AZOTH_GENERAL_SKIP_RESCORE=1 "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
     else
         skipped 0 "prod general training"
     fi
@@ -360,7 +371,8 @@ chain_prod() {
     if stage_active 4 || stage_active 5 || { stage_active 6 && ! prod_specialists_ready; }; then
         banner 4 "Train PROD SPECIALISTS (-> ${AZOTH_ROOT}/{filegroups,filetypes}/)"
         require_dir "prod general bundle" "${AZOTH_ROOT}/general" 0
-        time make azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0 "${PAR_ARGS[@]}" || return 1
+        time checkpoint_stage prod-specialists --input "${AZOTH_ROOT}/general" --output "$AZOTH_ROOT" -- \
+            make azoth-specialists AZOTH_SPECIALIST_SKIP_EXISTING=0 "${PAR_ARGS[@]}" || return 1
     else
         skipped 4 "prod specialist training"
     fi
@@ -373,14 +385,16 @@ chain_prod() {
 chain_fold() {
     if stage_active 1; then
         banner 1 "Train fold-A GENERAL (EXP_OOF_FOLD_EXCLUDE=0 -> ${FOLD_A_ROOT})"
-        time make azoth-general-fold-a "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
+        time checkpoint_stage fold-a-general --output "${FOLD_A_ROOT}/general" -- \
+            make azoth-general-fold-a "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
     else
         skipped 1 "fold-A general training"
     fi
 
     if stage_active 2; then
         banner 2 "Train fold-B GENERAL (EXP_OOF_FOLD_EXCLUDE=1 -> ${FOLD_B_ROOT})"
-        time make azoth-general-fold-b "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
+        time checkpoint_stage fold-b-general --output "${FOLD_B_ROOT}/general" -- \
+            make azoth-general-fold-b "${PAR_ARGS[@]}" "${FIDELITY_ARGS[@]}" || return 1
     else
         skipped 2 "fold-B general training"
     fi
@@ -388,7 +402,8 @@ chain_fold() {
     if stage_active 4; then
         banner 4 "Train fold-A specialists (-> ${FOLD_A_ROOT}/{filegroups,filetypes}/)"
         require_dir "fold-A general bundle" "${FOLD_A_ROOT}/general" 1
-        time make azoth-specialists-fold-a "${PAR_ARGS[@]}" || return 1
+        time checkpoint_stage fold-a-specialists --input "${FOLD_A_ROOT}/general" --output "$FOLD_A_ROOT" -- \
+            make azoth-specialists-fold-a "${PAR_ARGS[@]}" || return 1
     else
         skipped 4 "fold-A specialist training"
     fi
@@ -396,7 +411,8 @@ chain_fold() {
     if stage_active 5; then
         banner 5 "Train fold-B specialists (-> ${FOLD_B_ROOT}/{filegroups,filetypes}/)"
         require_dir "fold-B general bundle" "${FOLD_B_ROOT}/general" 2
-        time make azoth-specialists-fold-b "${PAR_ARGS[@]}" || return 1
+        time checkpoint_stage fold-b-specialists --input "${FOLD_B_ROOT}/general" --output "$FOLD_B_ROOT" -- \
+            make azoth-specialists-fold-b "${PAR_ARGS[@]}" || return 1
     else
         skipped 5 "fold-B specialist training"
     fi
@@ -412,9 +428,11 @@ if stage_active 0 || stage_active 1 || stage_active 2 || stage_active 4 || stage
         echo "          (fold-A gen -> fold-B gen -> fold-A spec -> fold-B spec)"
         echo "          2 concurrent trainings, RAM split 2 ways"
         echo "================================================================"
-        bg_group chain_prod > >(sed 's/^/[prod] /') 2>&1
+        # Flush each line: block-buffered prefixes can hide progress for minutes
+        # and interleave fragments when both chains finally flush together.
+        bg_group chain_prod > >(sed -u 's/^/[prod] /') 2>&1
         PID_PROD=$BG_PID
-        bg_group chain_fold > >(sed 's/^/[fold] /') 2>&1
+        bg_group chain_fold > >(sed -u 's/^/[fold] /') 2>&1
         PID_FOLD=$BG_PID
         CHAIN_PIDS=("$PID_PROD" "$PID_FOLD")
         CHAIN_FAIL=0
@@ -434,7 +452,7 @@ if stage_active 0 || stage_active 1 || stage_active 2 || stage_active 4 || stage
         chain_prod || { report_mem_watch; exit 1; }
         chain_fold || { report_mem_watch; exit 1; }
     fi
-    echo "[pipeline] trainings complete; MemAvailable now $(mem_avail_gb) GB"
+    echo "[pipeline] trainings complete; available RAM (including ZFS ARC) now $(mem_avail_gb) GiB"
 fi
 
 # ------------------------------------------------------------- scoring stages
@@ -479,11 +497,15 @@ if stage_active 3; then
         STAGE3_LOG=$(mktemp -t azoth-oof-merge-general.XXXXXX.log)
         echo "[3] running concurrently with stage 6; streaming to ${STAGE3_LOG}, reaped before stage 7"
         set -m   # own process group, so cleanup can stop the whole merge (see bg_group)
-        (time make azoth-oof-merge-general "${PAR_ARGS[@]}") > "$STAGE3_LOG" 2>&1 &
+        (time checkpoint_stage general-scores --input "${FOLD_A_ROOT}/general" \
+            --input "${FOLD_B_ROOT}/general" --output "${OOF_ROUTE_SCORES_DIR}/general" -- \
+            make azoth-oof-merge-general "${PAR_ARGS[@]}") > "$STAGE3_LOG" 2>&1 &
         STAGE3_PID=$!
         set +m
     else
-        time make azoth-oof-merge-general "${PAR_ARGS[@]}" || { report_mem_watch; exit 1; }
+        time checkpoint_stage general-scores --input "${FOLD_A_ROOT}/general" \
+            --input "${FOLD_B_ROOT}/general" --output "${OOF_ROUTE_SCORES_DIR}/general" -- \
+            make azoth-oof-merge-general "${PAR_ARGS[@]}" || { report_mem_watch; exit 1; }
     fi
 else
     skipped 3 "OOF general merge"
@@ -494,7 +516,9 @@ if stage_active 6; then
     require_file "fold-A specialists summary" "${FOLD_A_ROOT}/specialists.json" 4
     require_file "fold-B specialists summary" "${FOLD_B_ROOT}/specialists.json" 5
     require_file "prod specialists summary" "${AZOTH_ROOT}/specialists.json" 0
-    time make azoth-oof-route-scores "${PAR_ARGS[@]}" || { report_mem_watch; exit 1; }
+    time checkpoint_stage route-scores --input "$AZOTH_ROOT" \
+        --input "$FOLD_A_ROOT" --input "$FOLD_B_ROOT" --output "$OOF_ROUTE_SCORES_DIR" -- \
+        make azoth-oof-route-scores "${PAR_ARGS[@]}" || { report_mem_watch; exit 1; }
 else
     skipped 6 "OOF route-score merge"
 fi

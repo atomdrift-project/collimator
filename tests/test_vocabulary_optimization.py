@@ -3,6 +3,7 @@
 import json
 import random
 import sqlite3
+import struct
 from dataclasses import asdict
 from itertools import combinations
 from pathlib import Path
@@ -11,7 +12,19 @@ from threading import Event
 import pytest
 
 from collimator import features
-from collimator.vocabulary import CountView, VocabularyCounts
+from collimator.vocabulary import CountView, VocabularyCounts, _packed_remapper
+
+
+def test_packed_remapping_preserves_arbitrary_ids_and_key_orders():
+    mapping = {0: 0xFFFFFFFF, 1: 256, 257: 3, 65536: 19, 0xFFFFFFFF: 0}
+    remap = _packed_remapper(mapping)
+    keys = [parts for order in (1, 2, 3, 4) for parts in combinations(mapping, order)]
+    # Include adjacent prefixes as well as transitions between key lengths.
+    keys += list(reversed(keys))
+    for parts in keys:
+        packed = struct.pack(f">{len(parts)}I", *parts)
+        expected = struct.pack(f">{len(parts)}I", *(mapping[i] for i in parts))
+        assert remap(packed) == expected
 
 
 def test_ordered_merge_matches_document_sets_and_keeps_all_families(tmp_path):

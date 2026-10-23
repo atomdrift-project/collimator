@@ -80,6 +80,7 @@ Feature groups:
 from __future__ import annotations
 
 import collections
+import fcntl
 import hashlib
 import json
 import logging
@@ -88,6 +89,7 @@ import heapq
 import multiprocessing as mp
 import os
 import re
+import shutil
 import subprocess
 import time
 import tempfile
@@ -108,8 +110,8 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.stats as stats
 
-from .vocabulary import CountView, VocabularyCounts
 from .memory import available_memory_gb
+from .vocabulary import CountView, DiskTrigramCandidates, TrigramSource, VocabularyCounts
 
 log = logging.getLogger(__name__)
 _extract_trait_depth: ContextVar[int | None] = ContextVar("extract_trait_depth", default=None)
@@ -4335,13 +4337,33 @@ def _count_ngrams(paths, order, counts, family, document, benign_family="", *, n
 
 
 @contextmanager
-def _vocabulary_counts():
+def _vocabulary_counts(checkpoint_dir: Path | None = None):
+    if checkpoint_dir is not None:
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        with (checkpoint_dir / "lock").open("w") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            # A killed process cannot run TemporaryDirectory's cleanup.
+            # Only this checkpoint's exclusive owner may remove orphan shards.
+            for orphan in checkpoint_dir.glob("workers-*"):
+                if orphan.is_dir() and not orphan.is_symlink():
+                    shutil.rmtree(orphan)
+            with tempfile.TemporaryDirectory(prefix="workers-", dir=checkpoint_dir.resolve()) as scratch:
+                with VocabularyCounts(str(checkpoint_dir / "counts.sqlite"), durable=True,
+                                      resume=True, check_same_thread=False, cache_size_mib=256) as counts:
+                    yield counts, scratch
+            if (checkpoint_dir / "feature_spec.json").is_file():
+                # The spec is sufficient for pass 2 and future retries. Keep
+                # its identity receipt, not tens of GB of completed counts.
+                for suffix in ("", "-wal", "-shm"):
+                    (checkpoint_dir / f"counts.sqlite{suffix}").unlink(missing_ok=True)
+        return
     root = Path(os.getenv("COLLIMATOR_VOCAB_TMPDIR", "out/cache/vocabulary"))
     root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="count-", dir=root.resolve()) as scratch:
         # The merge thread uses this connection exclusively during counting;
         # the parent queries it only after the thread has joined.
-        with VocabularyCounts(str(Path(scratch) / "merged.sqlite"), check_same_thread=False) as counts:
+        with VocabularyCounts(str(Path(scratch) / "merged.sqlite"), durable=True,
+                              check_same_thread=False, cache_size_mib=256) as counts:
             yield counts, scratch
 
 
@@ -4599,18 +4621,24 @@ def resolve_worker_count(n_workers: int) -> int:
 
 
 def ram_headroom_gb(reserve_gb: float) -> float | None:
-    """GB of RAM this process tree may still claim; None if /proc/meminfo is unreadable.
+    """GiB of RAM this process tree may still claim; None if meminfo is unreadable.
 
     Available host RAM (including reclaimable ZFS ARC) less ``reserve_gb`` for
-    everything else on the box,
-    and, when COLLIMATOR_MEM_CEILING_GB is set (the nightly sets it), no more
-    than that ceiling less the anonymous memory this process's cgroup already
-    holds. Page cache is reclaimable, so it doesn't count against the ceiling.
+    everything else on the box. When COLLIMATOR_MEM_CEILING_GB is set (the
+    nightly sets it), headroom is also capped at that ceiling less the anonymous
+    memory this process's cgroup already holds. Page cache is reclaimable, so
+    it doesn't count against the ceiling.
     """
     available = available_memory_gb()
     if available is None:
         return None
     headroom = available - reserve_gb
+    # ARC can take time to shrink. Stop launching batches when the kernel's
+    # immediately available headroom is nearly gone, even if ARC is large.
+    kernel_available = available_memory_gb(include_arc=False)
+    minimum = float(os.getenv("COLLIMATOR_MEM_MIN_AVAILABLE_GB", "8"))
+    if kernel_available is not None and kernel_available < minimum:
+        headroom = 0.0
     if ceiling := os.getenv("COLLIMATOR_MEM_CEILING_GB"):
         try:
             headroom = min(headroom, float(ceiling) - _cgroup_anon_gb())
@@ -4631,16 +4659,17 @@ def _cgroup_anon_gb() -> float:
     return anon / 2**30
 
 
-def clamp_workers_to_available_ram(n_workers: int, *, log_budget: bool = True) -> int:
+def clamp_workers_to_available_ram(n_workers: int, *, log_budget: bool = True,
+                                   allow_zero: bool = False) -> int:
     """Best-effort cap on the DB-fetch worker count from currently-available RAM.
 
     Each concurrent fetch worker opens its own postgres backend and holds a
     fetch/count buffer, so on a co-tenanted host (hopper + scan) launching the
     full worker count when the box is *already* full is what tips it into a
     global OOM. This reads host RAM including reclaimable ZFS ARC at call time
-    and clamps the resolved worker count so ``(available RAM - reserve)`` covers the
-    per-worker headroom. Vocabulary scheduling rechecks this budget during
-    the pass; extraction takes a fresh snapshot after vocabulary completes.
+    and clamps the resolved worker count so ``(available RAM - reserve)``
+    covers the per-worker headroom. Vocabulary scheduling rechecks this budget
+    during the pass; extraction takes a fresh snapshot after vocabulary completes.
     Linux-only; on any other platform or a parse failure it returns the
     request unchanged (never raises). Tune via COLLIMATOR_MEM_RESERVE_GB /
     COLLIMATOR_MEM_PER_WORKER_GB, or disable with COLLIMATOR_MEM_AWARE_WORKERS=0.
@@ -4653,7 +4682,7 @@ def clamp_workers_to_available_ram(n_workers: int, *, log_budget: bool = True) -
     the concurrent caps sum to what a single run would have taken.
     """
     resolved = resolve_worker_count(n_workers)
-    if os.getenv("COLLIMATOR_MEM_AWARE_WORKERS", "1") == "0" or resolved <= 1:
+    if os.getenv("COLLIMATOR_MEM_AWARE_WORKERS", "1") == "0" or (resolved <= 1 and not allow_zero):
         return resolved
     try:
         reserve = float(os.getenv("COLLIMATOR_MEM_RESERVE_GB", "48"))
@@ -4664,7 +4693,7 @@ def clamp_workers_to_available_ram(n_workers: int, *, log_budget: bool = True) -
     headroom = ram_headroom_gb(reserve)
     if headroom is None:
         return resolved  # non-Linux or unparseable /proc/meminfo: leave as requested
-    cap = max(1, int(headroom / shares // max(per_worker, 0.1)))
+    cap = max(0 if allow_zero else 1, int(headroom / shares // max(per_worker, 0.1)))
     share_note = f", shares={shares}" if shares > 1 else ""
     if cap < resolved:
         if log_budget:
@@ -4933,17 +4962,31 @@ def _bounded_unordered_iter(
     exhausted = False
     refresh_at = 0.0
     limit = max_inflight if isinstance(max_inflight, int) else 1
+    sentinel = object()
+    buffered = sentinel
     while pending or not exhausted:
         if callable(max_inflight) and time.monotonic() >= refresh_at:
-            limit = max(1, max_inflight())
+            limit = max(0, max_inflight())
             refresh_at = time.monotonic() + _WORKER_BUDGET_REFRESH_SECONDS
         while not exhausted and len(pending) < limit:
             try:
-                pending.add(pool.submit(fn, next(source)))
+                item = next(source) if buffered is sentinel else buffered
+                buffered = sentinel
+                pending.add(pool.submit(fn, item))
             except StopIteration:
                 exhausted = True
         if not pending:
-            return
+            if exhausted:
+                return
+            # Keep one input buffered to distinguish an empty source from a
+            # paused pool; a zero budget must not silently discard queued work.
+            if buffered is sentinel:
+                try:
+                    buffered = next(source)
+                except StopIteration:
+                    return
+            time.sleep(max(0.0, refresh_at - time.monotonic()))
+            continue
         timeout = max(0.0, refresh_at - time.monotonic()) if callable(max_inflight) else None
         done, _ = wait(pending, timeout=timeout, return_when=FIRST_COMPLETED)
         if done:
@@ -4957,7 +5000,8 @@ def _memory_budgeted_unordered_iter(pool, fn, it, *, n_workers: int) -> Iterator
 
     def budget():
         nonlocal previous
-        admitted = clamp_workers_to_available_ram(n_workers, log_budget=previous is None)
+        admitted = clamp_workers_to_available_ram(n_workers, log_budget=previous is None,
+                                                  allow_zero=True)
         if admitted != previous:
             log.info("vocab worker budget: %s -> %d/%d workers; rechecking every %.0fs",
                      previous if previous is not None else "initial", admitted, n_workers,
@@ -4968,6 +5012,20 @@ def _memory_budgeted_unordered_iter(pool, fn, it, *, n_workers: int) -> Iterator
     # With a pool sized for future growth, queuing 2*budget tasks could spawn
     # 2*budget workers. Admit only one task per budgeted worker.
     yield from _bounded_unordered_iter(pool, fn, it, max_inflight=budget)
+
+
+def _memory_budgeted_serial_iter(fn, it) -> Iterator:
+    """Sequential recovery must respect the same zero-worker admission floor."""
+    for item in it:
+        waiting = False
+        while clamp_workers_to_available_ram(1, log_budget=False, allow_zero=True) == 0:
+            if not waiting:
+                log.info("vocab worker budget: 0/1 workers; waiting for memory")
+                waiting = True
+            time.sleep(_WORKER_BUDGET_REFRESH_SECONDS)
+        if waiting:
+            log.info("vocab worker budget: memory recovered; resuming 1 worker")
+        yield fn(item)
 
 
 def _extract_partitioned_batch_worker(
@@ -5049,16 +5107,41 @@ def _extract_partitioned_batch_worker(
 
 
 def _extract_partitioned_db_batch_worker(
-    args: tuple[int, int, Path | str, list[tuple[int, int, bool]], FeatureSpec],
+    args: tuple[int, int, Path | str, list[tuple[int, int, bool]], FeatureSpec]
+    | tuple[int, int, Path | str, list[tuple[int, int, bool]], FeatureSpec, bool],
 ) -> tuple[
     list[int], list[int], list[float], list[int],
     list[int], list[int], list[float], list[int],
+] | tuple[
+    tuple[list[int], list[int], list[float], list[int],
+          list[int], list[int], list[float], list[int]],
+    tuple[list[int], list[int], bytes],
 ]:
     """Fetch and extract train/test features for a batch of IDs from the DB."""
     from . import data  # noqa: PLC0415 — deferred to avoid circular import in workers
 
-    train_offset, test_offset, dsn, batch_ids, spec = args
+    train_offset, test_offset, dsn, batch_ids, spec, *capture = args
     ids = [rid for rid, _l, _t in batch_ids]
+    if capture and capture[0]:
+        reports_map = data.fetch_cleave_results(
+            dsn, ids, evaluation_labels={rid: label for rid, label, test in batch_ids if test},
+        )
+        _check_missing_cleave_rows(ids, reports_map)
+        kept = []
+        for rid, label, test in batch_ids:
+            if rid not in reports_map:
+                continue
+            report = _coerce_report(reports_map[rid]["cleave_result"])
+            if report is not None:
+                reports_map[rid]["cleave_result"] = report
+                kept.append((rid, label, test))
+        batch = [(reports_map[rid], label, test) for rid, label, test in kept]
+        matrices = _extract_partitioned_batch_worker((train_offset, test_offset, batch, spec))
+        return matrices, (
+            [rid for rid, _, test in kept if not test],
+            [rid for rid, _, test in kept if test],
+            b"".join(reports_map[rid]["evaluation_digest"] for rid, _, test in kept if test),
+        )
     reports_map = data.fetch_cleave_results(dsn, ids)
 
     batch = [
@@ -5323,7 +5406,10 @@ def _enumerate_partitioned_batches(
 def _vocab_labeled_db_batch_worker(args):
     dsn, ids_labels, *rest = args
     with VocabularyCounts(_batch_count_path(rest[0] if rest else None)) as counts:
-        return _count_labeled_vocab_batch(dsn, ids_labels, counts)
+        result = _count_labeled_vocab_batch(dsn, ids_labels, counts)
+        if len(rest) > 1:
+            counts.record_batch(rest[1], result, len(ids_labels))
+        return result
 
 
 # Keep fetched reports bounded to one batch, but combine repeated n-grams
@@ -5337,7 +5423,7 @@ _vocab_shard_finalizer: Finalize | None = None
 
 def _vocab_labeled_db_shard_worker(args):
     global _vocab_shard_counts, _vocab_shard_batches, _vocab_shard_finalizer
-    dsn, ids_labels, scratch = args
+    dsn, ids_labels, scratch, *batch_id = args
     if _vocab_shard_counts is None:
         _vocab_shard_counts = VocabularyCounts(_batch_count_path(scratch))
         _vocab_shard_batches = 0
@@ -5345,6 +5431,8 @@ def _vocab_labeled_db_shard_worker(args):
             _vocab_shard_counts, _vocab_shard_counts.close, exitpriority=10,
         )
     result = _count_labeled_vocab_batch(dsn, ids_labels, _vocab_shard_counts)
+    if batch_id:
+        _vocab_shard_counts.record_batch(batch_id[0], result, len(ids_labels))
     _vocab_shard_batches += 1
     sealed = _vocab_shard_batches >= _VOCAB_SHARD_BATCHES
     if sealed:
@@ -5512,25 +5600,30 @@ def _trigram_candidate_index(candidates):
     return by_first
 
 
-_worker_trigram_candidates: dict[str, dict[str, set[str]]] | None = None
+_worker_trigram_candidates: dict[str, dict[str, set[str]]] | DiskTrigramCandidates | None = None
 
 
 def _init_trigram_candidates(candidates):
     global _worker_trigram_candidates
-    _worker_trigram_candidates = _trigram_candidate_index(candidates)
+    _worker_trigram_candidates = (DiskTrigramCandidates(candidates)
+                                  if isinstance(candidates, TrigramSource)
+                                  else _trigram_candidate_index(candidates))
 
 
 def _vocab_benign_trigram_worker(args):
     """Count supported candidates without enumerating every benign triple."""
     from . import data
 
-    dsn, ids, candidates, scratch = args
+    dsn, ids, candidates, scratch, *batch_id = args
     if candidates is None:
         by_first = _worker_trigram_candidates
         if by_first is None:
             raise RuntimeError("trigram candidate index was not initialized")
     else:
-        by_first = candidates if isinstance(candidates, dict) else _trigram_candidate_index(candidates)
+        if isinstance(candidates, (dict, DiskTrigramCandidates)):
+            by_first = candidates
+        else:
+            by_first = _trigram_candidate_index(candidates)
     with VocabularyCounts(_batch_count_path(scratch)) as counts:
         for rid, item in data.fetch_cleave_results(dsn, ids).items():
             report = _coerce_report(item["cleave_result"])
@@ -5542,18 +5635,66 @@ def _vocab_benign_trigram_worker(args):
                 if paths in seen_files:
                     continue
                 seen_files.add(paths)
+                if isinstance(by_first, DiskTrigramCandidates):
+                    for triple in by_first.matches(paths):
+                        counts.increment("benign_trigram", triple, document=rid)
+                    continue
                 present = set(paths)
                 for a in present.intersection(by_first):
                     seconds = by_first[a]
                     for b in present.intersection(seconds):
                         for c in present.intersection(seconds[b]):
                             counts.increment("benign_trigram", (a, b, c), document=rid)
+        if batch_id:
+            counts.record_batch(batch_id[0], None, len(ids))
         return counts.view("benign_trigram")
 
 
-def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int]], n_workers: int = 0) -> FeatureSpec:
-    with _vocabulary_counts() as (counts, scratch):
-        return _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch)
+def vocabulary_identity(db_path: Path | str, row_ids_labels: Iterable[tuple[int, int]]) -> str:
+    """Identify a selected training cohort without rereading live labels.
+
+    Labels are fixed by selection and shared by vocabulary counting and feature
+    extraction. Reports are read batch by batch; committed counts retain what
+    their workers observed, even when the live reports subsequently change.
+    This is a recovery identity, not an immutable database-content checksum.
+    """
+    from .cache_identity import code_revision
+
+    identity = hashlib.sha256(f"selected-cohort-v1:{db_path}\n".encode())
+    for row_id, label in row_ids_labels:
+        identity.update(f"{row_id}:{label}\n".encode())
+    config = feature_config_from_env()
+    identity.update(json.dumps(
+        {name: getattr(config, name) for name in config.__dataclass_fields__},
+        sort_keys=True, default=sorted,
+    ).encode())
+    identity.update(code_revision("features").encode())
+    return identity.hexdigest()
+
+
+def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int]],
+                        n_workers: int = 0, *, checkpoint_dir: Path | None = None) -> FeatureSpec:
+    with _vocabulary_counts(checkpoint_dir) as (counts, scratch):
+        if checkpoint_dir is not None:
+            expected = vocabulary_identity(db_path, row_ids_labels)
+            identity_path = checkpoint_dir / "identity"
+            saved_identity = identity_path.read_text().strip() if identity_path.exists() else expected
+            if saved_identity != expected or counts.state("identity", expected) != expected:
+                raise ValueError("vocabulary checkpoint inputs changed; use a new checkpoint directory")
+            counts.set_state("identity", expected)
+            temporary_identity = identity_path.with_suffix(".tmp")
+            temporary_identity.write_text(expected + "\n")
+            os.replace(temporary_identity, identity_path)
+        spec_path = checkpoint_dir / "feature_spec.json" if checkpoint_dir else None
+        if spec_path is not None and spec_path.exists():
+            log.info("resuming completed vocabulary: %s", spec_path)
+            return FeatureSpec.load(spec_path)
+        spec = _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch)
+        if spec_path is not None:
+            temporary = spec_path.with_suffix(".tmp")
+            spec.save(temporary)
+            os.replace(temporary, spec_path)
+        return spec
 
 
 def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) -> FeatureSpec:
@@ -5567,7 +5708,10 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
     skeleton_counts: dict[str, int] = {}
     benign_elements: dict[str, int] = {}
     malware_elements: dict[str, int] = {}
-    batch_size = _feature_batch_size(nw)
+    # The same checkpoint may resume with fewer workers. Preserve its batch
+    # boundaries so completion IDs still refer to exactly the same input rows.
+    batch_size = counts.state("batch_size", _feature_batch_size(nw))
+    counts.set_state("batch_size", batch_size)
     pending_shards: dict[str, CountView] = {}
     merged_shards: set[str] = set()
     rows_counted = 0
@@ -5604,6 +5748,7 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
         tier_tri_counts: dict[str, int],
         *,
         n_rows: int | None = None,
+        restoring: bool = False,
     ) -> None:
         nonlocal last_progress, rows_counted
         rows_counted += batch_size if n_rows is None else n_rows
@@ -5612,7 +5757,9 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
         filetypes.update(fts)
         for k, v in el_counts.items():
             element_counts[k] = element_counts.get(k, 0) + v
-        if nw > 1:
+        if restoring:
+            pass
+        elif nw > 1:
             # Results from one worker can be consumed out of order. A sealed
             # shard already includes its earlier batches, even if their small
             # singleton-count results have not reached the parent yet.
@@ -5641,8 +5788,18 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
 
     # Counts spill to disk; never discard singletons between batches.
     batches_merged = 0
-
-    batch_args = ((db_path, batch, scratch) for batch in _batched(row_ids_labels, batch_size))
+    completed = set()
+    for batch_id, summary, n_rows in counts.completed_batches("count"):
+        _merge_batch(*json.loads(summary), n_rows=n_rows, restoring=True)
+        completed.add(batch_id)
+        batches_merged += 1
+    if completed:
+        log.info("resuming vocabulary: %d committed batches, %d rows", len(completed), rows_counted)
+    batch_args = (
+        (db_path, batch, scratch, f"count:{i}")
+        for i, batch in enumerate(_batched(row_ids_labels, batch_size))
+        if f"count:{i}" not in completed
+    )
 
     if nw > 1:
         with _background_vocab_merges(counts) as merge:
@@ -5668,7 +5825,7 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
                          i, len(pending_shards), now - merge_started)
                 last_merge_progress = now
     else:
-        for res in map(_vocab_labeled_db_batch_worker, batch_args):
+        for res in _memory_budgeted_serial_iter(_vocab_labeled_db_batch_worker, batch_args):
             _merge_batch(*res)
             batches_merged += 1
 
@@ -5685,26 +5842,35 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
 
     # Require support in distinct malware samples before spending work on
     # benign prevalence. Benign-only triples are outside this discovery policy.
-    candidates = counts.at_least("trigram", config.trigram_min_freq) if config.trigram_max > 0 else []
-    if candidates:
+    candidate_count = counts.count_at_least("trigram", config.trigram_min_freq) if config.trigram_max > 0 else 0
+    if candidate_count:
         benign_ids = [rid for rid, label in row_ids_labels if label == 0]
-        log.info("trigram prevalence: %d supported malware candidates, %d benign samples",
-                 len(candidates), len(benign_ids))
+        source = TrigramSource(counts.path, config.trigram_min_freq)
+        done_benign = {row[0] for row in counts.completed_batches("benign")}
+        log.info("trigram prevalence: %d candidates on disk, %d benign samples, %d batches resumed",
+                 candidate_count, len(benign_ids), len(done_benign))
         if nw > 1:
-            args = ((db_path, batch, None, scratch) for batch in _batched(benign_ids, batch_size))
+            args = ((db_path, batch, None, scratch, f"benign:{i}")
+                    for i, batch in enumerate(_batched(benign_ids, batch_size))
+                    if f"benign:{i}" not in done_benign)
             with _background_vocab_merges(counts) as merge:
                 with _feature_worker_pool(
-                    nw, initializer=_init_trigram_candidates, initargs=(candidates,),
+                    nw, initializer=_init_trigram_candidates, initargs=(source,),
                 ) as pool:
                     for result in _memory_budgeted_unordered_iter(
                         pool, _vocab_benign_trigram_worker, args, n_workers=nw,
                     ):
                         merge(result)
         else:
-            index = _trigram_candidate_index(candidates)
-            args = ((db_path, batch, index, scratch) for batch in _batched(benign_ids, batch_size))
-            for result in map(_vocab_benign_trigram_worker, args):
-                counts.merge(result)
+            index = DiskTrigramCandidates(source)
+            try:
+                args = ((db_path, batch, index, scratch, f"benign:{i}")
+                        for i, batch in enumerate(_batched(benign_ids, batch_size))
+                        if f"benign:{i}" not in done_benign)
+                for result in _memory_budgeted_serial_iter(_vocab_benign_trigram_worker, args):
+                    counts.merge(result)
+            finally:
+                index.close()
     trigram_benign_ceil = int(config.trigram_max_benign_frac * benign_total) if config.trigram_max_benign_frac > 0 else 0
     trigram_vocab = counts.top("trigram", config.trigram_max, config.trigram_min_freq,
                                benign_family="benign_trigram", benign_ceiling=trigram_benign_ceil)
@@ -6180,8 +6346,14 @@ def extract_partitioned_from_db(
     test_ids_labels: list[tuple[int, int]],
     spec: FeatureSpec,
     n_workers: int = 0,
+    *,
+    identity: dict[str, Any] | None = None,
 ) -> tuple[sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray]:
-    """Extract train/test features using worker-local DB fetching."""
+    """Extract features and optionally fill identities of the rows actually read.
+
+    ``identity`` receives aligned train/test row IDs and an evaluation revision
+    captured alongside reports, without pre/post scans of the live database.
+    """
     nw = resolve_worker_count(n_workers)
     batch_size = _feature_batch_size(nw)
 
@@ -6194,21 +6366,44 @@ def extract_partitioned_from_db(
     mixed_ids.sort(key=lambda x: x[0])
 
     batch_args = (
-        (train_offset, test_offset, db_path, batch, spec)
+        (train_offset, test_offset, db_path, batch, spec, identity is not None)
         for train_offset, test_offset, batch in _enumerate_partitioned_batches(
             mixed_ids,
             batch_size,
         )
     )
 
+    def assemble(results):
+        if identity is None:
+            return _assemble_partitioned_matrices(results, spec.total_features)
+        from array import array
+        from .cache_identity import evaluation_hasher
+
+        train_ids, test_ids = array("q"), array("q")
+        revision = evaluation_hasher(db_path)
+
+        def capture_batches():
+            for matrices, (train_rows, test_rows, digests) in results:
+                if len(train_rows) != len(matrices[3]) or len(test_rows) != len(matrices[7]):
+                    raise ValueError("extracted rows and captured identities disagree")
+                train_ids.extend(train_rows)
+                test_ids.extend(test_rows)
+                revision.update(digests)
+                yield matrices
+
+        matrices = _assemble_partitioned_matrices(capture_batches(), spec.total_features)
+        identity.update(
+            train_row_ids=np.frombuffer(train_ids, dtype=np.int64),
+            test_row_ids=np.frombuffer(test_ids, dtype=np.int64),
+            evaluation_revision=revision.hexdigest(),
+        )
+        return matrices
+
     if nw > 1:
         with _extract_pool(nw, spec) as pool:
             results = _bounded_iter(pool, _extract_partitioned_db_batch_worker, batch_args, max_inflight=2 * nw)
-            return _assemble_partitioned_matrices(results, spec.total_features)
-    return _assemble_partitioned_matrices(
-        map(_extract_partitioned_db_batch_worker, batch_args),
-        spec.total_features,
-    )
+            return assemble(results)
+    return assemble(map(_extract_partitioned_db_batch_worker, batch_args))
 
 
 def standardize(X: np.ndarray | sp.spmatrix, spec: FeatureSpec) -> np.ndarray:

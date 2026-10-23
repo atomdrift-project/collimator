@@ -349,17 +349,9 @@ def _save_matrix_cache(
     y_test: np.ndarray,
     train_file_types: np.ndarray,
     test_row_ids: np.ndarray | None = None,
+    evaluation_revision: str = "",
 ) -> None:
-    """Persist the (X_train, X_test, spec, …) bundle plus the test
-    partition's row IDs. test_row_ids is the sorted-by-row_id sequence
-    that produced X_test, so it lines up index-for-index with the
-    matrix. The matrix cache used to omit row IDs, which meant a
-    cache hit at run_experiment time left ``sorted_test`` unbound and
-    crashed on autocollie's `test_sample_row_ids` emission. New
-    caches always include test_row_ids; old caches load with
-    test_row_ids=None and the caller treats that as "row IDs not
-    available — drop test_sample_row_ids from the run JSON."
-    """
+    """Persist matrices with aligned evaluation IDs and their captured revision."""
     cache_dir.mkdir(parents=True, exist_ok=True)
     npz_path = cache_dir / f"matrix_{matrix_hash}.npz"
     sp.save_npz(str(cache_dir / f"matrix_{matrix_hash}_Xtrain.npz"), X_train, compressed=False)
@@ -368,6 +360,7 @@ def _save_matrix_cache(
         "y_train": y_train,
         "y_test": y_test,
         "train_file_types": train_file_types,
+        "evaluation_revision": np.asarray(evaluation_revision),
     }
     if test_row_ids is not None:
         extras["test_row_ids"] = np.asarray(test_row_ids, dtype=np.int64)
@@ -380,29 +373,32 @@ def _save_matrix_cache(
 def _load_matrix_cache(
     cache_dir: Path,
     matrix_hash: str,
-) -> "tuple[features.FeatureSpec, sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray, np.ndarray, np.ndarray | None] | None":
+) -> "tuple[features.FeatureSpec, sp.csr_matrix, np.ndarray, sp.csr_matrix, np.ndarray, np.ndarray, np.ndarray, str] | None":
     npz_path = cache_dir / f"matrix_{matrix_hash}.npz"
     spec_path = cache_dir / f"matrix_{matrix_hash}_spec.json"
     xtrain_path = cache_dir / f"matrix_{matrix_hash}_Xtrain.npz"
     xtest_path = cache_dir / f"matrix_{matrix_hash}_Xtest.npz"
     if not all(p.exists() for p in (npz_path, spec_path, xtrain_path, xtest_path)):
         return None
+    with np.load(str(npz_path), allow_pickle=True) as arrays:
+        # Never assign today's database identity to previously extracted data.
+        if "evaluation_revision" not in arrays.files or "test_row_ids" not in arrays.files:
+            return None
+        evaluation_revision = str(arrays["evaluation_revision"].item())
+        if not evaluation_revision:
+            return None
+        y_train = arrays["y_train"]
+        y_test = arrays["y_test"]
+        train_file_types = arrays["train_file_types"]
+        test_row_ids = arrays["test_row_ids"]
     spec = features.FeatureSpec.load(spec_path)
     X_train = sp.load_npz(str(xtrain_path))
     X_test = sp.load_npz(str(xtest_path))
-    arrays = np.load(str(npz_path), allow_pickle=True)
-    y_train = arrays["y_train"]
-    y_test = arrays["y_test"]
-    train_file_types = arrays["train_file_types"]
-    # Pre-row_ids caches won't have this key; tolerate the absence so
-    # we don't have to mass-invalidate the existing cache pool. The
-    # caller falls back to dropping test_sample_row_ids from the run
-    # JSON when this is None — autocollie's apples-to-apples scoring
-    # gracefully degrades when row IDs are missing.
-    test_row_ids = arrays["test_row_ids"] if "test_row_ids" in arrays.files else None
+    if len(test_row_ids) != len(y_test) or X_test.shape[0] != len(y_test):
+        raise ValueError("cached evaluation rows are misaligned")
     log.info("loaded cached matrices: %d train, %d test, %d features",
              X_train.shape[0], X_test.shape[0], spec.total_features)
-    return spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids
+    return spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids, evaluation_revision
 
 
 @dataclass(frozen=True, slots=True)
@@ -981,18 +977,12 @@ def run_experiment(
     )
     matrix_hash = _matrix_cache_key(corpus_hash, feature_cfg, feature_env) if cache_dir else ""
 
-    # test_row_ids carries the per-row identity for the test partition.
-    # Path 1 (cache miss): computed below from sorted_test and saved.
-    # Path 2 (cache hit, new schema): loaded out of the matrix cache.
-    # Path 3 (cache hit, old pre-row_ids schema): None — test_sample_row_ids
-    # gets dropped from the run JSON gracefully.
+    # Evaluation IDs/revisions describe the extracted inputs, even if the live
+    # database changes later. Old caches without this evidence are rebuilt.
     test_row_ids: np.ndarray | None = None
     cached_matrices = _load_matrix_cache(cache_dir, matrix_hash) if cache_dir else None
     if cached_matrices is not None:
-        spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids = cached_matrices
-        eval_revision = cache_identity.evaluation_revision(db_path, list(map(int, test_row_ids)), y_test)
-        if cache_identity.database_revision(db_path) != db_revision:
-            raise RuntimeError("database changed while loading cached matrices; retry")
+        spec, X_train, y_train, X_test, y_test, train_file_types, test_row_ids, eval_revision = cached_matrices
         print(f"\nEXPERIMENT (cached matrices: {X_train.shape[0]} train, {X_test.shape[0]} test)")
     else:
         # --- Cache level 1: corpus row selections + file types ----------------
@@ -1024,39 +1014,54 @@ def run_experiment(
         # Sort corpus to match DB extraction order (by row_id).
         sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
         sorted_test = sorted(corpus.test_samples, key=lambda s: s.row_id)
-        test_row_ids = np.asarray(
-            [int(s.row_id) for s in sorted_test], dtype=np.int64,
-        )
-        eval_revision = cache_identity.evaluation_revision(
-            db_path, list(map(int, test_row_ids)), [s.label for s in sorted_test],
-        )
 
         log.info("pass 1: building vocabulary (worker-local DB fetching)")
+        train_ids_labels = [(s.row_id, s.label) for s in sorted_train]
+        vocab_options = {}
+        if cache_dir is not None:
+            # Use the same selected labels as counting/extraction. Rechecking
+            # live labels races ingestion and adds a scan of every training row.
+            log.info("keying vocabulary recovery from %s selected IDs and labels (no database scan)",
+                     f"{len(train_ids_labels):,}")
+            vocab_key = features.vocabulary_identity(db_path, train_ids_labels)
+            vocab_options["checkpoint_dir"] = cache_dir / f"vocabulary_{vocab_key}"
         spec = features.build_vocab_from_db(
             db_path,
-            [(s.row_id, s.label) for s in sorted_train],
+            train_ids_labels,
             n_workers=n_workers,
+            **vocab_options,
         )
 
         log.info("pass 2: extracting all features (worker-local DB fetching)")
         # Keep the requested maximum intact: vocabulary admission can recover
         # from temporary pressure, and extraction gets its own current budget.
         extraction_workers = features.clamp_workers_to_available_ram(n_workers)
+        extracted_identity = {}
         X_train, y_train, X_test, y_test = features.extract_partitioned_from_db(
             db_path,
-            [(s.row_id, s.label) for s in sorted_train],
+            train_ids_labels,
             [(s.row_id, s.label) for s in sorted_test],
             spec,
             n_workers=extraction_workers,
+            identity=extracted_identity,
         )
+        test_row_ids = extracted_identity["test_row_ids"]
+        eval_revision = extracted_identity["evaluation_revision"]
+        # Deleted/invalid reports are dropped by extraction. Keep training
+        # file-type weights aligned with the actual matrix rows as well.
+        if len(extracted_identity["train_row_ids"]) != len(train_ids_labels):
+            selected_ids = np.fromiter((rid for rid, _ in train_ids_labels), dtype=np.int64)
+            train_file_types = train_file_types[np.searchsorted(selected_ids, extracted_identity["train_row_ids"])]
+            del selected_ids
+        del extracted_identity
+        del train_ids_labels
 
         if cache_dir and cache_identity.database_revision(db_path) == db_revision:
             _save_matrix_cache(
                 cache_dir, matrix_hash, spec, X_train, y_train, X_test, y_test,
                 train_file_types, test_row_ids=test_row_ids,
+                evaluation_revision=eval_revision,
             )
-
-    eval_ids = [int(x) for x in test_row_ids] if test_row_ids is not None else []
 
     # Experiment 38: Semantic Clustering.
     if "clusters" in features.feature_config_from_env().enabled_groups:
@@ -1289,8 +1294,6 @@ def run_experiment(
             averaged_threshold,
         )
 
-    if cache_identity.evaluation_revision(db_path, eval_ids, y_test) != eval_revision:
-        raise RuntimeError("evaluation rows changed during training; rerun on stable data")
     results = {
         "evaluation_revision": eval_revision,
         "training_partitions": ["train"],
