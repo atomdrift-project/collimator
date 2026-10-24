@@ -139,6 +139,14 @@ DEFAULT_TRAIT_PATH_DEPTH = 3
 # Low-confidence findings add noise without meaningful signal.
 MIN_CONFIDENCE = 0.65
 
+# What a *missing* `conf` on a finding means: no confidence recorded. cleave
+# now always writes `conf`, so this only applies to reports from builds that
+# omitted it. Reading the absence as 1.0 (the old value here) let a finding
+# cleave was unsure about clear MIN_CONFIDENCE and score as definitive, in
+# training and inference alike. Zero falls below every gate, which is the
+# honest reading of an absent value. Matches cleave's plain serde default.
+MISSING_CONF = 0.0
+
 # Number of riskiest files to summarize for package-level top-k signals.
 TOP_K_RISK_FILES = 1
 
@@ -1129,6 +1137,54 @@ def file_imports(file_entry: dict[str, Any]) -> list[Any]:
 def file_findings(file_entry: dict[str, Any]) -> list[Any]:
     """Return a file entry's findings (v8 `traits`, v7 `find`, else v4 `ts`)."""
     return _alias(file_entry, "traits", "find", "ts") or []
+
+
+def file_has_parent(file_entry: dict[str, Any]) -> bool:
+    """Whether this file was extracted from another file in the same report.
+
+    Three spellings, because cleave renamed this twice. v8 names the parent
+    `pid`, the containing file's id. v4-v6 named it `p`, the containing file's
+    *path*. Both v7 and v8 also carry `depth`, and anything below the root is
+    by definition contained.
+
+    Reading only `p` — which is what this module did until the rename was
+    noticed — silently reports every v8 report as a flat bag of root files.
+    """
+    if file_entry.get("pid") is not None:
+        return True
+    if file_entry.get("p"):
+        return True
+    return _float(_alias(file_entry, "depth", "dp") or 0) > 0
+
+
+def report_depths(files: list[dict[str, Any]]) -> list[int]:
+    """Archive nesting depth for every file, in report order.
+
+    v7 and v8 state it outright, so it is taken as given. Older reports carry
+    only `p`, the parent's path, and depth is the length of the chain from a
+    file up to a root — walked here rather than accumulated in one pass,
+    because a report is not required to list a parent before its children and
+    the old one-pass form quietly returned zero when it did not.
+    """
+    if any(_alias(f, "depth", "dp") is not None for f in files):
+        return [int(_float(_alias(f, "depth", "dp") or 0)) for f in files]
+
+    parents = {f.get("path", ""): f.get("p", "") for f in files}
+    depths = []
+    for entry in files:
+        seen: set[str] = set()
+        path = entry.get("path", "")
+        depth = 0
+        while True:
+            parent = parents.get(path, "")
+            # A path that is its own ancestor would otherwise spin forever.
+            if not parent or parent in seen:
+                break
+            seen.add(path)
+            path = parent
+            depth += 1
+        depths.append(depth)
+    return depths
 
 
 def file_size(file_entry: dict[str, Any]) -> Any:
@@ -2459,7 +2515,7 @@ def _summarize_findings(findings: list[dict[str, Any]]) -> _FindingSummary:
         # try/float() overhead was hot. Fall back only for stragglers.
         conf_raw = finding_conf(finding)
         if conf_raw is None:
-            conf_raw = 1.0
+            conf_raw = MISSING_CONF
         conf = conf_raw if isinstance(conf_raw, float) else _float(conf_raw)
         if conf < min_conf:
             continue
@@ -2594,7 +2650,7 @@ def _summarize_report_files(files: list[dict[str, Any]]) -> _FindingSummary:
 
         for finding in file_findings(file_entry):
             fid = finding_id(finding) or ""
-            if not fid or _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
+            if not fid or _float(finding_conf(finding), MISSING_CONF) < MIN_CONFIDENCE:
                 continue
             crit_ord = finding_crit(finding) or 0
             if crit_ord >= 3:
@@ -3517,7 +3573,7 @@ def _apply_format_hint_features(
 
     for file_entry in files:
         groups = _format_groups_for_type(str(file_entry.get("type", "")))
-        is_inner = bool(file_entry.get("p")) or _float(file_entry.get("depth", file_entry.get("dp", 0))) > 0
+        is_inner = file_has_parent(file_entry)
         if is_inner:
             inner_files += 1
         if groups:
@@ -3636,19 +3692,12 @@ def _apply_structural_features(
         except (ValueError, TypeError):
             pass
 
-    # Nesting depth calculation.
-    depths: dict[str, int] = {}
-    for file_entry in files:
-        fpath = file_entry.get("path", "")
-        parent = file_entry.get("p", "")
-        if not parent:
-            depths[fpath] = 0
-        else:
-            depths[fpath] = depths.get(parent, 0) + 1
-    max_nesting_depth = max(depths.values(), default=0)
+    # Nesting depth, from whichever spelling this report uses.
+    file_depths = report_depths(files)
+    max_nesting_depth = max(file_depths, default=0)
 
     for file_entry in files:
-        if file_entry.get("p"):
+        if file_has_parent(file_entry):
             inner_file_count += 1
         
         ftype = file_entry.get("type", "")
@@ -3697,7 +3746,7 @@ def _apply_structural_features(
                     hostile_mtimes.append(datetime.fromisoformat(str(fmt).replace(" ", "T")).timestamp())
                 except (ValueError, TypeError):
                     pass
-            if file_entry.get("p"):
+            if file_has_parent(file_entry):
                 hostile_files_with_parent += 1
         
         if ent > 0 and file_entry.get("type", "") in {"javascript", "python", "pe", "elf", "macho"}:
@@ -3852,7 +3901,7 @@ def _ngram_paths_for_file(file_entry: dict[str, Any]) -> list[str]:
         fid = finding_id(finding)
         if (
             fid
-            and _float(finding_conf(finding), 1.0) >= MIN_CONFIDENCE
+            and _float(finding_conf(finding), MISSING_CONF) >= MIN_CONFIDENCE
             and (finding_crit(finding) or 0) >= NGRAM_MIN_CRIT
         ):
             paths.add(fid.split("::")[0])
@@ -3864,7 +3913,7 @@ def _ranked_ngram_paths(file_entry: dict[str, Any], limit: int) -> list[str]:
     scores: dict[str, float] = {}
     for finding in file_findings(file_entry):
         fid = finding_id(finding)
-        conf = _float(finding_conf(finding), 1.0)
+        conf = _float(finding_conf(finding), MISSING_CONF)
         crit = finding_crit(finding) or 0
         if fid and conf >= MIN_CONFIDENCE and crit >= NGRAM_MIN_CRIT:
             path = fid.split("::")[0]
@@ -4147,15 +4196,7 @@ def _extract_into_at_depth(
         # Exp 51: hostile_depth_weight calculation
         hostile_depth_weight = 0.0
         if config.include_hostile_depth_weight:
-            depths: dict[str, int] = {}
-            for file_entry in files:
-                fpath = file_entry.get("path", "")
-                parent = file_entry.get("p", "")
-                depths[fpath] = depths.get(parent, 0) + 1 if parent else 0
-
-            for file_entry in files:
-                fpath = file_entry.get("path", "")
-                depth = depths.get(fpath, 0)
+            for file_entry, depth in zip(files, report_depths(files), strict=True):
                 file_summary = _summarize_findings(file_findings(file_entry))
                 hostile_depth_weight += file_summary.hostile_finding_count * depth
 
@@ -4465,7 +4506,7 @@ def _count_vocab_batch(
                 fid = finding_id(finding) or ""
                 if not fid:
                     continue
-                if _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
+                if _float(finding_conf(finding), MISSING_CONF) < MIN_CONFIDENCE:
                     continue
                 crit_ord = finding_crit(finding) or 0
                 file_traits.add(fid)
@@ -5619,7 +5660,7 @@ def _count_labeled_vocab_batch(dsn, ids_labels, counts):
             file_path_scores: dict[str, float] = {}
             for finding in file_findings(file_entry):
                 fid = finding_id(finding) or ""
-                conf = _float(finding_conf(finding), 1.0)
+                conf = _float(finding_conf(finding), MISSING_CONF)
                 if not fid or conf < MIN_CONFIDENCE:
                     continue
                 crit_ord = finding_crit(finding) or 0
@@ -6084,7 +6125,7 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
                 for fe in report_files(report):
                     for finding in file_findings(fe):
                         fid = finding_id(finding) or ""
-                        if not fid or _float(finding_conf(finding), 1.0) < MIN_CONFIDENCE:
+                        if not fid or _float(finding_conf(finding), MISSING_CONF) < MIN_CONFIDENCE:
                             continue
                         for path in _finding_paths(fid, config.trait_path_depth):
                             crit_ord = finding_crit(finding) or 0

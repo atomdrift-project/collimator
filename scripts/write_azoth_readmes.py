@@ -1391,14 +1391,14 @@ def _write_bundle(root: Path) -> None:
         f"numbers in this README come from a locked {_int(n_eval)}-row "
         "test partition, disjoint from training and calibration. The "
         "bundle is loaded at scan time by "
-        "[litmus](https://github.com/atomdrift-project/litmus). EMBER 2024 "
+        "[Atomdrift Scan](https://github.com/atomdrift-project/scan). EMBER 2024 "
         "reference: Joyce et al., *KDD'25*.",
         "",
         "## Use",
         "",
         "Input is a JSON report produced by `cleave`. Output is one "
         "verdict — `benign` or `hostile` — qualified by a severity level "
-        f"{_LEVEL_RANGE_LABEL}. Litmus reads the hostile threshold at the chosen level "
+        f"{_LEVEL_RANGE_LABEL}. Scan reads the hostile threshold at the chosen level "
         "(consumers can label anything firing above the configured critical "
         "level as suspicious if they want a softer tier); the deployed "
         f"default is {_DEFAULT_LEVEL_PHRASE}. Lower levels tighten the "
@@ -1409,9 +1409,10 @@ def _write_bundle(root: Path) -> None:
         "`config.json` records the deployed thresholds. Each route lives "
         f"in its own subdirectory: `general/`, one of {n_filegroup} "
         f"`filegroups/<name>/`, or one of {n_filetype} "
-        "`filetypes/<name>/`. A route directory carries two files: "
-        "`model.txt` (LightGBM) and `feature_spec.json` (the features the "
-        "model expects). Scores are the model's raw probabilities — there is "
+        "`filetypes/<name>/`. A route directory carries a "
+        "`models/seed_*.onnx` ensemble (LightGBM trees exported to ONNX, one "
+        "file per training seed) and `feature_spec.json` (the features those "
+        "models expect). Scores are the models' raw probabilities — there is "
         "no separate probability calibrator.",
         "",
         "Further reading: [ENSEMBLE_MODEL.md](ENSEMBLE_MODEL.md) for "
@@ -1518,7 +1519,7 @@ def _write_ensemble_card(root: Path) -> None:
         "one of these policy forms by recall at the FP/M target, with "
         "F1 and fp-count tiebreaks. The chosen policy and its "
         "calibrated thresholds are written to `route_policies.json` "
-        "and read by litmus at scan time:",
+        "and read by Scan at scan time:",
         "",
         "- `joint_or_at_fp_N` — OR-rule across the allowed routes, "
         "with per-route thresholds calibrated to a joint FP/M target "
@@ -1552,7 +1553,7 @@ def _write_ensemble_card(root: Path) -> None:
         "Litmus reads the per-level thresholds from "
         "`route_policies.json` and assigns severity per file.",
         "",
-        f"Default deploy level: {_DEFAULT_LEVEL_PHRASE} (litmus loads the hostile threshold at "
+        f"Default deploy level: {_DEFAULT_LEVEL_PHRASE} (Scan loads the hostile threshold at "
         "that level; any suspicious band is derived consumer-side). Per-route "
         "thresholds and observed FP/100M live in "
         "[route_policies.md](route_policies.md) and each "

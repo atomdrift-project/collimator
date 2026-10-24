@@ -2064,3 +2064,105 @@ def test_ram_headroom_honours_the_nightly_ceiling(tmp_path, monkeypatch) -> None
     assert features.ram_headroom_gb(32) == pytest.approx(208)
     monkeypatch.setenv("COLLIMATOR_MEM_CEILING_GB", "lots")
     assert features.ram_headroom_gb(32) == pytest.approx(208)
+
+
+# ---------------------------------------------------------------------------
+# Archive nesting: `p` (v4-v6, a parent path) versus `pid`/`depth` (v7-v8).
+#
+# Cleave renamed the parent twice and collimator followed only the first
+# rename, so every nesting feature read zero on current payloads while still
+# reading correctly on archived ones. Nothing failed — the columns simply went
+# constant, which is invisible to a model and to a test suite that never
+# asserted on them. These assert on both spellings.
+# ---------------------------------------------------------------------------
+
+
+def _nested_report_v8() -> dict:
+    """An archive, a member, and a payload decoded out of that member."""
+    return {
+        "v": "8",
+        "files": [
+            {"id": 0, "path": "/tmp/pkg.tgz", "type": "npm", "sha": "a0",
+             "size": 4096, "depth": 0, "traits": []},
+            {"id": 1, "path": "/tmp/pkg.tgz!!package/index.js", "type": "javascript",
+             "sha": "a1", "size": 512, "depth": 1, "pid": 0, "traits": []},
+            {"id": 2, "path": "/tmp/pkg.tgz!!package/index.js!!decoded", "type": "shell",
+             "sha": "a2", "size": 64, "depth": 2, "pid": 1, "traits": []},
+        ],
+    }
+
+
+def _nested_report_v4() -> dict:
+    """The same shape as an older report spells it: parent by path, no depth."""
+    return {
+        "v": "4",
+        "fs": [
+            {"id": 0, "path": "/tmp/pkg.tgz", "type": "npm", "sha": "a0",
+             "sz": 4096, "ts": []},
+            {"id": 1, "path": "member.js", "p": "/tmp/pkg.tgz", "type": "javascript",
+             "sha": "a1", "sz": 512, "ts": []},
+            {"id": 2, "path": "decoded.sh", "p": "member.js", "type": "shell",
+             "sha": "a2", "sz": 64, "ts": []},
+        ],
+    }
+
+
+def test_containment_is_recognized_in_every_spelling():
+    from collimator.features import file_has_parent
+
+    root, member, payload = report_files(_nested_report_v8())
+    assert not file_has_parent(root)
+    assert file_has_parent(member), "v8 states the parent as `pid`"
+    assert file_has_parent(payload)
+
+    root, member, payload = report_files(_nested_report_v4())
+    assert not file_has_parent(root)
+    assert file_has_parent(member), "v4 states the parent as `p`, a path"
+    assert file_has_parent(payload)
+
+
+def test_depth_is_read_from_both_spellings():
+    from collimator.features import report_depths
+
+    assert report_depths(report_files(_nested_report_v8())) == [0, 1, 2]
+    assert report_depths(report_files(_nested_report_v4())) == [0, 1, 2]
+
+
+def test_depth_survives_a_child_listed_before_its_parent():
+    """The old one-pass form returned zero when the order was not topological."""
+    from collimator.features import report_depths
+
+    report = _nested_report_v4()
+    report["fs"].reverse()
+    assert report_depths(report_files(report)) == [2, 1, 0]
+
+
+def test_depth_does_not_hang_on_a_cycle():
+    """A report is untrusted input; a path naming itself must not spin."""
+    from collimator.features import report_depths
+
+    files = [{"path": "a", "p": "b"}, {"path": "b", "p": "a"}]
+    assert all(d < len(files) + 1 for d in report_depths(files))
+
+
+def test_nesting_features_are_not_silently_zero_on_current_payloads():
+    """The regression itself: a v8 archive must not extract as a flat bag."""
+    spec = build_vocab([_nested_report_v8()])
+    vec = extract(_nested_report_v8(), spec)
+    index = {name: i for i, name in enumerate(spec.feature_names)}
+
+    depth = vec[index["struct:max_nesting_depth_log"]]
+    ratio = vec[index["struct:inner_file_ratio"]]
+    assert depth == pytest.approx(math.log1p(2)), "two levels of nesting"
+    assert ratio == pytest.approx(2 / 3), "two of three files are contained"
+
+
+def test_the_two_spellings_agree_on_the_same_archive():
+    """An archive must extract the same nesting whichever schema carried it."""
+    spec = build_vocab([_nested_report_v8(), _nested_report_v4()])
+    index = {name: i for i, name in enumerate(spec.feature_names)}
+    new = extract(_nested_report_v8(), spec)
+    old = extract(_nested_report_v4(), spec)
+
+    for name in ("struct:max_nesting_depth_log", "struct:inner_file_ratio"):
+        assert new[index[name]] == pytest.approx(old[index[name]]), name
