@@ -142,9 +142,12 @@ def _seed_health_failure(
             return f"missing or non-numeric {key}={raw!r}"
         if not math.isfinite(value):
             return f"non-finite {key}={value!r}"
-        if not 0.0 <= value <= 1.0:
+        # Summed ranking metrics can land a few ulps outside [0, 1]
+        # (e.g. sklearn AP=1.0000000000000002 for a perfect ranking).
+        # Allow only numerical roundoff; keep the configured AUC floor exact.
+        if not -1e-12 <= value <= 1.0 + 1e-12:
             return f"out-of-range {key}={value:.6g}"
-        checked[key] = value
+        checked[key] = min(1.0, max(0.0, value))
 
     if checked["roc_auc"] < min_roc_auc:
         return (
@@ -271,7 +274,7 @@ RAW_COMPRESSED_FILETYPES: frozenset[str] = frozenset({
 LITMUS_EXTRACTED_FILETYPES: frozenset[str] = RAW_COMPRESSED_FILETYPES
 
 
-DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
+_DEPLOYMENT_GROUP_TYPES: dict[str, tuple[str, ...]] = {
     "archive": data.expand_filetype_aliases(ARCHIVE_FILETYPES),
     "scripts": (
         "batch",
@@ -308,6 +311,14 @@ DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
     ),
     "config": ("ini", "json", "package.json", "plist", "toml", "xml", "yaml", "yml"),
     "media": ("bmp", "gif", "jpg", "jpeg", "mp3", "mp4", "png", "svg", "webp"),
+}
+
+# Training SQL matches stored spellings, while calibration and runtime routing
+# use canonical labels. Include both for every group (not only archives), or
+# ooxml/ole_doc/vbs/python_bytecode silently lose their group model.
+DEPLOYMENT_GROUPS: dict[str, tuple[str, ...]] = {
+    group: data.expand_filetype_aliases(file_types)
+    for group, file_types in _DEPLOYMENT_GROUP_TYPES.items()
 }
 
 

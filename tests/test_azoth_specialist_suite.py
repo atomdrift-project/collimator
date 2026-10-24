@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import sqlite3
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -82,6 +83,26 @@ def test_seed_ensemble_retries_until_requested_healthy_size(monkeypatch) -> None
     assert all(attempt["accepted"] for attempt in attempts[1:])
 
 
+def test_seed_health_accepts_perfect_metric_roundoff_without_wasting_retries(monkeypatch):
+    monkeypatch.setattr(suite.export, "is_constant_predictor", lambda model: model.constant)
+    accepted, attempts = suite._train_healthy_seed_ensemble(
+        name="html", base_seed=42, target_members=3, retry_budget=3,
+        min_roc_auc=0.5,
+        fit_seed=lambda seed: _fake_train_result(1.0, avg_precision=1.0000000000000002),
+    )
+    assert [seed for seed, _ in accepted] == [42, 43, 44]
+    assert len(attempts) == 3
+    # The audit retains the measured value, not a rewritten metric.
+    assert attempts[0]["avg_precision"] == 1.0000000000000002
+
+
+@pytest.mark.parametrize("value", [-0.000001, 1.000001, float("inf"), float("nan")])
+def test_seed_health_still_rejects_invalid_metrics(monkeypatch, value):
+    monkeypatch.setattr(suite.export, "is_constant_predictor", lambda model: model.constant)
+    assert suite._seed_health_failure(_fake_train_result(1., avg_precision=value), min_roc_auc=.5)
+    assert suite._seed_health_failure(_fake_train_result(.5 - 1e-13), min_roc_auc=.5)
+
+
 def test_seed_ensemble_stops_after_retry_budget_is_exhausted(monkeypatch) -> None:
     monkeypatch.setattr(
         suite.export,
@@ -158,6 +179,30 @@ def test_route_train_config_accepts_filegroup_route_key() -> None:
 
     assert got.reg_lambda == 3.5
     assert base.reg_lambda == 1.0
+
+
+@pytest.mark.parametrize("group,spellings", [
+    ("documents", ("ooxml", "docx", "xlsx", "ole_doc", "doc", "ole")),
+    ("scripts", ("vbs", "vbscript")),
+    ("portable", ("python_bytecode", "python-bytecode", "pyc")),
+])
+def test_group_training_fetches_canonical_and_historical_types(tmp_path, monkeypatch, group, spellings):
+    path = tmp_path / "samples.sqlite"
+    with sqlite3.connect(path) as conn:
+        conn.execute("CREATE TABLE samples (id INTEGER, sha256 TEXT, canonical_sha256 TEXT, "
+                     "label TEXT, score INTEGER, file_type TEXT)")
+        conn.executemany("INSERT INTO samples VALUES (?, ?, ?, 'bad', 4, ?)",
+                         [(i, "ff" * 32, "ff" * 32, ft) for i, ft in enumerate(spellings, 1)])
+        conn.execute("INSERT INTO samples VALUES (999, ?, ?, 'bad', 4, 'elf')", ("ff" * 32, "ff" * 32))
+    monkeypatch.setattr(suite.data, "LABELED_WHERE", "label IN ('bad','good')")
+    monkeypatch.delenv("COLLIMATOR_OOF_FOLD_EXCLUDE", raising=False)
+    monkeypatch.delenv("EXP_OOF_FOLD_EXCLUDE", raising=False)
+    rows = suite._fetch_rows(path, file_types=suite.DEPLOYMENT_GROUPS[group], max_id=999,
+                             min_score=None, min_malware_score=4)
+    assert {row[0] for row in rows} == set(range(1, len(spellings) + 1))
+    assert all(not row[2] for row in rows)  # canonical ff hash is training-only
+    assert suite._count_rows(path, file_types=suite.DEPLOYMENT_GROUPS[group], max_id=999,
+                             min_score=None)["bad"] == len(spellings)
 
 
 def _fake_meminfo(tmp_path: Path, avail_gb: float) -> Path:

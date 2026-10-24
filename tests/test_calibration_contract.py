@@ -151,6 +151,46 @@ def test_policy_report_average_precision_is_invariant_to_order_of_tied_scores():
     assert policy_eval._pr_auc(scores, labels[::-1]) == .5
 
 
+def test_policy_eval_headline_counts_cover_all_filetypes(tmp_path, monkeypatch):
+    table = score_table()
+    table["labels"] = np.array([1, 1, 0, 1, 0, 0])
+    table["file_types"] = np.array(["vsix"] * 3 + ["zip"] * 3)
+    table_path = tmp_path / "scores.npz"
+    np.savez(table_path, **table)
+    general_path = tmp_path / "general.npz"
+    np.savez(general_path, row_ids=table["row_ids"], canonical_shas=np.array(["00" * 32] * 6))
+    policies = {"routes": {"filetypes/" + ft: {
+        "filetype": ft, "levels": [{"level": 25, "hostile": {
+            "best": {"thresholds": {"general": .5}},
+        }}],
+    } for ft in ("vsix", "zip")}}
+    policy_path = tmp_path / "policy.json"
+    policy_path.write_text(json.dumps(policies))
+    output = tmp_path / "eval.json"
+    monkeypatch.setattr(sys, "argv", [
+        "policy-eval", "--score-table", str(table_path), "--general-scores", str(general_path),
+        "--route-policies", str(policy_path), "--partition", "all",
+        "--output-json", str(output), "--output-md", str(tmp_path / "eval.md"),
+    ])
+    assert policy_eval.main() == 0
+    report = json.loads(output.read_text())
+    assert report["malware"] == 3 == sum(x["malware"] for x in report["filetypes"].values())
+    assert report["rows"] == report["malware"] + report["benign"] == 6
+    assert report["filetypes"]["vsix"]["deployed_or_by_level"]["L25_hostile"]["recall"] == 0
+    assert report["filetypes"]["zip"]["deployed_or_by_level"]["L25_hostile"]["recall"] == 0
+
+
+def test_calibration_groups_cover_canonical_labels_and_aliases():
+    from collimator import data
+    mapping = calibrate._filetype_to_group()
+    assert mapping["ooxml"] == mapping["docx"] == mapping["ole_doc"] == "documents"
+    assert mapping["vbs"] == mapping["vbscript"] == "scripts"
+    assert mapping["python_bytecode"] == mapping["pyc"] == "portable"
+    for group, spellings in calibrate.DEPLOYMENT_GROUPS.items():
+        for spelling in spellings:
+            assert mapping[data.route_filetype(spelling)] == group
+
+
 @pytest.mark.parametrize("args", [
     ["--partition", "all"], ["--partition", "test"], ["--oof-route-scores-dir", "/tmp/oof"],
 ])

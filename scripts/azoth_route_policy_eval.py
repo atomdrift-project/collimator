@@ -527,8 +527,7 @@ def main() -> int:
                                        len(labels_slice), severity=severity) >= 0
                     tp = int(np.sum(hit & (labels_slice == 1)))
                     fp = int(np.sum(hit & (labels_slice == 0)))
-                    n_mal = int(np.sum(labels_slice == 1))
-                    or_metrics = {"tp": tp, "fp": fp, "recall": tp / n_mal if n_mal else math.nan,
+                    or_metrics = {"tp": tp, "fp": fp, "recall": tp / n_mal_slice if n_mal_slice else math.nan,
                                   "active_routes": list(probs_by_route)}
                     deployed_or_by_level[(level_no, severity)] = or_metrics
                     # Headline summary: prefer L50 hostile (the deployment
