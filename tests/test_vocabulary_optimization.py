@@ -15,6 +15,31 @@ from collimator import features
 from collimator.vocabulary import CountView, VocabularyCounts, _packed_remapper
 
 
+def test_auxiliary_vocab_sample_is_order_independent_and_stable_under_growth():
+    rows = [(i, i % 2) for i in range(10000)]
+    expected = features._stable_vocab_scan_rows(rows, 500, chunk_size=37)
+    assert expected == features._stable_vocab_scan_rows(rows[::-1], 500, chunk_size=10001)
+    added = [(i, 0) for i in range(10000, 10018)]
+    expanded = features._stable_vocab_scan_rows(added + rows, 500, chunk_size=53)
+    old_ids = {r[0] for r in expected}
+    new_ids = {r[0] for r in expanded}
+    # Insertions can displace only one old sample per newly selected ID.
+    assert len(old_ids - new_ids) == len(new_ids - old_ids) <= len(added)
+    assert len(expanded) == len(new_ids) == 500
+    removed = next(r for r in rows if r[0] not in old_ids)
+    assert features._stable_vocab_scan_rows([r for r in rows if r != removed], 500) == expected
+
+
+def test_auxiliary_vocab_sample_retains_labels_and_handles_small_corpora():
+    assert features._stable_vocab_scan_rows([]) == []
+    rows = [(9, 1), (2, 0), (5, 1)]
+    assert set(features._stable_vocab_scan_rows(rows)) == set(rows)
+    a = features._stable_vocab_scan_rows(rows, 2)
+    b = features._stable_vocab_scan_rows([(rid, 1-label) for rid, label in rows], 2)
+    assert [rid for rid, _ in a] == [rid for rid, _ in b]
+    assert [label for _, label in b] == [1-label for _, label in a]
+
+
 def test_packed_remapping_preserves_arbitrary_ids_and_key_orders():
     mapping = {0: 0xFFFFFFFF, 1: 256, 257: 3, 65536: 19, 0xFFFFFFFF: 0}
     remap = _packed_remapper(mapping)

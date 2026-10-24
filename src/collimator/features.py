@@ -5810,6 +5810,35 @@ def vocabulary_identity(db_path: Path | str, row_ids_labels: Iterable[tuple[int,
     return identity.hexdigest()
 
 
+@timed('vocabulary.sample')
+def _stable_vocab_scan_rows(row_ids_labels, limit=5000, *, chunk_size=262144):
+    """Bottom-k row-ID hash sample, stable across ordering and corpus growth.
+
+    Fixed-seed sampling of list positions reshuffles existing selections when
+    a few rows arrive or disappear. A bijective uint64 mixer assigns each ID a
+    fixed rank instead. Chunking bounds temporary memory for full-corpus runs.
+    """
+    if limit < 1 or chunk_size < 1:
+        raise ValueError("sample limit and chunk size must be positive")
+    best_keys = np.empty(0, dtype=np.uint64)
+    best_indices = np.empty(0, dtype=np.int64)
+    for start in range(0, len(row_ids_labels), chunk_size):
+        stop = min(start + chunk_size, len(row_ids_labels))
+        keys = np.fromiter((row_ids_labels[i][0] for i in range(start, stop)),
+                           dtype=np.uint64, count=stop-start)
+        # SplitMix64 finalization: fixed per-ID priorities, no RNG state.
+        keys += np.uint64(0x9E3779B97F4A7C15)
+        keys = (keys ^ (keys >> 30)) * np.uint64(0xBF58476D1CE4E5B9)
+        keys = (keys ^ (keys >> 27)) * np.uint64(0x94D049BB133111EB)
+        keys ^= keys >> 31
+        indices = np.arange(start, stop, dtype=np.int64)
+        keys = np.concatenate((best_keys, keys))
+        indices = np.concatenate((best_indices, indices))
+        selected = np.argpartition(keys, limit-1)[:limit] if len(keys) > limit else np.arange(len(keys))
+        best_keys, best_indices = keys[selected], indices[selected]
+    return [row_ids_labels[int(i)] for i in best_indices[np.argsort(best_keys)]]
+
+
 @timed('vocabulary.total')
 def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int]],
                         n_workers: int = 0, *, checkpoint_dir: Path | None = None) -> FeatureSpec:
@@ -5863,13 +5892,10 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
                     config.bigram_min_freq, malware_total)
     vocab_started = time.monotonic()
     last_progress = vocab_started
-    # Auxiliary vocab scans share a reproducible uniform training sample.
-    # Taking the first IDs would favor the oldest ingestion batches.
-    scan_rows = [
-        row_ids_labels[int(i)] for i in np.random.default_rng(0).choice(
-            len(row_ids_labels), min(5000, len(row_ids_labels)), replace=False,
-        )
-    ]
+    # Keep existing sampled IDs stable when a few training rows change.
+    scan_rows = _stable_vocab_scan_rows(row_ids_labels)
+    scan_digest = hashlib.sha256(np.asarray([r[0] for r in scan_rows], dtype="<u8").tobytes()).hexdigest()
+    log.info("auxiliary vocabulary sample: %d rows, ID digest=%s", len(scan_rows), scan_digest)
 
     def _merge_batch(
         path_counts: dict[str, int],

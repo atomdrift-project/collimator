@@ -9,6 +9,7 @@ from collimator.data import (
     canonicalize_filetype,
     count_labeled_by_partition_full,
     expand_filetype_aliases,
+    expand_route_filetypes,
     labeled_corpus_metadata_full,
     load_samples,
     normalize_archive_filetype,
@@ -43,6 +44,12 @@ def test_normalize_archive_filetype_strips_pure_compression():
     assert normalize_archive_filetype("") == ""
     assert normalize_archive_filetype(None) == ""
     assert normalize_archive_filetype("  tar.gz  ") == "tar"
+
+
+def test_runtime_route_expansion_preserves_all_aliases_and_compressed_members():
+    assert {'tar','tar.gz','tar.bz2','tar.xz','tar.zst'} <= set(expand_route_filetypes(('tar.gz',)))
+    assert {'ole_doc','doc','xls','ole','msi'} <= set(expand_route_filetypes(('xls',)))
+    assert expand_route_filetypes(('pe',)) == ('pe',)
 
 
 def test_canonicalize_filetype_folds_old_spellings():

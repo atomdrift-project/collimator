@@ -997,6 +997,9 @@ def _load_routes(summary_path: Path) -> list[dict[str, Any]]:
             LOG.info("skipping route %s: constant-predictor model (no split learned)", route)
             continue
         normalized = {**item, "route": route, "output_dir": str(route_dir)}
+        if item["kind"] == "filetype":
+            normalized["file_types"] = list(data.expand_route_filetypes(
+                tuple(item.get("file_types", [])) + (item["name"],)))
         routes.append(normalized)
     return routes
 

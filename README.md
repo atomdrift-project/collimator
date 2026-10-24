@@ -224,6 +224,23 @@ include waits and profiling overhead; summed profiles are not wall-clock time.
 A small sample can fail quality gates or leave rare routes too small to train;
 its metrics are for iteration, and the profiles remain available on failure.
 
+For repeatability checks, freeze all selected reports and metadata in one
+read-only database snapshot, then run fresh profiles against that local corpus:
+
+```sh
+.venv/bin/python scripts/freeze_profile_corpus.py --db "$DB" --percent 1 \
+  --output out/profiles/frozen-1pct
+make azoth-profile DB="$PWD/out/profiles/frozen-1pct/corpus.sqlite" PROFILE_PROFILER=none
+make azoth-profile DB="$PWD/out/profiles/frozen-1pct/corpus.sqlite" PROFILE_PROFILER=none
+```
+
+The manifest records the pin, row/partition counts, and database checksum.
+Both profiles still start with empty training caches; the repeated 1% predicate
+selects the same rows, rather than taking another 1% of the frozen sample.
+Local-corpus timings exclude replica fetch latency and should be reported
+separately from PostgreSQL timings. Keep replay configurations fixed between
+runs as well. Use the normal PostgreSQL `DB` for the full nightly run.
+
 Profiling iterations start at 1%, targeting a complete fresh run in 15 minutes
 before increasing to 2% and a 20-minute target. `result.json` records elapsed
 time, exit status, and whether the whole pipeline completed within the target.
@@ -296,6 +313,22 @@ Both destinations must be new. The replay uses local SQLite reports, verifies
 model/spec and database fingerprints, and compares every saved score and metadata
 array exactly. Its timing excludes capture and fingerprint validation. It measures
 scoring on a bounded cohort; it does not establish a fresh full-pipeline runtime.
+
+For model-quality comparisons, `scripts/compare_frozen_bundles.py capture`
+accepts `--source <bundle-root>`, `--db`, `--capture <new-directory>`, and repeated
+`--bundle name=<bundle-root>` arguments. It freezes the source score table's test
+labels/partitions plus PE dev rows, captures reports in one read-only database
+snapshot, and copies model/spec/config/policy files. It records any live label
+changes without replacing the frozen labels. `replay --capture <directory>
+--name <name> --output <new-directory> --workers 8` scores each captured bundle
+locally. Place replay outputs under `<results>/<name>`, then run `compare
+--capture <directory> --results <results> --output <new-directory>` for paired
+counts and PE score/policy counterfactuals. Policies are never refitted; historical
+bundles calibrated on all partitions retain their test-exposure limitation.
+
+Auxiliary vocabulary scans choose the 5,000 smallest fixed row-ID hash ranks.
+Small corpus changes no longer reshuffle a positional random sample. Logs include
+the selected-ID digest; full vocabulary counts still cover all training rows.
 
 Database selection scans and candidate counts need not shrink in direct
 proportion to the sample percentage. Hopper's replica-only

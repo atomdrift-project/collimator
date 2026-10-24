@@ -205,6 +205,21 @@ def test_group_training_fetches_canonical_and_historical_types(tmp_path, monkeyp
                              min_score=None)["bad"] == len(spellings)
 
 
+def test_specialist_eligibility_merges_alias_support_before_filtering(tmp_path, monkeypatch):
+    path = tmp_path / 'eligibility.sqlite'
+    with sqlite3.connect(path) as db:
+        db.execute('CREATE TABLE samples (id INTEGER PRIMARY KEY, label TEXT, score INTEGER, file_type TEXT)')
+        db.executemany('INSERT INTO samples (label,score,file_type) VALUES (?,4,?)',
+                       [('bad','ole')]*4 + [('good','ole')]*3 +
+                       [('bad','doc')]*3 + [('good','doc')]*4 + [('bad','pe'),('good','pe')])
+    monkeypatch.setattr(suite.data, 'LABELED_WHERE', "label IN ('bad','good')")
+    result = suite._eligible_filetypes(path, max_id=100, min_score=None, min_bad=5, min_good=5)
+    assert len(result) == 1
+    assert result[0]['name'] == 'ole_doc'
+    assert result[0]['bad'] == result[0]['good'] == 7
+    assert {'ole','doc','xls','ole_doc'} <= set(result[0]['file_types'])
+
+
 def _fake_meminfo(tmp_path: Path, avail_gb: float) -> Path:
     meminfo = tmp_path / "meminfo"
     meminfo.write_text(

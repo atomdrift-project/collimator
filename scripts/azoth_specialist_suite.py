@@ -534,11 +534,8 @@ def _eligible_filetypes(
         " FROM samples WHERE "
         + " AND ".join(where)
         + " GROUP BY 1"
-        + f" HAVING COUNT(*) FILTER (WHERE label = 'bad') >= {marker}"
-        + f" AND COUNT(*) FILTER (WHERE label = 'good') >= {marker}"
         + " ORDER BY total DESC"
     )
-    params.extend([min_bad, min_good])
     # Group raw rows by canonical route label so both compressed archive
     # variants (tar.gz, tar.bz2, tar.xz, … → tar) AND historical spellings
     # (python-bytecode → python_bytecode, xlsx → ooxml) merge onto one route
@@ -584,10 +581,7 @@ def _eligible_filetypes(
             )
             continue
         if agg["bad"] < min_bad or agg["good"] < min_good:
-            # Subthreshold after merge — defensive: the SQL HAVING already
-            # filtered per-raw-variant, but a normalized group could still
-            # land here if a rare variant slipped through with a less-strict
-            # threshold elsewhere in the query.
+            # Apply support limits to the canonical type, not each spelling.
             continue
         variants = sorted(agg["variants"])
         if variants != [normalized]:
@@ -602,7 +596,7 @@ def _eligible_filetypes(
                 # (`_fetch_rows(file_types=route["file_types"], ...)`) still
                 # sees every compressed sibling — `samples.file_type` is the
                 # un-normalized raw value, normalization happens on read.
-                "file_types": variants,
+                "file_types": list(data.expand_route_filetypes(tuple(variants))),
                 "bad": agg["bad"],
                 "good": agg["good"],
                 "total": agg["total"],

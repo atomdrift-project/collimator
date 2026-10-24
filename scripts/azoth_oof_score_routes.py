@@ -118,6 +118,8 @@ def _load_route_file_types(summary_path: Path) -> dict[str, list[str]]:
         route_name = (
             f"filegroups/{name}" if kind == "filegroup" else f"filetypes/{name}"
         )
+        if kind == "filetype":
+            file_types = data.expand_route_filetypes(tuple(file_types) + (name,))
         out[route_name] = [str(ft) for ft in file_types]
     return out
 

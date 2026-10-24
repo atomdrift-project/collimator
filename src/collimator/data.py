@@ -210,6 +210,20 @@ def route_filetype(file_type: str | None) -> str:
     return canonicalize_filetype(normalize_archive_filetype(file_type))
 
 
+def expand_route_filetypes(file_types: tuple[str, ...]) -> tuple[str, ...]:
+    """Stored spellings covered by canonical runtime specialist routes.
+
+    A training summary may list only high-count aliases. Scoring still needs
+    every alias that runtime maps to that specialist, including compressed TAR.
+    """
+    from .filegroups import ARCHIVE_FILETYPES
+
+    canonical = {route_filetype(ft) for ft in file_types} - {""}
+    variants = set(file_types) | set(expand_filetype_aliases(tuple(canonical)))
+    variants.update(ft for ft in ARCHIVE_FILETYPES if route_filetype(ft) in canonical)
+    return tuple(sorted(variants - {""}))
+
+
 log = logging.getLogger(__name__)
 
 # canonical_sha256 last-byte ranges. test < TEST_BUCKET_MAX, dev in

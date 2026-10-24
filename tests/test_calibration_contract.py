@@ -191,6 +191,20 @@ def test_calibration_groups_cover_canonical_labels_and_aliases():
             assert mapping[data.route_filetype(spelling)] == group
 
 
+def test_scoring_expands_legacy_specialist_summary_to_runtime_coverage(tmp_path, monkeypatch):
+    import azoth_oof_score_routes as oof_routes
+    root = tmp_path / 'filetypes/ole_doc'
+    root.mkdir(parents=True)
+    (root / 'feature_spec.json').write_text('{}')
+    summary = tmp_path / 'specialists.json'
+    summary.write_text(json.dumps({'results':[{'name':'ole_doc','kind':'filetype','file_types':['ole','xls']}]}))
+    monkeypatch.setattr(calibrate.bundle, 'has_model', lambda p: True)
+    monkeypatch.setattr(calibrate.export, 'route_model_is_degenerate', lambda p: False)
+    expected = set(calibrate._load_routes(summary)[0]['file_types'])
+    assert {'ole_doc','ole','doc','xls','ppt','msi'} <= expected
+    assert set(oof_routes._load_route_file_types(summary)['filetypes/ole_doc']) == expected
+
+
 @pytest.mark.parametrize("args", [
     ["--partition", "all"], ["--partition", "test"], ["--oof-route-scores-dir", "/tmp/oof"],
 ])

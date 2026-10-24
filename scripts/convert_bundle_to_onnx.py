@@ -104,6 +104,18 @@ def _sample_rows(db: str, filetypes: list[str], limit: int) -> list[tuple[int, i
     """Fetch a small sample of (row_id, label_int) rows for parity."""
     if not filetypes:
         return []
+    from collimator import data  # noqa: PLC0415
+    if not data._is_pg(db):
+        with data._connect(db) as conn:
+            rows = conn.execute(
+                "SELECT id, CASE WHEN label='bad' THEN 1 ELSE 0 END FROM samples "
+                "WHERE label IN ('bad','good') AND cleave_result IS NOT NULL AND skip='' "
+                "AND canonical_sha256 IS NOT NULL "
+                "AND lower(substr(canonical_sha256, -2)) < '20' "
+                f"AND file_type IN ({','.join('?' for _ in filetypes)}) ORDER BY id LIMIT ?",
+                [*filetypes, int(limit)],
+            )
+            return [(int(r[0]), int(r[1])) for r in rows]
     import psycopg  # noqa: PLC0415
     with psycopg.connect(db) as conn, conn.cursor() as cur:
         cur.execute(
