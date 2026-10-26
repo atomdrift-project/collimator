@@ -62,6 +62,96 @@ def test_allowlist_content_hash_tracks_content(tmp_path) -> None:
         _allowlist_content_hash({"COLLIMATOR_ALLOWED_FEATURES_FILE": str(tmp_path / "missing.json")})
 
 
+@pytest.mark.parametrize("nightly", [False, True])
+def test_interrupted_selection_recovery_with_live_ingestion(tmp_path, monkeypatch, nightly):
+    from collimator import experiment, cache_identity
+
+    db_path = tmp_path / "demo.db"
+    create_demo_db(db_path, n_benign=32, n_malware=32, seed=7)
+    if nightly:
+        monkeypatch.setenv("AZOTH_CHECKPOINT_DIR", str(tmp_path / "nightly"))
+    else:
+        monkeypatch.delenv("AZOTH_CHECKPOINT_DIR", raising=False)
+    monkeypatch.delenv("COLLIMATOR_SHARED_VOCAB_DIR", raising=False)
+    revisions = iter(str(i) for i in range(20))
+    monkeypatch.setattr(cache_identity, "database_revision", lambda db: next(revisions))
+    sample = experiment.sample_partitioned_reports
+    selections, matrix_keys, vocab_rows = [], [], []
+
+    def select(*args, **kwargs):
+        selections.append(1)
+        return sample(*args, **kwargs)
+
+    def matrices(cache, key):
+        matrix_keys.append(key)
+        return None
+
+    class Interrupted(Exception):
+        pass
+
+    def vocabulary(db, rows, **kwargs):
+        vocab_rows.append(rows)
+        raise Interrupted
+
+    monkeypatch.setattr(experiment, "sample_partitioned_reports", select)
+    monkeypatch.setattr(experiment, "_load_matrix_cache", matrices)
+    monkeypatch.setattr(features, "build_vocab_from_db", vocabulary)
+    for _ in range(2):
+        with pytest.raises(Interrupted):
+            experiment.run_experiment(db_path, train_samples=40, cache_dir=tmp_path / "cache")
+    assert len(selections) == (1 if nightly else 2)
+    assert vocab_rows[0] == vocab_rows[1]
+    assert matrix_keys[0] != matrix_keys[1]
+
+
+def test_nightly_selection_identity_separates_database_and_sampling(tmp_path, monkeypatch):
+    from collimator import experiment, data
+
+    monkeypatch.setenv("AZOTH_CHECKPOINT_DIR", str(tmp_path / "nightly"))
+    key = experiment._corpus_revision("db-a", "first")
+    assert experiment._corpus_revision("db-a", "next") == key
+    assert experiment._corpus_revision("db-b", "first") != key
+    monkeypatch.setattr(data, "SAMPLE_PREDICATE", "sampled")
+    assert experiment._corpus_revision("db-a", "first") != key
+    monkeypatch.delenv("AZOTH_CHECKPOINT_DIR")
+    assert experiment._corpus_revision("db-a", "live") == "live"
+
+
+def test_common_nightly_cohort_is_captured_once_and_keeps_folds_isolated(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from collimator import experiment, data
+    samples = [experiment.ExperimentSample(i, i % 2, i >= 16, f'{i:062x}' + ('ff' if i < 16 else '30'), i % 6)
+               for i in range(24)]
+    corpus = experiment.ExperimentCorpus(samples[:16][::-1], samples[16:])
+    calls = []
+    def select(db, **kwargs):
+        assert not kwargs['apply_oof_exclusion']
+        calls.append(db)
+        return corpus
+    monkeypatch.setattr(experiment, 'sample_partitioned_reports', select)
+    monkeypatch.setattr(experiment, '_load_primary_file_types',
+                        lambda db, ids: np.asarray([f'type-{i}' for i in ids]))
+    selection = dict(train_samples=0, max_test_samples=0, total_limit=0)
+    def run(exclude):
+        return experiment._shared_nightly_corpus(tmp_path, 'common', 'db', selection, exclude)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        fold_a, fold_b = list(pool.map(run, (0, 1)))
+    assert calls == ['db']
+    prod, _ = run(None)
+    assert prod == corpus
+    for excluded, (fold, types) in enumerate((fold_a, fold_b)):
+        assert fold.train_samples == [s for s in corpus.train_samples if data.oof_fold_of(s.group_id) != excluded]
+        assert fold.test_samples == [s for s in corpus.test_samples if data.oof_fold_of(s.group_id) != excluded]
+        assert list(types) == [f'type-{s.row_id}' for s in sorted(fold.train_samples, key=lambda s:s.row_id)]
+    assert set(s.row_id for s in fold_a[0].train_samples).isdisjoint(s.row_id for s in fold_b[0].train_samples)
+    assert len(fold_a[0].train_samples) + len(fold_b[0].train_samples) == len(prod.train_samples)
+    # A later live-label change cannot mutate the captured manifest.
+    monkeypatch.setattr(experiment, 'sample_partitioned_reports', lambda *a, **kw: pytest.fail('rescanned live DB'))
+    assert run(0)[0] == fold_a[0]
+    with pytest.raises(ValueError, match='unlimited'):
+        experiment._shared_nightly_corpus(tmp_path, 'limited', 'db', dict(train_samples=20), None)
+
+
 def test_matrix_cache_key_invalidates_on_allowlist_content(tmp_path) -> None:
     cfg = features.feature_config_from_env()
     f = tmp_path / "allow.json"

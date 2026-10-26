@@ -257,10 +257,24 @@ memory admission and the 128 GiB hard scope still apply. Override with
 `PROFILE_FIT_MEMORY_GB` and `PROFILE_EXTRACT_WORKERS_PER_FIT`; larger samples
 default to the regular 28 GiB estimate and six extraction workers per fit.
 
-Vocabulary counting keeps exact document frequencies. Workers aggregate compact
-token-set signatures across fetch batches, then sort and reduce packed integer
-keys in bounded NumPy chunks (262,144 combinations). Multi-file archives retain
-per-document union semantics. Candidate discovery and benign prevalence both
+Vocabulary counting keeps exact document frequencies. DB workers persist compact
+token-set signatures, and the parent combines their weights across shards before
+expanding combinations. Large expansions use two independent temporary count
+writers by default; `COLLIMATOR_VOCAB_REDUCE_WORKERS=1` selects serial expansion.
+The final count-store merge remains serial, but receives one expanded store per
+reducer instead of an expanded store for every worker shard.
+`COLLIMATOR_VOCAB_MERGE_GROUP=2` optionally groups completed outputs in pairs and
+combines equal keys in a disk-backed SQL sort before updating the destination.
+The default is 1: grouped merging saves writes but costs additional sorting CPU.
+Each group commits its counts and partition receipts atomically; recovery skips
+committed groups. Parallel expansion workers use a 256 MiB SQLite cache and
+bounded NumPy batches of 1,048,576 combinations. Larger batches combine more
+repeated keys before writing, and bulk conversion avoids a Python loop per
+SQLite argument. `COLLIMATOR_VOCAB_REDUCE_CACHE_MIB` tunes each worker's SQLite
+cache (1–1024 MiB); `COLLIMATOR_VOCAB_REDUCE_KEYS` tunes its batch bound
+(1–4,194,304 keys). Serial recovery keeps smaller transaction batches.
+Multi-file archives retain
+the existing per-document union path. Candidate discovery and benign prevalence both
 combine up to 16 fetch batches per shard; workers also rotate between batches
 after 60 seconds or 512 MiB on disk. The signature cache has an 8 MiB budget,
 and only four completed shards queue behind the merge writer. These bounds do
@@ -271,6 +285,83 @@ collisions; collisions and older checkpoint dictionaries use exact remapping.
 `COLLIMATOR_VOCAB_SHARD_BATCHES` overrides the batch limit
 for direct training runs. Timing files distinguish discovery and benign merges,
 and record signature reuse and shard sizes.
+Merge-queue waits are timed separately, with a log message for sustained waits.
+Expansion reports combinations processed, partition completion, and durable
+checkpoint counts. The parent emits a heartbeat every 30 seconds while waiting
+for workers and announces each final merge before it starts.
+The default `sorted` reducer uses exact external sort/reduce:
+it combines duplicate keys through bounded streaming merges before writing each
+key once per partition. This trades SQLite updates for temporary-file I/O; use
+`scripts/benchmark_vocabulary_expansion.py` to compare it against `upsert` on the
+same captured, unexpanded count database. `COLLIMATOR_VOCAB_REDUCER=upsert`
+selects the bounded-batch SQLite updater for comparison. The benchmark opens its source read-only,
+creates a separate output database, and reports timings, exact-count digests,
+and ranked vocabularies. It does not train or publish a model.
+Source signatures remain durable until every expansion partition commits its
+counts and recovery receipt. Retries skip committed partitions even if the
+worker budget or reducer changes; the original partition assignments stay fixed.
+Serial expansion commits count increments and signature
+removal in the same transaction.
+
+Pinned OOF pipelines also share raw **general-vocabulary discovery counts**
+between production and the two hash folds. Each selected training fold is
+counted once and published as an immutable SQLite file. Production adds both
+folds' counts; each fold model consumes only the rows it trains on. Frequency
+cutoffs, benign-candidate prevalence, ghosts, rare elements, and sampled
+auxiliary vocabularies remain specific to each model. Matching row selections
+reduce discovery visits from approximately `2N` to `N`; this does not halve
+feature extraction, model fitting, or total pipeline time.
+
+Reuse requires exactly matching selected IDs, labels, feature configuration and
+feature-code revision. Different selections or settings build separate count
+stores. Cached counts represent the reports observed while that fold was built;
+the ID pin does not freeze live report contents. Producers coordinate through a
+file lock, partial counting resumes from committed batches, and publication
+atomically moves the closed database. Consumers attach these files read-only,
+persisting their source references, receipts, and token dictionaries atomically
+instead of copying millions of count records. Recovery checks each source's
+file identity and rejects missing or replaced stores. Keep the published files
+with their consumers until the run no longer needs recovery.
+
+Production sums frequencies across both folds before applying any cutoff or
+top-k selection. It caches qualifying frequencies in temporary SQLite tables
+to avoid repeating that aggregation. Fold consumers read their single source
+directly. Benign counts stay local to each model, and trigram matching uses
+indexed token-prefix lookups into the immutable sources. Token remapping still
+handles collisions and older dictionaries exactly.
+
+Trigram benign filtering uses bounded, exactly ranked shortlists. It selects
+candidates in descending malware frequency and lexical tie order, then checks
+their benign prevalence with a small in-memory index in each worker. Once the
+requested number of candidates survives, unseen candidates cannot displace
+them. Candidates that have not been checked are never treated as benign-free.
+All selected training rows still contribute discovery counts, and every benign
+row is checked for each shortlist. This changes the evaluation order, not the
+frequency thresholds, final vocabulary size, or training sample size.
+Pages start at 4,096 candidates and double up to a 65,536-candidate memory bound.
+After four unsuccessful pages, filtering falls back to the exhaustive method;
+the transition clears prior subset counts atomically to prevent double-counting.
+The initial page size is configurable; `COLLIMATOR_TRIGRAM_SHORTLIST_SIZE` accepts 1 to
+65,536. Batch counts and receipts commit together, and the current page and
+selection cursor are checkpointed so recovery does not double-count batches or
+skip ties. Logs report each selection round and benign batch progress.
+`COLLIMATOR_TRIGRAM_SHORTLIST=0` selects exhaustive filtering for comparison;
+changing filtering modes requires a new partial-vocabulary checkpoint.
+
+The pipeline puts these count stores under its run checkpoint directory in
+`shared-vocabulary/`; retain that directory for recovery or remove it with the
+completed run's checkpoints. The extra retained stores trade disk space for
+avoided recounting. `AZOTH_SHARED_VOCAB=0` disables pipeline setup;
+`COLLIMATOR_SHARED_VOCAB_DIR` selects an explicit directory. Standalone callers
+can pass `shared_cache_dir` and canonical-hash-derived `row_folds` to
+`build_vocab_from_db`.
+
+`scripts/benchmark_shared_vocabulary.py` compares complete vocabulary generation
+on a bounded frozen cohort. Run `--mode independent` and `--mode shared` in
+fresh processes/output directories with identical `--db`, saved `--cohort`,
+and experiment `--run` inputs. It records actual discovery row visits, every
+resulting vocabulary, and order-independent digests over every raw count.
+Exact-count verification time is reported separately from vocabulary timing.
 
 For local aggregation experiments, capture a bounded set of counting inputs
 from an existing model's score cohort, then replay without accessing PostgreSQL:
@@ -287,6 +378,26 @@ batches), compares Python/native reducers and dense/deterministic IDs, and verif
 key/count. It reports counting/merging time and peak RSS separately from the
 exact-count verification. This is an aggregation benchmark; it excludes database
 fetches, report decoding, benign-candidate matching, and model training.
+
+Additional replay modes are `--mode global` (serial global expansion),
+`--mode parallel` (two expansion writers), `--mode parallel-batched` (two writers
+with grouped final merging), and `--mode sorted` (an experimental
+bulk SQL sort/reduce, available only in this benchmark). All modes verify every
+canonical key/count against the same captured input. `--prefill <closed.sqlite>`
+adds a mature count-store fixture; this mode compares packed counts, and reports
+fixture-copy time separately, including its filesystem sync. CPU totals include child processes.
+
+While a nightly is active, test changes in a separate source copy with
+`PYTHONPATH` pointing at that copy. Use its own scratch/output paths and a
+read-only captured input, rather than the replica or live checkpoint databases.
+`scripts/verify_vocabulary_optimization.py` expects sibling `baseline/` and
+`candidate/` copies. It runs the full tests and all replay variants on both the
+captured stream and a separate synthetic multi-gigabyte count store. It refuses
+to start unless its cgroup enforces at most two CPU cores, 8 GiB RAM, and
+30 MB/s read/write limits. Use a system-managed service running as the user if
+the user manager lacks the I/O controller; mount the live workspace read-only
+and grant writes only to the experiment directory. These component timings do
+not establish a full-corpus training ETA.
 
 OOF route scoring reuses one extraction pool across routes and fold bundles.
 Each task identifies its complete feature specification, and each worker retains
@@ -371,12 +482,46 @@ to captured results. Publication calibration and regression gates still rerun.
 Vocabulary admission can drain to zero and wait when RAM is short, then grow
 again after recovery. It also waits when kernel `MemAvailable` falls below
 `COLLIMATOR_MEM_MIN_AVAILABLE_GB` (default 8), allowing ARC reclaim to catch up.
-Manual nightly runs enter a systemd user scope with `MemoryHigh=112G`,
-`MemoryMax=128G`, and `OOMPolicy=kill`, so an OOM terminates the training group.
+Manual nightly runs enter a systemd user scope with `MemoryHigh=156G`,
+`MemoryMax=160G`, and `OOMPolicy=kill`, so an OOM terminates the training group.
 A user systemd manager is required. `NIGHTLY_MEMORY_SCOPE=0` is an explicit
 opt-out for runs already contained by another supervisor. The advisory ceiling
-defaults to 112 GiB for training and 48 GiB for the sweep, and training no longer
+defaults to 144 GiB for training and 48 GiB for the sweep, leaving room for fit
+allocations above the worker-admission ceiling. Training no longer
 lowers its OOM score by default.
+
+The pipeline samples cgroup memory every 30 seconds. Its main log reports
+`[memory] THROTTLED` or `[memory] PRESSURE` with usage, soft/hard limits,
+new limit/OOM events, and the percentage of the interval lost to all-task
+memory stalls. It also reports when pressure clears. Stage heartbeats alone
+do not prove worker progress. Worker admission respects ancestor cgroup limits
+as well as host headroom. A 160 GiB cap is not reserved RAM: concurrent build
+jobs and databases can still cause a host-wide OOM.
+
+General fits default to 32 threads (`AZOTH_GENERAL_THREADS` overrides this,
+capped by the available CPU share). The pipeline coordinates additional fit
+allocations through `COLLIMATOR_FIT_RESOURCE_DIR`: a process reserves its
+estimated growth before allocating, and fetch workers account for outstanding
+reservations. Already admitted work keeps running while new admissions wait.
+Reservations disappear when their owner exits, including after a crash. These
+estimates include sparse matrix copies and thread-dependent histogram storage;
+they are admission estimates, not a guarantee against OOM. An oversized fit
+fails after `COLLIMATOR_FIT_WAIT_SECONDS` (default 1800) rather than forcing an
+allocation beyond the measured budget.
+
+Extraction streams CSR arrays to `COLLIMATOR_MATRIX_DISK_DIR` (default
+`out/cache/matrix-scratch`) instead of retaining all blocks and then copying
+them into a combined matrix. Keep this on a disk-backed filesystem with space
+for concurrent matrices. The mapped arrays are reclaimable; they are temporary
+scratch, not recovery checkpoints. Fetch admission adjusts during extraction
+while retaining row order. Full nightly runs capture one pinned selection of
+row IDs and labels and derive both hash folds from it, allowing exact reuse of
+fold discovery counts even when the live database changes between stages.
+
+Training computes sparse means and variances in bounded float64 blocks,
+releases the combined holdout after splitting calibration/evaluation, and
+scores hard negatives in bounded batches. These avoid full-matrix temporary
+copies without dropping samples, features, or hard-negative candidates.
 
 Identical single-file token sets are counted once per batch with their full
 sample frequency. Multi-file overlaps still count each sample once. Worker

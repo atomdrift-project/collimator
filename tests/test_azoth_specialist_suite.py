@@ -286,8 +286,8 @@ def test_next_fit_packs_small_fits_but_never_starves_the_head() -> None:
     def fits(*gbs: float) -> list[dict]:
         return [{"mem_gb": gb} for gb in gbs]
 
-    # An idle pool always starts the head, even one over budget.
-    assert suite.next_fit(fits(90, 1), 0, 0, 40, 8) == {"mem_gb": 90}
+    # An idle pool must not bypass the memory budget.
+    assert suite.next_fit(fits(90, 1), 0, 0, 40, 8) is None
     # Small fits pack in beside a running one while they fit.
     assert suite.next_fit(fits(5, 5), 30, 1, 40, 8) == {"mem_gb": 5}
     # The head doesn't fit: wait, even though a smaller fit behind it would.
@@ -305,8 +305,7 @@ def test_next_fit_also_needs_the_ram_free_right_now() -> None:
     # other chain or the scan server grew): wait rather than overcommit.
     assert suite.next_fit([{"mem_gb": 10}], 5, 1, 40, 8, free_gb=8) is None
     assert suite.next_fit([{"mem_gb": 10}], 5, 1, 40, 8, free_gb=12) == {"mem_gb": 10}
-    # An idle pool still starts the head, so the suite always progresses.
-    assert suite.next_fit([{"mem_gb": 10}], 0, 0, 40, 8, free_gb=0) == {"mem_gb": 10}
+    assert suite.next_fit([{"mem_gb": 10}], 0, 0, 40, 8, free_gb=0) is None
 
 
 def test_fit_mem_file_round_trips_and_tolerates_garbage(tmp_path) -> None:

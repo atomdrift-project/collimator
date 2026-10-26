@@ -10,17 +10,20 @@ from __future__ import annotations
 import hashlib
 import importlib.metadata
 import json
+from functools import lru_cache
 from pathlib import Path
 
 from . import data
 
 
+@lru_cache(maxsize=3)
 def code_revision(stage: str) -> str:
+    """Keep identities stable once captured by a running training process."""
     root = Path(__file__).parent
     names = {
         "corpus": ("data.py", "filegroups.py", "experiment.py", "cache_identity.py"),
-        "features": ("features.py", "vocabulary.py", "allowlist.py", "data.py", "filegroups.py", "cache_identity.py"),
-        "training": ("train.py", "model.py", "experiment.py", "export.py", "bundle.py", "cache_identity.py"),
+        "features": ("features.py", "matrix_store.py", "vocabulary.py", "vocabulary_runs.py", "allowlist.py", "data.py", "filegroups.py", "cache_identity.py"),
+        "training": ("train.py", "fit_resources.py", "model.py", "experiment.py", "export.py", "bundle.py", "cache_identity.py"),
     }[stage]
     h = hashlib.sha256()
     for name in names:

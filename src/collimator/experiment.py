@@ -137,6 +137,20 @@ EXPERIMENT_FILEGROUPS: dict[str, tuple[str, ...]] = {
 }
 
 
+def _corpus_revision(db_path: Path | str, live_revision: str) -> str:
+    """Nightly resumes its selected cohort; ordinary experiments track live data.
+
+    This identifies saved row IDs/labels, not immutable report contents. Matrix
+    caches must continue to include the live database revision.
+    """
+    checkpoint = os.getenv("AZOTH_CHECKPOINT_DIR", "").strip()
+    if not checkpoint:
+        return live_revision
+    scope = ("nightly-selected-cohort-v1", str(Path(checkpoint).resolve()),
+             str(db_path), data.SAMPLE_PREDICATE)
+    return hashlib.sha256(json.dumps(scope).encode()).hexdigest()
+
+
 def _corpus_cache_key(
     seed: int,
     train_samples: int,
@@ -262,7 +276,11 @@ def _collimator_env() -> dict[str, str]:
     return {
         key: value
         for key, value in sorted(os.environ.items())
-        if key.startswith(prefixes) and key not in {"COLLIMATOR_EXPERIMENT_TAG"}
+        if key.startswith(prefixes) and key not in {
+            "COLLIMATOR_EXPERIMENT_TAG", "COLLIMATOR_FIT_RESOURCE_DIR",
+            "COLLIMATOR_MATRIX_DISK_DIR", "COLLIMATOR_FIT_WAIT_SECONDS",
+            "COLLIMATOR_FIT_POLL_SECONDS",
+        }
     }
 
 
@@ -339,6 +357,43 @@ def _load_corpus_cache(
         file_types = np.asarray([], dtype=object)
     log.info("loaded cached corpus: %d train, %d test from %s", len(train), len(test), path)
     return ExperimentCorpus(train_samples=train, test_samples=test), file_types
+
+
+def _shared_nightly_corpus(cache_dir, key, db_path, selection, excluded_fold):
+    """Capture one unlimited cohort; derive both folds without another DB scan.
+
+    Only IDs, selected labels and row metadata are frozen here. This does not
+    claim that live reports are immutable or allow matrix-cache reuse.
+    """
+    if any(selection.get(name, 0) != 0 for name in ('train_samples', 'max_test_samples', 'total_limit')):
+        raise ValueError('shared nightly cohort requires unlimited row selection')
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    with (cache_dir / f'corpus_{key}.lock').open('a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            log.info('waiting for the common pinned cohort; production and folds share one selection')
+            fcntl.flock(lock, fcntl.LOCK_EX)
+        captured = _load_corpus_cache(cache_dir, key)
+        if captured is None:
+            corpus = sample_partitioned_reports(db_path, **selection, apply_oof_exclusion=False)
+            file_types = _load_primary_file_types(
+                db_path, sorted(sample.row_id for sample in corpus.train_samples))
+            _save_corpus_cache(cache_dir, key, corpus, file_types)
+        else:
+            corpus, file_types = captured
+    if excluded_fold is None:
+        return corpus, file_types
+    # Both train and historical external-test/dev rows obey the existing OOF
+    # hash exclusion. Each fold builds its own feature vocabulary afterwards.
+    keep = lambda sample: data.oof_fold_of(sample.group_id) != excluded_fold
+    mask = np.fromiter((keep(sample) for sample in sorted(corpus.train_samples, key=lambda s: s.row_id)),
+                       dtype=bool, count=len(corpus.train_samples))
+    result = ExperimentCorpus([s for s in corpus.train_samples if keep(s)],
+                              [s for s in corpus.test_samples if keep(s)])
+    log.info('derived OOF cohort excluding fold %d: %d train, %d dev; no database rescan',
+             excluded_fold, len(result.train_samples), len(result.test_samples))
+    return result, file_types[mask]
 
 
 @timed('cache.matrix_write')
@@ -456,6 +511,7 @@ def sample_partitioned_reports(
     route_file_types: tuple[str, ...] = (),
     test_natural_prevalence: bool = False,
     evaluation_seed: int = 42,
+    apply_oof_exclusion: bool = True,
 ) -> ExperimentCorpus:
     """Reservoir-sample train rows and optionally cap the external test bucket.
 
@@ -509,7 +565,7 @@ def sample_partitioned_reports(
     # fold models; the held-out half then gets OOF predictions from this
     # model for downstream calibration. Test partition is excluded as
     # always; OOF fold logic only affects train+dev rows.
-    oof_exclude_str = os.getenv("EXP_OOF_FOLD_EXCLUDE", "").strip()
+    oof_exclude_str = os.getenv("EXP_OOF_FOLD_EXCLUDE", "").strip() if apply_oof_exclusion else ""
     oof_exclude: int | None = None
     if oof_exclude_str:
         try:
@@ -851,6 +907,10 @@ def run_experiment(
 ) -> dict[str, object]:
     """Run a fast subsampled train cycle evaluated on the full external test bucket."""
     started = time.perf_counter()
+    # Capture all source identities before long-running work. Later edits must
+    # not change a running process's checkpoint keys halfway through a fold.
+    for stage in ("corpus", "features", "training"):
+        cache_identity.code_revision(stage)
     # Pin the dataset to a single max(id) snapshot so concurrent inserts to the
     # hopper DB don't cause drift between this run and any others.
     pinned_max_id = _cached_snapshot_max_id(
@@ -861,6 +921,8 @@ def run_experiment(
     )
     log.info("dataset snapshot: max_id=%d", pinned_max_id)
     db_revision = cache_identity.database_revision(db_path)
+    corpus_revision = _corpus_revision(db_path, db_revision)
+    pinned_cohort = bool(os.getenv("AZOTH_CHECKPOINT_DIR", "").strip())
     evaluation_seed = int(os.getenv("EXP_EVAL_SEED", "42"))
 
     feature_cfg = features.feature_config_from_env()
@@ -973,13 +1035,19 @@ def run_experiment(
             total_limit,
             test_natural_prevalence=test_natural_prevalence,
             oof_fold_exclude=_oof_fold_exclude,
-            database_revision=db_revision,
+            database_revision=corpus_revision,
             evaluation_seed=evaluation_seed,
         )
         if cache_dir
         else ""
     )
-    matrix_hash = _matrix_cache_key(corpus_hash, feature_cfg, feature_env) if cache_dir else ""
+    # A saved selection survives ingestion; cached report-derived matrices do
+    # not acquire that permission merely by sharing its corpus key.
+    matrix_corpus_hash = (
+        hashlib.sha256(f"{corpus_hash}:{db_revision}".encode()).hexdigest()
+        if pinned_cohort else corpus_hash
+    )
+    matrix_hash = _matrix_cache_key(matrix_corpus_hash, feature_cfg, feature_env) if cache_dir else ""
 
     # Evaluation IDs/revisions describe the extracted inputs, even if the live
     # database changes later. Old caches without this evidence are rebuilt.
@@ -990,7 +1058,21 @@ def run_experiment(
         print(f"\nEXPERIMENT (cached matrices: {X_train.shape[0]} train, {X_test.shape[0]} test)")
     else:
         # --- Cache level 1: corpus row selections + file types ----------------
-        cached_corpus = _load_corpus_cache(cache_dir, corpus_hash) if cache_dir else None
+        if cache_dir and pinned_cohort and train_samples == max_test_samples == total_limit == 0:
+            common_key = _corpus_cache_key(
+                seed, 0, 0, min_malware_training_score, pinned_max_id, route, route_file_types, 0,
+                test_natural_prevalence=test_natural_prevalence, oof_fold_exclude=None,
+                database_revision=corpus_revision, evaluation_seed=evaluation_seed,
+            )
+            selection = dict(train_samples=0, max_test_samples=0, total_limit=0, seed=seed,
+                             min_malware_training_score=min_malware_training_score,
+                             max_id=pinned_max_id, route_file_types=route_file_types,
+                             test_natural_prevalence=test_natural_prevalence,
+                             evaluation_seed=evaluation_seed)
+            cached_corpus = _shared_nightly_corpus(cache_dir, common_key, db_path, selection,
+                                                  _oof_fold_exclude)
+        else:
+            cached_corpus = _load_corpus_cache(cache_dir, corpus_hash) if cache_dir else None
         if cached_corpus is not None:
             corpus, train_file_types = cached_corpus
         else:
@@ -1008,7 +1090,7 @@ def run_experiment(
             )
             sorted_train = sorted(corpus.train_samples, key=lambda s: s.row_id)
             train_file_types = _load_primary_file_types(db_path, [s.row_id for s in sorted_train])
-            if cache_dir and cache_identity.database_revision(db_path) == db_revision:
+            if cache_dir and (pinned_cohort or cache_identity.database_revision(db_path) == db_revision):
                 _save_corpus_cache(cache_dir, corpus_hash, corpus, train_file_types)
         _print_dataset_summary(corpus)
 
@@ -1022,13 +1104,18 @@ def run_experiment(
         log.info("pass 1: building vocabulary (worker-local DB fetching)")
         train_ids_labels = [(s.row_id, s.label) for s in sorted_train]
         vocab_options = {}
+        shared_vocab_dir = os.getenv("COLLIMATOR_SHARED_VOCAB_DIR", "").strip()
+        if shared_vocab_dir:
+            vocab_options["shared_cache_dir"] = Path(shared_vocab_dir)
+            vocab_options["row_folds"] = (data.oof_fold_of(s.group_id) for s in sorted_train)
         if cache_dir is not None:
             # Use the same selected labels as counting/extraction. Rechecking
             # live labels races ingestion and adds a scan of every training row.
             log.info("keying vocabulary recovery from %s selected IDs and labels (no database scan)",
                      f"{len(train_ids_labels):,}")
             vocab_key = features.vocabulary_identity(db_path, train_ids_labels)
-            vocab_options["checkpoint_dir"] = cache_dir / f"vocabulary_{vocab_key}"
+            prefix = "vocabulary_shared" if shared_vocab_dir else "vocabulary"
+            vocab_options["checkpoint_dir"] = cache_dir / f"{prefix}_{vocab_key}"
         spec = features.build_vocab_from_db(
             db_path,
             train_ids_labels,
@@ -1059,6 +1146,10 @@ def run_experiment(
             del selected_ids
         del extracted_identity
         del train_ids_labels
+        # Captured IDs/labels now live in aligned arrays and the on-disk cohort.
+        # Millions of Python sample objects and two sorted lists are otherwise
+        # retained throughout every seed's fit for no further use.
+        del corpus, cached_corpus, sorted_train, sorted_test, vocab_options
 
         if cache_dir and cache_identity.database_revision(db_path) == db_revision:
             _save_matrix_cache(

@@ -1,0 +1,86 @@
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+
+import pytest
+
+from collimator import fit_resources as resources
+
+
+def test_unspent_reservation_accounts_for_growth_and_stale_pids(monkeypatch):
+    processes = {1: ('start', 15), 2: ('reused', 20)}
+    monkeypatch.setattr(resources, '_process', processes.get)
+    entries = [dict(pid=1, start='start', base_anon=10, need=8),
+               dict(pid=2, start='old', base_anon=10, need=100),
+               dict(pid=3, start='gone', base_anon=0, need=100)]
+    assert resources._unspent(entries) == 3
+    assert resources._live(entries) == entries[:1]
+
+
+def test_fit_reservation_releases_on_exception(tmp_path, monkeypatch):
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.setattr(resources, '_available', lambda: 10)
+    with pytest.raises(RuntimeError):
+        with resources.fit_reservation(3):
+            assert resources.reserved_headroom_gb() > 2.9
+            raise RuntimeError('fit failed')
+    assert json.loads((tmp_path / 'fits.json').read_text()) == []
+
+
+def test_idle_fit_cannot_force_allocation_beyond_budget(tmp_path, monkeypatch):
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.setenv('COLLIMATOR_FIT_WAIT_SECONDS', '0')
+    monkeypatch.setattr(resources, '_available', lambda: 1)
+    with pytest.raises(MemoryError, match='needs 3.0 GiB'):
+        with resources.fit_reservation(3):
+            pytest.fail('oversized fit admitted')
+    assert json.loads((tmp_path / 'fits.json').read_text()) == []
+
+
+def test_estimate_scales_with_matrix_threads_and_cv():
+    import numpy as np
+    from types import SimpleNamespace
+    X = np.zeros((100, 20), dtype=np.float32)
+    small = resources.estimate_fit_gb(X, SimpleNamespace(n_folds=0, num_threads=8))
+    assert resources.estimate_fit_gb(X, SimpleNamespace(n_folds=0, num_threads=32)) > small
+    assert resources.estimate_fit_gb(X, SimpleNamespace(n_folds=5, num_threads=8)) > small
+    assert resources.estimate_fit_gb(np.zeros((200, 20), dtype=np.float32),
+                                     SimpleNamespace(n_folds=0, num_threads=8)) > small
+
+
+def test_parallel_fit_admission_is_atomic_and_recovers_killed_owner(tmp_path):
+    script = '''
+import sys,time
+from pathlib import Path
+from collimator import fit_resources as r
+r._available=lambda: 3.0
+with r.fit_reservation(2):
+    Path(sys.argv[1]).write_text('admitted')
+    while True: time.sleep(.1)
+'''
+    env = dict(os.environ, COLLIMATOR_FIT_RESOURCE_DIR=str(tmp_path / 'state'),
+               COLLIMATOR_FIT_POLL_SECONDS='.1', COLLIMATOR_FIT_WAIT_SECONDS='10')
+    procs = []
+    def wait_file(path):
+        until = time.monotonic() + 10
+        while not path.exists() and time.monotonic() < until:
+            time.sleep(.05)
+        assert path.exists()
+    try:
+        first = subprocess.Popen([sys.executable, '-c', script, str(tmp_path / 'one')], env=env)
+        procs.append(first)
+        wait_file(tmp_path / 'one')
+        second = subprocess.Popen([sys.executable, '-c', script, str(tmp_path / 'two')], env=env)
+        procs.append(second)
+        time.sleep(.5)
+        assert not (tmp_path / 'two').exists()
+        first.kill(); first.wait(timeout=5)
+        wait_file(tmp_path / 'two')
+    finally:
+        for process in procs:
+            if process.poll() is None:
+                process.kill()
+            process.wait(timeout=5)

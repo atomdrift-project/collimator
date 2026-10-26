@@ -219,8 +219,8 @@ def test_reinstall_preserves_schedule_and_sets_limits(shell_env):
     assert result.returncode == 0, result.stderr
     assert schedule in (units / "azoth-nightly.timer").read_text()
     train = (units / "azoth-nightly.service").read_text()
-    assert "MemoryHigh=112G" in train
-    assert "MemoryMax=128G" in train
+    assert "MemoryHigh=156G" in train
+    assert "MemoryMax=160G" in train
     assert "MemorySwapMax=16G" in train
     assert "OOMPolicy=stop" in train
     assert "Restart=on-abnormal" in train
@@ -314,6 +314,6 @@ def test_nightly_logger_protection_and_snapshot_gate(shell_env, tmp_path, snapsh
             text=True, capture_output=True, timeout=10,
         )
         assert scoped.returncode == 0, scoped.stderr
-        assert "MemoryMax=128G" in events.read_text()
+        assert "MemoryMax=160G" in events.read_text()
         assert "OOMPolicy=kill" in events.read_text()
         assert "NIGHTLY_IN_SCOPE=1" in events.read_text()

@@ -133,3 +133,27 @@ def test_serial_recovery_waits_without_dropping_a_batch(monkeypatch, budget_env)
 
     monkeypatch.setattr(features.time, "sleep", sleep)
     assert list(features._memory_budgeted_serial_iter(work, range(-3, 0))) == [3, 2, 1]
+
+
+def test_ordered_extraction_rebudgets_without_reordering(monkeypatch):
+    monkeypatch.setattr(features, '_WORKER_BUDGET_REFRESH_SECONDS', .01)
+    calls = 0
+    budgets = []
+    def budget():
+        nonlocal calls
+        calls += 1
+        value = 0 if calls == 1 else (1 if calls == 2 else 3)
+        budgets.append(value)
+        return value
+    def work(item):
+        import time
+        time.sleep(.03 if item == 0 else .001)
+        return item
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        assert list(features._bounded_iter(pool, work, range(12), max_inflight=budget)) == list(range(12))
+    assert 0 in budgets and 1 in budgets and 3 in budgets
+
+
+def test_ordered_empty_extraction_does_not_wait_at_zero_budget():
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        assert list(features._bounded_iter(pool, abs, [], max_inflight=lambda: 0)) == []

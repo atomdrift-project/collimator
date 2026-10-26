@@ -10,7 +10,7 @@ from types import SimpleNamespace
 import pytest
 
 
-@pytest.mark.parametrize("mode", ["batch", "shard", "bulk"])
+@pytest.mark.parametrize("mode", ["batch", "shard", "bulk", "global", "parallel", "parallel-batched", "sorted"])
 @pytest.mark.parametrize("shard_batches", [1, 2, 8])
 @pytest.mark.parametrize("token_ids", ["dense", "stable"])
 def test_replay_canonical_digest_includes_weighted_documents_and_archives(

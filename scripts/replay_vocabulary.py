@@ -12,8 +12,10 @@ from collections import Counter
 from dataclasses import asdict, replace
 import hashlib
 import json
+import os
 from pathlib import Path
 import resource
+import shutil
 import struct
 import subprocess
 import sys
@@ -84,18 +86,35 @@ def replay(args):
     started, cpu = time.monotonic(), time.process_time()
     count_seconds = merge_seconds = 0.0
     rows = shards = events = 0
+    deferred = args.mode in ("global", "parallel", "parallel-batched")
+    extra = dict(defer_signatures=True, materialize_workers=2 if args.mode != "global" else 1) if deferred else {}
+    if args.mode == "parallel-batched":
+        extra["materialize_merge_size"] = 2
+    prefill = getattr(args, "prefill", None)
     with tempfile.TemporaryDirectory(prefix="vocab-replay-", dir=args.scratch) as scratch:
+        destination = Path(scratch) / "merged.sqlite"
+        copy_started = time.monotonic()
+        if prefill:
+            shutil.copyfile(prefill, destination)
+            # Keep fixture-copy writeback outside the aggregation measurement.
+            with destination.open("rb") as copied:
+                os.fsync(copied.fileno())
+        prefill_copy_seconds = time.monotonic() - copy_started
+        started, cpu = time.monotonic(), time.process_time()
         with VocabularyCounts(str(Path(scratch) / "merged.sqlite"), durable=True,
-                              cache_size_mib=256, stable_token_ids=args.token_ids == "stable") as merged:
+                              cache_size_mib=256, stable_token_ids=args.token_ids == "stable",
+                              resume=bool(prefill), **extra) as merged:
             worker = None
+            ready = []
             with args.input.open() as source:
                 for batch_index, line in enumerate(source):
                     batch = json.loads(line)
                     rows += batch["rows"]
                     if worker is None:
                         worker = VocabularyCounts(str(Path(scratch) / f"worker-{shards}.sqlite"),
-                                                  bulk_signatures=args.mode == "bulk",
-                                                  stable_token_ids=args.token_ids == "stable")
+                                                  bulk_signatures=args.mode in ("bulk", "global", "parallel", "parallel-batched", "sorted"),
+                                                  stable_token_ids=args.token_ids == "stable",
+                                                  **(dict(defer_signatures=True) if deferred else {}))
                     t = time.monotonic()
                     groups = Counter()
                     for family, tokens, order, document, n in batch["events"]:
@@ -116,7 +135,13 @@ def replay(args):
                         worker.close()
                         count_seconds += time.monotonic() - t
                         t = time.monotonic()
-                        merged.merge(CountView(worker.path, "bigram"))
+                        if args.mode == "sorted":
+                            ready.append(CountView(worker.path, "bigram"))
+                            if len(ready) == 8:
+                                merge_sorted(merged, ready)
+                                ready.clear()
+                        else:
+                            merged.merge(CountView(worker.path, "bigram"))
                         merge_seconds += time.monotonic() - t
                         worker = None
                         shards += 1
@@ -125,10 +150,22 @@ def replay(args):
                 worker.close()
                 count_seconds += time.monotonic() - t
                 t = time.monotonic()
-                merged.merge(CountView(worker.path, "bigram"))
+                if args.mode == "sorted":
+                    ready.append(CountView(worker.path, "bigram"))
+                else:
+                    merged.merge(CountView(worker.path, "bigram"))
                 merge_seconds += time.monotonic() - t
                 shards += 1
+            if ready:
+                t = time.monotonic()
+                merge_sorted(merged, ready)
+                merge_seconds += time.monotonic() - t
+            t = time.monotonic()
+            if hasattr(merged, "materialize"):
+                merged.materialize()
+            materialize_seconds = time.monotonic() - t
             elapsed, cpu_seconds = time.monotonic() - started, time.process_time() - cpu
+            children = resource.getrusage(resource.RUSAGE_CHILDREN)
             peak_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             # Canonical names, not local IDs, define equality across variants.
             # SQLite provides an external sort rather than a giant Python dict.
@@ -136,18 +173,60 @@ def replay(args):
                 merged.tokens[i] for i in struct.unpack(f">{len(key)//4}I", key)))
             digest = hashlib.sha256()
             keys = 0
-            for row in merged.db.execute("SELECT family, canonical(token), n FROM counts ORDER BY 1, 2"):
-                digest.update((json.dumps(row) + "\n").encode())
-                keys += 1
+            if prefill:
+                for family, key, n in merged.db.execute("SELECT family, token, n FROM counts ORDER BY 1,2"):
+                    name = family.encode()
+                    digest.update(struct.pack(">IIQ",len(name),len(key),n) + name + key)
+                    keys += 1
+            else:
+                for row in merged.db.execute("SELECT family, canonical(token), n FROM counts ORDER BY 1, 2"):
+                    digest.update((json.dumps(row) + "\n").encode())
+                    keys += 1
             result = dict(mode=args.mode, token_ids=args.token_ids,
                           shard_batches=args.shard_batches, rows=rows, events=events,
                           shards=shards, keys=keys, digest=digest.hexdigest(),
                           elapsed_seconds=elapsed, cpu_seconds=cpu_seconds,
+                          cpu_with_children_seconds=cpu_seconds + children.ru_utime + children.ru_stime,
+                          child_peak_rss_kib=children.ru_maxrss,
                           count_seconds=count_seconds, merge_seconds=merge_seconds,
+                          materialize_seconds=materialize_seconds, prefill=str(prefill or ""),
+                          prefill_copy_seconds=prefill_copy_seconds,
                           database_bytes=Path(merged.path).stat().st_size,
                           aggregation_peak_rss_kib=peak_rss,
                           verification_peak_rss_kib=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
             print(json.dumps(result), flush=True)
+
+
+def merge_sorted(merged, views):
+    """Benchmark-only bounded SQL sort/reduce alternative; no default change."""
+    from collimator.vocabulary import _packed_remapper
+    attached = []
+    try:
+        selections = []
+        for i, view in enumerate(views):
+            alias = f"input{i}"
+            merged.db.execute(f"ATTACH DATABASE ? AS {alias}", (Path(view.path).resolve().as_uri()+"?mode=ro",))
+            attached.append(alias)
+            mapping = {old: merged._token_id(token) for old, token in merged.db.execute(f"SELECT id, token FROM {alias}.tokens")}
+            key = "token"
+            if any(old != new for old, new in mapping.items()):
+                merged.db.create_function(f"remap{i}",1,_packed_remapper(mapping))
+                key = f"remap{i}(token)"
+            selections.append(f"SELECT family,{key} AS token,n FROM {alias}.counts")
+        merged.db.execute("INSERT INTO counts SELECT family,token,sum(n),NULL,NULL FROM ("+
+                          " UNION ALL ".join(selections)+") WHERE true GROUP BY family,token "
+                          "ON CONFLICT(family,token) DO UPDATE SET n=n+excluded.n,first_document=NULL,document=NULL")
+        for alias in attached:
+            merged.db.execute(f"INSERT INTO batches SELECT * FROM {alias}.batches")
+        merged.db.commit()
+    except BaseException:
+        merged.db.rollback()
+        raise
+    finally:
+        for alias in attached:
+            merged.db.execute(f"DETACH DATABASE {alias}")
+    for view in views:
+        Path(view.path).unlink()
 
 
 def main():
@@ -159,7 +238,8 @@ def main():
     parser.add_argument("--rows", type=int, default=8192)
     parser.add_argument("--batch-size", type=int, default=170)
     parser.add_argument("--shard-batches", type=int, default=8)
-    parser.add_argument("--mode", choices=["batch", "shard", "bulk"], default="bulk")
+    parser.add_argument("--mode", choices=["batch", "shard", "bulk", "global", "parallel", "parallel-batched", "sorted"], default="bulk")
+    parser.add_argument("--prefill", type=Path, help="Existing closed count database for storage-scale stress replay")
     parser.add_argument("--token-ids", choices=["dense", "stable"], default="stable")
     parser.add_argument("--scratch", type=Path, default=Path("/tmp"))
     args = parser.parse_args()

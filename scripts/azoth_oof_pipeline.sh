@@ -61,9 +61,10 @@
 # admissions then sum to what one sequential run would have taken, which is the
 # operating point those per-fit estimates were calibrated against.
 #
-# MEM_LOG records available RAM including ARC every 60s; the low-water mark
-# is printed at the end. That is the number to look at before raising any
-# parallelism knob — we have been tuning these blind.
+# Fit allocations also share atomic reservations across chains. Extraction
+# streams matrices to disk-backed arrays so idle inputs can be reclaimed.
+# MEM_LOG records available RAM including ARC and cgroup pressure every 30s;
+# the low-water mark is printed at the end.
 #
 # ------------------------------------------------------------------- stages
 #
@@ -123,6 +124,21 @@ EVAL_OUT_JSON=${AZOTH_ROOT}/route_policy_eval_oof.json
 NUM_STAGES=10  # stages 0..9
 
 MEM_LOG=${MEM_LOG:-out/pipeline-mem.log}
+# One reservation ledger for every fit/fetcher in this run; isolate independent
+# pipelines. Scratch matrices use disk, never the small /tmp tmpfs.
+mkdir -p out
+RESOURCE_DIR=$(mktemp -d out/fit-resources-XXXXXX) || exit 1
+export COLLIMATOR_FIT_RESOURCE_DIR="$RESOURCE_DIR"
+export COLLIMATOR_MATRIX_DISK_DIR=${COLLIMATOR_MATRIX_DISK_DIR:-out/cache/matrix-scratch}
+
+# Raw counts are reusable only for identical selected rows, labels and feature
+# settings. Fold vocabularies still select exclusively from their training fold.
+if [[ ${AZOTH_SHARED_VOCAB:-1} == 0 ]]; then
+    unset COLLIMATOR_SHARED_VOCAB_DIR
+elif [[ ${THRESHOLD_MAX_ID:-} =~ ^[1-9][0-9]*$ ]]; then
+    export COLLIMATOR_SHARED_VOCAB_DIR=${COLLIMATOR_SHARED_VOCAB_DIR:-${AZOTH_CHECKPOINT_DIR:-out/cache/azoth-pipeline/$THRESHOLD_MAX_ID}/shared-vocabulary}
+    echo "[pipeline] sharing fold discovery counts: $COLLIMATOR_SHARED_VOCAB_DIR"
+fi
 
 timed_stage() {
     local key=$1
@@ -192,12 +208,7 @@ start_mem_watch() {
     [[ -r /proc/meminfo ]] || return 0
     mkdir -p "$(dirname "$MEM_LOG")"
     echo "# $(date +%F' '%T) pipeline start (MemTotal $(awk '/^MemTotal:/ {printf "%.0f", $2/1024/1024}' /proc/meminfo) GiB; available includes reclaimable ZFS ARC)" >> "$MEM_LOG"
-    (
-        while true; do
-            echo "$(date +%F' '%T) mem_available_gb=$(mem_avail_gb) swap_free_gb=$(awk '/^SwapFree:/ {printf "%.0f", $2/1024/1024}' /proc/meminfo)"
-            sleep 60
-        done
-    ) >> "$MEM_LOG" 2>/dev/null &
+    python3 -u src/collimator/memory.py --watch --log-file "$MEM_LOG" &
     MEM_WATCH_PID=$!
 }
 report_mem_watch() {
@@ -276,6 +287,9 @@ fi
 NPROC=$(nproc)
 CONCURRENCY=1
 PAR_ARGS=()
+GENERAL_THREADS=${AZOTH_GENERAL_THREADS:-32}
+[[ $GENERAL_THREADS =~ ^[1-9][0-9]*$ ]] || { echo "ERROR: AZOTH_GENERAL_THREADS must be a positive integer"; exit 1; }
+(( GENERAL_THREADS > NPROC )) && GENERAL_THREADS=$NPROC
 
 # Training fidelity for the three generals. A publish run is full-corpus by
 # definition — the whole point of k=2 OOF is the benign tail that sampling
@@ -296,10 +310,9 @@ FIDELITY_ARGS=()
 #                           already read this for threads; it now also divides
 #                           the memory admission, which is what was
 #                           double-booked before)
-#   COLLIMATOR_NUM_THREADS  caps each concurrent general's LightGBM at half the
-#                           cores; without it TrainConfig asks for n_jobs=-1 =
-#                           nproc per training and two of them put the box at
-#                           2x oversubscription during the fit phase
+#   COLLIMATOR_NUM_THREADS  uses the measured general-fit default (32 threads),
+#                           capped at half the cores when chains overlap;
+#                           AZOTH_GENERAL_THREADS overrides the default
 #   WORKERS                 halves the REQUESTED DB-fetch parallelism, not just
 #                           its ceiling. The clamps above only bind when the
 #                           request exceeds them, so two chains asking for the
@@ -323,14 +336,19 @@ if [[ "$PARALLEL_CHAINS" = "1" ]]; then
     export COLLIMATOR_MEM_SHARES=$CONCURRENCY
     export AZOTH_CONCURRENT_SUITES=$CONCURRENCY
     export COLLIMATOR_NUM_THREADS=$(( NPROC / CONCURRENCY ))
+    # General fitting has a measured thread sweet spot. Keep it explicit so
+    # make's EXP_LGBM_THREADS default cannot silently override the log.
+    (( GENERAL_THREADS > COLLIMATOR_NUM_THREADS )) && GENERAL_THREADS=$COLLIMATOR_NUM_THREADS
+    export COLLIMATOR_NUM_THREADS=$GENERAL_THREADS
     CHAIN_WORKERS=$(( ${WORKERS:-$NPROC} / CONCURRENCY ))
     (( CHAIN_WORKERS < 1 )) && CHAIN_WORKERS=1
-    PAR_ARGS=("WORKERS=$CHAIN_WORKERS")
+    PAR_ARGS=("WORKERS=$CHAIN_WORKERS" "EXP_LGBM_THREADS=$GENERAL_THREADS")
     echo "[pipeline] 2 concurrent chains: COLLIMATOR_MEM_SHARES=2, AZOTH_CONCURRENT_SUITES=2," \
          "COLLIMATOR_NUM_THREADS=${COLLIMATOR_NUM_THREADS}, WORKERS=${CHAIN_WORKERS}/chain" \
          "(nproc=${NPROC}, requested WORKERS=${WORKERS:-$NPROC})"
     echo "[pipeline] available RAM (including ZFS ARC) at start: $(mem_avail_gb) GiB"
 fi
+FIDELITY_ARGS+=("EXP_LGBM_THREADS=$GENERAL_THREADS")
 
 # Undo the split for stages that run alone — they should have the whole box.
 unsplit_resources() {

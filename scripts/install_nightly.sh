@@ -69,10 +69,10 @@ OOMPolicy=stop
 Restart=on-abnormal
 RestartSec=300
 # Bound growth after admission, including child processes and swap. The last
-# successful parallel run peaked at 76G; allow growth without consuming 192G
-# of a co-tenanted 251G host. MemoryHigh applies reclaim before the hard cap.
-MemoryHigh=112G
-MemoryMax=128G
+# full-corpus run exceeded 112G during holdout preparation. Allow 160G on
+# the co-tenanted 251G host; MemoryHigh applies reclaim before the hard cap.
+MemoryHigh=156G
+MemoryMax=160G
 MemorySwapMax=16G
 EOF
 

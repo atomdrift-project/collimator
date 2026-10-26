@@ -56,14 +56,17 @@ def fingerprint(command, inputs):
         if (key == "DB" or key == "THRESHOLD_MAX_ID"
             or key.startswith(("EXP_", "AZOTH_", "COLLIMATOR_")))
         # Ignore obsolete corpus-checksum settings inherited from older runs.
-        and key not in ("COLLIMATOR_SNAPSHOT_TIMEOUT_SECONDS", "AZOTH_DATA_REVISION")
+        and key not in ("COLLIMATOR_SNAPSHOT_TIMEOUT_SECONDS", "AZOTH_DATA_REVISION",
+                        "COLLIMATOR_FIT_RESOURCE_DIR", "COLLIMATOR_MATRIX_DISK_DIR",
+                        "COLLIMATOR_FIT_WAIT_SECONDS", "COLLIMATOR_FIT_POLL_SECONDS")
         and not any(part in key for part in (
             "MEM", "WORKER", "THREAD", "PARALLEL", "CONCURRENT", "CHECKPOINT", "RESUME",
         ))
     }
     # WORKERS/threads vary with sequential fallback; these do not change the
     # learned configuration or row selections.
-    semantic_command = [arg for arg in command if not arg.startswith("WORKERS=")]
+    semantic_command = [arg for arg in command
+                        if not arg.startswith(("WORKERS=", "EXP_LGBM_THREADS="))]
     return {"code": code.hexdigest(), "environment": environment,
             "command": semantic_command, "inputs": manifest(inputs)}
 

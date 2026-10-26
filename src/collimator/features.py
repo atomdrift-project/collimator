@@ -112,7 +112,7 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.stats as stats
 
-from .memory import available_memory_gb
+from .memory import available_memory_gb, cgroup_headroom_gb
 from .vocabulary import CountView, DiskTrigramCandidates, TrigramSource, VocabularyCounts
 
 log = logging.getLogger(__name__)
@@ -4394,12 +4394,16 @@ def _vocabulary_counts(checkpoint_dir: Path | None = None):
             fcntl.flock(lock, fcntl.LOCK_EX)
             # A killed process cannot run TemporaryDirectory's cleanup.
             # Only this checkpoint's exclusive owner may remove orphan shards.
-            for orphan in checkpoint_dir.glob("workers-*"):
-                if orphan.is_dir() and not orphan.is_symlink():
+            for orphan in checkpoint_dir.iterdir():
+                if (orphan.name.startswith(("workers-", "materialize-"))
+                        and orphan.is_dir() and not orphan.is_symlink()):
                     shutil.rmtree(orphan)
             with tempfile.TemporaryDirectory(prefix="workers-", dir=checkpoint_dir.resolve()) as scratch:
                 with VocabularyCounts(str(checkpoint_dir / "counts.sqlite"), durable=True,
-                                      resume=True, check_same_thread=False, cache_size_mib=256) as counts:
+                                      resume=True, check_same_thread=False, cache_size_mib=256,
+                                      defer_signatures=True, materialize_workers=max(1, int(os.getenv(
+                                          "COLLIMATOR_VOCAB_REDUCE_WORKERS", "2"))),
+                                      materialize_merge_size=int(os.getenv("COLLIMATOR_VOCAB_MERGE_GROUP", "1"))) as counts:
                     yield counts, scratch
             if (checkpoint_dir / "feature_spec.json").is_file():
                 # The spec is sufficient for pass 2 and future retries. Keep
@@ -4413,7 +4417,10 @@ def _vocabulary_counts(checkpoint_dir: Path | None = None):
         # The merge thread uses this connection exclusively during counting;
         # the parent queries it only after the thread has joined.
         with VocabularyCounts(str(Path(scratch) / "merged.sqlite"), durable=True,
-                              check_same_thread=False, cache_size_mib=256) as counts:
+                              check_same_thread=False, cache_size_mib=256, defer_signatures=True,
+                              materialize_workers=max(1, int(os.getenv(
+                                  "COLLIMATOR_VOCAB_REDUCE_WORKERS", "2"))),
+                              materialize_merge_size=int(os.getenv("COLLIMATOR_VOCAB_MERGE_GROUP", "1"))) as counts:
             yield counts, scratch
 
 
@@ -4423,7 +4430,9 @@ _VOCAB_MERGE_BACKLOG = 4
 @contextmanager
 def _background_vocab_merges(counts):
     """Overlap one SQLite writer with counting; bound queued shard files."""
+    from .profiling import event
     pending = collections.deque()
+    last_wait_log = 0.0
     with ThreadPoolExecutor(max_workers=1, thread_name_prefix="vocab-merge") as pool:
         def merge(view):
             from .profiling import profile
@@ -4431,8 +4440,16 @@ def _background_vocab_merges(counts):
                 counts.merge(view)
 
         def submit(view):
+            nonlocal last_wait_log
             if len(pending) >= _VOCAB_MERGE_BACKLOG:
+                started = time.monotonic()
                 pending.popleft().result()
+                waited = time.monotonic() - started
+                event("vocabulary.merge_queue", "wait", wall_seconds=waited, depth=len(pending)+1)
+                if waited >= 5 and time.monotonic() - last_wait_log >= 30:
+                    log.info("vocab merge queue: waited %.1fs for writer (%d queued shards)",
+                             waited, len(pending)+1)
+                    last_wait_log = time.monotonic()
             pending.append(pool.submit(merge, view))
 
         yield submit
@@ -4745,6 +4762,11 @@ def ram_headroom_gb(reserve_gb: float) -> float | None:
             headroom = min(headroom, float(ceiling) - _cgroup_anon_gb())
         except (OSError, ValueError, IndexError) as exc:
             log.warning("ignoring COLLIMATOR_MEM_CEILING_GB=%s: %s", ceiling, exc)
+    cgroup_headroom = cgroup_headroom_gb()
+    if cgroup_headroom is not None:
+        headroom = min(headroom, cgroup_headroom)
+    from .fit_resources import reserved_headroom_gb
+    headroom -= reserved_headroom_gb()
     return max(0.0, headroom)
 
 
@@ -5025,7 +5047,8 @@ def _enumerate_batches(
         offset += len(batch)
 
 
-def _bounded_iter(pool: ProcessPoolExecutor, fn, it: Iterable, *, max_inflight: int) -> Iterator:
+def _bounded_iter(pool: ProcessPoolExecutor, fn, it: Iterable,
+                  *, max_inflight: int | Callable[[], int]) -> Iterator:
     """Submit tasks to pool with bounded concurrency, yielding results in order.
 
     Unlike pool.map(), which eagerly submits all tasks before any results are
@@ -5033,6 +5056,9 @@ def _bounded_iter(pool: ProcessPoolExecutor, fn, it: Iterable, *, max_inflight: 
     bounds the amount of pickled task data queued in the IPC pipe and the
     number of raw-JSON strings materialised in the main process simultaneously.
     """
+    if callable(max_inflight):
+        yield from _bounded_ordered_dynamic_iter(pool, fn, it, max_inflight)
+        return
     pending: collections.deque = collections.deque()
     source = iter(it)
     for item in islice(source, max_inflight):
@@ -5046,6 +5072,51 @@ def _bounded_iter(pool: ProcessPoolExecutor, fn, it: Iterable, *, max_inflight: 
 
 
 _WORKER_BUDGET_REFRESH_SECONDS = 30.0
+
+
+def _bounded_ordered_dynamic_iter(pool, fn, it, budget):
+    """Drain under pressure, expand after recovery, and preserve row ordering."""
+    pending = collections.deque()
+    source = iter(it)
+    sentinel = object()
+    buffered = sentinel
+    exhausted = False
+    refresh_at = 0.0
+    limit = 0
+    while pending or not exhausted:
+        now = time.monotonic()
+        if now >= refresh_at:
+            limit = max(0, int(budget()))
+            refresh_at = now + _WORKER_BUDGET_REFRESH_SECONDS
+        # Probe exhaustion even at zero budget; an empty iterator must finish.
+        if buffered is sentinel and not exhausted:
+            buffered = next(source, sentinel)
+            exhausted = buffered is sentinel
+        while len(pending) < limit and not exhausted:
+            pending.append(pool.submit(fn, buffered))
+            buffered = next(source, sentinel)
+            exhausted = buffered is sentinel
+        if pending:
+            done, _ = wait([pending[0]], timeout=max(0, refresh_at - time.monotonic()),
+                           return_when=FIRST_COMPLETED)
+            if done:
+                yield pending.popleft().result()
+        elif not exhausted:
+            time.sleep(max(0, refresh_at - time.monotonic()))
+
+
+def _extraction_budget(n_workers):
+    previous = None
+    def budget():
+        nonlocal previous
+        current = clamp_workers_to_available_ram(n_workers, log_budget=previous is None,
+                                                 allow_zero=True)
+        if current != previous:
+            log.info('extraction worker budget: %s -> %d/%d; preserving row order',
+                     previous if previous is not None else 'initial', current, n_workers)
+            previous = current
+        return current
+    return budget
 
 
 def _bounded_unordered_iter(
@@ -5549,7 +5620,7 @@ def _vocab_shard_limit_reached(counts, batches, started):
 def _active_vocab_shard(scratch):
     global _vocab_shard_counts, _vocab_shard_batches, _vocab_shard_finalizer, _vocab_shard_started
     if _vocab_shard_counts is None:
-        _vocab_shard_counts = VocabularyCounts(_batch_count_path(scratch))
+        _vocab_shard_counts = VocabularyCounts(_batch_count_path(scratch), defer_signatures=True)
         _vocab_shard_batches = 0
         _vocab_shard_started = time.monotonic()
         _vocab_shard_finalizer = Finalize(
@@ -5588,9 +5659,11 @@ def _vocab_benign_trigram_shard_worker(args):
 @timed('vocabulary.batch')
 def _count_labeled_vocab_batch(dsn, ids_labels, counts):
     from . import data
+    from .profiling import event
 
     ids = [rid for rid, _l in ids_labels]
     reports_map = data.fetch_cleave_results(dsn, ids)
+    event("vocabulary.discovery", "rows", requested=len(ids), returned=len(reports_map))
 
     presence_counts: dict[str, int] = {}
     filetypes: set[str] = set()
@@ -5742,6 +5815,7 @@ def _init_trigram_candidates(candidates):
     global _worker_trigram_candidates
     _worker_trigram_candidates = (DiskTrigramCandidates(candidates)
                                   if isinstance(candidates, TrigramSource)
+                                  else candidates if isinstance(candidates, dict)
                                   else _trigram_candidate_index(candidates))
 
 
@@ -5841,7 +5915,10 @@ def _stable_vocab_scan_rows(row_ids_labels, limit=5000, *, chunk_size=262144):
 
 @timed('vocabulary.total')
 def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int]],
-                        n_workers: int = 0, *, checkpoint_dir: Path | None = None) -> FeatureSpec:
+                        n_workers: int = 0, *, checkpoint_dir: Path | None = None,
+                        shared_cache_dir: Path | None = None, row_folds: Iterable[int] | None = None) -> FeatureSpec:
+    if (shared_cache_dir is None) != (row_folds is None):
+        raise ValueError("shared vocabulary requires both cache directory and row folds")
     with _vocabulary_counts(checkpoint_dir) as (counts, scratch):
         if checkpoint_dir is not None:
             expected = vocabulary_identity(db_path, row_ids_labels)
@@ -5857,7 +5934,8 @@ def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int
         if spec_path is not None and spec_path.exists():
             log.info("resuming completed vocabulary: %s", spec_path)
             return FeatureSpec.load(spec_path)
-        spec = _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch)
+        spec = _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch,
+                                   shared_cache_dir=shared_cache_dir, row_folds=row_folds)
         if spec_path is not None:
             temporary = spec_path.with_suffix(".tmp")
             spec.save(temporary)
@@ -5865,7 +5943,7 @@ def build_vocab_from_db(db_path: Path | str, row_ids_labels: list[tuple[int, int
         return spec
 
 
-def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) -> FeatureSpec:
+def _count_vocab_rows(db_path, row_ids_labels, n_workers, counts, scratch):
     config = feature_config_from_env()
     nw = resolve_worker_count(n_workers)
     presence_counts: dict[str, int] = {}
@@ -5892,11 +5970,6 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
                     config.bigram_min_freq, malware_total)
     vocab_started = time.monotonic()
     last_progress = vocab_started
-    # Keep existing sampled IDs stable when a few training rows change.
-    scan_rows = _stable_vocab_scan_rows(row_ids_labels)
-    scan_digest = hashlib.sha256(np.asarray([r[0] for r in scan_rows], dtype="<u8").tobytes()).hexdigest()
-    log.info("auxiliary vocabulary sample: %d rows, ID digest=%s", len(scan_rows), scan_digest)
-
     def _merge_batch(
         path_counts: dict[str, int],
         fts: list[str],
@@ -5999,6 +6072,251 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
     log.info("vocab counting complete: %d rows, %d batches, %.1fs elapsed",
              len(row_ids_labels), batches_merged, time.monotonic() - vocab_started)
 
+    return (presence_counts, sorted(filetypes), element_counts, None, benign_presence,
+            malware_presence, skeleton_counts, benign_elements, malware_elements, None, None, None, None)
+
+
+def _published_fold_counts(db_path, rows, n_workers, root):
+    """Publish one immutable, resumable discovery-count database per cohort.
+
+    The key includes selected labels, configuration and feature code. It is a
+    captured training input, not a claim that the live database is immutable.
+    No vocabulary threshold or benign-candidate filtering runs in this cache.
+    """
+    key = vocabulary_identity(db_path, rows)
+    directory = Path(root) / key
+    directory.mkdir(parents=True, exist_ok=True)
+    published = directory / "discovery.sqlite"
+    with (directory / "publish.lock").open("w") as lock:
+        # Competing production/fold trainers consume the first completed copy.
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            log.info("shared vocabulary: waiting for matching fold (%d rows, %s)", len(rows), key[:12])
+            fcntl.flock(lock, fcntl.LOCK_EX)
+        if published.is_file():
+            log.info("shared vocabulary: reuse %d discovery rows (%s)", len(rows), key[:12])
+            return published
+        work = directory / "work"
+        with _vocabulary_counts(work) as (fold_counts, scratch):
+            if not fold_counts.state("shared_export_ready", False):
+                log.info("shared vocabulary: count %d discovery rows (%s)", len(rows), key[:12])
+                summary = _count_vocab_rows(db_path, rows, n_workers, fold_counts, scratch)
+                fold_counts.materialize()
+                # Replacing worker receipts and marking readiness is atomic.
+                # A restart after this commit must publish, never recount.
+                fold_counts.db.execute("DELETE FROM batches")
+                fold_counts.record_batch(f"shared:{key}", summary, len(rows))
+                fold_counts.set_state("shared_export_ready", True)
+        # Closing the last connection checkpoints WAL. Move the closed DB
+        # instead of copying potentially gigabytes of expanded counts.
+        os.replace(work / "counts.sqlite", published)
+        directory_fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+        log.info("shared vocabulary: published %d discovery rows (%s)", len(rows), key[:12])
+    return published
+
+
+def _shared_fold_counts(db_path, rows, row_folds, n_workers, counts, root):
+    """Build fold-local raw counts once; combine only the requested cohorts."""
+    import sqlite3
+
+    folds = {0: [], 1: []}
+    for row, fold in zip(rows, row_folds, strict=True):
+        if fold not in folds:
+            raise ValueError("shared vocabulary requires training folds 0 or 1")
+        folds[fold].append(row)
+    summary = [{}, set(), {}, None, {}, {}, {}, {}, {}, None, None, None, None]
+    for fold, selected in folds.items():
+        if not selected:
+            continue
+        published = _published_fold_counts(db_path, selected, n_workers, root)
+        # Published files are never opened for writing or removed by consumers.
+        with sqlite3.connect(published.resolve().as_uri() + "?mode=ro", uri=True) as db:
+            row = db.execute("SELECT summary,n_rows FROM batches WHERE id LIKE 'shared:%'").fetchone()
+            if row is None or row[1] != len(selected):
+                raise ValueError("shared vocabulary receipt does not match selected rows")
+            values = json.loads(row[0])
+        counts.attach_shared(CountView(str(published), "bigram"))
+        summary[1].update(values[1])
+        for index in (0, 2, 4, 5, 6, 7, 8):
+            for key, value in values[index].items():
+                summary[index][key] = summary[index].get(key, 0) + value
+        log.info("shared vocabulary: fold %d attached read-only (%d rows)", fold, len(selected))
+    summary[1] = sorted(summary[1])
+    return tuple(summary)
+
+
+@timed("vocabulary.benign_filter")
+def _count_benign_prevalence(db_path, benign_ids, nw, counts, scratch, source, prefix, batch_size):
+    """Count one candidate set; batch receipts and counts commit together."""
+    done = {row[0] for row in counts.completed_batches(prefix)}
+    total = (len(benign_ids) + batch_size - 1) // batch_size
+    processed = len(done)
+    log.info("trigram prevalence %s: %d benign rows, %d/%d batches resumed",
+             prefix, len(benign_ids), processed, total)
+    if processed == total:
+        return
+    started = last_progress = time.monotonic()
+
+    def progress():
+        nonlocal processed, last_progress
+        processed += 1
+        now = time.monotonic()
+        if now - last_progress >= 30 or processed == total:
+            log.info("trigram prevalence %s: %d/%d batches processed, %.1fs elapsed",
+                     prefix, processed, total, now - started)
+            last_progress = now
+
+    if nw > 1:
+        args = ((db_path, batch, None, scratch, f"{prefix}:{i}")
+                for i, batch in enumerate(_batched(benign_ids, batch_size))
+                if f"{prefix}:{i}" not in done)
+        pending, merged = {}, set()
+        with _background_vocab_merges(counts) as merge:
+            with _feature_worker_pool(nw, initializer=_init_trigram_candidates, initargs=(source,)) as pool:
+                for result, sealed in _memory_budgeted_unordered_iter(
+                    pool, _vocab_benign_trigram_shard_worker, args, n_workers=nw,
+                ):
+                    if result.path not in merged:
+                        pending[result.path] = result
+                    if sealed:
+                        merge(pending.pop(result.path))
+                        merged.add(result.path)
+                    progress()
+            for result in pending.values():
+                merge(result)
+    else:
+        index = DiskTrigramCandidates(source) if isinstance(source, TrigramSource) else source
+        try:
+            args = ((db_path, batch, index, scratch, f"{prefix}:{i}")
+                    for i, batch in enumerate(_batched(benign_ids, batch_size))
+                    if f"{prefix}:{i}" not in done)
+            for result in _memory_budgeted_serial_iter(_vocab_benign_trigram_worker, args):
+                counts.merge(result)
+                progress()
+        finally:
+            if isinstance(index, DiskTrigramCandidates):
+                index.close()
+
+
+@timed("vocabulary.trigram_selection")
+def _select_trigram_vocabulary(db_path, benign_ids, nw, counts, scratch, *,
+                               limit, minimum, benign_ceiling, batch_size):
+    """Filter consecutive exact rank pages until enough candidates survive.
+
+    Every unseen candidate ranks after the current page, including lexical
+    frequency ties. Once K survive, none of the unseen candidates can replace
+    them. Only tested candidates get benign counts; never run an unrestricted
+    top-k against the missing (untested) counts.
+    """
+    if limit <= 0:
+        return []
+    mode = "exhaustive" if os.getenv("COLLIMATOR_TRIGRAM_SHORTLIST", "1") == "0" else "shortlist"
+    if counts.state("trigram_filter_mode", mode) != mode:
+        raise ValueError("trigram filtering mode changed; use a new checkpoint")
+    counts.set_state("trigram_filter_mode", mode)
+    if mode == "exhaustive":
+        if counts.count_at_least("trigram", minimum):
+            _count_benign_prevalence(db_path, benign_ids, nw, counts, scratch,
+                                    TrigramSource(counts.path, minimum), "benign", batch_size)
+        return counts.top("trigram", limit, minimum, benign_family="benign_trigram",
+                          benign_ceiling=benign_ceiling)
+    page_size = int(os.getenv("COLLIMATOR_TRIGRAM_SHORTLIST_SIZE", "4096"))
+    if not 1 <= page_size <= 65536:
+        raise ValueError("trigram shortlist size must be between 1 and 65536")
+    parameters = [limit, minimum, benign_ceiling, len(benign_ids), batch_size]
+    state = counts.state("trigram_selection", dict(parameters=parameters, accepted=[],
+                         after=None, round=0, tested=0, complete=False))
+    if state["parameters"] != parameters:
+        raise ValueError("trigram shortlist inputs changed; use a new checkpoint")
+    while not state["complete"]:
+        if state.get("fallback"):
+            _count_benign_prevalence(db_path, benign_ids, nw, counts, scratch,
+                                    TrigramSource(counts.path, minimum), "benign-fallback", batch_size)
+            state.update(accepted=counts.top("trigram", limit, minimum,
+                         benign_family="benign_trigram", benign_ceiling=benign_ceiling), complete=True)
+            counts.set_state("trigram_selection", state)
+            break
+        if "page" not in state:
+            if state["round"] >= 4:
+                # Bound rereads when nearly every leading candidate is benign.
+                # Clear earlier subset counts atomically with the fallback
+                # marker; exhaustive counting must not add to those counts.
+                log.info("trigram shortlist: few candidates survived %d rounds; falling back to exhaustive filtering",
+                         state["round"])
+                try:
+                    counts.db.execute("DELETE FROM counts WHERE family='benign_trigram'")
+                    counts.db.execute("DELETE FROM batches WHERE id LIKE 'benign-shortlist-%'")
+                    state["fallback"] = True
+                    counts.set_state("trigram_selection", state)
+                except BaseException:
+                    counts.db.rollback()
+                    raise
+                continue
+            page = counts.ranked_page("trigram", min(65536, page_size * (2 ** state["round"])), minimum, state["after"])
+            state["page"] = [(key.hex(), n) for key,n in page]
+            counts.set_state("trigram_selection", state)
+        page = [(bytes.fromhex(key), n) for key,n in state["page"]]
+        if not page:
+            state["complete"] = True
+            counts.set_state("trigram_selection", state)
+            break
+        candidates = {}
+        for key, _ in page:
+            a, b, c = counts.token_parts(key)
+            candidates.setdefault(a, {}).setdefault(b, set()).add(c)
+        log.info("trigram shortlist: round %d, %d candidates, %d/%d accepted so far",
+                 state["round"] + 1, len(page), len(state["accepted"]), limit)
+        _count_benign_prevalence(db_path, benign_ids, nw, counts, scratch, candidates,
+                                f"benign-shortlist-{state['round']}", batch_size)
+        for key, _ in page:
+            row = counts.db.execute("SELECT n FROM counts WHERE family='benign_trigram' AND token=?", (key,)).fetchone()
+            if (row[0] if row else 0) <= benign_ceiling:
+                state["accepted"].append(" + ".join(counts.token_parts(key)))
+                if len(state["accepted"]) == limit:
+                    break
+        key, n = page[-1]
+        state.update(after=[n, " + ".join(counts.token_parts(key)), key.hex()],
+                     round=state["round"] + 1, tested=state["tested"] + len(page),
+                     complete=len(state["accepted"]) == limit)
+        del state["page"]
+        counts.set_state("trigram_selection", state)
+        from .profiling import event
+        event("vocabulary.trigram_shortlist", "round", candidates=len(page),
+              tested=state["tested"], accepted=len(state["accepted"]), complete=state["complete"])
+    log.info("trigram selection complete: %d shortlist candidates tested, %d selected, %d rounds, exhaustive fallback=%s",
+             state["tested"], len(state["accepted"]), state["round"], state.get("fallback", False))
+    return sorted(state["accepted"])
+
+
+def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch, *,
+                         shared_cache_dir=None, row_folds=None) -> FeatureSpec:
+    config = feature_config_from_env()
+    nw = resolve_worker_count(n_workers)
+    mode = "shared-folds-readonly" if shared_cache_dir is not None else "independent"
+    if counts.state("counting_mode", mode) != mode:
+        raise ValueError("vocabulary counting mode changed; use a new checkpoint directory")
+    counts.set_state("counting_mode", mode)
+    if shared_cache_dir is None:
+        summary = _count_vocab_rows(db_path, row_ids_labels, n_workers, counts, scratch)
+    else:
+        summary = _shared_fold_counts(db_path, row_ids_labels, row_folds, n_workers,
+                                      counts, shared_cache_dir)
+    (presence_counts, filetypes, element_counts, _, benign_presence, malware_presence,
+     skeleton_counts, benign_elements, malware_elements, _, _, _, _) = summary
+    batch_size = counts.state("batch_size", _feature_batch_size(nw))
+    counts.set_state("batch_size", batch_size)
+    benign_total = sum(label == 0 for _, label in row_ids_labels)
+    malware_total = len(row_ids_labels) - benign_total
+    # Keep existing sampled IDs stable when a few training rows change.
+    scan_rows = _stable_vocab_scan_rows(row_ids_labels)
+    scan_digest = hashlib.sha256(np.asarray([r[0] for r in scan_rows], dtype="<u8").tobytes()).hexdigest()
+    log.info("auxiliary vocabulary sample: %d rows, ID digest=%s", len(scan_rows), scan_digest)
+
     presence_vocab = sorted(k for k, c in presence_counts.items() if c >= MIN_PATH_FREQ)
     filetype_vocab = sorted(filetypes)
     element_vocab = sorted(k for k, c in element_counts.items() if c >= MIN_PATH_FREQ)
@@ -6007,49 +6325,12 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch) ->
     bigram_vocab = counts.top("bigram", config.bigram_max, config.bigram_min_freq)
     skeleton_vocab = sorted(k for k, c in skeleton_counts.items() if c >= 100)
 
-    # Require support in distinct malware samples before spending work on
-    # benign prevalence. Benign-only triples are outside this discovery policy.
-    candidate_count = counts.count_at_least("trigram", config.trigram_min_freq) if config.trigram_max > 0 else 0
-    if candidate_count:
-        benign_ids = [rid for rid, label in row_ids_labels if label == 0]
-        source = TrigramSource(counts.path, config.trigram_min_freq)
-        done_benign = {row[0] for row in counts.completed_batches("benign")}
-        log.info("trigram prevalence: %d candidates on disk, %d benign samples, %d batches resumed",
-                 candidate_count, len(benign_ids), len(done_benign))
-        if nw > 1:
-            args = ((db_path, batch, None, scratch, f"benign:{i}")
-                    for i, batch in enumerate(_batched(benign_ids, batch_size))
-                    if f"benign:{i}" not in done_benign)
-            pending_benign = {}
-            merged_benign = set()
-            with _background_vocab_merges(counts) as merge:
-                with _feature_worker_pool(
-                    nw, initializer=_init_trigram_candidates, initargs=(source,),
-                ) as pool:
-                    for result, sealed in _memory_budgeted_unordered_iter(
-                        pool, _vocab_benign_trigram_shard_worker, args, n_workers=nw,
-                    ):
-                        if result.path not in merged_benign:
-                            pending_benign[result.path] = result
-                        if sealed:
-                            merge(pending_benign.pop(result.path))
-                            merged_benign.add(result.path)
-                # Finalizers close the partial shards when the pool exits.
-                for result in pending_benign.values():
-                    merge(result)
-        else:
-            index = DiskTrigramCandidates(source)
-            try:
-                args = ((db_path, batch, index, scratch, f"benign:{i}")
-                        for i, batch in enumerate(_batched(benign_ids, batch_size))
-                        if f"benign:{i}" not in done_benign)
-                for result in _memory_budgeted_serial_iter(_vocab_benign_trigram_worker, args):
-                    counts.merge(result)
-            finally:
-                index.close()
     trigram_benign_ceil = int(config.trigram_max_benign_frac * benign_total) if config.trigram_max_benign_frac > 0 else 0
-    trigram_vocab = counts.top("trigram", config.trigram_max, config.trigram_min_freq,
-                               benign_family="benign_trigram", benign_ceiling=trigram_benign_ceil)
+    trigram_vocab = _select_trigram_vocabulary(
+        db_path, [rid for rid, label in row_ids_labels if label == 0], nw, counts, scratch,
+        limit=config.trigram_max, minimum=config.trigram_min_freq,
+        benign_ceiling=trigram_benign_ceil, batch_size=batch_size,
+    )
     tiered_bigram_vocab = counts.top("tiered_bigram", config.tiered_bigram_max, config.tiered_bigram_min_freq)
     tiered_trigram_vocab = counts.top("tiered_trigram", config.tiered_trigram_max, config.tiered_trigram_min_freq)
 
@@ -6495,6 +6776,25 @@ def _assemble_partitioned_matrices(
             shape=(n_rows, total_features),
         )
 
+    if directory := os.getenv('COLLIMATOR_MATRIX_DISK_DIR'):
+        from .matrix_store import MatrixWriter
+        train_writer = MatrixWriter(directory, total_features)
+        try:
+            test_writer = MatrixWriter(directory, total_features)
+            try:
+                for tr, tc, tv, tl, ter, tec, tev, tel in batch_iter:
+                    if len(tl):
+                        train_writer.append(_block(tr, tc, tv, len(tl)), tl)
+                    if len(tel):
+                        test_writer.append(_block(ter, tec, tev, len(tel)), tel)
+                X_train, y_train = train_writer.finish()
+                X_test, y_test = test_writer.finish()
+                return X_train, y_train, X_test, y_test
+            finally:
+                test_writer.close()
+        finally:
+            train_writer.close()
+
     train_blocks: list[sp.csr_matrix] = []
     test_blocks: list[sp.csr_matrix] = []
     train_labels: list[np.ndarray] = []
@@ -6578,7 +6878,8 @@ def extract_partitioned_from_db(
 
     if nw > 1:
         with _extract_pool(nw, spec) as pool:
-            results = _bounded_iter(pool, _extract_partitioned_db_batch_worker, batch_args, max_inflight=2 * nw)
+            results = _bounded_iter(pool, _extract_partitioned_db_batch_worker, batch_args,
+                                    max_inflight=_extraction_budget(nw))
             return assemble(results)
     return assemble(map(_extract_partitioned_db_batch_worker, batch_args))
 

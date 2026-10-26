@@ -6,6 +6,7 @@ from .profiling import timed
 
 import logging
 import os
+import time
 import warnings
 from dataclasses import dataclass, field, replace
 from typing import Any
@@ -28,6 +29,7 @@ from sklearn.isotonic import IsotonicRegression
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
 from .model import _shape_args, booster_device, create_classifier, predict_proba
+from .fit_resources import budgeted_fit
 
 log = logging.getLogger(__name__)
 
@@ -41,6 +43,38 @@ MIN_EARLY_STOPPING_CLASS_SIZE = 30
 # feature standardization stats. Bounds the float64 transient to one chunk
 # instead of a full-matrix copy (see train()).
 _STD_VARIANCE_CHUNK = 50_000
+_HARD_NEGATIVE_CHUNK = 50_000
+
+
+def _sparse_feature_moments(X):
+    """Compute export statistics without a full scaled sparse-matrix copy.
+
+    Both accumulations use float64; implicit zeros participate via the row
+    denominator. Canonicalize duplicate entries before squaring, per block.
+    The caller's matrix is never mutated.
+    """
+    started = last_log = time.monotonic()
+    sums = np.zeros(X.shape[1], dtype=np.float64)
+    sumsq = np.zeros_like(sums)
+    log.info("feature statistics: %d rows, bounded blocks of %d rows", X.shape[0], _STD_VARIANCE_CHUNK)
+    for start in range(0, X.shape[0], _STD_VARIANCE_CHUNK):
+        block = X[start:start + _STD_VARIANCE_CHUNK].astype(np.float64, copy=True)
+        block.sum_duplicates()
+        sums += np.asarray(block.sum(axis=0)).ravel()
+        block.data **= 2
+        sumsq += np.asarray(block.sum(axis=0)).ravel()
+        del block
+        now = time.monotonic()
+        if now - last_log >= 30:
+            log.info("feature statistics: %d/%d rows, %.1fs elapsed",
+                     min(start + _STD_VARIANCE_CHUNK, X.shape[0]), X.shape[0], now - started)
+            last_log = now
+    means = sums / max(1, X.shape[0])
+    variance = sumsq / max(1, X.shape[0]) - means ** 2
+    stds = np.sqrt(np.maximum(variance, 0)).astype(np.float32)
+    stds[stds < 1e-7] = 1.0
+    log.info("feature statistics complete: %.1fs elapsed", time.monotonic() - started)
+    return means.astype(np.float32), stds
 
 # Fraction of non-test training data reserved for calibration/evaluation.
 HOLDOUT_FRACTION = 0.10
@@ -276,7 +310,12 @@ def _compute_hard_negative_weights(
     if len(benign_idx) == 0:
         return None
     n_hard = max(int(np.ceil(len(benign_idx) * fraction)), 1)
-    benign_scores = predict_proba(model, X_train[benign_idx])
+    # Score bounded slices instead of copying every benign row (most of the
+    # full training matrix) at once. Preserve ordering and global tie-breaking.
+    benign_scores = np.empty(len(benign_idx), dtype=np.float64)
+    for start in range(0, len(benign_idx), _HARD_NEGATIVE_CHUNK):
+        stop = min(start + _HARD_NEGATIVE_CHUNK, len(benign_idx))
+        benign_scores[start:stop] = predict_proba(model, X_train[benign_idx[start:stop]])
     top_local = benign_idx[np.argsort(benign_scores)[-n_hard:]]
     sample_weight = np.ones(len(y_train), dtype=np.float32)
     sample_weight[top_local] = float(weight)
@@ -388,6 +427,7 @@ def _split_calibration_eval(
 
 
 @timed('training.total')
+@budgeted_fit
 def train(
     X: np.ndarray | sp.spmatrix,
     y: np.ndarray,
@@ -475,32 +515,14 @@ def train(
             n_min_class,
         )
 
+    has_holdout = X_holdout is not None
     # --- Standardization params ---
     # Trees are invariant to monotonic feature transforms, so we train on raw
     # features directly (no dense copy needed). We still compute mean/std and
     # export them so the Rust inference pipeline can apply standardization if
     # the model was trained that way — but for v13+ we skip it.
     if sp.issparse(X_tv):
-        feature_means64 = np.asarray(X_tv.mean(axis=0), dtype=np.float64).ravel()
-        # Var = E[X^2] - E[X]^2, computed without densifying or mutating X_tv.
-        # Some aggregate features can exceed float32's safe square range, so the
-        # squaring is done in float64. Accumulate the column sum-of-squares in
-        # row chunks rather than building a full float64 copy of X_tv: the copy
-        # peaked at ~3x the matrix size (measured: +5.25 GB on a 1.75 GB CSR)
-        # and was the single largest transient in train(). Chunking bounds the
-        # float64 transient to one block while producing a bit-identical result.
-        # (Trees are scale-invariant; these stats are export-only metadata for
-        # the Rust inference pipeline's optional standardization.)
-        n_rows_tv = X_tv.shape[0]
-        sumsq = np.zeros(X_tv.shape[1], dtype=np.float64)
-        for _i in range(0, n_rows_tv, _STD_VARIANCE_CHUNK):
-            blk = X_tv[_i:_i + _STD_VARIANCE_CHUNK].astype(np.float64)
-            blk.data **= 2
-            sumsq += np.asarray(blk.sum(axis=0), dtype=np.float64).ravel()
-        variance = sumsq / max(n_rows_tv, 1) - feature_means64 ** 2
-        feature_means = feature_means64.astype(np.float32)
-        feature_stds = np.sqrt(np.maximum(variance, 0)).astype(np.float32)
-        del sumsq, feature_means64, variance
+        feature_means, feature_stds = _sparse_feature_moments(X_tv)
     else:
         feature_means = X_tv.mean(axis=0).astype(np.float32)
         feature_stds = X_tv.std(axis=0).astype(np.float32)
@@ -679,7 +701,7 @@ def train(
         y_tv,
         weights_by_filetype=config.benign_filetype_weights,
     ) if file_types_tv is not None else None
-    if X_holdout is not None:
+    if has_holdout:
         calibration_split, evaluation_split = _split_calibration_eval(
             X_holdout, y_holdout, seed=config.seed,
         )
@@ -693,6 +715,9 @@ def train(
         else:
             X_calib, y_calib = calibration_split
             X_eval, y_eval = evaluation_split
+        # The disjoint splits now own their data. Retaining their combined
+        # source duplicates the holdout throughout both model fits.
+        del X_holdout, y_holdout
 
         # Use calibration split for early stopping and threshold selection.
         if config.hard_negative_fraction > 0.0 and config.hard_negative_weight > 1.0:
@@ -788,7 +813,7 @@ def train(
 
     # --- Evaluation ---
     iso_calibrator: IsotonicRegression | None = None
-    if X_holdout is not None:
+    if has_holdout:
         calib_preds = predict_proba(final_model, X_calib)
         # Training artifacts export raw model scores. Choose and report their
         # threshold in that same space; deployment calibrates the ensemble later.
@@ -857,9 +882,9 @@ def train(
         f"leaves={config.num_leaves or 'auto'}  min_child_samples={config.min_child_samples or 'auto'}  "
         f"β={config.beta}  seed={config.seed}"
     )
-    holdout_label = "Holdout" if X_holdout is not None else f"CV (out-of-fold, n={len(eval_y)})"
+    holdout_label = "Holdout" if has_holdout else f"CV (out-of-fold, n={len(eval_y)})"
     print(f"{'─' * 20} {holdout_label} {'─' * max(1, 54 - 22 - len(holdout_label))}")
-    if X_holdout is not None:
+    if has_holdout:
         print(f"  n={len(y_eval)} ({n_eval_malware} malware, {n_eval_benign} benign)  threshold={optimal_threshold:.3f}")
     print(
         f"  ROC AUC  {metrics['roc_auc']:.4f}   Avg Prec  {metrics['avg_precision']:.4f}"

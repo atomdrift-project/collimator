@@ -1740,13 +1740,13 @@ def next_fit(
     It must fit both the budget taken at suite start and the RAM free right
     now (``free_gb``), since anything else on the box (the other chain, the
     scan server) can grow mid-run. Strictly in order, so small fits can
-    never starve a big one. A fit always starts on an idle pool, even one
-    bigger than the budget, so the suite always makes progress.
+    never starve a big one. An idle pool must also respect the budget: starting
+    an oversized job to force progress can instead cause a host-wide OOM.
     """
     if not queue or n_running >= max_running:
         return None
     need = queue[0]["mem_gb"]
-    if n_running and (
+    if (
         (budget_gb is not None and running_gb + need > budget_gb)
         or (free_gb is not None and need > free_gb)
     ):
@@ -2201,9 +2201,12 @@ def main() -> int:
             initargs=(args.log_level,),
             max_tasks_per_child=1,
         ) as pool:
+            idle_since = None
             while queue or running:
                 running_gb = sum(job["mem_gb"] for job, _ in running.values())
                 free_gb = fit_mem_budget_gb()
+                # A suite that started during pressure can use recovered RAM.
+                budget_gb = None if free_gb is None else running_gb + free_gb
                 while job := next_fit(
                     queue, running_gb, len(running), budget_gb, args.parallelism, free_gb,
                 ):
@@ -2221,8 +2224,21 @@ def main() -> int:
                     running_gb += job["mem_gb"]
                     if free_gb is not None:
                         free_gb -= job["mem_gb"]
+                if not running and queue:
+                    if idle_since is None:
+                        idle_since = time.monotonic()
+                    elapsed = time.monotonic() - idle_since
+                    if elapsed >= float(os.getenv("COLLIMATOR_FIT_WAIT_SECONDS", "1800")):
+                        raise MemoryError("specialist fit could not fit within available RAM; "
+                                          "reduce overlapping stages or the matrix footprint")
+                    LOG.warning("specialist admission waiting: next fit needs %.1f GiB, "
+                                "%.1f GiB available; %.0fs elapsed", queue[0]["mem_gb"],
+                                free_gb or 0, elapsed)
+                    time.sleep(30)
+                    continue
+                idle_since = None
                 done, _ = concurrent.futures.wait(
-                    running, return_when=concurrent.futures.FIRST_COMPLETED,
+                    running, timeout=30, return_when=concurrent.futures.FIRST_COMPLETED,
                 )
                 for fut in done:
                     job, started = running.pop(fut)

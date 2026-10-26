@@ -40,7 +40,7 @@
 # loop until preempted), NIGHTLY_ALLOW_REGRESSION=1 (bypass the deploy
 # regression gate), NIGHTLY_WORKERS (default 48 train / 24 sweep; caps DB-fetch
 # parallelism — see the WORKERS export below), NIGHTLY_MEM_CEILING_GB (default
-# 112; admission ceiling), NIGHTLY_OOM_SCORE_ADJ (default 0).
+# 144; admission ceiling), NIGHTLY_OOM_SCORE_ADJ (default 0).
 # AZOTH_SINGLE_MIN_AVAILABLE_GB=96 / AZOTH_PARALLEL_MIN_AVAILABLE_GB=144
 # reserve host RAM before starting; AZOTH_MEMORY_WAIT_SECONDS=21600 bounds
 # deferral. Installed units additionally enforce RAM/swap limits.
@@ -71,8 +71,8 @@ azoth="$(dirname "$PWD")/azoth"
 # for other supervisors that already impose a memory limit.
 if [[ ${NIGHTLY_MEMORY_SCOPE:-1} != 0 && ${NIGHTLY_IN_SCOPE:-0} != 1 ]] &&
    ! rg -q '/azoth-(nightly|autocollie)\.service$' /proc/self/cgroup; then
-  hard_limit=$([ "$mode" = train ] && echo 128G || echo 64G)
-  soft_limit=$([ "$mode" = train ] && echo 112G || echo 48G)
+  hard_limit=$([ "$mode" = train ] && echo 160G || echo 64G)
+  soft_limit=$([ "$mode" = train ] && echo 156G || echo 48G)
   echo "nightly($mode): entering memory scope (high=$soft_limit, max=$hard_limit)"
   exec systemd-run --user --scope --collect --quiet \
     --unit="azoth-${mode}-manual-$$" \
@@ -193,7 +193,7 @@ fi
 # The most RAM this run may hold. Every memory-aware admission (DB-fetch
 # workers, specialist fits) stops launching work as the run's cgroup nears it,
 # on top of leaving each clamp's reserve free for the rest of the host.
-default_ceiling=$([ "$mode" = train ] && echo 112 || echo 48)
+default_ceiling=$([ "$mode" = train ] && echo 144 || echo 48)
 export COLLIMATOR_MEM_CEILING_GB="${NIGHTLY_MEM_CEILING_GB-$default_ceiling}"
 echo "nightly($mode): memory ceiling ${COLLIMATOR_MEM_CEILING_GB:-none} GB"
 

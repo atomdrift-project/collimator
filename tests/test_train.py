@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import scipy.sparse as sp
+import pytest
 
 from collimator.train import (
     TrainConfig,
@@ -11,7 +12,61 @@ from collimator.train import (
     _compute_metrics,
     _split_calibration_eval,
     train,
+    _sparse_feature_moments,
 )
+
+
+@pytest.mark.parametrize('dtype', [np.float32, np.float64, np.int32])
+def test_sparse_moments_are_bounded_and_preserve_input(monkeypatch, dtype):
+    import collimator.train as module
+    monkeypatch.setattr(module, '_STD_VARIANCE_CHUNK', 3)
+    dense = np.array([[0, 2, 0, 7], [1, 0, 0, 7], [3, 4, 0, 7],
+                      [0, -5, 0, 7], [6, 0, 0, 7]], dtype=dtype)
+    X = sp.csr_matrix(dense)
+    saved = X.copy()
+    def forbidden(*args, **kwargs):
+        raise AssertionError('full sparse mean copy')
+    monkeypatch.setattr(sp.csr_matrix, 'mean', forbidden)
+    means, stds = _sparse_feature_moments(X)
+    expected_std = dense.astype(np.float64).std(axis=0)
+    expected_std[expected_std < 1e-7] = 1
+    np.testing.assert_allclose(means, dense.mean(axis=0), rtol=1e-6, atol=1e-6)
+    np.testing.assert_allclose(stds, expected_std, rtol=1e-6)
+    np.testing.assert_array_equal(X.data, saved.data)
+    np.testing.assert_array_equal(X.indices, saved.indices)
+
+
+def test_sparse_moments_duplicate_entries_and_large_values(monkeypatch):
+    import collimator.train as module
+    monkeypatch.setattr(module, '_STD_VARIANCE_CHUNK', 1)
+    X = sp.csr_matrix((np.array([1e20, 1e20, 2e20], dtype=np.float32),
+                       [0, 0, 1], [0, 2, 3]), shape=(2, 3))
+    expected = X.astype(np.float64).toarray()
+    means, stds = _sparse_feature_moments(X)
+    np.testing.assert_allclose(means, expected.mean(axis=0), rtol=1e-6)
+    expected_std = expected.std(axis=0)
+    expected_std[expected_std < 1e-7] = 1
+    np.testing.assert_allclose(stds, expected_std, rtol=1e-6)
+    assert X.nnz == 3
+
+
+def test_hard_negative_batches_preserve_global_selection_and_ties(monkeypatch):
+    import collimator.train as module
+    monkeypatch.setattr(module, '_HARD_NEGATIVE_CHUNK', 3)
+    X = sp.csr_matrix(np.array([[.2], [.9], [.1], [.9], [.8], [.2], [.9], [.3]]))
+    y = np.array([0, 0, 1, 0, 0, 1, 0, 0])
+    sizes = []
+    def predict(model, block):
+        sizes.append(block.shape[0])
+        return block.toarray().ravel()
+    monkeypatch.setattr(module, 'predict_proba', predict)
+    result = module._compute_hard_negative_weights(None, X, y, fraction=.5, weight=5)
+    benign = np.flatnonzero(y == 0)
+    selected = benign[np.argsort(X.toarray().ravel()[benign])[-3:]]
+    expected = np.ones(len(y), dtype=np.float32)
+    expected[selected] = 5
+    np.testing.assert_array_equal(result, expected)
+    assert sizes == [3, 3]
 
 
 def test_split_calibration_eval_returns_disjoint_stratified_splits() -> None:
