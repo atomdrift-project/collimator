@@ -279,7 +279,7 @@ def _collimator_env() -> dict[str, str]:
         if key.startswith(prefixes) and key not in {
             "COLLIMATOR_EXPERIMENT_TAG", "COLLIMATOR_FIT_RESOURCE_DIR",
             "COLLIMATOR_MATRIX_DISK_DIR", "COLLIMATOR_FIT_WAIT_SECONDS",
-            "COLLIMATOR_FIT_POLL_SECONDS",
+            "COLLIMATOR_FIT_POLL_SECONDS", "COLLIMATOR_FIT_BOUNDED_CGROUPS",
         }
     }
 

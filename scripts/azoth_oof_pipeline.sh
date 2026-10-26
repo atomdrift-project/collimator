@@ -130,6 +130,9 @@ mkdir -p out
 RESOURCE_DIR=$(mktemp -d out/fit-resources-XXXXXX) || exit 1
 export COLLIMATOR_FIT_RESOURCE_DIR="$RESOURCE_DIR"
 export COLLIMATOR_MATRIX_DISK_DIR=${COLLIMATOR_MATRIX_DISK_DIR:-out/cache/matrix-scratch}
+# A bounded build runner can only grow to its hard limit. Unknown/unbounded
+# competitors retain the conservative reserve inside fit_resources.
+export COLLIMATOR_FIT_BOUNDED_CGROUPS=${COLLIMATOR_FIT_BOUNDED_CGROUPS-/sys/fs/cgroup/system.slice/actions.runner.werewolf-linux.linux-amd64.service}
 
 # Raw counts are reusable only for identical selected rows, labels and feature
 # settings. Fold vocabularies still select exclusively from their training fold.

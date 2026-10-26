@@ -58,7 +58,8 @@ def fingerprint(command, inputs):
         # Ignore obsolete corpus-checksum settings inherited from older runs.
         and key not in ("COLLIMATOR_SNAPSHOT_TIMEOUT_SECONDS", "AZOTH_DATA_REVISION",
                         "COLLIMATOR_FIT_RESOURCE_DIR", "COLLIMATOR_MATRIX_DISK_DIR",
-                        "COLLIMATOR_FIT_WAIT_SECONDS", "COLLIMATOR_FIT_POLL_SECONDS")
+                        "COLLIMATOR_FIT_WAIT_SECONDS", "COLLIMATOR_FIT_POLL_SECONDS",
+                        "COLLIMATOR_FIT_BOUNDED_CGROUPS")
         and not any(part in key for part in (
             "MEM", "WORKER", "THREAD", "PARALLEL", "CONCURRENT", "CHECKPOINT", "RESUME",
         ))

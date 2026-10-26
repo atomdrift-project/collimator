@@ -38,6 +38,7 @@ def test_stage_resumes_but_rejects_replaced_inputs_outputs_and_snapshot(tmp_path
     env["COLLIMATOR_SNAPSHOT_TIMEOUT_SECONDS"] = "600"
     env["COLLIMATOR_FIT_RESOURCE_DIR"] = str(tmp_path / 'new-reservations')
     env["COLLIMATOR_MATRIX_DISK_DIR"] = str(tmp_path / 'new-scratch')
+    env["COLLIMATOR_FIT_BOUNDED_CGROUPS"] = str(tmp_path / 'bounded-competitor')
     command.append('EXP_LGBM_THREADS=8')
     command[-2] = "WORKERS=8"
     assert "skipping" in run()

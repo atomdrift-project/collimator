@@ -32,12 +32,88 @@ def test_fit_reservation_releases_on_exception(tmp_path, monkeypatch):
 
 def test_idle_fit_cannot_force_allocation_beyond_budget(tmp_path, monkeypatch):
     monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
-    monkeypatch.setenv('COLLIMATOR_FIT_WAIT_SECONDS', '0')
+    monkeypatch.setenv('COLLIMATOR_FIT_WAIT_SECONDS', '.001')
     monkeypatch.setattr(resources, '_available', lambda: 1)
     with pytest.raises(MemoryError, match='needs 3.0 GiB'):
         with resources.fit_reservation(3):
             pytest.fail('oversized fit admitted')
     assert json.loads((tmp_path / 'fits.json').read_text()) == []
+
+
+def test_default_wait_survives_old_deadline_then_admits(tmp_path, monkeypatch):
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.delenv('COLLIMATOR_FIT_WAIT_SECONDS', raising=False)
+    clock = [0.0]
+    monkeypatch.setattr(resources.time, 'monotonic', lambda: clock[0])
+    monkeypatch.setattr(resources.time, 'sleep', lambda _: clock.__setitem__(0, clock[0] + 1900))
+    monkeypatch.setattr(resources, '_available', lambda: 1 if clock[0] < 3800 else 10)
+    with resources.fit_reservation(3):
+        assert clock[0] == 3800
+    assert json.loads((tmp_path / 'fits.json').read_text()) == []
+
+
+def test_admission_timeout_can_be_disabled_while_waiting(tmp_path, monkeypatch):
+    monkeypatch.setenv('COLLIMATOR_FIT_RESOURCE_DIR', str(tmp_path))
+    monkeypatch.setenv('COLLIMATOR_FIT_WAIT_SECONDS', '1')
+    clock = [0.0]
+    monkeypatch.setattr(resources.time, 'monotonic', lambda: clock[0])
+    def tick(_):
+        clock[0] += 10
+        monkeypatch.setenv('COLLIMATOR_FIT_WAIT_SECONDS', '0')
+    monkeypatch.setattr(resources.time, 'sleep', tick)
+    monkeypatch.setattr(resources, '_available', lambda: 1 if clock[0] < 20 else 10)
+    with resources.fit_reservation(3):
+        assert clock[0] == 20
+
+
+@pytest.mark.parametrize('value', ['-1', 'nan'])
+def test_invalid_wait_policy_is_rejected(monkeypatch, value):
+    monkeypatch.setenv('COLLIMATOR_FIT_WAIT_SECONDS', value)
+    with pytest.raises(ValueError):
+        resources.fit_wait_seconds()
+
+
+def test_bounded_competitor_reserve_tracks_remaining_growth(tmp_path, monkeypatch):
+    monkeypatch.delenv('COLLIMATOR_MEM_RESERVE_GB', raising=False)
+    monkeypatch.setenv('COLLIMATOR_FIT_BOUNDED_CGROUPS', str(tmp_path))
+    (tmp_path / 'memory.max').write_text(str(32 * 2**30))
+    stat = tmp_path / 'memory.stat'
+    stat.write_text(f'anon {27 * 2**30}\nshmem 0\nkernel {2**30}\nfile {10 * 2**30}\n')
+    assert resources.host_reserve_gb() == 20
+    stat.write_text(f'anon {31 * 2**30}\nshmem 0\nkernel {2**30}\n')
+    assert resources.host_reserve_gb() == 16
+    # Reclaimable page cache is not deducted from the growth allowance.
+    stat.write_text(f'anon 0\nshmem 0\nkernel 0\nfile {32 * 2**30}\n')
+    assert resources.host_reserve_gb() == 48
+    (tmp_path / 'memory.max').write_text('max')
+    assert resources.host_reserve_gb() == 48
+    monkeypatch.setenv('COLLIMATOR_MEM_RESERVE_GB', '60')
+    assert resources.host_reserve_gb() == 60
+
+
+def test_unknown_competitor_keeps_conservative_reserve(tmp_path, monkeypatch):
+    monkeypatch.delenv('COLLIMATOR_MEM_RESERVE_GB', raising=False)
+    monkeypatch.setenv('COLLIMATOR_FIT_BOUNDED_CGROUPS', str(tmp_path / 'missing'))
+    assert resources.host_reserve_gb() == 48
+
+
+def test_adaptive_reserve_still_respects_kernel_and_cgroup_limits(tmp_path, monkeypatch):
+    monkeypatch.setattr(resources, 'host_reserve_gb', lambda: 20)
+    monkeypatch.setattr(resources.memory, 'available_memory_gb', lambda **kw: 153)
+    monkeypatch.setattr(resources.memory, 'cgroup_headroom_gb', lambda **kw: 150)
+    monkeypatch.setenv('COLLIMATOR_MEM_CEILING_GB', '144')
+    monkeypatch.setenv('COLLIMATOR_MEM_MIN_AVAILABLE_GB', '8')
+    monkeypatch.setattr(resources.memory, 'cgroup_path', lambda: tmp_path)
+    stat = tmp_path / 'memory.stat'
+    stat.write_text(f'anon {5 * 2**30}\nkernel {2**30}\n')
+    assert resources._available() == 133  # host availability minus reserve
+    monkeypatch.setattr(resources.memory, 'cgroup_headroom_gb', lambda **kw: 80)
+    assert resources._available() == 80
+    stat.write_text(f'anon {100 * 2**30}\nkernel {2**30}\n')
+    assert resources._available() == 43  # advisory ceiling remains enforced
+    monkeypatch.setattr(resources.memory, 'available_memory_gb',
+                        lambda **kw: 7 if kw.get('include_arc') is False else 153)
+    assert resources._available() == 0  # ARC is not immediate free RAM
 
 
 def test_estimate_scales_with_matrix_threads_and_cv():

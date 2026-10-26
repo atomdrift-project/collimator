@@ -505,9 +505,19 @@ estimated growth before allocating, and fetch workers account for outstanding
 reservations. Already admitted work keeps running while new admissions wait.
 Reservations disappear when their owner exits, including after a crash. These
 estimates include sparse matrix copies and thread-dependent histogram storage;
-they are admission estimates, not a guarantee against OOM. An oversized fit
-fails after `COLLIMATOR_FIT_WAIT_SECONDS` (default 1800) rather than forcing an
-allocation beyond the measured budget.
+they are admission estimates, not a guarantee against OOM. Admission waits
+without a deadline by default, logging the fit estimate, current headroom,
+outstanding reservations and host reserve. `COLLIMATOR_FIT_WAIT_SECONDS=0`
+means unlimited waiting; a positive value opts into a deadline. Waiting never
+forces an allocation beyond the measured budget.
+
+For fit admission, the pipeline identifies the build runner via
+`COLLIMATOR_FIT_BOUNDED_CGROUPS` (colon-separated cgroup directories). When
+their hard limits can be read, the host reserve is 16 GiB plus their remaining
+growth allowance, capped at the conservative 48 GiB default. Reclaimable file
+cache does not reduce the growth allowance. Missing or unlimited competitor
+limits retain 48 GiB; an explicit `COLLIMATOR_MEM_RESERVE_GB` overrides this
+policy. This changes admission only, not the 160 GiB hard limit or the models.
 
 Extraction streams CSR arrays to `COLLIMATOR_MATRIX_DISK_DIR` (default
 `out/cache/matrix-scratch`) instead of retaining all blocks and then copying

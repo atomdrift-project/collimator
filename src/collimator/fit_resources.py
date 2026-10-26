@@ -10,6 +10,7 @@ from functools import wraps
 import fcntl
 import json
 import logging
+import math
 import os
 from pathlib import Path
 import time
@@ -75,6 +76,43 @@ def reserved_headroom_gb():
         return _unspent(entries)
 
 
+def host_reserve_gb():
+    """Reserve for other host work plus bounded competitors' remaining growth.
+
+    Coordinated pipelines also recognize the host's bounded build runner, so
+    later children of an already-running pipeline pick up the policy. Count
+    non-reclaimable usage against the hard limit, not
+    their page cache. A 16 GiB floor remains for unrelated host allocations.
+    An explicit host reserve always wins.
+    """
+    if value := os.getenv('COLLIMATOR_MEM_RESERVE_GB'):
+        return float(value)
+    default = ('/sys/fs/cgroup/system.slice/actions.runner.werewolf-linux.linux-amd64.service'
+               if os.getenv('COLLIMATOR_FIT_RESOURCE_DIR') else '')
+    competitors = os.getenv('COLLIMATOR_FIT_BOUNDED_CGROUPS', default)
+    if not competitors:
+        return 48.0
+    growth = 0.0
+    try:
+        for name in set(competitors.split(os.pathsep)):
+            path = Path(name)
+            limit = int((path / 'memory.max').read_text())
+            stat = dict(line.split() for line in (path / 'memory.stat').read_text().splitlines())
+            resident = sum(int(stat[key]) for key in ('anon', 'shmem', 'kernel'))
+            growth += max(0, limit - resident) / 2**30
+    except (OSError, ValueError, KeyError):
+        return 48.0
+    return min(48.0, 16.0 + growth)
+
+
+def fit_wait_seconds():
+    """No deadline for contention by default; explicit finite limits are opt-in."""
+    value = float(os.getenv('COLLIMATOR_FIT_WAIT_SECONDS', '0'))
+    if math.isnan(value) or value < 0:
+        raise ValueError('COLLIMATOR_FIT_WAIT_SECONDS must be nonnegative')
+    return value if value > 0 else math.inf
+
+
 def _available():
     available = memory.available_memory_gb()
     kernel = memory.available_memory_gb(include_arc=False)
@@ -82,7 +120,7 @@ def _available():
         raise RuntimeError('cannot measure memory for fit admission')
     if kernel < float(os.getenv('COLLIMATOR_MEM_MIN_AVAILABLE_GB', '8')):
         return 0.0
-    headroom = max(0, available - float(os.getenv('COLLIMATOR_MEM_RESERVE_GB', '48')))
+    headroom = max(0, available - host_reserve_gb())
     limit = memory.cgroup_headroom_gb(reclaim_file=True)
     if limit is not None:
         headroom = min(headroom, limit)
@@ -119,11 +157,13 @@ def fit_reservation(need):
         return
     token = uuid.uuid4().hex
     started = time.monotonic()
-    timeout = float(os.getenv('COLLIMATOR_FIT_WAIT_SECONDS', '1800'))
     interval = float(os.getenv('COLLIMATOR_FIT_POLL_SECONDS', '10'))
     last_log = -float('inf')
     try:
         while True:
+            # Re-read policy while waiting so controlled operational updates
+            # need not discard already-extracted matrices.
+            timeout = fit_wait_seconds()
             with _locked(directory) as entries:
                 headroom = _available()
                 reserved = _unspent(entries)
@@ -146,8 +186,11 @@ def fit_reservation(need):
                                   f'{elapsed:.0f}s. Reduce overlapping stages or the matrix footprint.')
             if elapsed - last_log >= 30:
                 log.warning('fit waiting BEFORE allocation: needs %.1f GiB additional, '
-                            '%.1f GiB headroom, %.1f GiB reserved; %.0fs elapsed',
-                            need, headroom, reserved, elapsed)
+                            '%.1f GiB headroom, %.1f GiB reserved by fits; '
+                            'host reserve %.1f GiB; %.0fs elapsed; %s',
+                            need, headroom, reserved, host_reserve_gb(), elapsed,
+                            'no admission deadline' if math.isinf(timeout) else
+                            f'explicit admission deadline {timeout:.0f}s')
                 last_log = elapsed
             time.sleep(min(max(.1, interval), timeout - elapsed))
         yield

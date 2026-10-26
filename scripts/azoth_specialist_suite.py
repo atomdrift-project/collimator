@@ -40,6 +40,7 @@ from collimator.autocollie_selection import (
     write_selection_report,
 )
 from collimator.filegroups import ARCHIVE_FILETYPES
+from collimator.fit_resources import fit_wait_seconds
 
 LOG = logging.getLogger("azoth_specialist_suite")
 
@@ -2228,7 +2229,7 @@ def main() -> int:
                     if idle_since is None:
                         idle_since = time.monotonic()
                     elapsed = time.monotonic() - idle_since
-                    if elapsed >= float(os.getenv("COLLIMATOR_FIT_WAIT_SECONDS", "1800")):
+                    if elapsed >= fit_wait_seconds():
                         raise MemoryError("specialist fit could not fit within available RAM; "
                                           "reduce overlapping stages or the matrix footprint")
                     LOG.warning("specialist admission waiting: next fit needs %.1f GiB, "
