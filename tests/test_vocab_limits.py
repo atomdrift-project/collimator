@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from itertools import combinations
 from pathlib import Path
@@ -162,6 +163,12 @@ def _worker_context_id(spec):
     return id(ctx)
 
 
+# threadpoolctl only sees a BLAS it can limit (OpenBLAS, MKL, BLIS). NumPy on
+# macOS links Apple Accelerate, which it cannot see, so there is nothing to check.
+@pytest.mark.skipif(
+    not any(entry["user_api"] == "blas" for entry in threadpool_info()),
+    reason="needs a BLAS threadpoolctl can limit (OpenBLAS, MKL or BLIS)",
+)
 @pytest.mark.parametrize("extraction", [False, True])
 def test_feature_pool_limits_blas_and_restores_parent_env(monkeypatch, extraction):
     monkeypatch.setenv("OPENBLAS_NUM_THREADS", "8")
@@ -198,6 +205,21 @@ def test_extended_metric_frequency_counts_reports(monkeypatch):
     spec = features.build_vocab_from_db("unused", [(rid, rid % 2) for rid in reports], n_workers=1)
     assert "custom_common_count" in spec.metric_vocab
     assert "custom_rare_count" not in spec.metric_vocab
+
+
+def test_extended_metrics_on_reduced_reports_stay_within_the_fact_profile(monkeypatch):
+    monkeypatch.setenv("COLLIMATOR_EXTENDED_METRICS", "1")
+    profile = json.loads(features.FACT_PROFILE_MANIFEST.read_text())["id"]
+    retained, dropped = "pe_image_size", "custom_common_count"
+    entry = {"type": "pe", "ms": {"pe": {"image_size": 4096}, "custom": {"common_count": 1}}}
+    report = {"v": "9", "fp": profile, "fs": [entry]}
+    reports = {rid: {"cleave_result": report} for rid in range(1, 21)}
+    monkeypatch.setattr(
+        data, "fetch_cleave_results", lambda _db, ids: {rid: reports[rid] for rid in ids}
+    )
+    spec = features.build_vocab_from_db("unused", [(rid, rid % 2) for rid in reports], n_workers=1)
+    assert retained in spec.metric_vocab
+    assert dropped not in spec.metric_vocab
 
 
 def test_benign_trigram_scan_matches_candidates_without_cross_file_mixing(monkeypatch):

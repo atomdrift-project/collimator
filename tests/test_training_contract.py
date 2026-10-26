@@ -198,7 +198,7 @@ def test_lightgbm_knobs_reach_fitted_booster():
     assert params["min_split_gain"] == .3
     assert tuple(params["monotone_constraints"]) == (1, -1)
     grid = np.column_stack([np.linspace(-2, 2, 100), np.zeros(100)])
-    assert np.all(np.diff(clf.predict_proba(grid)[:, 1]) >= -1e-10)
+    assert np.all(np.diff(model.predict_proba(clf, grid)) >= -1e-10)
     with pytest.raises(ValueError, match="GOSS"):
         model.create_classifier(10, 10, learner="azoth", device="cpu", boosting_type="goss", subsample=.8)
 

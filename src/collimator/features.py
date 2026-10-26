@@ -1042,22 +1042,24 @@ def file_facts(file_entry: dict[str, Any]) -> dict[str, Any]:
     return facts if isinstance(facts, dict) else {}
 
 
-# cleave metric renames (2026-08-22, Pike-naming pass). Trained models and
-# allowed_features.json carry the OLD feature names; reports carry the NEW
-# metric names. `file_metrics` back-fills the old key from the new one so
-# every existing vocab keeps resolving. Retire entries as models retrain.
+# cleave metric renames (2026-08-22, Pike-naming pass, and later). Trained
+# models and allowed_features.json carry the OLD feature names; reports carry
+# the NEW metric names. `file_metrics` back-fills the old key from the new one so
+# every existing vocab keeps resolving. Keep every entry: hopper keeps reports
+# from every generation, so training always mixes old and new names. Mirrored
+# in scan's src/features.rs METRIC_RENAMES; change both together.
 _METRIC_RENAMES: dict[str, str] = {  # old flat name -> new flat name
     "archive.total_compressed": "archive.compressed_size",
     "archive.total_uncompressed": "archive.uncompressed_size",
-    "ast.array_literal_max_length": "ast.max_array_len",
+    "ast.array_literal_max_length": "ast.max_array_length",
     "ast.numeric_array_max_length": "ast.max_numeric_array",
-    "ast.numeric_sequence_max_length": "ast.max_numeric_seq",
+    "ast.numeric_sequence_max_length": "ast.max_numeric_sequence",
     "ast.string_concat_chain_max_length": "ast.max_concat_chain",
     "binary.embedded_archive_count": "binary.embedded_archives",
     "binary.embedded_binary_count": "binary.embedded_binaries",
     "binary.embedded_file_count": "binary.embedded_files",
     "binary.overall_entropy": "file.entropy",
-    "binary.total_basic_blocks": "binary.basic_blocks",
+    "binary.total_basic_blocks": "binary.basic_block_count",
     "comments.base64_in_comments": "comments.base64",
     "comments.code_in_comments": "comments.code",
     "comments.empty_comments": "comments.empty",
@@ -1086,11 +1088,33 @@ _METRIC_RENAMES: dict[str, str] = {  # old flat name -> new flat name
     "strings.url_encoded_strings": "strings.url_encoded",
     "strings.very_long_strings": "strings.very_long",
     "text.high_byte_ratio": "text.non_ascii_ratio",
-    "text.max_inline_whitespace_run": "text.max_ws_run",
+    "text.max_inline_whitespace_run": "text.max_whitespace_run",
     "text.most_common_char_codepoint": "text.top_char",
     "text.most_common_char_is_null": "text.top_char_null",
     "text.most_common_ratio": "text.top_char_ratio",
     "text.total_lines": "text.lines",
+    # Later renames: filefacts' 2026-10-01 schema cleanup, and metrics cleave
+    # computed before filefacts took over parsing.
+    "ast.member_depth_max": "ast.max_member_depth",
+    "binary.high_entropy_strings": "binary.high_entropy_string_count",
+    "binary.normalized_string_count": "text.normalized_string_count",
+    "comments.url_in_comments": "comments.url_count",
+    "elf.build_id_present": "elf.has_build_id",
+    "elf.class_bits": "elf.bits",
+    "elf.debuglink_present": "elf.has_debuglink",
+    "elf.entry_point": "elf.entry",
+    "elf.gnu_hash_present": "elf.has_gnu_hash",
+    "elf.hidden_symbols": "elf.hidden_symbol_count",
+    "elf.load_segment_max_p_filesz": "elf.load_segment_max_file_size",
+    "elf.load_segment_max_p_memsz": "elf.load_segment_max_memory_size",
+    "pe.certificate_table_size": "pe.cert_table_size",
+    "pe.delay_load_imports": "pe.delay_import_count",
+    "pe.manifest_present": "pe.has_manifest",
+    "pe.size_of_headers": "pe.headers_size",
+    "pe.size_of_image": "pe.image_size",
+    "pe.tls_callbacks": "pe.tls_callback_count",
+    "pe.version_info_present": "pe.has_version_info",
+    "text.max_ws_run": "text.max_whitespace_run",
 }
 
 
@@ -1613,6 +1637,74 @@ class FeatureSpec:
             trait_path_depth=data.get("trait_path_depth", DEFAULT_TRAIT_PATH_DEPTH),
             tiered_min_crit=tuple(data.get("tiered_min_crit", [3, 3, 3])),
             tiered_branch_min_crit=data.get("tiered_branch_min_crit", {}),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Fact profiles
+# ---------------------------------------------------------------------------
+# cleave stores reports whose `files[].facts` are cut down to a model-input
+# profile and stamps the report `"fp": <profile id>`. Every metric outside the
+# profile, every symbol row whose name is not a gap token, and every section is
+# gone, and a feature reading one would silently extract 0 for these reports
+# but the true value for full-facts reports. A report with no `fp` carries
+# full facts and needs no check.
+#
+# The profile is cleave's src/model_facts_manifest.json, vendored here so
+# training does not depend on a sibling checkout; a report naming any other
+# profile is rejected rather than guessed at. The rules are those of cleave's
+# model_facts::supports, so both sides agree on what a profile covers.
+FACT_PROFILE_MANIFEST = Path(__file__).parent / "data" / "model_facts_manifest.json"
+
+
+class FactProfileError(ValueError):
+    """A report's fact profile cannot supply every feature in the layout."""
+
+
+@lru_cache(maxsize=1)
+def _fact_profile_manifest() -> dict[str, Any]:
+    with open(FACT_PROFILE_MANIFEST) as f:
+        manifest: dict[str, Any] = json.load(f)
+    return manifest
+
+
+def check_fact_profile(profile: str, feature_names: Iterable[str]) -> None:
+    """Raise FactProfileError unless `profile` covers every feature named.
+
+    A metric must be one the profile retains. Families that only re-key
+    vocabulary entries (present:, bigrams:, ...) or read no facts at all
+    (filetype:, ghost:, ...) are covered as a whole; any other feature must be
+    in the profile's audited fixed-feature list, so a new scalar feature fails
+    until its fact dependencies have been audited.
+    """
+    manifest = _fact_profile_manifest()
+    if profile != manifest["id"]:
+        raise FactProfileError(
+            f"unknown fact profile {profile!r}: collimator knows only "
+            f"{manifest['id']!r} ({FACT_PROFILE_MANIFEST}); copy the matching "
+            "src/model_facts_manifest.json from cleave"
+        )
+    families = set(manifest["families"])
+    parameterized = set(manifest["parameterized_families"])
+    metrics = set(manifest["metrics"])
+    fixed = set(manifest["fixed_features"])
+    uncovered: list[str] = []
+    for name in feature_names:
+        family, _, key = name.partition(":")
+        if family not in families:
+            uncovered.append(f"{name} (family {family!r} not in profile)")
+        elif family == "metrics":
+            if key not in metrics:
+                uncovered.append(f"{name} (metric not retained)")
+        elif family not in parameterized and name not in fixed:
+            uncovered.append(f"{name} (no fact-dependency audit)")
+    if uncovered:
+        shown = ", ".join(uncovered[:20])
+        more = f", and {len(uncovered) - 20} more" if len(uncovered) > 20 else ""
+        raise FactProfileError(
+            f"fact profile {profile} omits inputs for {len(uncovered)} features "
+            f"in this layout: {shown}{more}. Train on full facts (cleave "
+            "--full-facts), drop these features, or extend the profile in cleave"
         )
 
 
@@ -2252,7 +2344,7 @@ class _ExtractContext:
         "tiered_bigram_vocab_tokens", "tiered_trigram_vocab_tokens",
         "tiered_quadgram_vocab_tokens",
         "bigram_lookup_pair", "synergy_lookup_pair", "trigram_lookup_triple", "trigrams_by_first",
-        "trait_path_depth", "ranked_ngrams", "tiered_slots",
+        "trait_path_depth", "ranked_ngrams", "tiered_slots", "fact_profiles",
     )
 
     def __init__(self, spec: FeatureSpec) -> None:
@@ -2267,6 +2359,8 @@ class _ExtractContext:
         # Build lookups that map to the actual indices in feature_names.
         name_to_idx = {name: i for i, name in enumerate(spec.feature_names)}
         self.absolute_lookup = name_to_idx
+        # Fact profiles already checked against this layout (see check_fact_profile).
+        self.fact_profiles: set[str] = set()
 
         self.presence_lookup: dict[str, int] = {}
         self.maxcrit_lookup: dict[str, int] = {}
@@ -4158,6 +4252,12 @@ def _extract_into(
     cluster_id: int = -1,
 ) -> None:
     """Extract features from a report into a pre-allocated vector."""
+    profile = report.get("fp")
+    if profile is not None:
+        profile = str(profile)
+        if profile not in ctx.fact_profiles:
+            check_fact_profile(profile, ctx.absolute_lookup)
+            ctx.fact_profiles.add(profile)
     token = _extract_trait_depth.set(ctx.trait_path_depth)
     try:
         _extract_into_at_depth(report, ctx, vec, formula, elements, score, mtime, cluster_id)
@@ -6353,6 +6453,7 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch, *,
     if config.include_extended_metrics:
         from . import data as _data  # noqa: PLC0415
         metric_key_counts: dict[str, int] = {}
+        reduced = False  # whether any scanned report carries cleave's fact profile
         # Scan a random subset for speed (5000 rows is enough to find common keys).
         scan_ids = [rid for rid, _l in scan_rows]
         for start in range(0, len(scan_ids), 500):
@@ -6361,6 +6462,7 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch, *,
                 report = _coerce_report(item["cleave_result"])
                 if report is None:
                     continue
+                reduced = reduced or report.get("fp") is not None
                 report_metric_keys: set[str] = set()
                 for file_entry in report_files(report):
                     ms = file_metrics(file_entry)
@@ -6391,9 +6493,15 @@ def _build_vocab_from_db(db_path, row_ids_labels, n_workers, counts, scratch, *,
         # the threshold but still respects base_keys and the prefix filter). The
         # allowlist reserves the slot even when the scan sample never saw the key
         # — exactly the case for a rare anti-analysis signal.
+        # On a corpus with reduced reports, offer only metrics the fact profile
+        # retains: those reports carry no others, so a column for one would be
+        # zero on every reduced row. To offer a new metric there, add it to
+        # cleave's profile first.
+        retained = frozenset(_fact_profile_manifest()["metrics"]) if reduced else None
         kept = {
             k for k, c in metric_key_counts.items()
             if c >= threshold and k not in base_keys and _passes_prefix(k)
+            and (retained is None or k in retained)
         }
         forced = {
             k for k in ALWAYS_KEEP_METRICS

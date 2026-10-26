@@ -318,6 +318,7 @@ def test_fit_mem_file_round_trips_and_tolerates_garbage(tmp_path) -> None:
         assert suite._load_fit_mem(path) == {}
 
 
+@pytest.mark.skipif(not Path("/proc/self/status").exists(), reason="needs Linux /proc")
 def test_tree_rss_counts_the_fit_and_its_workers() -> None:
     import os
     import subprocess

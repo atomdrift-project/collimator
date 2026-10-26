@@ -2,12 +2,30 @@
 
 import os
 from pathlib import Path
+import shutil
 import subprocess
 
 import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _bash_version() -> tuple[int, int]:
+    out = subprocess.run(
+        ["bash", "-c", 'echo "${BASH_VERSINFO[0]} ${BASH_VERSINFO[1]}"'],
+        capture_output=True, text=True, check=False,
+    ).stdout.split()
+    return (int(out[0]), int(out[1])) if len(out) == 2 else (0, 0)
+
+
+# The training scripts expand arrays that may be empty under `set -u`, which
+# bash only allows from 4.4 on (macOS ships 3.2). nightly.sh serializes runs
+# with flock(1) from util-linux. Both are present on the Linux training hosts.
+needs_bash_4_4 = pytest.mark.skipif(
+    _bash_version() < (4, 4), reason="needs bash >= 4.4 (empty arrays under set -u)"
+)
+needs_flock = pytest.mark.skipif(shutil.which("flock") is None, reason="needs flock(1)")
 
 
 @pytest.fixture
@@ -77,6 +95,7 @@ if [[ ${TEST_FAIL_TARGET:-} == "$1" ]]; then exit 1; fi
     return env, memory, events
 
 
+@needs_bash_4_4
 def test_pipeline_keeps_successful_generals_when_another_stage_fails(shell_env, tmp_path):
     env, _, events = shell_env
     env.update(
@@ -107,6 +126,7 @@ def run_pipeline(env):
     )
 
 
+@needs_bash_4_4
 def test_parallel_training_when_ram_available(shell_env):
     env, _, events = shell_env
     result = run_pipeline(env)
@@ -116,6 +136,7 @@ def test_parallel_training_when_ram_available(shell_env):
     assert "WORKERS=24/chain" in result.stdout
 
 
+@needs_bash_4_4
 @pytest.mark.parametrize("explicit", [None, "0", "1"])
 def test_serial_training_under_memory_pressure(shell_env, explicit):
     env, memory, events = shell_env
@@ -137,6 +158,7 @@ def test_low_memory_does_not_launch_training(shell_env):
     assert not events.exists()
 
 
+@needs_bash_4_4
 def test_parallel_failure_does_not_publish(shell_env):
     env, _, events = shell_env
     env["TEST_FAIL_TARGET"] = "azoth-general"
@@ -147,6 +169,7 @@ def test_parallel_failure_does_not_publish(shell_env):
     assert "azoth-deploy" not in events.read_text()
 
 
+@needs_bash_4_4
 @pytest.mark.parametrize("before,after", [(110, 200), (200, 110)])
 def test_scoring_rechecks_memory(shell_env, tmp_path, before, after):
     env, memory, events = shell_env
@@ -228,6 +251,7 @@ def test_reinstall_preserves_schedule_and_sets_limits(shell_env):
     assert "MemoryMax=64G" in (units / "azoth-autocollie.service").read_text()
 
 
+@needs_flock
 @pytest.mark.parametrize("snapshot", ["123456", "invalid"])
 def test_nightly_logger_protection_and_snapshot_gate(shell_env, tmp_path, snapshot):
     env, _, events = shell_env
